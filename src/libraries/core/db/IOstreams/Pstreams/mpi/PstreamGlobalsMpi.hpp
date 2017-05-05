@@ -49,6 +49,8 @@ namespace PstreamGlobals
 {
 
 extern DynamicList<MPI_Request> outstandingRequests_;
+// Current communicators. First element will be MPI_COMM_WORLD
+//extern DynamicList<MPI_Comm> MPICommunicators_;
 
 };
 

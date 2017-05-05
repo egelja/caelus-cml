@@ -83,7 +83,7 @@ CML::abortCalculation::abortCalculation
 :
     name_(name),
     obr_(obr),
-    abortFile_("$FOAM_CASE/" + name),
+    abortFile_("$CAELUS_CASE/" + name),
     action_(nextWrite)
 {
     abortFile_.expand();

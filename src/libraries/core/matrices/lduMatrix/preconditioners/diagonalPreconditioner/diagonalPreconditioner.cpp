@@ -45,6 +45,21 @@ CML::diagonalPreconditioner::diagonalPreconditioner
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag().size())
 {
+    this->appInv();
+    // scalar* RESTRICT rDPtr = rD_.begin();
+    // const scalar* RESTRICT DPtr = solver_.matrix().diag().begin();
+
+    // register label nCells = rD_.size();
+
+    // // Generate reciprocal diagonal
+    // for (register label cell=0; cell<nCells; cell++)
+    // {
+    //     rDPtr[cell] = 1.0/DPtr[cell];
+    // }
+}
+
+void CML::diagonalPreconditioner::appInv()
+{
     scalar* RESTRICT rDPtr = rD_.begin();
     const scalar* RESTRICT DPtr = solver_.matrix().diag().begin();
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -327,8 +327,8 @@ functions
                         type pythonIntegration;
                         startCode "";
                         executeCode "";
-                        writeFile "$FOAM_CASE/system/calcFillingAtHeight.py";
-                        endFile "$FOAM_CASE/system/calcFillingAtHeight.py";
+                        writeFile "$CAELUS_CASE/system/calcFillingAtHeight.py";
+                        endFile "$CAELUS_CASE/system/calcFillingAtHeight.py";
                         //                        endFile $writeFile;
                         swakToPythonNamespaces (
                             pythonStatistics
@@ -337,7 +337,7 @@ functions
                     }
                 }
                 readDuringConstruction true;
-                conditionFile "$FOAM_CASE/system/checkForNumpy.py";
+                conditionFile "$CAELUS_CASE/system/checkForNumpy.py";
             }
         }
         readDuringConstruction true;

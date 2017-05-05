@@ -22,6 +22,20 @@
         thermo->rho()
     );
 
+    Info<< "Reading field T\n" << endl;
+    volScalarField T
+    (
+        IOobject
+        (
+            "T",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
     Info<< "Reading field U\n" << endl;
     volVectorField U
     (
@@ -41,19 +55,6 @@
     dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
     dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
 
-    bool totalEnthalpyForm
-    (
-        readBool
-        (
-            pimple.dict().lookup("totalEnthalpyFormulation")
-        )
-    );
-    
-    if (totalEnthalpyForm)
-        Info<< "Using total enthalpy fomulation " << endl;
-    else
-        Info<< "Using sensible enthalpy equation formualtion" << endl;
-
     Info<< "Creating turbulence model\n" << endl;
     autoPtr<compressible::turbulenceModel> turbulence
     (
@@ -66,62 +67,18 @@
         )
     );
 
-    surfaceScalarField Uf = (phi/fvc::interpolate(rho))();
-
-    surfaceScalarField phid
+    surfaceScalarField phiHat
     (
-        "phid",
+        "phiHat",
         fvc::interpolate(psi)
        *(
             (fvc::interpolate(U) & mesh.Sf())
         )
     );
 
-
-    surfaceScalarField phis
-    (
-        "phis",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
-
-    surfaceScalarField phil
-    (
-        "phil",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
-
-    surfaceScalarField left
-    (
-        IOobject
-        (
-            "left",
-            runTime.timeName(),
-            mesh
-        ),
-        mesh,
-        dimensionedScalar("left", dimless, 1.0)
-    );
-
-    surfaceScalarField right
-    (
-        IOobject
-        (
-            "right",
-            runTime.timeName(),
-            mesh
-        ),
-        mesh,
-        dimensionedScalar("right", dimless, -1.0)
-    );
-
-    Info<< "Creating field dpdt\n" << endl;
     volScalarField dpdt("dpdt", fvc::ddt(p));
 
+    volScalarField Ek("Ek", 0.5*magSqr(U));
 
+    volScalarField EkMatDer("EkMatDer", fvc::ddt(rho,Ek)+fvc::div(phi,Ek));
 

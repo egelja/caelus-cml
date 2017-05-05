@@ -1,0 +1,80 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+reactingSolverEnv = globalEnv.Clone()
+
+# Path to source
+src = reactingSolverEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+reactingSolverEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [reactingSolverEnv['LIB_SRC'] +  '/turbulenceModels',
+src + '/turbulenceModels/compressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/compressible/RAS/RASModel', 
+src + '/turbulenceModels/compressible/RAS/lnInclude',
+src + '/thermophysicalModels',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/chemistryModel/lnInclude',
+src + '/combustionModels/lnInclude',
+src + '/transportModels/basic/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude',
+src + '/core/lnInclude',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/roeFDSFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/llfFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/hllcFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/ktpFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/dwFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/kfvsFlux'
+]
+reactingSolverEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+reactingSolverEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if reactingSolverEnv['WHICH_OS'] == "windows":
+  reactingSolverEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad')
+  lib_link = ['libcompressibleTurbulenceModel', 'libcompressibleRASModels',
+  'libbasicThermophysicalModels', 'libfvOptions', 'libsampling', 'libcompressibleLESModels', 'libcompressibleVLESModels','libnumericFlux', 'libreactionThermophysicalModels','libchemistryModel','libspecie','libcombustionModels']
+else:
+  lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
+  'basicThermophysicalModels', 'fvOptions', 'sampling', 'compressibleLESModels','compressibleVLESModels','numericFlux','reactionThermophysicalModels','chemistryModel','specie','combustionModels']
+  
+reactingSolverEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  reactingSolver.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binreactingSolver = reactingSolverEnv.Program(target = 'reactingSolver',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = reactingSolverEnv['BIN_PLATFORM_INSTALL']
+reactingSolverEnv.Alias('install', install_dir)
+reactingSolverEnv.Install(install_dir, binreactingSolver)

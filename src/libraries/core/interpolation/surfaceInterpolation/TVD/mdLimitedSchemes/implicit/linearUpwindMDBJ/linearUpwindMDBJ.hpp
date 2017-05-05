@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,13 +24,9 @@ Description
 
     A TVD property staisfying limited central scheme based on the 
     Barth-Jespersen limiter to prevent unwanted oscillations. 
-    Implementation suitable for scalar fields.
-
-    The scheme inherits from upwind class but it does not use 
-    upwind inteprolation since that function is virtual it is 
-    overwritten here.
 
 SourceFiles
+
     linearUpwindMDBJ.cpp
 
 References
@@ -39,6 +35,7 @@ References
          Barth, T. J. and Jespersen, D. C., AIAA paper 89-0366, Jan. 1989.
 
 Author
+
     Aleksandar Jemcov
 
 \*---------------------------------------------------------------------------*/
@@ -58,6 +55,7 @@ class linearUpwindMDBJ : public upwind<Type>
 
     word gradSchemeName_;
     tmp<fv::gradScheme<Type> > gradScheme_;
+    scalar order_;
 
     linearUpwindMDBJ(const linearUpwindMDBJ&);
 
@@ -71,19 +69,19 @@ public:
     (
         const fvMesh& mesh,
         const surfaceScalarField& faceFlux
-    ) : upwind<Type>(mesh, faceFlux),
+    ) :
+        upwind<Type>(mesh, faceFlux),
         gradSchemeName_("grad"),
-        gradScheme_
-        (
-            new fv::gaussGrad<Type>(mesh)
-        )
+        gradScheme_(new fv::gaussGrad<Type>(mesh)),
+        order_(1)
     {}
 
     linearUpwindMDBJ
     (
         const fvMesh& mesh,
         Istream& schemeData
-    ) : upwind<Type>(mesh, schemeData),
+    ) :
+        upwind<Type>(mesh, schemeData),
         gradSchemeName_(schemeData),
         gradScheme_
         (
@@ -94,14 +92,22 @@ public:
             )
         )
     {
-        if (!schemeData.eof())
+        if (schemeData.eof())
         {
-            IOWarningIn("linearUpwindMDBJ(const fvMesh&, Istream&)", schemeData)
-                << "unexpected additional entries in stream." << nl
-                << "    Only the name of the gradient scheme in the"
-                   " 'gradSchemes' dictionary should be specified."
-                << endl;
+            order_ = scalar(1);
         }
+        else
+        {
+            order_ = readScalar(schemeData);
+            if (order_ < 0 || order_ > 1)
+            {
+                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, Istream& is)", schemeData)
+                        << "coefficient = " << order_
+                        << " should be >= 0 and <= 1"
+                        << exit(FatalIOError);
+            }
+        }
+
     }
 
     linearUpwindMDBJ
@@ -109,7 +115,8 @@ public:
         const fvMesh& mesh,
         const surfaceScalarField& faceFlux,
         Istream& schemeData
-    ) : upwind<Type>(mesh, faceFlux, schemeData),
+    ) :
+        upwind<Type>(mesh, faceFlux, schemeData),
         gradSchemeName_(schemeData),
         gradScheme_
         (
@@ -121,17 +128,20 @@ public:
         )
     {
 
-        if (!schemeData.eof())
+        if (schemeData.eof())
         {
-            IOWarningIn
-            (
-                "linearUpwindMDBJ(const fvMesh&, "
-                "const surfaceScalarField& faceFlux, Istream&)",
-                schemeData
-            )   << "unexpected additional entries in stream." << nl
-                << "    Only the name of the gradient scheme in the"
-                   " 'gradSchemes' dictionary should be specified."
-                << endl;
+            order_ = scalar(1);
+        }
+        else
+        {
+            order_ = readScalar(schemeData);
+            if (order_ < 0 || order_ > 1)
+            {
+                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, surfaceScalarField const& faceFlux, Istream& is)", schemeData)
+                        << "coefficient = " << order_
+                        << " should be >= 0 and <= 1"
+                        << exit(FatalIOError);
+            }
         }
     }
 

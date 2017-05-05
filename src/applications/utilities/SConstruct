@@ -333,6 +333,7 @@ subdirs = [
 'mesh/conversion/caelusToSurface',
 'mesh/conversion/mshToCAELUS',
 'mesh/conversion/writeMeshObj',
+'mesh/conversion/gmshToCAELUS',
 'mesh/manipulation/attachMesh',
 'mesh/manipulation/autoPatch',
 'mesh/manipulation/checkMesh',

@@ -87,11 +87,18 @@ public:
         //- Return the current wall-clock time as a string
         static string clockTime();
 
+#ifdef windows
+  // Satisfy assumptions elsewhere e.g., streams
+  typedef long TIME_T;
+#else
+  typedef time_t TIME_T;
+#endif
+
         //- Returns wall-clock time from clock instantiation
-        time_t elapsedClockTime() const;
+        TIME_T elapsedClockTime() const;
 
         //- Returns wall-clock time from last call of clockTimeIncrement()
-        time_t clockTimeIncrement() const;
+        TIME_T clockTimeIncrement() const;
 };
 
 

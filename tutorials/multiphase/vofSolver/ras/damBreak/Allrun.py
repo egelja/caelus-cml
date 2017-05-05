@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -43,7 +42,7 @@ run = None
 
 # Executing setFields
 print "Executing setFields"
-run = subprocess.Popen(['caelus.py', '-l', 'funkySetFields'], shell=pltfrm)
+run = subprocess.Popen(['caelus.py', '-l', 'funkySetFields', '-latestTime'], shell=pltfrm)
 run.wait()
 run = None
 
@@ -52,3 +51,6 @@ print "Executing vofSolver"
 run = subprocess.Popen(['caelus.py', '-l', 'vofSolver'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('damBreak.foam', 'a').close()

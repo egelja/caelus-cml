@@ -57,7 +57,8 @@ bool CML::UOPstream::write
             MPI_PACKED,
             procID(toProcNo),
             tag,
-            MPI_COMM_WORLD
+			MPI_COMM_WORLD
+//            PstreamGlobals::MPICommunicators_[1]
         );
 
         if (debug)
@@ -77,7 +78,8 @@ bool CML::UOPstream::write
             MPI_PACKED,
             procID(toProcNo),
             tag,
-            MPI_COMM_WORLD
+			MPI_COMM_WORLD
+//            PstreamGlobals::MPICommunicators_[1]
         );
 
         if (debug)
@@ -99,7 +101,8 @@ bool CML::UOPstream::write
             MPI_PACKED,
             procID(toProcNo),
             tag,
-            MPI_COMM_WORLD,
+			MPI_COMM_WORLD,
+//            PstreamGlobals::MPICommunicators_[1],
             &request
         );
 

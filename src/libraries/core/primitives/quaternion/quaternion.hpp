@@ -148,6 +148,12 @@ public:
                //- Rotate the given quaternion anti-clockwise (and normalize)
                inline quaternion invTransform(const quaternion& q) const;
 
+		       //- Calculate unit rotation vector from given quaternion
+        	   inline vector rotVector(const quaternion& q) const;
+
+        	   //- Calculate rotation angle from given quaternion
+        	   inline scalar rotAngle(const quaternion& q) const;
+
 
     // Member operators
 

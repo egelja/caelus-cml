@@ -110,27 +110,6 @@ void CoherentStructureModel::correct(tmp<volTensorField> const& gradU)
     updateSubGridScaleFields(gradU());
 }
 
-tmp<volScalarField> CoherentStructureModel::k() const
-{
-    WarningIn("tmp<volScalarField> CoherentStructureModel::k() const")
-        << "Turbulence kinetic energy not defined for Spalart-Allmaras model. "
-        << "Returning zero field" << endl;
-
-    return tmp<volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "k",
-                runTime_.timeName(),
-                mesh_
-            ),
-            mesh_,
-            dimensionedScalar("0", dimensionSet(0, 2, -2, 0, 0), 0)
-        )
-    );
-}
 
 bool CoherentStructureModel::read()
 {

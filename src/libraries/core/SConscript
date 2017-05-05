@@ -262,6 +262,7 @@ src_files_core = Split("""
   dimensionedTypes/dimensionedSymmTensor/dimensionedSymmTensor.cpp
   dimensionedTypes/dimensionedTensor/dimensionedTensor.cpp
   matrices/solution/solution.cpp
+  matrices/scalarMatrices/scalarSquareMatrix.cpp
   matrices/scalarMatrices/scalarMatrices.cpp
   matrices/scalarMatrices/SVD/SVD.cpp
   matrices/LUscalarMatrix/LUscalarMatrix.cpp
@@ -795,6 +796,7 @@ src_files_core = Split("""
   fields/fvPatchFields/derived/timeVaryingMappedFixedValue/AverageIOFields.cpp
   fields/fvPatchFields/derived/timeVaryingMappedFixedValue/timeVaryingMappedFixedValueFvPatchFields.cpp
   fields/fvPatchFields/derived/totalPressure/totalPressureFvPatchScalarField.cpp
+  fields/fvPatchFields/derived/totalTemperature/totalTemperatureFvPatchScalarField.cpp
   fields/fvPatchFields/derived/turbulentInlet/turbulentInletFvPatchFields.cpp
   fields/fvPatchFields/derived/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchScalarField.cpp
   fields/fvPatchFields/derived/uniformFixedValue/uniformFixedValueFvPatchFields.cpp
@@ -847,61 +849,72 @@ src_files_core = Split("""
   interpolation/surfaceInterpolation/schemes/harmonic/harmonic.cpp
   interpolation/surfaceInterpolation/schemes/localMax/localMax.cpp
   interpolation/surfaceInterpolation/schemes/linearUpwind/linearUpwind.cpp
-  interpolation/surfaceInterpolation/schemes/linearUpwind/linearUpwindV.cpp
   interpolation/surfaceInterpolation/limitedSchemes/limitedSurfaceInterpolationScheme/limitedSurfaceInterpolationSchemes.cpp
   interpolation/surfaceInterpolation/limitedSchemes/upwind/upwind.cpp
   interpolation/surfaceInterpolation/limitedSchemes/blended/blended.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/Minmod/Minmod.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/vanLeer/vanLeer.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/vanAlbada/vanAlbada.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/koren/koren.cpp
   interpolation/surfaceInterpolation/limitedSchemes/OSPRE/OSPRE.cpp
   interpolation/surfaceInterpolation/limitedSchemes/limitedLinear/limitedLinear.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/SuperBee/SuperBee.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/MUSCL/MUSCL.cpp
   interpolation/surfaceInterpolation/limitedSchemes/Phi/Phi.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/BarthJespersen/BarthJespersen.cpp
-  interpolation/surfaceInterpolation/limitedSchemes/Venkatakrishnan/Venkatakrishnan.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmod.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmodV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindDL/linearUpwindDL.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindDL/linearUpwindDLV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMG/linearUpwindMG.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMG/linearUpwindMGV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanLeer/linearUpwindVanLeer.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanLeer/linearUpwindVanLeerV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindUMIST/linearUpwindUMIST.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindUMIST/linearUpwindUMISTV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanAlbada/linearUpwindVanAlbada.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanAlbada/linearUpwindVanAlbadaV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindBJ/linearUpwindBJ.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindBJ/linearUpwindBJV.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMC/linearUpwindMC.cpp
-  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMC/linearUpwindMCV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindMinmod/linearUpwindMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindKoren/linearUpwindKoren.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindSuperbee/linearUpwindSuperbee.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindDL/linearUpwindDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindMG/linearUpwindMG.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindVanLeer/linearUpwindVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindUMIST/linearUpwindUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindVanAlbada/linearUpwindVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindBJ/linearUpwindBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearBJ/multivariateLinearBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearMinmod/multivariateLinearMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearVanLeer/multivariateLinearVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearSuperbee/multivariateLinearSuperbee.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearVanAlbada/multivariateLinearVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearKoren/multivariateLinearKoren.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearUMIST/multivariateLinearUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearDL/multivariateLinearDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearMG/multivariateLinearMG.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMinmod/dcLinearUpwindMinmod.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMinmod/dcLinearUpwindMinmodV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindKoren/dcLinearUpwindKoren.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindSuperbee/dcLinearUpwindSuperbee.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanLeer/dcLinearUpwindVanLeer.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanLeer/dcLinearUpwindVanLeerV.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindUMIST/dcLinearUpwindUMIST.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindUMIST/dcLinearUpwindUMISTV.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanAlbada/dcLinearUpwindVanAlbada.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanAlbada/dcLinearUpwindVanAlbadaV.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJ.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJV.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMC.cpp
-  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMCV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindDL/dcLinearUpwindDL.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMG/dcLinearUpwindMG.cpp
   interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDBJ/linearUpwindMDBJ.cpp
-  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDBJ/linearUpwindMDBJV.cpp
-  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDV/linearUpwindMDV.cpp
-  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDV/linearUpwindMDVV.cpp
+  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDDL/linearUpwindMDDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearKoren/linearKoren.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearBJ/linearBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearMinmod/linearMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearVanLeer/linearVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearSuperbee/linearSuperbee.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearDL/linearDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearMG/linearMG.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearUMIST/linearUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linear/linearVanAlbada/linearVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralBJ/limitedCentralBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralDL/limitedCentralDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralMG/limitedCentralMG.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralVanLeer/limitedCentralVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralVanAlbada/limitedCentralVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralMinmod/limitedCentralMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralKoren/limitedCentralKoren.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralSuperbee/limitedCentralSuperbee.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralUMIST/limitedCentralUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedBJ/blendedBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedDL/blendedDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedMG/blendedMG.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedUMIST/blendedUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedVanLeer/blendedVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedVanAlbada/blendedVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedMinmod/blendedMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedKoren/blendedKoren.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/blended/blendedSuperbee/blendedSuperbee.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSurfaceInterpolationScheme/multivariateSurfaceInterpolationSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSelectionScheme/multivariateSelectionSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateIndependentScheme/multivariateIndependentSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/upwind/multivariateUpwind.cpp
-  interpolation/surfaceInterpolation/multivariateSchemes/vanLeer/multivariateVanLeer.cpp
-  interpolation/surfaceInterpolation/multivariateSchemes/Minmod/multivariateMinmod.cpp
-  interpolation/surfaceInterpolation/multivariateSchemes/SuperBee/multivariateSuperBee.cpp
-  interpolation/surfaceInterpolation/multivariateSchemes/MUSCL/multivariateMUSCL.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/limitedLinear/multivariateLimitedLinear.cpp
   finiteVolume/fv/fv.cpp
   finiteVolume/fvSchemes/fvSchemes.cpp

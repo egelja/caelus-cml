@@ -43,26 +43,26 @@ void CML::roeFlux::evaluateFlux
     vector const dotX
 ) const
 {
-    scalar rhoLeft = pLeft/(RLeft*TLeft);
-    scalar rhoRight = pRight/(RRight*TRight);
+    scalar const rhoLeft  = pLeft/(RLeft*TLeft);
+    scalar const rhoRight = pRight/(RRight*TRight);
 
-    scalar eLeft = CvLeft*TLeft+0.5*magSqr(ULeft);
-    scalar eRight = CvRight*TRight+0.5*magSqr(URight);
+    scalar const eLeft  = CvLeft*TLeft+0.5*magSqr(ULeft);
+    scalar const eRight = CvRight*TRight+0.5*magSqr(URight);
 
-    scalar const kappaLeft = (CvLeft+RLeft)/CvLeft;
+    scalar const kappaLeft  = (CvLeft+RLeft)/CvLeft;
     scalar const kappaRight = (CvRight+RRight)/CvRight;
 
-    vector normalVector = Sf/magSf;
+    vector const normalVector = Sf/magSf;
 
-    scalar const contrVLeft  = (ULeft & normalVector);
+    scalar const contrVLeft  = (ULeft  & normalVector);
     scalar const contrVRight = (URight & normalVector);
 
-    scalar const hLeft = eLeft + pLeft/rhoLeft;
+    scalar const hLeft  = eLeft + pLeft/rhoLeft;
     scalar const hRight = eRight + pRight/rhoRight;
 
     scalar const rhoTilda = sqrt(max(rhoLeft*rhoRight,0.0));
 
-    scalar const rhoLeftSqrt = sqrt(max(rhoLeft,0.0));
+    scalar const rhoLeftSqrt  = sqrt(max(rhoLeft,0.0));
     scalar const rhoRightSqrt = sqrt(max(rhoRight,0.0));
 
     scalar const wLeft = rhoLeftSqrt/(rhoLeftSqrt + rhoRightSqrt);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,36 +19,37 @@ ddtSchemes
 
 gradSchemes
 {
-    default         Gauss linear skewCorrected;
+    default         Gauss skewCorrected linear;
 }
 
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss BarthJespersenV grad(U) skewCorrected;
-    div(phid,p)     Gauss BarthJespersen  grad(p) skewCorrected;
+    div(phi,Ek)     Gauss skewCorrected linearVanLeer;
+    div(phi,U)      Gauss skewCorrected linearVanLeer;
+    div(phiHat,p)   Gauss skewCorrected linearVanLeer;
     div(phi,KE)     Gauss linear skewCorrected;
-    div(phi,h)      Gauss BarthJespersen  grad(h) skewCorrected;
-    div(phi,k)      Gauss BarthJespersen  grad(k) skewCorrected;
+    div(phi,h)      Gauss skewCorrected linearVanLeer;
+    div(phi,k)      Gauss skewCorrected linearVanLeer;
     div((muEff*dev2(T(grad(U))))) Gauss linear skewCorrected;
-    div(((muEff*grad(U))&U)) Gauss linear skewCorrected;
-    div(((muEff*dev2(T(grad(U))))&U)) Gauss linear skewCorrected;
+    div(((muEff*grad(U))&U)) Gauss skewCorrected linear;
+    div(((muEff*dev2(T(grad(U))))&U)) Gauss skewCorrected linear;
 }
 
 laplacianSchemes
 {
-    default         Gauss linear corrected skewCorrected;
+    default         Gauss skewCorrected linear corrected;
 }
 
 interpolationSchemes
 {
-    default         linear skewCorrected;
-    reconstruct(T)  Minmod grad(T);
+    default         skewCorrected linear;
+    reconstruct(T)  linearVanLeer;
 }
 
 snGradSchemes
 {
-    default         corrected;
+    default         skewCorrected corrected;
 }
 
 fluxRequired

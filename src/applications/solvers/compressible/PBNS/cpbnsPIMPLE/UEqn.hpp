@@ -7,8 +7,6 @@ tmp<fvVectorMatrix> UEqn
     fvOptions(rho,U)
 );
 
-UEqn().relax();
-
 fvOptions.constrain(UEqn());
 
 if (pimple.momentumPredictor())

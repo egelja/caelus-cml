@@ -46,6 +46,8 @@ src_files = Split("""
   GenEddyVisc/GenEddyVisc.cpp
   GenSGSStress/GenSGSStress.cpp
   laminar/laminar.cpp
+  kOmegaSSTDES/kOmegaSSTDES.cpp
+  kOmegaSSTDDES/kOmegaSSTDDES.cpp
   SpalartAllmarasDES/SpalartAllmarasDES.cpp
   SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
   SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp

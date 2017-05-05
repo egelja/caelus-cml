@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,43 +19,43 @@ ddtSchemes
 
 gradSchemes
 {
-    default         Gauss linear;
-    grad(p)         Gauss linear;
-    grad(U)         Gauss linear;
+    default         Gauss skewCorrected linear;
+    grad(p)         Gauss skewCorrected linear;
+    grad(U)         Gauss skewCorrected linear;
 }
 
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss limitedLinearV 1;
-    div(phi,k)      Gauss limitedLinear 1;
-    div(phi,epsilon) Gauss limitedLinear 1;
-    div(phi,R)      Gauss limitedLinear 1;
-    div(R)          Gauss linear;
-    div(phi,nuTilda) Gauss limitedLinear 1;
-    div((nuEff*dev(T(grad(U))))) Gauss linear;
+    div(phi,U)      Gauss  skewCorrected linearUpwindBJ grad(U);
+    div(phi,k)      Gauss  skewCorrected linearUpwindBJ grad(k);
+    div(phi,epsilon) Gauss skewCorrected linearUpwindBJ grad(epsilon);
+    div(phi,R)      Gauss  skewCorrected linearUpwindBJ grad(R);
+    div(R)          Gauss  skewCorrected linear;
+    div(phi,nuTilda) Gauss skewCorrected linearUpwindBJ grad(nuTilda);
+    div((nuEff*dev(T(grad(U))))) Gauss skewCorrected linear;
 }
 
 laplacianSchemes
 {
     default         none;
-    laplacian(nuEff,U) Gauss linear corrected;
-    laplacian((1|A(U)),p) Gauss linear corrected;
-    laplacian(DkEff,k) Gauss linear corrected;
-    laplacian(DepsilonEff,epsilon) Gauss linear corrected;
-    laplacian(DREff,R) Gauss linear corrected;
-    laplacian(DnuTildaEff,nuTilda) Gauss linear corrected;
+    laplacian(nuEff,U) Gauss skewCorrected linear corrected;
+    laplacian((1|A(U)),p) Gauss skewCorrected linear corrected;
+    laplacian(DkEff,k) Gauss skewCorrected linear corrected;
+    laplacian(DepsilonEff,epsilon) Gauss skewCorrected linear corrected;
+    laplacian(DREff,R) Gauss skewCorrected linear corrected;
+    laplacian(DnuTildaEff,nuTilda) Gauss skewCorrected linear corrected;
 }
 
 interpolationSchemes
 {
-    default         linear;
-    interpolate(U)  linear;
+    default         skewCorrected linear;
+    interpolate(U)  skewCorrected linear;
 }
 
 snGradSchemes
 {
-    default         corrected;
+    default         skewCorrected corrected;
 }
 
 fluxRequired

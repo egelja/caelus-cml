@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -50,14 +50,14 @@ functions
         functionObjectLibs ("libutilityFunctionObjects.so");
         outputControl   timeStep;
         outputInterval  1;
-        fileToUpdate    "$FOAM_CASE/system/fvSolution";
+        fileToUpdate    "$CAELUS_CASE/system/fvSolution";
 
         timeVsFile
         (
-            ( -1   "$FOAM_CASE/system/fvSolution.0"  )
-            ( 0.10 "$FOAM_CASE/system/fvSolution.10" )
-            ( 0.20 "$FOAM_CASE/system/fvSolution.20" )
-            ( 0.35 "$FOAM_CASE/system/fvSolution.35" )
+            ( -1   "$CAELUS_CASE/system/fvSolution.0"  )
+            ( 0.10 "$CAELUS_CASE/system/fvSolution.10" )
+            ( 0.20 "$CAELUS_CASE/system/fvSolution.20" )
+            ( 0.35 "$CAELUS_CASE/system/fvSolution.35" )
         );
     }
 }

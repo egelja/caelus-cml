@@ -308,6 +308,7 @@ void realizableKE::correct()
 
     epsEqn().boundaryManipulate(epsilon_.boundaryField());
 
+    mesh_.updateFvMatrix(epsEqn());
     solve(epsEqn);
     bound(epsilon_, epsilonMin_);
 
@@ -324,6 +325,7 @@ void realizableKE::correct()
     );
 
     kEqn().relax();
+    mesh_.updateFvMatrix(kEqn());
     solve(kEqn);
     bound(k_, kMin_);
 

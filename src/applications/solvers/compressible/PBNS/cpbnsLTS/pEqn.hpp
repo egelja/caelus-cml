@@ -24,7 +24,7 @@ while (pimple.correctNonOrthogonal())
     fvScalarMatrix pEqn
     (
         fvm::ddt(psi, p)
-      + fvm::div(phid, p)
+      + fvm::div(phiHat, p)
       - fvm::laplacian(rho*rAU, p)
     );
 

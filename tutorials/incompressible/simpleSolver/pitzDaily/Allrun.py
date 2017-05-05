@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -42,3 +41,6 @@ print "Executing simpleSolver"
 run = subprocess.Popen(['caelus.py', '-l', 'simpleSolver'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('pitzDaily.foam', 'a').close()

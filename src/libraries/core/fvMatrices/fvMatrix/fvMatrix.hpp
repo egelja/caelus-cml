@@ -1604,12 +1604,7 @@ void CML::fvMatrix<Type>::relax(const scalar alpha)
                 // normalised diagonal
                 forAll(pa, face)
                 {
-                    D[pa[face]] +=
-                        cmptMag(cmptMin(iCoeffs[face]))
-                      - cmptMin(iCoeffs[face]);
-                    sumOff[pa[face]] +=
-                        cmptMag(cmptMin(iCoeffs[face]))
-                      - cmptMin(iCoeffs[face]);
+                    D[pa[face]] += cmptAv(iCoeffs[face]);
                 }
             }
         }
@@ -1673,6 +1668,13 @@ void CML::fvMatrix<Type>::relax(const scalar alpha)
                 forAll(pa, face)
                 {
                     D[pa[face]] -= component(iCoeffs[face], 0);
+                }
+            }
+            else
+            {
+                forAll(pa, face)
+                {
+                    D[pa[face]] -= cmptAv(iCoeffs[face]);
                 }
             }
         }

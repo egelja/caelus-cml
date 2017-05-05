@@ -25,7 +25,7 @@ expressions
         	    {
                 	name velClass;
 	                outOfBounds clamp;
-        	        fileName "$FOAM_CASE/velClass.data";
+        	        fileName "$CAELUS_CASE/velClass.data";
             	    }
         	);
 		variables (

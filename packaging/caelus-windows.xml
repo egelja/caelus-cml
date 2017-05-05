@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 5.10</fullName>
-    <version>5.10</version>
+    <fullName>Caelus 6.04</fullName>
+    <version>6.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../doc/gpl-3.0.txt</licenseFile>
@@ -432,8 +432,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
             </postInstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Caelus 5.10 Terminal</comment>
-                    <name>Caelus 5.10 Terminal</name>
+                    <comment>Caelus 6.04 Terminal</comment>
+                    <name>Caelus 6.04 Terminal</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
@@ -692,7 +692,7 @@ from Caelus.write_env import *
     <readmeFileEncoding>ascii</readmeFileEncoding>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
     <saveRelativePaths>1</saveRelativePaths>
-    <slideShowTiming>10</slideShowTiming>
+    <slideShowTiming>7</slideShowTiming>
     <splashScreenDelay>5</splashScreenDelay>
     <startMenuGroupName>${project.fullName}</startMenuGroupName>
     <uninstallerDirectory>${installdir}/${product_shortName}-${product_version}</uninstallerDirectory>
@@ -743,25 +743,74 @@ from Caelus.write_env import *
             </ruleList>
         </parameterGroup>
         <parameterGroup>
-            <name>terminalconfiglin</name>
-            <title>Terminal Configuration</title>
+            <name>post_install_page</name>
+            <title>Need Support?</title>
             <explanation></explanation>
             <value></value>
             <default></default>
+            <insertAfter>installation</insertAfter>
             <parameterList>
-                <booleanParameter>
-                    <name>colourbuildlin</name>
-                    <description></description>
-                    <explanation>Choose if you want compiling to use colourful output</explanation>
-                    <value>True</value>
-                    <default>True</default>
-                </booleanParameter>
+                <labelParameter>
+                    <name>post_install_page_label</name>
+                    <description>You can connect with us on the following</description>
+                    <explanation></explanation>
+                    <image></image>
+                </labelParameter>
+                <labelParameter>
+                    <name>email</name>
+                    <description>Email                                                                                                                                </description>
+                    <explanation></explanation>
+                    <image>images/mail-128.png</image>
+                </labelParameter>
+                <linkParameter>
+                    <name>caelus_email</name>
+                    <description>caelus@appliedccm.com.au</description>
+                    <explanation></explanation>
+                    <cliOptionShow>0</cliOptionShow>
+                    <clickedActionList>
+                        <launchBrowser>
+                            <url>mailto:caelus@appliedccm.com</url>
+                        </launchBrowser>
+                    </clickedActionList>
+                </linkParameter>
+                <labelParameter>
+                    <name>twitter</name>
+                    <description>Twitter                                                                                                                               </description>
+                    <explanation></explanation>
+                    <cliOptionShow>0</cliOptionShow>
+                    <image>images/Twitter-Logo.png</image>
+                </labelParameter>
+                <linkParameter>
+                    <name>caelus_twitter</name>
+                    <description>@caelus_cml</description>
+                    <explanation></explanation>
+                    <cliOptionShow>0</cliOptionShow>
+                    <clickedActionList>
+                        <launchBrowser>
+                            <url>https://twitter.com/caelus_cml</url>
+                        </launchBrowser>
+                    </clickedActionList>
+                </linkParameter>
+                <labelParameter>
+                    <name>facebook</name>
+                    <title>Facebook</title>
+                    <description>Facebook                                                                                                                          </description>
+                    <explanation></explanation>
+                    <image>images/FB-Logo.png</image>
+                </labelParameter>
+                <linkParameter>
+                    <name>caelus_facebook</name>
+                    <title>Caelus Facebook Page</title>
+                    <description>https://www.facebook.com/groups/caelus/</description>
+                    <explanation></explanation>
+                    <cliOptionShow>0</cliOptionShow>
+                    <clickedActionList>
+                        <launchBrowser>
+                            <url>https://www.facebook.com/groups/caelus/</url>
+                        </launchBrowser>
+                    </clickedActionList>
+                </linkParameter>
             </parameterList>
-            <ruleList>
-                <platformTest>
-                    <type>linux</type>
-                </platformTest>
-            </ruleList>
         </parameterGroup>
         <booleanParameterGroup>
             <name>mpi</name>
@@ -838,10 +887,13 @@ from Caelus.write_env import *
     </platformOptionsList>
     <slideShowImageList>
         <slideShowImage>
+            <path>images/CAELUS_logo__version_slide.png</path>
+        </slideShowImage>
+        <slideShowImage>
             <path>images/ACCM_logo_slide.png</path>
         </slideShowImage>
         <slideShowImage>
-            <path>images/CAELUS_logo_slide.png</path>
+            <path>images/volvo.png</path>
         </slideShowImage>
         <slideShowImage>
             <path>images/city.png</path>
@@ -850,16 +902,16 @@ from Caelus.write_env import *
             <path>images/sub.png</path>
         </slideShowImage>
         <slideShowImage>
-            <path>images/cylinder.png</path>
-        </slideShowImage>
-        <slideShowImage>
-            <path>images/sphere.png</path>
+            <path>images/RLG.png</path>
         </slideShowImage>
         <slideShowImage>
             <path>images/g2995.png</path>
         </slideShowImage>
         <slideShowImage>
             <path>images/forward_step_temperature2.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/cyclone.png</path>
         </slideShowImage>
     </slideShowImageList>
 </project>

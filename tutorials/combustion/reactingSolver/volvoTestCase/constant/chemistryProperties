@@ -1,0 +1,41 @@
+/*---------------------------------------------------------------------------*
+Caelus 6.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      chemistryProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+psiChemistryModel  ODEChemistryModel<gasThermoPhysics>;
+
+chemistry           on;
+
+chemistrySolver     ode;
+
+initialChemicalTimeStep 1e-7; // initially 1e-7
+
+sequentialCoeffs
+{
+    cTauChem        0.001;
+}
+
+EulerImplicitCoeffs
+{
+    cTauChem        0.05;
+    equilibriumRateLimiter off;
+}
+
+odeCoeffs
+{
+    solver          SIBS; // SIBS KRR4 RK
+    eps             5.0E-2;
+    scale           1;
+}
+
+// ************************************************************************* //

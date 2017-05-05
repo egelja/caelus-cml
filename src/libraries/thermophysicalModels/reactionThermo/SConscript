@@ -1,4 +1,4 @@
-#Copyright (C) 2014 Applied CCM
+#Copyright (C) 2016 Applied CCM
 import subprocess
 Import('globalEnv')
 
@@ -17,17 +17,10 @@ reactThermoEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this library
 #===============================================================================
-if reactThermoEnv['WHICH_OS'] == "windows" :
-  lib_inc = ['lnInclude',
-  reactThermoEnv['FLEXXX_PATH'] + '/include',
-  src + '/thermophysicalModels/specie/lnInclude',
-  src + '/thermophysicalModels/basic/lnInclude'
-  ]
-else :
-  lib_inc = ['lnInclude',
-  src + '/thermophysicalModels/specie/lnInclude',
-  src + '/thermophysicalModels/basic/lnInclude'
-  ]
+lib_inc = ['lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude'
+]
 
 reactThermoEnv.Prepend(CPPPATH = lib_inc)
 
@@ -44,25 +37,9 @@ lib_link = ['core','specie','basicThermophysicalModels']
 reactThermoEnv.Append(LIBS = lib_link)
 
 #===============================================================================
-# flex ++ - only for Linux and Mac
-#===============================================================================
-if reactThermoEnv['WHICH_OS'] == "windows" :
-  source_from_flex = ['chemistryReaders/chemkinReader/windows/chemkinLexer.cpp']
-else :
-  source_to_flex = 'chemistryReaders/chemkinReader/chemkinLexer.ll'
-  
-  flex_target = 'chemistryReaders/chemkinReader/posix/chemkinLexer.cpp'
-  
-  reactThermoEnv.CXXFile(target= flex_target, source = source_to_flex, 
-  LEXFLAGS = '-+' )
-  
-  source_from_flex = [flex_target]
-
-#===============================================================================
 # Sources for this library
 #===============================================================================
 src_files = Split("""
-  chemistryReaders/chemkinReader/chemkinReader.cpp
   chemistryReaders/chemistryReader/makeChemistryReaders.cpp
   mixtures/basicMultiComponentMixture/basicMultiComponentMixture.cpp
   combustionThermo/hCombustionThermo/hCombustionThermo.cpp
@@ -83,7 +60,7 @@ src_files = Split("""
   derivedFvPatchFields/fixedUnburntEnthalpy/fixedUnburntEnthalpyFvPatchScalarField.cpp
   derivedFvPatchFields/gradientUnburntEnthalpy/gradientUnburntEnthalpyFvPatchScalarField.cpp
   derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField.cpp
-  """) + source_from_flex
+  """)
 
 #===============================================================================
 # Build this library

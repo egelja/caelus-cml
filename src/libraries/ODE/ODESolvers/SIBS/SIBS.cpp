@@ -47,7 +47,7 @@ CML::SIBS::SIBS(const ODE& ode)
 :
     ODESolver(ode),
     a_(iMaxX_, 0.0),
-    alpha_(kMaxX_, kMaxX_, 0.0),
+    alpha_(kMaxX_, 0.0),
     d_p_(n_, kMaxX_, 0.0),
     x_p_(kMaxX_, 0.0),
     err_(kMaxX_, 0.0),
@@ -56,7 +56,7 @@ CML::SIBS::SIBS(const ODE& ode)
     ySeq_(n_, 0.0),
     yErr_(n_, 0.0),
     dfdx_(n_, 0.0),
-    dfdy_(n_, n_, 0.0),
+    dfdy_(n_, 0.0),
     first_(1),
     epsOld_(-1.0)
 {}

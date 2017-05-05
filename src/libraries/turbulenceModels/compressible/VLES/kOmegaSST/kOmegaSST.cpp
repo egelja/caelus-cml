@@ -32,25 +32,49 @@ namespace VLESModels
 defineTypeNameAndDebug(VLESKOmegaSST, 0);
 addToRunTimeSelectionTable(VLESModel, VLESKOmegaSST, dictionary);
 
-tmp<volScalarField> VLESKOmegaSST::F1(const volScalarField& CDkOmega) const
+tmp<volScalarField> VLESKOmegaSST::F1(volScalarField const& CDkOmega) const
 {
-    tmp<volScalarField> CDkOmegaPlus = max
-    (
-        CDkOmega,
-        dimensionedScalar("1.0e-10", dimDensity/sqr(dimTime), 1.0e-10)
-    );
 
-    tmp<volScalarField> arg1 = min
-    (
-        max
+    if (!delayed_)
+    {
+        return tmp<volScalarField>
         (
-            (scalar(1)/betaStar_)*sqrt(k_)/(omega_*y_),
-            scalar(500)*(mu()/rho_)/(sqr(y_)*omega_)
-        ),
-        (4*rho_*alphaOmega2_)*k_/(CDkOmegaPlus*sqr(y_))
-    );
+            new volScalarField   
+            (
+                IOobject
+                (
+                    "zero",
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                mesh_,
+                dimensionedScalar("zero", dimless, 0),
+                calculatedFvPatchScalarField::typeName
+            )
+        );
+    }    
+    else
+    {
+        tmp<volScalarField> CDkOmegaPlus = max
+        (
+            CDkOmega,
+            dimensionedScalar("1.0e-10", dimDensity/sqr(dimTime), 1.0e-10)
+        );
 
-    return tanh(pow4(arg1));
+        tmp<volScalarField> arg1 = min
+        (
+            max
+            (
+                (scalar(1)/betaStar_)*sqrt(k_)/(omega_*y_),
+                scalar(500)*(mu()/rho_)/(sqr(y_)*omega_)
+            ),
+            (4*rho_*alphaOmega2_)*k_/(CDkOmegaPlus*sqr(y_))
+        );
+
+        return tanh(pow4(arg1));
+    }
 }
 
 tmp<volScalarField> VLESKOmegaSST::F2() const
@@ -67,16 +91,22 @@ tmp<volScalarField> VLESKOmegaSST::F2() const
 
 VLESKOmegaSST::VLESKOmegaSST
 (
-    const volScalarField& rho,
-    const volVectorField& U,
-    const surfaceScalarField& phi,
-    const basicThermo& thermoPhysicalModel,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    volScalarField const& rho,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
+    basicThermo const& thermoPhysicalModel,
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     VLESModel(modelName, rho, U, phi, thermoPhysicalModel, turbulenceModelName),
-
+    delayed_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "delayed", 
+            true
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -185,7 +215,15 @@ VLESKOmegaSST::VLESKOmegaSST
             10.0
         )
     ),
-
+    Cx_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cx",
+            coeffDict_,
+            0.61
+        )
+    ),
     y_(mesh_),
 
     k_
@@ -235,6 +273,20 @@ VLESKOmegaSST::VLESKOmegaSST
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    Fr_
+    (
+        IOobject
+        (
+            "Fr",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fr", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
@@ -312,6 +364,7 @@ bool VLESKOmegaSST::read()
 {
     if (VLESModel::read())
     {
+        delayed_.readIfPresent("delayed", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -324,6 +377,7 @@ bool VLESKOmegaSST::read()
         betaStar_.readIfPresent(coeffDict());
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
+        Cx_.readIfPresent(coeffDict());
 
         return true;
     }
@@ -404,19 +458,19 @@ void VLESKOmegaSST::correct()
         divU += fvc::div(mesh_.phi());
     }
 
-    const volTensorField gradU(fvc::grad(U_));
-    const volScalarField S2(2*magSqr(dev(symm(gradU))));
+    volTensorField const gradU(fvc::grad(U_));
+    volScalarField const S2(2*magSqr(dev(symm(gradU))));
     volScalarField G(GName(), mut_*(gradU && dev(twoSymm(gradU))));
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
-    const volScalarField CDkOmega
+    volScalarField const CDkOmega
     (
         (2*rho_*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    const volScalarField F1(this->F1(CDkOmega));
+    volScalarField const F1(this->F1(CDkOmega));
 
     dimensionedScalar mutMin
     (
@@ -466,23 +520,47 @@ void VLESKOmegaSST::correct()
 
     // Re-calculate viscosity
 
-    volScalarField Fr
-    (
-        min
+    if (delayed_)
+    {
+        Fr_ = max
         (
-            scalar(1.0),
-            pow
+            min
             (
-                (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
-                /
-                (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
-                2.0
-            )
-        )
-    );
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+    else
+    {
+        Fr_ = max
+        (
+            min
+            (
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+
+    Fr_.correctBoundaryConditions();
 
     // Re-calculate viscosity
-    mut_ = Fr*rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    mut_ = Fr_*rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
     mut_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity

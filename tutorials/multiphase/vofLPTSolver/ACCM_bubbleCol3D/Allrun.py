@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -70,4 +69,7 @@ print "Executing vofLPTSolver"
 run = subprocess.Popen(['caelus.py', '-l', 'vofLPTSolver', '-parallel'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('ACCM_bubbleCol3D.foam', 'a').close()
 

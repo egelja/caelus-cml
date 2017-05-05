@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -12,7 +11,7 @@ import Caelus
 
 # Code name and version
 code = 'Caelus'
-version = '5.10'
+version = Caelus.PROJECT_VER
 
 clean = True
 build = True

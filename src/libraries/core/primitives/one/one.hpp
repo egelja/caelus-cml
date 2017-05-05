@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,40 +28,46 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef one_H
-#define one_H
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#ifndef one_HPP_
+#define one_HPP_
 
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class one Declaration
-\*---------------------------------------------------------------------------*/
 
 class one
 {
 public:
 
-    // Constructors
-
-        //- Construct null
-        one()
-        {}
+    //- Construct null
+    one() {}
 };
 
+template <typename Type>
+inline Type const& operator*(Type const& t, one const&)
+{
+    return t;
+}
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template <typename Type>
+inline Type const& operator*(one const&, Type const& t)
+{
+    return t;
+}
+
+template <typename Type>
+inline Type operator/(one const&, Type const& t)
+{
+    return scalar(1)/t;
+}
+
+
+template <typename Type>
+inline Type const& operator/(Type const& t, one const&)
+{
+    return t;
+}
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#   include "oneI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
-// ************************************************************************* //

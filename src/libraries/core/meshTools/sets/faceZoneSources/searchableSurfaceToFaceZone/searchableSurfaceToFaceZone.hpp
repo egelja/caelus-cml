@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::searchableSurfaceToFaceZone
+    CML::searchableSurfaceToFaceZone
 
 Description
     A topoSetSource to select faces based on intersection (of cell-cell

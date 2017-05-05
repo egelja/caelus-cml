@@ -21,9 +21,9 @@ Class
     CML::dcLinearUpwindVanLeer
 
 Description
-    A TVD property staisfying dcLinear upwind scheme based on the VanLeer 
-    limiter to prevent unwanted oscillations. Implementation suitable for
-    scalar fields.
+    A TVD property staisfying dcLinear upwind scheme based on the 
+    Barth-Jespersen limiter to prevent unwanted oscillations. 
+    Implementation suitable for scalar fields.
 
 SourceFiles
     dcLinearUpwindVanLeer.cpp
@@ -33,6 +33,10 @@ References
     [1] "Towards the ultimate conservative difference scheme II. Monotonicity 
          and Conservation Combined in Second Order Scheme", B. Van Leer,
          J. Comp. Phys. 14 (4), pp 361-370, 1974
+
+    [2] "Analysis of Slope Limiter on Irregular Grids", M. Berger, 
+         M.J. Aftosmis and S.M. Murman, 43rd AIAA Aerospace Sciences Meeting, 
+         Jan. 10-13, 2005, Reno, NV
 
 Author
     Aleksandar Jemcov
@@ -49,103 +53,88 @@ namespace CML
 {
 
 template<class Type>
-class dcLinearUpwindVanLeer
-:
-    public upwind<Type>
+class dcLinearUpwindVanLeer : public upwind<Type>
 {
-    // Private Data
+    word gradSchemeName_;
+    tmp<fv::gradScheme<Type> > gradScheme_;
 
-        word gradSchemeName_;
-        tmp<fv::gradScheme<Type> > gradScheme_;
+    //- Disallow default bitwise copy construct
+    dcLinearUpwindVanLeer(dcLinearUpwindVanLeer const&);
 
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        dcLinearUpwindVanLeer(const dcLinearUpwindVanLeer&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const dcLinearUpwindVanLeer&);
-
+    //- Disallow default bitwise assignment
+    void operator=(dcLinearUpwindVanLeer const&);
 
 public:
 
     //- Runtime type information
     TypeName("dcLinearUpwindVanLeer");
 
+    //- Construct from faceFlux
+    dcLinearUpwindVanLeer
+    (
+        fvMesh const& mesh,
+        surfaceScalarField const& faceFlux
+    )   :
+        upwind<Type>(mesh, faceFlux),
+        gradSchemeName_("grad"),
+        gradScheme_(new fv::gaussGrad<Type>(mesh))
+    {}
 
-    // Constructors
-
-        //- Construct from faceFlux
-        dcLinearUpwindVanLeer
+    //- Construct from Istream.
+    //  The name of the flux field is read from the Istream and looked-up
+    //  from the mesh objectRegistry
+    dcLinearUpwindVanLeer
+    (
+        fvMesh const& mesh,
+        Istream& schemeData
+    )   :
+        upwind<Type>(mesh, schemeData),
+        gradSchemeName_(schemeData),
+        gradScheme_
         (
-            const fvMesh& mesh,
-            const surfaceScalarField& faceFlux
-        )
-        :
-            upwind<Type>(mesh, faceFlux),
-            gradSchemeName_("grad"),
-            gradScheme_
+            fv::gradScheme<Type>::New
             (
-                new fv::gaussGrad<Type>(mesh)
+                mesh,
+                mesh.gradScheme(gradSchemeName_)
             )
-        {}
+        )
+    {}
 
-        //- Construct from Istream.
-        //  The name of the flux field is read from the Istream and looked-up
-        //  from the mesh objectRegistry
-        dcLinearUpwindVanLeer
+    //- Construct from faceFlux and Istream
+    dcLinearUpwindVanLeer
+    (
+        fvMesh const& mesh,
+        surfaceScalarField const& faceFlux,
+        Istream& schemeData
+    )   :
+        upwind<Type>(mesh, faceFlux, schemeData),
+        gradSchemeName_(schemeData),
+        gradScheme_
         (
-            const fvMesh& mesh,
-            Istream& schemeData
-        )
-        :
-            upwind<Type>(mesh, schemeData),
-            gradSchemeName_(schemeData),
-            gradScheme_
+            fv::gradScheme<Type>::New
             (
-                fv::gradScheme<Type>::New
-                (
-                    mesh,
-                    mesh.gradScheme(gradSchemeName_)
-                )
+                mesh,
+                mesh.gradScheme(gradSchemeName_)
             )
-        {}
-
-        //- Construct from faceFlux and Istream
-        dcLinearUpwindVanLeer
-        (
-            const fvMesh& mesh,
-            const surfaceScalarField& faceFlux,
-            Istream& schemeData
         )
-        :
-            upwind<Type>(mesh, faceFlux, schemeData),
-            gradSchemeName_(schemeData),
-            gradScheme_
-            (
-                fv::gradScheme<Type>::New
-                (
-                    mesh,
-                    mesh.gradScheme(gradSchemeName_)
-                )
-            )
-        {}
+    {}
 
     // Member Functions
 
-        //- Return false fir deferred correction
-        virtual bool corrected() const
-        {
-            return false;
-        }
+    //- Return false for deferred correction
+    virtual bool corrected() const
+    {
+        return false;
+    }
 
-        //- Return the explicit correction to the face-interpolate
-        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
-        correction
-        (
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const;
+    //- Return the explicit correction to the face-interpolate
+    virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+    correction
+    (
+        GeometricField<Type, fvPatchField, volMesh> const&
+    ) const;
+
+    scalar slopeLimiter(scalar const) const;
 
 };
 

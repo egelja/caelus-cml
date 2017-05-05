@@ -220,7 +220,7 @@ CML::radiation::viewFactor::viewFactor(const volScalarField& T)
     {
         Fmatrix_.reset
         (
-            new scalarSquareMatrix(totalNCoarseFaces_, totalNCoarseFaces_, 0.0)
+            new scalarSquareMatrix(totalNCoarseFaces_, 0.0)
         );
 
         Info<< "Insert elements in the matrix..." << endl;
@@ -265,7 +265,6 @@ CML::radiation::viewFactor::viewFactor(const volScalarField& T)
             (
                 new scalarSquareMatrix
                 (
-                    totalNCoarseFaces_,
                     totalNCoarseFaces_,
                     0.0
                 )
@@ -461,7 +460,7 @@ void CML::radiation::viewFactor::calculate()
         // Variable emissivity
         if (!constEmissivity_)
         {
-            scalarSquareMatrix C(totalNCoarseFaces_, totalNCoarseFaces_, 0.0);
+            scalarSquareMatrix C(totalNCoarseFaces_, 0.0);
 
             for (label i=0; i<totalNCoarseFaces_; i++)
             {
@@ -487,7 +486,7 @@ void CML::radiation::viewFactor::calculate()
 
             Info<< "\nSolving view factor equations..." << endl;
             // Negative coming into the fluid
-            LUsolve(C, q);
+            scalarSquareMatrix::LUsolve(C, q);
         }
         else //Constant emissivity
         {
@@ -510,7 +509,7 @@ void CML::radiation::viewFactor::calculate()
                     }
                 }
                 Info<< "\nDecomposing C matrix..." << endl;
-                LUDecompose(CLU_(), pivotIndices_);
+                scalarSquareMatrix::LUDecompose(CLU_(), pivotIndices_);
             }
 
             for (label i=0; i<totalNCoarseFaces_; i++)
@@ -533,7 +532,7 @@ void CML::radiation::viewFactor::calculate()
             }
 
             Info<< "\nLU Back substitute C matrix.." << endl;
-            LUBacksubstitute(CLU_(), pivotIndices_, q);
+            scalarSquareMatrix::LUBacksubstitute(CLU_(), pivotIndices_, q);
             iterCounter_ ++;
         }
     }

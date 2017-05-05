@@ -35,31 +35,54 @@ addToRunTimeSelectionTable(VLESModel, realizableVLESKE, dictionary);
 
 tmp<volScalarField> realizableVLESKE::F1() const
 {
-
-    const volScalarField CDkOmega
-    (
-        (2*0.856)*(fvc::grad(k_) 
-        & 
-        fvc::grad(epsilon_/k_/0.09))/(epsilon_/k_/0.09)
-    );
-
-    tmp<volScalarField> CDkOmegaPlus = max
-    (
-        CDkOmega,
-        dimensionedScalar("1.0e-10", dimDensity/sqr(dimTime), 1.0e-10)
-    );
-
-    tmp<volScalarField> arg1 = min
-    (
-        max
+    if (!delayed_)
+    {
+        return tmp<volScalarField>
         (
-            (scalar(1)/0.09)*sqrt(k_)/(epsilon_/k_*y_/0.09),
-            scalar(500)*(mu()/rho_)/(sqr(y_)*epsilon_/k_/0.09)
-        ),
-        (4*0.856)*k_/(CDkOmegaPlus*sqr(y_))
-    );
+            new volScalarField   
+            (
+                IOobject
+                (
+                    "zero",
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                mesh_,
+                dimensionedScalar("zero", dimless, 0),
+                calculatedFvPatchScalarField::typeName
+            )
+        );
+    }    
+    else
+    {
 
-    return tanh(pow4(arg1));
+        const volScalarField CDkOmega
+        (
+            (2*0.856*rho_)*(fvc::grad(k_) 
+            & 
+            fvc::grad(epsilon_/k_/0.09))/(epsilon_/k_/0.09)
+        );
+
+        tmp<volScalarField> CDkOmegaPlus = max
+        (
+            CDkOmega,
+            dimensionedScalar("1.0e-10", dimDensity/sqr(dimTime), 1.0e-10)
+        );
+
+        tmp<volScalarField> arg1 = min
+        (
+            max
+            (
+                (scalar(1)/0.09)*sqrt(k_)/(epsilon_/k_*y_/0.09),
+                scalar(500)*(mu()/rho_)/(sqr(y_)*epsilon_/k_/0.09)
+            ),
+            (4*0.856*rho_)*k_/(CDkOmegaPlus*sqr(y_))
+        );
+
+        return tanh(pow4(arg1));
+    }
 }
 
 
@@ -114,10 +137,16 @@ realizableVLESKE::realizableVLESKE
     const basicThermo& thermoPhysicalModel,
     word const& turbulenceModelName,
     word const& modelName
-)
-:
+) :
     VLESModel(modelName, rho, U, phi, thermoPhysicalModel, turbulenceModelName),
-
+    delayed_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "delayed", 
+            true
+        )
+    ),
     Cmu_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -172,6 +201,15 @@ realizableVLESKE::realizableVLESKE
             1.0
         )
     ),
+    Cx_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cx",
+            coeffDict_,
+            0.61
+        )
+    ),
     k_
     (
         IOobject
@@ -219,6 +257,20 @@ realizableVLESKE::realizableVLESKE
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    Fr_
+    (
+        IOobject
+        (
+            "Fr",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fr", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     ),
 
     y_(mesh_)
@@ -292,12 +344,14 @@ bool realizableVLESKE::read()
 {
     if (VLESModel::read())
     {
+        delayed_.readIfPresent("delayed", coeffDict());
         Cmu_.readIfPresent(coeffDict());
         A0_.readIfPresent(coeffDict());
         C2_.readIfPresent(coeffDict());
         sigmak_.readIfPresent(coeffDict());
         sigmaEps_.readIfPresent(coeffDict());
         Prt_.readIfPresent(coeffDict());
+        Cx_.readIfPresent(coeffDict());
 
         return true;
     }
@@ -390,20 +444,44 @@ void realizableVLESKE::correct()
     // Update epsilon and G at the wall
     epsilon_.boundaryField().updateCoeffs();
 
-    volScalarField Fr
-    (
-        min
+    if (delayed_)
+    {
+        Fr_ = max
         (
-            scalar(1.0),
-            pow
+            min
             (
-                (scalar(1.0)-(1-F1())*exp(-0.002*Lc/Lk()))
-                /
-                (scalar(1.0)-(1-F1())*exp(-0.002*Li()/Lk())),
-                2.0
-            )
-        )
-    );
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-(1-this->F1())*exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-(1-this->F1())*exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+    else
+    {
+        Fr_ = max
+        (
+            min
+            (
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+
+    Fr_.correctBoundaryConditions();
 
     // Dissipation equation
     tmp<fvScalarMatrix> epsEqn
@@ -413,7 +491,7 @@ void realizableVLESKE::correct()
       - fvm::Sp(fvc::div(phi_), epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
-        C1*magS*epsilon_
+        C1*magS*rho_*epsilon_
       - fvm::Sp
         (
             C2_*rho_*epsilon_/(k_ + sqrt((mu()/rho_)*epsilon_)),
@@ -447,7 +525,7 @@ void realizableVLESKE::correct()
     bound(k_, kMin_);
 
     // Re-calculate viscosity
-    mut_ = Fr*rCmu(gradU, S2, magS)*rho_*sqr(k_)/epsilon_;
+    mut_ = Fr_*rCmu(gradU, S2, magS)*rho_*sqr(k_)/epsilon_;
     mut_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity

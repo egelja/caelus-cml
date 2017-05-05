@@ -1,0 +1,51 @@
+/*---------------------------------------------------------------------------*
+Caelus 6.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     reactingSolver;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.5;
+
+deltaT          1e-5;// start with 2e-5 and then change it to 1e-6
+
+writeControl    runTime;
+
+writeInterval   5e-4;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  16;
+
+writeCompression on;
+
+timeFormat      general;
+
+timePrecision   16;
+
+runTimeModifiable true;
+
+adjustTimeStep  no; 
+
+maxCo           0.2;
+
+
+
+// ************************************************************************* //

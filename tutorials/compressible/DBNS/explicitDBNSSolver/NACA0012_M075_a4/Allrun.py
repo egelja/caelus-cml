@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -49,3 +48,6 @@ print "Calculating Mach number"
 run = subprocess.Popen(['caelus.py', '-l', 'Mach'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('NACA0012_M075_a4.foam', 'a').close()

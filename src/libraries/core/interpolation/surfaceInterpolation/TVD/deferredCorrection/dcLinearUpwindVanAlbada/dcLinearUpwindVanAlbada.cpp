@@ -21,164 +21,16 @@ License
 
 #include "dcLinearUpwindVanAlbada.hpp"
 #include "fvMesh.hpp"
+#include "vanAlbadaSlopeLimiter.hpp"
+#include "dcLinearUpwindCorrection.hpp"
 
-template<class Type>
-CML::tmp<CML::GeometricField<Type, CML::fvsPatchField, CML::surfaceMesh> >
-CML::dcLinearUpwindVanAlbada<Type>::correction
-(
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-) const
-{
-    const fvMesh& mesh = this->mesh();
-
-    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
-    (
-        new GeometricField<Type, fvsPatchField, surfaceMesh>
-        (
-            IOobject
-            (
-                "dcLinearUpwindVanAlbada::correction(" + vf.name() + ')',
-                mesh.time().timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            mesh,
-            dimensioned<Type>(vf.name(), vf.dimensions(), pTraits<Type>::zero)
-        )
-    );
-
-    GeometricField<Type, fvsPatchField, surfaceMesh>& sfCorr = tsfCorr();
-
-    const surfaceScalarField& faceFlux = this->faceFlux_;
-
-    const labelList& own = mesh.owner();
-    const labelList& nei = mesh.neighbour();
-
-    const volVectorField& C = mesh.C();
-    const surfaceVectorField& Cf = mesh.Cf();
-
-    tmp
-    <
-        GeometricField
-        <
-            typename outerProduct<vector, Type>::type,
-            fvPatchField,
-            volMesh
-        >
-    > tgradVf = gradScheme_().grad(vf, gradSchemeName_);
-
-    const GeometricField
-    <
-        typename outerProduct<vector, Type>::type,
-        fvPatchField,
-        volMesh
-    >& gradVf = tgradVf();
-
-    forAll(faceFlux, facei)
-    {
-        label cellD, cellU;
-        if (faceFlux[facei] > 0)
-        {
-            cellD = nei[facei];
-            cellU = own[facei];
-        }
-        else
-        {
-            cellD = own[facei];
-            cellU = nei[facei];
-        }
-
-        scalar r
-        ( 
-            ((scalar(2.0)*(C[cellD]-C[cellU])&gradVf[cellU])
-            /(vf[cellD]-vf[cellU] + SMALL)) 
-            +
-            scalar(1.0)
-        );
-
-        r = max(0,r);
-
-        scalar const limiter = 2*r/(r*r+1);
-
-        sfCorr[facei] = limiter*(Cf[facei] - C[cellU]) & gradVf[cellU];
-    }
-
-    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
-        GeometricBoundaryField& bSfCorr = sfCorr.boundaryField();
-
-    forAll(bSfCorr, patchi)
-    {
-        fvsPatchField<Type>& pSfCorr = bSfCorr[patchi];
-
-        if (pSfCorr.coupled())
-        {
-            const labelUList& pOwner =
-                mesh.boundary()[patchi].faceCells();
-
-            const vectorField& pCf = Cf.boundaryField()[patchi];
-
-            const scalarField& pFaceFlux = faceFlux.boundaryField()[patchi];
-
-            const scalarField vfNei
-            (
-                vf.boundaryField()[patchi].patchNeighbourField()
-            );
-
-            const Field<typename outerProduct<vector, Type>::type> pGradVfNei
-            (
-                gradVf.boundaryField()[patchi].patchNeighbourField()
-            );
-
-            // Build the d-vectors
-            vectorField pd(Cf.boundaryField()[patchi].patch().delta());
-
-            forAll(pOwner, facei)
-            {
-                label pown = pOwner[facei];
-
-                scalar r = 0;
-                scalar limiter = 0;
-                
-                if (pFaceFlux[facei] > 0)
-                {
-                    r = ((scalar(2.0)*(pCf[facei]-C[pown])&gradVf[pown])
-                        /(vfNei[facei]-vf[pown] + SMALL)) 
-                        +
-                        scalar(1.0);
-
-                    r = max(0,r);
-                    
-                    limiter = 2*r/(r*r+1);
-
-                    pSfCorr[facei] = limiter*(pCf[facei] - C[pown]) 
-                                   & gradVf[pown];
-                }
-                else
-                {
-                    r = ((scalar(2.0)*(pCf[facei]-pd[facei]-C[pown])
-                        &pGradVfNei[facei])/(vf[pown]-vfNei[facei] + SMALL)) 
-                        +
-                        scalar(1.0);
-
-                    r = max(0,r);
-                    
-                    limiter = 2*r/(r*r+1);
-
-                    pSfCorr[facei] = limiter*(pCf[facei] - pd[facei] - C[pown]) 
-                                   & pGradVfNei[facei];
-                }
-            }
-        }
-    }
-
-    return tsfCorr;
-}
+makeVanAlbadaSlopeLimiter(dcLinearUpwind)
+makeDCLinearUpwindCorrection(VanAlbada)
 
 
 namespace CML
 {
     makelimitedSurfaceInterpolationTypeScheme(dcLinearUpwindVanAlbada, scalar)
+    makelimitedSurfaceInterpolationTypeScheme(dcLinearUpwindVanAlbada, vector)
 }
 

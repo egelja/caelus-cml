@@ -1,4 +1,4 @@
-#Copyright (C) 2014 Applied CCM
+#Copyright (C) 2014-2016 Applied CCM
 import os
 import sys
 import platform
@@ -157,7 +157,7 @@ elif which_os == "darwin" :
   GFLAGS = '-O3 -fPIC -std=c99 '\
   + ' -Wall -Wno-unused-variable -Wno-sometimes-uninitialized -pedantic '\
   + ' -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
-  + ' -DDARWIN -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
+  + ' -DDARWIN -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS -D__thread='
 #end of macosx compiler flags
 
 else :

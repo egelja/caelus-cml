@@ -260,8 +260,6 @@ SpalartAllmaras::SpalartAllmaras
     printCoeffs();
 }
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 tmp<volScalarField> SpalartAllmaras::DnuTildaEff() const
 {
     return tmp<volScalarField>

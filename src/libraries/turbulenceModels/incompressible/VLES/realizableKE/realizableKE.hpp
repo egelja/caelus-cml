@@ -55,15 +55,19 @@ class realizableVLESKE : public VLESModel
 
 protected:
 
+    Switch delayed_;
+
     dimensionedScalar Cmu_;
     dimensionedScalar A0_;
     dimensionedScalar C2_;
     dimensionedScalar sigmak_;
     dimensionedScalar sigmaEps_;
+    dimensionedScalar Cx_;
 
     volScalarField k_;
     volScalarField epsilon_;
     volScalarField nut_;
+    volScalarField Fr_;
 
     //- Wall distance field
     //  Note: different to wall distance in parent VLESModel

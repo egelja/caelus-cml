@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,157 +28,14 @@ Author
 #include "mdLimiter.hpp"
 #include "fvMesh.hpp"
 #include "linearUpwindMDBJ.hpp"
+#include "mdLinearUpwindCorrection.hpp"
 
-template<class Type>
-CML::tmp<CML::GeometricField<Type, CML::fvsPatchField, CML::surfaceMesh> >
-CML::linearUpwindMDBJ<Type>::correction
-(
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-) const
-{
-    fvMesh const& mesh = this->mesh();
-
-    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
-    (
-        new GeometricField<Type, fvsPatchField, surfaceMesh>
-        (
-            IOobject
-            (
-                "linearUpwindMDBJ::correction(" + vf.name() + ')',
-                mesh.time().timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            mesh,
-            dimensioned<Type>
-            (
-                vf.name(),
-                vf.dimensions(),
-                pTraits<Type>::zero
-            )
-        )
-    );
-
-    GeometricField<Type, fvsPatchField, surfaceMesh>& sfCorr = tsfCorr();
-
-    surfaceScalarField const& faceFlux = this->faceFlux_;
-
-    labelList const& own = mesh.owner();
-    labelList const& nei = mesh.neighbour();
-
-    volVectorField const& C = mesh.C();
-    surfaceVectorField const& Cf = mesh.Cf();
-
-    tmp
-    <
-        GeometricField
-        <
-            typename outerProduct<vector, Type>::type,
-            fvPatchField,
-            volMesh
-        >
-    > tgradVf = gradScheme_().grad(vf, gradSchemeName_);
-
-    const GeometricField
-    <
-        typename outerProduct<vector, Type>::type,
-        fvPatchField,
-        volMesh
-    >& gradVf = tgradVf();
-
-    MDLimiter<BJLimiter,volScalarField> scalarLimiter
-    (
-        mesh,
-        vf
-    );
-
-    scalarLimiter.limitField(gradVf);
-
-    volScalarField const& limiter = scalarLimiter.getPhiLimiter();
-
-    forAll(faceFlux, facei)
-    {
-        label cellU;
-        if (faceFlux[facei] > 0)
-        {
-            cellU = own[facei];
-        }
-        else
-        {
-            cellU = nei[facei];
-        }
-
-        sfCorr[facei] += 
-            limiter[cellU]*(Cf[facei] - C[cellU]) & gradVf[cellU];
-
-    }
-
-    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
-        GeometricBoundaryField& bSfCorr = sfCorr.boundaryField();
-
-    forAll(bSfCorr, patchi)
-    {
-        fvsPatchField<Type>& pSfCorr = bSfCorr[patchi];
-
-        if (pSfCorr.coupled())
-        {
-            labelUList const& pOwner =
-                mesh.boundary()[patchi].faceCells();
-
-            vectorField const& pCf = Cf.boundaryField()[patchi];
-
-            const scalarField& pFaceFlux = faceFlux.boundaryField()[patchi];
-
-            scalarField const vfNei
-            (
-                vf.boundaryField()[patchi].patchNeighbourField()
-            );
-
-            scalarField const limiterNei
-            (
-                limiter.boundaryField()[patchi].patchNeighbourField()
-            );
-
-            const Field<typename outerProduct<vector, Type>::type> pGradVfNei
-            (
-                gradVf.boundaryField()[patchi].patchNeighbourField()
-            );
-
-            // Build the d-vectors
-            vectorField const pd(Cf.boundaryField()[patchi].patch().delta());
-
-            forAll(pOwner, facei)
-            {
-                label pown = pOwner[facei];
-
-                if (pFaceFlux[facei] > 0)
-                {
-                    pSfCorr[facei] += 
-                        limiter[pown]*(pCf[facei] - C[pown]) 
-                      & gradVf[pown];                    
-                }
-                else
-                {
-                    pSfCorr[facei] += 
-                        limiterNei[facei]*(pCf[facei] - pd[facei] - C[pown])
-                      & pGradVfNei[facei];
-
-                }
-            }
-
-        }
-    }
-
-    return tsfCorr;
-}
-
-
+makeMDLinearUpwindCorrection(BJ)
 
 namespace CML
 {
     makelimitedSurfaceInterpolationTypeScheme(linearUpwindMDBJ, scalar)
+    makelimitedSurfaceInterpolationTypeScheme(linearUpwindMDBJ, vector)
 }
 
 

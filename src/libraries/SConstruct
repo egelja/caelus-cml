@@ -367,7 +367,6 @@ subdirs2 = [
   'parallel/decompose/decompose',
   'parallel/decompose/decompositionMethods',
   'parallel/decompose/scotchDecomp',
-
   'parallel/decompose/metisDecomp',
   'parallel/reconstruct/reconstruct',
   'parallel/distributed',

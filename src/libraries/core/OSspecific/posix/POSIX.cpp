@@ -1334,4 +1334,9 @@ CML::scalar CML::osRandomDouble()
 }
 
 
+std::string CML::toUnixPath(const std::string & path)
+{
+  return path;
+}
+
 // ************************************************************************* //

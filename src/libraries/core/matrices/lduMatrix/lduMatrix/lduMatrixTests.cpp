@@ -86,7 +86,7 @@ bool CML::lduMatrix::solverPerformance::checkConvergence
             << endl;
     }
 
-    if (finalResidual_ < Tolerance)
+    if (finalResidual_ < Tolerance && iter >= minIter)
     {
         converged_ = true;
     }

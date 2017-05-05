@@ -56,54 +56,12 @@
 
     tmp<surfaceScalarField> Uf = phi/fvc::interpolate(rho);
 
-    surfaceScalarField phid
+    surfaceScalarField phiHat
     (
-        "phid",
+        "phiHat",
         fvc::interpolate(psi)
        *(
             (fvc::interpolate(U) & mesh.Sf())
         )
     );
 
-
-    surfaceScalarField phis
-    (
-        "phis",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
-
-    surfaceScalarField phil
-    (
-        "phil",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
-
-    surfaceScalarField left
-    (
-        IOobject
-        (
-            "left",
-            runTime.timeName(),
-            mesh
-        ),
-        mesh,
-        dimensionedScalar("left", dimless, 1.0)
-    );
-
-    surfaceScalarField right
-    (
-        IOobject
-        (
-            "right",
-            runTime.timeName(),
-            mesh
-        ),
-        mesh,
-        dimensionedScalar("right", dimless, -1.0)
-    );

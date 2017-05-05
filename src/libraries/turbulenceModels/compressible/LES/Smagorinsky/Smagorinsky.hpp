@@ -105,31 +105,29 @@ public:
 
     // Member Functions
 
-        //- Return SGS kinetic energy
-        //  calculated from the given velocity gradient
-        tmp<volScalarField> k(const tmp<volTensorField>& gradU) const
-        {
-            volSymmTensorField D(symm(gradU));
+    //  calculated from the given velocity gradient
+    tmp<volScalarField> k(const tmp<volTensorField>& gradU) const
+    {
+        volSymmTensorField D(symm(gradU));
 
-            volScalarField a(ce_/delta());
-            volScalarField b((2.0/3.0)*tr(D));
-            volScalarField c(2*ck_*delta()*(dev(D) && D));
+        volScalarField a(ce_/delta());
+        volScalarField b((2.0/3.0)*tr(D));
+        volScalarField c(2*ck_*delta()*(dev(D) && D));
 
-            return sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a));
-        }
+        return sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a));
+    }
 
-        //- Return SGS kinetic energy
-        virtual tmp<volScalarField> k() const
-        {
-            return k(fvc::grad(U()));
-        }
+    //- Return SGS kinetic energy
+    virtual tmp<volScalarField> k() const
+    {
+        return k(fvc::grad(U()));
+    }
 
+    //- Correct Eddy-Viscosity and related properties
+    virtual void correct(const tmp<volTensorField>& gradU);
 
-        //- Correct Eddy-Viscosity and related properties
-        virtual void correct(const tmp<volTensorField>& gradU);
-
-        //- Read LESProperties dictionary
-        virtual bool read();
+    //- Read LESProperties dictionary
+    virtual bool read();
 };
 
 

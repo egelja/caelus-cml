@@ -79,7 +79,17 @@ public:
     {}
 
     //- Return SGS kinetic energy
-    virtual tmp<volScalarField> k() const;
+    virtual tmp<volScalarField> k() const
+    {
+        volSymmTensorField D(symm(fvc::grad(U())));
+        scalar const ce = 1.048;
+        volScalarField const ck(C(fvc::grad(U()))*ce);
+        volScalarField const a(ce/delta());
+        volScalarField const b((2.0/3.0)*tr(D));
+        volScalarField const c(2*ck*delta()*(dev(D) && D));
+
+        return sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a));
+    }
 
     //- Correct Eddy-Viscosity and related properties
     virtual void correct(tmp<volTensorField> const& gradU);

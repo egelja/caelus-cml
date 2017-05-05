@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "SIBS.hpp"
+#include "simpleMatrix.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,14 +50,14 @@ void CML::SIBS::SIMPR
     }
 
     labelList pivotIndices(n_);
-    LUDecompose(a, pivotIndices);
+    scalarSquareMatrix::LUDecompose(a, pivotIndices);
 
     for (register label i=0; i<n_; i++)
     {
         yEnd[i] = h*(dydx[i] + h*dfdx[i]);
     }
 
-    LUBacksubstitute(a, pivotIndices, yEnd);
+    scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
 
     scalarField del(yEnd);
     scalarField ytemp(n_);
@@ -77,7 +78,7 @@ void CML::SIBS::SIMPR
             yEnd[i] = h*yEnd[i] - del[i];
         }
 
-        LUBacksubstitute(a, pivotIndices, yEnd);
+        scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
 
         for (register label i=0; i<n_; i++)
         {
@@ -93,7 +94,7 @@ void CML::SIBS::SIMPR
         yEnd[i] = h*yEnd[i] - del[i];
     }
 
-    LUBacksubstitute(a, pivotIndices, yEnd);
+    scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
 
     for (register label i=0; i<n_; i++)
     {

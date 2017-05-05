@@ -24,7 +24,7 @@ Group
     grpJobControlFunctionObjects
 
 Description
-    Watches for presence of the named file in the $FOAM_CASE directory
+    Watches for presence of the named file in the $CAELUS_CASE directory
     and aborts the calculation if it is present.
 
     Currently the following action types are supported:

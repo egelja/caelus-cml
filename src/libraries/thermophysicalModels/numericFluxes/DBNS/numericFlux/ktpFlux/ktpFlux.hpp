@@ -25,6 +25,7 @@ Reference
     [1] A. Kurganov, S. Noelle and G. Petrova: "Semi-discrete central-upwind 
         scheme for hyperbolic conservation laws and Hamilton-Jacobi equations. 
         In: SIAM J. Sci. Comput., 23, 2001, pp. 707–740
+
     [2] A. Kurganov and E. Tadmor: "New high-resolution central schemes for 
         nonlinear conservation laws and convection-diffusion equations". 
         In: J. Comput. Phys., 160, 2000, pp. 241–282.

@@ -31,7 +31,8 @@ src + '/core/lnInclude',
 src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/roeFDSFlux',
 src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/llfFlux',
 src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/hllcFlux',
-src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/ktpFlux'
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/ktpFlux',
+src + '/thermophysicalModels/numericFluxes/DBNS/numericFlux/dwFlux'
 ]
 explicitDBNSSolverEnv.Prepend(CPPPATH = lib_inc)
 

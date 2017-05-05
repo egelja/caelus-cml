@@ -173,7 +173,7 @@ CML::simpleMatrix<Type>::simpleMatrix
     const Type& sourceVal
 )
 :
-    scalarSquareMatrix(mSize, mSize, coeffVal),
+    scalarSquareMatrix(mSize, coeffVal),
     source_(mSize, sourceVal)
 {}
 
@@ -205,8 +205,8 @@ CML::Field<Type> CML::simpleMatrix<Type>::solve() const
 {
     scalarSquareMatrix tmpMatrix = *this;
     Field<Type> sourceSol = source_;
-
-    CML::solve(tmpMatrix, sourceSol);
+    
+    scalarSquareMatrix::solve(tmpMatrix, sourceSol);
 
     return sourceSol;
 }
@@ -218,7 +218,7 @@ CML::Field<Type> CML::simpleMatrix<Type>::LUsolve() const
     scalarSquareMatrix luMatrix = *this;
     Field<Type> sourceSol = source_;
 
-    CML::LUsolve(luMatrix, sourceSol);
+    scalarSquareMatrix::LUsolve(luMatrix, sourceSol);
 
     return sourceSol;
 }

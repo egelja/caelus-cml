@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -61,5 +60,6 @@ run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], she
 run.wait()
 run = None
 
-
+# Create stub file for paraview
+open('motorBike.foam', 'a').close()
 

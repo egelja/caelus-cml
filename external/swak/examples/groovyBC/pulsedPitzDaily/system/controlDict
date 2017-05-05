@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -473,8 +473,8 @@ functions
                         type pythonIntegration;
                         startCode "componentSum=0";
                         endCode "";
-                        executeFile "$FOAM_CASE/system/calcHistogram.py";
-                        writeFile "$FOAM_CASE/system/calcHistogram2D.py";
+                        executeFile "$CAELUS_CASE/system/calcHistogram.py";
+                        writeFile "$CAELUS_CASE/system/calcHistogram2D.py";
                         swakToPythonNamespaces (
                             pythonStatistics
                         );
@@ -495,7 +495,7 @@ functions
                     }
                 }
                 readDuringConstruction true;
-                conditionFile "$FOAM_CASE/system/checkForNumpy.py";
+                conditionFile "$CAELUS_CASE/system/checkForNumpy.py";
                 initCode "";
             }
         }

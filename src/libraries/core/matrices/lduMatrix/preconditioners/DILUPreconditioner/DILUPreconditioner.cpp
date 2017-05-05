@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014  - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,20 +34,19 @@ namespace CML
 
 CML::DILUPreconditioner::DILUPreconditioner
 (
-    const lduMatrix::solver& sol,
-    const dictionary&
-)
-:
+    lduMatrix::solver const& sol,
+    dictionary const&
+) :
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag())
 {
-    calcReciprocalD(rD_, sol.matrix());
+    this->approximateInverse(rD_, sol.matrix());
 }
 
-void CML::DILUPreconditioner::calcReciprocalD
+void CML::DILUPreconditioner::approximateInverse
 (
     scalarField& rD,
-    const lduMatrix& matrix
+    lduMatrix const& matrix
 )
 {
     scalar* RESTRICT rDPtr = rD.begin();
@@ -64,7 +63,6 @@ void CML::DILUPreconditioner::calcReciprocalD
         rDPtr[uPtr[face]] -= upperPtr[face]*lowerPtr[face]/rDPtr[lPtr[face]];
     }
 
-
     // Calculate the reciprocal of the preconditioned diagonal
     register label nCells = rD.size();
 
@@ -77,19 +75,19 @@ void CML::DILUPreconditioner::calcReciprocalD
 void CML::DILUPreconditioner::precondition
 (
     scalarField& w,
-    const scalarField& r,
-    const direction
+    scalarField const& r,
+    direction const
 ) const
 {
     scalar* RESTRICT wPtr = w.begin();
-    const scalar* RESTRICT rPtr = r.begin();
-    const scalar* RESTRICT rDPtr = rD_.begin();
+    scalar const* RESTRICT rPtr = r.begin();
+    scalar const* RESTRICT rDPtr = rD_.begin();
 
-    const label* const RESTRICT uPtr =
+    label const* const RESTRICT uPtr =
         solver_.matrix().lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr =
+    label const* const RESTRICT lPtr =
         solver_.matrix().lduAddr().lowerAddr().begin();
-    const label* const RESTRICT losortPtr =
+    label const* const RESTRICT losortPtr =
         solver_.matrix().lduAddr().losortAddr().begin();
 
     const scalar* const RESTRICT upperPtr =
@@ -105,7 +103,6 @@ void CML::DILUPreconditioner::precondition
     {
         wPtr[cell] = rDPtr[cell]*rPtr[cell];
     }
-
 
     register label sface;
 
@@ -126,13 +123,13 @@ void CML::DILUPreconditioner::precondition
 void CML::DILUPreconditioner::preconditionT
 (
     scalarField& wT,
-    const scalarField& rT,
-    const direction
+    scalarField const& rT,
+    direction const
 ) const
 {
     scalar* RESTRICT wTPtr = wT.begin();
-    const scalar* RESTRICT rTPtr = rT.begin();
-    const scalar* RESTRICT rDPtr = rD_.begin();
+    scalar const* RESTRICT rTPtr = rT.begin();
+    scalar const* RESTRICT rDPtr = rD_.begin();
 
     const label* const RESTRICT uPtr =
         solver_.matrix().lduAddr().upperAddr().begin();

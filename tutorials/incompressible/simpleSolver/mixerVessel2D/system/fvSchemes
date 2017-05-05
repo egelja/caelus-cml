@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -27,9 +27,9 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss limitedLinearV 1;
-    div(phi,k)      Gauss limitedLinear 1;
-    div(phi,epsilon) Gauss limitedLinear 1;
+    div(phi,U)      Gauss linearBJ;
+    div(phi,k)      Gauss linearBJ;
+    div(phi,epsilon) Gauss linearBJ;
     div((nuEff*dev(T(grad(U))))) Gauss linear;
 }
 

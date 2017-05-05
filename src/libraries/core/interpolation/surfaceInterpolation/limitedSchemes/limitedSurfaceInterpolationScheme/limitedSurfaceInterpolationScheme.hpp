@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -366,9 +367,8 @@ tmp<surfaceScalarField> limitedSurfaceInterpolationScheme<Type>::weights
 
     forAll(pWeights, face)
     {
-        pWeights[face] =
-            pWeights[face]*CDweights[face]
-          + (1.0 - pWeights[face])*pos(faceFlux_[face]);
+        pWeights[face] = pos(faceFlux_[face])
+            + pWeights[face]*(CDweights[face]-pos(faceFlux_[face]));
     }
 
     surfaceScalarField::GeometricBoundaryField& bWeights =
@@ -383,9 +383,8 @@ tmp<surfaceScalarField> limitedSurfaceInterpolationScheme<Type>::weights
 
         forAll(pWeights, face)
         {
-            pWeights[face] =
-                pWeights[face]*pCDweights[face]
-              + (1.0 - pWeights[face])*pos(pFaceFlux[face]);
+            pWeights[face] = pos(pFaceFlux[face])
+                + pWeights[face]*(pCDweights[face]-pos(pFaceFlux[face]));
         }
     }
 

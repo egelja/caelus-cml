@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,14 +19,17 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
+
     CML::DICPreconditioner
 
 Description
+
     Simplified diagonal-based incomplete Cholesky preconditioner for symmetric
     matrices (symmetric equivalent of DILU).  The reciprocal of the
     preconditioned diagonal is calculated and stored.
 
 SourceFiles
+
     DICPreconditioner.cpp
 
 References
@@ -49,26 +52,17 @@ References
 namespace CML
 {
 
-class DICPreconditioner
-:
-    public lduMatrix::preconditioner
+class DICPreconditioner : public lduMatrix::preconditioner
 {
-    // Private data
+    scalarField rD_;
+    scalarField rDuUpper_;
+    scalarField rDlUpper_;
 
-        //- The reciprocal preconditioned diagonal
-        scalarField rD_;
-        //- Cached arrays
-        scalarField rDuUpper_;
-        scalarField rDlUpper_;
+    //- Disallow default bitwise copy construct
+    DICPreconditioner(const DICPreconditioner&);
 
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        DICPreconditioner(const DICPreconditioner&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const DICPreconditioner&);
+    //- Disallow default bitwise assignment
+    void operator=(const DICPreconditioner&);
 
 public:
 
@@ -77,27 +71,28 @@ public:
 
     // Constructors
 
-        //- Construct from matrix components and preconditioner solver controls
-        DICPreconditioner
-        (
-            const lduMatrix::solver&,
-            const dictionary& solverControlsUnused
-        );
+    //- Construct from matrix components and preconditioner solver controls
+    DICPreconditioner
+    (
+        lduMatrix::solver const&,
+        dictionary const& solverControlsUnused
+    );
 
     //- Destructor
     virtual ~DICPreconditioner()
     {}
 
-
     // Member Functions
 
-        //- Return w the preconditioned form of residual r
-        virtual void precondition
-        (
-            scalarField& w,
-            const scalarField& r,
-            const direction cmpt=0
-        ) const;
+    void approximateInverse();
+
+    //- Return w the preconditioned form of residual r
+    virtual void precondition
+    (
+        scalarField& w,
+        scalarField const& r,
+        direction const cmpt=0
+    ) const;
 };
 
 }

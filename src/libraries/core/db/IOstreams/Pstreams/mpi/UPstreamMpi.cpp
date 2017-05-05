@@ -53,13 +53,30 @@ void CML::UPstream::addValidParOptions(HashTable<string>& validParOptions)
     validParOptions.insert("p4wd", "directory");
     validParOptions.insert("p4amslave", "");
     validParOptions.insert("p4yourname", "hostname");
-    validParOptions.insert("GAMMANP", "number of instances");
     validParOptions.insert("machinefile", "machine file");
+//	validParOptions.insert("np_user", "number of users processors");
 }
 
 
 bool CML::UPstream::init(int& argc, char**& argv)
 {
+
+//    int n_user_procs = 0;
+
+//    string npString("-np_user");
+
+//    for (label i = 0; i < argc; i++)
+//    {
+//        if (argv[i] == npString)
+//        {
+//            if (i+1 < argc)
+//            {
+//                n_user_procs = atoi(argv[i+1]);
+//                break;
+//            }
+//        }
+//    }
+
     MPI_Init(&argc, &argv);
 
     int numprocs;
@@ -72,25 +89,59 @@ bool CML::UPstream::init(int& argc, char**& argv)
             << " myProcNo:" << myProcNo_ << endl;
     }
 
-    if (numprocs <= 1)
-    {
-        FatalErrorIn("UPstream::init(int& argc, char**& argv)")
-            << "bool IPstream::init(int& argc, char**& argv) : "
-               "attempt to run parallel on 1 processor"
-            << CML::abort(FatalError);
-    }
+	if (numprocs <= 1)
+	{
+	    FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+	        << "bool IPstream::init(int& argc, char**& argv) : "
+	           "attempt to run parallel on 1 processor"
+	        << CML::abort(FatalError);
+	}
 
-    procIDs_.setSize(numprocs);
+	procIDs_.setSize(numprocs);
 
-    forAll(procIDs_, procNo)
-    {
-        procIDs_[procNo] = procNo;
-    }
+	forAll(procIDs_, procNo)
+	{
+	    procIDs_[procNo] = procNo;
+	}
 
     setParRun();
 
+//    int numProcsWorld;
+//    MPI_Comm_size(MPI_COMM_WORLD, &numProcsWorld);
+//    MPI_Comm_rank(MPI_COMM_WORLD, &myProcNo_);
+
+//    // Set first communicator as  COMM_WORLD
+//    PstreamGlobals::MPICommunicators_.setSize(2);
+//    PstreamGlobals::MPICommunicators_[0] = MPI_COMM_WORLD;
+
+//	int n_caelus_procs = numProcsWorld - n_user_procs;
+
+//    if (n_caelus_procs < 2)
+//    {
+//        FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+//            << "bool IPstream::init(int& argc, char**& argv) : "
+//               "not enough Caelus processors"
+//            << CML::abort(FatalError);
+//    }
+
+//	MPI_Comm MPI_COMM_CAELUS;
+
+//	int colour = 0;
+//	if(myProcNo_ >= n_caelus_procs)
+//	{
+//		// User processors
+//		colour = 1;
+//	}
+
+//    int numprocs;	
+//	MPI_Comm_split(MPI_COMM_WORLD, colour, myProcNo_, &MPI_COMM_CAELUS);
+//    MPI_Comm_size(MPI_COMM_CAELUS, &numprocs);
+    // Set first communicator as  COMM_WORLD
+//    PstreamGlobals::MPICommunicators_[1] = MPI_COMM_CAELUS;
+
+
 #   ifndef SGIMPI
-    string bufferSizeName = getEnv("MPI_BUFFER_SIZE");
+	string bufferSizeName = getEnv("MPI_BUFFER_SIZE");
 
     if (bufferSizeName.size())
     {
@@ -110,14 +161,12 @@ bool CML::UPstream::init(int& argc, char**& argv)
     }
 #   endif
 
-    int processorNameLen;
+	int processorNameLen;
     char processorName[MPI_MAX_PROCESSOR_NAME];
 
     MPI_Get_processor_name(processorName, &processorNameLen);
 
-    //signal(SIGABRT, stop);
-
-    // Now that nprocs is known construct communication tables.
+    // Now that nprocs is known construct communication tables.	
     initCommunicationSchedule();
 
     return true;
@@ -159,6 +208,7 @@ void CML::UPstream::exit(int errnum)
     else
     {
         MPI_Abort(MPI_COMM_WORLD, errnum);
+//        MPI_Abort(PstreamGlobals::MPICommunicators_[1], errnum);
     }
 }
 
@@ -166,6 +216,7 @@ void CML::UPstream::exit(int errnum)
 void CML::UPstream::abort()
 {
     MPI_Abort(MPI_COMM_WORLD, 1);
+//    MPI_Abort(PstreamGlobals::MPICommunicators_[1], 1);
 }
 
 
@@ -204,6 +255,7 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                         UPstream::procID(slave),
                         tag,
                         MPI_COMM_WORLD,
+//                        PstreamGlobals::MPICommunicators_[1],
                         MPI_STATUS_IGNORE
                     )
                 )
@@ -230,6 +282,7 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     UPstream::procID(UPstream::masterNo()),
                     tag,
                     MPI_COMM_WORLD
+//                    PstreamGlobals::MPICommunicators_[1]
                 )
             )
             {
@@ -261,6 +314,7 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                         UPstream::procID(slave),
                         tag,
                         MPI_COMM_WORLD
+//                        PstreamGlobals::MPICommunicators_[1]
                     )
                 )
                 {
@@ -284,6 +338,7 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     UPstream::procID(UPstream::masterNo()),
                     tag,
                     MPI_COMM_WORLD,
+//                    PstreamGlobals::MPICommunicators_[1],
                     MPI_STATUS_IGNORE
                 )
             )
@@ -300,6 +355,7 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
     {
         scalar sum;
         MPI_Allreduce(&Value, &sum, 1, MPI_SCALAR, MPI_SUM, MPI_COMM_WORLD);
+//        MPI_Allreduce(&Value, &sum, 1, MPI_SCALAR, MPI_SUM, PstreamGlobals::MPICommunicators_[1]);
         Value = sum;
 
         /*

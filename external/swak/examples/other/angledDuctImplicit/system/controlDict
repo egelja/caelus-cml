@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -793,7 +793,7 @@ functions
             {
                 name velClass;
                 outOfBounds clamp;
-                fileName "$FOAM_CASE/velClass.data";
+                fileName "$CAELUS_CASE/velClass.data";
             }
         );
         expression "velClass(mag(U))";
@@ -1071,7 +1071,7 @@ functions
                 isParallelized true;
 
                 conditionCode "return abs(runTime % 3)<1e-5";
-                //                conditionFile "$FOAM_CASE/test.py"
+                //                conditionFile "$CAELUS_CASE/test.py"
 
 
                 //                writeDebug true;

@@ -126,6 +126,28 @@ CML::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
                 << exit(FatalError);
         }
 
+        cellIDs = cellZones()[zoneID];
+    }
+
+    if (cellSetName != "none")
+    {
+        Info<< "Applying solid body motion to cellSet " << cellSetName
+            << endl;
+
+        cellSet set(*this, cellSetName);
+
+        cellIDs = set.toc();
+    }
+
+    label nCells = returnReduce(cellIDs.size(), sumOp<label>());
+    moveAllCells_ = nCells == 0;
+
+    if (moveAllCells_)
+    {
+        Info<< "Applying solid body motion to entire mesh" << endl;
+    }
+    else
+    {
         // collect point IDs of points in cell zone
 
         boolList movePts(nPoints(), false);

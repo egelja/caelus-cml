@@ -31,6 +31,7 @@ Author
 #include "llfFlux.hpp"
 #include "hllcFlux.hpp"
 #include "ktpFlux.hpp"
+#include "dwFlux.hpp"
 
 namespace CML
 {
@@ -325,6 +326,84 @@ namespace CML
  
     public:
         ktpFluxVLimiter
+        (
+            volScalarField const& p,
+            volVectorField const& U,
+            volScalarField const& T,
+            basicThermo& thermo
+        ) : 
+            RiemannSolver(),
+            flux_(p,U,T,thermo)
+        {}
+
+        void update()
+        {
+            this->flux_.update();
+        }
+
+        surfaceScalarField const & rhoFlux() const
+        {
+            return this->flux_.rhoFlux();
+        }
+
+        surfaceVectorField const& rhoUFlux() const
+        {
+            return this->flux_.rhoUFlux();
+        }
+
+        surfaceScalarField const& rhoEFlux() const
+        {
+            return this->flux_.rhoEFlux();
+        }
+
+    };
+
+    class dwFluxBJLimiter : public RiemannSolver
+    {
+    private:
+        numericFlux<dwFlux,BJLimiter> flux_;
+ 
+    public:
+        dwFluxBJLimiter
+        (
+            volScalarField const& p,
+            volVectorField const& U,
+            volScalarField const& T,
+            basicThermo& thermo
+        ) : 
+            RiemannSolver(),
+            flux_(p,U,T,thermo)
+        {}
+
+        void update()
+        {
+            this->flux_.update();
+        }
+
+        surfaceScalarField const & rhoFlux() const
+        {
+            return this->flux_.rhoFlux();
+        }
+
+        surfaceVectorField const& rhoUFlux() const
+        {
+            return this->flux_.rhoUFlux();
+        }
+
+        surfaceScalarField const& rhoEFlux() const
+        {
+            return this->flux_.rhoEFlux();
+        }
+
+    };
+
+    class dwFluxVLimiter : public RiemannSolver
+    {
+    private:
+      numericFlux<dwFlux,VLimiter> flux_;
+ 
+    public:
+        dwFluxVLimiter
         (
             volScalarField const& p,
             volVectorField const& U,

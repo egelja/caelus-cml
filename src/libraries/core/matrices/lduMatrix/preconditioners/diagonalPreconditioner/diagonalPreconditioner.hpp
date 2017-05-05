@@ -51,15 +51,12 @@ References
 namespace CML
 {
 
-class diagonalPreconditioner
-:
-    public lduMatrix::preconditioner
+class diagonalPreconditioner : public lduMatrix::preconditioner
 {
     // Private data
 
     //- The reciprocal diagonal
     scalarField rD_;
-
 
     // Private Member Functions
 
@@ -84,9 +81,10 @@ public:
     virtual ~diagonalPreconditioner()
     {}
 
-
     // Member Functions
 
+    void appInv();
+  
     //- Return w the preconditioned form of residual r
     virtual void precondition
     (

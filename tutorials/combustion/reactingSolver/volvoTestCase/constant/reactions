@@ -1,0 +1,22 @@
+species
+5
+(
+O2
+H2O
+CO2
+N2
+C3H8
+)
+;
+
+reactions
+{
+    un-named-reaction-0
+    {
+        type            irreversibleArrheniusReaction;
+        reaction        "C3H8 + 5O2^0.5 = 3CO2 + 4H2O";
+        A               4.74342e+08;
+        beta            0;
+        Ta              10063.8;
+    }
+}

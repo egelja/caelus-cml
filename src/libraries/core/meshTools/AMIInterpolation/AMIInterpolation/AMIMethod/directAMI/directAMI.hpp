@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::directAMI
+    CML::directAMI
 
 Description
     Direct mapped Arbitrary Mesh Interface (AMI) method

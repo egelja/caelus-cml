@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM 
-
+-------------------------------------------------------------------------------
 Description
     Spalart-Allmaras 1-eqn mixing-length model for incompressible external
     flows accounting for curvature effects (SA-RC).

@@ -50,6 +50,12 @@ Author
     ktpFluxBJLimiter   ktpfbjLmtr(p,U,T,thermo());
     RiemannSolver*     kfbjPtr = &ktpfbjLmtr;
 
+    dwFluxVLimiter     dwfvLmtr(p,U,T,thermo());
+    RiemannSolver*     dwvPtr = &dwfvLmtr;
+
+    dwFluxBJLimiter    dwfbjLmtr(p,U,T,thermo());
+    RiemannSolver*     dwbjPtr = &dwfbjLmtr;
+
 
     dbRegistrator<RiemannSolver*> roeFluxVLimiter
     (
@@ -155,7 +161,33 @@ Author
         kfbjPtr
     );
 
-    Info << "Available numeric fluxes : roeFlux, llfFlux, hllc, ktpFlux" << endl;
+    dbRegistrator<RiemannSolver*> dwFluxVLimiter
+    (
+        IOobject
+        (
+            "dwFluxVLimiter",
+            runTime.constant(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        dwvPtr
+    );
+
+    dbRegistrator<RiemannSolver*> dwFluxBJLimiter
+    (
+        IOobject
+        (
+            "dwFluxBJLimiter",
+            runTime.constant(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        dwbjPtr
+    );
+
+    Info << "Available numeric fluxes : roeFlux, llfFlux, hllcFlux, ktpFlux, dwFlux" << endl;
     Info << "Available limiters: VLimiter, BJLimiter" << endl;
 
 

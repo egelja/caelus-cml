@@ -50,6 +50,7 @@ SourceFiles
 #include "surfaceInterpolation.hpp"
 #include "fvSchemes.hpp"
 #include "fvSolution.hpp"
+#include "fvMatricesFwd.hpp"
 #include "data.hpp"
 #include "DimensionedField.hpp"
 #include "volFieldsFwd.hpp"
@@ -66,7 +67,6 @@ namespace CML
 
 class fvMeshLduAddressing;
 class volMesh;
-
 
 /*---------------------------------------------------------------------------*\
                            Class fvMesh Declaration
@@ -310,6 +310,26 @@ public:
 
             //- Return face deltas as surfaceVectorField
             tmp<surfaceVectorField> delta() const;
+
+            //- Empty functions for derived fvMesh types
+            virtual void updateFvMatrix(fvMatrix<scalar>& eqn) const
+            {}
+
+            virtual void updateFvMatrix(fvMatrix<vector>& eqn) const
+            {}
+
+            virtual void updateFvMatrix(fvMatrix<tensor>& eqn) const
+            {}
+
+            virtual void updateFvMatrix(fvMatrix<symmTensor>& eqn) const
+            {}
+
+            virtual void updateFvMatrix(fvMatrix<sphericalTensor>& eqn) const
+            {}
+
+            //- Return patch face weights
+            virtual const scalarField patchWeights(const fvPatch&) const;
+
 
         // Edit
 

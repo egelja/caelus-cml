@@ -46,6 +46,7 @@ src_files = Split("""
   realizableKE/realizableKE.cpp
   kOmegaSST/kOmegaSST.cpp
   coherentStructureModel/coherentStructureModel.cpp
+  SpalartAllmaras/SpalartAllmaras.cpp
 """)
  
 #===============================================================================

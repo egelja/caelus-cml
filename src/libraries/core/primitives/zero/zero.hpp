@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,18 +30,11 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef zero_H
-#define zero_H
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#ifndef zero_HPP_
+#define zero_HPP_
 
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class zero Declaration
-\*---------------------------------------------------------------------------*/
-
 class zero
 {
 public:
@@ -49,16 +43,52 @@ public:
     {}
 };
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template <typename Type>
+inline Type const& operator+(Type const& t, zero const&)
+{
+    return t;
+}
+
+template <typename Type>
+inline Type const& operator+(zero const&, Type const& t)
+{
+    return t;
+}
+
+template <typename Type>
+inline const Type& operator-(const Type& t, const zero&)
+{
+    return t;
+}
+
+template <typename Type>
+inline Type operator-(zero const&, Type const& t)
+{
+    return -t;
+}
+
+template <typename Type>
+inline zero operator*(Type const& t, zero const&)
+{
+    return zero();
+}
+
+template <typename Type>
+inline zero operator*(zero const&, Type const& t)
+{
+    return zero();
+}
+
+template <typename Type>
+inline zero operator/(zero const&, Type const& t)
+{
+    return zero();
+}
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#   include "zeroI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-// ************************************************************************* //
+

@@ -160,6 +160,7 @@ void dynOneEqEddy::correct(const tmp<volTensorField>& gradU)
     );
 
     kEqn().relax();
+    mesh_.updateFvMatrix(kEqn());
     kEqn().solve();
 
     bound(k_, kMin_);

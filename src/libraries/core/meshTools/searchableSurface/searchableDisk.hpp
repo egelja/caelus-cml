@@ -18,7 +18,7 @@ License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::searchableDisk
+    CML::searchableDisk
 
 Description
     Searching on circular disk given as origin, normal (gets normalised)

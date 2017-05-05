@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +22,27 @@ Class
     CML::limitedLinearLimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    TVD limited linear differencing scheme based on r obtained from the
-    LimiterFunc class.
 
-    Used in conjunction with the template class LimitedScheme.
+    Differencing scheme based on parameterised limiter function. 
+    Scheme selects a paramter value between 0 and 2 where
+    0 value represents unlimited linear scheme and values between 1 and 2
+    representent a TVD satisfying scheme. A value between 0 and 2 must be
+    specified in the dictionary entry.
 
 SourceFiles
+
     limitedLinear.cpp
+
+References
+
+    [1] "Analysis of Slope Limiter on Irregular Grids", M. Berger, 
+         M.J. Aftosmis and S.M. Murman, 43rd AIAA Aerospace Sciences Meeting, 
+         Jan. 10-13, 2005, Reno, NV
+
+Author
+
+    OpenFoam Foundation
+    Aleksandar Jemcov
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,35 +51,42 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
 
-/*---------------------------------------------------------------------------*\
-                    Class limitedLinearLimiter Declaration
-\*---------------------------------------------------------------------------*/
-
 template<class LimiterFunc>
-class limitedLinearLimiter
-:
-    public LimiterFunc
+class limitedLinearLimiter : public LimiterFunc
 {
     scalar k_;
+    scalar order_;
     scalar twoByk_;
 
 public:
 
-    limitedLinearLimiter(Istream& is)
-    :
-        k_(readScalar(is))
+    limitedLinearLimiter(Istream& is) : k_(readScalar(is))
     {
-        if (k_ < 0 || k_ > 1)
+        if (k_ < 0 || k_ > 2)
         {
             FatalIOErrorIn("limitedLinearLimiter(Istream& is)", is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
+        }
+
+        if (is.eof())
+        {
+            order_ = scalar(1);
+        }
+        else
+        {
+            order_ = readScalar(is);
+            if (order_ < 0 || order_ > 2)
+            {
+                FatalIOErrorIn("linearKoren(fvMesh const&, Istream&)", is)
+                        << "coefficient = " << order_
+                        << " should be >= 0 and <= 1"
+                        << exit(FatalIOError);
+            }
         }
 
         // Avoid the /0 when k_ = 0
@@ -93,12 +114,7 @@ public:
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

@@ -1,0 +1,32 @@
+/*---------------------------------------------------------------------------*
+Caelus 6.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      combustionProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+combustionModel  PaSR<psiChemistryCombustionModel>;
+
+active  true;
+
+infinitelyFastChemistryCoeffs
+{
+    C       10.0;
+}
+
+PaSRCoeffs
+{
+    Cmix                Cmix [ 0 0 0 0 0 0 0 ] 10.0; 
+    turbulentReaction   on; 
+    useReactionRate     off;  
+}
+
+
+// ************************************************************************* //

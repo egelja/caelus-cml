@@ -32,7 +32,7 @@ namespace VLESModels
 defineTypeNameAndDebug(CoherentStructureModelVLES, 0);
 addToRunTimeSelectionTable(VLESModel, CoherentStructureModelVLES, dictionary);
 
-tmp<volScalarField> CoherentStructureModelVLES::F1(const volScalarField& CDkOmega) const
+tmp<volScalarField> CoherentStructureModelVLES::F1(volScalarField const& CDkOmega) const
 {
     tmp<volScalarField> CDkOmegaPlus = max
     (
@@ -67,16 +67,22 @@ tmp<volScalarField> CoherentStructureModelVLES::F2() const
 
 CoherentStructureModelVLES::CoherentStructureModelVLES
 (
-    const volScalarField& rho,
-    const volVectorField& U,
-    const surfaceScalarField& phi,
-    const basicThermo& thermoPhysicalModel,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    volScalarField const& rho,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
+    basicThermo const& thermoPhysicalModel,
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     VLESModel(modelName, rho, U, phi, thermoPhysicalModel, turbulenceModelName),
-
+    delayed_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "delayed", 
+            true
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -235,6 +241,20 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    Fr_
+    (
+        IOobject
+        (
+            "Fr",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fr", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
@@ -312,6 +332,7 @@ bool CoherentStructureModelVLES::read()
 {
     if (VLESModel::read())
     {
+        delayed_.readIfPresent("delayed", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -425,7 +446,8 @@ void CoherentStructureModelVLES::correct()
     }  
 
     tmp<volScalarField> Li = pow(k_,3.0/2.0)/(betaStar_*k_*omega_);
-    tmp<volScalarField> Lk = pow((mu()/rho_),3.0/4.0)/pow(betaStar_*k_*omega_,1.0/4.0);
+    tmp<volScalarField> Lk =
+        pow((mu()/rho_),3.0/4.0)/pow(betaStar_*k_*omega_,1.0/4.0);
 
     volScalarField divU(fvc::div(phi_/fvc::interpolate(rho_)));
 
@@ -434,18 +456,18 @@ void CoherentStructureModelVLES::correct()
         divU += fvc::div(mesh_.phi());
     }
 
-    const volScalarField S2(2*magSqr(dev(symm(gradU))));
+    volScalarField const S2(2*magSqr(dev(symm(gradU))));
     volScalarField G(GName(), mut_*(gradU && dev(twoSymm(gradU))));
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
-    const volScalarField CDkOmega
+    volScalarField const CDkOmega
     (
         (2*rho_*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    const volScalarField F1(this->F1(CDkOmega));
+    volScalarField const F1(this->F1(CDkOmega));
 
     dimensionedScalar mutMin
     (
@@ -495,23 +517,47 @@ void CoherentStructureModelVLES::correct()
 
     // Re-calculate viscosity
 
-    volScalarField Fr
-    (
-        min
+    if (delayed_)
+    {
+        Fr_ = max
         (
-            scalar(1.0),
-            pow
+            min
             (
-                (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
-                /
-                (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
-                2.0
-            )
-        )
-    );
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+    else
+    {
+        Fr_ = max
+        (
+            min
+            (
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
 
+    Fr_.correctBoundaryConditions();
+    
     // Re-calculate viscosity
-    mut_ = Fr*rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    mut_ = Fr_*rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
     mut_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity

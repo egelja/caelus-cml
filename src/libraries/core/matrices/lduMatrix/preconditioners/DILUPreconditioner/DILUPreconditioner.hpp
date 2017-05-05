@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,15 +19,18 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
+
     CML::DILUPreconditioner
 
 Description
+
     Simplified diagonal-based incomplete LU preconditioner for asymmetric
     matrices. Better known under ILU(0) name.
     The reciprocal of the preconditioned diagonal is calculated
     and stored.
 
 SourceFiles
+
     DILUPreconditioner.cpp
 
 References
@@ -59,7 +62,6 @@ class DILUPreconditioner
     //- The reciprocal preconditioned diagonal
     scalarField rD_;
 
-
 public:
 
     //- Runtime type information
@@ -68,32 +70,31 @@ public:
     //- Construct from matrix components and preconditioner solver controls
     DILUPreconditioner
     (
-        const lduMatrix::solver&,
-        const dictionary& solverControlsUnused
+        lduMatrix::solver const&,
+        dictionary const& solverControlsUnused
     );
-
 
     //- Destructor
     virtual ~DILUPreconditioner()
     {}
 
     //- Calculate the reciprocal of the preconditioned diagonal
-    static void calcReciprocalD(scalarField& rD, const lduMatrix& matrix);
+    static void approximateInverse(scalarField& rD, lduMatrix const& matrix);
 
     //- Return w the preconditioned form of residual r
     virtual void precondition
     (
         scalarField& w,
-        const scalarField& r,
-        const direction cmpt=0
+        scalarField const& r,
+        direction const cmpt=0
     ) const;
 
     //- Return wT the transpose-matrix preconditioned form of residual rT.
     virtual void preconditionT
     (
         scalarField& wT,
-        const scalarField& rT,
-        const direction cmpt=0
+        scalarField const& rT,
+        direction const cmpt=0
     ) const;
 };
 

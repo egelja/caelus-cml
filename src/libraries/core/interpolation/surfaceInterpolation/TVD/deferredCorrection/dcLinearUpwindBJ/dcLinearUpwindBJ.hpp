@@ -52,34 +52,39 @@ template<class Type>
 class dcLinearUpwindBJ : public upwind<Type>
 {
     word gradSchemeName_;
-    
     tmp<fv::gradScheme<Type> > gradScheme_;
 
-    dcLinearUpwindBJ(const dcLinearUpwindBJ&);
+    //- Disallow default bitwise copy construct
+    dcLinearUpwindBJ(dcLinearUpwindBJ const&);
 
-    void operator=(const dcLinearUpwindBJ&);
+    //- Disallow default bitwise assignment
+    void operator=(dcLinearUpwindBJ const&);
 
 public:
 
+    //- Runtime type information
     TypeName("dcLinearUpwindBJ");
 
+    //- Construct from faceFlux
     dcLinearUpwindBJ
     (
-        const fvMesh& mesh,
-        const surfaceScalarField& faceFlux
-    ) : upwind<Type>(mesh, faceFlux),
+        fvMesh const& mesh,
+        surfaceScalarField const& faceFlux
+    )   :
+        upwind<Type>(mesh, faceFlux),
         gradSchemeName_("grad"),
-        gradScheme_
-        (
-            new fv::gaussGrad<Type>(mesh)
-        )
+        gradScheme_(new fv::gaussGrad<Type>(mesh))
     {}
 
+    //- Construct from Istream.
+    //  The name of the flux field is read from the Istream and looked-up
+    //  from the mesh objectRegistry
     dcLinearUpwindBJ
     (
-        const fvMesh& mesh,
+        fvMesh const& mesh,
         Istream& schemeData
-    ) : upwind<Type>(mesh, schemeData),
+    )   :
+        upwind<Type>(mesh, schemeData),
         gradSchemeName_(schemeData),
         gradScheme_
         (
@@ -91,34 +96,42 @@ public:
         )
     {}
 
+    //- Construct from faceFlux and Istream
     dcLinearUpwindBJ
     (
-        const fvMesh& mesh,
-        const surfaceScalarField& faceFlux,
+        fvMesh const& mesh,
+        surfaceScalarField const& faceFlux,
         Istream& schemeData
-    ) : upwind<Type>(mesh, faceFlux, schemeData),
+    )   :
+        upwind<Type>(mesh, faceFlux, schemeData),
         gradSchemeName_(schemeData),
         gradScheme_
-    (
-        fv::gradScheme<Type>::New
         (
-            mesh,
-            mesh.gradScheme(gradSchemeName_)
+            fv::gradScheme<Type>::New
+            (
+                mesh,
+                mesh.gradScheme(gradSchemeName_)
+            )
         )
-    )
     {}
 
-    // Return false for deferred correction
+    // Member Functions
+
+    //- Return false for deferred correction
     virtual bool corrected() const
     {
         return false;
     }
 
+    //- Return the explicit correction to the face-interpolate
     virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
     correction
     (
-        const GeometricField<Type, fvPatchField, volMesh>&
+        GeometricField<Type, fvPatchField, volMesh> const&
     ) const;
+
+    scalar slopeLimiter(scalar const) const;
+
 };
 
 }

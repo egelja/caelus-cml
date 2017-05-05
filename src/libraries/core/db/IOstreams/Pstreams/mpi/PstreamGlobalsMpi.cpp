@@ -33,6 +33,11 @@ namespace CML
 DynamicList<MPI_Request> PstreamGlobals::outstandingRequests_;
 //! \endcond
 
+// Allocated communicators.
+//! \cond fileScope
+//DynamicList<MPI_Comm> PstreamGlobals::MPICommunicators_;
+//! \endcond
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML

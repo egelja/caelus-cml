@@ -1,0 +1,48 @@
+/*---------------------------------------------------------------------------*
+Caelus 6.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       volScalarField;
+    location    "0";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 1500;
+
+boundaryField
+{
+    triangle
+    {
+        type            zeroGradient;
+    }
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 288;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 288;
+        value           uniform 288;
+    }
+    walls
+    {
+        type            zeroGradient;
+    }
+    cyc_half0
+    {
+        type            empty;
+    }
+    cyc_half1
+    {
+        type            empty;
+    }
+}

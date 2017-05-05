@@ -18,9 +18,11 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
+
     explicitDBNSSolver
 
 Description
+
     Explicit density-based Navier-Stokes solver for high speed flows. The
     solution algorithm is based on reconstruction-average-evolution (RAE)
     algorithm that utulizes a Rimeann solver for the reconstruction part
@@ -30,8 +32,17 @@ Description
     averaging is performed through a projection on C^0 function space
     used in cell-centered finite vlumes.
 
+References
+
+  [1] "Density Based Navier-Stokes Solver for Transonic Flows", O. Borm,
+      A. Jemcov, and H.-P. Kau, 6th OpenFOAM Workshop, PennState University,
+      USA, June 14, 2011
+
 Author
+
     Aleksandar Jemcov
+
+
 
 \*---------------------------------------------------------------------------*/
 #include "fvCFD.hpp"

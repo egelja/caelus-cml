@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,30 +19,30 @@ ddtSchemes
 
 gradSchemes
 {
-    default         Gauss linear skewCorrected;
+    default         Gauss  skewCorrected linear;
 }
 
 divSchemes
 {
     default         none;
-    div(((muEff*grad(U))&U)) Gauss linear skewCorrected;
-    div(((muEff*dev2(T(grad(U))))&U)) Gauss linear skewCorrected;
-    div((muEff*dev2(T(grad(U))))) Gauss linear skewCorrected;
+    div(((muEff*grad(U))&U)) Gauss skewCorrected linear;
+    div(((muEff*dev2(T(grad(U))))&U)) Gauss skewCorrected linear;
+    div((muEff*dev2(T(grad(U))))) Gauss  skewCorrected linear;
 }
 
 laplacianSchemes
 {
-    default         Gauss linear corrected skewCorrected;
+    default         Gauss  skewCorrected linear corrected;
 }
 
 interpolationSchemes
 {
-    default         linear skewCorrected;;
+    default          skewCorrected linear;
 }
 
 snGradSchemes
 {
-    default         corrected;
+    default          skewCorrected corrected;
 }
 
 fluxRequired

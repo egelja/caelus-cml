@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -66,3 +65,6 @@ print "Reconstructing solution with reconstructPar"
 run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('2DRiemann800.foam', 'a').close()

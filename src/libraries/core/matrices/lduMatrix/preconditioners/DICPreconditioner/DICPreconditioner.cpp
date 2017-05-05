@@ -34,14 +34,19 @@ namespace CML
 
 CML::DICPreconditioner::DICPreconditioner
 (
-    const lduMatrix::solver& sol,
-    const dictionary&
+    lduMatrix::solver const& sol,
+    dictionary const&
 )
 :
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag()),
     rDuUpper_(sol.matrix().upper().size()),
     rDlUpper_(sol.matrix().upper().size())
+{
+    this->approximateInverse();
+}
+
+void CML::DICPreconditioner::approximateInverse()
 {
     scalar* RESTRICT rDPtr = rD_.begin();
     scalar* RESTRICT rDuUpperPtr = rDuUpper_.begin();
@@ -78,17 +83,17 @@ CML::DICPreconditioner::DICPreconditioner
 void CML::DICPreconditioner::precondition
 (
     scalarField& w,
-    const scalarField& r,
-    const direction
+    scalarField const& r,
+    direction const
 ) const
 {
     scalar* RESTRICT wPtr = w.begin();
-    const scalar* RESTRICT rPtr = r.begin();
-    const scalar* RESTRICT rDPtr = rD_.begin();
+    scalar const* RESTRICT rPtr = r.begin();
+    scalar const* RESTRICT rDPtr = rD_.begin();
 
-    const label* const RESTRICT uPtr =
+    label const* const RESTRICT uPtr =
         solver_.matrix().lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr =
+    label const* const RESTRICT lPtr =
         solver_.matrix().lduAddr().lowerAddr().begin();
 
     const scalar* const RESTRICT rDuUpperPtr = rDuUpper_.begin();

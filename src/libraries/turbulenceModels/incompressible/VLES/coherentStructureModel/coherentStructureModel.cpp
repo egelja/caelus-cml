@@ -32,7 +32,7 @@ namespace VLESModels
 defineTypeNameAndDebug(CoherentStructureModelVLES, 0);
 addToRunTimeSelectionTable(VLESModel, CoherentStructureModelVLES, dictionary);
 
-tmp<volScalarField> CoherentStructureModelVLES::F1(const volScalarField& CDkOmega) const
+tmp<volScalarField> CoherentStructureModelVLES::F1(volScalarField const& CDkOmega) const
 {
     tmp<volScalarField> CDkOmegaPlus = max
     (
@@ -67,15 +67,21 @@ tmp<volScalarField> CoherentStructureModelVLES::F2() const
 
 CoherentStructureModelVLES::CoherentStructureModelVLES
 (
-    const volVectorField& U,
-    const surfaceScalarField& phi,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
     transportModel& transport,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     VLESModel(modelName, U, phi, transport, turbulenceModelName),
-
+    delayed_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "delayed", 
+            true
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -213,6 +219,20 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    Fr_
+    (
+        IOobject
+        (
+            "Fr",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fr", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
@@ -285,7 +305,7 @@ tmp<fvVectorMatrix> CoherentStructureModelVLES::divDevReff(volVectorField& U) co
 
 tmp<fvVectorMatrix> CoherentStructureModelVLES::divDevRhoReff
 (
-    const volScalarField& rho,
+    volScalarField const& rho,
     volVectorField& U
 ) const
 {
@@ -302,6 +322,7 @@ bool CoherentStructureModelVLES::read()
 {
     if (VLESModel::read())
     {
+        delayed_.readIfPresent("delayed", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -416,19 +437,19 @@ void CoherentStructureModelVLES::correct()
     tmp<volScalarField> Li = pow(k_,3.0/2.0)/(betaStar_*k_*omega_);
     tmp<volScalarField> Lk = pow(nu(),3.0/4.0)/pow(betaStar_*k_*omega_,1.0/4.0);
 
-    const volScalarField S2(2*magSqr(symm(fvc::grad(U_))));
-    const volScalarField Omega(2*magSqr(skew(fvc::grad(U_))));
+    volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
+    volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));
     volScalarField G(GName(), nut_*S2);
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
-    const volScalarField CDkOmega
+    volScalarField const CDkOmega
     (
         (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    const volScalarField F1(this->F1(CDkOmega));
+    volScalarField const F1(this->F1(CDkOmega));
 
     dimensionedScalar nutMin
     (
@@ -453,6 +474,7 @@ void CoherentStructureModelVLES::correct()
 
     omegaEqn().boundaryManipulate(omega_.boundaryField());
 
+    mesh_.updateFvMatrix(omegaEqn());
     solve(omegaEqn);
     bound(omega_, omegaMin_);
 
@@ -468,28 +490,53 @@ void CoherentStructureModelVLES::correct()
     );
 
     kEqn().relax();
+    mesh_.updateFvMatrix(kEqn());
     solve(kEqn);
     bound(k_, kMin_);
 
 
     // Re-calculate viscosity
 
-    volScalarField Fr
-    (
-        min
+    if (delayed_)
+    {
+        Fr_ = max
         (
-            scalar(1.0),
-            pow
+            min
             (
-                (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
-                /
-                (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
-                2.0
-            )
-        )
-    );
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-(1-F1)*exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
+    else
+    {
+        Fr_ = max
+        (
+            min
+            (
+                scalar(1.0),
+                pow
+                (
+                    (scalar(1.0)-exp(-0.002*Lc/Lk()))
+                    /
+                    (scalar(1.0)-exp(-0.002*Li()/Lk())),
+                    2.0
+                )
+            ),
+            scalar(0.0)
+        );
+    }
 
-    nut_ = Fr*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    Fr_.correctBoundaryConditions();
+
+    nut_ = Fr_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
 
     nut_.correctBoundaryConditions();
 }

@@ -1,5 +1,23 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014-2015 Applied CCM 
+Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2014-2015 Applied CCM
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
 \*---------------------------------------------------------------------------*/
 
 #include "SpalartAllmaras.hpp"
@@ -226,10 +244,6 @@ tmp<volScalarField> SpalartAllmaras::DnuTildaEff() const
 
 tmp<volScalarField> SpalartAllmaras::k() const
 {
-    WarningIn("tmp<volScalarField> SpalartAllmaras::k() const")
-        << "Turbulence kinetic energy not defined for Spalart-Allmaras model. "
-        << "Returning zero field" << endl;
-
     return tmp<volScalarField>
     (
         new volScalarField
@@ -240,8 +254,7 @@ tmp<volScalarField> SpalartAllmaras::k() const
                 runTime_.timeName(),
                 mesh_
             ),
-            mesh_,
-            dimensionedScalar("0", dimensionSet(0, 2, -2, 0, 0), 0)
+            scalar(0.5)*tr(R())
         )
     );
 }
@@ -249,11 +262,6 @@ tmp<volScalarField> SpalartAllmaras::k() const
 
 tmp<volScalarField> SpalartAllmaras::epsilon() const
 {
-    WarningIn("tmp<volScalarField> SpalartAllmaras::epsilon() const")
-        << "Turbulence kinetic energy dissipation rate not defined for "
-        << "Spalart-Allmaras model. Returning zero field"
-        << endl;
-
     return tmp<volScalarField>
     (
         new volScalarField
@@ -264,8 +272,7 @@ tmp<volScalarField> SpalartAllmaras::epsilon() const
                 runTime_.timeName(),
                 mesh_
             ),
-            mesh_,
-            dimensionedScalar("0", dimensionSet(0, 2, -3, 0, 0), 0)
+            scalar(2.0)*nuEff()*magSqr(symm(fvc::grad(U())))
         )
     );
 }
@@ -422,6 +429,7 @@ void SpalartAllmaras::correct()
     );
 
     nuTildaEqn().relax();
+    mesh_.updateFvMatrix(nuTildaEqn());
     solve(nuTildaEqn);
     bound(nuTilda_, dimensionedScalar("0", nuTilda_.dimensions(), 0.0));
     nuTilda_.correctBoundaryConditions();

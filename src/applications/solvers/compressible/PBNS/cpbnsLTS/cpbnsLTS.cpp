@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,12 +18,15 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
+
     cpbnsLTS
 
 Description
+
     An LTS based steady state solver for compressible flows
 
 Author
+
     Aleksandar Jemcov
 
 \*---------------------------------------------------------------------------*/

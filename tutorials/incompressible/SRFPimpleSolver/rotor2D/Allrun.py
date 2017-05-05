@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
 # ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -42,3 +41,6 @@ print "Executing SRFPimpleSolver"
 run = subprocess.Popen(['caelus.py', '-l', 'SRFPimpleSolver'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('rotor2D.foam', 'a').close()

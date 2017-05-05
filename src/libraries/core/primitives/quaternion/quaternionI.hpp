@@ -128,6 +128,26 @@ inline CML::quaternion CML::quaternion::invTransform
 }
 
 
+inline CML::vector CML::quaternion::rotVector(const quaternion& q) const
+{
+    if (sqrt(scalar(1) - sqr(q.w())) > SMALL)
+    {
+        return q.v()/sqrt(scalar(1) - sqr(q.w()));
+    }
+    else
+    {
+        // Return arbitary unit vector
+        return vector(1,0,0);
+    }
+}
+
+
+inline CML::scalar CML::quaternion::rotAngle(const quaternion& q) const
+{
+    return scalar(2)*acos(q.w());
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 inline void CML::quaternion::operator=(const quaternion& q)

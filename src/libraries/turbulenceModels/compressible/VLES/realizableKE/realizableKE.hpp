@@ -52,17 +52,21 @@ class realizableVLESKE : public VLESModel
 
 protected:
 
+    Switch delayed_;
+
     dimensionedScalar Cmu_;
     dimensionedScalar A0_;
     dimensionedScalar C2_;
     dimensionedScalar sigmak_;
     dimensionedScalar sigmaEps_;
     dimensionedScalar Prt_;
+    dimensionedScalar Cx_;
 
     volScalarField k_;
     volScalarField epsilon_;
     volScalarField mut_;
     volScalarField alphat_;
+    volScalarField Fr_;
 
     //- Wall distance field
     //  Note: different to wall distance in parent VLESModel
@@ -87,7 +91,7 @@ public:
         volScalarField const& rho,
         volVectorField const& U,
         surfaceScalarField const& phi,
-        const basicThermo& thermoPhysicalModel,
+        basicThermo const& thermoPhysicalModel,
         word const& turbulenceModelName = turbulenceModel::typeName,
         word const& modelName = typeName
     );

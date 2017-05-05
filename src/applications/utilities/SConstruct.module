@@ -63,6 +63,7 @@ subdirs = [
    'mesh/conversion/fluentMeshToCAELUS',
    'mesh/conversion/caelusToSurface',
    'mesh/conversion/mshToCAELUS',
+   'mesh/conversion/gmshToCAELUS',
    'mesh/conversion/writeMeshObj',
    'mesh/manipulation/attachMesh',
    'mesh/manipulation/autoPatch',

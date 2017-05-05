@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.10
+Caelus 6.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -25,7 +25,7 @@ boundaryField
         //        type            timeVaryingTotalPressure;
         p0              100040; // only used for restarts
         outOfBounds     clamp;
-        fileName        "$FOAM_CASE/constant/p0vsTime";
+        fileName        "$CAELUS_CASE/constant/p0vsTime";
 
         U               U;
         phi             phi;

@@ -2660,7 +2660,7 @@ OpenFOAM-installation is **not** installed using the `dpkg`.
 
 For parallel runs the content of the `caseDir`-variable changed
 and a few variables have been added
--   **caseDir:** in parallel runs now points to the `FOAM_CASE`
+-   **caseDir:** in parallel runs now points to the `CAELUS_CASE`
                       instead of the processor subdirectory
 -   **systemDir:** points to the global `system`-directory
 -   **constantDir:** points to the global `constant`-directory
@@ -4598,7 +4598,7 @@ These expansions allow the construction of reusable snipplets
 that include information from other parts of the case. For
 instance (this is only part of the specification)
 
-    #include "$FOAM_CASE/constant/g"
+    #include "$CAELUS_CASE/constant/g"
     vecName U;
     downComponent (
         "grav=$[(dimensionedVector)g];"

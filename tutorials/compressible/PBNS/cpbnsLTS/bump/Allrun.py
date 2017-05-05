@@ -1,6 +1,5 @@
 #!/usr/bin/python
-# ---------------------------------------------------------------------------
-# Caelus 5.10
+# Caelus 6.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -53,3 +52,6 @@ print "Executing reconstructPar -latestTime"
 run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], shell=pltfrm)
 run.wait()
 run = None
+
+# Create stub file for paraview
+open('bump.foam', 'a').close()

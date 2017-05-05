@@ -833,6 +833,11 @@ void CML::forces::calcForcesMoment()
         {
             label patchI = iter.key();
 
+            const scalarField patchWeights
+            (
+                mesh.patchWeights(mesh.boundary()[patchI])
+            );
+
             vectorField Md
             (
                 mesh.C().boundaryField()[patchI] - coordSys_.origin()
@@ -845,7 +850,7 @@ void CML::forces::calcForcesMoment()
             (
                 Sfb[patchI]/sA
                *(
-                    Sfb[patchI] & fD.boundaryField()[patchI]
+                    (Sfb[patchI]*patchWeights) & fD.boundaryField()[patchI]
                 )
             );
 
@@ -879,6 +884,11 @@ void CML::forces::calcForcesMoment()
         {
             label patchI = iter.key();
 
+            const scalarField patchWeights
+            (
+                mesh.patchWeights(mesh.boundary()[patchI])
+            );
+
             vectorField Md
             (
                 mesh.C().boundaryField()[patchI] - coordSys_.origin()
@@ -886,10 +896,13 @@ void CML::forces::calcForcesMoment()
 
             vectorField fN
             (
-                rho(p)*Sfb[patchI]*(p.boundaryField()[patchI] - pRef)
+                rho(p)*Sfb[patchI]*patchWeights*(p.boundaryField()[patchI] - pRef)
             );
 
-            vectorField fT(Sfb[patchI] & devRhoReffb[patchI]);
+            vectorField fT
+            (
+                (Sfb[patchI]*patchWeights) & devRhoReffb[patchI]
+            );
 
             vectorField fP(Md.size(), vector::zero);
 

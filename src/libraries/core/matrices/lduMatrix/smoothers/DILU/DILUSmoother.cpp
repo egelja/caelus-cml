@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,8 +24,6 @@ License
 #include "DILUPreconditioner.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(DILUSmoother, 0);
@@ -33,9 +32,6 @@ namespace CML
         addDILUSmootherAsymMatrixConstructorToTable_;
 }
 
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
 CML::DILUSmoother::DILUSmoother
 (
     const word& fieldName,
@@ -43,8 +39,7 @@ CML::DILUSmoother::DILUSmoother
     const FieldField<Field, scalar>& interfaceBouCoeffs,
     const FieldField<Field, scalar>& interfaceIntCoeffs,
     const lduInterfaceFieldPtrsList& interfaces
-)
-:
+) :
     lduMatrix::smoother
     (
         fieldName,
@@ -55,11 +50,8 @@ CML::DILUSmoother::DILUSmoother
     ),
     rD_(matrix_.diag())
 {
-    DILUPreconditioner::calcReciprocalD(rD_, matrix_);
+    DILUPreconditioner::approximateInverse(rD_, matrix_);
 }
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::DILUSmoother::smooth
 (
@@ -115,5 +107,3 @@ void CML::DILUSmoother::smooth
     }
 }
 
-
-// ************************************************************************* //

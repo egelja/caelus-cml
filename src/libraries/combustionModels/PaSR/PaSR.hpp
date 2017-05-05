@@ -139,7 +139,7 @@ CML::combustionModels::PaSR<CombThermoType>::PaSR
     (
         IOobject
         (
-            "PaSR::kappa",
+            "PaSR-kappa",
             mesh.time().timeName(),
             mesh,
             IOobject::NO_READ,

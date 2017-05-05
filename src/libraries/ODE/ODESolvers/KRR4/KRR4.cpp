@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "KRR4.hpp"
+#include "simpleMatrix.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -62,8 +63,8 @@ CML::KRR4::KRR4(const ODE& ode)
     g4_(n_, 0.0),
     yErr_(n_, 0.0),
     dfdx_(n_, 0.0),
-    dfdy_(n_, n_, 0.0),
-    a_(n_, n_, 0.0),
+    dfdy_(n_, 0.0),
+    a_(n_, 0.0),
     pivotIndices_(n_, 0.0)
 {}
 
@@ -103,14 +104,14 @@ void CML::KRR4::solve
             a_[i][i] += 1.0/(gamma*h);
         }
 
-        LUDecompose(a_, pivotIndices_);
+        simpleMatrix<scalar>::LUDecompose(a_, pivotIndices_);
 
         for (register label i=0; i<n_; i++)
         {
             g1_[i] = dydxTemp_[i] + h*c1X*dfdx_[i];
         }
 
-        LUBacksubstitute(a_, pivotIndices_, g1_);
+        simpleMatrix<scalar>::LUBacksubstitute(a_, pivotIndices_, g1_);
 
         for (register label i=0; i<n_; i++)
         {
@@ -125,7 +126,7 @@ void CML::KRR4::solve
             g2_[i] = dydx_[i] + h*c2X*dfdx_[i] + c21*g1_[i]/h;
         }
 
-        LUBacksubstitute(a_, pivotIndices_, g2_);
+        simpleMatrix<scalar>::LUBacksubstitute(a_, pivotIndices_, g2_);
 
         for (register label i=0; i<n_; i++)
         {
@@ -140,7 +141,7 @@ void CML::KRR4::solve
             g3_[i] = dydx_[i] + h*c3X*dfdx_[i] + (c31*g1_[i] + c32*g2_[i])/h;
         }
 
-        LUBacksubstitute(a_, pivotIndices_, g3_);
+        simpleMatrix<scalar>::LUBacksubstitute(a_, pivotIndices_, g3_);
 
         for (register label i=0; i<n_; i++)
         {
@@ -148,7 +149,7 @@ void CML::KRR4::solve
                 + (c41*g1_[i] + c42*g2_[i] + c43*g3_[i])/h;
         }
 
-        LUBacksubstitute(a_, pivotIndices_, g4_);
+        simpleMatrix<scalar>::LUBacksubstitute(a_, pivotIndices_, g4_);
 
         for (register label i=0; i<n_; i++)
         {

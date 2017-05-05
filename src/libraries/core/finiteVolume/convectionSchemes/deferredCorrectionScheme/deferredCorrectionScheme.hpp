@@ -26,6 +26,9 @@ Description
 SourceFiles
     deferredCorrectionScheme.C
 
+Author
+    Aleksandar Jemcov
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef deferredCorrectionScheme_HPP
@@ -70,15 +73,22 @@ public:
         scheme_
         (
             fv::convectionScheme<Type>::New(mesh, faceFlux, is)
-        ),
-        r_(readScalar(is))
+        )
     {
-        if (r_ < 0 || r_ > 1)
+        if(is.eof())
         {
-            FatalIOErrorIn("deferredCorrection(fvMesh& mesh, surfaceScalarField& faceFlux, Istream& is)", is)
-            << "coefficient = " << r_
-            << " should be >= 0 and <= 1"
-            << exit(FatalIOError);
+            r_ = scalar(1.0);
+        }
+        else
+        {
+            r_ = readScalar(is);
+            if (r_ < 0 || r_ > 1)
+            {
+                FatalIOErrorIn("deferredCorrection(fvMesh& mesh, surfaceScalarField& faceFlux, Istream& is)", is)
+                    << "coefficient = " << r_
+                    << " should be >= 0 and <= 1"
+                    << exit(FatalIOError);
+            }
         }
     }
 

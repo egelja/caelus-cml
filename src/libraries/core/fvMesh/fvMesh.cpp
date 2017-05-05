@@ -32,6 +32,7 @@ License
 #include "MapFvFields.hpp"
 #include "fvMeshMapper.hpp"
 #include "mapClouds.hpp"
+#include "wallFvPatch.hpp"
 
 #include "volPointInterpolation.hpp"
 #include "extendedLeastSquaresVectors.hpp"
@@ -160,6 +161,19 @@ void CML::fvMesh::clearOut()
     deleteDemandDrivenData(phiPtr_);
 
     polyMesh::clearOut();
+}
+
+
+const CML::scalarField CML::fvMesh::patchWeights(const fvPatch& patch) const
+{
+   if (!isA<wallFvPatch>(patch))
+      FatalErrorIn("fvMesh::patchWeight(const fvPatch&) const")
+         << "patch: " << patch.name() << " is not a wall patch"
+         << abort(FatalError);
+
+   scalarField weights(patch.size(), scalar(1.0));
+
+   return weights;
 }
 
 

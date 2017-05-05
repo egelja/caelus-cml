@@ -52,7 +52,13 @@ CML::fileName::Type CML::fileName::type() const
 
 bool CML::fileName::isAbsolute() const
 {
+#ifdef windows
+  // Cater for absolute Windows paths, e.g., C:\..., and file share \\machine_name
+  return ((3 < size()) && (operator[](1) == ':' || 
+                           (operator[](0) == '\\' && operator[](1) == '\\')));
+#else
     return !empty() && operator[](0) == '/';
+#endif
 }
 
 

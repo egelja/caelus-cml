@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,10 +18,12 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
+
     cpbnsPIMPLE
 
 Description
-    A PIMPLE based transient solver for compressible flows
+
+    A fractional step based transient solver for compressible flows
 
 Author
     Aleksandar Jemcov
@@ -73,10 +75,12 @@ int main(int argc, char *argv[])
             {
                 #include "pEqn.hpp"
             }
-
-            turbulence->correct();
-
         }
+
+        turbulence->correct();
+
+        Ek = 0.5*magSqr(U);
+        EkMatDer = fvc::ddt(rho,Ek)+fvc::div(phi,Ek);
 
         runTime.write();
 

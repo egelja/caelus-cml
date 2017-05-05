@@ -55,8 +55,8 @@ subdirs = [
    'incompressible/pimpleSolver/pimpleDyMSolver',
    'compressible/PBNS/cpbnsLTS',
    'compressible/PBNS/cpbnsPIMPLE',
-   'compressible/PBNS/cpbnsSIMPLE',
    'compressible/DBNS/explicitDBNSSolver',
+   'combustion/reactingSolver',
    'multiphase/vofSolver',
    'multiphase/vofLPTSolver',
 ]

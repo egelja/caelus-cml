@@ -76,7 +76,8 @@ CML::UIPstream::UIPstream
         // and set it
         if (!wantedSize)
         {
-            MPI_Probe(procID(fromProcNo_), tag_, MPI_COMM_WORLD, &status);
+//            MPI_Probe(procID(fromProcNo_), tag_, PstreamGlobals::MPICommunicators_[1], &status);
+			MPI_Probe(procID(fromProcNo_), tag_, MPI_COMM_WORLD, &status);
             MPI_Get_count(&status, MPI_BYTE, &messageSize_);
 
             externalBuf_.setCapacity(messageSize_);
@@ -163,7 +164,8 @@ CML::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
         // and set it
         if (!wantedSize)
         {
-            MPI_Probe(procID(fromProcNo_), tag_, MPI_COMM_WORLD, &status);
+//            MPI_Probe(procID(fromProcNo_), tag_, PstreamGlobals::MPICommunicators_[1], &status);
+			MPI_Probe(procID(fromProcNo_), tag_, MPI_COMM_WORLD, &status);
             MPI_Get_count(&status, MPI_BYTE, &messageSize_);
 
             externalBuf_.setCapacity(messageSize_);
@@ -229,6 +231,7 @@ CML::label CML::UIPstream::read
                 procID(fromProcNo),
                 tag,
                 MPI_COMM_WORLD,
+//                PstreamGlobals::MPICommunicators_[1],
                 &status
             )
         )
@@ -285,6 +288,7 @@ CML::label CML::UIPstream::read
                 procID(fromProcNo),
                 tag,
                 MPI_COMM_WORLD,
+//                PstreamGlobals::MPICommunicators_[1],
                 &request
             )
         )

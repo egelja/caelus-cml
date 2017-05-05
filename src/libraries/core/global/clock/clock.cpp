@@ -117,14 +117,14 @@ CML::clock::clock()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-time_t CML::clock::elapsedClockTime() const
+CML::clock::TIME_T CML::clock::elapsedClockTime() const
 {
     newTime_ = getTime();
     return newTime_ - startTime_;
 }
 
 
-time_t CML::clock::clockTimeIncrement() const
+CML::clock::TIME_T CML::clock::clockTimeIncrement() const
 {
     lastTime_ = newTime_;
     newTime_ = getTime();

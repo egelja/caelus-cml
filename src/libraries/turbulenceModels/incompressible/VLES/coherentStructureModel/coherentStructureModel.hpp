@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM 
+Copyright (C) 2015 - 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,14 +19,18 @@ License
 
 Description
 
-    Coherernt structure model for VLES based on k-omega SST transport equations
+    Coherent structure model for VLES based on k-omega SST transport equations
 
 References
 
     [1] D. W. Stephens, C. Sideroff and A. Jemcov, "A Two Equation VLES
-    Turbulence Model with Near-Wall Delayed Behavior" 7th Asia-Pacific 
-    International Symposium in Aerospace Technology, November 2015, 
-    Cairns, Australia
+        Turbulence Model with Near-Wall Delayed Behavior" 7th Asia-Pacific 
+        International Symposium in Aerospace Technology, November 2015, 
+        Cairns, Australia
+
+    [2] H. Kobayashi, F.E. Ham, X. Wu "Aplication of a local SGS model 
+        based on coherent structure to complex geometries", International
+        Journal of Heat and Fluid Flow, 29(3) pp. 640-653
 
 Author(s)
     Aleksandar Jemcov
@@ -53,6 +57,8 @@ protected:
 
     // Protected
     Switch delayed_;
+    Switch damped_;
+    Switch curvatureCorrection_;
 
     // Model coefficients
     dimensionedScalar alphaK1_;
@@ -72,6 +78,12 @@ protected:
     dimensionedScalar a1_;
     dimensionedScalar c1_;
 
+    dimensionedScalar Cr1_;
+    dimensionedScalar Cr2_;
+    dimensionedScalar Cr3_;
+    dimensionedScalar Cscale_;
+    dimensionedScalar frMax_;
+
     //- Wall distance field
     //  Note: different to wall distance in parent VLESModel
     wallDist y_;
@@ -81,7 +93,11 @@ protected:
     volScalarField k_;
     volScalarField omega_;
     volScalarField nut_;
+    volScalarField nuSgs_;
+    volScalarField yStar_;
+    volScalarField fr1_;
     volScalarField Fr_;
+    volScalarField Fd_;
 
     tmp<volScalarField> F1(volScalarField const& CDkOmega) const;
     tmp<volScalarField> F2() const;

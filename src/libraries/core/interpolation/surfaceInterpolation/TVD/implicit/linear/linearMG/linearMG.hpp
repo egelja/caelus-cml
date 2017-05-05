@@ -71,7 +71,7 @@ public:
             order_ = readScalar(is);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearKoren(fvMesh const&, Istream&)", is)
+                FatalIOErrorIn("linearMG(fvMesh const&, Istream&)", is)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

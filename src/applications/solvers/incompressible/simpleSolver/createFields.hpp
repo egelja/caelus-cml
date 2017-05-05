@@ -40,3 +40,41 @@
         incompressible::RASModel::New(U, phi, laminarTransport)
     );
 
+    volScalarField Vol
+    (
+        IOobject
+        (
+            "Vol",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("vol",dimensionSet(0,3,0,0,0,0,0),scalar(0)),
+        zeroGradientFvPatchScalarField::typeName
+    );
+
+    surfaceScalarField left
+    (
+        IOobject
+        (
+            "left",
+            runTime.timeName(),
+            mesh
+        ),
+        mesh,
+        dimensionedScalar("left", dimless, 1.0)
+    );
+
+    surfaceScalarField right
+    (
+        IOobject
+        (
+            "right",
+            runTime.timeName(),
+            mesh
+        ),
+        mesh,
+        dimensionedScalar("right", dimless, -1.0)
+    );

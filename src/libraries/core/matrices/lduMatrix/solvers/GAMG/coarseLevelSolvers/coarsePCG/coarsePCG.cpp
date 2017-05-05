@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,7 +36,7 @@ CML::dictionary CML::CoarsePCG::solverDict
     const scalar relTol
 )
 {
-    dictionary dict(IStringStream("solver PCG; preconditioner DIC;")());
+    dictionary dict(IStringStream("solver PCG; preconditioner SSGS;")());
     dict.add("tolerance", tol);
     dict.add("relTol", relTol);
 
@@ -57,14 +57,13 @@ CML::dictionary CML::CoarsePCG::solverDict
 
 CML::CoarsePCG::CoarsePCG
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const dictionary& solverControls
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces,
+    dictionary const& solverControls
+) :
     PCG
     (
         fieldName,
@@ -78,15 +77,14 @@ CML::CoarsePCG::CoarsePCG
 
 CML::CoarsePCG::CoarsePCG
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const scalar tolerance,
-    const scalar relTol
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces,
+    scalar const tolerance,
+    scalar const relTol
+) :
     PCG
     (
         fieldName,

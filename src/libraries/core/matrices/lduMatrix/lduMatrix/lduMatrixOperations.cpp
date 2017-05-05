@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -370,8 +371,8 @@ CML::tmp<CML::scalarField > CML::lduMatrix::H1() const
 
         for (register label face=0; face<nFaces; face++)
         {
-            H1Ptr[uPtr[face]] -= lowerPtr[face];
-            H1Ptr[lPtr[face]] -= upperPtr[face];
+            H1Ptr[uPtr[face]] -= upperPtr[face];
+            H1Ptr[lPtr[face]] -= lowerPtr[face];
         }
     }
 

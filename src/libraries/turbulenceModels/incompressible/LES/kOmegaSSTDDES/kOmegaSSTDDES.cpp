@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,22 +36,21 @@ addToRunTimeSelectionTable(LESModel, kOmegaSSTDDES, dictionary);
 tmp<volScalarField> kOmegaSSTDDES::FDES() const
 {
     return max
-           (
-                Lt()/(CDES_*delta())*(scalar(1.0) - F1()),
-                scalar(1.0)
-           );
+    (
+        Lt()/(CDES_*delta())*(scalar(1.0) - F1()),
+        scalar(1.0)
+    );
 }
 
 
 kOmegaSSTDDES::kOmegaSSTDDES
 (
-    const volVectorField& U,
-    const surfaceScalarField& phi,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
     transportModel& transport,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     kOmegaSSTDES(U, phi, transport, turbulenceModelName, modelName)
 {}
 

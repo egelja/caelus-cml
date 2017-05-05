@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -68,13 +68,6 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    // Runge-Kutta coefficient
-    scalarList beta(4);
-    beta[0] = 0.1100;
-    beta[1] = 0.2766;
-    beta[2] = 0.5000;
-    beta[3] = 1.0000;
-
     while (runTime.run())
     {
 #       include "cfl.hpp"
@@ -93,6 +86,7 @@ int main(int argc, char *argv[])
         // Runge-Kutta multistage time loop
         forAll (beta, i)
         {
+            Info << "Runge-Kutta stage " << i + 1 << endl;
             riemannSolver->update();
             volScalarField rhoResidual  = 
                 (fvc::div(riemannSolver->rhoFlux()))();
@@ -106,29 +100,55 @@ int main(int argc, char *argv[])
                 fvm::ddt(1.0/beta[i], rho) == - rhoResidual
             );
 
+            scalar const  rhoL2 =
+                CML::sqrt(gSum(sqr(rhoResidual.internalField())))
+                /mesh.nCells();
+
+            Info << "rho residual: "<< rhoL2 << "    ";
+
             rhoUResidual -= 
                 fvc::div(turbulence->muEff()*dev2(CML::T(fvc::grad(U))));
             rhoUResidual -= fvc::laplacian(turbulence->muEff(),U);
+            scalar const c = scalar(2.0/3.0);
+            rhoUResidual -= fvc::div(c*I*rho*turbulence->k());
 
             solve
             (
                 fvm::ddt(1.0/beta[i], rhoU) == -rhoUResidual
             );
 
+            U.dimensionedInternalField() = rhoU.dimensionedInternalField()
+              / rho.dimensionedInternalField();
+            U.correctBoundaryConditions();
+
+            scalar const rhoUL2 =
+                CML::sqrt(gSum(magSqr(rhoUResidual.internalField())))
+                /mesh.nCells();
+
+            Info << "rhoU residual: "<< rhoUL2 << "    ";
+
             volScalarField k = (thermo->Cp()*turbulence->alphaEff())();
             k.correctBoundaryConditions();
             rhoEResidual -= fvc::laplacian(k,T);
-            U = rhoU/rho;
-            U.correctBoundaryConditions();
             rhoEResidual -= 
                 fvc::div(turbulence->muEff()*(fvc::grad(U))&U);
             rhoEResidual -=  
                 fvc::div(turbulence->muEff()*dev2(CML::T(fvc::grad(U)))&U);
+            scalar const sigmaK = scalar(0.6);
+            volScalarField muk = (turbulence->mu()+sigmaK*turbulence->mut())();
+            rhoEResidual -= fvc::laplacian(muk,turbulence->k());
+            rhoEResidual -= fvc::div((c*I*rho*turbulence->k())&U);
 
             solve
             (
                 fvm::ddt(1.0/beta[i], rhoE) == - rhoEResidual
             );
+
+            scalar const rhoEL2 =
+                CML::sqrt(gSum(sqr(rhoEResidual.internalField())))
+                /mesh.nCells();
+
+            Info << "rhoE residual: "<< rhoEL2 << endl;            
 
 #           include "updateFields.hpp"
 

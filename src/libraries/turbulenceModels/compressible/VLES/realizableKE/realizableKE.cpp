@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -246,6 +245,19 @@ realizableVLESKE::realizableVLESKE
         ),
         mesh_
     ),
+    muSgs_
+    (
+        IOobject
+        (
+            "muSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("muSgs",mut_.dimensions(),0)
+    ),
     alphat_
     (
         IOobject
@@ -257,6 +269,19 @@ realizableVLESKE::realizableVLESKE
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    alphaSgs_
+    (
+        IOobject
+        (
+            "alphaSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("alphaSgs",alphat_.dimensions(),0)
     ),
     Fr_
     (
@@ -306,7 +331,7 @@ tmp<volSymmTensorField> realizableVLESKE::R() const
             ((2.0/3.0)*I)*k_ - mut_*twoSymm(fvc::grad(U_)),
             k_.boundaryField().types()
         )
-    );
+    )*Fr_;
 }
 
 
@@ -324,7 +349,7 @@ tmp<volSymmTensorField> realizableVLESKE::devRhoReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))
+           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -332,7 +357,7 @@ tmp<volSymmTensorField> realizableVLESKE::devRhoReff() const
 
 tmp<fvVectorMatrix> realizableVLESKE::divDevRhoReff(volVectorField& U) const
 {
-    return
+    return Fr_*
     (
       - fvm::laplacian(muEff(), U)
       - fvc::div(muEff()*dev2(T(fvc::grad(U))))
@@ -525,12 +550,18 @@ void realizableVLESKE::correct()
     bound(k_, kMin_);
 
     // Re-calculate viscosity
-    mut_ = Fr_*rCmu(gradU, S2, magS)*rho_*sqr(k_)/epsilon_;
+    mut_ = rCmu(gradU, S2, magS)*rho_*sqr(k_)/epsilon_;
     mut_.correctBoundaryConditions();
+
+    muSgs_ = Fr_*mut_;
+    muSgs_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity
     alphat_ = mut_/Prt_;
     alphat_.correctBoundaryConditions();
+
+    alphaSgs_ = Fr_*alphat_;
+    alphaSgs_.correctBoundaryConditions();
 }
 
 

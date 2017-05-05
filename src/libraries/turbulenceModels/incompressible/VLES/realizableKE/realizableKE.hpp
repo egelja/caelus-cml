@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Appled CCM
+Copyright (C) 2015 - 2016 Appled CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -67,6 +67,7 @@ protected:
     volScalarField k_;
     volScalarField epsilon_;
     volScalarField nut_;
+    volScalarField nuSgs_;
     volScalarField Fr_;
 
     //- Wall distance field

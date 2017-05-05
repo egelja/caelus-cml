@@ -34,11 +34,11 @@ namespace CML
 
 CML::DILUSmoother::DILUSmoother
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces
 ) :
     lduMatrix::smoother
     (
@@ -56,9 +56,9 @@ CML::DILUSmoother::DILUSmoother
 void CML::DILUSmoother::smooth
 (
     scalarField& psi,
-    const scalarField& source,
-    const direction cmpt,
-    const label nSweeps
+    scalarField const& source,
+    direction const cmpt,
+    label const nSweeps
 ) const
 {
     const scalar* const RESTRICT rDPtr = rD_.begin();

@@ -83,7 +83,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-vector eigenValues(const tensor& t)
+vector eigenValues(const tensor& t, bool sort)
 {
     // The eigenvalues
     scalar i, ii, iii;
@@ -179,22 +179,24 @@ vector eigenValues(const tensor& t)
         }
     }
 
-    // Sort the eigenvalues into ascending order
-    if (i > ii)
+    if (sort)
     {
-        Swap(i, ii);
-    }
+        // Sort the eigenvalues into ascending order
+        if (i > ii)
+        {
+            Swap(i, ii);
+        }
 
-    if (ii > iii)
-    {
-        Swap(ii, iii);
-    }
+        if (ii > iii)
+        {
+            Swap(ii, iii);
+        }
 
-    if (i > ii)
-    {
-        Swap(i, ii);
+        if (i > ii)
+        {
+            Swap(i, ii);
+        }
     }
-
     return vector(i, ii, iii);
 }
 
@@ -307,9 +309,9 @@ vector eigenVector(const tensor& t, const scalar lambda)
 }
 
 
-tensor eigenVectors(const tensor& t)
+tensor eigenVectors(const tensor& t, bool sort)
 {
-    vector evals(eigenValues(t));
+    vector evals(eigenValues(t, sort));
 
     tensor evs
     (
@@ -322,9 +324,9 @@ tensor eigenVectors(const tensor& t)
 }
 
 
-vector eigenValues(const symmTensor& t)
+vector eigenValues(const symmTensor& t, bool sort)
 {
-    return eigenValues(tensor(t));
+    return eigenValues(tensor(t), sort);
 }
 
 
@@ -334,9 +336,9 @@ vector eigenVector(const symmTensor& t, const scalar lambda)
 }
 
 
-tensor eigenVectors(const symmTensor& t)
+tensor eigenVectors(const symmTensor& t, bool sort)
 {
-    return eigenVectors(tensor(t));
+    return eigenVectors(tensor(t), sort);
 }
 }
 

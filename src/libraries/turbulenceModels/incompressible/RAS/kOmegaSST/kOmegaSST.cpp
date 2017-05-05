@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
-Copyright (C) 2014-2015 Applied CCM
+Copyright (C) 2014-2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,7 +32,7 @@ namespace RASModels
 defineTypeNameAndDebug(kOmegaSST, 0);
 addToRunTimeSelectionTable(RASModel, kOmegaSST, dictionary);
 
-tmp<volScalarField> kOmegaSST::F1(const volScalarField& CDkOmega) const
+tmp<volScalarField> kOmegaSST::F1(volScalarField const& CDkOmega) const
 {
     tmp<volScalarField> CDkOmegaPlus = max
     (
@@ -67,15 +67,29 @@ tmp<volScalarField> kOmegaSST::F2() const
 
 kOmegaSST::kOmegaSST
 (
-    const volVectorField& U,
-    const surfaceScalarField& phi,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
     transportModel& transport,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     RASModel(modelName, U, phi, transport, turbulenceModelName),
-    curvatureCorrection_(coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)),
+    curvatureCorrection_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "curvatureCorrection",
+            false
+        )
+    ),
+    damped_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "damped", 
+            false
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -258,6 +272,7 @@ kOmegaSST::kOmegaSST
         ),
         mesh_
     ),
+    yStar_(pow(0.09,0.25)*pow(k_,0.5)*y_/nu()),
     fr1_
     (
         IOobject
@@ -270,20 +285,55 @@ kOmegaSST::kOmegaSST
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
+    ),
+    Fd_
+    (
+        IOobject
+        (
+            "Fd",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fd", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
     bound(omega_, omegaMin_);
 
-    nut_ =
-    (
-        a1_*k_
-      / max
+    if (damped_)
+    {
+        Info << "Buffer layer damping enabled" << endl;
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_/nu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        nut_ =
         (
-            a1_*omega_,
-            F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
-        )
-    );
+            a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );
+        nut_ *= Fd_;
+    }
+    else
+    {
+        nut_ =
+        (
+            a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );
+    }
     nut_.correctBoundaryConditions();
 
     if (curvatureCorrection_)
@@ -347,7 +397,7 @@ tmp<fvVectorMatrix> kOmegaSST::divDevReff(volVectorField& U) const
 
 tmp<fvVectorMatrix> kOmegaSST::divDevRhoReff
 (
-    const volScalarField& rho,
+    volScalarField const& rho,
     volVectorField& U
 ) const
 {
@@ -365,6 +415,7 @@ bool kOmegaSST::read()
     if (RASModel::read())
     {
         curvatureCorrection_.readIfPresent("curvatureCorrection",coeffDict());
+        damped_.readIfPresent("damped", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -405,19 +456,19 @@ void kOmegaSST::correct()
         y_.correct();
     }
 
-    const volScalarField S2(2*magSqr(symm(fvc::grad(U_))));
-    const volScalarField Omega(2*magSqr(skew(fvc::grad(U_))));
+    volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
+    volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));
     volScalarField G(GName(), nut_*S2);
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
-    const volScalarField CDkOmega
+    volScalarField const CDkOmega
     (
         (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    const volScalarField F1(this->F1(CDkOmega));
+    volScalarField const F1(this->F1(CDkOmega));
 
     dimensionedScalar nutMin
     (
@@ -429,20 +480,20 @@ void kOmegaSST::correct()
     // Curvature correction terms
     if (curvatureCorrection_)
     {    
-        const volTensorField Omegaij(skew(fvc::grad(this->U_)));
-        const volScalarField sqrOmega(2*magSqr(Omegaij));
-        const volSymmTensorField Sij(symm(fvc::grad(this->U_)));    
-        const volScalarField sqrS(2*magSqr(Sij));
-        const dimensionedScalar smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
-        const volScalarField sqrD(0.5*(sqrS + sqrOmega + smallOmega));
-        const volScalarField rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
-        const volSymmTensorField DSijDt(fvc::DDt(this->phi_,Sij));
-        const volScalarField rTilda(  
+        volTensorField const Omegaij(skew(fvc::grad(this->U_)));
+        volScalarField const sqrOmega(2*magSqr(Omegaij));
+        volSymmTensorField const Sij(symm(fvc::grad(this->U_)));    
+        volScalarField const sqrS(2*magSqr(Sij));
+        dimensionedScalar const smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
+        volScalarField const sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+        volScalarField const rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+        volSymmTensorField const DSijDt(fvc::DDt(this->phi_,Sij));
+        volScalarField const rTilda(  
             (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
-        const volScalarField frotation ((scalar(1.0) + Cr1_)
+        volScalarField const frotation ((scalar(1.0) + Cr1_)
             *scalar(2.0)*rStar/(scalar(1.0) + rStar)*
             (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_);
-        const volScalarField frTilda(max(min(frotation, frMax_), scalar(0))); 
+        volScalarField const frTilda(max(min(frotation, frMax_), scalar(0))); 
         fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
     }
 
@@ -487,7 +538,20 @@ void kOmegaSST::correct()
 
 
     // Re-calculate viscosity
-    nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    if (damped_)
+    {
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_/nu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        nut_ *= nut_;
+    }
+    else
+    {
+        nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    }
+    
     nut_.correctBoundaryConditions();
 }
 

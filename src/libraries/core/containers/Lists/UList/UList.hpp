@@ -51,6 +51,7 @@ template<class T> class List;
 template<class T> class SubList;
 
 // Forward declaration of friend functions and operators
+template<class T> class SLList;
 template<class T> class UList;
 template<class T> Ostream& operator<<(Ostream&, const UList<T>&);
 template<class T> Istream& operator>>(Istream&, UList<T>&);

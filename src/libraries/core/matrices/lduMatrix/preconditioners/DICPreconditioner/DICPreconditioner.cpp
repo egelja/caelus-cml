@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -62,9 +62,28 @@ void CML::DICPreconditioner::approximateInverse()
     register label nCells = rD_.size();
     register label nFaces = solver_.matrix().upper().size();
 
+    bool zeroPivot = false;
     for (register label face=0; face<nFaces; face++)
     {
-        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/rDPtr[lPtr[face]];
+        scalar const Djj = rDPtr[lPtr[face]];
+        if (Djj >= SMALL)
+        {
+            rDPtr[uPtr[face]] -= sqr(upperPtr[face])/Djj;
+        }
+        else
+        {
+            zeroPivot = true;
+            break;
+        }
+    }
+
+    if (zeroPivot)
+    {
+        for (register label cell=0; cell<nCells; cell++)
+        {
+            rDPtr[cell] = solver_.matrix().diag()[cell];
+        }
+        zeroPivot = false;
     }
 
     // Generate reciprocal DIC

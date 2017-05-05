@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,30 +19,27 @@ ddtSchemes
 
 gradSchemes
 {
-    default         Gauss  skewCorrected linear;
+    default         leastSquares;
 }
 
 divSchemes
 {
-    default         none;
-    div(((muEff*grad(U))&U)) Gauss skewCorrected linear;
-    div(((muEff*dev2(T(grad(U))))&U)) Gauss skewCorrected linear;
-    div((muEff*dev2(T(grad(U))))) Gauss  skewCorrected linear;
+    default         Gauss linear;
 }
 
 laplacianSchemes
 {
-    default         Gauss  skewCorrected linear corrected;
+    default         Gauss linear corrected;
 }
 
 interpolationSchemes
 {
-    default          skewCorrected linear;
+    default          linear;
 }
 
 snGradSchemes
 {
-    default          skewCorrected corrected;
+    default          corrected;
 }
 
 fluxRequired
@@ -52,7 +49,7 @@ fluxRequired
     potential;
 }
 
-Flux    llfFlux;
+Flux    hllcFlux;
 Limiter BJLimiter;
 
 

@@ -697,7 +697,7 @@ public:
             bool pointInCell(const point& p, label celli) const;
 
             //- Find the cell with the nearest cell centre to location
-            label findNearestCell(const point& location) const;
+            virtual label findNearestCell(const point& location) const;
 
             //- Find cell enclosing this location (-1 if not in mesh)
             label findCell(const point& location) const;

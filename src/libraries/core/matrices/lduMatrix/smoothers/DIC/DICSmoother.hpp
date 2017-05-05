@@ -48,47 +48,44 @@ References
 namespace CML
 {
 
-class DICSmoother
-:
-    public lduMatrix::smoother
+class DICSmoother : public lduMatrix::smoother
 {
     // Private data
 
-        //- The reciprocal preconditioned diagonal
-        scalarField rD_;
-        // - Cached arrays 
-        scalarField rDuUpper_;
-        scalarField rDlUpper_;
+   //- The reciprocal preconditioned diagonal
+   scalarField rD_;
+   // - Cached arrays 
+   scalarField rDuUpper_;
+   scalarField rDlUpper_;
 
 public:
 
     //- Runtime type information
     TypeName("DIC");
 
-
     // Constructors
 
-        //- Construct from matrix components
-        DICSmoother
-        (
-            const word& fieldName,
-            const lduMatrix& matrix,
-            const FieldField<Field, scalar>& interfaceBouCoeffs,
-            const FieldField<Field, scalar>& interfaceIntCoeffs,
-            const lduInterfaceFieldPtrsList& interfaces
-        );
+    //- Construct from matrix components
+    DICSmoother
+    (
+        word const& fieldName,
+        lduMatrix const& matrix,
+        FieldField<Field, scalar> const& interfaceBouCoeffs,
+        FieldField<Field, scalar> const& interfaceIntCoeffs,
+        lduInterfaceFieldPtrsList const& interfaces
+    );
 
 
     // Member Functions
 
-        //- Smooth the solution for a given number of sweeps
-        void smooth
-        (
-            scalarField& x,
-            const scalarField& b,
-            const direction cmpt,
-            const label nSweeps
-        ) const;
+    //- Smooth the solution for a given number of sweeps
+    void smooth
+    (
+        scalarField& x,
+        scalarField const& b,
+        direction const cmpt,
+        label const nSweeps
+    ) const;
 };
 
 }

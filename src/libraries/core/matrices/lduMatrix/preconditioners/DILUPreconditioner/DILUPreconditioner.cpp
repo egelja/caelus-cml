@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014  - 2016 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -58,14 +58,34 @@ void CML::DILUPreconditioner::approximateInverse
     const scalar* const RESTRICT lowerPtr = matrix.lower().begin();
 
     register label nFaces = matrix.upper().size();
+
+    bool zeroPivot = false;
     for (register label face=0; face<nFaces; face++)
     {
-        rDPtr[uPtr[face]] -= upperPtr[face]*lowerPtr[face]/rDPtr[lPtr[face]];
+         scalar const Djj = rDPtr[lPtr[face]];
+        if (Djj >= SMALL)
+        {
+            rDPtr[uPtr[face]] -= upperPtr[face]*lowerPtr[face]/Djj;
+        }
+        else
+        {
+            zeroPivot = true;
+            break;
+        }
     }
 
     // Calculate the reciprocal of the preconditioned diagonal
     register label nCells = rD.size();
 
+    if (zeroPivot)
+    {
+        for (register label cell=0; cell<nCells; cell++)
+        {
+            rDPtr[cell] = matrix.diag()[cell];
+        }
+        zeroPivot = false;
+    }
+    
     for (register label cell=0; cell<nCells; cell++)
     {
         rDPtr[cell] = 1.0/rDPtr[cell];

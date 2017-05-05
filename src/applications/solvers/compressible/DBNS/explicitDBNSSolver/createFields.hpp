@@ -90,3 +90,9 @@
         )
     );
 
+    // Runge-Kutta coefficients
+    scalarList beta(4);
+    beta[0] = 0.1100;
+    beta[1] = 0.2766;
+    beta[2] = 0.5000;
+    beta[3] = 1.0000;

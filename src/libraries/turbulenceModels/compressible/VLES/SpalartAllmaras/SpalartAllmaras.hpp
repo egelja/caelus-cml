@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM 
+Copyright (C) 2015 - 2016 Applied CCM 
 --------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -83,7 +83,9 @@ protected:
 
     volScalarField nuTilda_;
     volScalarField mut_;
+    volScalarField muSgs_;
     volScalarField alphat_;
+    volScalarField alphaSgs_;
     volScalarField fr1_;
     volScalarField Fr_;
     wallDist d_;

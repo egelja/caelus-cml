@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -25,8 +25,7 @@ boundaryField
 
     fixedWalls
     {
-        type            fixedValue;
-        value           uniform (0 0 0);
+        type            noSlipWall;
     }
 
     frontAndBack

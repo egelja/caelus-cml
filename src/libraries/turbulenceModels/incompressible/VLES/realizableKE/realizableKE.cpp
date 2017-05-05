@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -238,6 +238,19 @@ realizableVLESKE::realizableVLESKE
         ),
         mesh_
     ),
+    nuSgs_
+    (
+        IOobject
+        (
+            "nuSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("nuSgs",nut_.dimensions(),0)
+    ),
     Fr_
     (
         IOobject
@@ -246,7 +259,7 @@ realizableVLESKE::realizableVLESKE
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fr", dimless, 1),
@@ -284,7 +297,7 @@ tmp<volSymmTensorField> realizableVLESKE::R() const
             ((2.0/3.0)*I)*k_ - nut_*twoSymm(fvc::grad(U_)),
             k_.boundaryField().types()
         )
-    );
+    )*Fr_;
 }
 
 
@@ -302,7 +315,7 @@ tmp<volSymmTensorField> realizableVLESKE::devReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -nuEff()*dev(twoSymm(fvc::grad(U_)))
+           -nuEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -310,7 +323,7 @@ tmp<volSymmTensorField> realizableVLESKE::devReff() const
 
 tmp<fvVectorMatrix> realizableVLESKE::divDevReff(volVectorField& U) const
 {
-    return
+    return Fr_*
     (
       - fvm::laplacian(nuEff(), U)
       - fvc::div(nuEff()*dev(T(fvc::grad(U))))
@@ -326,7 +339,7 @@ tmp<fvVectorMatrix> realizableVLESKE::divDevRhoReff
 {
     volScalarField muEff("muEff", rho*nuEff());
 
-    return
+    return Fr_*
     (
       - fvm::laplacian(muEff, U)
       - fvc::div(muEff*dev(T(fvc::grad(U))))
@@ -508,8 +521,10 @@ void realizableVLESKE::correct()
     solve(kEqn);
     bound(k_, kMin_);
 
-    nut_ = Fr_*rCmu(gradU, S2, magS)*sqr(k_)/epsilon_;
+    nut_ = rCmu(gradU, S2, magS)*sqr(k_)/epsilon_;
     nut_.correctBoundaryConditions();
+    nuSgs_ = Fr_*nut_;
+    nuSgs_.correctBoundaryConditions();
 }
 
 

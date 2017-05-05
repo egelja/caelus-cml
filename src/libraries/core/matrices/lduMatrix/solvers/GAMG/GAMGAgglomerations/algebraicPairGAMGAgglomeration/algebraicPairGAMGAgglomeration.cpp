@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,8 +24,6 @@ License
 #include "lduMatrix.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(algebraicPairGAMGAgglomeration, 0);
@@ -37,18 +36,21 @@ namespace CML
     );
 }
 
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
 CML::algebraicPairGAMGAgglomeration::algebraicPairGAMGAgglomeration
 (
-    const lduMatrix& matrix,
-    const dictionary& controlDict
-)
-:
+    lduMatrix const& matrix,
+    dictionary const& controlDict
+) :
     pairGAMGAgglomeration(matrix.mesh(), controlDict)
 {
-    agglomerate(matrix.mesh(), mag(matrix.upper()));
+    if (matrix.hasLower())
+        agglomerate
+        (
+            matrix.mesh(),
+            max(mag(matrix.lower()), mag(matrix.upper()))
+        );
+    else
+        agglomerate(matrix.mesh(), mag(matrix.upper()));
 }
 
 

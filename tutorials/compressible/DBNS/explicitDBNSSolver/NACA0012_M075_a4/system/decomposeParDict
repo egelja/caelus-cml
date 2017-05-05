@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -15,7 +15,7 @@ FoamFile
 
 numberOfSubdomains 8;
 
-method          simple;
+method          scotch;
 
 simpleCoeffs
 {
@@ -31,6 +31,12 @@ hierarchicalCoeffs
 }
 
 metisCoeffs
+{
+    processorWeights 
+    ( 1 1 1 1 1 1 1 1 );
+}
+
+scotchCoefficients
 {
     processorWeights 
     ( 1 1 1 1 1 1 1 1 );

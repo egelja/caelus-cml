@@ -82,6 +82,22 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
             true
         )
     ),
+    damped_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "damped", 
+            false
+        )
+    ),
+    curvatureCorrection_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "curvatureCorrection",
+            false
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -182,6 +198,52 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         )
     ),
 
+    Cr1_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr1",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cr2_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr2",
+            coeffDict_,
+            2.0
+        )
+    ),
+    Cr3_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr3",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cscale_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cscale",
+            coeffDict_,
+            1.0
+        )
+    ),
+    frMax_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "frMax",
+            coeffDict_,
+            1.25
+        )
+    ),
+    
     y_(mesh_),
 
     k_
@@ -220,6 +282,33 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         ),
         mesh_
     ),
+    nuSgs_
+    (
+        IOobject
+        (
+            "nuSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("nuSgs",nut_.dimensions(),0)
+    ),
+    yStar_(pow(0.09,0.25)*pow(k_,0.5)*y_/nu()),
+    fr1_
+    (
+        IOobject
+        (
+            "fr1",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("one", dimless, 1)
+    ),
     Fr_
     (
         IOobject
@@ -228,27 +317,66 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fr", dimless, 1),
+        calculatedFvPatchScalarField::typeName
+    ),
+    Fd_
+    (
+        IOobject
+        (
+            "Fd",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fd", dimless, 1),
         calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
     bound(omega_, omegaMin_);
-
-    nut_ =
-    (
-        a1_*k_
-      / max
+    if (damped_)
+    {
+        Info << "Buffer layer damping enabled" << endl;
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_/nu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        nut_ =
         (
-            a1_*omega_,
-            F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
-        )
-    );
+            a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );        
+        nut_ *= Fd_;
+    }
+    else
+    {
+        nut_ =
+        (
+            a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );
+    }
     nut_.correctBoundaryConditions();
 
+    if (curvatureCorrection_)
+    {
+        Info<<" Curvature correction modification enabled" << endl;
+    }
+    
     printCoeffs();
 }
 
@@ -270,7 +398,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::R() const
             ((2.0/3.0)*I)*k_ - nut_*twoSymm(fvc::grad(U_)),
             k_.boundaryField().types()
         )
-    );
+    )*Fr_;
 }
 
 
@@ -288,7 +416,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::devReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -nuEff()*dev(twoSymm(fvc::grad(U_)))
+           -nuEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -296,7 +424,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::devReff() const
 
 tmp<fvVectorMatrix> CoherentStructureModelVLES::divDevReff(volVectorField& U) const
 {
-    return
+    return Fr_*
     (
       - fvm::laplacian(nuEff(), U)
       - fvc::div(nuEff()*dev(T(fvc::grad(U))))
@@ -311,7 +439,7 @@ tmp<fvVectorMatrix> CoherentStructureModelVLES::divDevRhoReff
 {
     volScalarField muEff("muEff", rho*nuEff());
 
-    return
+    return Fr_*
     (
       - fvm::laplacian(muEff, U)
       - fvc::div(muEff*dev(T(fvc::grad(U))))
@@ -323,6 +451,7 @@ bool CoherentStructureModelVLES::read()
     if (VLESModel::read())
     {
         delayed_.readIfPresent("delayed", coeffDict());
+        damped_.readIfPresent("damped", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -334,6 +463,11 @@ bool CoherentStructureModelVLES::read()
         betaStar_.readIfPresent(coeffDict());
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
+        Cr1_.readIfPresent(coeffDict());
+        Cr2_.readIfPresent(coeffDict());
+        Cr3_.readIfPresent(coeffDict());
+        Cscale_.readIfPresent(coeffDict());
+        frMax_.readIfPresent(coeffDict());
 
         return true;
     }
@@ -458,6 +592,25 @@ void CoherentStructureModelVLES::correct()
         SMALL
      );
 
+    if (curvatureCorrection_)
+    {    
+        volTensorField const Omegaij(skew(fvc::grad(this->U_)));
+        volScalarField const sqrOmega(2*magSqr(Omegaij));
+        volSymmTensorField const Sij(symm(fvc::grad(this->U_)));    
+        volScalarField const sqrS(2*magSqr(Sij));
+        dimensionedScalar const smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
+        volScalarField const sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+        volScalarField const rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+        volSymmTensorField const DSijDt(fvc::DDt(this->phi_,Sij));
+        volScalarField const rTilda(  
+            (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
+        volScalarField const frotation ((scalar(1.0) + Cr1_)
+            *scalar(2.0)*rStar/(scalar(1.0) + rStar)*
+            (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_);
+        volScalarField const frTilda(max(min(frotation, frMax_), scalar(0))); 
+        fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
+    }
+
     // Turbulent frequency equation
     tmp<fvScalarMatrix> omegaEqn
     (
@@ -465,7 +618,7 @@ void CoherentStructureModelVLES::correct()
       + fvm::div(phi_, omega_)
       - fvm::laplacian(DomegaEff(F1), omega_)
      ==
-        gamma(F1)* min(G, c1_*betaStar_*k_*omega_)/(nut_ + nutMin)
+        gamma(F1)* min(fr1_*G, c1_*betaStar_*k_*omega_)/(nut_ + nutMin)
       - fvm::Sp(beta(F1)*omega_, omega_)
       + 2*(1-F1)*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
     );
@@ -485,7 +638,7 @@ void CoherentStructureModelVLES::correct()
       + fvm::div(phi_, k_)
       - fvm::laplacian(DkEff(F1), k_)
      ==
-        min(G, c1_*betaStar_*k_*omega_)
+        min(fr1_*G, c1_*betaStar_*k_*omega_)
       - fvm::Sp(betaStar_*omega_, k_)
     );
 
@@ -536,9 +689,23 @@ void CoherentStructureModelVLES::correct()
 
     Fr_.correctBoundaryConditions();
 
-    nut_ = Fr_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    if (damped_)
+    {
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_/nu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        nut_ *= Fd_;
+    }
+    else
+    {
+        nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+    }
 
     nut_.correctBoundaryConditions();
+    nuSgs_ = Fr_*nut_;
+    nuSgs_.correctBoundaryConditions();
 }
 
 

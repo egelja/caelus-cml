@@ -47,6 +47,102 @@ CML::word CML::name(const quaternion& q)
 }
 
 
+CML::quaternion CML::slerp
+(
+    const quaternion& qa,
+    const quaternion& qb,
+    const scalar t
+)
+{
+    label sign = 1;
+
+    if ((qa & qb) < 0)
+    {
+        sign = -1;
+    }
+
+    return qa*pow((inv(qa)*sign*qb), t);
+}
+
+
+CML::quaternion CML::average
+(
+    const UList<quaternion>& qs,
+    const UList<scalar> w
+)
+{
+    quaternion qa(w[0]*qs[0]);
+
+    for (label i=1; i<qs.size(); i++)
+    {
+        // Invert quaternion if it has the opposite sign to the average
+        if ((qa & qs[i]) > 0)
+        {
+            qa += w[i]*qs[i];
+        }
+        else
+        {
+            qa -= w[i]*qs[i];
+        }
+    }
+
+    return qa;
+}
+
+
+CML::quaternion CML::exp(const quaternion& q)
+{
+    const scalar magV = mag(q.v());
+
+    if (magV == 0)
+    {
+        return quaternion(1, vector::zero);
+    }
+
+    const scalar expW = exp(q.w());
+
+    return quaternion
+    (
+        expW*cos(magV),
+        expW*sin(magV)*q.v()/magV
+    );
+}
+
+
+CML::quaternion CML::pow(const quaternion& q, const label power)
+{
+    const scalar magQ = mag(q);
+    const scalar magV = mag(q.v());
+
+    quaternion powq(q.v());
+
+    if (magV != 0 && magQ != 0)
+    {
+        powq /= magV;
+        powq *= power*acos(q.w()/magQ);
+    }
+
+    return pow(magQ, power)*exp(powq);
+}
+
+
+CML::quaternion CML::pow(const quaternion& q, const scalar power)
+{
+    const scalar magQ = mag(q);
+    const scalar magV = mag(q.v());
+
+    quaternion powq(q.v());
+
+    if (magV != 0 && magQ != 0)
+    {
+        powq /= magV;
+        powq *= power*acos(q.w()/magQ);
+    }
+
+    return pow(magQ, power)*exp(powq);
+}
+
+
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 CML::Istream& CML::operator>>(Istream& is, quaternion& q)

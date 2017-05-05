@@ -55,6 +55,8 @@ src_files = Split("""
   SpalartAllmarasDES/SpalartAllmarasDES.cpp
   SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
   SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
+  kOmegaSSTDES/kOmegaSSTDES.cpp
+  kOmegaSSTDDES/kOmegaSSTDDES.cpp
   derivedFvPatchFields/wallFunctions/muSgsWallFunctions/muSgsUSpaldingWallFunction/muSgsUSpaldingWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsWallFunction/alphaSgsWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsJayatillekeWallFunction/alphaSgsJayatillekeWallFunctionFvPatchScalarField.cpp

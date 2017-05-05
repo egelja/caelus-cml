@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,18 +34,10 @@ SourceFiles
 
 #include "pairGAMGAgglomeration.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
 
-/*---------------------------------------------------------------------------*\
-                 Class algebraicPairGAMGAgglomeration Declaration
-\*---------------------------------------------------------------------------*/
-
-class algebraicPairGAMGAgglomeration
-:
-    public pairGAMGAgglomeration
+class algebraicPairGAMGAgglomeration : public pairGAMGAgglomeration
 {
 
 public:
@@ -55,21 +48,15 @@ public:
 
     // Constructors
 
-        //- Construct given mesh and controls
-        algebraicPairGAMGAgglomeration
-        (
-            const lduMatrix& matrix,
-            const dictionary& controlDict
-        );
+    //- Construct given mesh and controls
+    algebraicPairGAMGAgglomeration
+    (
+        lduMatrix const& matrix,
+        dictionary const& controlDict
+    );
 };
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
-// ************************************************************************* //

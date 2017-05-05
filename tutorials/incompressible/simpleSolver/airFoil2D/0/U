@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,20 +19,18 @@ boundaryField
 {
     inlet
     {
-        type            freestream;
-        freestreamValue uniform (25.75 3.62 0);
+        type            fixedValue;
+        value           uniform (25.75 3.62 0);
     }
 
     outlet
     {
-        type            freestream;
-        freestreamValue uniform (25.75 3.62 0);
+        type            zeroGradient;
     }
 
     wall
     {
-        type            fixedValue;
-        value           uniform (0 0 0);
+        type            noSlipWall;
     }
 
     frontAndBack

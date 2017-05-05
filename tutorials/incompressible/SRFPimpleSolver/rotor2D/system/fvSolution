@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,10 +19,10 @@ solvers
         solver          GAMG;
         tolerance       1e-08;
         relTol          0.05;
-        smoother        GaussSeidel;
+        smoother        SSGS;
         cacheAgglomeration true;
         nCellsInCoarsestLevel 20;
-        agglomerator    faceAreaPair;
+        agglomerator    algebraicPair;
         mergeLevels     1;
     }
 
@@ -35,7 +35,7 @@ solvers
     "Urel.*"
     {
         solver          smoothSolver;
-        smoother        GaussSeidel;
+        smoother        USGS;
         nSweeps         2;
         tolerance       1e-07;
         relTol          0.1;
@@ -44,7 +44,7 @@ solvers
     "k.*"
     {
         solver          smoothSolver;
-        smoother        GaussSeidel;
+        smoother        USGS;
         nSweeps         2;
         tolerance       1e-07;
         relTol          0.1;
@@ -53,7 +53,7 @@ solvers
     "epsilon.*"
     {
         solver          smoothSolver;
-        smoother        GaussSeidel;
+        smoother        USGS;
         nSweeps         2;
         tolerance       1e-07;
         relTol          0.1;

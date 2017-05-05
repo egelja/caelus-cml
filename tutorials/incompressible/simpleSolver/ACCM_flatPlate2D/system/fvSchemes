@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 6.04
+Caelus 6.10
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -45,7 +45,7 @@ default					none;
 	laplacian(DnuTildaEff,nuTilda) 	Gauss 	linear 	corrected; // Will be used for S-A model only
 	laplacian(DkEff,k)		Gauss 	linear 	corrected; // Will be used for k-omega & k-omega only
 	laplacian(DomegaEff,omega)	Gauss 	linear 	corrected; // Will be used for k-omega model only
-	laplacian((1|A(U)),p)		Gauss 	linear	corrected;
+	laplacian(rAUf,p)		Gauss 	linear	corrected;
 	laplacian(1,p)			Gauss 	linear 	corrected;
 }
 

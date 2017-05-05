@@ -34,8 +34,8 @@ addToRunTimeSelectionTable(LESModel, SpalartAllmarasDDES, dictionary);
 
 tmp<volScalarField> SpalartAllmarasDDES::rd
 (
-    const volScalarField& visc,
-    const volScalarField& S
+    volScalarField const& visc,
+    volScalarField const& S
 ) const
 {
     return
@@ -52,20 +52,20 @@ tmp<volScalarField> SpalartAllmarasDDES::rd
 }
 
 
-tmp<volScalarField> SpalartAllmarasDDES::fd(const volScalarField& S) const
+tmp<volScalarField> SpalartAllmarasDDES::fd(volScalarField const& S) const
 {
     return 1 - tanh(pow3(8*rd((muEff()/rho()), S)));
 }
 
 
-tmp<volScalarField> SpalartAllmarasDDES::S(const volTensorField& gradU) const
+tmp<volScalarField> SpalartAllmarasDDES::S(volTensorField const& gradU) const
 {
-    const volScalarField contraction(gradU && gradU);
+    volScalarField const contraction(gradU && gradU);
     return sqrt(contraction);
 }
 
 
-tmp<volScalarField> SpalartAllmarasDDES::dTilda(const volScalarField& S) const
+tmp<volScalarField> SpalartAllmarasDDES::dTilda(volScalarField const& S) const
 {
     return max
     (
@@ -79,15 +79,21 @@ tmp<volScalarField> SpalartAllmarasDDES::dTilda(const volScalarField& S) const
 
 SpalartAllmarasDDES::SpalartAllmarasDDES
 (
-    const volScalarField& rho,
-    const volVectorField& U,
-    const surfaceScalarField& phi,
-    const basicThermo& thermophysicalModel,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
-    SpalartAllmarasDES(rho, U, phi, thermophysicalModel, turbulenceModelName, modelName)
+    volScalarField const& rho,
+    volVectorField const& U,
+    surfaceScalarField const& phi,
+    basicThermo const& thermophysicalModel,
+    word const& turbulenceModelName,
+    word const& modelName
+) :
+    SpalartAllmarasDES
+    (
+        rho,
+        U,
+        phi,
+        thermophysicalModel,
+        turbulenceModelName, modelName
+    )
 {}
 
 

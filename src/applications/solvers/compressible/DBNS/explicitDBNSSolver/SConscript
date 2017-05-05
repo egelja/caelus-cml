@@ -49,7 +49,7 @@ if explicitDBNSSolverEnv['WHICH_OS'] == "windows":
   explicitDBNSSolverEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad -u compressibleLESSModelsLoad -u compressibleVLESModelsLoad')
 
 lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
-'basicThermophysicalModels', 'fvOptions', 'sampling', 'compressibleLESModels','numericFlux']
+'basicThermophysicalModels', 'fvOptions', 'sampling', 'compressibleLESModels','numericFlux','compressibleVLESModels']
   
 explicitDBNSSolverEnv.Append(LIBS = lib_link)
 

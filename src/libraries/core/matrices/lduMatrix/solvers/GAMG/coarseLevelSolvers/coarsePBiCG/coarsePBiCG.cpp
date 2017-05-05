@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,11 +33,11 @@ namespace CML
 
 CML::dictionary CML::CoarsePBiCG::solverDict
 (
-    const scalar tol,
-    const scalar relTol
+    scalar const tol,
+    scalar const relTol
 )
 {
-    dictionary dict(IStringStream("solver PBiCG; preconditioner DILU;")());
+    dictionary dict(IStringStream("solver PBiCG; preconditioner USGS;")());
     dict.add("tolerance", tol);
     dict.add("relTol", relTol);
 
@@ -56,14 +57,13 @@ CML::dictionary CML::CoarsePBiCG::solverDict
 
 CML::CoarsePBiCG::CoarsePBiCG
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const dictionary& solverControls
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces,
+    dictionary const& solverControls
+) :
     PBiCG
     (
         fieldName,
@@ -77,15 +77,14 @@ CML::CoarsePBiCG::CoarsePBiCG
 
 CML::CoarsePBiCG::CoarsePBiCG
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const scalar tolerance,
-    const scalar relTol
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces,
+    scalar const tolerance,
+    scalar const relTol
+) :
     PBiCG
     (
         fieldName,

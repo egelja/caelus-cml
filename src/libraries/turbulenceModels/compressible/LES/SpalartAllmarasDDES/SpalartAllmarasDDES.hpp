@@ -51,52 +51,47 @@ class SpalartAllmarasDDES
 {
     // Private Member Functions
 
-        tmp<volScalarField> fd(const volScalarField& S) const;
+    tmp<volScalarField> fd(volScalarField const& S) const;
 
-        tmp<volScalarField> rd
-        (
-            const volScalarField& visc,
-            const volScalarField& S
-        ) const;
+    tmp<volScalarField> rd
+    (
+        volScalarField const& visc,
+        volScalarField const& S
+    ) const;
 
-        // Disallow default bitwise copy construct and assignment
-        SpalartAllmarasDDES(const SpalartAllmarasDDES&);
-        SpalartAllmarasDDES& operator=(const SpalartAllmarasDDES&);
-
+    // Disallow default bitwise copy construct and assignment
+    SpalartAllmarasDDES(SpalartAllmarasDDES const&);
+    SpalartAllmarasDDES& operator=(SpalartAllmarasDDES const&);
 
 protected:
 
     // Protected Member Functions
 
-        //- Length scale
-        virtual tmp<volScalarField> dTilda(const volScalarField& S) const;
+    //- Length scale
+    virtual tmp<volScalarField> dTilda(volScalarField const& S) const;
 
-        virtual tmp<volScalarField> S(const volTensorField& gradU) const;
-
+    virtual tmp<volScalarField> S(volTensorField const& gradU) const;
 
 public:
 
     //- Runtime type information
     TypeName("SpalartAllmarasDDES");
 
-
     // Constructors
 
-        //- Construct from components
-        SpalartAllmarasDDES
-        (
-            const volScalarField& rho,
-            const volVectorField& U,
-            const surfaceScalarField& phi,
-            const basicThermo& thermophysicalModel,
-            const word& turbulenceModelName = turbulenceModel::typeName,
-            const word& modelName = typeName
-        );
-
+    //- Construct from components
+    SpalartAllmarasDDES
+    (
+        volScalarField const& rho,
+        volVectorField const& U,
+        surfaceScalarField const& phi,
+        basicThermo const& thermophysicalModel,
+        word const& turbulenceModelName = turbulenceModel::typeName,
+        word const& modelName = typeName
+    );
 
     //- Destructor
-    virtual ~SpalartAllmarasDDES()
-    {}
+    virtual ~SpalartAllmarasDDES() {}
 };
 
 } 

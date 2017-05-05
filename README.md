@@ -15,30 +15,31 @@ You should have received a copy of the GNU General Public License along with Cae
 
 ## COPYRIGHT Applied CCM 2014-2016
 
-Current version: Caelus 6.04
+Current version: Caelus 6.10
 
 ## Solvers
 ### basic:
 - **`potenialSolver`**: potential flow solver provided by the OpenFOAM Foundation
 ### incompressible:
-- **`simpleSolver`**: SIMPLE-based incompressible steady-state solver provided by the OpenFOAM Foundation
-- **`SRFSimpleSolver`**: SIMPLE-based incompressible steady-state solver in a single rotating rotating reference frame provided by the OpenFOAM Foundation
-- **`pimpleSolver`**: PIMPLE-based incompressible transient solver provided by the OpenFOAM Foundation
-- **`pimpleDyMSolver`**: PIMPLE-based incompressible transient dynamic mesh solver provided by the OpenFOAM Foundation
-- **`SRFPimpleSolver`**: PIMPLE-based incompressible transient solver in a single rotating reference frame provided by the OpenFOAM Foundation
-- **`pisoSolver`**: PISO-based incompressible transient solver provided by the OpenFOAM Foundation
+- **`simpleSolver`**: SIMPLE-based incompressible steady-state solver
+- **`pCorrSimpleSolver`**: SIMPLE-based incompressible steady-state solver using pressure correction approach
+- **`SRFSimpleSolver`**: SIMPLE-based incompressible steady-state solver in a single rotating rotating reference frame
+- **`pimpleSolver`**: PIMPLE-based incompressible transient solver provided
+- **`pimpleDyMSolver`**: PIMPLE-based incompressible transient dynamic mesh solver
+- **`SRFPimpleSolver`**: PIMPLE-based incompressible transient solver in a single rotating reference frame
+- **`pisoSolver`**: PISO-based incompressible transient solver
 ### compressible:
 - **`explicitDBNSSolver`**: density-based explicit compressible solver
+- **`explicitDBNSSRFSolver`**: density-based explicit compressible solver in single rotating reference frame using the absolute velocity formulation
 - **`cpbnsLTS`**: steady-state pressure-based compressible solver
 - **`cpbnsPIMPLE`**: transient pressure-based compressible solver
 ### heat-transfer:
-- **`buoyantBoussinesqSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force based on Boussinesq approximation provided by the OpenFOAM Foundation
-- **`buoyantSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force provided by the OpenFOAM Foundation
+- **`buoyantBoussinesqSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force based on Boussinesq approximation
+- **`buoyantSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force
 ### multiphase:
-- **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids provided by the OpenFOAM Foundation
+- **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids
 - **`vofLPTSolver`**: Volume of Fluid (VOF) phase-fraction based solver with Lagrangian particle tracking
 ### combustion:
-- **`edmSolver`**: transient PIMPLE combustion model based on eddy dissipation model (EDM)
 - **`reactingSolver`**: A fractional step based transient solver for compressible combustion flows with the Arrhenius rate chemistry ODE solver. Time stepping algorithm is based on PIMPLE algorithm
 ## Turbulence Models
 ### Reynolds Avergaged Navier-Stokes:
@@ -52,10 +53,10 @@ Current version: Caelus 6.04
 - nutU high Reynolds number velocity based
 - nutUSpalding all Reynolds number velocity based
 ### Very Large Eddy Simulation:
-- Spalart-Allmaras
-- k-omega SST
+- Spalart-Allmaras with curvature correction
+- k-omega SST with curvature correction
 - Realizable k-epsilon
-- coherent structure
+- coherent structure  with curvature correction
 ### Detached Eddy Simulation:
 - Spalart-Allmaras Delayed DES
 - Spalart-Allmaras Improved Delayed DES
@@ -68,18 +69,18 @@ Current version: Caelus 6.04
 - van Driest
 
 ## Installation
-Binary+Source and Source-only installers available for download at <http://www.caelus-cml.com/download/>.
+Installers available for download at <http://www.caelus-cml.com/download/>.
 
 ## Execution Environment
-Caelus comes with a new execution environment based on Python and does not require the sourcing or calling an environment file for every new shell. The new execution environment operates in nearly identical manner to the previous except every command needs to prepended with caelus.py. For example, using potentialSolver:
+Caelus provides an execution environment based on Python and does not require the sourcing or calling an environment file for every new shell. This environment operates in nearly identical manner to the previous except every command needs is prepended with caelus.py. For parallel, it simplifies usage of utilities and solver. For example, using pCorrSimpleSolver:
 
 **Previous**
 ```Bash
- $> potentialSolver -noFunctionObjects -writep
+ $> mpiexec -n 4 pCorrSimpleSolver -parallel &> pCorrSimpleSolver.log &
 ```
 **New**:
 ```Bash
- $> caelus.py potentialSolver -noFunctionObjects -writep
+ $> caelus.py -l pCorrSimpleSolver -parallel
 ```
 Type `caelus.py --help` for the complete list of options.
 

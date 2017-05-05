@@ -27,11 +27,15 @@ Description
     Simplified diagonal-based incomplete LU preconditioner for asymmetric
     matrices. Better known under ILU(0) name.
     The reciprocal of the preconditioned diagonal is calculated
-    and stored.
+    and stored. Guarding against zero pivots is added.
 
 SourceFiles
 
     DILUPreconditioner.cpp
+
+Modifications
+
+    Aleksandar Jemcov
 
 References
 

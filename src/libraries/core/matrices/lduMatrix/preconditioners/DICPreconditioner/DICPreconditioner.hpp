@@ -26,11 +26,16 @@ Description
 
     Simplified diagonal-based incomplete Cholesky preconditioner for symmetric
     matrices (symmetric equivalent of DILU).  The reciprocal of the
-    preconditioned diagonal is calculated and stored.
+    preconditioned diagonal is calculated and stored. Guarding against zero
+    pivots is added to prevent FPE.
 
 SourceFiles
 
     DICPreconditioner.cpp
+
+Modifications
+
+    Aleksandar Jemcov
 
 References
 

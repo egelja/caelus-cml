@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,24 +44,20 @@ namespace incompressible
 namespace LESModels
 {
 
-class kOmegaSSTDDES
-:
-    public kOmegaSSTDES
+class kOmegaSSTDDES : public kOmegaSSTDES
 {
     // Private Member Functions
 
-        // Disallow default bitwise copy construct and assignment
-        kOmegaSSTDDES(const kOmegaSSTDDES&);
-        kOmegaSSTDDES& operator=(const kOmegaSSTDDES&);
-
+    // Disallow default bitwise copy construct and assignment
+    kOmegaSSTDDES(kOmegaSSTDDES const&);
+    kOmegaSSTDDES& operator=(kOmegaSSTDDES const&);
 
 protected:
 
     // Protected Member Functions
 
-        //- Length scale
-        virtual tmp<volScalarField> FDES() const;
-
+    //- Length scale
+    virtual tmp<volScalarField> FDES() const;
 
 public:
 
@@ -71,20 +67,18 @@ public:
 
     // Constructors
 
-        //- Construct from components
-        kOmegaSSTDDES
-        (
-            const volVectorField& U,
-            const surfaceScalarField& phi,
-            transportModel& transport,
-            const word& turbulenceModelName = turbulenceModel::typeName,
-            const word& modelName = typeName
-        );
-
+    //- Construct from components
+    kOmegaSSTDDES
+    (
+        volVectorField const& U,
+        surfaceScalarField const& phi,
+        transportModel& transport,
+        word const& turbulenceModelName = turbulenceModel::typeName,
+        word const& modelName = typeName
+    );
 
     //- Destructor
-    virtual ~kOmegaSSTDDES()
-    {}
+    virtual ~kOmegaSSTDDES() {}
 };
 
 } 

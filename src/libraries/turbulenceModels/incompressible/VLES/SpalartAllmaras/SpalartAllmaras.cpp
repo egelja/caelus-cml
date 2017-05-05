@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014-2015 Applied CCM 
+Copyright (C) 2014-2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -129,7 +129,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             false
         )
     ),
-    delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", false)),
+    delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", true)),
     sigmaNut_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -255,6 +255,19 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
         ),
         mesh_
     ),
+    nuSgs_
+    (
+        IOobject
+        (
+            "nuSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("nuSgs",nut_.dimensions(),0)
+    ),
     fr1_
     (
         IOobject
@@ -263,7 +276,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -276,7 +289,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1),
@@ -375,7 +388,7 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::R() const
             ((2.0/3.0)*I)*(sqrt(epsilon()*nut_/0.09)) 
             - nut()*twoSymm(fvc::grad(U_))
         )
-    );
+    )*Fr_;
 }
 
 
@@ -393,7 +406,7 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::devReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -nuEff()*dev(twoSymm(fvc::grad(U_)))
+           -nuEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -404,7 +417,7 @@ SpalartAllmarasVLES::divDevReff(volVectorField& U) const
 {
     volScalarField const nuEff_(nuEff());
 
-    return
+    return Fr_*
     (
       - fvm::laplacian(nuEff_, U)
       - fvc::div(nuEff_*dev(T(fvc::grad(U))))
@@ -420,7 +433,7 @@ tmp<fvVectorMatrix> SpalartAllmarasVLES::divDevRhoReff
 {
     volScalarField muEff("muEff", rho*nuEff());
 
-    return
+    return Fr_*
     (
       - fvm::laplacian(muEff, U)
       - fvc::div(muEff*dev(T(fvc::grad(U))))
@@ -611,9 +624,12 @@ void SpalartAllmarasVLES::correct()
     bound(nuTilda_, dimensionedScalar("0", nuTilda_.dimensions(), 0.0));
     nuTilda_.correctBoundaryConditions();
 
-    // Re-calculate viscosity
-    nut_.internalField() = Fr_.internalField()*fv1*nuTilda_.internalField();
+    nut_ = fv1*nuTilda_;
     nut_.correctBoundaryConditions();
+
+    // Re-calculate viscosity
+    nuSgs_ = Fr_*nut_;
+    nuSgs_.correctBoundaryConditions();
 }
 
 

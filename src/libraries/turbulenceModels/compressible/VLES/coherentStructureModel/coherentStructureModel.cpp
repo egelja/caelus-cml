@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -81,6 +81,22 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         (
             "delayed", 
             true
+        )
+    ),
+    damped_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "damped", 
+            false
+        )
+    ),
+    curvatureCorrection_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "curvatureCorrection",
+            false
         )
     ),
     alphaK1_
@@ -192,6 +208,52 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         )
     ),
 
+    Cr1_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr1",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cr2_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr2",
+            coeffDict_,
+            2.0
+        )
+    ),
+    Cr3_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr3",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cscale_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cscale",
+            coeffDict_,
+            1.0
+        )
+    ),
+    frMax_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "frMax",
+            coeffDict_,
+            1.25
+        )
+    ),
+
     y_(mesh_),
 
     k_
@@ -230,6 +292,20 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         ),
         mesh_
     ),
+    muSgs_
+    (
+        IOobject
+        (
+            "muSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("muSgs",mut_.dimensions(),0)
+    ),
+    yStar_(pow(0.09,0.25)*pow(k_,0.5)*y_*rho/mu()),
     alphat_
     (
         IOobject
@@ -241,6 +317,32 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    alphaSgs_
+    (
+        IOobject
+        (
+            "alphaSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("alphaSgs",alphat_.dimensions(),0)
+    ),
+    fr1_
+    (
+        IOobject
+        (
+            "fr1",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("one", dimless, 1)
     ),
     Fr_
     (
@@ -255,20 +357,56 @@ CoherentStructureModelVLES::CoherentStructureModelVLES
         mesh_,
         dimensionedScalar("fr", dimless, 1),
         calculatedFvPatchScalarField::typeName
+    ),
+    Fd_
+    (
+        IOobject
+        (
+            "Fd",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fd", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
     bound(k_, kMin_);
     bound(omega_, omegaMin_);
 
-    mut_ =
-    (
-        rho_*a1_*k_
-      / max
+    if (damped_)
+    {
+        Info << "Buffer layer damping enabled" << endl;
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_*rho_/mu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        mut_ =
         (
-            a1_*omega_,
-            F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
-        )
-    );
+            rho_*a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );        
+        mut_ *= Fd_;
+    }
+    else
+    {
+        mut_ =
+        (
+            rho_*a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );
+    }
+    
     mut_.correctBoundaryConditions();
 
     alphat_ = mut_/Prt_;
@@ -295,7 +433,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::R() const
             ((2.0/3.0)*I)*k_ - (mut_/rho_)*twoSymm(fvc::grad(U_)),
             k_.boundaryField().types()
         )
-    );
+    )*Fr_;
 }
 
 
@@ -313,7 +451,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::devRhoReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))
+           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -321,7 +459,7 @@ tmp<volSymmTensorField> CoherentStructureModelVLES::devRhoReff() const
 
 tmp<fvVectorMatrix> CoherentStructureModelVLES::divDevRhoReff(volVectorField& U) const
 {
-    return
+    return Fr_*
     (
       - fvm::laplacian(muEff(), U)
       - fvc::div(muEff()*dev2(T(fvc::grad(U))))
@@ -333,6 +471,8 @@ bool CoherentStructureModelVLES::read()
     if (VLESModel::read())
     {
         delayed_.readIfPresent("delayed", coeffDict());
+        damped_.readIfPresent("damped", coeffDict());
+        curvatureCorrection_.readIfPresent("curvatureCorrection",coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -345,6 +485,12 @@ bool CoherentStructureModelVLES::read()
         betaStar_.readIfPresent(coeffDict());
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
+
+        Cr1_.readIfPresent(coeffDict());
+        Cr2_.readIfPresent(coeffDict());
+        Cr3_.readIfPresent(coeffDict());
+        Cscale_.readIfPresent(coeffDict());
+        frMax_.readIfPresent(coeffDict());
 
         return true;
     }
@@ -404,7 +550,7 @@ void CoherentStructureModelVLES::correct()
 
 
     volScalarField Fcs = 
-        (Q/(E+dimensionedScalar("smallE",E->dimensions(),VSMALL)))();
+        (Q()/(E()+dimensionedScalar("smallE",E->dimensions(),VSMALL)))();
 
     dimensionedScalar FcsNegOne("FcsNegOne",Fcs.dimensions(),scalar(-1));
     dimensionedScalar FcsPosOne("FcsPosOne",Fcs.dimensions(),scalar( 1));
@@ -455,9 +601,9 @@ void CoherentStructureModelVLES::correct()
     {
         divU += fvc::div(mesh_.phi());
     }
-
-    volScalarField const S2(2*magSqr(dev(symm(gradU))));
-    volScalarField G(GName(), mut_*(gradU && dev(twoSymm(gradU))));
+    
+    volScalarField const S2(2*magSqr(dev(symm(gradU()))));
+    volScalarField G(GName(), mut_*(gradU && dev(twoSymm(gradU()))));
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
@@ -476,6 +622,26 @@ void CoherentStructureModelVLES::correct()
         SMALL
      );
 
+    if (curvatureCorrection_)
+    {    
+        volTensorField const Omegaij(skew(fvc::grad(this->U_)));
+        volScalarField const sqrOmega(2*magSqr(Omegaij));
+        volSymmTensorField const Sij(symm(fvc::grad(this->U_)));    
+        volScalarField const sqrS(2*magSqr(Sij));
+        dimensionedScalar const smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
+        volScalarField const sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+        volScalarField const rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+        surfaceScalarField const u(this->phi_/fvc::interpolate(rho_));
+        volSymmTensorField const DSijDt(fvc::DDt(u,Sij));
+        volScalarField const rTilda(  
+            (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
+        volScalarField const frotation ((scalar(1.0) + Cr1_)
+            *scalar(2.0)*rStar/(scalar(1.0) + rStar)*
+            (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_);
+        volScalarField const frTilda(max(min(frotation, frMax_), scalar(0))); 
+        fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
+    }
+
     volScalarField rhoGammaF1(rho_*gamma(F1));
 
     // Turbulent frequency equation
@@ -485,7 +651,7 @@ void CoherentStructureModelVLES::correct()
       + fvm::div(phi_, omega_)
       - fvm::laplacian(DomegaEff(F1), omega_)
      ==
-        rhoGammaF1*min(G, c1_*rho_*betaStar_*k_*omega_)/(mut_ + mutMin)
+        rhoGammaF1*min(fr1_*G, c1_*rho_*betaStar_*k_*omega_)/(mut_ + mutMin)
       - fvm::SuSp((2.0/3.0)*rhoGammaF1*divU, omega_)
       - fvm::Sp(beta(F1)*rho_*omega_, omega_)
       + 2*(1-F1)*rho_*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
@@ -505,7 +671,7 @@ void CoherentStructureModelVLES::correct()
       + fvm::div(phi_, k_)
       - fvm::laplacian(DkEff(F1), k_)
      ==
-        min(G, c1_*rho_*betaStar_*k_*omega_)
+        min(fr1_*G, c1_*rho_*betaStar_*k_*omega_)
       - fvm::SuSp(2.0/3.0*rho_*divU, k_)
       - fvm::Sp(betaStar_*rho_*omega_, k_)
     );
@@ -556,13 +722,30 @@ void CoherentStructureModelVLES::correct()
 
     Fr_.correctBoundaryConditions();
     
-    // Re-calculate viscosity
-    mut_ = Fr_*rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
-    mut_.correctBoundaryConditions();
+    if (damped_)
+    {
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_*rho_/mu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        mut_ = rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        mut_ *= Fd_;
+    }
+    else
+    {
+        mut_ = rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        mut_.correctBoundaryConditions();
+    }
+
+    muSgs_ = mut_*Fr_;
+    muSgs_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity
     alphat_ = mut_/Prt_;
     alphat_.correctBoundaryConditions();
+
+    alphaSgs_ = muSgs_/Prt_;
+    alphaSgs_.correctBoundaryConditions();
 }
 
 }

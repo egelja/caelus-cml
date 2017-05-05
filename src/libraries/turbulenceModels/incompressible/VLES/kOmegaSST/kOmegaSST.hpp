@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM 
+Copyright (C) 2015 - 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,6 +31,7 @@ Description
         VLESKOmegaSSTCoeffs
         {
             delayed     true;
+            damped      false;
             alphaK1     0.85034;
             alphaK2     1.0;
             alphaOmega1 0.5;
@@ -72,6 +73,8 @@ protected:
 
     // Protected data
     Switch delayed_;
+    Switch damped_;
+    Switch curvatureCorrection_;
 
     // Model coefficients
     dimensionedScalar alphaK1_;
@@ -93,6 +96,12 @@ protected:
 
     dimensionedScalar Cx_;
 
+    dimensionedScalar Cr1_;
+    dimensionedScalar Cr2_;
+    dimensionedScalar Cr3_;
+    dimensionedScalar Cscale_;
+    dimensionedScalar frMax_;
+
     //- Wall distance field
     //  Note: different to wall distance in parent VLESModel
     wallDist y_;
@@ -102,7 +111,11 @@ protected:
     volScalarField k_;
     volScalarField omega_;
     volScalarField nut_;
+    volScalarField nuSgs_;
+    volScalarField yStar_;
+    volScalarField fr1_;
     volScalarField Fr_;
+    volScalarField Fd_;
 
 
     tmp<volScalarField> F1(volScalarField const& CDkOmega) const;

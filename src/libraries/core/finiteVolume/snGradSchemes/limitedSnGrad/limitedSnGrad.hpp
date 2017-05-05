@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,6 +31,15 @@ Description
     calculated such that the non-orthogonal contribution does not exceed the
     orthogonal part.
 
+    Format:
+        limited \<corrected scheme\> \<coefficient\>;
+
+        or
+
+        limited \<coefficient\>;  // Backward compatibility
+
+SourceFiles
+    limitedSnGrad.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -65,6 +75,8 @@ class limitedSnGrad
 {
     // Private data
 
+        tmp<snGradScheme<Type> > correctedScheme_;
+
         scalar limitCoeff_;
 
 
@@ -72,6 +84,34 @@ class limitedSnGrad
 
         //- Disallow default bitwise assignment
         void operator=(const limitedSnGrad&);
+
+        //- Lookup function for the corrected to support backward compatibility
+        //  of dictionary specification
+        tmp<snGradScheme<Type> > lookupCorrectedScheme(Istream& is)
+        {
+            token nextToken(is);
+
+            if (nextToken.isNumber())
+            {
+                limitCoeff_ = nextToken.number();
+                return tmp<snGradScheme<Type> >
+                (
+                    new correctedSnGrad<Type>(this->mesh())
+                );
+            }
+            else
+            {
+                is.putBack(nextToken);
+                tmp<snGradScheme<Type> > tcorrectedScheme
+                (
+                    fv::snGradScheme<Type>::New(this->mesh(), is)
+                );
+
+                is >> limitCoeff_;
+
+                return tcorrectedScheme;
+            }
+        }
 
 
 public:
@@ -85,7 +125,9 @@ public:
         //- Construct from mesh
         limitedSnGrad(const fvMesh& mesh)
         :
-            snGradScheme<Type>(mesh)
+            snGradScheme<Type>(mesh),
+            correctedScheme_(new correctedSnGrad<Type>(this->mesh())),
+            limitCoeff_(1)
         {}
 
 
@@ -93,7 +135,7 @@ public:
         limitedSnGrad(const fvMesh& mesh, Istream& is)
         :
             snGradScheme<Type>(mesh),
-            limitCoeff_(readScalar(is))
+            correctedScheme_(lookupCorrectedScheme(is))
         {
             if (limitCoeff_ < 0 || limitCoeff_ > 1)
             {
@@ -173,7 +215,7 @@ limitedSnGrad<Type>::correction
 {
     const GeometricField<Type, fvsPatchField, surfaceMesh> corr
     (
-        correctedSnGrad<Type>(this->mesh()).correction(vf)
+        correctedScheme_().correction(vf)
     );
 
     const surfaceScalarField limiter

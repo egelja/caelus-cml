@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM 
+Copyright (C) 2015 - 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -125,7 +125,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
     (
         coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)
     ),
-    delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", false)),
+    delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", true)),
     sigmaNut_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -259,6 +259,19 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
         ),
         mesh_
     ),
+    muSgs_
+    (
+        IOobject
+        (
+            "muSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("muSgs",mut_.dimensions(),0)
+    ),  
     alphat_
     (
         IOobject
@@ -270,6 +283,19 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    alphaSgs_
+    (
+        IOobject
+        (
+            "alphaSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("alphaSgs",alphat_.dimensions(),0)
     ),
     fr1_
     (
@@ -372,7 +398,7 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::R() const
             ),
             ((2.0/3.0)*I)*k() - (mut()/rho_)*twoSymm(fvc::grad(U_))
         )
-    );
+    )*Fr_;
 }
 
 
@@ -390,7 +416,7 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::devRhoReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))
+           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
         )
     );
 }
@@ -404,7 +430,7 @@ SpalartAllmarasVLES::divDevRhoReff(volVectorField& U) const
     return
     (
       - fvm::laplacian(muEff_, U)
-      - fvc::div(muEff_*dev2(T(fvc::grad(U))))
+      - fvc::div(muEff_*dev2(T(fvc::grad(U))))*Fr_
     );
 }
 
@@ -592,12 +618,18 @@ void SpalartAllmarasVLES::correct()
     nuTilda_.correctBoundaryConditions();
 
     // Re-calculate viscosity
-    mut_.internalField() = rho_*Fr_*fv1*nuTilda_.internalField();
+    mut_ = rho_*fv1*nuTilda_;
     mut_.correctBoundaryConditions();
+
+    muSgs_ = Fr_*mut_;
+    muSgs_.correctBoundaryConditions();
 
     // Re-calculate thermal diffusivity
     alphat_ = mut_/Prt_;
     alphat_.correctBoundaryConditions();
+
+    alphaSgs_ = Fr_*alphat_;
+    alphaSgs_.correctBoundaryConditions();
 }
 
 

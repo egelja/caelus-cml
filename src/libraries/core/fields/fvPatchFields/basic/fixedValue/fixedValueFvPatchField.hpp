@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -60,6 +60,14 @@ public:
         (
             const fvPatch&,
             const DimensionedField<Type, volMesh>&
+        );
+
+        //- Construct from patch, internal field, and value
+        fixedValueFvPatchField
+        (
+            const fvPatch&,
+            const DimensionedField<Type, volMesh>&,
+            Type const
         );
 
         //- Construct from patch, internal field and dictionary
@@ -202,6 +210,16 @@ fixedValueFvPatchField<Type>::fixedValueFvPatchField
     fvPatchField<Type>(p, iF)
 {}
 
+template<class Type>
+fixedValueFvPatchField<Type>::fixedValueFvPatchField
+(
+    const fvPatch& p,
+    const DimensionedField<Type, volMesh>& iF,
+    Type const val
+)
+:
+    fvPatchField<Type>(p, iF, val)
+{}
 
 template<class Type>
 fixedValueFvPatchField<Type>::fixedValueFvPatchField

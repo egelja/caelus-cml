@@ -46,13 +46,13 @@ namespace CML
 
 typedef Tensor<scalar> tensor;
 
-vector eigenValues(const tensor&);
+vector eigenValues(const tensor&, bool sort = true);
 vector eigenVector(const tensor&, const scalar lambda);
-tensor eigenVectors(const tensor&);
+tensor eigenVectors(const tensor&, bool sort = true);
 
-vector eigenValues(const symmTensor&);
+vector eigenValues(const symmTensor&, bool sort = true);
 vector eigenVector(const symmTensor&, const scalar lambda);
-tensor eigenVectors(const symmTensor&);
+tensor eigenVectors(const symmTensor&, bool sort = true);
 
 //- Data associated with tensor type are contiguous
 template<>

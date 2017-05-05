@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,15 +40,30 @@ CML::scalar CML::GAMGSolver::scalingFactor
     {
         scalingFactorNum += source[i]*field[i];
         scalingFactorDenom += Acf[i]*field[i];
-
-        // While the matrix-multiply done for the scaling it is
-        // possible to perform a point-Jacobi smoothing operation cheaply
         field[i] += (source[i] - Acf[i])/D[i];
     }
 
     vector2D scalingVector(scalingFactorNum, scalingFactorDenom);
     reduce(scalingVector, sumOp<vector2D>());
-    return scalingVector.x()/stabilise(scalingVector.y(), VSMALL);
+
+    if
+    (
+        scalingVector.x()*scalingVector.y() <= scalar(0.)
+        ||
+        mag(scalingVector.x()) < mag(scalingVector.y())
+    )
+    {
+        return scalar(1.);
+    }
+    else if (mag(scalingVector.x()) > scalar(2.)*mag(scalingVector.y()))
+    {
+        return scalar(2.);
+    }
+    else
+    {
+        return scalar(scalingVector.x()/scalingVector.y());
+    }
+        
 }
 
 

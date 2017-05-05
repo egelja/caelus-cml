@@ -84,6 +84,7 @@ protected:
 
     volScalarField nuTilda_;
     volScalarField nut_;
+    volScalarField nuSgs_;
     volScalarField fr1_;
     volScalarField Fr_;
     wallDist d_;

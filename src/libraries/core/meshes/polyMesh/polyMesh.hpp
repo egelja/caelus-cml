@@ -574,7 +574,7 @@ public:
             ) const;
 
             //- Find cell enclosing this location (-1 if not in mesh)
-            label findCell
+            virtual label findCell
             (
                 const point&,
                 const cellRepresentation = CELL_TETS

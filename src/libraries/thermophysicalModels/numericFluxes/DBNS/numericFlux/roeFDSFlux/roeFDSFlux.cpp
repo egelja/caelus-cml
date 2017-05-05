@@ -111,7 +111,7 @@ void CML::roeFlux::evaluateFlux
     scalar lambda2 = mag(contrVTilda);
     scalar lambda3 = mag(contrVTilda + cTilda);
 
-    const scalar eps = 0.5*cTilda;
+    const scalar eps = 0.2*cTilda;
 
     if(lambda1 < eps || lambda2 < eps || lambda3 < eps)
     {

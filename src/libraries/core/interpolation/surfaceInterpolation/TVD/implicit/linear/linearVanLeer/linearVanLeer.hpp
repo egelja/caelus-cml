@@ -29,7 +29,7 @@ SourceFiles
 
 References
 
-    [1] "Towards the ulitmate conservative difference scheme II. Monotonicity 
+    [1] "Towards the ultimate conservative difference scheme II. Monotonicity 
          and Conservation Combined in Second Order Scheme", B. Van Leer,
          J. Comp. Phys. 14 (4), pp 361-370, 1974
         
@@ -70,7 +70,7 @@ public:
             order_ = readScalar(is);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearKoren(fvMesh const&, Istream&)", is)
+                FatalIOErrorIn("linearVanLeer(fvMesh const&, Istream&)", is)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

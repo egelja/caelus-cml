@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM 
+Copyright (C) 2015 - 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,6 +53,8 @@ class VLESKOmegaSST : public VLESModel
 protected:
 
     Switch delayed_;
+    Switch damped_;
+    Switch curvatureCorrection_;
 
     dimensionedScalar alphaK1_;
     dimensionedScalar alphaK2_;
@@ -75,14 +77,24 @@ protected:
 
     dimensionedScalar Cx_;
 
+    dimensionedScalar Cr1_;
+    dimensionedScalar Cr2_;
+    dimensionedScalar Cr3_;
+    dimensionedScalar Cscale_;
+    dimensionedScalar frMax_;
+
     wallDist y_;
 
     volScalarField k_;
     volScalarField omega_;
     volScalarField mut_;
+    volScalarField muSgs_;
+    volScalarField yStar_;
     volScalarField alphat_;
+    volScalarField alphaSgs_;
+    volScalarField fr1_;
     volScalarField Fr_;
-  //volScalarField fr1_;
+    volScalarField Fd_;
 
 
     tmp<volScalarField> F1(volScalarField const& CDkOmega) const;

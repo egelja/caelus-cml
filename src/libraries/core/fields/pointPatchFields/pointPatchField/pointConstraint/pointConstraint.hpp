@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,6 +41,7 @@ SourceFiles
 #include "vector.hpp"
 #include "tensor.hpp"
 #include "Tuple2.hpp"
+#include "transform.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,6 +64,9 @@ public:
         //- Construct null
         inline pointConstraint();
 
+        //- Construct from components
+        inline pointConstraint(const Tuple2<label, vector>&);
+
         //- Construct from Istream
         inline pointConstraint(Istream&);
 
@@ -77,7 +81,28 @@ public:
 
         //- Return the accumulated constraint transformation tensor
         inline tensor constraintTransformation() const;
+
+        //- Return the accumulated unconstrained directions. Directions
+        //  coded as first n rows of tensor.
+        inline void unconstrainedDirections(label& n, tensor& vecs) const;
 };
+
+
+//- Reduce operator
+class combineConstraintsEqOp
+{
+public:
+    inline void operator()(pointConstraint&, const pointConstraint&) const;
+};
+
+//- Transformation function
+inline pointConstraint transform(const tensor& tt, const pointConstraint& v);
+
+//- contiguous
+template<class T> bool contiguous();
+template<>
+inline bool contiguous<pointConstraint>()                {return true;}
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

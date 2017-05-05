@@ -29,6 +29,11 @@ Author
 SourceFiles
     CoherentStructureModel.cpp
 
+Reference
+    [1] H. Kobayashi, F.E. Ham, X. Wu "Aplication of a local SGS model 
+        based on coherent structure to complex geometries", International
+        Journal of Heat and Fluid Flow, 29(3) pp. 640-653
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef CoherentStructureModel_HPP

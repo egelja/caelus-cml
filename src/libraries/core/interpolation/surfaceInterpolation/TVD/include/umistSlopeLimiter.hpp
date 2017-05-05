@@ -20,8 +20,8 @@ License
 Description
 
     A TVD property staisfying linear upwind scheme based on the UMIST 
-    limiter to prevent unwanted oscillations. Implementation suitable for
-    scalar fields. The limiter corresponds to the symmetric QUICK limiter.
+    limiter to prevent unwanted oscillations. The limiter corresponds
+    to the symmetric QUICK limiter.
 
 References
 

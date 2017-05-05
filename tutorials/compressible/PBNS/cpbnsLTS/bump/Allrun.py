@@ -1,6 +1,5 @@
 #!/usr/bin/python
-# Caelus 6.04
-# Web:   www.caelus-cml.com
+# Caelus 6.10
 # ---------------------------------------------------------------------------
 
 # Importing the required modules for Python

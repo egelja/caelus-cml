@@ -284,15 +284,17 @@ src_files_core = Split("""
   matrices/lduMatrix/solvers/GAMG/coarseLevelSolvers/coarsePBiCG/coarsePBiCG.cpp
   matrices/lduMatrix/smoothers/GaussSeidel/GaussSeidelSmoother.cpp
   matrices/lduMatrix/smoothers/symGaussSeidel/symGaussSeidelSmoother.cpp
+  matrices/lduMatrix/smoothers/SSGS/SSGSSmoother.cpp
+  matrices/lduMatrix/smoothers/USGS/USGSSmoother.cpp
   matrices/lduMatrix/smoothers/DIC/DICSmoother.cpp
-  matrices/lduMatrix/smoothers/DICGaussSeidel/DICGaussSeidelSmoother.cpp
   matrices/lduMatrix/smoothers/DILU/DILUSmoother.cpp
-  matrices/lduMatrix/smoothers/DILUGaussSeidel/DILUGaussSeidelSmoother.cpp
   matrices/lduMatrix/preconditioners/noPreconditioner/noPreconditioner.cpp
   matrices/lduMatrix/preconditioners/diagonalPreconditioner/diagonalPreconditioner.cpp
+  matrices/lduMatrix/preconditioners/GAMGPreconditioner/GAMGPreconditioner.cpp
+  matrices/lduMatrix/preconditioners/SSGSPreconditioner/SSGSPreconditioner.cpp
+  matrices/lduMatrix/preconditioners/USGSPreconditioner/USGSPreconditioner.cpp
   matrices/lduMatrix/preconditioners/DICPreconditioner/DICPreconditioner.cpp
   matrices/lduMatrix/preconditioners/DILUPreconditioner/DILUPreconditioner.cpp
-  matrices/lduMatrix/preconditioners/GAMGPreconditioner/GAMGPreconditioner.cpp
   matrices/lduMatrix/lduAddressing/lduAddressing.cpp
   matrices/lduMatrix/lduAddressing/lduInterface/lduInterface.cpp
   matrices/lduMatrix/lduAddressing/lduInterface/processorLduInterface.cpp
@@ -792,6 +794,7 @@ src_files_core = Split("""
   fields/fvPatchFields/derived/pressureInletOutletVelocity/pressureInletOutletVelocityFvPatchVectorField.cpp
   fields/fvPatchFields/derived/pressureInletOutletParSlipVelocity/pressureInletOutletParSlipVelocityFvPatchVectorField.cpp
   fields/fvPatchFields/derived/slip/slipFvPatchFields.cpp
+  fields/fvPatchFields/derived/noSlipWall/noSlipWallFvPatchVectorField.cpp
   fields/fvPatchFields/derived/swirlFlowRateInletVelocity/swirlFlowRateInletVelocityFvPatchVectorField.cpp
   fields/fvPatchFields/derived/timeVaryingMappedFixedValue/AverageIOFields.cpp
   fields/fvPatchFields/derived/timeVaryingMappedFixedValue/timeVaryingMappedFixedValueFvPatchFields.cpp

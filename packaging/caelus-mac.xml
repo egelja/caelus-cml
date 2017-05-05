@@ -134,7 +134,7 @@
                     <platforms>osx</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <origin>../platforms/darwin64SystemDPOpt</origin>
+                            <origin>../platforms/darwin64clang++DPOpt</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -83,15 +83,17 @@ tmp<volScalarField> kOmegaSSTDES::FDES() const
 
 kOmegaSSTDES::kOmegaSSTDES
 (
-    const volVectorField& U,
-    const surfaceScalarField& phi,
+    volVectorField const & U,
+    surfaceScalarField const& phi,
     transportModel& transport,
-    const word& turbulenceModelName,
-    const word& modelName
-)
-:
+    word const& turbulenceModelName,
+    word const& modelName
+) :
     LESModel(modelName, U, phi, transport, turbulenceModelName),
-    curvatureCorrection_(coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)),
+    curvatureCorrection_
+    (
+        coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -343,7 +345,7 @@ tmp<fvVectorMatrix> kOmegaSSTDES::divDevReff(volVectorField& U) const
 
 tmp<fvVectorMatrix> kOmegaSSTDES::divDevRhoReff
 (
-    const volScalarField& rho,
+    volScalarField const& rho,
     volVectorField& U
 ) const
 {
@@ -388,7 +390,7 @@ bool kOmegaSSTDES::read()
 }
 
 
-void kOmegaSSTDES::correct(const tmp<volTensorField>& gradU)
+void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
 {
     LESModel::correct(gradU);
 
@@ -398,22 +400,21 @@ void kOmegaSSTDES::correct(const tmp<volTensorField>& gradU)
         y_.boundaryField() = max(y_.boundaryField(), VSMALL);
     }
 
-    const volScalarField S2(2*magSqr(symm(fvc::grad(U_))));
-    const volScalarField Omega(2*magSqr(skew(fvc::grad(U_))));
+    volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
+    volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));
     volScalarField G(GName(), nuSgs_*S2);
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
-    const volScalarField CDkOmega
+    volScalarField const CDkOmega
     (
         (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    const volScalarField F1(this->F1());
-    //const volScalarField FDES();
+    volScalarField const F1(this->F1());
 
-   dimensionedScalar nuSgsMin
+    dimensionedScalar nuSgsMin
     (
         "nuSgsMin",
         k_.dimensions()/omega_.dimensions(),
@@ -423,20 +424,30 @@ void kOmegaSSTDES::correct(const tmp<volTensorField>& gradU)
     // Curvature correction terms
     if (curvatureCorrection_)
     {    
-        const volTensorField Omegaij(skew(fvc::grad(this->U_)));
-        const volScalarField sqrOmega(2*magSqr(Omegaij));
-        const volSymmTensorField Sij(symm(fvc::grad(this->U_)));    
-        const volScalarField sqrS(2*magSqr(Sij));
-        const dimensionedScalar smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
-        const volScalarField sqrD(0.5*(sqrS + sqrOmega + smallOmega));
-        const volScalarField rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
-        const volSymmTensorField DSijDt(fvc::DDt(this->phi_,Sij));
-        const volScalarField rTilda(  
-            (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
-        const volScalarField frotation ((scalar(1.0) + Cr1_)
+        volTensorField const Omegaij(skew(fvc::grad(this->U_)));
+        volScalarField const sqrOmega(2*magSqr(Omegaij));
+        volSymmTensorField const Sij(symm(fvc::grad(this->U_)));    
+        volScalarField const sqrS(2*magSqr(Sij));
+        dimensionedScalar const smallOmega
+        (
+            "smallOmega",
+            sqrOmega.dimensions(),
+            SMALL
+        );
+        volScalarField const sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+        volScalarField const rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+        volSymmTensorField const DSijDt(fvc::DDt(this->phi_,Sij));
+        volScalarField const rTilda
+        (  
+            (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt))
+        );
+        volScalarField const frotation
+        (
+            (scalar(1.0) + Cr1_)
             *scalar(2.0)*rStar/(scalar(1.0) + rStar)*
-            (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_);
-        const volScalarField frTilda(max(min(frotation, frMax_), scalar(0))); 
+            (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_
+        );
+        volScalarField const frTilda(max(min(frotation, frMax_), scalar(0))); 
         fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
     }
 

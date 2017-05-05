@@ -33,13 +33,12 @@ namespace CML
 
 CML::DICSmoother::DICSmoother
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces
+) :
     lduMatrix::smoother
     (
         fieldName,
@@ -87,9 +86,9 @@ CML::DICSmoother::DICSmoother
 void CML::DICSmoother::smooth
 (
     scalarField& x,
-    const scalarField& b,
-    const direction cmpt,
-    const label nSweeps
+    scalarField const& b,
+    direction const cmpt,
+    label const nSweeps
 ) const
 {
     const scalar* const RESTRICT rDuUpperPtr = rDuUpper_.begin();

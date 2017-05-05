@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,63 +37,47 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
 
-/*---------------------------------------------------------------------------*\
-                        Class DILUSmoother Declaration
-\*---------------------------------------------------------------------------*/
-
-class DILUSmoother
-:
-    public lduMatrix::smoother
+class DILUSmoother : public lduMatrix::smoother
 {
     // Private data
 
-        //- The reciprocal preconditioned diagonal
-        scalarField rD_;
-
+    //- The reciprocal preconditioned diagonal
+    scalarField rD_;
 
 public:
 
     //- Runtime type information
     TypeName("DILU");
 
-
     // Constructors
 
-        //- Construct from matrix components
-        DILUSmoother
-        (
-            const word& fieldName,
-            const lduMatrix& matrix,
-            const FieldField<Field, scalar>& interfaceBouCoeffs,
-            const FieldField<Field, scalar>& interfaceIntCoeffs,
-            const lduInterfaceFieldPtrsList& interfaces
-        );
+    //- Construct from matrix components
+    DILUSmoother
+    (
+        word const& fieldName,
+        lduMatrix const& matrix,
+        FieldField<Field, scalar> const& interfaceBouCoeffs,
+        FieldField<Field, scalar> const& interfaceIntCoeffs,
+        lduInterfaceFieldPtrsList const& interfaces
+    );
 
 
     // Member Functions
 
-        //- Smooth the solution for a given number of sweeps
-        void smooth
-        (
-            scalarField& psi,
-            const scalarField& source,
-            const direction cmpt,
-            const label nSweeps
-        ) const;
+    //- Smooth the solution for a given number of sweeps
+    void smooth
+    (
+        scalarField& psi,
+        scalarField const& source,
+        direction const cmpt,
+        label const nSweeps
+    ) const;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

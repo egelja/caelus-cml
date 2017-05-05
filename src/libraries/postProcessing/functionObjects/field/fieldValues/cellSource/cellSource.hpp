@@ -345,7 +345,7 @@ Type CML::fieldValues::cellSource::processValues
                 scalar mean = component(meanValue, d);
                 scalar& res = setComponent(result, d);
 
-                res = sqrt(sum(V*sqr(vals - mean))/(V.size()*sum(V)))/mean;
+                res = sqrt(sum(V*sqr(vals - mean))/sum(V))/mean;
             }
 
             break;

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,8 +44,13 @@ CML::IFstreamAllocator::IFstreamAllocator(const fileName& pathname)
                     "cannot open null file " << endl;
         }
     }
-
+#ifdef windows
+    // Use binary mode in case we read binary.
+    // Causes windows reading to fail if we don't.
+    ifPtr_ = new ifstream(pathname.c_str(), ios_base::in|ios_base::binary);
+#else
     ifPtr_ = new ifstream(pathname.c_str());
+#endif
 
     // If the file is compressed, decompress it before reading.
     if (!ifPtr_->good() && isFile(pathname + ".gz", false))

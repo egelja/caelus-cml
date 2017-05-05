@@ -80,4 +80,4 @@ funcObjFieldEnv.Install(install_dir, libfieldFunctionObjects)
 
 if (funcObjFieldEnv['WHICH_OS'] == "darwin"):
 
-  funcObjFieldEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjFieldEnv['LIB_PLATFORM_INSTALL'] + '/libfieldFunctionObjects.dylib')
+  funcObjFieldEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libfieldFunctionObjects.dylib')

@@ -136,6 +136,9 @@ protected:
         //- resetOnOutput flag
         Switch resetOnOutput_;
 
+        //- Initialised flag
+        bool initialised_;
+
         //- List of field average items, describing what averages to be
         //  calculated and output
         List<fieldAverageItem> faItems_;
@@ -345,7 +348,7 @@ void CML::fieldAverage::addMeanField
                     IOobject
                     (
                         meanFieldName,
-                        obr_.time().timeName(),
+                        obr_.time().timeName(obr_.time().startTime().value()),
                         obr_,
                         IOobject::READ_IF_PRESENT,
                         IOobject::NO_WRITE
@@ -403,7 +406,7 @@ void CML::fieldAverage::addPrime2MeanField
                     IOobject
                     (
                         meanFieldName,
-                        obr_.time().timeName(),
+                        obr_.time().timeName(obr_.time().startTime().value()),
                         obr_,
                         IOobject::READ_IF_PRESENT,
                         IOobject::NO_WRITE

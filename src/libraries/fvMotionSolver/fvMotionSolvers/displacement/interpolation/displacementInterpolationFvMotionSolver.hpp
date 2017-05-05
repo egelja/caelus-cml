@@ -32,9 +32,6 @@ Description
 
     Tables are in the \a constant/tables directory.
 
-Note
-    could be a motionSolver - does not use any fvMesh structure.
-
 SourceFiles
     displacementInterpolationFvMotionSolver.cpp
 

@@ -31,9 +31,8 @@ particleTracksEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if particleTracksEnv['WHICH_OS'] == "windows":
   particleTracksEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','lagrangian']
+
+lib_link = ['genericPatchFields','lagrangian']
      
 particleTracksEnv.Append(LIBS = lib_link)
 

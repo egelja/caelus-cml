@@ -55,4 +55,4 @@ barCompEnv.Install(install_dir, libbarotropicCompressibilityModel)
 
 if (barCompEnv['WHICH_OS'] == "darwin"):
 
-  barCompEnv.Append(SHLINKFLAGS ='-install_name @' + barCompEnv['LIB_PLATFORM_INSTALL'] + '/libbarotropicCompressibilityModel.dylib')
+  barCompEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libbarotropicCompressibilityModel.dylib')

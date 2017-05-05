@@ -75,4 +75,4 @@ turbCompRASEnv.Install(install_dir, libcompressibleRASModels)
 
 if (turbCompRASEnv['WHICH_OS'] == "darwin"):
 
-  turbCompRASEnv.Append(SHLINKFLAGS ='-install_name @' + turbCompRASEnv['LIB_PLATFORM_INSTALL'] + '/libcompressibleRASModels.dylib')
+  turbCompRASEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcompressibleRASModels.dylib')

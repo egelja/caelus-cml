@@ -24,7 +24,9 @@ src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
 src + '/turbulenceModels/incompressible/RAS/lnInclude', 
 src + '/transportModels',
 src + '/transportModels/incompressible/singlePhaseTransportModel',
-src + '/transportModels/incompressible/lnInclude'
+src + '/transportModels/incompressible/lnInclude',
+src + '/fvOptions/lnInclude',
+  src + '/sampling/lnInclude'
 ]
 buoyBoussinesqSimpleSolverEnv.Prepend(CPPPATH = lib_inc)
 
@@ -39,11 +41,9 @@ buoyBoussinesqSimpleSolverEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if buoyBoussinesqSimpleSolverEnv['WHICH_OS'] == "windows":
   buoyBoussinesqSimpleSolverEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
-  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-   'libincompressibleTransportModels']
-else:
-  lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
-  'incompressibleTransportModels']
+
+lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
+'incompressibleTransportModels','fvOptions','sampling']
 
 buoyBoussinesqSimpleSolverEnv.Append(LIBS = lib_link)
 

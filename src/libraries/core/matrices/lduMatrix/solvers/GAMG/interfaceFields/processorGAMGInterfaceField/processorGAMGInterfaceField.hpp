@@ -85,6 +85,14 @@ public:
             const lduInterfaceField& fineInterface
         );
 
+        //- Construct from GAMG interface and fine level interface field
+        processorGAMGInterfaceField
+        (
+            const GAMGInterface& GAMGCp,
+            const bool doTransform,
+            const int rank
+        );
+
 
     //- Destructor
     virtual ~processorGAMGInterfaceField();

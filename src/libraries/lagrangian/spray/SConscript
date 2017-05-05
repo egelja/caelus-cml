@@ -83,4 +83,4 @@ lagSprayEnv.Install(install_dir, liblagrangianSpray)
 
 if (lagSprayEnv['WHICH_OS'] == "darwin"):
 
-  lagSprayEnv.Append(SHLINKFLAGS ='-install_name @' + lagSprayEnv['LIB_PLATFORM_INSTALL'] + '/liblagrangianSpray.dylib')
+  lagSprayEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangianSpray.dylib')

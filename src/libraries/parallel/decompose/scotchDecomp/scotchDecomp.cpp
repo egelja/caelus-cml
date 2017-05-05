@@ -118,7 +118,7 @@ License
 
 #include "scotchDecomp.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "floatScalar.hpp"
+//#include "floatScalar.hpp"
 #include "Time.hpp"
 #include "OFstream.hpp"
 #include "globalIndex.hpp"
@@ -177,11 +177,11 @@ void CML::scotchDecomp::check(const int retVal, const char* str)
 CML::label CML::scotchDecomp::decompose
 (
     const fileName& meshPath,
-    const List<int>& adjncy,
-    const List<int>& xadj,
+    const List<label>& adjncy,
+    const List<label>& xadj,
     const scalarField& cWeights,
 
-    List<int>& finalDecomp
+    List<label>& finalDecomp
 )
 {
     if (!Pstream::parRun())
@@ -208,8 +208,8 @@ CML::label CML::scotchDecomp::decompose
         // Send all to master. Use scheduled to save some storage.
         if (Pstream::master())
         {
-            Field<int> allAdjncy(nTotalConnections);
-            Field<int> allXadj(globalCells.size()+1);
+            Field<label> allAdjncy(nTotalConnections);
+            Field<label> allXadj(globalCells.size()+1);
             scalarField allWeights(globalCells.size());
 
             // Insert my own
@@ -225,11 +225,11 @@ CML::label CML::scotchDecomp::decompose
                 allAdjncy[nTotalConnections++] = adjncy[i];
             }
 
-            for (int slave=1; slave<Pstream::nProcs(); slave++)
+            for (label slave=1; slave<Pstream::nProcs(); slave++)
             {
                 IPstream fromSlave(Pstream::scheduled, slave);
-                Field<int> nbrAdjncy(fromSlave);
-                Field<int> nbrXadj(fromSlave);
+                Field<label> nbrAdjncy(fromSlave);
+                Field<label> nbrXadj(fromSlave);
                 scalarField nbrWeights(fromSlave);
 
                 // Append.
@@ -248,7 +248,7 @@ CML::label CML::scotchDecomp::decompose
             allXadj[nTotalCells] = nTotalConnections;
 
 
-            Field<int> allFinalDecomp;
+            Field<label> allFinalDecomp;
             decomposeOneProc
             (
                 meshPath,
@@ -260,10 +260,10 @@ CML::label CML::scotchDecomp::decompose
 
 
             // Send allFinalDecomp back
-            for (int slave=1; slave<Pstream::nProcs(); slave++)
+            for (label slave=1; slave<Pstream::nProcs(); slave++)
             {
                 OPstream toSlave(Pstream::scheduled, slave);
-                toSlave << SubField<int>
+                toSlave << SubField<label>
                 (
                     allFinalDecomp,
                     globalCells.localSize(slave),
@@ -271,7 +271,7 @@ CML::label CML::scotchDecomp::decompose
                 );
             }
             // Get my own part (always first)
-            finalDecomp = SubField<int>
+            finalDecomp = SubField<label>
             (
                 allFinalDecomp,
                 globalCells.localSize()
@@ -282,7 +282,7 @@ CML::label CML::scotchDecomp::decompose
             // Send my part of the graph (already in global numbering)
             {
                 OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
-                toMaster<< adjncy << SubField<int>(xadj, xadj.size()-1)
+                toMaster<< adjncy << SubField<label>(xadj, xadj.size()-1)
                     << cWeights;
             }
 
@@ -299,11 +299,11 @@ CML::label CML::scotchDecomp::decompose
 CML::label CML::scotchDecomp::decomposeOneProc
 (
     const fileName& meshPath,
-    const List<int>& adjncy,
-    const List<int>& xadj,
+    const List<label>& adjncy,
+    const List<label>& xadj,
     const scalarField& cWeights,
 
-    List<int>& finalDecomp
+    List<label>& finalDecomp
 )
 {
     // Dump graph
@@ -376,7 +376,7 @@ CML::label CML::scotchDecomp::decomposeOneProc
     // Graph
     // ~~~~~
 
-    List<int> velotab;
+    List<label> velotab;
 
 
     // Check for externally provided cellweights and if so initialise weights
@@ -426,7 +426,7 @@ CML::label CML::scotchDecomp::decomposeOneProc
 
         forAll(velotab, i)
         {
-            velotab[i] = int((cWeights[i]/minWeights - 1)*rangeScale) + 1;
+            velotab[i] = label((cWeights[i]/minWeights - 1)*rangeScale) + 1;
         }
     }
 
@@ -500,7 +500,7 @@ CML::label CML::scotchDecomp::decomposeOneProc
 
     // Hack:switch off fpu error trapping
 #   ifdef FE_NOMASK_ENV
-    int oldExcepts = fedisableexcept
+    label oldExcepts = fedisableexcept
     (
         FE_DIVBYZERO
       | FE_INVALID
@@ -588,7 +588,7 @@ CML::labelList CML::scotchDecomp::decompose
     calcCellCells(mesh, identity(mesh.nCells()), mesh.nCells(), cellCells);
 
     // Decompose using default weights
-    List<int> finalDecomp;
+    List<label> finalDecomp;
     decompose
     (
         mesh.time().path()/mesh.name(),
@@ -633,7 +633,7 @@ CML::labelList CML::scotchDecomp::decompose
     calcCellCells(mesh, agglom, agglomPoints.size(), cellCells);
 
     // Decompose using weights
-    List<int> finalDecomp;
+    List<label> finalDecomp;
     decompose
     (
         mesh.time().path()/mesh.name(),
@@ -681,7 +681,7 @@ CML::labelList CML::scotchDecomp::decompose
     CompactListList<label> cellCells(globalCellCells);
 
     // Decompose using weights
-    List<int> finalDecomp;
+    List<label> finalDecomp;
     decompose
     (
         "scotch",

@@ -39,22 +39,7 @@ namespace CML
 
     addToRunTimeSelectionTable(polyPatch, oldCyclicPolyPatch, word);
     addToRunTimeSelectionTable(polyPatch, oldCyclicPolyPatch, dictionary);
-
-    template<>
-    const char* CML::NamedEnum
-    <
-        CML::oldCyclicPolyPatch::transformType,
-        3
-    >::names[] =
-    {
-        "unknown",
-        "rotational",
-        "translational"
-    };
 }
-
-const CML::NamedEnum<CML::oldCyclicPolyPatch::transformType, 3>
-    CML::oldCyclicPolyPatch::transformTypeNames;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -317,7 +302,7 @@ void CML::oldCyclicPolyPatch::getCentresAndAnchors
     anchors0 = getAnchorPoints(half0Faces, pp.points());
     half1Ctrs = calcFaceCentres(half1Faces, pp.points());
 
-    switch (transform_)
+    switch (transform())
     {
         case ROTATIONAL:
         {
@@ -583,12 +568,13 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType,
+    const transformType transform
 )
 :
-    coupledPolyPatch(name, size, start, index, bm),
+    coupledPolyPatch(name, size, start, index, bm, patchType, transform),
     featureCos_(0.9),
-    transform_(UNKNOWN),
     rotationAxis_(vector::zero),
     rotationCentre_(point::zero),
     separationVector_(vector::zero)
@@ -600,12 +586,12 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    coupledPolyPatch(name, dict, index, bm),
+    coupledPolyPatch(name, dict, index, bm, patchType),
     featureCos_(0.9),
-    transform_(UNKNOWN),
     rotationAxis_(vector::zero),
     rotationCentre_(point::zero),
     separationVector_(vector::zero)
@@ -632,26 +618,22 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
 
     dict.readIfPresent("featureCos", featureCos_);
 
-    if (dict.found("transform"))
+    switch (transform())
     {
-        transform_ = transformTypeNames.read(dict.lookup("transform"));
-        switch (transform_)
+        case ROTATIONAL:
         {
-            case ROTATIONAL:
-            {
-                dict.lookup("rotationAxis") >> rotationAxis_;
-                dict.lookup("rotationCentre") >> rotationCentre_;
-                break;
-            }
-            case TRANSLATIONAL:
-            {
-                dict.lookup("separationVector") >> separationVector_;
-                break;
-            }
-            default:
-            {
-                // no additional info required
-            }
+            dict.lookup("rotationAxis") >> rotationAxis_;
+            dict.lookup("rotationCentre") >> rotationCentre_;
+            break;
+        }
+        case TRANSLATIONAL:
+        {
+            dict.lookup("separationVector") >> separationVector_;
+            break;
+        }
+        default:
+        {
+            // no additional info required
         }
     }
 }
@@ -665,7 +647,6 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
 :
     coupledPolyPatch(pp, bm),
     featureCos_(pp.featureCos_),
-    transform_(pp.transform_),
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_)
@@ -683,7 +664,6 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
 :
     coupledPolyPatch(pp, bm, index, newSize, newStart),
     featureCos_(pp.featureCos_),
-    transform_(pp.transform_),
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_)
@@ -1263,12 +1243,10 @@ void CML::oldCyclicPolyPatch::write(Ostream& os) const
 
 
     os.writeKeyword("featureCos") << featureCos_ << token::END_STATEMENT << nl;
-    switch (transform_)
+    switch (transform())
     {
         case ROTATIONAL:
         {
-            os.writeKeyword("transform") << transformTypeNames[transform_]
-                << token::END_STATEMENT << nl;
             os.writeKeyword("rotationAxis") << rotationAxis_
                 << token::END_STATEMENT << nl;
             os.writeKeyword("rotationCentre") << rotationCentre_
@@ -1277,8 +1255,6 @@ void CML::oldCyclicPolyPatch::write(Ostream& os) const
         }
         case TRANSLATIONAL:
         {
-            os.writeKeyword("transform") << transformTypeNames[transform_]
-                << token::END_STATEMENT << nl;
             os.writeKeyword("separationVector") << separationVector_
                 << token::END_STATEMENT << nl;
             break;

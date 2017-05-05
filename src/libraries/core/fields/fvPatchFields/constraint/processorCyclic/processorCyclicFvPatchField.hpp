@@ -162,15 +162,10 @@ public:
 #include "demandDrivenData.hpp"
 #include "transformField.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
 
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF
@@ -182,7 +177,7 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
 
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -197,7 +192,7 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
 // Construct by mapping given processorCyclicFvPatchField<Type>
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const processorCyclicFvPatchField<Type>& ptf,
     const fvPatch& p,
@@ -231,7 +226,7 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
 
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -278,7 +273,7 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
 
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const processorCyclicFvPatchField<Type>& ptf
 )
@@ -291,7 +286,7 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
 
 template<class Type>
-processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
+CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 (
     const processorCyclicFvPatchField<Type>& ptf,
     const DimensionedField<Type, volMesh>& iF
@@ -306,110 +301,9 @@ processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 // * * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
 
 template<class Type>
-processorCyclicFvPatchField<Type>::~processorCyclicFvPatchField()
+CML::processorCyclicFvPatchField<Type>::~processorCyclicFvPatchField()
 {}
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-//template<class Type>
-//tmp<Field<Type> >
-//processorCyclicFvPatchField<Type>::patchNeighbourField() const
-//{
-//   return *this;
-//}
-//
-//
-//template<class Type>
-//void processorCyclicFvPatchField<Type>::initEvaluate
-//(
-//    const Pstream::commsTypes commsType
-//)
-//{
-//    if (Pstream::parRun())
-//    {
-//        procPatch_.compressedSend(commsType, this->patchInternalField()());
-//    }
-//}
-//
-//
-//template<class Type>
-//void processorCyclicFvPatchField<Type>::evaluate
-//(
-//    const Pstream::commsTypes commsType
-//)
-//{
-//    if (Pstream::parRun())
-//    {
-//        procPatch_.compressedReceive<Type>(commsType, *this);
-//
-//        if (doTransform())
-//        {
-//            transform(*this, procPatch_.forwardT(), *this);
-//        }
-//    }
-//}
-//
-//
-//template<class Type>
-//tmp<Field<Type> > processorCyclicFvPatchField<Type>::snGrad() const
-//{
-//    return this->patch().deltaCoeffs()*(*this - this->patchInternalField());
-//}
-//
-//
-//template<class Type>
-//void processorCyclicFvPatchField<Type>::initInterfaceMatrixUpdate
-//(
-//    const scalarField& psiInternal,
-//    scalarField&,
-//    const lduMatrix&,
-//    const scalarField&,
-//    const direction,
-//    const Pstream::commsTypes commsType
-//) const
-//{
-//    procPatch_.compressedSend
-//    (
-//        commsType,
-//        this->patch().patchInternalField(psiInternal)()
-//    );
-//}
-//
-//
-//template<class Type>
-//void processorCyclicFvPatchField<Type>::updateInterfaceMatrix
-//(
-//    const scalarField&,
-//    scalarField& result,
-//    const lduMatrix&,
-//    const scalarField& coeffs,
-//    const direction cmpt,
-//    const Pstream::commsTypes commsType
-//) const
-//{
-//    scalarField pnf
-//    (
-//        procPatch_.compressedReceive<scalar>(commsType, this->size())()
-//    );
-//
-//    // Transform according to the transformation tensor
-//    transformCoupleField(pnf, cmpt);
-//
-//    // Multiply the field by coefficients and add into the result
-//
-//    const labelUList& faceCells = this->patch().faceCells();
-//
-//    forAll(faceCells, elemI)
-//    {
-//        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
-//    }
-//}
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

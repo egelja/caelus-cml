@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -33,7 +34,7 @@ Description
 #include "turbulenceModel.hpp"
 #include "pimpleControl.hpp"
 #include "SRFModel.hpp"
-#include "IObasicSourceList.hpp"
+#include "fvIOoptionList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     #include "createTime.hpp"
     #include "createMesh.hpp"
     #include "createFields.hpp"
+    #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     pimpleControl pimple(mesh);
@@ -83,14 +85,7 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-#ifdef _WIN32
-        Info<< "ExecutionTime = " << static_cast<scalar>(runTime.elapsedCpuTime()) << " s"
-            << "  ClockTime = " << static_cast<scalar>(runTime.elapsedClockTime()) << " s"<< nl << endl;
-#else
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s" 
-              << "  ClockTime = " << runTime.elapsedClockTime() << " s" << nl << endl;
-#endif
-         
+        #include "reportTimeStats.hpp"         
     }
 
     Info<< "End\n" << endl;
@@ -99,4 +94,3 @@ int main(int argc, char *argv[])
 }
 
 
-// ************************************************************************* //

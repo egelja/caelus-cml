@@ -150,8 +150,15 @@ bool CML::pointZone::checkParallelSync(const bool report) const
 
     forAll(maxZone, pointI)
     {
-        // Check point in zone on both sides
-        if (maxZone[pointI] != minZone[pointI])
+        // Check point in same (or no) zone on all processors
+        if
+        (
+            (
+                maxZone[pointI] != -1
+             || minZone[pointI] != labelMax
+            )
+         && (maxZone[pointI] != minZone[pointI])
+        )
         {
             if (report && !error)
             {
@@ -163,7 +170,8 @@ bool CML::pointZone::checkParallelSync(const bool report) const
                     << (minZone[pointI] == labelMax ? -1 : minZone[pointI])
                     << " on some processors and in zone "
                     << maxZone[pointI]
-                    << " on some other processors."
+                    << " on some other processors." << nl
+                    << "(suppressing further warnings)"
                     << endl;
             }
             error = true;

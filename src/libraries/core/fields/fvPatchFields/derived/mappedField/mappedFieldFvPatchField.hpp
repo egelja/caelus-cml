@@ -22,11 +22,43 @@ Class
     CML::mappedFieldFvPatchField
 
 Description
-    Self-contained version of mapped. Does not use information on
-    patch, instead holds it locally (and possibly duplicate) so use
-    normal mapped in preference and only use this if you cannot
-    change the underlying patch type to mapped.
+    This boundary condition provides a self-contained version of the \c mapped
+    condition.  It does not use information on the patch; instead it holds
+    thr data locally.
 
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        fieldName    | name of field to be mapped | no       | this field name
+        setAverage   | flag to activate setting of average value | yes |
+        average      | average value to apply if \c setAverage = yes | yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            mappedField;
+        fieldName       T;              // optional field name
+        setAverage      no;             // apply an average value
+        average         0;              // average to apply if setAverage
+        value           uniform 0;      // place holder
+    }
+    \endverbatim
+
+Note
+    Since this condition can be applied on a per-field and per-patch basis,
+    it is possible to duplicate the mapping information.  If possible, employ
+    the \c mapped condition in preference to avoid this situation, and only
+    employ this condition if it is not possible to change the underlying
+    geometric (poly) patch type to \c mapped.
+
+SeeAlso
+    CML::mappedPatchBase
+    CML::mappedPolyPatch
+    CML::mappedFvPatch
+    CML::fixedValueFvPatchField
 
 \*---------------------------------------------------------------------------*/
 
@@ -68,17 +100,11 @@ class mappedFieldFvPatchField
         //- Interpolation scheme to use for nearestCell mode
         word interpolationScheme_;
 
-        //- Pointer to the cell interpolator
-        mutable autoPtr<interpolation<Type> > interpolator_;
-
 
     // Private Member Functions
 
         //- Field to sample. Either on my or nbr mesh
         const GeometricField<Type, CML::fvPatchField, volMesh>& sampleField() const;
-
-        //- Access the interpolation method
-        const interpolation<Type>& interpolator() const;
 
 
 public:
@@ -363,22 +389,6 @@ mappedFieldFvPatchField<Type>::sampleField() const
 
 
 template<class Type>
-const interpolation<Type>&
-mappedFieldFvPatchField<Type>::interpolator() const
-{
-    if (!interpolator_.valid())
-    {
-        interpolator_ = interpolation<Type>::New
-        (
-            interpolationScheme_,
-            sampleField()
-        );
-    }
-    return interpolator_();
-}
-
-
-template<class Type>
 void mappedFieldFvPatchField<Type>::updateCoeffs()
 {
     if (this->updated())
@@ -418,6 +428,15 @@ void mappedFieldFvPatchField<Type>::updateCoeffs()
                     samples
                 );
 
+
+                autoPtr<interpolation<Type> > interpolator
+                (
+                    interpolation<Type>::New
+                    (
+                        interpolationScheme_,
+                        sampleField()
+                    )
+                );
                 const interpolation<Type>& interp = interpolator();
 
                 newValues.setSize(samples.size(), pTraits<Type>::max);

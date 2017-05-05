@@ -42,13 +42,14 @@ namespace CML
     );
 
     template<>
-    const char* NamedEnum<sampledTriSurfaceMesh::samplingSource, 2>::names[] =
+    const char* NamedEnum<sampledTriSurfaceMesh::samplingSource, 3>::names[] =
     {
         "cells",
+        "insideCells",
         "boundaryFaces"
     };
 
-    const NamedEnum<sampledTriSurfaceMesh::samplingSource, 2>
+    const NamedEnum<sampledTriSurfaceMesh::samplingSource, 3>
     sampledTriSurfaceMesh::samplingSourceNames_;
 
 
@@ -105,7 +106,7 @@ CML::sampledTriSurfaceMesh::nonCoupledboundaryTree() const
 
         treeBoundBox overallBb(mesh().points());
         Random rndGen(123456);
-        overallBb = overallBb.extend(rndGen, 1E-4);
+        overallBb = overallBb.extend(rndGen, 1e-4);
         overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
         overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
 
@@ -131,114 +132,11 @@ CML::sampledTriSurfaceMesh::nonCoupledboundaryTree() const
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-CML::sampledTriSurfaceMesh::sampledTriSurfaceMesh
-(
-    const word& name,
-    const polyMesh& mesh,
-    const word& surfaceName,
-    const samplingSource sampleSource
-)
-:
-    sampledSurface(name, mesh),
-    surface_
-    (
-        IOobject
-        (
-            surfaceName,
-            mesh.time().constant(), // instance
-            "triSurface",           // local
-            mesh,                   // registry
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE,
-            false
-        )
-    ),
-    sampleSource_(sampleSource),
-    needsUpdate_(true),
-    sampleElements_(0),
-    samplePoints_(0)
-{}
-
-
-CML::sampledTriSurfaceMesh::sampledTriSurfaceMesh
-(
-    const word& name,
-    const polyMesh& mesh,
-    const dictionary& dict
-)
-:
-    sampledSurface(name, mesh, dict),
-    surface_
-    (
-        IOobject
-        (
-            dict.lookup("surface"),
-            mesh.time().constant(), // instance
-            "triSurface",           // local
-            mesh,                   // registry
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE,
-            false
-        )
-    ),
-    sampleSource_(samplingSourceNames_[dict.lookup("source")]),
-    needsUpdate_(true),
-    sampleElements_(0),
-    samplePoints_(0)
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::sampledTriSurfaceMesh::~sampledTriSurfaceMesh()
-{}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-bool CML::sampledTriSurfaceMesh::needsUpdate() const
+bool CML::sampledTriSurfaceMesh::update(const meshSearch& meshSearcher)
 {
-    return needsUpdate_;
-}
-
-
-bool CML::sampledTriSurfaceMesh::expire()
-{
-    // already marked as expired
-    if (needsUpdate_)
-    {
-        return false;
-    }
-
-    sampledSurface::clearGeom();
-    MeshStorage::clear();
-
-    boundaryTreePtr_.clear();
-    sampleElements_.clear();
-    samplePoints_.clear();
-
-    needsUpdate_ = true;
-    return true;
-}
-
-
-bool CML::sampledTriSurfaceMesh::update()
-{
-    if (!needsUpdate_)
-    {
-        return false;
-    }
-
-
     // Find the cells the triangles of the surface are in.
     // Does approximation by looking at the face centres only
     const pointField& fc = surface_.faceCentres();
-
-    // Mesh search engine, no triangulation of faces.
-    meshSearch meshSearcher(mesh(), polyMesh::FACEPLANES);
-
 
     List<nearInfo> nearest(fc.size());
 
@@ -246,7 +144,7 @@ bool CML::sampledTriSurfaceMesh::update()
     // elements
     globalIndex globalCells
     (
-        sampleSource_ == cells
+        (sampleSource_ == cells || sampleSource_ == insideCells)
       ? mesh().nCells()
       : mesh().nFaces()
     );
@@ -274,6 +172,25 @@ bool CML::sampledTriSurfaceMesh::update()
             {
                 nearest[triI].first() = magSqr(nearInfo.hitPoint()-fc[triI]);
                 nearest[triI].second() = globalCells.toGlobal(nearInfo.index());
+            }
+        }
+    }
+    else if (sampleSource_ == insideCells)
+    {
+        // Search for cell containing point
+
+        const indexedOctree<treeDataCell>& cellTree = meshSearcher.cellTree();
+
+        forAll(fc, triI)
+        {
+            if (cellTree.bb().contains(fc[triI]))
+            {
+                label index = cellTree.findInside(fc[triI]);
+                if (index != -1)
+                {
+                    nearest[triI].first() = 0.0;
+                    nearest[triI].second() = globalCells.toGlobal(index);
+                }
             }
         }
     }
@@ -463,6 +380,19 @@ bool CML::sampledTriSurfaceMesh::update()
                 }
             }
         }
+        else if (sampleSource_ == insideCells)
+        {
+            // samplePoints_   : per surface point a location inside the cell
+            // sampleElements_ : per surface point the cell
+
+            forAll(points(), pointI)
+            {
+                const point& pt = points()[pointI];
+                label cellI = cellOrFaceLabels[pointToFace[pointI]];
+                sampleElements_[pointI] = cellI;
+                samplePoints_[pointI] = pt;
+            }
+        }
         else
         {
             // samplePoints_   : per surface point a location on the boundary
@@ -487,6 +417,9 @@ bool CML::sampledTriSurfaceMesh::update()
         // if sampleSource_ == cells:
         //      samplePoints_   : n/a
         //      sampleElements_ : per surface triangle the cell
+        // if sampleSource_ == insideCells:
+        //      samplePoints_   : n/a
+        //      sampleElements_ : -1 or per surface triangle the cell
         // else:
         //      samplePoints_   : n/a
         //      sampleElements_ : per surface triangle the boundary face
@@ -505,7 +438,7 @@ bool CML::sampledTriSurfaceMesh::update()
 
         if (sampledSurface::interpolate())
         {
-            if (sampleSource_ == cells)
+            if (sampleSource_ == cells || sampleSource_ == insideCells)
             {
                 forAll(samplePoints_, pointI)
                 {
@@ -542,7 +475,7 @@ bool CML::sampledTriSurfaceMesh::update()
         }
         else
         {
-            if (sampleSource_ == cells)
+            if (sampleSource_ == cells || sampleSource_ == insideCells)
             {
                 forAll(sampleElements_, triI)
                 {
@@ -574,6 +507,157 @@ bool CML::sampledTriSurfaceMesh::update()
 
     needsUpdate_ = false;
     return true;
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+CML::sampledTriSurfaceMesh::sampledTriSurfaceMesh
+(
+    const word& name,
+    const polyMesh& mesh,
+    const word& surfaceName,
+    const samplingSource sampleSource
+)
+:
+    sampledSurface(name, mesh),
+    surface_
+    (
+        IOobject
+        (
+            surfaceName,
+            mesh.time().constant(), // instance
+            "triSurface",           // local
+            mesh,                   // registry
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            false
+        )
+    ),
+    sampleSource_(sampleSource),
+    needsUpdate_(true),
+    sampleElements_(0),
+    samplePoints_(0)
+{}
+
+
+CML::sampledTriSurfaceMesh::sampledTriSurfaceMesh
+(
+    const word& name,
+    const polyMesh& mesh,
+    const dictionary& dict
+)
+:
+    sampledSurface(name, mesh, dict),
+    surface_
+    (
+        IOobject
+        (
+            dict.lookup("surface"),
+            mesh.time().constant(), // instance
+            "triSurface",           // local
+            mesh,                   // registry
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            false
+        )
+    ),
+    sampleSource_(samplingSourceNames_[dict.lookup("source")]),
+    needsUpdate_(true),
+    sampleElements_(0),
+    samplePoints_(0)
+{}
+
+
+CML::sampledTriSurfaceMesh::sampledTriSurfaceMesh
+(
+    const word& name,
+    const polyMesh& mesh,
+    const triSurface& surface,
+    const word& sampleSourceName
+)
+:
+    sampledSurface(name, mesh),
+    surface_
+    (
+        IOobject
+        (
+            name,
+            mesh.time().constant(), // instance
+            "triSurface",           // local
+            mesh,                  // registry
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        surface
+    ),
+    sampleSource_(samplingSourceNames_[sampleSourceName]),
+    needsUpdate_(true),
+    sampleElements_(0),
+    samplePoints_(0)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::sampledTriSurfaceMesh::~sampledTriSurfaceMesh()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::sampledTriSurfaceMesh::needsUpdate() const
+{
+    return needsUpdate_;
+}
+
+
+bool CML::sampledTriSurfaceMesh::expire()
+{
+    // already marked as expired
+    if (needsUpdate_)
+    {
+        return false;
+    }
+
+    sampledSurface::clearGeom();
+    MeshStorage::clear();
+
+    boundaryTreePtr_.clear();
+    sampleElements_.clear();
+    samplePoints_.clear();
+
+    needsUpdate_ = true;
+    return true;
+}
+
+
+bool CML::sampledTriSurfaceMesh::update()
+{
+    if (!needsUpdate_)
+    {
+        return false;
+    }
+
+    // Mesh search engine, no triangulation of faces.
+    meshSearch meshSearcher(mesh(), polyMesh::FACEPLANES);
+
+    return update(meshSearcher);
+}
+
+
+bool CML::sampledTriSurfaceMesh::update(const treeBoundBox& bb)
+{
+    if (!needsUpdate_)
+    {
+        return false;
+    }
+
+    // Mesh search engine on subset, no triangulation of faces.
+    meshSearch meshSearcher(mesh(), bb, polyMesh::FACEPLANES);
+
+    return update(meshSearcher);
 }
 
 

@@ -1,4 +1,4 @@
-U = rAU*(UEqn() == sources(U))().H();
+U = rAU*UEqn().H();
 
 if (pimple.nCorrPISO() <= 1)
 {
@@ -7,7 +7,7 @@ if (pimple.nCorrPISO() <= 1)
 
 phi = (fvc::interpolate(U) & mesh.Sf())
     + fvc::ddtPhiCorr(rAU, U, phi);
-
+fvOptions.makeRelative(phi);
 adjustPhi(phi, U, p);
 
 // Non-orthogonal pressure corrector loop
@@ -36,4 +36,4 @@ p.relax();
 
 U -= rAU*fvc::grad(p);
 U.correctBoundaryConditions();
-sources.correct(U);
+fvOptions.correct(U);

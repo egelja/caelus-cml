@@ -33,9 +33,8 @@ mapFieldsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if mapFieldsEnv['WHICH_OS'] == "windows":
   mapFieldsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libsampling','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','sampling','lagrangian']
+
+lib_link = ['genericPatchFields','sampling','lagrangian']
     
 mapFieldsEnv.Append(LIBS = lib_link)
     

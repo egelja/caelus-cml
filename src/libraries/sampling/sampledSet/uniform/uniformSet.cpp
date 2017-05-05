@@ -73,6 +73,7 @@ bool CML::uniformSet::nextSample
 
 bool CML::uniformSet::trackToBoundary
 (
+    passiveParticleCloud& particleCloud,
     passiveParticle& singleParticle,
     point& samplePt,
     label& sampleI,
@@ -90,7 +91,6 @@ bool CML::uniformSet::trackToBoundary
     // Alias
     const point& trackPt = singleParticle.position();
 
-    passiveParticleCloud particleCloud(mesh());
     particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
 
     while(true)
@@ -101,7 +101,7 @@ bool CML::uniformSet::trackToBoundary
             // no more samples.
             if (debug)
             {
-                Info<< "trackToBoundary : Reached end : samplePt now:"
+                Pout<< "trackToBoundary : Reached end : samplePt now:"
                     << samplePt << "  sampleI now:" << sampleI << endl;
             }
             return false;
@@ -112,7 +112,7 @@ bool CML::uniformSet::trackToBoundary
             // trackPt corresponds with samplePt. Store and use next samplePt
             if (debug)
             {
-                Info<< "trackToBoundary : samplePt corresponds to trackPt : "
+                Pout<< "trackToBoundary : samplePt corresponds to trackPt : "
                     << "  trackPt:" << trackPt << "  samplePt:" << samplePt
                     << endl;
             }
@@ -128,7 +128,7 @@ bool CML::uniformSet::trackToBoundary
                 // no more samples.
                 if (debug)
                 {
-                    Info<< "trackToBoundary : Reached end : "
+                    Pout<< "trackToBoundary : Reached end : "
                         << "  samplePt now:" << samplePt
                         << "  sampleI now:" << sampleI
                         << endl;
@@ -141,7 +141,7 @@ bool CML::uniformSet::trackToBoundary
 
         if (debug)
         {
-            Info<< "Searching along trajectory from "
+            Pout<< "Searching along trajectory from "
                 << "  trackPt:" << trackPt
                 << "  trackCellI:" << singleParticle.cell()
                 << "  to:" << samplePt << endl;
@@ -156,7 +156,7 @@ bool CML::uniformSet::trackToBoundary
 
             if (debug)
             {
-                Info<< "Result of tracking "
+                Pout<< "Result of tracking "
                     << "  trackPt:" << trackPt
                     << "  trackCellI:" << singleParticle.cell()
                     << "  trackFaceI:" << singleParticle.face()
@@ -174,10 +174,10 @@ bool CML::uniformSet::trackToBoundary
 
         if (singleParticle.onBoundary())
         {
-            //Info<< "trackToBoundary : reached boundary" << endl;
+            //Pout<< "trackToBoundary : reached boundary" << endl;
             if (mag(trackPt - samplePt) < smallDist)
             {
-                //Info<< "trackToBoundary : boundary is also sampling point"
+                //Pout<< "trackToBoundary : boundary is also sampling point"
                 //    << endl;
                 // Reached samplePt on boundary
                 samplingPts.append(trackPt);
@@ -189,7 +189,7 @@ bool CML::uniformSet::trackToBoundary
             return true;
         }
 
-        //Info<< "trackToBoundary : reached internal sampling point" << endl;
+        //Pout<< "trackToBoundary : reached internal sampling point" << endl;
         // Reached samplePt in cell or on internal face
         samplingPts.append(trackPt);
         samplingCells.append(singleParticle.cell());
@@ -227,8 +227,9 @@ void CML::uniformSet::calcSamples
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    // Force calculation of minimum-tet decomposition.
-    (void) mesh().tetBasePtIs();
+    // Force calculation of cloud addressing on all processors
+    const bool oldMoving = const_cast<polyMesh&>(mesh()).moving(false);
+    passiveParticleCloud particleCloud(mesh());
 
     // Get all boundary intersections
     List<pointIndexHit> bHits = searchEngine().intersections
@@ -305,6 +306,7 @@ void CML::uniformSet::calcSamples
 
         bool reachedBoundary = trackToBoundary
         (
+            particleCloud,
             singleParticle,
             samplePt,
             sampleI,
@@ -325,7 +327,7 @@ void CML::uniformSet::calcSamples
         {
             if (debug)
             {
-                Info<< "calcSamples : Reached end of samples: "
+                Pout<< "calcSamples : Reached end of samples: "
                     << "  samplePt now:" << samplePt
                     << "  sampleI now:" << sampleI
                     << endl;
@@ -344,7 +346,7 @@ void CML::uniformSet::calcSamples
 
             if (debug)
             {
-                Info<< "Finding next boundary : "
+                Pout<< "Finding next boundary : "
                     << "bPoint:" << bHits[bHitI].hitPoint()
                     << "  tracking:" << singleParticle.position()
                     << "  dist:" << dist
@@ -378,6 +380,8 @@ void CML::uniformSet::calcSamples
 
         startSegmentI = samplingPts.size();
     }
+
+    const_cast<polyMesh&>(mesh()).moving(oldMoving);
 }
 
 
@@ -415,13 +419,14 @@ void CML::uniformSet::genSamples()
     );
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::uniformSet::uniformSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const point& start,
     const point& end,
@@ -437,7 +442,7 @@ CML::uniformSet::uniformSet
 
     if (debug)
     {
-        write(Info);
+        write(Pout);
     }
 }
 
@@ -446,7 +451,7 @@ CML::uniformSet::uniformSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :
@@ -459,7 +464,7 @@ CML::uniformSet::uniformSet
 
     if (debug)
     {
-        write(Info);
+        write(Pout);
     }
 }
 

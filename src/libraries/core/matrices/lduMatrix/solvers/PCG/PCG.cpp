@@ -23,8 +23,6 @@ License
 #include "PCG.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(PCG, 0);
@@ -32,9 +30,6 @@ namespace CML
     lduMatrix::solver::addsymMatrixConstructorToTable<PCG>
         addPCGSymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::PCG::PCG
 (
@@ -57,66 +52,74 @@ CML::PCG::PCG
     )
 {}
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 CML::lduMatrix::solverPerformance CML::PCG::solve
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt
 ) const
 {
-    // --- Setup class containing solver performance data
+    // Setup class containing solver performance data
     lduMatrix::solverPerformance solverPerf
     (
         lduMatrix::preconditioner::getName(controlDict_) + typeName,
         fieldName_
     );
 
-    register label nCells = psi.size();
+    register label nCells = x.size();
 
-    scalar* RESTRICT psiPtr = psi.begin();
+    scalar* RESTRICT xPtr = x.begin();
 
-    scalarField pA(nCells);
-    scalar* RESTRICT pAPtr = pA.begin();
+    scalarField p(nCells);
+    scalar* RESTRICT pPtr = p.begin();
 
-    scalarField wA(nCells);
-    scalar* RESTRICT wAPtr = wA.begin();
+    scalarField w(nCells);
+    scalar* RESTRICT wPtr = w.begin();
 
-    scalar wArA = matrix_.great_;
-    scalar wArAold = wArA;
+    scalar rho = matrix_.great_;
+    scalar rhoOld = rho;
 
-    // --- Calculate A.psi
-    matrix_.Amul(wA, psi, interfaceBouCoeffs_, interfaces_, cmpt);
+    // Calculate A.x
+    matrix_.Amul(w, x, interfaceBouCoeffs_, interfaces_, cmpt);
 
-    // --- Calculate initial residual field
-    scalarField rA(source - wA);
-    scalar* RESTRICT rAPtr = rA.begin();
+    // Calculate initial residual field
+    scalarField r(b - w);
+    scalar* RESTRICT rPtr = r.begin();
 
-    // --- Calculate normalisation factor
-    scalar normFactor = this->normFactor(psi, source, wA, pA);
+    // Calculate normalisation factor
+    scalar normFactor = this->normFactor(x, b, w, p);
 
     if (lduMatrix::debug >= 2)
     {
         Info<< "   Normalisation factor = " << normFactor << endl;
     }
 
-    // --- Calculate normalised residual norm
-    solverPerf.initialResidual() = gSumMag(rA)/normFactor;
+    // Calculate normalised residual norm
+    solverPerf.initialResidual() = gSumMag(r)/normFactor;
     solverPerf.finalResidual() = solverPerf.initialResidual();
 
-    // --- Check convergence, solve if not converged
-    if (!solverPerf.checkConvergence
-         (
-             tolerance_, 
-             relTol_, 
-             solverPerf.nIterations(),
-             minIter_
-         )
-       )
+    // Check convergence, solve if not converged
+    if (this->eps_ >= solverPerf.initialResidual())
     {
-        // --- Select and construct the preconditioner
+        !solverPerf.checkConvergence
+        (
+            this->tolerance_, 
+            solverPerf.nIterations(),
+            this->minIter_
+        );
+    }
+    else
+    {
+        !solverPerf.checkConvergence
+        (
+            this->tolerance_, 
+            this->relTol_,
+            solverPerf.nIterations(),
+            this->minIter_
+        );
+    }
+    {
+        // Select and construct the preconditioner
         autoPtr<lduMatrix::preconditioner> preconPtr =
         lduMatrix::preconditioner::New
         (
@@ -124,57 +127,56 @@ CML::lduMatrix::solverPerformance CML::PCG::solve
             controlDict_
         );
 
-        // --- Solver iteration
+        // Solver iteration
         do
         {
-            // --- Store previous wArA
-            wArAold = wArA;
+            // Store previous rho
+            rhoOld = rho;
 
-            // --- Precondition residual
-            preconPtr->precondition(wA, rA, cmpt);
+            // Apply preconditioner
+            preconPtr->precondition(w, r, cmpt);
 
-            // --- Update search directions:
-            wArA = gSumProd(wA, rA);
+            // Update rho:
+            rho = gSumProd(w, r);
 
             if (solverPerf.nIterations() == 0)
             {
-                for (register label cell=0; cell<nCells; cell++)
+                for (register label cell=0; cell<nCells; ++cell)
                 {
-                    pAPtr[cell] = wAPtr[cell];
+                    pPtr[cell] = wPtr[cell];
                 }
             }
             else
             {
-                scalar beta = wArA/wArAold;
+                scalar beta = rho/rhoOld;
 
-                for (register label cell=0; cell<nCells; cell++)
+                for (register label cell=0; cell<nCells; ++cell)
                 {
-                    pAPtr[cell] = wAPtr[cell] + beta*pAPtr[cell];
+                    pPtr[cell] = wPtr[cell] + beta*pPtr[cell];
                 }
             }
 
 
-            // --- Update preconditioned residual
-            matrix_.Amul(wA, pA, interfaceBouCoeffs_, interfaces_, cmpt);
+            // Update preconditioned residual
+            matrix_.Amul(w, p, interfaceBouCoeffs_, interfaces_, cmpt);
 
-            scalar wApA = gSumProd(wA, pA);
-
-
-            // --- Test for singularity
-            if (solverPerf.checkSingularity(mag(wApA)/normFactor)) break;
+            scalar wApA = gSumProd(w, p);
 
 
-            // --- Update solution and residual:
+            // Test for singularity
+            if (solverPerf.checkSingularity(mag(wApA)/normFactor)) 
+                break;
 
-            scalar alpha = wArA/wApA;
+            // Update solution and residual:
+            scalar alpha = rho/wApA;
 
-            for (register label cell=0; cell<nCells; cell++)
+            for (register label cell=0; cell<nCells; ++cell)
             {
-                psiPtr[cell] += alpha*pAPtr[cell];
-                rAPtr[cell] -= alpha*wAPtr[cell];
+                xPtr[cell] += alpha*pPtr[cell];
+                rPtr[cell] -= alpha*wPtr[cell];
             }
 
-            solverPerf.finalResidual() = gSumMag(rA)/normFactor;
+            solverPerf.finalResidual() = gSumMag(r)/normFactor;
 
         } while
         (
@@ -195,4 +197,3 @@ CML::lduMatrix::solverPerformance CML::PCG::solve
 }
 
 
-// ************************************************************************* //

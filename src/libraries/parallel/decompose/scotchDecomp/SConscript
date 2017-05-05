@@ -31,11 +31,7 @@ scotchDecompEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-if scotchDecompEnv['WHICH_OS'] == "windows" :
-  lib_link = ['libcore','libdecompositionMethods','libscotch','libscotcherr',
-  'libscotcherrexit']
-else:
-  lib_link = ['core','decompositionMethods','scotch','scotcherr']
+lib_link = ['core','decompositionMethods','scotch','scotcherr','scotcherrexit']
 scotchDecompEnv.Append(LIBS = lib_link)
 
 #===============================================================================
@@ -49,7 +45,7 @@ src_files = Split("""
 # Build this library
 #===============================================================================
 if scotchDecompEnv['WHICH_OS'] == "windows" :
-  libscotchDecomp =scotchDecompEnv.SharedLibrary(target = 'libscotchDecomp', 
+  libscotchDecomp =scotchDecompEnv.SharedLibrary(target = 'scotchDecomp', 
   source = src_files)
 
 else :
@@ -65,4 +61,4 @@ scotchDecompEnv.Install(install_dir, libscotchDecomp)
 
 if (scotchDecompEnv['WHICH_OS'] == "darwin"):
 
-  scotchDecompEnv.Append(SHLINKFLAGS ='-install_name @' + scotchDecompEnv['LIB_PLATFORM_INSTALL'] + '/libscotchDecomp.dylib')
+  scotchDecompEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libscotchDecomp.dylib')

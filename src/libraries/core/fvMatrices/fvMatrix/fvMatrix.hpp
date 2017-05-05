@@ -413,6 +413,9 @@ public:
             tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
                 flux() const;
 
+            // Diagonal based on row sum
+            tmp<volScalarField> Ac() const;
+
 
     // Member operators
 
@@ -1964,6 +1967,36 @@ flux() const
     return tfieldFlux;
 }
 
+template<class Type> CML::tmp<CML::volScalarField> 
+CML::fvMatrix<Type>::Ac() const
+{
+    tmp<volScalarField> tAphi
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "A("+psi_.name()+')',
+                psi_.instance(),
+                psi_.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi_.mesh(),
+            dimensions_/(psi_.dimensions()*dimVol),
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+
+    register const label nCells = psi_.mesh().V().size();
+    scalarField s(nCells);
+    lduMatrix::rowSum(s);
+    tAphi().internalField() = s/psi_.mesh().V();
+    tAphi().correctBoundaryConditions();
+
+    return tAphi;
+}
+
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
@@ -3352,7 +3385,6 @@ CML::operator&
     GeometricField<Type, fvPatchField, volMesh>& Mphi = tMphi();
 
     // Loop over field components
-    for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
     if (M.hasDiag())
     {
         for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
@@ -3363,7 +3395,6 @@ CML::operator&
             Mphi.internalField().replace(cmpt, -boundaryDiagCmpt*psiCmpt);
         }
     }
-    // Matrix without diagonal
     else 
     {
         Mphi.internalField() = pTraits<Type>::zero;

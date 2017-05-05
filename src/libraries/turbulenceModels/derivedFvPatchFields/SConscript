@@ -59,4 +59,4 @@ turbDerPatFieldsEnv.Install(install_dir, libturbulenceDerivedFvPatchFields)
 
 if (turbDerPatFieldsEnv['WHICH_OS'] == "darwin"):
 
-  turbDerPatFieldsEnv.Append(SHLINKFLAGS ='-install_name @' + turbDerPatFieldsEnv['LIB_PLATFORM_INSTALL'] + '/libturbulenceDerivedFvPatchFields.dylib')
+  turbDerPatFieldsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libturbulenceDerivedFvPatchFields.dylib')

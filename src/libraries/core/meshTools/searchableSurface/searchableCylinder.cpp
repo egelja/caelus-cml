@@ -35,11 +35,40 @@ addToRunTimeSelectionTable(searchableSurface, searchableCylinder, dict);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-CML::pointField CML::searchableCylinder::coordinates() const
+CML::tmp<CML::pointField> CML::searchableCylinder::coordinates() const
 {
-    pointField ctrs(1, 0.5*(point1_ + point2_));
+    tmp<pointField> tCtrs(new pointField(1, 0.5*(point1_ + point2_)));
 
-    return ctrs;
+    return tCtrs;
+}
+
+
+void CML::searchableCylinder::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(1);
+    centres[0] = 0.5*(point1_ + point2_);
+
+    radiusSqr.setSize(1);
+    radiusSqr[0] = CML::magSqr(point1_-centres[0]) + CML::sqr(radius_);
+
+    // Add a bit to make sure all points are tested inside
+    radiusSqr += CML::sqr(SMALL);
+}
+
+
+CML::tmp<CML::pointField> CML::searchableCylinder::points() const
+{
+    tmp<pointField> tPts(new pointField(2));
+    pointField& pts = tPts();
+
+    pts[0] = point1_;
+    pts[1] = point2_;
+
+    return tPts;
 }
 
 
@@ -629,21 +658,61 @@ void CML::searchableCylinder::getNormal
             vector v(info[i].hitPoint() - point1_);
 
             // Decompose sample-point1 into normal and parallel component
-            scalar parallel = v & unitDir_;
+            scalar parallel = (v & unitDir_);
 
-            if (parallel < 0)
+            // Remove the parallel component and normalise
+            v -= parallel*unitDir_;
+            scalar magV = mag(v);
+
+            if (parallel <= 0)
             {
-                normal[i] = -unitDir_;
+                if ((magV-radius_) < mag(parallel))
+                {
+                    // either above endcap (magV<radius) or outside but closer
+                    normal[i] = -unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/magV;
+                }
             }
-            else if (parallel > magDir_)
+            else if (parallel <= 0.5*magDir_)
             {
-                normal[i] = -unitDir_;
+                // See if endcap closer or sidewall
+                if (magV >= radius_ || (radius_-magV) < parallel)
+                {
+                    normal[i] = v/magV;
+                }
+                else
+                {
+                    // closer to endcap
+                    normal[i] = -unitDir_;
+                }
             }
-            else
+            else if (parallel <= magDir_)
             {
-                // Remove the parallel component
-                v -= parallel*unitDir_;
-                normal[i] = v/mag(v);
+                // See if endcap closer or sidewall
+                if (magV >= radius_ || (radius_-magV) < (magDir_-parallel))
+                {
+                    normal[i] = v/magV;
+                }
+                else
+                {
+                    // closer to endcap
+                    normal[i] = unitDir_;
+                }
+            }
+            else    // beyond cylinder
+            {
+                if ((magV-radius_) < (parallel-magDir_))
+                {
+                    // above endcap
+                    normal[i] = unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/magV;
+                }
             }
         }
     }
@@ -657,7 +726,7 @@ void CML::searchableCylinder::getVolumeType
 ) const
 {
     volType.setSize(points.size());
-    volType = INSIDE;
+    volType = volumeType::INSIDE;
 
     forAll(points, pointI)
     {
@@ -671,12 +740,12 @@ void CML::searchableCylinder::getVolumeType
         if (parallel < 0)
         {
             // left of point1 endcap
-            volType[pointI] = OUTSIDE;
+            volType[pointI] = volumeType::OUTSIDE;
         }
         else if (parallel > magDir_)
         {
             // right of point2 endcap
-            volType[pointI] = OUTSIDE;
+            volType[pointI] = volumeType::OUTSIDE;
         }
         else
         {
@@ -685,11 +754,11 @@ void CML::searchableCylinder::getVolumeType
 
             if (mag(v) > radius_)
             {
-                volType[pointI] = OUTSIDE;
+                volType[pointI] = volumeType::OUTSIDE;
             }
             else
             {
-                volType[pointI] = INSIDE;
+                volType[pointI] = volumeType::INSIDE;
             }
         }
     }

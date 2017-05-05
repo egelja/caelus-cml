@@ -54,4 +54,4 @@ LESFiltersEnv.Install(install_dir, libLESfilters)
 
 if (LESFiltersEnv['WHICH_OS'] == "darwin"):
 
-  LESFiltersEnv.Append(SHLINKFLAGS ='-install_name @' + LESFiltersEnv['LIB_PLATFORM_INSTALL'] + '/libLESfilters.dylib')
+  LESFiltersEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libLESfilters.dylib')

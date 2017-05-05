@@ -22,7 +22,7 @@ License
 
 #include "metisDecomp.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "floatScalar.hpp"
+#include "scalar.hpp"
 #include "Time.hpp"
 
 extern "C"
@@ -53,10 +53,10 @@ namespace CML
 // Call Metis with options from dictionary.
 CML::label CML::metisDecomp::decompose
 (
-    const List<int>& adjncy,
-    const List<int>& xadj,
+    const List<label>& adjncy,
+    const List<label>& xadj,
     const scalarField& cWeights,
-    List<int>& finalDecomp
+    List<label>& finalDecomp
 )
 {
     // Method of decomposition
@@ -64,7 +64,7 @@ CML::label CML::metisDecomp::decompose
     // k-way: multi-level k-way
     word method("recursive");
 
-    int numCells = xadj.size()-1;
+    label numCells = xadj.size()-1;
 
     // decomposition options
     idx_t options[METIS_NOPTIONS];
@@ -72,13 +72,13 @@ CML::label CML::metisDecomp::decompose
 
     // processor weights initialised with no size, only used if specified in
     // a file
-    Field<floatScalar> processorWeights;
+    Field<scalar> processorWeights;
 
     // cell weights (so on the vertices of the dual)
-    List<int> cellWeights;
+    List<label> cellWeights;
 
     // face weights (so on the edges of the dual)
-    List<int> faceWeights;
+    List<label> faceWeights;
 
 
     // Check for externally provided cellweights and if so initialise weights
@@ -109,7 +109,7 @@ CML::label CML::metisDecomp::decompose
         cellWeights.setSize(cWeights.size());
         forAll(cellWeights, i)
         {
-            cellWeights[i] = int(cWeights[i]/minWeights);
+            cellWeights[i] = label(cWeights[i]/minWeights);
         }
     }
 
@@ -198,19 +198,19 @@ CML::label CML::metisDecomp::decompose
         //}
     }
 
-    int ncon = 1;
+    label ncon = 1;
 
-    int nProcs = nProcessors_;
+    label nProcs = nProcessors_;
 
     // output: cell -> processor addressing
     finalDecomp.setSize(numCells);
 
     // output: number of cut edges
-    int edgeCut = 0;
+    label edgeCut = 0;
 
     // Vertex weight info
-    int* vwgtPtr = NULL;
-    int* adjwgtPtr = NULL;
+    label* vwgtPtr = NULL;
+    label* adjwgtPtr = NULL;
 
     if (cellWeights.size())
     {
@@ -228,8 +228,8 @@ CML::label CML::metisDecomp::decompose
         (
             &numCells,          // num vertices in graph
             &ncon,              // num balancing constraints
-            const_cast<List<int>&>(xadj).begin(),   // indexing into adjncy
-            const_cast<List<int>&>(adjncy).begin(), // neighbour info
+            const_cast<List<label>&>(xadj).begin(),   // indexing into adjncy
+            const_cast<List<label>&>(adjncy).begin(), // neighbour info
             vwgtPtr,// vertexweights
             NULL,               // vsize: total communication vol
             adjwgtPtr,// edgeweights
@@ -247,8 +247,8 @@ CML::label CML::metisDecomp::decompose
         (
             &numCells,         // num vertices in graph
             &ncon,              // num balancing constraints
-            const_cast<List<int>&>(xadj).begin(),   // indexing into adjncy
-            const_cast<List<int>&>(adjncy).begin(), // neighbour info
+            const_cast<List<label>&>(xadj).begin(),   // indexing into adjncy
+            const_cast<List<label>&>(adjncy).begin(), // neighbour info
             vwgtPtr,// vertexweights
             NULL,               // vsize: total communication vol
             adjwgtPtr,// edgeweights

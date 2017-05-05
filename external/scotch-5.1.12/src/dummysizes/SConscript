@@ -1,4 +1,5 @@
 #Copyright (C) 2014 Applied CCM
+import os
 import subprocess
 Import('globalEnv')
 
@@ -6,20 +7,16 @@ Import('globalEnv')
 # libraries
 dummySizesEnv = globalEnv.Clone()
 
-# Path to source
-src = dummySizesEnv['LIB_SRC']
-
-dummySizesEnv.Append(CCFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
+dummySizesEnv.Append(CCFLAGS = ' -DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
                                '-DSCOTCH_PATCHLEVEL=12')
 
 #===============================================================================
 # Additions to include directories for this executable
 #===============================================================================
+# Path to source
+src = dummySizesEnv['LIB_SRC']
+dummySizesEnv.Prepend(CPPPATH = [os.path.join(src,'libscotch')])
 
-lib_inc = [src + '/libscotch']
-dummySizesEnv.Prepend(CPPPATH = lib_inc)
-
-print  lib_inc 
 #===============================================================================
 # Sources for this executable
 #===============================================================================

@@ -32,9 +32,8 @@ SourceFiles
 #ifndef treeDataPrimitivePatch_H
 #define treeDataPrimitivePatch_H
 
-#include "PrimitivePatch_.hpp"
-//#include "indexedOctree.hpp"
 #include "treeBoundBoxList.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,29 +55,21 @@ TemplateName(treeDataPrimitivePatch);
                    Class treeDataPrimitivePatch Declaration
 \*---------------------------------------------------------------------------*/
 
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType=point
->
+template<class PatchType>
 class treeDataPrimitivePatch
 :
     public treeDataPrimitivePatchName
 {
-    // Static data
-
-        //- tolerance on linear dimensions
-        static scalar tolSqr;
-
     // Private data
 
         //- Underlying geometry
-        const PrimitivePatch<Face, FaceList, PointField, PointType>& patch_;
+        const PatchType& patch_;
 
         //- Whether to precalculate and store face bounding box
         const bool cacheBb_;
+
+        //- Tolerance to use for intersection tests
+        const scalar planarTol_;
 
         //- face bounding boxes (valid only if cacheBb_)
         treeBoundBoxList bbs_;
@@ -92,7 +83,114 @@ class treeDataPrimitivePatch
         //- Initialise all member data
         void update();
 
+
 public:
+
+
+    class findNearestOp
+    {
+        const indexedOctree<treeDataPrimitivePatch>& tree_;
+
+    public:
+
+        findNearestOp(const indexedOctree<treeDataPrimitivePatch>& tree);
+
+        void operator()
+        (
+            const labelUList& indices,
+            const point& sample,
+
+            scalar& nearestDistSqr,
+            label& minIndex,
+            point& nearestPoint
+        ) const;
+
+        //- Calculates nearest (to line) point in shape.
+        //  Returns point and distance (squared)
+        void operator()
+        (
+            const labelUList& indices,
+            const linePointRef& ln,
+
+            treeBoundBox& tightest,
+            label& minIndex,
+            point& linePoint,
+            point& nearestPoint
+        ) const;
+    };
+
+
+    class findIntersectOp
+    {
+        const indexedOctree<treeDataPrimitivePatch>& tree_;
+
+    public:
+
+        findIntersectOp(const indexedOctree<treeDataPrimitivePatch>& tree);
+
+        //- Calculate intersection of any face with ray. Sets result
+        //  accordingly. Used to find first intersection.
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
+
+    class findAllIntersectOp
+    {
+        const indexedOctree<treeDataPrimitivePatch>& tree_;
+
+        DynamicList<label>& shapeMask_;
+
+    public:
+
+        findAllIntersectOp
+        (
+            const indexedOctree<treeDataPrimitivePatch>& tree,
+            DynamicList<label>& shapeMask
+        );
+
+        //- Calculate intersection of unique face with ray. Sets result
+        //  accordingly. Used to find all faces.
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
+
+    class findSelfIntersectOp
+    {
+        const indexedOctree<treeDataPrimitivePatch>& tree_;
+
+        const label edgeID_;
+
+    public:
+
+        findSelfIntersectOp
+        (
+            const indexedOctree<treeDataPrimitivePatch>& tree,
+            const label edgeID
+        );
+
+        //- Calculate intersection of face with edge of patch. Excludes
+        //  faces that use edgeID. Used to find self intersection.
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
 
     // Constructors
 
@@ -100,7 +198,8 @@ public:
         treeDataPrimitivePatch
         (
             const bool cacheBb,
-            const PrimitivePatch<Face, FaceList, PointField, PointType>&
+            const PatchType&,
+            const scalar planarTol
         );
 
 
@@ -118,8 +217,7 @@ public:
             pointField shapePoints() const;
 
             //- Return access to the underlying patch
-            const PrimitivePatch<Face, FaceList, PointField, PointType>&
-            patch() const
+            const PatchType& patch() const
             {
                 return patch_;
             }
@@ -129,18 +227,9 @@ public:
 
             //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
             //  Only makes sense for closed surfaces.
-            label getVolumeType
+            volumeType getVolumeType
             (
-                const indexedOctree
-                <
-                    treeDataPrimitivePatch
-                    <
-                        Face,
-                        FaceList,
-                        PointField,
-                        PointType
-                    >
-                >&,
+                const indexedOctree<treeDataPrimitivePatch<PatchType> >&,
                 const point&
             ) const;
 
@@ -159,48 +248,15 @@ public:
                 const scalar radiusSqr
             ) const;
 
-            //- Calculates nearest (to sample) point in shape.
-            //  Returns actual point and distance (squared)
-            void findNearest
+            //- Helper: find intersection of line with shapes
+            static bool findIntersection
             (
-                const labelUList& indices,
-                const point& sample,
-
-                scalar& nearestDistSqr,
-                label& nearestIndex,
-                point& nearestPoint
-            ) const;
-
-            //- Calculates nearest (to line) point in shape.
-            //  Returns point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const linePointRef& ln,
-
-                treeBoundBox& tightest,
-                label& minIndex,
-                point& linePoint,
-                point& nearestPoint
-            ) const
-            {
-                notImplemented
-                (
-                    "treeDataPrimitivePatch::findNearest"
-                    "(const labelUList&, const linePointRef&, ..)"
-                );
-            }
-
-            //- Calculate intersection of shape with ray. Sets result
-            //  accordingly
-            bool intersects
-            (
+                const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree,
                 const label index,
                 const point& start,
                 const point& end,
-                point& result
-            ) const;
-
+                point& intersectionPoint
+            );
 };
 
 
@@ -212,33 +268,13 @@ public:
 
 #include "indexedOctree.hpp"
 #include "triangleFuncs.hpp"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-CML::scalar
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-tolSqr = sqr(1E-6);
-
+#include "triSurfaceTools.hpp"
+#include "triFace.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-CML::treeBoundBox
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-calcBb
+template<class PatchType>
+CML::treeBoundBox CML::treeDataPrimitivePatch<PatchType>::calcBb
 (
     const pointField& points,
     const face& f
@@ -257,15 +293,8 @@ calcBb
 }
 
 
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-void CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-update()
+template<class PatchType>
+void CML::treeDataPrimitivePatch<PatchType>::update()
 {
     if (cacheBb_)
     {
@@ -282,39 +311,71 @@ update()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-treeDataPrimitivePatch
+template<class PatchType>
+CML::treeDataPrimitivePatch<PatchType>::treeDataPrimitivePatch
 (
     const bool cacheBb,
-    const PrimitivePatch<Face, FaceList, PointField, PointType>& patch
+    const PatchType& patch,
+    const scalar planarTol
 )
 :
     patch_(patch),
-    cacheBb_(cacheBb)
+    cacheBb_(cacheBb),
+    planarTol_(planarTol)
 {
     update();
 }
 
 
+template<class PatchType>
+CML::treeDataPrimitivePatch<PatchType>::findNearestOp::findNearestOp
+(
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree
+)
+:
+    tree_(tree)
+{}
+
+
+template<class PatchType>
+CML::treeDataPrimitivePatch<PatchType>::findIntersectOp::findIntersectOp
+(
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree
+)
+:
+    tree_(tree)
+{}
+
+
+template<class PatchType>
+CML::treeDataPrimitivePatch<PatchType>::findAllIntersectOp::findAllIntersectOp
+(
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree,
+    DynamicList<label>& shapeMask
+)
+:
+    tree_(tree),
+    shapeMask_(shapeMask)
+{}
+
+
+template<class PatchType>
+CML::treeDataPrimitivePatch<PatchType>::
+findSelfIntersectOp::findSelfIntersectOp
+(
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree,
+    const label edgeID
+)
+:
+    tree_(tree),
+    edgeID_(edgeID)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-CML::pointField
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-shapePoints() const
+template<class PatchType>
+CML::pointField CML::treeDataPrimitivePatch<PatchType>::shapePoints() const
 {
     pointField cc(patch_.size());
 
@@ -329,27 +390,10 @@ shapePoints() const
 
 //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
 //  Only makes sense for closed surfaces.
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-CML::label
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-getVolumeType
+template<class PatchType>
+CML::volumeType CML::treeDataPrimitivePatch<PatchType>::getVolumeType
 (
-    const indexedOctree
-    <
-        treeDataPrimitivePatch
-        <
-            Face,
-            FaceList,
-            PointField,
-            PointType
-        >
-    >& oc,
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& oc,
     const point& sample
 ) const
 {
@@ -377,7 +421,6 @@ getVolumeType
             << abort(FatalError);
     }
 
-
     // Get actual intersection point on face
     label faceI = info.index();
 
@@ -388,7 +431,7 @@ getVolumeType
     }
 
     const pointField& points = patch_.localPoints();
-    const face& f = patch_.localFaces()[faceI];
+    const typename PatchType::FaceType& f = patch_.localFaces()[faceI];
 
     // Retest to classify where on face info is. Note: could be improved. We
     // already have point.
@@ -429,9 +472,10 @@ getVolumeType
 
     const scalar typDimSqr = mag(area) + VSMALL;
 
+
     forAll(f, fp)
     {
-        if ((magSqr(points[f[fp]] - curPt)/typDimSqr) < tolSqr)
+        if ((magSqr(points[f[fp]] - curPt)/typDimSqr) < planarTol_)
         {
             // Face intersection point equals face vertex fp
 
@@ -448,7 +492,7 @@ getVolumeType
 
     const point fc(f.centre(points));
 
-    if ((magSqr(fc - curPt)/typDimSqr) < tolSqr)
+    if ((magSqr(fc - curPt)/typDimSqr) < planarTol_)
     {
         // Face intersection point equals face centre. Normal at face centre
         // is already average of face normals
@@ -481,7 +525,7 @@ getVolumeType
 
         pointHit edgeHit = e.line(points).nearestDist(sample);
 
-        if ((magSqr(edgeHit.rawPoint() - curPt)/typDimSqr) < tolSqr)
+        if ((magSqr(edgeHit.rawPoint() - curPt)/typDimSqr) < planarTol_)
         {
             // Face intersection point lies on edge e
 
@@ -526,7 +570,7 @@ getVolumeType
             fc
         ).nearestDist(sample);
 
-        if ((magSqr(edgeHit.rawPoint() - curPt)/typDimSqr) < tolSqr)
+        if ((magSqr(edgeHit.rawPoint() - curPt)/typDimSqr) < planarTol_)
         {
             // Face intersection point lies on edge between two face triangles
 
@@ -577,21 +621,13 @@ getVolumeType
     // - tolerances are wrong. (if e.g. face has zero area)
     // - or (more likely) surface is not closed.
 
-    return indexedOctree<treeDataPrimitivePatch>::UNKNOWN;
+    return volumeType::UNKNOWN;
 }
 
 
 // Check if any point on shape is inside cubeBb.
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-bool
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-overlaps
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::overlaps
 (
     const label index,
     const treeBoundBox& cubeBb
@@ -617,7 +653,7 @@ overlaps
     // 2. Check if one or more face points inside
 
     const pointField& points = patch_.points();
-    const face& f = patch_[index];
+    const typename PatchType::FaceType& f = patch_[index];
 
     if (cubeBb.containsAny(points, f))
     {
@@ -628,36 +664,42 @@ overlaps
     // go through cube. Use triangle-bounding box intersection.
     const point fc = f.centre(points);
 
-    forAll(f, fp)
+    if (f.size() == 3)
     {
-        bool triIntersects = triangleFuncs::intersectBb
+        return triangleFuncs::intersectBb
         (
-            points[f[fp]],
-            points[f[f.fcIndex(fp)]],
-            fc,
+            points[f[0]],
+            points[f[1]],
+            points[f[2]],
             cubeBb
         );
-
-        if (triIntersects)
+    }
+    else
+    {
+        forAll(f, fp)
         {
-            return true;
+            bool triIntersects = triangleFuncs::intersectBb
+            (
+                points[f[fp]],
+                points[f[f.fcIndex(fp)]],
+                fc,
+                cubeBb
+            );
+
+            if (triIntersects)
+            {
+                return true;
+            }
         }
     }
+
     return false;
 }
 
 
 // Check if any point on shape is inside sphere.
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-bool
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-overlaps
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::overlaps
 (
     const label index,
     const point& centre,
@@ -696,18 +738,8 @@ overlaps
 }
 
 
-// Calculate nearest point to sample. Updates (if any) nearestDistSqr, minIndex,
-// nearestPoint.
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-void
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-findNearest
+template<class PatchType>
+void CML::treeDataPrimitivePatch<PatchType>::findNearestOp::operator()
 (
     const labelUList& indices,
     const point& sample,
@@ -717,13 +749,15 @@ findNearest
     point& nearestPoint
 ) const
 {
-    const pointField& points = patch_.points();
+    const treeDataPrimitivePatch<PatchType>& shape = tree_.shapes();
+    const PatchType& patch = shape.patch();
+
+    const pointField& points = patch.points();
 
     forAll(indices, i)
     {
         const label index = indices[i];
-
-        const face& f = patch_[index];
+        const typename PatchType::FaceType& f = patch[index];
 
         pointHit nearHit = f.nearestPoint(sample, points);
         scalar distSqr = sqr(nearHit.distance());
@@ -738,16 +772,35 @@ findNearest
 }
 
 
-template
-<
-    class Face,
-    template<class> class FaceList,
-    class PointField,
-    class PointType
->
-bool
-CML::treeDataPrimitivePatch<Face, FaceList, PointField, PointType>::
-intersects
+template<class PatchType>
+void CML::treeDataPrimitivePatch<PatchType>::findNearestOp::operator()
+(
+    const labelUList& indices,
+    const linePointRef& ln,
+
+    treeBoundBox& tightest,
+    label& minIndex,
+    point& linePoint,
+    point& nearestPoint
+) const
+{
+    notImplemented
+    (
+        "treeDataPrimitivePatch<PatchType>::findNearestOp::operator()"
+        "("
+        "    const labelUList&,"
+        "    const linePointRef&,"
+        "    treeBoundBox&,"
+        "    label&,"
+        "    point&,"
+        "    point&"
+        ") const"
+    );
+}
+
+
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::findIntersectOp::operator()
 (
     const label index,
     const point& start,
@@ -755,10 +808,90 @@ intersects
     point& intersectionPoint
 ) const
 {
-    // Do quick rejection test
-    if (cacheBb_)
+    return findIntersection(tree_, index, start, end, intersectionPoint);
+}
+
+
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::findAllIntersectOp::operator()
+(
+    const label index,
+    const point& start,
+    const point& end,
+    point& intersectionPoint
+) const
+{
+    if (!shapeMask_.empty() && findIndex(shapeMask_, index) != -1)
     {
-        const treeBoundBox& faceBb = bbs_[index];
+        return false;
+    }
+
+    return findIntersection(tree_, index, start, end, intersectionPoint);
+}
+
+
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::findSelfIntersectOp::operator()
+(
+    const label index,
+    const point& start,
+    const point& end,
+    point& intersectionPoint
+) const
+{
+    if (edgeID_ == -1)
+    {
+        FatalErrorIn
+        (
+            "findSelfIntersectOp::operator()\n"
+            "(\n"
+            "    const label index,\n"
+            "    const point& start,\n"
+            "    const point& end,\n"
+            "    point& intersectionPoint\n"
+            ") const"
+        )   << "EdgeID not set. Please set edgeID to the index of"
+            << " the edge you are testing"
+            << exit(FatalError);
+    }
+
+    const treeDataPrimitivePatch<PatchType>& shape = tree_.shapes();
+    const PatchType& patch = shape.patch();
+
+    const typename PatchType::FaceType& f = patch.localFaces()[index];
+    const edge& e = patch.edges()[edgeID_];
+
+    if (findIndex(f, e[0]) == -1 && findIndex(f, e[1]) == -1)
+    {
+        return findIntersection(tree_, index, start, end, intersectionPoint);
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+template<class PatchType>
+bool CML::treeDataPrimitivePatch<PatchType>::findIntersection
+(
+    const indexedOctree<treeDataPrimitivePatch<PatchType> >& tree,
+    const label index,
+    const point& start,
+    const point& end,
+    point& intersectionPoint
+)
+{
+    const treeDataPrimitivePatch<PatchType>& shape = tree.shapes();
+    const PatchType& patch = shape.patch();
+
+    const pointField& points = patch.points();
+    const typename PatchType::FaceType& f = patch[index];
+
+    // Do quick rejection test
+    if (shape.cacheBb_)
+    {
+        const treeBoundBox& faceBb = shape.bbs_[index];
 
         if ((faceBb.posBits(start) & faceBb.posBits(end)) != 0)
         {
@@ -767,25 +900,39 @@ intersects
         }
     }
 
-    const pointField& points = patch_.points();
-    const face& f = patch_[index];
-    const point fc = f.centre(points);
     const vector dir(end - start);
+    pointHit inter;
 
-    pointHit inter = patch_[index].intersection
-    (
-        start,
-        dir,
-        fc,
-        points,
-        intersection::HALF_RAY
-    );
+    if (f.size() == 3)
+    {
+        inter = triPointRef
+        (
+            points[f[0]],
+            points[f[1]],
+            points[f[2]]
+        ).intersection(start, dir, intersection::HALF_RAY, shape.planarTol_);
+    }
+    else
+    {
+        const pointField& faceCentres = patch.faceCentres();
+
+        inter = f.intersection
+        (
+            start,
+            dir,
+            faceCentres[index],
+            points,
+            intersection::HALF_RAY,
+            shape.planarTol_
+        );
+    }
 
     if (inter.hit() && inter.distance() <= 1)
     {
         // Note: no extra test on whether intersection is in front of us
         // since using half_ray
         intersectionPoint = inter.hitPoint();
+
         return true;
     }
     else

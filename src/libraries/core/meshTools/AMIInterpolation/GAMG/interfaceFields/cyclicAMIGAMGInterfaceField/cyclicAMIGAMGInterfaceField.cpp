@@ -34,6 +34,12 @@ namespace CML
         cyclicAMIGAMGInterfaceField,
         lduInterface
     );
+    addToRunTimeSelectionTable
+    (
+        GAMGInterfaceField,
+        cyclicAMIGAMGInterfaceField,
+        lduInterfaceField
+    );
 }
 
 
@@ -56,6 +62,20 @@ CML::cyclicAMIGAMGInterfaceField::cyclicAMIGAMGInterfaceField
     doTransform_ = p.doTransform();
     rank_ = p.rank();
 }
+
+
+CML::cyclicAMIGAMGInterfaceField::cyclicAMIGAMGInterfaceField
+(
+    const GAMGInterface& GAMGCp,
+    const bool doTransform,
+    const int rank
+)
+:
+    GAMGInterfaceField(GAMGCp, doTransform, rank),
+    cyclicAMIInterface_(refCast<const cyclicAMIGAMGInterface>(GAMGCp)),
+    doTransform_(doTransform),
+    rank_(rank)
+{}
 
 
 // * * * * * * * * * * * * * * * * Desstructor * * * * * * * * * * * * * * * //

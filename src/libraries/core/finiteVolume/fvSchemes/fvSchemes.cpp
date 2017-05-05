@@ -21,6 +21,7 @@ License
 
 #include "fvSchemes.hpp"
 #include "Time.hpp"
+#include "steadyStateDdtScheme.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -104,6 +105,11 @@ void CML::fvSchemes::read(const dictionary& dict)
     )
     {
         defaultDdtScheme_ = ddtSchemes_.lookup("default");
+        steady_ =
+        (
+            word(defaultDdtScheme_)
+         == fv::steadyStateDdtScheme<scalar>::typeName
+        );
     }
 
 
@@ -359,7 +365,8 @@ CML::fvSchemes::fvSchemes(const objectRegistry& obr)
             tokenList()
         )()
     ),
-    defaultFluxRequired_(false)
+    defaultFluxRequired_(false),
+    steady_(false)
 {
     // persistent settings across reads is incorrect
     clear();

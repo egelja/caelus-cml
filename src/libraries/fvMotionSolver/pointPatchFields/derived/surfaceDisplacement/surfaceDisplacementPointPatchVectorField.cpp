@@ -418,7 +418,8 @@ surfaceDisplacementPointPatchVectorField::surfaces() const
                     IOobject::MUST_READ,
                     IOobject::NO_WRITE
                 ),
-                surfacesDict_
+                surfacesDict_,
+                true                // allow single-region shortcut
             )
         );
     }

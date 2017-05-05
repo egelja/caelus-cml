@@ -249,6 +249,18 @@ CML::displacementLayeredMotionFvMotionSolver::faceZoneEvaluate
         // Only on boundary faces - follow boundary conditions
         fld = vectorField(pointDisplacement_, meshPoints);
     }
+    else if (type == "uniformFollow")
+    {
+        // Reads name of name of patch. Then get average point dislacement on
+        // patch. That becomes the value of fld.
+        const word patchName(dict.lookup("patch"));
+        label patchID = mesh().boundaryMesh().findPatchID(patchName);
+        pointField pdf
+        (
+            pointDisplacement_.boundaryField()[patchID].patchInternalField()
+        );
+        fld = gAverage(pdf);
+    }
     else
     {
         FatalIOErrorIn
@@ -395,22 +407,6 @@ Info<< "For cellZone:" << cellZoneI
         // Implement real bc.
         patchDisp[patchI].correctBoundaryConditions();
 
-
-//Info<< "Writing displacement for faceZone " << fz.name()
-//    << " to " << patchDisp[patchI].name() << endl;
-//patchDisp[patchI].write();
-
-//        // Copy into pointDisplacement for other fields to use
-//        forAll(isZonePoint, pointI)
-//        {
-//            if (isZonePoint[pointI])
-//            {
-//                pointDisplacement_[pointI] = patchDisp[patchI][pointI];
-//            }
-//        }
-//        pointDisplacement_.correctBoundaryConditions();
-
-
         patchI++;
     }
 
@@ -419,37 +415,40 @@ Info<< "For cellZone:" << cellZoneI
     // ~~~~~
     // solving the interior is just interpolating
 
-//    // Get normalised distance
-//    pointScalarField distance
-//    (
-//        IOobject
-//        (
-//            "distance",
-//            mesh().time().timeName(),
-//            mesh(),
-//            IOobject::NO_READ,
-//            IOobject::NO_WRITE,
-//            false
-//        ),
-//        pointMesh::New(mesh()),
-//        dimensionedScalar("distance", dimLength, 0.0)
-//    );
-//    forAll(distance, pointI)
-//    {
-//        if (isZonePoint[pointI])
-//        {
-//            scalar d1 = patchDist[0][pointI];
-//            scalar d2 = patchDist[1][pointI];
-//            if (d1+d2 > SMALL)
-//            {
-//                scalar s = d1/(d1+d2);
-//                distance[pointI] = s;
-//            }
-//        }
-//    }
-//    Info<< "Writing distance pointScalarField to " << mesh().time().timeName()
-//        << endl;
-//    distance.write();
+    if (debug)
+    {
+        // Get normalised distance
+        pointScalarField distance
+        (
+            IOobject
+            (
+                "distance",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            pointMesh::New(mesh()),
+            dimensionedScalar("distance", dimLength, 0.0)
+        );
+        forAll(distance, pointI)
+        {
+            if (isZonePoint[pointI])
+            {
+                scalar d1 = patchDist[0][pointI];
+                scalar d2 = patchDist[1][pointI];
+                if (d1+d2 > SMALL)
+                {
+                    scalar s = d1/(d1+d2);
+                    distance[pointI] = s;
+                }
+            }
+        }
+        Info<< "Writing distance pointScalarField to "
+            << mesh().time().timeName() << endl;
+        distance.write();
+    }
 
     // Average
     forAll(pointDisplacement_, pointI)
@@ -466,7 +465,6 @@ Info<< "For cellZone:" << cellZoneI
               + s*patchDisp[1][pointI];
         }
     }
-    pointDisplacement_.correctBoundaryConditions();
 }
 
 
@@ -493,7 +491,6 @@ displacementLayeredMotionFvMotionSolver
         pointMesh::New(fvMesh_)
     )
 {
-    pointDisplacement_.correctBoundaryConditions();
 }
 
 

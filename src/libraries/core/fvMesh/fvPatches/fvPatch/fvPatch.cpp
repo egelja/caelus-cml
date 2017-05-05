@@ -136,7 +136,9 @@ const CML::scalarField& CML::fvPatch::magSf() const
 
 CML::tmp<CML::vectorField> CML::fvPatch::delta() const
 {
-    return Cf() - Cn();
+    // Use patch-normal delta for all non-coupled BCs
+    const vectorField nHat(nf());
+    return nHat*(nHat & (Cf() - Cn()));
 }
 
 

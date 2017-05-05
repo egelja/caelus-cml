@@ -74,6 +74,26 @@ public:
             hexes(nCells),
             polys(nCells)
         {}
+
+
+    // Member Functions
+
+        void setSize(const label nCells)
+        {
+            nTets = 0;
+            nPyrs = 0;
+            nPrisms = 0;
+            nHexesWedges = 0;
+            nPolys = 0;
+
+            tets.setSize(nCells);
+            pyrs.setSize(nCells);
+            prisms.setSize(nCells);
+            wedges.setSize(nCells);
+            hexes.setSize(nCells);
+            polys.setSize(nCells);
+        }
+
 };
 
 

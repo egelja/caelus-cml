@@ -40,6 +40,7 @@ Description
 #include "fvMesh.hpp"
 #include "MeshedSurfaces.hpp"
 #include "globalIndex.hpp"
+#include "cellSet.hpp"
 
 #include "extrudedMesh.hpp"
 #include "extrudeModel.hpp"
@@ -185,8 +186,24 @@ void updateFaceLabels(const mapPolyMesh& map, labelList& faceLabels)
 }
 
 
+void updateCellSet(const mapPolyMesh& map, labelHashSet& cellLabels)
+{
+    const labelList& reverseMap = map.reverseCellMap();
 
-// Main program:
+    labelHashSet newCellLabels(2*cellLabels.size());
+
+    forAll(cellLabels, i)
+    {
+        label oldCellI = cellLabels[i];
+
+        if (reverseMap[oldCellI] >= 0)
+        {
+            newCellLabels.insert(reverseMap[oldCellI]);
+        }
+    }
+    cellLabels.transfer(newCellLabels);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -239,7 +256,10 @@ int main(int argc, char *argv[])
 
     Info<< "Extruding from " << ExtrudeModeNames[mode]
         << " using model " << model().type() << endl;
-
+    if (flipNormals)
+    {
+        Info<< "Flipping normals before extruding" << endl;
+    }
     if (mergeTol > 0)
     {
         Info<< "Collapsing edges < " << mergeTol << " of bounding box" << endl;
@@ -261,12 +281,15 @@ int main(int argc, char *argv[])
     word backPatchName;
     labelList backPatchFaces;
 
+    // Optional added cells (get written to cellSet)
+    labelHashSet addedCellsSet;
+
     if (mode == PATCH || mode == MESH)
     {
-        if (flipNormals)
+        if (flipNormals && mode == MESH)
         {
             FatalErrorIn(args.executable())
-                << "Flipping normals not supported for extrusions from patch."
+                << "Flipping normals not supported for extrusions from mesh."
                 << exit(FatalError);
         }
 
@@ -309,6 +332,60 @@ int main(int argc, char *argv[])
         addPatchCellLayer layerExtrude(mesh, (mode == MESH));
 
         const labelList meshFaces(patchFaces(patches, sourcePatches));
+
+        if (mode == PATCH && flipNormals)
+        {
+            // Cheat. Flip patch faces in mesh. This invalidates the
+            // mesh (open cells) but does produce the correct extrusion.
+            polyTopoChange meshMod(mesh);
+            forAll(meshFaces, i)
+            {
+                label meshFaceI = meshFaces[i];
+
+                label patchI = patches.whichPatch(meshFaceI);
+                label own = mesh.faceOwner()[meshFaceI];
+                label nei = -1;
+                if (patchI == -1)
+                {
+                    nei = mesh.faceNeighbour()[meshFaceI];
+                }
+
+                label zoneI = mesh.faceZones().whichZone(meshFaceI);
+                bool zoneFlip = false;
+                if (zoneI != -1)
+                {
+                    label index = mesh.faceZones()[zoneI].whichFace(meshFaceI);
+                    zoneFlip = mesh.faceZones()[zoneI].flipMap()[index];
+                }
+
+                meshMod.modifyFace
+                (
+                    mesh.faces()[meshFaceI].reverseFace(),  // modified face
+                    meshFaceI,                      // label of face
+                    own,                            // owner
+                    nei,                            // neighbour
+                    true,                           // face flip
+                    patchI,                         // patch for face
+                    zoneI,                          // zone for face
+                    zoneFlip                        // face flip in zone
+                );
+            }
+
+            // Change the mesh. No inflation.
+            autoPtr<mapPolyMesh> map = meshMod.changeMesh(mesh, false);
+
+            // Update fields
+            mesh.updateMesh(map);
+
+            // Move mesh (since morphing does not do this)
+            if (map().hasMotionPoints())
+            {
+                mesh.movePoints(map().preMotionPoints());
+            }
+        }
+
+
+
         indirectPrimitivePatch extrudePatch
         (
             IndirectList<face>
@@ -322,12 +399,7 @@ int main(int argc, char *argv[])
         // Determine extrudePatch normal
         pointField extrudePatchPointNormals
         (
-            PatchTools::pointNormals    //calcNormals
-            (
-                mesh,
-                extrudePatch,
-                meshFaces
-            )
+            PatchTools::pointNormals(mesh, extrudePatch)
         );
 
 
@@ -412,6 +484,7 @@ int main(int argc, char *argv[])
             )
             {
                 label nbrProcI = patchToNbrProc[patchI];
+
                 word name =
                         "procBoundary"
                       + CML::name(Pstream::myProcNo())
@@ -483,11 +556,6 @@ int main(int argc, char *argv[])
             displacement[pointI] = extrudePt - layer0Points[pointI];
         }
 
-        if (flipNormals)
-        {
-            Info<< "Flipping faces." << nl << endl;
-            displacement = -displacement;
-        }
 
         // Check if wedge (has layer0 different from original patch points)
         // If so move the mesh to starting position.
@@ -572,11 +640,12 @@ int main(int argc, char *argv[])
         const labelListList& layerFaces = layerExtrude.layerFaces();
         backPatchFaces.setSize(layerFaces.size());
         frontPatchFaces.setSize(layerFaces.size());
-        forAll(backPatchFaces, i)
+        forAll(backPatchFaces, patchFaceI)
         {
-            backPatchFaces[i]  = layerFaces[i].first();
-            frontPatchFaces[i] = layerFaces[i].last();
+            backPatchFaces[patchFaceI]  = layerFaces[patchFaceI].first();
+            frontPatchFaces[patchFaceI] = layerFaces[patchFaceI].last();
         }
+
 
         // Create dummy fvSchemes, fvSolution
         createDummyFvMeshFiles(mesh, regionDir);
@@ -608,11 +677,33 @@ int main(int argc, char *argv[])
             map().reverseFaceMap(),
             backPatchFaces
         );
+
+        // Store added cells
+        if (mode == MESH)
+        {
+            const labelListList addedCells
+            (
+                layerExtrude.addedCells
+                (
+                    meshFromMesh,
+                    layerExtrude.layerFaces()
+                )
+            );
+            forAll(addedCells, faceI)
+            {
+                const labelList& aCells = addedCells[faceI];
+                forAll(aCells, i)
+                {
+                    addedCellsSet.insert(aCells[i]);
+                }
+            }
+        }
     }
     else
     {
         // Read from surface
         fileName surfName(dict.lookup("surface"));
+        surfName.expand();
 
         Info<< "Extruding surfaceMesh read from file " << surfName << nl
             << endl;
@@ -731,6 +822,7 @@ int main(int argc, char *argv[])
             // Update stored data
             updateFaceLabels(map(), frontPatchFaces);
             updateFaceLabels(map(), backPatchFaces);
+            updateCellSet(map(), addedCellsSet);
 
             // Move mesh (if inflation used)
             if (map().hasMotionPoints())
@@ -834,6 +926,9 @@ int main(int argc, char *argv[])
         // Update fields
         mesh.updateMesh(map);
 
+        // Update local data
+        updateCellSet(map(), addedCellsSet);
+
         // Move mesh (if inflation used)
         if (map().hasMotionPoints())
         {
@@ -848,6 +943,21 @@ int main(int argc, char *argv[])
     {
         FatalErrorIn(args.executable()) << "Failed writing mesh"
             << exit(FatalError);
+    }
+
+    // Need writing cellSet
+    label nAdded = returnReduce(addedCellsSet.size(), sumOp<label>());
+    if (nAdded > 0)
+    {
+        cellSet addedCells(mesh, "addedCells", addedCellsSet);
+        Info<< "Writing added cells to cellSet " << addedCells.name()
+            << nl << endl;
+        if (!addedCells.write())
+        {
+            FatalErrorIn(args.executable()) << "Failed writing cellSet"
+                << addedCells.name()
+                << exit(FatalError);
+        }
     }
 
     Info<< "End\n" << endl;

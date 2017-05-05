@@ -4,9 +4,13 @@
     (
         fvm::div(phi, U)
       + turbulence->divDevReff(U)
+     ==
+        fvOptions(U)
     );
 
     UEqn().relax();
+
+    fvOptions.constrain(UEqn());
 
     if (simple.momentumPredictor())
     {
@@ -22,4 +26,6 @@
                 )*mesh.magSf()
             )
         );
+
+        fvOptions.correct(U);
     }

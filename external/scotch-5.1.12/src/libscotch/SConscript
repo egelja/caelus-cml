@@ -7,7 +7,7 @@ Import('globalEnv')
 # libraries
 scotchEnv = globalEnv.Clone()
 
-scotchEnv.Append(CXXFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
+scotchEnv.Append(CXXFLAGS = ' -DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
                             '-DSCOTCH_PATCHLEVEL=12')
 
 #===============================================================================
@@ -209,4 +209,4 @@ scotchEnv.Install(install_dir, libscotch)
 
 if (scotchEnv['WHICH_OS'] == "darwin"):
 
-  scotchEnv.Append(SHLINKFLAGS ='-install_name @' + scotchEnv['LIB_PLATFORM_INSTALL'] + '/libscotch.dylib')
+  scotchEnv.Append(SHLINKFLAGS ='-install_name @loader_path/../../../external/scotch-5.1.12/lib/libscotch.dylib')

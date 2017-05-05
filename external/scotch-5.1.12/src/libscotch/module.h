@@ -385,11 +385,11 @@
 #define bgraphStoreSave             _SCOTCHbgraphStoreSave
 #define bgraphStoreUpdt             _SCOTCHbgraphStoreUpdt
 
-#if ((defined INTSIZE64) || (defined COMM))
+#if ((defined CAELUS_LABEL64) || (defined COMM))
 #define commAllgatherv              _SCOTCHcommAllgatherv
 #define commGatherv                 _SCOTCHcommGatherv
 #define commScatterv                _SCOTCHcommScatterv
-#endif /* ((defined INTSIZE64) || (defined COMM)) */
+#endif /* ((defined CAELUS_LABEL64) || (defined COMM)) */
 
 #define dgraphAllreduceMaxSum2      _SCOTCHdgraphAllreduceMaxSum2
 #define dgraphBuild                 _SCOTCHdgraphBuild

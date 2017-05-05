@@ -34,6 +34,12 @@ namespace CML
         processorGAMGInterfaceField,
         lduInterface
     );
+    addToRunTimeSelectionTable
+    (
+        GAMGInterfaceField,
+        processorGAMGInterfaceField,
+        lduInterfaceField
+    );
 }
 
 
@@ -56,6 +62,20 @@ CML::processorGAMGInterfaceField::processorGAMGInterfaceField
     doTransform_ = p.doTransform();
     rank_ = p.rank();
 }
+
+
+CML::processorGAMGInterfaceField::processorGAMGInterfaceField
+(
+    const GAMGInterface& GAMGCp,
+    const bool doTransform,
+    const int rank
+)
+:
+    GAMGInterfaceField(GAMGCp, doTransform, rank),
+    procInterface_(refCast<const processorGAMGInterface>(GAMGCp)),
+    doTransform_(doTransform),
+    rank_(rank)
+{}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

@@ -47,7 +47,7 @@ src_files = Split("""
 # Build this library
 #===============================================================================
 libdecompositionMethods = decomposeMethodsEnv.SharedLibrary(target = 
-'libdecompositionMethods', source = src_files)
+'decompositionMethods', source = src_files)
 
 #===============================================================================
 # Install this library
@@ -58,4 +58,4 @@ decomposeMethodsEnv.Install(install_dir, libdecompositionMethods)
 
 if (decomposeMethodsEnv['WHICH_OS'] == "darwin"):
 
-  decomposeMethodsEnv.Append(SHLINKFLAGS ='-install_name @' + decomposeMethodsEnv['LIB_PLATFORM_INSTALL'] + '/libdecompositionMethods.dylib')
+  decomposeMethodsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdecompositionMethods.dylib')

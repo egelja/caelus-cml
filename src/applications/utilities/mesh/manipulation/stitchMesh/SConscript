@@ -32,9 +32,8 @@ stitchMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if stitchMeshEnv['WHICH_OS'] == "windows":
   stitchMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh','libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh','genericPatchFields']
+
+lib_link = ['dynamicMesh','genericPatchFields']
   
 stitchMeshEnv.Append(LIBS = lib_link)
 

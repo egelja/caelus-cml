@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 4.10
+Caelus 5.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -12,7 +12,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [1 -1 -1 0 0 0 0];
+dimensions      [0 2 -1 0 0 0 0];
 
 internalField   uniform 0;
 
@@ -20,17 +20,20 @@ boundaryField
 {
     floor
     {
-        type            alphatWallFunction;
+        type            alphatJayatillekeWallFunction;
+        Prt             0.85;
         value           uniform 0;
     }
     ceiling
     {
-        type            alphatWallFunction;
+        type            alphatJayatillekeWallFunction;
+        Prt             0.85;
         value           uniform 0;
     }
     fixedWalls
     {
-        type            alphatWallFunction;
+        type            alphatJayatillekeWallFunction;
+        Prt             0.85;
         value           uniform 0;
     }
 }

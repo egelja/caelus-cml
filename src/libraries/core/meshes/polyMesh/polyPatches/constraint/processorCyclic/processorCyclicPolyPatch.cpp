@@ -33,10 +33,7 @@ namespace CML
 }
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::processorCyclicPolyPatch::processorCyclicPolyPatch
 (
@@ -47,10 +44,23 @@ CML::processorCyclicPolyPatch::processorCyclicPolyPatch
     const polyBoundaryMesh& bm,
     const int myProcNo,
     const int neighbProcNo,
-    const word& referPatchName
+    const word& referPatchName,
+    const transformType transform,
+    const word& patchType
 )
 :
-    processorPolyPatch(name, size, start, index, bm, myProcNo, neighbProcNo),
+    processorPolyPatch
+    (
+        name,
+        size,
+        start,
+        index,
+        bm,
+        myProcNo,
+        neighbProcNo,
+        transform,
+        patchType
+    ),
     tag_
     (
         Pstream::nProcs()*max(myProcNo, neighbProcNo)
@@ -72,10 +82,11 @@ CML::processorCyclicPolyPatch::processorCyclicPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    processorPolyPatch(name, dict, index, bm),
+    processorPolyPatch(name, dict, index, bm, patchType),
     tag_
     (
         Pstream::nProcs()*max(myProcNo(), neighbProcNo())
@@ -101,6 +112,22 @@ CML::processorCyclicPolyPatch::processorCyclicPolyPatch
     processorPolyPatch(pp, bm),
     tag_(pp.tag_),
     referPatchName_(pp.referPatchName()),
+    referPatchID_(-1)
+{}
+
+
+CML::processorCyclicPolyPatch::processorCyclicPolyPatch
+(
+    const processorCyclicPolyPatch& pp,
+    const polyBoundaryMesh& bm,
+    const label index,
+    const label newSize,
+    const label newStart
+)
+:
+    processorPolyPatch(pp, bm, index, newSize, newStart),
+    tag_(pp.tag_),
+    referPatchName_(pp.referPatchName_),
     referPatchID_(-1)
 {}
 

@@ -51,6 +51,9 @@ class processorCyclicPointPatchField
         //- Local reference to processor patch
         const processorCyclicPointPatch& procPatch_;
 
+        //- Receive buffer for non-blocking communication
+        mutable Field<Type> receiveBuf_;
+ 
 
 public:
 
@@ -198,7 +201,8 @@ CML::processorCyclicPointPatchField<Type>::processorCyclicPointPatchField
 )
 :
     coupledPointPatchField<Type>(p, iF),
-    procPatch_(refCast<const processorCyclicPointPatch>(p))
+    procPatch_(refCast<const processorCyclicPointPatch>(p)),
+    receiveBuf_(0)
 {}
 
 
@@ -211,7 +215,8 @@ CML::processorCyclicPointPatchField<Type>::processorCyclicPointPatchField
 )
 :
     coupledPointPatchField<Type>(p, iF, dict),
-    procPatch_(refCast<const processorCyclicPointPatch>(p))
+    procPatch_(refCast<const processorCyclicPointPatch>(p)),
+    receiveBuf_(0)
 {}
 
 
@@ -225,7 +230,8 @@ CML::processorCyclicPointPatchField<Type>::processorCyclicPointPatchField
 )
 :
     coupledPointPatchField<Type>(ptf, p, iF, mapper),
-    procPatch_(refCast<const processorCyclicPointPatch>(ptf.patch()))
+    procPatch_(refCast<const processorCyclicPointPatch>(ptf.patch())),
+    receiveBuf_(0)
 {}
 
 
@@ -237,7 +243,8 @@ CML::processorCyclicPointPatchField<Type>::processorCyclicPointPatchField
 )
 :
     coupledPointPatchField<Type>(ptf, iF),
-    procPatch_(refCast<const processorCyclicPointPatch>(ptf.patch()))
+    procPatch_(refCast<const processorCyclicPointPatch>(ptf.patch())),
+    receiveBuf_(0)
 {}
 
 
@@ -269,6 +276,19 @@ void CML::processorCyclicPointPatchField<Type>::initSwapAddSeparated
             )
         );
 
+        if (commsType == Pstream::nonBlocking)
+        {
+            receiveBuf_.setSize(pf.size());
+            IPstream::read
+            (
+                commsType,
+                procPatch_.neighbProcNo(),
+                reinterpret_cast<char*>(receiveBuf_.begin()),
+                receiveBuf_.byteSize(),
+                procPatch_.tag()
+            );
+        }
+        
         OPstream::write
         (
             commsType,
@@ -290,16 +310,19 @@ void CML::processorCyclicPointPatchField<Type>::swapAddSeparated
 {
     if (Pstream::parRun())
     {
-        Field<Type> pnf(this->size());
-
-        IPstream::read
-        (
-            commsType,
-            procPatch_.neighbProcNo(),
-            reinterpret_cast<char*>(pnf.begin()),
-            pnf.byteSize(),
-            procPatch_.tag()
-        );
+        // If nonblocking data has already been received into receiveBuf_
+        if (commsType != Pstream::nonBlocking)
+        {
+            receiveBuf_.setSize(this->size());
+            IPstream::read
+            (
+                commsType,
+                procPatch_.neighbProcNo(),
+                reinterpret_cast<char*>(receiveBuf_.begin()),
+                receiveBuf_.byteSize(),
+                procPatch_.tag()
+            );
+        }
 
         if (doTransform())
         {
@@ -307,11 +330,11 @@ void CML::processorCyclicPointPatchField<Type>::swapAddSeparated
                 procPatch_.procCyclicPolyPatch();
             const tensor& forwardT = ppp.forwardT()[0];
 
-            transform(pnf, forwardT, pnf);
+            transform(receiveBuf_, forwardT, receiveBuf_);
         }
 
         // All points are separated
-        this->addToInternalField(pField, pnf);
+        this->addToInternalField(pField, receiveBuf_);
     }
 }
 

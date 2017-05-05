@@ -43,7 +43,8 @@ License
 void CML::ensightMesh::correct()
 {
     patchPartOffset_ = 2;
-    meshCellSets_ = mesh_.nCells();
+    meshCellSets_.setSize(mesh_.nCells());
+
     boundaryFaceSets_.setSize(mesh_.boundary().size());
     allPatchNames_.clear();
     patchNames_.clear();
@@ -52,14 +53,6 @@ void CML::ensightMesh::correct()
     faceZoneNames_.clear();
     nFaceZonePrims_ = 0;
     boundaryFaceToBeIncluded_.clear();
-
-    const cellShapeList& cellShapes = mesh_.cellShapes();
-
-    const cellModel& tet = *(cellModeller::lookup("tet"));
-    const cellModel& pyr = *(cellModeller::lookup("pyr"));
-    const cellModel& prism = *(cellModeller::lookup("prism"));
-    const cellModel& wedge = *(cellModeller::lookup("wedge"));
-    const cellModel& hex = *(cellModeller::lookup("hex"));
 
     if (!noPatches_)
     {
@@ -107,6 +100,16 @@ void CML::ensightMesh::correct()
     }
     else
     {
+        const cellShapeList& cellShapes = mesh_.cellShapes();
+
+        const cellModel& tet = *(cellModeller::lookup("tet"));
+        const cellModel& pyr = *(cellModeller::lookup("pyr"));
+        const cellModel& prism = *(cellModeller::lookup("prism"));
+        const cellModel& wedge = *(cellModeller::lookup("wedge"));
+        const cellModel& hex = *(cellModeller::lookup("hex"));
+
+
+
         // Count the shapes
         labelList& tets = meshCellSets_.tets;
         labelList& pyrs = meshCellSets_.pyrs;
@@ -254,7 +257,10 @@ void CML::ensightMesh::correct()
     // faceZones
     if (faceZones_)
     {
-        const wordList faceZoneNamesAll = mesh_.faceZones().names();
+        wordList faceZoneNamesAll = mesh_.faceZones().names();
+        // Need to sort the list of all face zones since the index may vary
+        // from processor to processor...
+        sort(faceZoneNamesAll);
 
         // Find faceZone names which match that requested at command-line
         forAll(faceZoneNamesAll, nameI)
@@ -294,15 +300,16 @@ void CML::ensightMesh::correct()
         // Count face types in each faceZone
         forAll(faceZoneNamesAll, zoneI)
         {
-            //const word& zoneName = faceZoneNamesAll[zoneI];
+            const word& zoneName = faceZoneNamesAll[zoneI];
+            const label faceZoneId = mesh_.faceZones().findZoneID(zoneName);
 
-            const faceZone& fz = mesh_.faceZones()[zoneI];
+            const faceZone& fz = mesh_.faceZones()[faceZoneId];
 
             if (fz.size())
             {
-                labelList& tris = faceZoneFaceSets_[zoneI].tris;
-                labelList& quads = faceZoneFaceSets_[zoneI].quads;
-                labelList& polys = faceZoneFaceSets_[zoneI].polys;
+                labelList& tris = faceZoneFaceSets_[faceZoneId].tris;
+                labelList& quads = faceZoneFaceSets_[faceZoneId].quads;
+                labelList& polys = faceZoneFaceSets_[faceZoneId].polys;
 
                 tris.setSize(fz.size());
                 quads.setSize(fz.size());
@@ -350,19 +357,20 @@ void CML::ensightMesh::correct()
         {
             const word& zoneName = faceZoneNamesAll[zoneI];
             nFacePrimitives nfp;
+            const label faceZoneId = mesh_.faceZones().findZoneID(zoneName);
 
             if (faceZoneNames_.found(zoneName))
             {
                 if
                 (
-                    faceZoneFaceSets_[zoneI].tris.size()
-                 || faceZoneFaceSets_[zoneI].quads.size()
-                 || faceZoneFaceSets_[zoneI].polys.size()
+                    faceZoneFaceSets_[faceZoneId].tris.size()
+                 || faceZoneFaceSets_[faceZoneId].quads.size()
+                 || faceZoneFaceSets_[faceZoneId].polys.size()
                 )
                 {
-                    nfp.nTris   = faceZoneFaceSets_[zoneI].tris.size();
-                    nfp.nQuads  = faceZoneFaceSets_[zoneI].quads.size();
-                    nfp.nPolys  = faceZoneFaceSets_[zoneI].polys.size();
+                    nfp.nTris   = faceZoneFaceSets_[faceZoneId].tris.size();
+                    nfp.nQuads  = faceZoneFaceSets_[faceZoneId].quads.size();
+                    nfp.nPolys  = faceZoneFaceSets_[faceZoneId].polys.size();
                 }
             }
 
@@ -587,6 +595,7 @@ void CML::ensightMesh::writePolysPoints
     const labelList& polys,
     const cellList& cellFaces,
     const faceList& faces,
+    const labelList& faceOwner,
     ensightStream& ensightGeometryFile
 ) const
 {
@@ -596,12 +605,46 @@ void CML::ensightMesh::writePolysPoints
 
         forAll(cf, faceI)
         {
-            const face& f = faces[cf[faceI]];
+            const label faceId = cf[faceI];
+            const face& f = faces[faceId];  // points of face (in global points)
+            const label np = f.size();
+            bool reverseOrder = false;
+            if (faceId >= faceOwner.size())
+            {
+                // Boundary face.
+                // Nothing should be done for processor boundary.
+                // The current cell always owns them. Given that we
+                // are reverting the
+                // order when the cell is the neighbour to the face,
+                // the orientation of
+                // all the boundaries, no matter if they are "real"
+                // or processorBoundaries, is consistent.
+            }
+            else
+            {
+                if (faceOwner[faceId] != polys[i])
+                {
+                    reverseOrder = true;
+                }
+            }
 
-            List<int> temp(f.size());
+            // If the face owner is the current cell, write the points
+            // in the standard order.
+            // If the face owner is not the current cell, write the points
+            // in reverse order.
+            // EnSight prefers to have all the faces of an nfaced cell
+            // oriented in the same way.
+            List<int> temp(np);
             forAll(f, pointI)
             {
-                temp[pointI] = f[pointI] + 1;
+                if (reverseOrder)
+                {
+                    temp[np-1-pointI] = f[pointI] + 1;
+                }
+                else
+                {
+                    temp[pointI] = f[pointI] + 1;
+                }
             }
             ensightGeometryFile.write(temp);
         }
@@ -618,6 +661,8 @@ void CML::ensightMesh::writeAllPolys
     if (meshCellSets_.nPolys)
     {
         const cellList& cellFaces = mesh_.cells();
+        const labelList& faceOwner = mesh_.faceOwner();
+
         // Renumber faces to use global point numbers
         faceList faces(mesh_.faces());
         forAll(faces, i)
@@ -708,6 +753,7 @@ void CML::ensightMesh::writeAllPolys
                 meshCellSets_.polys,
                 cellFaces,
                 faces,
+                faceOwner,
                 ensightGeometryFile
             );
             // Slaves
@@ -717,12 +763,14 @@ void CML::ensightMesh::writeAllPolys
                 labelList polys(fromSlave);
                 cellList cellFaces(fromSlave);
                 faceList faces(fromSlave);
+                labelList faceOwner(fromSlave);
 
                 writePolysPoints
                 (
                     polys,
                     cellFaces,
                     faces,
+                    faceOwner,
                     ensightGeometryFile
                 );
             }
@@ -730,7 +778,7 @@ void CML::ensightMesh::writeAllPolys
         else
         {
             OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
-            toMaster<< meshCellSets_.polys << cellFaces << faces;
+            toMaster<< meshCellSets_.polys << cellFaces << faces << faceOwner;
         }
     }
 }
@@ -922,8 +970,10 @@ void CML::ensightMesh::writeAllNSided
 }
 
 
-void CML::ensightMesh::writeAllInternalPoints
+void CML::ensightMesh::writeAllPoints
 (
+    const label ensightPartI,
+    const word& ensightPartName,
     const pointField& uniquePoints,
     const label nPoints,
     ensightStream& ensightGeometryFile
@@ -933,49 +983,8 @@ void CML::ensightMesh::writeAllInternalPoints
 
     if (Pstream::master())
     {
-        ensightGeometryFile.writePartHeader(1);
-        ensightGeometryFile.write("internalMesh");
-        ensightGeometryFile.write("coordinates");
-        ensightGeometryFile.write(nPoints);
-
-        for (direction d=0; d<vector::nComponents; d++)
-        {
-            ensightGeometryFile.write(uniquePoints.component(d));
-
-            for (int slave=1; slave<Pstream::nProcs(); slave++)
-            {
-                IPstream fromSlave(Pstream::scheduled, slave);
-                scalarField pointsComponent(fromSlave);
-                ensightGeometryFile.write(pointsComponent);
-            }
-        }
-    }
-    else
-    {
-        for (direction d=0; d<vector::nComponents; d++)
-        {
-            OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
-            toMaster<< uniquePoints.component(d);
-        }
-    }
-}
-
-
-void CML::ensightMesh::writeAllPatchPoints
-(
-    const label ensightPatchI,
-    const word& patchName,
-    const pointField& uniquePoints,
-    const label nPoints,
-    ensightStream& ensightGeometryFile
-) const
-{
-    barrier();
-
-    if (Pstream::master())
-    {
-        ensightGeometryFile.writePartHeader(ensightPatchI);
-        ensightGeometryFile.write(patchName.c_str());
+        ensightGeometryFile.writePartHeader(ensightPartI);
+        ensightGeometryFile.write(ensightPartName.c_str());
         ensightGeometryFile.write("coordinates");
         ensightGeometryFile.write(nPoints);
 
@@ -994,11 +1003,7 @@ void CML::ensightMesh::writeAllPatchPoints
     {
         for (direction d=0; d<vector::nComponents; d++)
         {
-            OPstream toMaster
-            (
-                Pstream::scheduled,
-                Pstream::masterNo()
-            );
+            OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
             toMaster<< uniquePoints.component(d);
         }
     }
@@ -1022,7 +1027,7 @@ void CML::ensightMesh::write
 
     if (timeIndex == 0)
     {
-        timeFile += "000.";
+        timeFile += "0000.";
     }
     else if (meshMoving)
     {
@@ -1072,8 +1077,10 @@ void CML::ensightMesh::write
 
         const pointField uniquePoints(mesh_.points(), uniquePointMap_);
 
-        writeAllInternalPoints
+        writeAllPoints
         (
+            1,
+            "internalMesh",
             uniquePoints,
             nPoints,
             ensightGeometryFile
@@ -1138,6 +1145,7 @@ void CML::ensightMesh::write
             if (nfp.nTris || nfp.nQuads || nfp.nPolys)
             {
                 const polyPatch& p = mesh_.boundaryMesh()[patchi];
+
                 const labelList& tris = boundaryFaceSets_[patchi].tris;
                 const labelList& quads = boundaryFaceSets_[patchi].quads;
                 const labelList& polys = boundaryFaceSets_[patchi].polys;
@@ -1146,13 +1154,13 @@ void CML::ensightMesh::write
                 labelList pointToGlobal;
                 labelList uniqueMeshPointLabels;
                 autoPtr<globalIndex> globalPointsPtr =
-                mesh_.globalData().mergePoints
-                (
-                    p.meshPoints(),
-                    p.meshPointMap(),
-                    pointToGlobal,
-                    uniqueMeshPointLabels
-                );
+                    mesh_.globalData().mergePoints
+                    (
+                        p.meshPoints(),
+                        p.meshPointMap(),
+                        pointToGlobal,
+                        uniqueMeshPointLabels
+                    );
 
                 pointField uniquePoints(mesh_.points(), uniqueMeshPointLabels);
                 // Renumber the patch faces
@@ -1162,7 +1170,7 @@ void CML::ensightMesh::write
                     inplaceRenumber(pointToGlobal, patchFaces[i]);
                 }
 
-                writeAllPatchPoints
+                writeAllPoints
                 (
                     ensightPatchI++,
                     patchName,
@@ -1221,18 +1229,18 @@ void CML::ensightMesh::write
             labelList pointToGlobal;
             labelList uniqueMeshPointLabels;
             autoPtr<globalIndex> globalPointsPtr =
-            mesh_.globalData().mergePoints
-            (
-                fz().meshPoints(),
-                fz().meshPointMap(),
-                pointToGlobal,
-                uniqueMeshPointLabels
-            );
+                mesh_.globalData().mergePoints
+                (
+                    fz().meshPoints(),
+                    fz().meshPointMap(),
+                    pointToGlobal,
+                    uniqueMeshPointLabels
+                );
 
             pointField uniquePoints(mesh_.points(), uniqueMeshPointLabels);
 
             // Find the list of master faces belonging to the faceZone,
-            // in loacal numbering
+            // in local numbering
             faceList faceZoneFaces(fz().localFaces());
 
             // Count how many master faces belong to the faceZone. Is there
@@ -1267,7 +1275,7 @@ void CML::ensightMesh::write
                 inplaceRenumber(pointToGlobal, faceZoneMasterFaces[i]);
             }
 
-            writeAllPatchPoints
+            writeAllPoints
             (
                 ensightPatchI++,
                 faceZoneName,

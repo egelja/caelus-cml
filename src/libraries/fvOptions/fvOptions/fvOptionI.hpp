@@ -19,9 +19,9 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-
 #include "fvMesh.hpp"
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 inline const CML::word& CML::fv::option::name() const
 {
@@ -128,11 +128,11 @@ inline const CML::word& CML::fv::option::nbrRegionName() const
 }
 
 
-inline const CML::meshToMeshNew& CML::fv::option::meshInterp() const
+inline const CML::meshToMesh& CML::fv::option::meshInterp() const
 {
     if (!meshInterpPtr_.valid())
     {
-        FatalErrorIn("const meshToMeshNew& meshInterp() const")
+        FatalErrorIn("const meshToMesh& meshInterp() const")
             << "Interpolation object not set"
             << abort(FatalError);
     }

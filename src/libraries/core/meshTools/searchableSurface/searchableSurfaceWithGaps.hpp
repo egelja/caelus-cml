@@ -50,7 +50,7 @@ namespace CML
 // Forward declaration of classes
 
 /*---------------------------------------------------------------------------*\
-                           Class searchableSurfaceWithGaps Declaration
+                 Class searchableSurfaceWithGaps Declaration
 \*---------------------------------------------------------------------------*/
 
 class searchableSurfaceWithGaps
@@ -61,7 +61,7 @@ private:
 
     // Private Member Data
 
-        //- gap size in meter
+        //- gap size in metre
         const scalar gap_;
 
         //- Underlying geometry (size 1)
@@ -147,9 +147,26 @@ public:
 
         //- Get representative set of element coordinates
         //  Usually the element centres (should be of length size()).
-        virtual pointField coordinates() const
+        virtual tmp<pointField> coordinates() const
         {
             return surface().coordinates();
+        }
+
+        //- Get bounding spheres (centre and radius squared), one per element.
+        //  Any point on element is guaranteed to be inside.
+        virtual void boundingSpheres
+        (
+            pointField& centres,
+            scalarField& radiusSqr
+        ) const
+        {
+            surface().boundingSpheres(centres, radiusSqr);
+        }
+
+        //- Get the points that define the surface.
+        virtual tmp<pointField> points() const
+        {
+            return surface().points();
         }
 
         //- Does any part of the surface overlap the supplied bound box?
@@ -240,16 +257,16 @@ public:
             //  bounding boxes. The bounds are hints to the surface as for
             //  the range of queries it can expect. faceMap/pointMap can be
             //  set if the surface has done any redistribution.
-            virtual void distribute
-            (
-                const List<treeBoundBox>& bbs,
-                const bool keepNonLocal,
-                autoPtr<mapDistribute>& faceMap,
-                autoPtr<mapDistribute>& pointMap
-            )
-            {
-                subGeom_[0].distribute(bbs, keepNonLocal, faceMap, pointMap);
-            }
+            //virtual void distribute
+            //(
+            //    const List<treeBoundBox>& bbs,
+            //    const bool keepNonLocal,
+            //    autoPtr<mapDistribute>& faceMap,
+            //    autoPtr<mapDistribute>& pointMap
+            //)
+            //{
+            //    subGeom_[0].distribute(bbs, keepNonLocal, faceMap, pointMap);
+            //}
 
             //- WIP. Store element-wise field.
             virtual void setField(const labelList& values)

@@ -38,12 +38,9 @@ REnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if REnv['WHICH_OS'] == "windows":
   REnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
-  lib_link = ['libcore','libincompressibleTurbulenceModel',
-  'libincompressibleRASModels','libincompressibleTransportModels',
-  'libgenericPatchFields']
-else:
-  lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
-  'incompressibleTransportModels','genericPatchFields']
+
+lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
+'incompressibleTransportModels','genericPatchFields']
     
 REnv.Append(LIBS = lib_link)
 

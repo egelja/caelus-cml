@@ -36,6 +36,8 @@ SourceFiles
 #include "indexedOctree.hpp"
 #include "treeBoundBoxList.hpp"
 #include "PackedBoolList.hpp"
+#include "primitiveMesh.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -86,6 +88,58 @@ class treeDataFace
         void update();
 
 public:
+
+
+    class findNearestOp
+    {
+        const indexedOctree<treeDataFace>& tree_;
+
+    public:
+
+        findNearestOp(const indexedOctree<treeDataFace>& tree);
+
+        void operator()
+        (
+            const labelUList& indices,
+            const point& sample,
+
+            scalar& nearestDistSqr,
+            label& minIndex,
+            point& nearestPoint
+        ) const;
+
+        void operator()
+        (
+            const labelUList& indices,
+            const linePointRef& ln,
+
+            treeBoundBox& tightest,
+            label& minIndex,
+            point& linePoint,
+            point& nearestPoint
+        ) const;
+    };
+
+
+    class findIntersectOp
+    {
+        const indexedOctree<treeDataFace>& tree_;
+
+    public:
+
+        findIntersectOp(const indexedOctree<treeDataFace>& tree);
+
+        //- Calculate intersection of triangle with ray. Sets result
+        //  accordingly
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
 
     // Declare name of the class and its debug switch
     ClassName("treeDataFace");
@@ -144,7 +198,7 @@ public:
 
             //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
             //  Only makes sense for closed surfaces.
-            label getVolumeType
+            volumeType getVolumeType
             (
                 const indexedOctree<treeDataFace>&,
                 const point&
@@ -156,49 +210,6 @@ public:
                 const label index,
                 const treeBoundBox& sampleBb
             ) const;
-
-            //- Calculates nearest (to sample) point in shape.
-            //  Returns actual point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const point& sample,
-
-                scalar& nearestDistSqr,
-                label& nearestIndex,
-                point& nearestPoint
-            ) const;
-
-            //- Calculates nearest (to line) point in shape.
-            //  Returns point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const linePointRef& ln,
-
-                treeBoundBox& tightest,
-                label& minIndex,
-                point& linePoint,
-                point& nearestPoint
-            ) const
-            {
-                notImplemented
-                (
-                    "treeDataFace::findNearest"
-                    "(const labelUList&, const linePointRef&, ..)"
-                );
-            }
-
-            //- Calculate intersection of shape with ray. Sets result
-            //  accordingly
-            bool intersects
-            (
-                const label index,
-                const point& start,
-                const point& end,
-                point& result
-            ) const;
-
 };
 
 

@@ -57,3 +57,8 @@ libutilityFunctionObjects = funcObjUtilEnv.SharedLibrary(target =
 install_dir = funcObjUtilEnv['LIB_PLATFORM_INSTALL']
 funcObjUtilEnv.Alias('install', install_dir)
 funcObjUtilEnv.Install(install_dir, libutilityFunctionObjects)
+
+
+if (funcObjUtilEnv['WHICH_OS'] == "darwin"):
+
+  funcObjUtilEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libutilityFunctionObjects.dylib')

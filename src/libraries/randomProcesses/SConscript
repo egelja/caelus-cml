@@ -61,4 +61,4 @@ randProcEnv.Install(install_dir, librandomProcesses)
 
 if (randProcEnv['WHICH_OS'] == "darwin"):
 
-  randProcEnv.Append(SHLINKFLAGS ='-install_name @' + randProcEnv['LIB_PLATFORM_INSTALL'] + '/librandomProcesses.dylib')
+  randProcEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/librandomProcesses.dylib')

@@ -30,7 +30,6 @@ SourceFiles
 #ifndef surfaceWriter_H
 #define surfaceWriter_H
 
-#include "volFields.hpp"
 #include "typeInfo.hpp"
 #include "autoPtr.hpp"
 #include "pointField.hpp"
@@ -111,7 +110,6 @@ public:
             return false;
         }
 
-
         //- Write single surface geometry to file.
         virtual void write
         (
@@ -122,7 +120,6 @@ public:
             const bool verbose = false
         ) const
         {}
-
 
         //- Write scalarField for a single surface to file.
         //  One value per face or vertex (isNodeValues = true)
@@ -198,8 +195,6 @@ public:
             const bool verbose = false
         ) const
         {}
-
-
 };
 
 

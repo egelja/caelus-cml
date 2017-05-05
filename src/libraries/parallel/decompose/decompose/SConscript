@@ -54,4 +54,4 @@ decomposeEnv.Install(install_dir, libdecompose)
 
 if (decomposeEnv['WHICH_OS'] == "darwin"):
 
-  decomposeEnv.Append(SHLINKFLAGS ='-install_name @' + decomposeEnv['LIB_PLATFORM_INSTALL'] + '/libdecompose.dylib')
+  decomposeEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdecompose.dylib')

@@ -131,7 +131,20 @@ public:
         // Evaluation functions
 
             //- Return patch-normal gradient
-            virtual tmp<Field<Type> > snGrad() const;
+            virtual tmp<Field<Type> > snGrad
+            (
+                const scalarField& deltaCoeffs
+            ) const;
+
+            //- Return patch-normal gradient
+            virtual tmp<Field<Type> > snGrad() const
+            {
+                notImplemented
+                (
+                    type() + "::coupledFvPatchField<Type>::snGrad()"
+                );
+                return *this;
+            }
 
             //- Initialise the evaluation of the patch field
             virtual void initEvaluate
@@ -161,7 +174,21 @@ public:
 
             //- Return the matrix diagonal coefficients corresponding to the
             //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientInternalCoeffs
+            (
+                const scalarField& deltaCoeffs
+            ) const;
+
+            //- Return the matrix diagonal coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
             virtual tmp<Field<Type> > gradientInternalCoeffs() const;
+
+            //- Return the matrix source coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientBoundaryCoeffs
+            (
+                const scalarField& deltaCoeffs
+            ) const;
 
             //- Return the matrix source coefficients corresponding to the
             //  evaluation of the gradient of this patchField
@@ -190,15 +217,10 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF
@@ -210,7 +232,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -223,7 +245,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const coupledFvPatchField<Type>& ptf,
     const fvPatch& p,
@@ -237,7 +259,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -250,7 +272,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const coupledFvPatchField<Type>& ptf
 )
@@ -261,7 +283,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 
 template<class Type>
-coupledFvPatchField<Type>::coupledFvPatchField
+CML::coupledFvPatchField<Type>::coupledFvPatchField
 (
     const coupledFvPatchField<Type>& ptf,
     const DimensionedField<Type, volMesh>& iF
@@ -275,16 +297,19 @@ coupledFvPatchField<Type>::coupledFvPatchField
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<Field<Type> > coupledFvPatchField<Type>::snGrad() const
+CML::tmp<CML::Field<Type> > CML::coupledFvPatchField<Type>::snGrad
+(
+    const scalarField& deltaCoeffs
+) const
 {
     return
-        (this->patchNeighbourField() - this->patchInternalField())
-       *this->patch().deltaCoeffs();
+        deltaCoeffs
+       *(this->patchNeighbourField() - this->patchInternalField());
 }
 
 
 template<class Type>
-void coupledFvPatchField<Type>::initEvaluate(const Pstream::commsTypes)
+void CML::coupledFvPatchField<Type>::initEvaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {
@@ -294,7 +319,7 @@ void coupledFvPatchField<Type>::initEvaluate(const Pstream::commsTypes)
 
 
 template<class Type>
-void coupledFvPatchField<Type>::evaluate(const Pstream::commsTypes)
+void CML::coupledFvPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {
@@ -312,7 +337,8 @@ void coupledFvPatchField<Type>::evaluate(const Pstream::commsTypes)
 
 
 template<class Type>
-tmp<Field<Type> > coupledFvPatchField<Type>::valueInternalCoeffs
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::valueInternalCoeffs
 (
     const tmp<scalarField>& w
 ) const
@@ -320,8 +346,10 @@ tmp<Field<Type> > coupledFvPatchField<Type>::valueInternalCoeffs
     return Type(pTraits<Type>::one)*w;
 }
 
+
 template<class Type>
-tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::valueBoundaryCoeffs
 (
     const tmp<scalarField>& w
 ) const
@@ -329,31 +357,54 @@ tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
     return Type(pTraits<Type>::one)*(1.0 - w);
 }
 
+
 template<class Type>
-tmp<Field<Type> > coupledFvPatchField<Type>::gradientInternalCoeffs() const
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::gradientInternalCoeffs
+(
+    const scalarField& deltaCoeffs
+) const
 {
+    return -Type(pTraits<Type>::one)*deltaCoeffs;
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::gradientInternalCoeffs() const
+{
+    notImplemented("coupledFvPatchField<Type>::gradientInternalCoeffs()");
     return -Type(pTraits<Type>::one)*this->patch().deltaCoeffs();
 }
 
 
 template<class Type>
-tmp<Field<Type> > coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::gradientBoundaryCoeffs
+(
+    const scalarField& deltaCoeffs
+) const
 {
+    return -this->gradientInternalCoeffs(deltaCoeffs);
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> >
+CML::coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
+{
+    notImplemented("coupledFvPatchField<Type>::gradientBoundaryCoeffs()");
     return -this->gradientInternalCoeffs();
 }
 
 
 template<class Type>
-void coupledFvPatchField<Type>::write(Ostream& os) const
+void CML::coupledFvPatchField<Type>::write(Ostream& os) const
 {
     fvPatchField<Type>::write(os);
     this->writeEntry("value", os);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

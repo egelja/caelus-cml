@@ -179,6 +179,17 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const = 0;
 
+        virtual tmp<surfaceInterpolationScheme<Type> > 
+        interpScheme() const
+        {
+            FatalErrorIn("convectionScheme::interpScheme() const")
+            << "Current scheme does not implement interpScheme() function" 
+            << abort(FatalError);
+            // Dummy return - the code should have failed before the return
+            tmp<surfaceInterpolationScheme<Type> > x;
+            return x;
+        }
+
 
     // Member operators
 

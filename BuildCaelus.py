@@ -1,20 +1,22 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 4.10
+# Caelus 5.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
 # Importing the required modules for Python
 import subprocess, sys, os, glob, shutil, optparse, getopt
+#import Caelus
 
 # Code name and version
 code = 'Caelus'
-version = '4.10'
+version = '5.04'
 
 clean = True
 build = True
 nprocs = 0
+swak = True
 
 if sys.platform == 'win32':
    pltfrm = True
@@ -27,12 +29,13 @@ BuildCaelus.py [options]
   -c          | --clean-only        skip building
   -b          | --build-only        skip cleaning
   -p <nprocs> | --parallel <nprocs> build with > 0 processors
+              | --no-swak           don't build swak library and utilities
   -h          | --help              print the usage
 """ 
 
 try:
    opts, args = getopt.getopt(sys.argv[1:],"hcbp:", \
-                              ["clean-only", "build-only", "parallel"])
+                              ["clean-only", "build-only", "parallel","no-swak"])
 except getopt.GetoptError:
    print Usage
    sys.exit(2)
@@ -51,6 +54,8 @@ for opt, arg in opts:
          sys.exit("Specify >= 1 processors")
       elif nprocs ==1 :
          nprocs = 0
+   elif opt in ("--no-swak"):
+      swak = False
 
 # Starting up the meshing and solving
 print "**********************************"
@@ -61,6 +66,10 @@ build_dirs = ['external/metis-5.1.0', \
               'external/scotch-5.1.12', \
               'src/libraries', \
               'src/applications']
+if swak:
+   build_dirs.append('external/swak')
+else:
+   print "Not building swak"
 
 for curr_dir in build_dirs:
 
@@ -79,7 +88,8 @@ for curr_dir in build_dirs:
       print ""
       print "Cleaning \'" + work_dir + "\' directory"
       print ""
-      pc = subprocess.call(['scons.py', '-c'], cwd=curr_dir, \
+      pc = subprocess.call(['scons.py', '-f', 'SConstruct.module', \
+                           '-c', 'install'], cwd=curr_dir, \
                             stdout=sys.stdout, stderr=sys.stderr, \
                             shell=pltfrm)
 
@@ -89,17 +99,18 @@ for curr_dir in build_dirs:
       print "Building \'" + work_dir + "\'"
       print ""
 
+      # Make platforms dir for new source installs
+      if not os.path.exists('platforms'):
+         os.mkdir('platforms')
+
+      build_cmd = ['scons.py', '-f', 'SConstruct.module', 'install']
+
       # Parallel build
       if nprocs:
-         pb = subprocess.call(['scons.py', '-j'+str(nprocs), 'install'], \
-		                         cwd=curr_dir, stdout=sys.stdout, \
-		                         stderr=sys.stderr, shell=pltfrm)
+         build_cmd.append('-j'+str(nprocs))
 		
-      # Serial build
-      else:
-         pb = subprocess.call(['scons.py', 'install'], cwd=curr_dir, \
-		                         stdout=sys.stdout, stderr=sys.stderr, \
-		                         shell=pltfrm)
+      pb = subprocess.call(build_cmd, cwd=curr_dir, stdout=sys.stdout, \
+                           stderr=sys.stderr, shell=pltfrm)
 
 print ""
 print "Done building %s %s" % (code, version)

@@ -1866,7 +1866,7 @@ CML::scalar CML::particle::trackToFace
                 (
                     position_,
                     endPosition,
-                    triI,
+                    tI,
                     tetAreas[tI],
                     tetPlaneBasePtIs[tI],
                     cellI_,

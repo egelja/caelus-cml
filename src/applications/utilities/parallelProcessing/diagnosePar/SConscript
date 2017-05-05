@@ -32,10 +32,7 @@ diagnoseParEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if diagnoseParEnv['WHICH_OS'] == "windows":
-  lib_link = []
-else:
-  lib_link = []
+lib_link = []
    
 diagnoseParEnv.Append(LIBS = lib_link)
 

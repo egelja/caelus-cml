@@ -167,10 +167,13 @@ public:
 
     // Member operators
 
-        inline sutherlandTransport& operator=
-        (
-            const sutherlandTransport&
-        );
+        inline sutherlandTransport& operator=(const sutherlandTransport&);
+
+        inline void operator+=(const sutherlandTransport&);
+
+        inline void operator-=(const sutherlandTransport&);
+
+        inline void operator*=(const scalar);
 
 
     // Friend operators
@@ -372,6 +375,52 @@ CML::sutherlandTransport<Thermo>::operator=
     Ts_ = st.Ts_;
 
     return *this;
+}
+
+
+template<class Thermo>
+inline void CML::sutherlandTransport<Thermo>::operator+=
+(
+    const sutherlandTransport<Thermo>& st
+)
+{
+    scalar molr1 = this->nMoles();
+
+    Thermo::operator+=(st);
+
+    molr1 /= this->nMoles();
+    scalar molr2 = st.nMoles()/this->nMoles();
+
+    As_ = molr1*As_ + molr2*st.As_;
+    Ts_ = molr1*Ts_ + molr2*st.Ts_;
+}
+
+
+template<class Thermo>
+inline void CML::sutherlandTransport<Thermo>::operator-=
+(
+    const sutherlandTransport<Thermo>& st
+)
+{
+    scalar molr1 = this->nMoles();
+
+    Thermo::operator-=(st);
+
+    molr1 /= this->nMoles();
+    scalar molr2 = st.nMoles()/this->nMoles();
+
+    As_ = molr1*As_ - molr2*st.As_;
+    Ts_ = molr1*Ts_ - molr2*st.Ts_;
+}
+
+
+template<class Thermo>
+inline void CML::sutherlandTransport<Thermo>::operator*=
+(
+    const scalar s
+)
+{
+    Thermo::operator*=(s);
 }
 
 

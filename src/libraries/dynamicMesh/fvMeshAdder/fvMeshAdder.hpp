@@ -125,15 +125,6 @@ private:
             const label unmappedIndex
         );
 
-        //- Map from old to new according to map. Handles map = -1.
-        template<class Type>
-        static void map
-        (
-            const Field<Type>&,
-            const labelList& map,
-            Field<Type>&
-        );
-
         //- Update single volField.
         template<class Type>
         static void MapVolField
@@ -195,26 +186,6 @@ public:
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-void CML::fvMeshAdder::map
-(
-    const Field<Type>& oldFld,
-    const labelList& oldToNew,
-    Field<Type>& fld
-)
-{
-    forAll(oldFld, cellI)
-    {
-        label newCellI = oldToNew[cellI];
-
-        if (newCellI >= 0 && newCellI < fld.size())
-        {
-            fld[newCellI] = oldFld[cellI];
-        }
-    }
-}
-
-
-template<class Type>
 void CML::fvMeshAdder::MapVolField
 (
     const mapAddedPolyMesh& meshMap,
@@ -237,8 +208,8 @@ void CML::fvMeshAdder::MapVolField
 
         intFld.setSize(mesh.nCells());
 
-        map(oldInternalField, meshMap.oldCellMap(), intFld);
-        map(fldToAdd.internalField(), meshMap.addedCellMap(), intFld);
+        intFld.rmap(oldInternalField, meshMap.oldCellMap());
+        intFld.rmap(fldToAdd.internalField(), meshMap.addedCellMap());
     }
 
 
@@ -320,7 +291,7 @@ void CML::fvMeshAdder::MapVolField
                         oldPatchSizes[patchI],
                         meshMap.oldFaceMap(),
                         mesh.boundaryMesh()[newPatchI],
-                        0                   // unmapped value
+                        -1              // unmapped value
                     )
                 );
 
@@ -382,7 +353,7 @@ void CML::fvMeshAdder::MapVolField
                             oldPatch.size(),
                             meshMap.addedFaceMap(),
                             newPatch,
-                            0                       // unmapped values
+                            -1          // unmapped values
                         )
                     );
 
@@ -405,34 +376,23 @@ void CML::fvMeshAdder::MapVolField
                     // PatchField will have correct size already. Just slot in
                     // my elements.
 
-                    // From new patch faces to patch faces on added mesh. This
-                    // time keep unmapped elements -1.
-                    labelList newToAdded
-                    (
-                        calcPatchMap
-                        (
-                            oldPatch.start(),
-                            oldPatch.size(),
-                            meshMap.addedFaceMap(),
-                            newPatch,
-                            -1                      // unmapped values
-                        )
-                    );
-
-                    const fvPatchField<Type>& addedFld =
-                        fldToAdd.boundaryField()[patchI];
-
-                    fvPatchField<Type>& newFld = bfld[newPatchI];
-
-                    forAll(newFld, i)
+                    labelList addedToNew(oldPatch.size(), -1);
+                    forAll(addedToNew, i)
                     {
-                        label oldFaceI = newToAdded[i];
-
-                        if (oldFaceI >= 0 && oldFaceI < addedFld.size())
+                        label addedFaceI = oldPatch.start()+i;
+                        label newFaceI = meshMap.addedFaceMap()[addedFaceI];
+                        label patchFaceI = newFaceI-newPatch.start();
+                        if (patchFaceI >= 0 && patchFaceI < newPatch.size())
                         {
-                            newFld[i] = addedFld[oldFaceI];
+                            addedToNew[i] = patchFaceI;
                         }
                     }
+
+                    bfld[newPatchI].rmap
+                    (
+                        fldToAdd.boundaryField()[patchI],
+                        addedToNew
+                    );
                 }
             }
         }
@@ -539,8 +499,9 @@ void CML::fvMeshAdder::MapSurfaceField
 
         intFld.setSize(mesh.nInternalFaces());
 
-        map(oldField, meshMap.oldFaceMap(), intFld);
-        map(fldToAdd, meshMap.addedFaceMap(), intFld);
+        intFld.rmap(oldField, meshMap.oldFaceMap());
+        intFld.rmap(fldToAdd, meshMap.addedFaceMap());
+
 
         // Faces that were boundary faces but are not anymore.
         // Use owner value (so lowest numbered cell, i.e. from 'old' not 'added'
@@ -638,12 +599,11 @@ void CML::fvMeshAdder::MapSurfaceField
                         oldPatchSizes[patchI],
                         meshMap.oldFaceMap(),
                         mesh.boundaryMesh()[newPatchI],
-                        0                   // unmapped value
+                        -1      // unmapped value
                     )
                 );
 
                 directFvPatchFieldMapper patchMapper(newToOld);
-
 
                 // Create new patchField with same type as existing one.
                 // Note:
@@ -700,7 +660,7 @@ void CML::fvMeshAdder::MapSurfaceField
                             oldPatch.size(),
                             meshMap.addedFaceMap(),
                             newPatch,
-                            0                       // unmapped values
+                            -1                  // unmapped values
                         )
                     );
 
@@ -723,34 +683,23 @@ void CML::fvMeshAdder::MapSurfaceField
                     // PatchField will have correct size already. Just slot in
                     // my elements.
 
-                    // From new patch faces to patch faces on added mesh. This
-                    // time keep unmapped elements -1.
-                    labelList newToAdded
-                    (
-                        calcPatchMap
-                        (
-                            oldPatch.start(),
-                            oldPatch.size(),
-                            meshMap.addedFaceMap(),
-                            newPatch,
-                            -1                      // unmapped values
-                        )
-                    );
-
-                    const fvsPatchField<Type>& addedFld =
-                        fldToAdd.boundaryField()[patchI];
-
-                    fvsPatchField<Type>& newFld = bfld[newPatchI];
-
-                    forAll(newFld, i)
+                    labelList addedToNew(oldPatch.size(), -1);
+                    forAll(addedToNew, i)
                     {
-                        label oldFaceI = newToAdded[i];
-
-                        if (oldFaceI >= 0 && oldFaceI < addedFld.size())
+                        label addedFaceI = oldPatch.start()+i;
+                        label newFaceI = meshMap.addedFaceMap()[addedFaceI];
+                        label patchFaceI = newFaceI-newPatch.start();
+                        if (patchFaceI >= 0 && patchFaceI < newPatch.size())
                         {
-                            newFld[i] = addedFld[oldFaceI];
+                            addedToNew[i] = patchFaceI;
                         }
                     }
+
+                    bfld[newPatchI].rmap
+                    (
+                        fldToAdd.boundaryField()[patchI],
+                        addedToNew
+                    );
                 }
             }
         }

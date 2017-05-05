@@ -39,7 +39,7 @@ comModelsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['libcore','libchemistryModel','libcompressibleLESModels',
+lib_link = ['core','chemistryModel','compressibleLESModels',
 'reactionThermophysicalModels'] 
 comModelsEnv.Append(LIBS = lib_link)
        
@@ -69,7 +69,7 @@ src_files = Split("""
 #===============================================================================
 # Build this library
 #===============================================================================
-libcombustionModels = comModelsEnv.SharedLibrary(target = 'libcombustionModels',
+libcombustionModels = comModelsEnv.SharedLibrary(target = 'combustionModels',
 source = src_files)
 
 #===============================================================================
@@ -81,4 +81,4 @@ comModelsEnv.Install(install_dir, libcombustionModels)
 
 if (comModelsEnv['WHICH_OS'] == "darwin"):
 
-  comModelsEnv.Append(SHLINKFLAGS ='-install_name @' + comModelsEnv['LIB_PLATFORM_INSTALL'] + '/libcombustionModels.dylib')
+  comModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcombustionModels.dylib')

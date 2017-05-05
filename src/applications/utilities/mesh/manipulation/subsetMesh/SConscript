@@ -33,9 +33,8 @@ subsetMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if subsetMeshEnv['WHICH_OS'] == "windows":
   subsetMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
   
 subsetMeshEnv.Append(LIBS = lib_link)
 

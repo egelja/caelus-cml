@@ -32,9 +32,8 @@ splitMeshRegionsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if splitMeshRegionsEnv['WHICH_OS'] == "windows":
   splitMeshRegionsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh','libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh','genericPatchFields']
+
+lib_link = ['dynamicMesh','genericPatchFields']
   
 splitMeshRegionsEnv.Append(LIBS = lib_link)
 

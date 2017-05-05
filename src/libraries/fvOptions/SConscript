@@ -80,4 +80,4 @@ fvOptEnv.Install(install_dir, libfvOptions)
 
 if (fvOptEnv['WHICH_OS'] == "darwin"):
 
-  fvOptEnv.Append(SHLINKFLAGS ='-install_name @' + fvOptEnv['LIB_PLATFORM_INSTALL'] + '/libifvOptions.dylib')
+  fvOptEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libfvOptions.dylib')

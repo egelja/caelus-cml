@@ -37,11 +37,9 @@ yPlusLESEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if yPlusLESEnv['WHICH_OS'] == "windows":
   yPlusLESEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
-  lib_link = ['libgenericPatchFields','libincompressibleLESModels',
-  'libincompressibleTransportModels','libincompressibleTurbulenceModel']
-else:
-  lib_link = ['genericPatchFields','incompressibleLESModels',
-  'incompressibleTransportModels','incompressibleTurbulenceModel']
+
+lib_link = ['genericPatchFields','incompressibleLESModels',
+'incompressibleTransportModels','incompressibleTurbulenceModel']
 
 yPlusLESEnv.Append(LIBS = lib_link)
 

@@ -86,4 +86,4 @@ thermoLiqPropEnv.Install(install_dir, libliquidProperties)
 
 if (thermoLiqPropEnv['WHICH_OS'] == "darwin"):
 
-  thermoLiqPropEnv.Append(SHLINKFLAGS ='-install_name @' + thermoLiqPropEnv['LIB_PLATFORM_INSTALL'] + '/libliquidProperties.dylib')
+  thermoLiqPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libliquidProperties.dylib')

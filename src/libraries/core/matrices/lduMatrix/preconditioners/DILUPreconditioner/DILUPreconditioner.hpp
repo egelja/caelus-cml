@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,11 +23,22 @@ Class
 
 Description
     Simplified diagonal-based incomplete LU preconditioner for asymmetric
-    matrices.  The reciprocal of the preconditioned diagonal is calculated
+    matrices. Better known under ILU(0) name.
+    The reciprocal of the preconditioned diagonal is calculated
     and stored.
 
 SourceFiles
     DILUPreconditioner.cpp
+
+References
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,14 +47,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class DILUPreconditioner Declaration
-\*---------------------------------------------------------------------------*/
 
 class DILUPreconditioner
 :
@@ -50,8 +56,8 @@ class DILUPreconditioner
 {
     // Private data
 
-        //- The reciprocal preconditioned diagonal
-        scalarField rD_;
+    //- The reciprocal preconditioned diagonal
+    scalarField rD_;
 
 
 public:
@@ -59,51 +65,39 @@ public:
     //- Runtime type information
     TypeName("DILU");
 
-
-    // Constructors
-
-        //- Construct from matrix components and preconditioner solver controls
-        DILUPreconditioner
-        (
-            const lduMatrix::solver&,
-            const dictionary& solverControlsUnused
-        );
+    //- Construct from matrix components and preconditioner solver controls
+    DILUPreconditioner
+    (
+        const lduMatrix::solver&,
+        const dictionary& solverControlsUnused
+    );
 
 
     //- Destructor
     virtual ~DILUPreconditioner()
     {}
 
+    //- Calculate the reciprocal of the preconditioned diagonal
+    static void calcReciprocalD(scalarField& rD, const lduMatrix& matrix);
 
-    // Member Functions
+    //- Return w the preconditioned form of residual r
+    virtual void precondition
+    (
+        scalarField& w,
+        const scalarField& r,
+        const direction cmpt=0
+    ) const;
 
-        //- Calculate the reciprocal of the preconditioned diagonal
-        static void calcReciprocalD(scalarField& rD, const lduMatrix& matrix);
-
-        //- Return wA the preconditioned form of residual rA
-        virtual void precondition
-        (
-            scalarField& wA,
-            const scalarField& rA,
-            const direction cmpt=0
-        ) const;
-
-        //- Return wT the transpose-matrix preconditioned form of residual rT.
-        virtual void preconditionT
-        (
-            scalarField& wT,
-            const scalarField& rT,
-            const direction cmpt=0
-        ) const;
+    //- Return wT the transpose-matrix preconditioned form of residual rT.
+    virtual void preconditionT
+    (
+        scalarField& wT,
+        const scalarField& rT,
+        const direction cmpt=0
+    ) const;
 };
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
-// ************************************************************************* //

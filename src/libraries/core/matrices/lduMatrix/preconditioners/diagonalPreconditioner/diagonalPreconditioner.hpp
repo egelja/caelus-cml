@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,13 +22,24 @@ Class
     CML::diagonalPreconditioner
 
 Description
-    Diagonal preconditioner for both symmetric and asymmetric matrices.
+    Diagonal (Jacobi) preconditioner for both symmetric and 
+    asymmetric matrices.
 
     The reciprocal of the diagonal is calculated and stored for reuse
     because on most systems '*' is faster than '/'.
 
 SourceFiles
     diagonalPreconditioner.cpp
+
+References
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,14 +48,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class diagonalPreconditioner Declaration
-\*---------------------------------------------------------------------------*/
 
 class diagonalPreconditioner
 :
@@ -51,69 +57,58 @@ class diagonalPreconditioner
 {
     // Private data
 
-        //- The reciprocal diagonal
-        scalarField rD;
+    //- The reciprocal diagonal
+    scalarField rD_;
 
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        diagonalPreconditioner(const diagonalPreconditioner&);
+    //- Disallow default bitwise copy construct
+    diagonalPreconditioner(const diagonalPreconditioner&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const diagonalPreconditioner&);
-
+    //- Disallow default bitwise assignment
+    void operator=(const diagonalPreconditioner&);
 
 public:
 
     //- Runtime type information
     TypeName("diagonal");
 
+    //- Construct from matrix components and preconditioner solver controls
+    diagonalPreconditioner
+    (
+        const lduMatrix::solver&,
+        const dictionary& solverControlsUnused
+    );
 
-    // Constructors
-
-        //- Construct from matrix components and preconditioner solver controls
-        diagonalPreconditioner
-        (
-            const lduMatrix::solver&,
-            const dictionary& solverControlsUnused
-        );
-
-
-    //- Destructor
     virtual ~diagonalPreconditioner()
     {}
 
 
     // Member Functions
 
-        //- Return wA the preconditioned form of residual rA
-        virtual void precondition
-        (
-            scalarField& wA,
-            const scalarField& rA,
-            const direction cmpt=0
-        ) const;
+    //- Return w the preconditioned form of residual r
+    virtual void precondition
+    (
+        scalarField& w,
+        const scalarField& r,
+        const direction cmpt=0
+    ) const;
 
-        //- Return wT the transpose-matrix preconditioned form of residual rT.
-        virtual void preconditionT
-        (
-            scalarField& wT,
-            const scalarField& rT,
-            const direction cmpt=0
-        ) const
-        {
-            return precondition(wT, rT, cmpt);
-        }
+    //- Return wT the transpose-matrix preconditioned form of residual rT.
+    virtual void preconditionT
+    (
+        scalarField& wT,
+        const scalarField& rT,
+        const direction cmpt=0
+    ) const
+    {
+        return precondition(wT, rT, cmpt);
+    }
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-// ************************************************************************* //

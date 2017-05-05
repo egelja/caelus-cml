@@ -238,7 +238,7 @@ public:
             //- Set the subset from all cells with region == currentRegion.
             //  Create "oldInternalFaces" patch for exposed
             //  internal faces (patchID==-1) or use supplied patch.
-            //  Handles coupled patches by if nessecary making coupled patch
+            //  Handles coupled patches by if necessary making coupled patch
             //  face part of patchID (so uncoupled)
             void setLargeCellSubset
             (
@@ -264,6 +264,9 @@ public:
             {
                 return baseMesh_;
             }
+
+            //- Have subMesh?
+            bool hasSubMesh() const;
 
             //- Return reference to subset mesh
             const fvMesh& subMesh() const;

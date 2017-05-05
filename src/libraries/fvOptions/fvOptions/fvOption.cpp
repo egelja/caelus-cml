@@ -23,6 +23,7 @@ License
 #include "fvMesh.hpp"
 #include "fvMatrices.hpp"
 #include "volFields.hpp"
+#include "fvsPatchFields.hpp"
 #include "ListOps.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
@@ -104,7 +105,7 @@ void CML::fv::option::setCellSet()
     {
         case smPoints:
         {
-            Info<< "- selecting cells using points" << endl;
+            Info<< indent << "- selecting cells using points" << endl;
 
             labelHashSet selectedCells;
 
@@ -132,7 +133,8 @@ void CML::fv::option::setCellSet()
         }
         case smCellSet:
         {
-            Info<< "- selecting cells using cellSet " << cellSetName_ << endl;
+            Info<< indent
+                << "- selecting cells using cellSet " << cellSetName_ << endl;
 
             cellSet selectedCells(mesh_, cellSetName_);
             cells_ = selectedCells.toc();
@@ -141,7 +143,8 @@ void CML::fv::option::setCellSet()
         }
         case smCellZone:
         {
-            Info<< "- selecting cells using cellZone " << cellSetName_ << endl;
+            Info<< indent
+                << "- selecting cells using cellZone " << cellSetName_ << endl;
 
             label zoneID = mesh_.cellZones().findZoneID(cellSetName_);
             if (zoneID == -1)
@@ -159,7 +162,7 @@ void CML::fv::option::setCellSet()
         {
             if (active_ && master_)
             {
-                Info<< "- selecting inter region mapping" << endl;
+                Info<< indent << "- selecting inter region mapping" << endl;
 
                 const fvMesh& nbrMesh =
                     mesh_.time().lookupObject<fvMesh>(nbrRegionName_);
@@ -178,14 +181,15 @@ void CML::fv::option::setCellSet()
                 {
                     meshInterpPtr_.reset
                     (
-                        new meshToMeshNew
+                        new meshToMesh
                         (
                             mesh_,
                             nbrMesh,
-                            meshToMeshNew::interpolationMethodNames_.read
+                            meshToMesh::interpolationMethodNames_.read
                             (
                                 dict_.lookup("interpolationMethod")
-                            )
+                            ),
+                            false // not interpolating patches
                         )
                     );
                 }
@@ -203,7 +207,7 @@ void CML::fv::option::setCellSet()
         }
         case smAll:
         {
-            Info<< "- selecting all cells" << endl;
+            Info<< indent << "- selecting all cells" << endl;
             cells_ = identity(mesh_.nCells());
 
             break;
@@ -228,7 +232,8 @@ void CML::fv::option::setCellSet()
         }
         reduce(V_, sumOp<scalar>());
 
-        Info<< "- selected " << returnReduce(cells_.size(), sumOp<label>())
+        Info<< indent
+            << "- selected " << returnReduce(cells_.size(), sumOp<label>())
             << " cell(s) with volume " << V_ << nl << endl;
     }
 }
@@ -244,6 +249,7 @@ CML::fv::option::option
 )
 :
     name_(name),
+    modelType_(modelType),
     mesh_(mesh),
     dict_(dict),
     coeffs_(dict.subDict(modelType + "Coeffs")),
@@ -264,12 +270,12 @@ CML::fv::option::option
     if (dict_.readIfPresent("timeStart", timeStart_))
     {
         dict_.lookup("duration") >> duration_;
-        Info<< "- applying source at time " << timeStart_
+        Info<< indent << "- applying source at time " << timeStart_
             << " for duration " << duration_ << endl;
     }
     else
     {
-        Info<< "- applying source for all time" << endl;
+        Info<< indent << "- applying source for all time" << endl;
     }
 
     setSelection(dict_);
@@ -289,7 +295,8 @@ CML::autoPtr<CML::fv::option> CML::fv::option::New
 {
     word modelType(coeffs.lookup("type"));
 
-    Info<< "Selecting finite volume options model type " << modelType << endl;
+    Info<< indent
+        << "Selecting finite volume options model type " << modelType << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(modelType);
@@ -386,13 +393,21 @@ void CML::fv::option::correct(volTensorField& fld)
 }
 
 
-void CML::fv::option::addSup(fvMatrix<scalar>& eqn, const label fieldI)
+void CML::fv::option::addSup
+(
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
 
 
-void CML::fv::option::addSup(fvMatrix<vector>& eqn, const label fieldI)
+void CML::fv::option::addSup
+(
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
@@ -408,15 +423,138 @@ void CML::fv::option::addSup
 }
 
 
-void CML::fv::option::addSup(fvMatrix<symmTensor>& eqn, const label fieldI)
+void CML::fv::option::addSup
+(
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
 
 
-void CML::fv::option::addSup(fvMatrix<tensor>& eqn, const label fieldI)
+void CML::fv::option::addSup
+(
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
 {
     // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<sphericalTensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<sphericalTensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void CML::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
 }
 
 
@@ -458,13 +596,22 @@ void CML::fv::option::setValue(fvMatrix<tensor>& eqn, const label fieldI)
 }
 
 
-void CML::fv::option::relativeFlux(surfaceScalarField& phi) const
+void CML::fv::option::makeRelative(surfaceScalarField& phi) const
 {
     // do nothing
 }
 
 
-void CML::fv::option::relativeFlux
+void CML::fv::option::makeRelative
+(
+    FieldField<fvsPatchField, scalar>& phi
+) const
+{
+    // do nothing
+}
+
+
+void CML::fv::option::makeRelative
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
@@ -474,13 +621,13 @@ void CML::fv::option::relativeFlux
 }
 
 
-void CML::fv::option::absoluteFlux(surfaceScalarField& phi) const
+void CML::fv::option::makeAbsolute(surfaceScalarField& phi) const
 {
     // do nothing
 }
 
 
-void CML::fv::option::absoluteFlux
+void CML::fv::option::makeAbsolute
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi

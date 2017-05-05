@@ -33,11 +33,9 @@ stressComponentsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if stressComponentsEnv['WHICH_OS'] == "windows":
   stressComponentsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libincompressibleRASModels',
-  'libincompressibleTransportModels']
-else:
-  lib_link = ['genericPatchFields','incompressibleRASModels',
-  'incompressibleTransportModels']
+
+lib_link = ['genericPatchFields','incompressibleRASModels',
+'incompressibleTransportModels']
     
 stressComponentsEnv.Append(LIBS = lib_link)
 

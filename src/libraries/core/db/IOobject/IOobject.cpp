@@ -43,7 +43,7 @@ static CML::StaticHashTable<CML::word> replacedFileNames_;
 //    "foo/bar/"          ERROR - no name
 //    "foo/xxx/bar"       ("foo", "xxx", "bar")
 //    "foo/xxx/yyy/bar"   ("foo", "xxx/yyy", "bar")
-bool CML::IOobject::IOobject::fileNameComponents
+bool CML::IOobject::fileNameComponents
 (
     const fileName& path,
     fileName& instance,
@@ -58,50 +58,73 @@ bool CML::IOobject::IOobject::fileNameComponents
     // called with directory
     if (isDir(path))
     {
-        WarningIn("IOobject::fileNameComponents(const fileName&, ...)")
-            << " called with directory: " << path << "\n";
+        WarningIn
+        (
+            "IOobject::fileNameComponents"
+            "("
+                "const fileName&, "
+                "fileName&, "
+                "fileName&, "
+                "word&"
+            ")"
+        )
+            << " called with directory: " << path << endl;
+
         return false;
     }
 
     if (path.isAbsolute())
     {
-        // called with absolute path
-        WarningIn("IOobject::fileNameComponents(const fileName&, ...)")
-            << "called with absolute path: " << path << "\n";
-        return false;
-    }
-
-    string::size_type first = path.find('/');
-
-    if (first == string::npos)
-    {
-        // no '/' found - no instance or local
-
-        // check afterwards
-        name.string::operator=(path);
-    }
-    else
-    {
-        instance = path.substr(0, first);
-
         string::size_type last = path.rfind('/');
-        if (last > first)
-        {
-            // with local
-            local = path.substr(first+1, last-first-1);
-        }
+        instance = path.substr(0, last);
 
         // check afterwards
         name.string::operator=(path.substr(last+1));
+    }
+    else
+    {
+        string::size_type first = path.find('/');
+
+        if (first == string::npos)
+        {
+            // no '/' found - no instance or local
+
+            // check afterwards
+            name.string::operator=(path);
+        }
+        else
+        {
+            instance = path.substr(0, first);
+
+            string::size_type last = path.rfind('/');
+            if (last > first)
+            {
+                // with local
+                local = path.substr(first+1, last-first-1);
+            }
+
+            // check afterwards
+            name.string::operator=(path.substr(last+1));
+        }
     }
 
 
     // check for valid (and stripped) name, regardless of the debug level
     if (name.empty() || string::stripInvalid<word>(name))
     {
-        WarningIn("IOobject::fileNameComponents(const fileName&, ...)")
+        WarningIn
+        (
+            "IOobject::fileNameComponents"
+            "("
+                "const fileName&, "
+                "fileName&, "
+                "fileName&, "
+                "word&"
+            ")"
+        )
             << "has invalid word for name: \"" << name
-            << "\"\nwhile processing path: " << path << "\n";
+            << "\"\nwhile processing path: " << path << endl;
+
         return false;
     }
 
@@ -196,9 +219,16 @@ CML::IOobject::IOobject
     {
         FatalErrorIn
         (
-            "IOobject::IOobject" "(const fileName&, const objectRegistry&, ...)"
+            "IOobject::IOobject"
+            "("
+                "const fileName&, "
+                "const objectRegistry&, "
+                "readOption, "
+                "writeOption, "
+                "bool"
+            ")"
         )
-            << " invalid path specification\n"
+            << " invalid path specification"
             << exit(FatalError);
     }
 

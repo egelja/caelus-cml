@@ -130,6 +130,20 @@ const CML::wordList& CML::searchablePlane::regions() const
 }
 
 
+void CML::searchablePlane::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(1);
+    centres[0] = refPoint();
+
+    radiusSqr.setSize(1);
+    radiusSqr[0] = CML::sqr(GREAT);
+}
+
+
 void CML::searchablePlane::findNearest
 (
     const pointField& samples,

@@ -32,45 +32,25 @@ caelusDebugSwitchesEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusDebugSwitchesEnv['WHICH_OS'] == "windows":
   caelusDebugSwitchesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u compressibleLESModelsLoad -u compressibleRASModelsLoad -u distributionModelsLoad -u incompressibleLESModelsLoad -u incompressibleRASModelsLoad -u interfacePropertiesLoad -u lagrangianIntermediateLoad')
-  lib_link = ['libautoMesh','libbarotropicCompressibilityModel',
-  'libbasicSolidThermo','libbasicThermophysicalModels','libblockMesh',
-  'libchemistryModel','libcoalCombustion','libcompressibleLESModels',
-  'libcompressibleRASModels','libcompressibleTurbulenceModel','libconversion',
-  'libdecompositionMethods','libdistributed','libdistributionModels',
-  'libdynamicFvMesh','libdynamicMesh','libedgeMesh',
-  'libfieldFunctionObjects','libCAELUSCalcFunctions','libforces',
-  'libfvMotionSolvers','libgenericPatchFields','libincompressibleLESModels',
-  'libincompressibleRASModels','libincompressibleTransportModels',
-  'libincompressibleTurbulenceModel','libinterfaceProperties',
-  'libIOFunctionObjects','libjobControl','liblagrangian',
-  'liblagrangianIntermediate','liblaminarFlameSpeedModels','libLESdeltas',
-  'libLESfilters','libliquidMixtureProperties','libliquidProperties',
-  'libODE',
-  'libradiationModels','librandomProcesses','libreactionThermophysicalModels',
-  'libreconstruct','libsampling','libSLGThermo','libsolidMixtureProperties',
-  'libsolidParticle','libsolidProperties','libsolid',
-  'libspecie','libsurfaceFilmModels','libsurfMesh','libsystemCall',
-  'libthermalPorousZone','libthermophysicalFunctions','libtopoChangerFvMesh',
-  'libtwoPhaseInterfaceProperties','libutilityFunctionObjects']
-else:
-  lib_link = ['autoMesh','barotropicCompressibilityModel','basicSolidThermo',
-  'basicThermophysicalModels','blockMesh','chemistryModel','coalCombustion',
-  'compressibleLESModels','compressibleRASModels',
-  'compressibleTurbulenceModel','conversion','decompositionMethods',
-  'distributed','distributionModels','dynamicFvMesh','dynamicMesh',
-  'edgeMesh','fieldFunctionObjects','CAELUSCalcFunctions','forces',
-  'fvMotionSolvers','genericPatchFields','incompressibleLESModels',
-  'incompressibleRASModels','incompressibleTransportModels',
-  'incompressibleTurbulenceModel','interfaceProperties','IOFunctionObjects',
-  'jobControl','lagrangian','lagrangianIntermediate',
-  'laminarFlameSpeedModels','LESdeltas','LESfilters',
-  'liquidMixtureProperties','liquidProperties'
-  ,'ODE','radiationModels','randomProcesses',
-  'reactionThermophysicalModels','reconstruct','sampling','SLGThermo',
-  'solidMixtureProperties','solidParticle','solidProperties','solid',
-  'specie','surfaceFilmModels','surfMesh','systemCall','thermalPorousZone',
-  'thermophysicalFunctions','topoChangerFvMesh','twoPhaseInterfaceProperties',
-  'utilityFunctionObjects'   
+
+lib_link = ['autoMesh','barotropicCompressibilityModel','basicSolidThermo',
+'basicThermophysicalModels','blockMesh','chemistryModel','coalCombustion',
+'compressibleLESModels','compressibleRASModels',
+'compressibleTurbulenceModel','conversion','decompositionMethods',
+'distributed','distributionModels','dynamicFvMesh','dynamicMesh',
+'edgeMesh','fieldFunctionObjects','CAELUSCalcFunctions','forces',
+'fvMotionSolvers','genericPatchFields','incompressibleLESModels',
+'incompressibleRASModels','incompressibleTransportModels',
+'incompressibleTurbulenceModel','interfaceProperties','IOFunctionObjects',
+'jobControl','lagrangian','lagrangianIntermediate',
+'laminarFlameSpeedModels','LESdeltas','LESfilters',
+'liquidMixtureProperties','liquidProperties'
+,'ODE','radiationModels','randomProcesses',
+'reactionThermophysicalModels','reconstruct','sampling','SLGThermo',
+'solidMixtureProperties','solidParticle','solidProperties','solid',
+'specie','surfaceFilmModels','surfMesh','systemCall',
+'thermophysicalFunctions','topoChangerFvMesh','twoPhaseInterfaceProperties',
+'utilityFunctionObjects'   
 ]
 caelusDebugSwitchesEnv.Append(LIBS = lib_link)
 

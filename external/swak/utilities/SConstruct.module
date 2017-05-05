@@ -1,0 +1,75 @@
+#import os
+#import sys
+#import platform
+#import subprocess
+#import re
+
+from Caelus.build import *
+import Caelus
+
+#===============================================================================
+# Extra include path(s)
+#===============================================================================
+#globalEnv.Append(CPPPATH = ['lnInclude', '.'])
+
+#===============================================================================
+# Extra linker flags
+#===============================================================================
+
+#===============================================================================
+# Extra link library path(s)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBPATH = [''])
+
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+else :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+#===============================================================================
+# Extra link library(ies)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBS = ['core'])
+  
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBS = ['pthread', 'core'])
+
+else :
+   globalEnv.Append(LIBS = ['core'])
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+   'calcNonUniformOffsetsForMapped',
+   'fieldReport',
+   'funkyDoCalc',
+   'funkySetBoundaryField',
+   'funkySetFields',
+   'funkySetLagrangianField',
+   'funkyWarpMesh',
+   'replayTransientBC'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    print ">> Removing lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/cleanLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+	
+  else:
+    print ">> Creating lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/createLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+#===============================================================================
+# That's All Folks!
+#===============================================================================

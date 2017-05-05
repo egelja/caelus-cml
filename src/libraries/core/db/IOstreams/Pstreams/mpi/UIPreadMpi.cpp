@@ -225,7 +225,7 @@ CML::label CML::UIPstream::read
             (
                 buf,
                 bufSize,
-                MPI_PACKED,
+                MPI_BYTE,
                 procID(fromProcNo),
                 tag,
                 MPI_COMM_WORLD,
@@ -281,7 +281,7 @@ CML::label CML::UIPstream::read
             (
                 buf,
                 bufSize,
-                MPI_PACKED,
+                MPI_BYTE,
                 procID(fromProcNo),
                 tag,
                 MPI_COMM_WORLD,

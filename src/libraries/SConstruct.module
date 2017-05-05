@@ -1,0 +1,185 @@
+#import os
+#import sys
+#import platform
+#import subprocess
+#import re
+
+from Caelus.build import *
+import Caelus
+
+#===============================================================================
+# Extra include path(s)
+#===============================================================================
+globalEnv.Append(CPPPATH = '')
+
+#===============================================================================
+# Extra linker flags
+#===============================================================================
+
+#===============================================================================
+# Extra link library path(s)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBPATH = '')
+
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+else :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+#===============================================================================
+# Extra link library(ies)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBS = '')
+  
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBS = 'pthread')
+
+else :
+   globalEnv.Append(LIBS = '')
+
+#===============================================================================
+# Update build version
+#===============================================================================
+if GetOption('clean'):
+   # delete the global.cpp file
+   file_target = globalEnv['LIB_SRC'] + '/core/global/global.cpp'
+  
+   # check the file exists as we made have already run clean without a build
+   if os.path.isfile(file_target):
+      os.remove(file_target)
+
+else:
+   if Caelus.WHICH_OS == "windows" :
+      lines = subprocess.Popen(["git","show-ref", "--hash=12"], shell=True,
+      stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+   else:
+      lines = subprocess.Popen(["git","show-ref", "--hash=12"],
+      stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+  
+   if len(lines) == 0:
+      print ">> git command not found. Version set to major only"
+      build_string = globalEnv['PROJECT_VER']
+   else:
+      git_version = lines.splitlines()[0]
+      build_string = globalEnv['PROJECT_VER'] + '-' + git_version
+
+   # Write result to .build file
+   o = open(globalEnv['CAELUS_PROJECT_DIR'] + "/.build","w")
+   o.write(build_string)
+   o.close()
+
+   # define our method for multiple replacements
+   def replace_all(text, dic):
+      for i, j in dic.iteritems():
+         text = text.replace(i, j)
+      return text
+
+   # Dictionary pairs of words we wish to replace
+   dic = {"VERSION_STRING":globalEnv['PROJECT_VER'], "BUILD_STRING":build_string}
+
+   # Update global.C file with version information
+   o = open(globalEnv['LIB_SRC'] + '/core/global/global.cpp',"w")
+  
+   data = open(globalEnv['LIB_SRC'] + '/core/global/global.Cver').read()
+  
+   o.write(replace_all(data, dic))
+   o.close()
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+   'core',
+   'edgeMesh',
+   'surfMesh',
+   'lagrangian/basic',
+   'lagrangian/distributionModels',
+   'genericPatchFields',
+   'parallel/decompose/decompose',
+   'parallel/decompose/decompositionMethods',
+   'parallel/decompose/scotchDecomp',
+   'parallel/decompose/metisDecomp',
+   'parallel/reconstruct/reconstruct',
+   'parallel/distributed',
+   'conversion',
+   'sampling',
+   'dynamicMesh',
+   'dynamicFvMesh',
+   'topoChangerFvMesh',
+   'ODE',
+   'randomProcesses',
+   'thermophysicalModels/specie',
+   'thermophysicalModels/solid',
+   'thermophysicalModels/thermophysicalFunctions',
+   'thermophysicalModels/properties/liquidProperties',
+   'thermophysicalModels/properties/liquidMixtureProperties',
+   'thermophysicalModels/properties/solidProperties',
+   'thermophysicalModels/properties/solidMixtureProperties',
+   'thermophysicalModels/basic',
+   'thermophysicalModels/reactionThermo',
+   'thermophysicalModels/laminarFlameSpeed',
+   'thermophysicalModels/chemistryModel',
+   'thermophysicalModels/barotropicCompressibilityModel',
+   'thermophysicalModels/SLGThermo',
+   'thermophysicalModels/basicSolidThermo',
+   'thermophysicalModels/solidChemistryModel',
+   'thermophysicalModels/radiationModels',
+   'transportModels/incompressible',
+   'transportModels/interfaceProperties',
+   'transportModels/twoPhaseInterfaceProperties',
+   'turbulenceModels/LES/LESfilters',
+   'turbulenceModels/LES/LESdeltas',
+   'turbulenceModels/incompressible/turbulenceModel',
+   'turbulenceModels/incompressible/RAS',
+   'turbulenceModels/incompressible/LES',
+   'turbulenceModels/compressible/turbulenceModel',
+   'turbulenceModels/compressible/RAS',
+   'turbulenceModels/compressible/LES',
+   'turbulenceModels/derivedFvPatchFields',
+   'combustionModels',
+   'regionModels/regionModel',
+   'regionModels/pyrolysisModels',
+   'regionModels/surfaceFilmModels',
+   'regionModels/thermoBaffleModels',
+   'regionModels/regionCoupling',
+   'lagrangian/solidParticle',
+   'lagrangian/intermediate',
+   'lagrangian/spray',
+   'lagrangian/coalCombustion',
+   'postProcessing/postCalc',
+   'postProcessing/CAELUSCalcFunctions',
+   'postProcessing/functionObjects/field',
+   'postProcessing/functionObjects/forces',
+   'postProcessing/functionObjects/IO',
+   'postProcessing/functionObjects/utilities',
+   'postProcessing/functionObjects/jobControl',
+   'postProcessing/functionObjects/systemCall',
+   'mesh/autoMesh',
+   'mesh/blockMesh',
+   'fvAgglomerationMethods/pairPatchAgglomeration',
+   'fvMotionSolver',
+   'fvOptions'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    print ">> Removing lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/cleanLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+	
+  else:
+    print ">> Creating lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/createLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+#===============================================================================
+# That's All Folks!
+#===============================================================================

@@ -60,4 +60,4 @@ inTranModelEnv.Install(install_dir, libincompressibleTransportModels)
 
 if (inTranModelEnv['WHICH_OS'] == "darwin"):
 
-  inTranModelEnv.Append(SHLINKFLAGS ='-install_name @' + inTranModelEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleTransportModels.dylib')
+  inTranModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleTransportModels.dylib')

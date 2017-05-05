@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus</fullName>
-    <version>4.10</version>
+    <fullName>Caelus 5.04</fullName>
+    <version>5.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../doc/gpl-3.0.txt</licenseFile>
@@ -40,6 +40,9 @@
                         <distributionFile>
                             <origin>../BuildCaelus.py</origin>
                         </distributionFile>
+                        <distributionDirectory>
+                            <origin>../lib</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -92,6 +95,9 @@
                         <distributionDirectory>
                             <origin>../tutorials/incompressible</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/multiphase</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -108,6 +114,9 @@
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/scotch-5.1.12</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/swak</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
@@ -139,7 +148,7 @@
                     <platforms>windows</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <origin>../platforms/windows64mingwDP</origin>
+                            <origin>../platforms/windows64SystemDPOpt</origin>
                         </distributionDirectory>
                     </distributionFileList>
                     <shouldPackRuleList>
@@ -420,8 +429,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
             </postInstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Caelus Terminal</comment>
-                    <name>Caelus Terminal</name>
+                    <comment>Caelus 5.04 Terminal</comment>
+                    <name>Caelus 5.04 Terminal</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
@@ -507,18 +516,44 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
         </throwError>
     </preInstallationActionList>
     <postInstallationActionList>
+        <if>
+            <actionList>
+                <setInstallerVariable>
+                    <name>new_pythonpath</name>
+                    <value>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6:${env(PYTHONPATH)}</value>
+                </setInstallerVariable>
+            </actionList>
+            <conditionRuleList>
+                <compareTextLength>
+                    <length>0</length>
+                    <logic>does_not_equal</logic>
+                    <text>${env(PYTHONPATH)}</text>
+                </compareTextLength>
+            </conditionRuleList>
+            <elseActionList>
+                <setInstallerVariable>
+                    <name>new_pythonpath</name>
+                    <value>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6</value>
+                </setInstallerVariable>
+            </elseActionList>
+        </if>
+        <setEnvironmentVariable>
+            <name>PYTHONPATH</name>
+            <value>${new_pythonpath}</value>
+        </setEnvironmentVariable>
         <writeFile>
-            <path>${installdir}/${product_shortName}-${product_version}/etc/caelus_conf.py</path>
+            <path>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus/conf.py</path>
             <progressText>Writing Caelus Configuration file</progressText>
             <text>PROJECT_NAME = '${project.shortName}'
 PROJECT_VER = '${project.version}'
 PRECISION_OPTION = 'DP'
 COMPILER_ARCH = '64'
 BUILD_TYPE = 'Opt'
+INT_TYPE = '32'
 FLEXXX = 'flex'
 
 # Windows setup
-COMPILER = 'mingw'
+#COMPILER = 'mingw'
 PROJECT_DIR = "${installdir.escape_backslashes}"
 
 MPI_BIN = '${mpibinpath.escape_backslashes}'
@@ -532,9 +567,34 @@ MPI_LIB_NAME = '${mpilibname}'
 CAELUS_TERM = '${project.component(windowsdata).selected}'
 COLOUR_BUILD = '${colourbuildwin}'</text>
         </writeFile>
+        <writeFile>
+            <path>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py</path>
+            <progressText>Writing Caelus Configuration file</progressText>
+            <text>
+import sys
+import os
+
+sys.path.append('${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6')
+
+from Caelus.write_env import *
+</text>
+        </writeFile>
+        <addEnvironmentVariable>
+            <name>PYTHONPATH</name>
+            <scope>user</scope>
+            <value>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6;%PYTHONPATH%</value>
+        </addEnvironmentVariable>
+        <addDirectoryToPath>
+            <insertAt>end</insertAt>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scons-local-2.3.4</path>
+        </addDirectoryToPath>
+        <addDirectoryToPath>
+            <insertAt>end</insertAt>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\bin</path>
+        </addDirectoryToPath>
         <runProgram>
             <program>python</program>
-            <programArguments>"${installdir}/${product_shortName}-${product_version}/etc/caelus_setup.py"</programArguments>
+            <programArguments>"${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py"</programArguments>
         </runProgram>
         <setWindowsACL>
             <action>allow</action>
@@ -542,7 +602,83 @@ COLOUR_BUILD = '${colourbuildwin}'</text>
             <recurseContainers>1</recurseContainers>
             <recurseObjects>1</recurseObjects>
         </setWindowsACL>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py</path>
+        </deleteFile>
     </postInstallationActionList>
+    <preUninstallationActionList>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6</pattern>
+            <substitution></substitution>
+            <text>${env(PYTHONPATH)}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>^:</pattern>
+            <substitution></substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>:$</pattern>
+            <substitution></substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>::</pattern>
+            <substitution>:</substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <if>
+            <actionList>
+                <setEnvironmentVariable>
+                    <name>PYTHONPATH</name>
+                    <value>${new_pythonpath}</value>
+                </setEnvironmentVariable>
+            </actionList>
+            <conditionRuleList>
+                <compareTextLength>
+                    <length>0</length>
+                    <logic>does_not_equal</logic>
+                    <text>${new_pythonpath}</text>
+                </compareTextLength>
+            </conditionRuleList>
+            <elseActionList>
+                <deleteEnvironmentVariable>
+                    <name>PYTHONPATH</name>
+                    <scope>system</scope>
+                </deleteEnvironmentVariable>
+            </elseActionList>
+        </if>
+    </preUninstallationActionList>
+    <postUninstallationActionList>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\src</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\.build</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\etc</path>
+        </deleteFile>
+        <removeDirectoryFromPath>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scons-local-2.3.4</path>
+        </removeDirectoryFromPath>
+        <removeDirectoryFromPath>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\bin</path>
+        </removeDirectoryFromPath>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\platforms</path>
+        </deleteFile>
+    </postUninstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
     <compressionAlgorithm>lzma-ultra</compressionAlgorithm>
     <enableRollback>0</enableRollback>
@@ -559,6 +695,12 @@ COLOUR_BUILD = '${colourbuildwin}'</text>
     <uninstallerDirectory>${installdir}/${product_shortName}-${product_version}</uninstallerDirectory>
     <vendor>Applied CCM</vendor>
     <windows64bitMode>1</windows64bitMode>
+    <finalPageActionList>
+        <launchBrowser>
+            <progressText>Register on Caelus website</progressText>
+            <url>http://www.caelus-cml.com/registration</url>
+        </launchBrowser>
+    </finalPageActionList>
     <parameterList>
         <directoryParameter>
             <name>installdir</name>
@@ -583,8 +725,8 @@ COLOUR_BUILD = '${colourbuildwin}'</text>
                     <name>colourbuildwin</name>
                     <description></description>
                     <explanation>Choose if you want compiling to use colourful output</explanation>
-                    <value>True</value>
-                    <default>True</default>
+                    <value>False</value>
+                    <default>False</default>
                 </booleanParameter>
             </parameterList>
             <ruleList>

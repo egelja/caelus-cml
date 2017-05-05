@@ -55,4 +55,4 @@ genPatFieldEnv.Install(install_dir, libgenericPatchFields)
 
 if (genPatFieldEnv['WHICH_OS'] == "darwin"):
 
-  genPatFieldEnv.Append(SHLINKFLAGS ='-install_name @' + genPatFieldEnv['LIB_PLATFORM_INSTALL'] + '/libgenericPatchFields.dylib')
+  genPatFieldEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libgenericPatchFields.dylib')

@@ -1,0 +1,108 @@
+#import os
+#import sys
+#import platform
+#import subprocess
+#import re
+
+from Caelus.build import *
+import Caelus
+
+#===============================================================================
+# Metis variables
+#===============================================================================
+globalEnv.Replace(LIB_SRC = os.path.join(Caelus.METIS_PATH, 'libmetis'))
+globalEnv.Replace(BIN_PLATFORM_INSTALL = os.path.join(Caelus.METIS_PATH,'bin'))
+globalEnv.Replace(LIB_PLATFORM_INSTALL = os.path.join(Caelus.METIS_PATH,'lib'))
+globalEnv.Replace(PROJECT_INC = os.path.join(Caelus.METIS_PATH, 'include'))
+globalEnv.Replace(CPPPATH = globalEnv['PROJECT_INC'])
+
+#===============================================================================
+# Metis compiler flags
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   # General compiler flags
+   GFLAGS = '-std=c99 -fno-strict-aliasing ' \
+   + ' -Wall -pedantic -Wpedantic-ms-format -Wno-unused-but-set-variable ' \
+   + ' -Wno-unused-variable -Wno-unknown-pragmas ' \
+   + ' -DUSE_GKREGEX -DNDEBUG -DNDEBUG2 -D__USE_MINGW_ANSI_STDIO=1' \
+   + ' -Dwindows'
+#end of windows compiler flags
+
+elif Caelus.WHICH_OS == "darwin" :
+   # Set the C++ compiler
+   globalEnv.Replace(CXX = globalEnv['COMPILER'])
+   if globalEnv['COMPILER'] == 'clang++':
+      globalEnv.Replace(CC = 'clang')
+  
+   #empty compiler flag for now
+   GFLAGS = '-O3 -fPIC -std=c99 '\
+   + ' -Wall -Wno-unused-variable -Wno-sometimes-uninitialized -pedantic '\
+   + ' -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
+   + ' -DDARWIN -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
+#end of macosx compiler flags
+
+else :
+   # General compiler flags
+   GFLAGS = '-O3 -fPIC -std=c99 -fno-strict-aliasing '\
+   + ' -Wall -pedantic -Wno-unused-but-set-variable -Wno-unused-variable '\
+   + ' -Wno-unknown-pragmas -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
+   + ' -DLINUX -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
+
+  # Flag to turn label into 64bit int during compilation
+   if  globalEnv['INT_TYPE'] == '64':
+      GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
+#end of linux compiler flags
+
+# Setup full compiler flags
+# override existing flags???
+globalEnv.Replace(CCFLAGS = GFLAGS)
+
+#===============================================================================
+# Extra include path(s)
+#===============================================================================
+globalEnv.Append(CPPPATH = [os.path.join(Caelus.METIS_PATH, 'libmetis'), 
+                            os.path.join(Caelus.METIS_PATH, 'GKlib')])
+
+#===============================================================================
+# Extra linker flags
+#===============================================================================
+if Caelus.WHICH_OS == "darwin":
+   globalEnv.Append(LINKFLAGS = '-dynamic')
+
+#===============================================================================
+# Extra link library path(s)
+#===============================================================================
+globalEnv.Append(LIBPATH = '')
+
+#===============================================================================
+# Extra link library(ies)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBS = '')
+  
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBS = '')
+
+else :
+   globalEnv.Append(LIBS = 'm')
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+   'libmetis'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+	
+  else:
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+#===============================================================================
+# That's All Folks!
+#===============================================================================

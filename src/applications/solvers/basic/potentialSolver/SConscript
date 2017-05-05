@@ -6,6 +6,24 @@ Import('globalEnv')
 # libraries
 potentialSolEnv = globalEnv.Clone()
 
+# Path to source
+src = potentialSolEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/fvOptions/lnInclude',
+  src + '/sampling/lnInclude']
+potentialSolEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['fvOptions','sampling']
+     
+
+potentialSolEnv.Append(LIBS = lib_link)
+
 #===============================================================================
 # Sources for this executable
 #===============================================================================

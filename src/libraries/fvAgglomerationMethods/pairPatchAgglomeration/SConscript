@@ -54,4 +54,4 @@ patchPairEnv.Install(install_dir, libpairPatchAgglomeration)
 
 if (patchPairEnv['WHICH_OS'] == "darwin"):
 
-  patchPairEnv.Append(SHLINKFLAGS ='-install_name @' + patchPairEnv['LIB_PLATFORM_INSTALL'] + '/libpairPatchAgglomeration.dylib')
+  patchPairEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libpairPatchAgglomeration.dylib')

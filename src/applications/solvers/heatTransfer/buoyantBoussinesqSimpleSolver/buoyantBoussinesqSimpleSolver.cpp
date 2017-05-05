@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,18 +26,18 @@ Description
 
     Uses the Boussinesq approximation:
     \f[
-        rho_{eff} = 1 - beta(T - T_{ref})
+        rho_{k} = 1 - beta(T - T_{ref})
     \f]
 
     where:
-        \f$ rho_{eff} \f$ = the effective (driving) density
+        \f$ rho_{k} \f$ = the effective (driving) density
         beta = thermal expansion coefficient [1/K]
         T = temperature [K]
         \f$ T_{ref} \f$ = reference temperature [K]
 
     Valid when:
     \f[
-        rho_{eff} << 1
+        \frac{beta(T - T_{ref})}{rho_{ref}} << 1
     \f]
 
 \*---------------------------------------------------------------------------*/
@@ -44,9 +45,8 @@ Description
 #include "fvCFD.hpp"
 #include "singlePhaseTransportModel.hpp"
 #include "RASModel.hpp"
+#include "fvIOoptionList.hpp"
 #include "simpleControl.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
@@ -55,11 +55,10 @@ int main(int argc, char *argv[])
     #include "createMesh.hpp"
     #include "readGravitationalAcceleration.hpp"
     #include "createFields.hpp"
+    #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);
-
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
 
@@ -78,14 +77,7 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-#ifdef _WIN32
-        Info<< "ExecutionTime = " << static_cast<scalar>(runTime.elapsedCpuTime()) << " s"
-            << "  ClockTime = " << static_cast<scalar>(runTime.elapsedClockTime()) << " s"
-#else
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-#endif
-            << nl << endl;
+        #include "reportTimeStats.hpp"
     }
 
     Info<< "End\n" << endl;
@@ -94,4 +86,4 @@ int main(int argc, char *argv[])
 }
 
 
-// ************************************************************************* //
+

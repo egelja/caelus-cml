@@ -52,3 +52,7 @@ source = src_files)
 install_dir = funcObjSysEnv['LIB_PLATFORM_INSTALL']
 funcObjSysEnv.Alias('install', install_dir)
 funcObjSysEnv.Install(install_dir, libsystemCall)
+
+if (funcObjSysEnv['WHICH_OS'] == "darwin"):
+
+  funcObjSysEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsystemCall.dylib')

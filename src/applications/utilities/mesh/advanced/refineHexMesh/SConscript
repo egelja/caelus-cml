@@ -31,9 +31,8 @@ refineHexMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if refineHexMeshEnv['WHICH_OS'] == "windows":
   refineHexMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh','libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh','genericPatchFields']
+
+lib_link = ['dynamicMesh','genericPatchFields']
      
 
 refineHexMeshEnv.Append(LIBS = lib_link)

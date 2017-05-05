@@ -33,9 +33,8 @@ transformPointsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if transformPointsEnv['WHICH_OS'] == "windows":
   transformPointsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
   
 transformPointsEnv.Append(LIBS = lib_link)
 

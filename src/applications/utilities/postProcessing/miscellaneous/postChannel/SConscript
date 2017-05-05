@@ -31,9 +31,8 @@ postChannelEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if postChannelEnv['WHICH_OS'] == "windows":
   postChannelEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libsampling']
-else:
-  lib_link = ['genericPatchFields','sampling']
+
+lib_link = ['genericPatchFields','sampling']
      
 
 postChannelEnv.Append(LIBS = lib_link)

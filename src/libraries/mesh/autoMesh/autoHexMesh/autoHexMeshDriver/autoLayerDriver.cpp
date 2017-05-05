@@ -1807,6 +1807,15 @@ void CML::autoLayerDriver::setupLayerInfoTruncation
             }
         }
         nPatchPointLayers = patchNLayers;
+
+        // Set any unset patch face layers
+        forAll(nPatchFaceLayers, patchFaceI)
+        {
+            if (nPatchFaceLayers[patchFaceI] == -1)
+            {
+                nPatchFaceLayers[patchFaceI] = 0;
+            }
+        }
     }
     else
     {

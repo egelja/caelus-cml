@@ -71,6 +71,14 @@ const symmTensor symmTensor::min
                       -VGREAT
 );
 
+template<>
+const symmTensor symmTensor::I
+(
+    1, 0, 0,
+       1, 0,
+          1
+);
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -31,9 +31,8 @@ caelusToVTKEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusToVTKEnv['WHICH_OS'] == "windows":
   caelusToVTKEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','lagrangian']
+
+lib_link = ['genericPatchFields','lagrangian']
      
 
 caelusToVTKEnv.Append(LIBS = lib_link)

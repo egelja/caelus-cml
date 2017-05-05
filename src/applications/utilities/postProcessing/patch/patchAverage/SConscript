@@ -32,9 +32,8 @@ patchAverageEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if patchAverageEnv['WHICH_OS'] == "windows":
   patchAverageEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
      
 patchAverageEnv.Append(LIBS = lib_link)
 

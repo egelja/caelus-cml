@@ -50,6 +50,22 @@ CML::treeDataPoint::treeDataPoint
 {}
 
 
+CML::treeDataPoint::findNearestOp::findNearestOp
+(
+    const indexedOctree<treeDataPoint>& tree
+)
+:
+    tree_(tree)
+{}
+
+
+CML::treeDataPoint::findIntersectOp::findIntersectOp
+(
+    const indexedOctree<treeDataPoint>& tree
+)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::pointField CML::treeDataPoint::shapePoints() const
@@ -67,13 +83,13 @@ CML::pointField CML::treeDataPoint::shapePoints() const
 
 //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
 //  Only makes sense for closed surfaces.
-CML::label CML::treeDataPoint::getVolumeType
+CML::volumeType CML::treeDataPoint::getVolumeType
 (
     const indexedOctree<treeDataPoint>& oc,
     const point& sample
 ) const
 {
-    return indexedOctree<treeDataPoint>::UNKNOWN;
+    return volumeType::UNKNOWN;
 }
 
 
@@ -89,9 +105,26 @@ bool CML::treeDataPoint::overlaps
 }
 
 
-// Calculate nearest point to sample. Updates (if any) nearestDistSqr, minIndex,
-// nearestPoint.
-void CML::treeDataPoint::findNearest
+// Check if any point on shape is inside sphere.
+bool CML::treeDataPoint::overlaps
+(
+    const label index,
+    const point& centre,
+    const scalar radiusSqr
+) const
+{
+    label pointI = (useSubset_ ? pointLabels_[index] : index);
+
+    if (magSqr(points_[pointI] - centre) <= radiusSqr)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+void CML::treeDataPoint::findNearestOp::operator()
 (
     const labelUList& indices,
     const point& sample,
@@ -101,12 +134,19 @@ void CML::treeDataPoint::findNearest
     point& nearestPoint
 ) const
 {
+    const treeDataPoint& shape = tree_.shapes();
+
     forAll(indices, i)
     {
         const label index = indices[i];
-        label pointI = (useSubset_ ? pointLabels_[index] : index);
+        label pointI =
+        (
+            shape.useSubset()
+          ? shape.pointLabels()[index]
+          : index
+        );
 
-        const point& pt = points_[pointI];
+        const point& pt = shape.points()[pointI];
 
         scalar distSqr = magSqr(pt - sample);
 
@@ -120,9 +160,7 @@ void CML::treeDataPoint::findNearest
 }
 
 
-//- Calculates nearest (to line) point in shape.
-//  Returns point and distance (squared)
-void CML::treeDataPoint::findNearest
+void CML::treeDataPoint::findNearestOp::operator()
 (
     const labelUList& indices,
     const linePointRef& ln,
@@ -133,15 +171,26 @@ void CML::treeDataPoint::findNearest
     point& nearestPoint
 ) const
 {
+    const treeDataPoint& shape = tree_.shapes();
+
     // Best so far
-    scalar nearestDistSqr = magSqr(linePoint - nearestPoint);
+    scalar nearestDistSqr = GREAT;
+    if (minIndex >= 0)
+    {
+        nearestDistSqr = magSqr(linePoint - nearestPoint);
+    }
 
     forAll(indices, i)
     {
         const label index = indices[i];
-        label pointI = (useSubset_ ? pointLabels_[index] : index);
+        label pointI =
+        (
+            shape.useSubset()
+          ? shape.pointLabels()[index]
+          : index
+        );
 
-        const point& shapePt = points_[pointI];
+        const point& shapePt = shape.points()[pointI];
 
         if (tightest.contains(shapePt))
         {
@@ -173,6 +222,23 @@ void CML::treeDataPoint::findNearest
             }
         }
     }
+}
+
+
+bool CML::treeDataPoint::findIntersectOp::operator()
+(
+    const label index,
+    const point& start,
+    const point& end,
+    point& result
+) const
+{
+    notImplemented
+    (
+        "treeDataPoint::intersects(const label, const point&,"
+        "const point&, point&)"
+    );
+    return false;
 }
 
 

@@ -148,12 +148,13 @@ CML::autoPtr<CML::sampledSurface> CML::sampledSurface::New
 CML::sampledSurface::sampledSurface
 (
     const word& name,
-    const polyMesh& mesh
+    const polyMesh& mesh,
+    const bool interpolate
 )
 :
     name_(name),
     mesh_(mesh),
-    interpolate_(false),
+    interpolate_(interpolate),
     SfPtr_(NULL),
     magSfPtr_(NULL),
     CfPtr_(NULL),
@@ -234,6 +235,7 @@ CML::scalar CML::sampledSurface::area() const
     return area_;
 }
 
+
 CML::tmp<CML::scalarField> CML::sampledSurface::sample
 (
     const surfaceScalarField& sField
@@ -252,6 +254,7 @@ CML::tmp<CML::vectorField> CML::sampledSurface::sample
     notImplemented("tmp<CML::vectorField> sampledSurface::sample");
     return tmp<vectorField>(NULL);
 }
+
 
 CML::tmp<CML::sphericalTensorField> CML::sampledSurface::sample
 (

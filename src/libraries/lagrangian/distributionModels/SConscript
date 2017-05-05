@@ -59,4 +59,4 @@ lagDistModelsEnv.Install(install_dir, libdistributionModels)
 
 if (lagDistModelsEnv['WHICH_OS'] == "darwin"):
 
-  lagDistModelsEnv.Append(SHLINKFLAGS ='-install_name @' + lagDistModelsEnv['LIB_PLATFORM_INSTALL'] + '/libdistributionModels.dylib')
+  lagDistModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdistributionModels.dylib')

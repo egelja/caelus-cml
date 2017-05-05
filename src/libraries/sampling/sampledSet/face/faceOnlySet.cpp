@@ -39,6 +39,7 @@ namespace CML
 
 bool CML::faceOnlySet::trackToBoundary
 (
+    passiveParticleCloud& particleCloud,
     passiveParticle& singleParticle,
     DynamicList<point>& samplingPts,
     DynamicList<label>& samplingCells,
@@ -51,7 +52,6 @@ bool CML::faceOnlySet::trackToBoundary
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    passiveParticleCloud particleCloud(mesh());
     particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
 
     // Alias
@@ -111,8 +111,9 @@ void CML::faceOnlySet::calcSamples
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    // Force calculation of minimum-tet decomposition.
-    (void) mesh().tetBasePtIs();
+    // Force calculation of cloud addressing on all processors
+    const bool oldMoving = const_cast<polyMesh&>(mesh()).moving(false);
+    passiveParticleCloud particleCloud(mesh());
 
     // Get all boundary intersections
     List<pointIndexHit> bHits = searchEngine().intersections
@@ -214,6 +215,7 @@ void CML::faceOnlySet::calcSamples
 
         bool reachedBoundary = trackToBoundary
         (
+            particleCloud,
             singleParticle,
             samplingPts,
             samplingCells,
@@ -282,6 +284,8 @@ void CML::faceOnlySet::calcSamples
 
         startSegmentI = samplingPts.size();
     }
+
+    const_cast<polyMesh&>(mesh()).moving(oldMoving);
 }
 
 
@@ -327,7 +331,7 @@ CML::faceOnlySet::faceOnlySet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const point& start,
     const point& end
@@ -350,7 +354,7 @@ CML::faceOnlySet::faceOnlySet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :

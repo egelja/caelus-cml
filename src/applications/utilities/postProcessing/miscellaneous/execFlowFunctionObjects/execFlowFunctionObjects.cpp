@@ -31,12 +31,14 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "calc.hpp"
+#include "argList.hpp"
+#include "timeSelector.hpp"
 
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "pointFields.hpp"
 #include "ReadFields_.hpp"
+#include "fvIOoptionList.hpp"
 
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.hpp"
 
@@ -47,43 +49,17 @@ Description
 #include "compressible/RAS/RASModel/RASModel.hpp"
 #include "compressible/LES/LESModel/LESModel.hpp"
 
+using namespace CML;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-    void execFlowFunctionObjects(const argList& args, const Time& runTime)
-    {
-        if (args.optionFound("dict"))
-        {
-            IOdictionary dict
-            (
-                IOobject
-                (
-                    args["dict"],
-                    runTime.system(),
-                    runTime,
-                    IOobject::MUST_READ_IF_MODIFIED
-                )
-            );
-
-            functionObjectList fol(runTime, dict);
-            fol.start();
-            fol.execute(true);  // override outputControl - force writing
-        }
-        else
-        {
-            functionObjectList fol(runTime);
-            fol.start();
-            fol.execute(true);  // override outputControl - force writing
-        }
-    }
-}
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
+void calc
+(
+    const argList& args,
+    const Time& runTime,
+    const fvMesh& mesh,
+    functionObjectList& fol
+)
 {
     if (args.optionFound("noFlow"))
     {
@@ -145,7 +121,7 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
         PtrList<pointTensorField> ptFlds;
         ReadFields(pMesh, objects, ptFlds);
 
-        execFlowFunctionObjects(args, runTime);
+        fol.execute(true);
     }
     else
     {
@@ -188,7 +164,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
             mesh
         );
 
-        if (phi.dimensions() == dimensionSet(0, 3, -1, 0, 0))
+        #include "createFvOptions.hpp"
+
+        if (phi.dimensions() == dimVolume/dimTime)
         {
             IOobject RASPropertiesHeader
             (
@@ -225,7 +203,8 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                         laminarTransport
                     )
                 );
-                execFlowFunctionObjects(args, runTime);
+
+                fol.execute(true);
             }
             else if (LESPropertiesHeader.headerOk())
             {
@@ -238,7 +217,7 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     incompressible::LESModel::New(U, phi, laminarTransport)
                 );
 
-                execFlowFunctionObjects(args, runTime);
+                fol.execute(true);
             }
             else
             {
@@ -254,12 +233,10 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     )
                 );
 
-                dimensionedScalar nu(transportProperties.lookup("nu"));
-
-                execFlowFunctionObjects(args, runTime);
+                fol.execute(true);
             }
         }
-        else if (phi.dimensions() == dimensionSet(1, 0, -1, 0, 0))
+        else if (phi.dimensions() == dimMass/dimTime)
         {
             autoPtr<basicThermo> thermo(basicThermo::New(mesh));
 
@@ -309,7 +286,7 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     )
                 );
 
-                execFlowFunctionObjects(args, runTime);
+                fol.execute(true);
             }
             else if (LESPropertiesHeader.headerOk())
             {
@@ -320,7 +297,7 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     compressible::LESModel::New(rho, U, phi, thermo())
                 );
 
-                execFlowFunctionObjects(args, runTime);
+                fol.execute(true);
             }
             else
             {
@@ -336,9 +313,7 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     )
                 );
 
-                dimensionedScalar mu(transportProperties.lookup("mu"));
-
-                execFlowFunctionObjects(args, runTime);
+                fol.execute(true);
             }
         }
         else
@@ -348,6 +323,76 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                 << nl << exit(FatalError);
         }
     }
+}
+
+
+int main(int argc, char *argv[])
+{
+    CML::timeSelector::addOptions();
+    #include "addRegionOption.hpp"
+    CML::argList::addBoolOption
+    (
+        "noFlow",
+        "suppress creating flow models"
+    );
+    #include "addDictOption.hpp"
+
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
+    CML::instantList timeDirs = CML::timeSelector::select0(runTime, args);
+    #include "createNamedMesh.hpp"
+
+    // Construct functionObjectList
+
+    autoPtr<functionObjectList> folPtr;
+    // Externally stored dictionary for if fol constructed not from runTime
+    dictionary folDict;
+
+    if (args.optionFound("dict"))
+    {
+        folDict = IOdictionary
+        (
+            IOobject
+            (
+                args["dict"],
+                runTime,
+                IOobject::MUST_READ_IF_MODIFIED
+            )
+        );
+        folPtr.reset(new functionObjectList(runTime, folDict));
+    }
+    else
+    {
+        folPtr.reset(new functionObjectList(runTime));
+    }
+    folPtr->start();
+
+
+    forAll(timeDirs, timeI)
+    {
+        runTime.setTime(timeDirs[timeI], timeI);
+
+        Info<< "Time = " << runTime.timeName() << endl;
+
+        mesh.readUpdate();
+
+        FatalIOError.throwExceptions();
+
+        try
+        {
+            calc(args, runTime, mesh, folPtr());
+        }
+        catch (IOerror& err)
+        {
+            Warning<< err << endl;
+        }
+
+        Info<< endl;
+    }
+
+    Info<< "End\n" << endl;
+
+    return 0;
 }
 
 

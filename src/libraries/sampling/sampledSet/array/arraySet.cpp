@@ -79,7 +79,7 @@ void CML::arraySet::calcSamples
 
     forAll(sampleCoords, i)
     {
-        sampleCoords[i] = transform(coordSys_.R(), sampleCoords[i]);
+        sampleCoords[i] = transform(coordSys_.R().R(), sampleCoords[i]);
     }
 
     forAll(sampleCoords, sampleI)
@@ -139,7 +139,7 @@ CML::arraySet::arraySet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const coordinateSystem& origin,
     const Vector<label>& pointsDensity,
@@ -164,7 +164,7 @@ CML::arraySet::arraySet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :

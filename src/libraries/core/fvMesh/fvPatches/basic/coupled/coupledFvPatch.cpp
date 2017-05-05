@@ -41,7 +41,12 @@ coupledFvPatch::~coupledFvPatch()
 {}
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+tmp<CML::vectorField> coupledFvPatch::delta() const
+{
+    return Cf() - Cn();
+}
 
 } // End namespace CML
 

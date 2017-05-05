@@ -44,6 +44,7 @@ SourceFiles
 #include "pointIndexHit.hpp"
 #include "linePointRef.hpp"
 #include "objectRegistry.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,25 +64,6 @@ class searchableSurface
 :
     public regIOobject
 {
-public:
-
-    // Data types
-
-        //- Volume types
-        enum volumeType
-        {
-            UNKNOWN = 0,
-            MIXED = 1,      // not used. only here to maintain consistency with
-                            // indexedOctree volumeType.
-            INSIDE = 2,
-            OUTSIDE = 3
-        };
-
-        static const NamedEnum<volumeType, 4> volumeTypeNames;
-
-
-private:
-
     // Private data
 
         const word name_;
@@ -202,7 +184,18 @@ public:
 
         //- Get representative set of element coordinates
         //  Usually the element centres (should be of length size()).
-        virtual pointField coordinates() const = 0;
+        virtual tmp<pointField> coordinates() const = 0;
+
+        //- Get bounding spheres (centre and radius squared), one per element.
+        //  Any point on element is guaranteed to be inside.
+        virtual void boundingSpheres
+        (
+            pointField& centres,
+            scalarField& radiusSqr
+        ) const = 0;
+
+        //- Get the points that define the surface.
+        virtual tmp<pointField> points() const = 0;
 
         //- Does any part of the surface overlap the supplied bound box?
         virtual bool overlaps(const boundBox& bb) const = 0;
@@ -271,6 +264,19 @@ public:
                 List<pointIndexHit>&
             ) const = 0;
 
+            //- Find the nearest locations for the supplied points to a
+            //  particular region in the searchable surface.
+            virtual void findNearest
+            (
+                const pointField& samples,
+                const scalarField& nearestDistSqr,
+                const labelList& regionIndices,
+                List<pointIndexHit>& info
+            ) const
+            {
+                findNearest(samples, nearestDistSqr, info);
+            }
+
             //- Find first intersection on segment from start to end.
             //  Note: searchableSurfacesQueries expects no
             //  intersection to be found if start==end. Is problem?
@@ -318,6 +324,17 @@ public:
                 const pointField&,
                 List<volumeType>&
             ) const = 0;
+
+            //- Find nearest, normal and region. Can be overridden with
+            //  optimised implementation
+            virtual void findNearest
+            (
+                const pointField& sample,
+                const scalarField& nearestDistSqr,
+                List<pointIndexHit>&,
+                vectorField& normal,
+                labelList& region
+            ) const;
 
 
         // Other

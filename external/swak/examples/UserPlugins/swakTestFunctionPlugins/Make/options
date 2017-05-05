@@ -1,0 +1,25 @@
+
+include $(OBJECTS_DIR)/../../../../../Libraries/rules/versionOptions
+
+ifdef FOAM_DEV
+FOAM_DEV_LIBS = -lswakFiniteArea -lfiniteArea
+endif
+
+EXE_INC = \
+    $(FOAM_DEV_OPTION) 	\
+    -I../../../Libraries/swak4FoamParsers/lnInclude \
+    -I../../../Libraries/swakFiniteArea/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/finiteArea/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    $(FILEFORMATS_INC) \
+    -I$(LIB_SRC)/meshTools/lnInclude
+
+LIB_LIBS = \
+    -L$(FOAM_USER_LIBBIN) \
+    $(FOAM_DEV_LIBS) \
+    -lswak4FoamParsers \
+    -lsampling \
+    $(FILEFORMATS_LIB) \
+    -lfiniteVolume \
+    -lmeshTools

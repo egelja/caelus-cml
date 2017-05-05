@@ -46,10 +46,11 @@ CML::mappedWallPolyPatch::mappedWallPolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    wallPolyPatch(name, size, start, index, bm),
+    wallPolyPatch(name, size, start, index, bm, patchType),
     mappedPatchBase(static_cast<const polyPatch&>(*this))
 {}
 
@@ -67,7 +68,7 @@ CML::mappedWallPolyPatch::mappedWallPolyPatch
     const polyBoundaryMesh& bm
 )
 :
-    wallPolyPatch(name, size, start, index, bm),
+    wallPolyPatch(name, size, start, index, bm, typeName),
     mappedPatchBase
     (
         static_cast<const polyPatch&>(*this),
@@ -92,7 +93,7 @@ CML::mappedWallPolyPatch::mappedWallPolyPatch
     const polyBoundaryMesh& bm
 )
 :
-    wallPolyPatch(name, size, start, index, bm),
+    wallPolyPatch(name, size, start, index, bm, typeName),
     mappedPatchBase
     (
         static_cast<const polyPatch&>(*this),
@@ -109,10 +110,11 @@ CML::mappedWallPolyPatch::mappedWallPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    wallPolyPatch(name, dict, index, bm),
+    wallPolyPatch(name, dict, index, bm, patchType),
     mappedPatchBase(*this, dict)
 {}
 

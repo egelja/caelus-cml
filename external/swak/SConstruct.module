@@ -1,0 +1,102 @@
+#import os
+#import sys
+#import platform
+#import subprocess
+#import re
+
+from Caelus.build import *
+import Caelus
+
+# Check if 64-bit ints are being
+if Caelus.INT_TYPE == 64:
+   sys.exit('ERROR: swak not compliant with 64-bit integers yet')
+
+#===============================================================================
+# Extra include path(s)
+#===============================================================================
+#globalEnv.Append(CPPPATH = ['lnInclude', '.'])
+
+#===============================================================================
+# Extra linker flags
+#===============================================================================
+
+#===============================================================================
+# Extra link library path(s)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBPATH = [''])
+
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+else :
+   globalEnv.Append(LIBPATH = [Caelus.MPI_LIB])
+
+#===============================================================================
+# Extra link library(ies)
+#===============================================================================
+if Caelus.WHICH_OS == "windows" :
+   globalEnv.Append(LIBS = ['core'])
+  
+elif Caelus.WHICH_OS == "darwin" :
+   globalEnv.Append(LIBS = ['pthread','core'])
+
+else :
+   globalEnv.Append(LIBS = ['core'])
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+   'libraries/swakParsers',
+   'libraries/swakLagrangianParser',
+   'libraries/groovyBC',
+   'libraries/swakFunctionObjects',
+   'libraries/simpleFunctionObjects',
+   'libraries/simpleLagrangianFunctionObjects',
+   'libraries/simpleSearchableSurfaces',
+   'libraries/simpleSwakFunctionObjects',
+   'libraries/swakTopoSources',
+   'libraries/swakSourceFields',
+   'libraries/groovyStandardBCs',
+   'libraries/functionPlugins/swakMeshQualityFunctionPlugin',
+   'libraries/functionPlugins/swakLocalCalculationsFunctionPlugin',
+   'libraries/functionPlugins/swakRandomFunctionPlugin',
+   'libraries/functionPlugins/swakFvcSchemesFunctionPlugin',
+   'libraries/functionPlugins/swakThermoTurbFunctionPlugin',
+   'libraries/functionPlugins/swakTransportTurbFunctionPlugin',
+   'libraries/functionPlugins/swakSurfacesAndSetsFunctionPlugin',
+   'libraries/functionPlugins/swakLagrangianCloudSourcesFunctionPlugin',
+   'libraries/functionPlugins/swakVelocityFunctionPlugin',
+   'libraries/functionPlugins/swakChemistryModelFunctionPlugin',
+   'libraries/functionPlugins/swakRadiationModelFunctionPlugin',
+   'libraries/functionPlugins/lagrangianCloudAdaptors/coalCloudAdaptor',
+   'utilities/calcNonUniformOffsetsForMapped',
+   'utilities/fieldReport',
+   'utilities/funkyDoCalc',
+   'utilities/funkySetBoundaryField',
+   'utilities/funkySetFields',
+   'utilities/funkySetLagrangianField',
+   'utilities/funkyWarpMesh',
+   'utilities/replayTransientBC'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    print ">> Removing lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/cleanLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+	
+  else:
+    print ">> Creating lnInclude directory for " + dir
+    subprocess.call(['python', 
+    Caelus.CAELUS_PROJECT_DIR + '/bin/createLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+#===============================================================================
+# That's All Folks!
+#===============================================================================

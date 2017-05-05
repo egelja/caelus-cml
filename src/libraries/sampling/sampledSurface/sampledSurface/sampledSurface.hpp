@@ -37,7 +37,7 @@ Description
     up-to-date.
 
 SourceFiles
-    sampledSurface.C
+    sampledSurface.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -78,7 +78,7 @@ class sampledSurface
         const polyMesh& mesh_;
 
         //- Do we intend to interpolate the information?
-        bool interpolate_;
+        const bool interpolate_;
 
 
     // Demand-driven data
@@ -194,7 +194,8 @@ public:
         sampledSurface
         (
             const word& name,
-            const polyMesh&
+            const polyMesh&,
+            const bool interpolate = false
         );
 
         //- Construct from dictionary
@@ -318,37 +319,37 @@ public:
             const GeometricField<Type, pointPatchField, pointMesh>& pfld
         ) const;
 
-        //- Vol sample field on surface
+        //- Sample field on surface
         virtual tmp<scalarField> sample
         (
             const volScalarField&
         ) const = 0;
 
-        //- Vol sample field on surface
+        //- Sample field on surface
         virtual tmp<vectorField> sample
         (
             const volVectorField&
         ) const = 0;
 
-        //- Vol sample field on surface
+        //- Sample field on surface
         virtual tmp<sphericalTensorField> sample
         (
             const volSphericalTensorField&
         ) const = 0;
 
-        //- Vol sample field on surface
+        //- Sample field on surface
         virtual tmp<symmTensorField> sample
         (
             const volSymmTensorField&
         ) const = 0;
 
-        //- Vol sample field on surface
+        //- Sample field on surface
         virtual tmp<tensorField> sample
         (
             const volTensorField&
         ) const = 0;
 
-         //- Surface sample field on surface
+        //- Surface sample field on surface
         virtual tmp<scalarField> sample
         (
             const surfaceScalarField&
@@ -383,6 +384,7 @@ public:
         (
             const interpolation<scalar>&
         ) const = 0;
+
 
         //- Interpolate field on surface
         virtual tmp<vectorField> interpolate
@@ -431,6 +433,8 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
 bool CML::sampledSurface::checkFieldSize(const Field<Type>& field) const

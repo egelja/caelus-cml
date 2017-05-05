@@ -1,0 +1,640 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application oodles;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+// endTime         0.001;
+endTime         0.1;
+
+deltaT          1e-05;
+
+writeControl    timeStep;
+
+writeInterval   10;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression compressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+functions
+{
+    distance {
+        // should  be the distance from the inlet. Currently wrong
+        type solveLaplacianPDE;
+        outputControl   timeStep;
+        outputInterval  1;
+
+        solveAt startup;
+        fieldName distance;
+        steady true;
+        //        steady false;
+        //        rho "1" [0 -2 1 0 0 0 0];
+        lambda "1" [0 0 0 0 0 0 0];
+        source "0" [0 -1 0 0 0 0 0];
+    }
+    heat {
+        // result doubtful
+        type solveLaplacianPDE;
+        outputControl   timeStep;
+        outputInterval  1;
+
+        solveAt timestep;
+        fieldName heat;
+        steady false;
+        //        steady true;
+        rho "1" [0 -3 1 0 0 0 0];
+        lambda "1e-2*mag(U)" [0 -1 0 0 0 0 0];
+        source "0" [0 -3 0 1 0 0 0];
+        sourceImplicit "0" [0 -3 0 0 0 0 0];
+    }
+    residualTime {
+        // result doubtful
+        type solveTransportPDE;
+
+        outputControl   timeStep;
+        outputInterval  1;
+
+        solveAt write;
+        fieldName residualTime;
+        steady true;
+
+        diffusion "1e-4" [0 2 -1 0 0 0 0];
+        source "1" [0 0 0 0 0 0 0];
+
+        phi "phi" [0 3 -1 0 0];
+    }
+    residualTimeRelax {
+        $residualTime;
+        fieldName residualTimeRelax;
+    }
+    residualTimeRelaxFinal {
+        $residualTime;
+        fieldName residualTimeRelaxFinal;
+        relaxLastIteration true;
+    }
+    scalarTransport {
+        // result doubtful
+        type solveTransportPDE;
+
+        outputControl   timeStep;
+        outputInterval  1;
+
+        solveAt timestep;
+        fieldName scalar;
+        steady false;
+
+        rho "1" [0 0 0 0 0 0 0];
+        diffusion "1e-4" [0 2 -1 0 0 0 0];
+        source "0" [0 0 -1 0 0 0 0];
+
+        phi "phi" [0 3 -1 0 0];
+    }
+    probes1
+    {
+        // Type of functionObject
+        type probes;
+
+        outputControl   timeStep;
+        outputInterval  1;
+
+        // Where to load it from (if not already in solver)
+        functionObjectLibs ("libsampling.so");
+
+        // Locations to be probed. runTime modifiable!
+        probeLocations
+        (
+            (0.0254 0.0253 0.0)
+            (0.0508 0.0253 0.0)
+            (0.0762 0.0253 0.0)
+            (0.1016 0.0253 0.0)
+            (0.1270 0.0253 0.0)
+            (0.1524 0.0253 0.0)
+            (0.1778 0.0253 0.0)
+        );
+
+        // Fields to be probed. runTime modifiable!
+        fields
+        (
+            p
+        );
+    }
+
+    fieldAverage1
+    {
+        // Type of functionObject
+        type fieldAverage;
+
+        // Where to load it from (if not already in solver)
+        functionObjectLibs ("libfieldFunctionObjects.so");
+
+        outputControl   outputTime;
+
+        // Fields to be  averaged - runTime modifiable
+        fields
+        (
+            U
+            {
+                mean            on;
+                prime2Mean      on;
+                base            time;
+            }
+            p
+            {
+                mean            on;
+                prime2Mean      on;
+                base            time;
+            }
+        );
+    }
+    kineticEnergyExpression
+    {
+        type expressionField;
+        outputControl timeStep;
+        outputInterval 1;
+        fieldName kineticEnergy;
+        expression "U&U+k";
+        autowrite true;
+    }
+    kineticOut
+    {
+        type patchExpression;
+        accumulations (
+            min max sum average sumMag weightedAverage
+        );
+        patches (
+            inlet
+            outlet
+            upperWall
+            lowerWall
+        );
+        expression "U&U+k*phi";
+        verbose true;
+    }
+    sumKineticOut
+    {
+        type patchExpression;
+        accumulations (
+            sum
+        );
+        patches (
+            inlet
+            outlet
+        );
+        expression "mag(Sf())*(U&U+k*phi)";
+        verbose true;
+    }
+    deltaP
+    {
+        type patchExpression;
+        accumulations (
+            min max average
+        );
+        patches (
+            inlet
+        );
+        variables "pOut{outlet}=average(p);";
+        //        variables "pOut{}=average(p);";
+        //        variables "pOut{patch'outlet/nowhere}=average(p);";
+        expression "p-pOut";
+        verbose true;
+    }
+    deltaPAverage
+    {
+        type patchExpression;
+        accumulations (
+            min max average
+        );
+        patches (
+            outlet
+        );
+        variables "pAverage{}=sum(p*vol())/sum(vol());";
+        expression "pAverage-p";
+        verbose true;
+    }
+    massFlowSimple
+    {
+        // Just for checking whether tha othr massflow is correct
+        type patchMassFlow;
+        patches (
+            inlet
+            outlet
+        );
+        verbose true;
+    }
+    massFlowSwak
+    {
+        type patchExpression;
+        verbose true;
+        accumulations (
+            sum
+        );
+        patches (
+            inlet
+            outlet
+        );
+        expression "phi";
+    }
+    massFlowSwak2
+    {
+        type patchExpression;
+        verbose true;
+        accumulations (
+            sum
+        );
+        patches (
+            inlet
+            outlet
+        );
+        expression "U&Sf()";
+    }
+    fixdedK
+    {
+        type manipulateField;
+        expression "1e-5";
+        mask "mag(pos().y)<0.01 && pos().x>0.1 && pos().x<0.12";
+        fieldName k;
+        outputControl timeStep;
+        outputInterval 1;
+        writeManipulated true;
+    }
+    clearKinetic
+    {
+        type clearExpressionField;
+        outputControl timeStep;
+        outputInterval 1;
+        fieldName kineticEnergy;
+    }
+    velocityChangeInTime
+    {
+        type swakExpression;
+        valueType internalField;
+        expression "mag(ddt(foo))";
+        accumulations (
+            average
+            max
+        );
+        aliases {
+            foo U;
+            bar p;
+        }
+        verbose true;
+    }
+    pressureStatistics
+    {
+        type swakExpression;
+        valueType internalField;
+        expression "p";
+        accumulations (
+            average
+            weightedAverage
+            min
+            max
+            median
+            weightedMedian
+            quantile0.5
+            weightedQuantile0.5
+            range0.9
+            weightedRange0.9
+            weightedQuantile.05
+            weightedQuantile.95
+            smaller100
+            bigger100
+            weightedSmaller100
+            weightedBigger100
+            smaller0
+            weightedSmaller0
+            integrate
+            weightedSum
+            weightedQuantile0
+            weightedQuantile1
+            // weightedQuantile-1
+            // weightedQuantile2e1
+            smaller-1e3
+            bigger-1e3
+            smaller1e3
+            bigger1e3
+        );
+        verbose true;
+    }
+    velocityStatistics
+    {
+        $pressureStatistics;
+
+        expression "U";
+    }
+    pressureChangeInTime
+    {
+        type swakExpression;
+        valueType internalField;
+        expression "mag(ddt(p))";
+        accumulations (
+            average
+            max
+        );
+        verbose true;
+    }
+    pressureChangeInTime2
+    {
+        type swakExpression;
+        valueType internalField;
+        expression "mag((p-oldTime(p))/deltaT())";
+        accumulations (
+            average
+            max
+        );
+        verbose true;
+    }
+    pressureChangeInTimeCenter
+    {
+        type swakExpression;
+        valueType cellZone;
+        zoneName center;
+        expression "mag((p-oldTime(p))/deltaT())";
+        accumulations (
+            average
+            max
+        );
+        verbose true;
+    }
+    pressureChangeInTimeWall
+    {
+        type patchExpression;
+        valueType patch;
+        patches (
+            lowerWall
+            upperWall
+        );
+        expression "mag((p-oldTime(p))/deltaT())";
+        accumulations (
+            average
+            max
+        );
+        verbose true;
+    }
+    RField
+    {
+        type expressionField;
+        autowrite true;
+        outputControl timeStep;
+        outputInterval 1;
+        fieldName turbulenceR;
+        expression "turb_R()";
+    }
+    RMax
+    {
+        type volumeMinMax;
+        verbose true;
+        fields (
+            turbulenceR
+        );
+    }
+    stopHighU {
+        type writeAndEndFieldRange;
+        fieldName U;
+        minimum -10;
+        maximum 40;
+    }
+    stopIfNoChange {
+        type writeAndEndSwakExpression;
+        valueType internalField;
+        logicalExpression "mag(diffU)<threshold";
+        logicalAccumulation and;
+        variables (
+            "diffU=U-oldU;"
+            "threshold=0.1;"
+            "oldU=U;"
+        );
+        storedVariables (
+            {
+                name oldU;
+                initialValue "vector(1e5,1e5,1e5)";
+            }
+        );
+    }
+    // stopIfPython {
+    //     type writeAndEndPython;
+    //     conditionCode "return runTime>4e-5";
+    // }
+    onlySerial {
+      type executeIfParallelSerial;
+      readDuringConstruction true;
+      runIfParallel false;
+      functions {
+       doWithPython {
+        type executeIfFunctionObjectPresent;
+        functions {
+            doWithNumpy {
+                type executeIfPython;
+                functions {
+                    getVelocity {
+                        type calculateGlobalVariables;
+                        outputControl timeStep;
+                        outputInterval 1;
+                        valueType internalField;
+                        toGlobalNamespace pythonStatistics;
+                        variables (
+                            "UField=U;"
+                            "RField=turbulenceR;"
+                            "volume=vol();"
+                        );
+                        toGlobalVariables (
+                            UField
+                            RField
+                            volume
+                        );
+                    }
+                    calculateDistribution {
+                        type pythonIntegration;
+                        startCode "componentSum=0";
+                        endCode "";
+                        executeFile "$FOAM_CASE/system/calcHistogram.py";
+                        writeFile "$FOAM_CASE/system/calcHistogram2D.py";
+                        swakToPythonNamespaces (
+                            pythonStatistics
+                        );
+                        pythonToSwakNamespace fromNumpy;
+                        pythonToSwakVariables (
+                            componentSum
+                        );
+                    }
+                    writeComonentField {
+                        type expressionField;
+                        autowrite true;
+                        outputControl outputTime;
+                        fieldName componentSumFromPython;
+                        expression "componentSum";
+                        globalScopes (
+                            fromNumpy
+                        );
+                    }
+                }
+                readDuringConstruction true;
+                conditionFile "$FOAM_CASE/system/checkForNumpy.py";
+                initCode "";
+            }
+        }
+        readDuringConstruction true;
+        functionObjectName executeIfPython;
+       }
+      }
+    }
+    // showRegistered {
+    //     type listRegisteredObjects;
+    // }
+    distributionOfP {
+        type fieldDistribution;
+        //        outputInterval  10;
+        outputControlMode outputTime;
+        writeTimeline true;
+        writeDistribution true;
+        fieldName p;
+        distributionBinWidth 0.1;
+        distributionMaxBinNr 5000;
+        verbose true;
+    }
+    distributionOfU {
+        $distributionOfP;
+
+        fieldName U;
+        distributionBinWidth 0.01;
+    }
+    distributionOfPhi {
+        $distributionOfP;
+
+        fieldName phi;
+        distributionBinWidth 1e-7;
+    }
+    wallDistributionP {
+        type patchFieldDistribution;
+        outputControlMode deltaT;
+        outputDeltaT 5e-5;
+        writeTimeline true;
+        writeDistribution true;
+        fieldName p;
+        patchNames (
+            ".+Wall"
+        );
+        distributionBinWidth 0.1;
+        distributionMaxBinNr 100;
+        verbose true;
+    }
+    averagePressureDistributionX {
+        type swakExpressionAverageDistribution;
+        verbose true;
+        outputControlMode outputTime;
+        valueType internalField;
+        expression "p";
+        weight "vol()";
+        mask "1";
+        abscissa "pos().x";
+        binNumber 50;
+        valueIfZero -100;
+    }
+    averagePressureDistributionXTooFine {
+        $averagePressureDistributionX;
+        binNumber 200;
+    }
+    averagePressureDistribution {
+        $averagePressureDistributionX;
+        abscissa "pos()";
+        valueIfZero (-100 -100 -100);
+    }
+    averageVelocityDistributionX {
+        $averagePressureDistributionX;
+        expression "U";
+    }
+    averageVelocityDistribution {
+        $averageVelocityDistributionX;
+        abscissa "pos()";
+        valueIfZero (-100 -100 -100);
+    }
+    lowVelocityLogK {
+        type swakExpressionDistribution;
+        outputControlMode deltaT;
+        outputDeltaT 5e-5;
+        writeTimeline true;
+        writeDistribution true;
+        verbose true;
+        expression "log(max(k,1e-12))";
+        mask "mag(U)<1";
+        weight "vol()";
+        valueType internalField;
+        distributionBinWidth 0.1;
+    }
+    centerVelocityDistribution {
+        $lowVelocityLogK;
+        valueType cellZone;
+        zoneName center;
+        expression "U";
+        mask "true";
+        weight "vol()";
+        distributionBinWidth 0.1;
+    }
+    weightDifferCenterVelocityDistribution {
+        $centerVelocityDistribution;
+        weight "vol()*vector(mag(pos().x),mag(pos().y),mag(pos().z))";
+    }
+    noDistributionOutput {
+        $lowVelocityLogK;
+        expression "mag(U)";
+        mask "false";
+        weight "vol()";
+        distributionBinWidth 0.1;
+    }
+    wallVelocityGradient {
+        type patchExpressionDistribution;
+        outputControlMode deltaT;
+        outputDeltaT 5e-5;
+        writeTimeline true;
+        writeDistribution true;
+        verbose true;
+        expression "snGrad(U)";
+        distributionBinWidth 1;
+        distributionMaxBinNr 100;
+        patchNames (
+            ".+Wall"
+        );
+    }
+};
+
+libs (
+    "libOpenFOAM.so"
+    "libgroovyBC.so"
+    "libgroovyStandardBCs.so"
+    "libsimpleFunctionObjects.so"
+    "libsimpleSwakFunctionObjects.so"
+    "libswakFunctionObjects.so"
+    "libswakPythonIntegration.so"
+    "libswakTransportTurbFunctionPlugin.so"
+) ;
+
+// ************************************************************************* //

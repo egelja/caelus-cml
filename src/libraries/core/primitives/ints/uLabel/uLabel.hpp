@@ -142,6 +142,8 @@ public:
         static const uLabel one;
         static const uLabel max;
         static const uLabel min;
+        static const uLabel rootMax;
+        static const uLabel rootMin;
 
 
     // Constructors

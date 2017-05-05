@@ -444,6 +444,10 @@ public:
         // regIOobject implementation
 
             //- Write using given format, version and compression
+            //  Do not use the triSurfaceMesh::writeObject since it
+            //  would filter out empty regions. These need to be preserved
+            //  in case we want to make decisions based on the number of
+            //  regions.
             virtual bool writeObject
             (
                 IOstream::streamFormat fmt,
@@ -522,8 +526,7 @@ void CML::distributedTriSurfaceMesh::distributeFields
 
     HashTable<const DimensionedSurfField*> fields
     (
-        objectRegistry::lookupClass
-        <DimensionedSurfField >()
+        objectRegistry::lookupClass<DimensionedSurfField>()
     );
 
     for

@@ -34,6 +34,7 @@
             // calculated from the relaxed pressure
             U -= rAU*fvc::reconstruct((buoyancyPhi + p_rghEqn.flux())/rAUf);
             U.correctBoundaryConditions();
+            fvOptions.correct(U);
         }
     }
 

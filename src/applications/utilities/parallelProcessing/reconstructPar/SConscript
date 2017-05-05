@@ -33,9 +33,8 @@ reconstructParEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if reconstructParEnv['WHICH_OS'] == "windows":
   reconstructParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian','libreconstruct']
-else:
-  lib_link = ['genericPatchFields','lagrangian','reconstruct']
+
+lib_link = ['genericPatchFields','lagrangian','reconstruct']
   
 reconstructParEnv.Append(LIBS = lib_link)
 

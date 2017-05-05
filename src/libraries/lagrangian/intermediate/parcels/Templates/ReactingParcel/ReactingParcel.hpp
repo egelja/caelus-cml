@@ -796,7 +796,7 @@ void CML::ReactingParcel<ParcelType>::cellValueSourceCorrection
 
     this->Tc_ += td.cloud().hsTrans()[cellI]/(this->Cpc_*massCellNew);
 
-    if (debug && (this->Tc_ < td.cloud().constProps().TMin()))
+    if (this->Tc_ < td.cloud().constProps().TMin())
     {
         if (debug)
         {
@@ -1055,7 +1055,7 @@ void CML::ReactingParcel<ParcelType>::calc
 
         if (td.cloud().solution().coupled())
         {
-            scalar dm = np0*mass1;
+            scalar dm = np0*mass0;
 
             // Absorb parcel into carrier phase
             forAll(Y_, i)
@@ -1069,7 +1069,7 @@ void CML::ReactingParcel<ParcelType>::calc
             }
             td.cloud().UTrans()[cellI] += dm*U0;
 
-            td.cloud().phaseChange().addToPhaseChangeMass(dm);
+            td.cloud().phaseChange().addToPhaseChangeMass(np0*mass1);
         }
 
         return;

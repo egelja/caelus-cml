@@ -25,7 +25,7 @@ Description
 
 SourceFiles
     GAMGInterfaceField.cpp
-    newAmgInterfaceField.cpp
+    GAMGInterfaceFieldNew.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -76,12 +76,25 @@ public:
         (
             autoPtr,
             GAMGInterfaceField,
-            lduInterface,
+            lduInterfaceField,
             (
                 const GAMGInterface& GAMGCp,
                 const lduInterfaceField& fineInterface
             ),
             (GAMGCp, fineInterface)
+        );
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            GAMGInterfaceField,
+            lduInterface,
+            (
+                const GAMGInterface& GAMGCp,
+                const bool doTransform,
+                const int rank
+            ),
+            (GAMGCp, doTransform, rank)
         );
 
 
@@ -93,6 +106,15 @@ public:
         (
             const GAMGInterface& GAMGCp,
             const lduInterfaceField& fineInterface
+        );
+
+        //- Return a pointer to a new interface created on freestore given
+        //  the fine interface
+        static autoPtr<GAMGInterfaceField> New
+        (
+            const GAMGInterface& GAMGCp,
+            const bool doTransform,
+            const int rank
         );
 
 
@@ -108,6 +130,30 @@ public:
             lduInterfaceField(GAMGCp),
             interface_(GAMGCp)
         {}
+
+        //- Construct from GAMG interface and fine level interface field
+        GAMGInterfaceField
+        (
+            const GAMGInterface& GAMGCp,
+            const bool doTransform,
+            const int rank
+        )
+        :
+            lduInterfaceField(GAMGCp),
+            interface_(GAMGCp)
+        {}
+
+
+    // Member Functions
+
+        // Access
+
+            //- Return interface
+            const GAMGInterface& interface() const
+            {
+                return interface_;
+            }
+
 };
 
 

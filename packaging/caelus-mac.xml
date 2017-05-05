@@ -1,0 +1,578 @@
+<project>
+    <shortName>Caelus</shortName>
+    <fullName>Caelus 5.04</fullName>
+    <version>5.04</version>
+    <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
+    <readmeFile>../README.md</readmeFile>
+    <licenseFile>../doc/gpl-3.0.txt</licenseFile>
+    <htmlLicenseFile>../doc/gpl-3.0-standalone.html</htmlLicenseFile>
+    <wrapLicenseFileText>0</wrapLicenseFileText>
+    <leftImage>images/caelus_logo_black.png</leftImage>
+    <logoImage>images/ACCM_logo.png</logoImage>
+    <splashImage>images/caelus_splash2.png</splashImage>
+    <componentList>
+        <component>
+            <name>caelus</name>
+            <description>Caelus Source and Build Tools</description>
+            <canBeEdited>0</canBeEdited>
+            <detailedDescription>Full source code for Calues libraries, solvers and utilites and associated build tools</detailedDescription>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>caelus</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}</destination>
+                    <name>caelusfiles</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../etc</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../doc</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>../README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../BuildCaelus.py</origin>
+                        </distributionFile>
+                        <distributionDirectory>
+                            <origin>../lib</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>src</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/src</destination>
+                    <name>srcfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../src/applications</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../src/libraries</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>tutorials</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/tutorials</destination>
+                    <name>tutorialsfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../tutorials/heatTransfer</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/incompressible</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/multiphase</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>external</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external</destination>
+                    <name>externalfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <allowWildcards>1</allowWildcards>
+                            <origin>../external/metis-5.1.0</origin>
+                            <onPackingFilterList>
+                                <fileNameFilter logic="does_not_match" pattern="*.dylib"/>
+                            </onPackingFilterList>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/scons-local-2.3.4</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <allowWildcards>1</allowWildcards>
+                            <origin>../external/scotch-5.1.12</origin>
+                            <onPackingFilterList>
+                                <fileNameFilter logic="does_not_match" pattern="*.dylib"/>
+                            </onPackingFilterList>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/swak</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>external Mac</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/darwin</destination>
+                    <name>extmac</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/darwin/openmpi-1.6.5</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+        </component>
+        <component>
+            <name>binaries</name>
+            <description>Binaries</description>
+            <canBeEdited>1</canBeEdited>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>platforms Mac</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/platforms</destination>
+                    <name>pltformmac</name>
+                    <platforms>osx</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../platforms/darwin64clang++DPOpt</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>metislib</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/metis-5.1.0/lib</destination>
+                    <name>metislib</name>
+                    <platforms>osx</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>../external/metis-5.1.0/lib/libmetis.dylib</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>scotchlib</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-5.1.12/lib</destination>
+                    <name>scotchlib</name>
+                    <platforms>osx</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>../external/scotch-5.1.12/lib/libscotch.dylib</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../external/scotch-5.1.12/lib/libscotcherr.dylib</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../external/scotch-5.1.12/lib/libscotcherrexit.dylib</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <shouldPackRuleList>
+                <compareText>
+                    <logic>equals</logic>
+                    <text>"${buildtype}"</text>
+                    <value>"full"</value>
+                </compareText>
+            </shouldPackRuleList>
+        </component>
+    </componentList>
+    <preBuildActionList>
+        <setInstallerVariable>
+            <name>buildtype</name>
+            <value>full</value>
+        </setInstallerVariable>
+    </preBuildActionList>
+    <postBuildActionList>
+        <createTimeStamp>
+            <format>%Y%m%d%H%M%S</format>
+            <variable>timestamp</variable>
+        </createTimeStamp>
+        <setInstallerVariable>
+            <name>tempDir</name>
+            <value>/tmp/.tmpDir${timestamp}</value>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>dmgName</name>
+            <value>${installbuilder_install_root}/output/${project.installerFilename}.dmg</value>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>tempDmgFile</name>
+            <value>${tempDir}/tmp.dmg</value>
+        </setInstallerVariable>
+        <deleteFile>
+            <path>${installbuilder_install_root}/output/${project.installerFilename}.dmg</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${tempDir}</path>
+        </deleteFile>
+        <createDirectory>
+            <path>${tempDir}/output</path>
+        </createDirectory>
+        <copyFile>
+            <destination>${tempDir}/output</destination>
+            <origin>${installbuilder_install_root}/output/${project.installerFilename}</origin>
+        </copyFile>
+        <runProgram>
+            <program>hdiutil</program>
+            <programArguments>create -srcfolder "${tempDir}/output" -volname "${project.fullName}" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW "${tempDmgFile}"</programArguments>
+        </runProgram>
+        <runProgram>
+            <program>hdiutil</program>
+            <programArguments>convert "${tempDmgFile}" -format UDZO -imagekey zlib-level=9 -o "${dmgName}"</programArguments>
+        </runProgram>
+        <deleteFile>
+            <path>${tempDir}</path>
+        </deleteFile>
+    </postBuildActionList>
+    <preInstallationActionList>
+        <throwError>
+            <text>Python not found in your PATH. Please correct before installing.</text>
+            <ruleList>
+                <programTest>
+                    <condition>is_not_in_path</condition>
+                    <name>python</name>
+                </programTest>
+            </ruleList>
+        </throwError>
+    </preInstallationActionList>
+    <postInstallationActionList>
+        <if>
+            <actionList>
+                <setInstallerVariable>
+                    <name>new_pythonpath</name>
+                    <value>${installdir}/${product_shortName}-${product_version}/lib/python2.6:${env(PYTHONPATH)}</value>
+                </setInstallerVariable>
+            </actionList>
+            <conditionRuleList>
+                <compareTextLength>
+                    <length>0</length>
+                    <logic>does_not_equal</logic>
+                    <text>${env(PYTHONPATH)}</text>
+                </compareTextLength>
+            </conditionRuleList>
+            <elseActionList>
+                <setInstallerVariable>
+                    <name>new_pythonpath</name>
+                    <value>${installdir}/${product_shortName}-${product_version}/lib/python2.6</value>
+                </setInstallerVariable>
+            </elseActionList>
+        </if>
+        <setEnvironmentVariable>
+            <name>PYTHONPATH</name>
+            <value>${new_pythonpath}</value>
+        </setEnvironmentVariable>
+        <writeFile>
+            <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/conf.py</path>
+            <progressText>Writing Caelus Configuration file</progressText>
+            <text>PROJECT_NAME = '${project.shortName}'
+PROJECT_VER = '${project.version}'
+PRECISION_OPTION = 'DP'
+COMPILER_ARCH = '64'
+BUILD_TYPE = 'Opt'
+INT_TYPE = '32'
+FLEXXX = 'flex'
+
+# Mac setup
+PROJECT_DIR = "${installdir}"
+COMPILER = 'clang++'
+#MPI_BIN = '${mpibinpath}'
+#MPI_INC = '${mpiincpath}'
+#MPI_LIB = '${mpilibpath}'
+#MPI_LIB_NAME = '${mpilibname}'
+#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-5.1.12'
+#METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
+COLOUR_BUILD = '${colourbuildlin}'</text>
+            <ruleList>
+                <isFalse>
+                    <value>${mpi}</value>
+                </isFalse>
+                <platformTest>
+                    <type>osx</type>
+                </platformTest>
+            </ruleList>
+        </writeFile>
+        <writeFile>
+            <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/conf.py</path>
+            <progressText>Writing Caelus Configuration file</progressText>
+            <text>PROJECT_NAME = '${project.shortName}'
+PROJECT_VER = '${project.version}'
+PRECISION_OPTION = 'DP'
+COMPILER_ARCH = '64'
+BUILD_TYPE = 'Opt'
+INT_TYPE = '32'
+FLEXXX = 'flex'
+
+# Mac setup
+PROJECT_DIR = "${installdir}"
+COMPILER = 'clang++'
+MPI_BIN = "${mpibinpath}"
+MPI_INC = "${mpiincpath}"
+MPI_LIB = "${mpilibpath}"
+MPI_LIB_NAME = "${mpilibname}"
+#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-5.1.12'
+#METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
+COLOUR_BUILD = '${colourbuildlin}'</text>
+            <ruleList>
+                <isTrue>
+                    <value>${mpi}</value>
+                </isTrue>
+                <platformTest>
+                    <type>osx</type>
+                </platformTest>
+            </ruleList>
+        </writeFile>
+        <writeFile>
+            <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/dummy.py</path>
+            <progressText>Writing Caelus Configuration file</progressText>
+            <text>
+import sys
+import os
+
+sys.path.append('${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6')
+
+from Caelus.write_env import *
+</text>
+        </writeFile>
+        <addEnvironmentVariable>
+            <name>PYTHONPATH</name>
+            <scope>user</scope>
+            <value>${installdir}/${product_shortName}-${product_version}/lib/python2.6:$PYTHONPATH</value>
+        </addEnvironmentVariable>
+        <addDirectoryToPath>
+            <insertAt>end</insertAt>
+            <path>${installdir}/${product_shortName}-${product_version}/external/scons-local-2.3.4</path>
+        </addDirectoryToPath>
+        <addDirectoryToPath>
+            <insertAt>end</insertAt>
+            <path>${installdir}/${product_shortName}-${product_version}/bin</path>
+        </addDirectoryToPath>
+        <runProgram>
+            <program>python</program>
+            <programArguments>"${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/dummy.py"</programArguments>
+        </runProgram>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/dummy.py</path>
+        </deleteFile>
+    </postInstallationActionList>
+    <preUninstallationActionList>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>${installdir}/${product_shortName}-${product_version}/lib/python2.6</pattern>
+            <substitution></substitution>
+            <text>${env(PYTHONPATH)}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>^:</pattern>
+            <substitution></substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>:$</pattern>
+            <substitution></substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <setInstallerVariableFromRegEx>
+            <name>new_pythonpath</name>
+            <pattern>::</pattern>
+            <substitution>:</substitution>
+            <text>${new_pythonpath}</text>
+        </setInstallerVariableFromRegEx>
+        <if>
+            <actionList>
+                <setEnvironmentVariable>
+                    <name>PYTHONPATH</name>
+                    <value>${new_pythonpath}</value>
+                </setEnvironmentVariable>
+            </actionList>
+            <conditionRuleList>
+                <compareTextLength>
+                    <length>0</length>
+                    <logic>does_not_equal</logic>
+                    <text>${new_pythonpath}</text>
+                </compareTextLength>
+            </conditionRuleList>
+            <elseActionList>
+                <deleteEnvironmentVariable>
+                    <name>PYTHONPATH</name>
+                    <scope>system</scope>
+                </deleteEnvironmentVariable>
+            </elseActionList>
+        </if>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/etc</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/external/</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/lib</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/platforms</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/src</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/.build</path>
+        </deleteFile>
+    </preUninstallationActionList>
+    <postUninstallationActionList>
+        <removeDirectoryFromPath>
+            <path>${installdir}/${product_shortName}-${product_version}/external/scons-local-2.3.4</path>
+        </removeDirectoryFromPath>
+        <removeDirectoryFromPath>
+            <path>${installdir}/${product_shortName}-${product_version}/bin</path>
+        </removeDirectoryFromPath>
+    </postUninstallationActionList>
+    <allowComponentSelection>1</allowComponentSelection>
+    <compressionAlgorithm>lzma-ultra</compressionAlgorithm>
+    <disableSplashScreen>1</disableSplashScreen>
+    <enableRollback>0</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <height>410</height>
+    <licenseFileEncoding>ascii</licenseFileEncoding>
+    <osxApplicationBundleIdentifier>com.caelus-cml.caelus</osxApplicationBundleIdentifier>
+    <osxSigningIdentity>Developer ID Application: APPLIED CCM PTY. LTD.</osxSigningIdentity>
+    <projectSchemaVersion>1.0</projectSchemaVersion>
+    <readmeFileEncoding>ascii</readmeFileEncoding>
+    <saveRelativePaths>1</saveRelativePaths>
+    <slideShowTiming>10</slideShowTiming>
+    <splashScreenDelay>5</splashScreenDelay>
+    <startMenuGroupName>${project.fullName}</startMenuGroupName>
+    <uninstallerDirectory>${installdir}/${product_shortName}-${product_version}</uninstallerDirectory>
+    <vendor>Applied CCM</vendor>
+    <windows64bitMode>1</windows64bitMode>
+    <finalPageActionList>
+        <launchBrowser>
+            <progressText>Register on Caelus website</progressText>
+            <url>http://www.caelus-cml.com/registration</url>
+        </launchBrowser>
+    </finalPageActionList>
+    <parameterList>
+        <directoryParameter>
+            <name>installdir</name>
+            <description>Installer.Parameter.installdir.description</description>
+            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <value>${platform_install_prefix}/${project.shortName}/</value>
+            <default>${platform_install_prefix}/${project.shortName}</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <cliOptionName>prefix</cliOptionName>
+            <mustBeWritable>1</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>40</width>
+        </directoryParameter>
+        <booleanParameterGroup>
+            <name>mpi</name>
+            <title>MPI Configuration</title>
+            <description>Set MPI configuration options</description>
+            <explanation></explanation>
+            <value>0</value>
+            <default>0</default>
+            <parameterList>
+                <parameterGroup>
+                    <name>MPIConfig</name>
+                    <title>MPI Configuration</title>
+                    <explanation></explanation>
+                    <value></value>
+                    <default></default>
+                    <parameterList>
+                        <directoryParameter>
+                            <name>mpibinpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI bin directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/bin</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/bin</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>mpibinpath</cliOptionName>
+                            <cliOptionText>Path to MPI bin directory</cliOptionText>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>0</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <directoryParameter>
+                            <name>mpiincpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI include directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/include</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/include</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>mpiincpath</cliOptionName>
+                            <cliOptionText>Path to MPI include directory</cliOptionText>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>0</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <directoryParameter>
+                            <name>mpilibpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI lib directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/lib</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/darwin/openmpi-1.6.5/lib</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>mpilibpath</cliOptionName>
+                            <cliOptionText>Path to MPI library directory</cliOptionText>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>0</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <stringParameter>
+                            <name>mpilibname</name>
+                            <description></description>
+                            <explanation>Please specifc the MPI library name</explanation>
+                            <value>mpi</value>
+                            <default>mpi</default>
+                            <allowEmptyValue>1</allowEmptyValue>
+                            <cliOptionName>mpilibname</cliOptionName>
+                            <cliOptionText>MPI library name</cliOptionText>
+                            <width>40</width>
+                        </stringParameter>
+                    </parameterList>
+                </parameterGroup>
+            </parameterList>
+        </booleanParameterGroup>
+        <booleanParameter>
+            <name>colourbuildlin</name>
+            <description></description>
+            <explanation>Choose if you want compiling to use colourful output</explanation>
+            <value>False</value>
+            <default>False</default>
+            <cliOptionName>colourbuild</cliOptionName>
+            <cliOptionText>Controls whether building will show colours</cliOptionText>
+        </booleanParameter>
+    </parameterList>
+    <platformOptionsList>
+        <platformOptions>
+            <platform>windows</platform>
+        </platformOptions>
+        <platformOptions>
+            <platform>linux-x64</platform>
+        </platformOptions>
+        <platformOptions>
+            <platform>osx</platform>
+        </platformOptions>
+    </platformOptionsList>
+    <slideShowImageList>
+        <slideShowImage>
+            <path>images/ACCM_logo_slide.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/CAELUS_logo_slide.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/city.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/sub.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/cylinder.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/sphere.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/g2995.png</path>
+        </slideShowImage>
+    </slideShowImageList>
+</project>
+

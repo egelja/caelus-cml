@@ -84,4 +84,4 @@ fvMotionEnv.Install(install_dir, libfvMotionSolvers)
 
 if (fvMotionEnv['WHICH_OS'] == "darwin"):
 
-  fvMotionEnv.Append(SHLINKFLAGS ='-install_name @' + fvMotionEnv['LIB_PLATFORM_INSTALL'] + '/libfvMotionSolvers.dylib')
+  fvMotionEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libfvMotionSolvers.dylib')

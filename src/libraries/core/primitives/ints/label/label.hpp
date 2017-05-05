@@ -119,6 +119,11 @@ namespace CML
         return readLongLong(is);
     }
 
+    inline bool readLabel(const char* buf, label& s)
+    {
+        return readLongLong(buf, s);
+    }
+
 } // End namespace CML
 
 #endif
@@ -161,6 +166,8 @@ public:
         static const label one;
         static const label min;
         static const label max;
+        static const label rootMin;
+        static const label rootMax;
 
 
     // Constructors
@@ -219,6 +226,8 @@ public:
         static const int one;
         static const int min;
         static const int max;
+        static const int rootMax;
+        static const int rootMin;
 
 
     // Constructors

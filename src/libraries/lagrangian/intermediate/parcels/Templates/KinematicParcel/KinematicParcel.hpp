@@ -1552,7 +1552,11 @@ bool CML::KinematicParcel<ParcelType>::move
     const scalar maxCo = td.cloud().solution().maxCo();
 
     scalar tEnd = (1.0 - p.stepFraction())*trackTime;
-    const scalar dtMax = tEnd;
+    scalar dtMax = trackTime;
+    if (td.cloud().solution().transient())
+    {
+        dtMax *= maxCo;
+    }
 
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
     {
@@ -1907,6 +1911,7 @@ void CML::KinematicParcel<ParcelType>::readFields(CloudType& c)
         p.U_ = U[i];
         p.f_ = f[i];
         p.angularMomentum_ = angularMomentum[i];
+        p.torque_ = torque[i];
         p.rho_ = rho[i];
         p.age_ = age[i];
         p.tTurb_ = tTurb[i];

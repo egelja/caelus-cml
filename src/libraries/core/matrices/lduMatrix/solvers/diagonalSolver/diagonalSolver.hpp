@@ -33,14 +33,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class diagonalSolver Declaration
-\*---------------------------------------------------------------------------*/
 
 class diagonalSolver
 :
@@ -84,19 +78,14 @@ public:
         //- Solve the matrix with this solver
         lduMatrix::solverPerformance solve
         (
-            scalarField& psi,
-            const scalarField& source,
+            scalarField& x,
+            const scalarField& b,
             const direction cmpt=0
         ) const;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

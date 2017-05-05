@@ -25,15 +25,6 @@ License
 #include "mathematicalConstants.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-namespace CML
-{
-    defineTypeNameAndDebug(cylindricalCS, 0);
-    addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, dictionary);
-    addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origRotation);
-}
-
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -102,6 +93,23 @@ CML::cylindricalCS::cylindricalCS
 :
     coordinateSystem(name, dict),
     inDegrees_(dict.lookupOrDefault("degrees", true))
+{}
+
+
+CML::cylindricalCS::cylindricalCS
+(
+    const objectRegistry& obr,
+    const dictionary& dict
+)
+:
+    coordinateSystem(obr, dict),
+    inDegrees_(dict.lookupOrDefault("degrees", true))
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::cylindricalCS::~cylindricalCS()
 {}
 
 

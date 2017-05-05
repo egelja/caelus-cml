@@ -40,11 +40,9 @@ simpleSolEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if simpleSolEnv['WHICH_OS'] == "windows":
   simpleSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
-  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-  'libincompressibleTransportModels', 'libfvOptions', 'libsampling']
-else:
-  lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
-  'incompressibleTransportModels', 'fvOptions', 'sampling']
+
+lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
+'incompressibleTransportModels', 'fvOptions', 'sampling']
   
 simpleSolEnv.Append(LIBS = lib_link)
 

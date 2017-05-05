@@ -41,10 +41,18 @@ CML::fieldCoordinateSystemTransform::fieldCoordinateSystemTransform
     obr_(obr),
     active_(true),
     fieldSet_(),
-    coordSys_(dict, obr)
+    coordSys_(obr, dict)
 {
     // Check if the available mesh is an fvMesh otherise deactivate
-    if (!isA<fvMesh>(obr_))
+    if (isA<fvMesh>(obr_))
+    {
+        read(dict);
+
+        Info<< type() << " " << name_ << ":" << nl
+            << "   Applying transformation from global Cartesian to local "
+            << coordSys_ << nl << endl;
+    }
+    else
     {
         active_ = false;
         WarningIn
@@ -56,15 +64,9 @@ CML::fieldCoordinateSystemTransform::fieldCoordinateSystemTransform
                 "const dictionary&, "
                 "const bool"
             ")"
-        )   << "No fvMesh available, deactivating."
+        )   << "No fvMesh available, deactivating " << name_
             << endl;
     }
-
-    read(dict);
-
-    Info<< type() << ":" << nl
-        << "   Applying transformation from global Cartesian to local "
-        << coordSys_ << nl << endl;
 }
 
 

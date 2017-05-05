@@ -23,7 +23,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.hpp"
-#include "timeSelector.hpp"
 #include "Time.hpp"
 #include "fvMesh.hpp"
 #include "topoSetSource.hpp"
@@ -328,15 +327,10 @@ public:
 
 int main(int argc, char *argv[])
 {
-    timeSelector::addOptions();
-
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
-
-    // Get times list
-    instantList timeDirs = timeSelector::select0(runTime, args);
-
-#   include "createMesh.hpp"
+    #include "addRegionOption.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
+    #include "createNamedMesh.hpp"
 
     Info<< "Reading setFieldsDict\n" << endl;
 

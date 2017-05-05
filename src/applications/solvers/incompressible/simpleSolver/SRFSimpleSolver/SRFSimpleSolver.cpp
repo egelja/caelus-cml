@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,7 +32,7 @@ Description
 #include "RASModel.hpp"
 #include "SRFModel.hpp"
 #include "simpleControl.hpp"
-#include "IObasicSourceList.hpp"
+#include "fvIOoptionList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
     #include "createTime.hpp"
     #include "createMesh.hpp"
     #include "createFields.hpp"
+    #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);
@@ -79,14 +81,7 @@ int main(int argc, char *argv[])
             runTime.write();
         }
 
-#ifdef _WIN32
-        Info<< "ExecutionTime = " << static_cast<scalar>(runTime.elapsedCpuTime()) << " s"
-            << "  ClockTime = " << static_cast<scalar>(runTime.elapsedClockTime()) << " s"
-#else
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-#endif
-            << nl << endl;
+        #include "reportTimeStats.hpp"
     }
 
     Info<< "End\n" << endl;
@@ -95,4 +90,3 @@ int main(int argc, char *argv[])
 }
 
 
-// ************************************************************************* //

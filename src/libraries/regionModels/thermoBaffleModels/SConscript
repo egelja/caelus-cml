@@ -69,4 +69,4 @@ thermoBaffEnv.Install(install_dir, libthermoBaffleModels)
 
 if (thermoBaffEnv['WHICH_OS'] == "darwin"):
 
-  thermoBaffEnv.Append(SHLINKFLAGS ='-install_name @' + thermoBaffEnv['LIB_PLATFORM_INSTALL'] + '/libthermoBaffleModels.dylib')
+  thermoBaffEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libthermoBaffleModels.dylib')

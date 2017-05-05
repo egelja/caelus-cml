@@ -50,6 +50,8 @@ class orientedSurface
 :
     public triSurface
 {
+public:
+
     // Data types
 
         //- Enumeration listing whether face needs to be flipped.
@@ -60,6 +62,7 @@ class orientedSurface
             NOFLIP
         };
 
+private:
 
     // Private Member Functions
 
@@ -97,7 +100,7 @@ class orientedSurface
         );
 
         //- Given nearest point and face check orientation to nearest face
-        //  and flip if nessecary (only marked in flipState) and propagate.
+        //  and flip if necessary (only marked in flipState) and propagate.
         static void propagateOrientation
         (
             const triSurface&,
@@ -127,6 +130,8 @@ class orientedSurface
         //- Make surface surface has consistent orientation across connected
         //  triangles.
         static bool orientConsistent(triSurface& s);
+
+
 public:
 
     ClassName("orientedSurface");

@@ -27,6 +27,7 @@ License
 #include "searchableSurfaces.hpp"
 #include "orientedSurface.hpp"
 #include "pointIndexHit.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -114,7 +115,7 @@ void CML::shellSurfaces::setAndCheckLevels
         {
             Info<< "    level " << levels_[shellI][j]
                 << " for all cells within " << distances_[shellI][j]
-                << " meter." << endl;
+                << " metre." << endl;
         }
     }
     else
@@ -325,7 +326,7 @@ void CML::shellSurfaces::findHigherLevel
         candidateMap.setSize(candidateI);
 
         // Do the expensive nearest test only for the candidate points.
-        List<searchableSurface::volumeType> volType;
+        List<volumeType> volType;
         allGeometry_[shells_[shellI]].getVolumeType(candidates, volType);
 
         forAll(volType, i)
@@ -336,11 +337,11 @@ void CML::shellSurfaces::findHigherLevel
             (
                 (
                     modes_[shellI] == INSIDE
-                 && volType[i] == searchableSurface::INSIDE
+                 && volType[i] == volumeType::INSIDE
                 )
              || (
                     modes_[shellI] == OUTSIDE
-                 && volType[i] == searchableSurface::OUTSIDE
+                 && volType[i] == volumeType::OUTSIDE
                 )
             )
             {

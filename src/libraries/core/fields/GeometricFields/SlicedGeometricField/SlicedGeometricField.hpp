@@ -77,7 +77,8 @@ private:
         (
             const Mesh& mesh,
             const Field<Type>& completeField,
-            const bool preserveCouples
+            const bool preserveCouples,
+            const bool preserveProcessorOnly = false
         );
 
         //- Slice the given field and a create a PtrList of SlicedPatchField
@@ -127,7 +128,8 @@ public:
             const dimensionSet&,
             const Field<Type>& completeIField,
             const Field<Type>& completeBField,
-            const bool preserveCouples=true
+            const bool preserveCouples=true,
+            const bool preserveProcessorOnly = false
         );
 
         //- Construct from GeometricField. Reuses full internal and
@@ -204,6 +206,8 @@ public:
 
 } // End namespace CML
 
+#include "processorFvPatch.hpp"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template
@@ -219,7 +223,8 @@ slicedBoundaryField
 (
     const Mesh& mesh,
     const Field<Type>& completeField,
-    const bool preserveCouples
+    const bool preserveCouples,
+    const bool preserveProcessorOnly
 )
 {
     tmp<FieldField<PatchField, Type> > tbf
@@ -231,7 +236,15 @@ slicedBoundaryField
 
     forAll(mesh.boundary(), patchi)
     {
-        if (preserveCouples && mesh.boundary()[patchi].coupled())
+        if
+        (
+            preserveCouples
+         && mesh.boundary()[patchi].coupled()
+         && (
+               !preserveProcessorOnly
+            || isA<processorFvPatch>(mesh.boundary()[patchi])
+            )
+        )
         {
             // For coupled patched construct the correct patch field type
             bf.set
@@ -422,7 +435,8 @@ SlicedGeometricField
     const dimensionSet& ds,
     const Field<Type>& completeIField,
     const Field<Type>& completeBField,
-    const bool preserveCouples
+    const bool preserveCouples,
+    const bool preserveProcessorOnly
 )
 :
     GeometricField<Type, PatchField, GeoMesh>
@@ -431,7 +445,13 @@ SlicedGeometricField
         mesh,
         ds,
         Field<Type>(),
-        slicedBoundaryField(mesh, completeBField, preserveCouples)
+        slicedBoundaryField
+        (
+            mesh,
+            completeBField,
+            preserveCouples,
+            preserveProcessorOnly
+        )
     )
 {
     // Set the internalField to the slice of the complete field

@@ -31,7 +31,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::isoSurface, 0);
+namespace CML
+{
+defineTypeNameAndDebug(isoSurface, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -68,18 +71,24 @@ CML::PackedBoolList CML::isoSurface::collocatedFaces
     // Initialise to false
     PackedBoolList collocated(pp.size());
 
-    if (isA<processorPolyPatch>(pp) && collocatedPatch(pp))
+    if (isA<processorPolyPatch>(pp))
     {
-        forAll(pp, i)
+        if (collocatedPatch(pp))
         {
-            collocated[i] = 1u;
+            forAll(pp, i)
+            {
+                collocated[i] = 1u;
+            }
         }
     }
-    else if (isA<cyclicPolyPatch>(pp) && collocatedPatch(pp))
+    else if (isA<cyclicPolyPatch>(pp))
     {
-        forAll(pp, i)
+        if (collocatedPatch(pp))
         {
-            collocated[i] = 1u;
+            forAll(pp, i)
+            {
+                collocated[i] = 1u;
+            }
         }
     }
     else
@@ -1064,7 +1073,7 @@ CML::triSurface CML::isoSurface::stitchTriPoints
             {
                 // There is no (higher numbered) duplicate triangle
                 label newTriI = newToOldTri.size();
-                newToOldTri.append(triI);
+                newToOldTri.append(triMap[triI]);
                 tris[newTriI] = tris[triI];
             }
         }

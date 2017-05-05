@@ -85,15 +85,11 @@ protected:
         //- Interpolation scheme to use for nearestcell mode
         word interpolationScheme_;
 
-        mutable autoPtr<interpolation<Type> > interpolator_;
-
 
     // Protected Member Functions
 
         //- Field to sample. Either on my or nbr mesh
 		const GeometricField<Type, fvPatchField, volMesh>& sampleField() const;
-        //- Access the interpolation method
-        const interpolation<Type>& interpolator() const;
 
 
 public:
@@ -357,22 +353,6 @@ mappedFixedValueFvPatchField<Type>::sampleField() const
 
 
 template<class Type>
-const interpolation<Type>&
-mappedFixedValueFvPatchField<Type>::interpolator() const
-{
-    if (!interpolator_.valid())
-    {
-        interpolator_ = interpolation<Type>::New
-        (
-            interpolationScheme_,
-            sampleField()
-        );
-    }
-    return interpolator_();
-}
-
-
-template<class Type>
 void mappedFixedValueFvPatchField<Type>::updateCoeffs()
 {
     if (this->updated())
@@ -417,6 +397,14 @@ void mappedFixedValueFvPatchField<Type>::updateCoeffs()
                     samples
                 );
 
+                autoPtr<interpolation<Type> > interpolator
+                (
+                    interpolation<Type>::New
+                    (
+                        interpolationScheme_,
+                        sampleField()
+                    )
+                );
                 const interpolation<Type>& interp = interpolator();
 
                 newValues.setSize(samples.size(), pTraits<Type>::max);

@@ -548,7 +548,7 @@ CML::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
-    changing_(false),
+    topoChanging_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -824,7 +824,7 @@ CML::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
-    changing_(false),
+    topoChanging_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {

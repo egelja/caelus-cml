@@ -26,28 +26,12 @@ License
 
 CML::autoPtr<CML::coordinateSystem> CML::coordinateSystem::New
 (
-    const word& name,
+    const objectRegistry& obr,
     const dictionary& dict
 )
 {
-    if (debug)
-    {
-        Pout<< "coordinateSystem::New(const word&, const dictionary&) : "
-            << "constructing coordinateSystem"
-            << endl;
-    }
-
-    // construct base class directly, also allow 'cartesian' as an alias
-    word coordType(typeName_());
-    if
-    (
-        !dict.readIfPresent("type", coordType)
-     || coordType == typeName_()
-     || coordType == "cartesian"
-    )
-    {
-        return autoPtr<coordinateSystem>(new coordinateSystem(name, dict));
-    }
+    const dictionary& coordDict = dict.subDict(typeName_());
+    word coordType = coordDict.lookup("type");
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(coordType);
@@ -56,54 +40,27 @@ CML::autoPtr<CML::coordinateSystem> CML::coordinateSystem::New
     {
         FatalIOErrorIn
         (
-            "coordinateSystem::New(const word&, const dictionary&)",
+            "coordinateSystem::New(const objectRegistry&, const dictionary&)",
             dict
         )   << "Unknown coordinateSystem type "
             << coordType << nl << nl
             << "Valid coordinateSystem types are :" << nl
-            << "[default: " << typeName_() << "]"
             << dictionaryConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
     }
 
-    return autoPtr<coordinateSystem>(cstrIter()(name, dict));
+    return autoPtr<coordinateSystem>(cstrIter()(obr, coordDict));
 }
 
 
 CML::autoPtr<CML::coordinateSystem> CML::coordinateSystem::New
 (
-    const word& coordType,
-    const word& name,
-    const point& origin,
-    const coordinateRotation& cr
+    const dictionary& dict
 )
 {
-    if (debug)
-    {
-        Pout<< "coordinateSystem::New(const word&, const word&, "
-            << "const point&, const coordinateRotation&) : "
-               "constructing coordinateSystem"
-            << endl;
-    }
+    const dictionary& coordDict = dict.subDict(typeName_());
 
-    origRotationConstructorTable::iterator cstrIter =
-        origRotationConstructorTablePtr_->find(coordType);
-
-    if (cstrIter == origRotationConstructorTablePtr_->end())
-    {
-        FatalErrorIn
-        (
-            "coordinateSystem::New(const word&, const word&, "
-            "const point&, const coordinateRotation&) : "
-            "constructing coordinateSystem"
-        )   << "Unknown coordinateSystem type "
-            << coordType << nl << nl
-            << "Valid coordinateSystem types are :" << nl
-            << origRotationConstructorTablePtr_->sortedToc()
-            << exit(FatalError);
-    }
-
-    return autoPtr<coordinateSystem>(cstrIter()(name, origin, cr));
+    return autoPtr<coordinateSystem>(new coordinateSystem(coordDict));
 }
 
 
@@ -115,7 +72,7 @@ CML::autoPtr<CML::coordinateSystem> CML::coordinateSystem::New
     const word name(is);
     const dictionary dict(is);
 
-    return New(name, dict);
+    return autoPtr<coordinateSystem>(new coordinateSystem(name, dict));
 }
 
 

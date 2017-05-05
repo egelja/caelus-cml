@@ -332,7 +332,7 @@ public:
             const scalarField& pointValues,
             const scalar iso,
             const bool regularise,
-            const scalar mergeTol = 1E-6    // fraction of bounding box
+            const scalar mergeTol = 1e-6    // fraction of bounding box
         );
 
 
@@ -353,7 +353,7 @@ public:
 
         //- Interpolates cCoords,pCoords. Takes the original fields
         //  used to create the iso surface.
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > interpolate
         (
             const scalarField& cVals,
@@ -363,7 +363,7 @@ public:
         ) const;
 
         //- Interpolates cCoords,pCoords.
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > interpolate
         (
             const Field<Type>& cCoords,
@@ -375,6 +375,8 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "polyMesh.hpp"
 #include "tetMatcher.hpp"
@@ -843,7 +845,7 @@ void CML::isoSurfaceCell::generateTriPoints
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::isoSurfaceCell::interpolate
 (
@@ -897,7 +899,7 @@ CML::isoSurfaceCell::interpolate
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::isoSurfaceCell::interpolate
 (
@@ -947,7 +949,6 @@ CML::isoSurfaceCell::interpolate
 
     return tvalues;
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

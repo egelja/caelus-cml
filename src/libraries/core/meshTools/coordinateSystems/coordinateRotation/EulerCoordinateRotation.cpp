@@ -35,7 +35,133 @@ namespace CML
         EulerCoordinateRotation,
         dictionary
     );
+    addToRunTimeSelectionTable
+    (
+        coordinateRotation,
+        EulerCoordinateRotation,
+        objectRegistry
+    );
 }
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+CML::vector CML::EulerCoordinateRotation::transform(const vector& st) const
+{
+    return (R_ & st);
+}
+
+
+CML::vector CML::EulerCoordinateRotation::invTransform
+(
+    const vector& st
+) const
+{
+    return (Rtr_ & st);
+}
+
+
+CML::tmp<CML::vectorField> CML::EulerCoordinateRotation::transform
+(
+    const vectorField& st
+) const
+{
+    notImplemented
+    (
+        "tmp<vectorField> CML::EulerCoordinateRotation:: "
+        "transform(const vectorField& st) const"
+    );
+    return tmp<vectorField>(NULL);
+}
+
+
+CML::tmp<CML::vectorField> CML::EulerCoordinateRotation::invTransform
+(
+    const vectorField& st
+) const
+{
+    notImplemented
+    (
+        "tmp<vectorField>  CML::EulerCoordinateRotation::"
+        "invTransform(const vectorField& st) const"
+    );
+    return tmp<vectorField>(NULL);
+}
+
+
+const CML::tensorField& CML::EulerCoordinateRotation::Tr() const
+{
+    notImplemented
+    (
+        "const tensorField& EulerCoordinateRotation::Tr() const"
+    );
+    return *reinterpret_cast<const tensorField*>(0);
+}
+
+
+CML::tmp<CML::tensorField> CML::EulerCoordinateRotation::transformTensor
+(
+    const tensorField& st
+) const
+{
+     notImplemented
+    (
+        "const tensorField& EulerCoordinateRotation::transformTensor() const"
+    );
+    return tmp<tensorField>(NULL);
+}
+
+
+CML::tensor CML::EulerCoordinateRotation::transformTensor
+(
+    const tensor& st
+) const
+{
+    return (R_ & st & Rtr_);
+}
+
+
+CML::tmp<CML::tensorField> CML::EulerCoordinateRotation::transformTensor
+(
+    const tensorField& st,
+    const labelList& cellMap
+) const
+{
+    notImplemented
+    (
+        "tmp<CML::tensorField> EulerCoordinateRotation::transformTensor "
+        " const tensorField& st,"
+        " const labelList& cellMap "
+        ") const"
+    );
+    return tmp<tensorField>(NULL);
+}
+
+
+CML::tmp<CML::symmTensorField> CML::EulerCoordinateRotation::
+transformVector
+(
+    const vectorField& st
+) const
+{
+    tmp<symmTensorField> tfld(new symmTensorField(st.size()));
+    symmTensorField& fld = tfld();
+
+    forAll(fld, i)
+    {
+        fld[i] = transformPrincipal(R_, st[i]);
+    }
+    return tfld;
+}
+
+
+CML::symmTensor CML::EulerCoordinateRotation::transformVector
+(
+    const vector& st
+) const
+{
+    return transformPrincipal(R_, st);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -58,7 +184,7 @@ void CML::EulerCoordinateRotation::calcTransform
         psi   *= constant::mathematical::pi/180.0;
     }
 
-    tensor::operator=
+    R_ =
     (
         tensor
         (
@@ -75,6 +201,8 @@ void CML::EulerCoordinateRotation::calcTransform
             cos(theta)
         )
     );
+
+    Rtr_ = R_.T();
 }
 
 
@@ -82,7 +210,8 @@ void CML::EulerCoordinateRotation::calcTransform
 
 CML::EulerCoordinateRotation::EulerCoordinateRotation()
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {}
 
 
@@ -92,7 +221,8 @@ CML::EulerCoordinateRotation::EulerCoordinateRotation
     const bool inDegrees
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     calcTransform
     (
@@ -112,7 +242,8 @@ CML::EulerCoordinateRotation::EulerCoordinateRotation
     const bool inDegrees
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     calcTransform(phiAngle, thetaAngle, psiAngle, inDegrees);
 }
@@ -123,7 +254,8 @@ CML::EulerCoordinateRotation::EulerCoordinateRotation
     const dictionary& dict
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     vector rotation(dict.lookup("rotation"));
 
@@ -136,5 +268,33 @@ CML::EulerCoordinateRotation::EulerCoordinateRotation
     );
 }
 
+
+CML::EulerCoordinateRotation::EulerCoordinateRotation
+(
+    const dictionary& dict,
+    const objectRegistry&
+)
+:
+    R_(sphericalTensor::I),
+    Rtr_(R_)
+{
+    vector rotation(dict.lookup("rotation"));
+
+    calcTransform
+    (
+        rotation.component(vector::X),
+        rotation.component(vector::Y),
+        rotation.component(vector::Z),
+        dict.lookupOrDefault("degrees", true)
+    );
+}
+
+
+void CML::EulerCoordinateRotation::write(Ostream& os) const
+{
+     os.writeKeyword("e1") << e1() << token::END_STATEMENT << nl;
+     os.writeKeyword("e2") << e2() << token::END_STATEMENT << nl;
+     os.writeKeyword("e3") << e3() << token::END_STATEMENT << nl;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

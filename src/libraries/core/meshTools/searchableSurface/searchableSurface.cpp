@@ -29,22 +29,7 @@ namespace CML
     defineTypeNameAndDebug(searchableSurface, 0);
     defineRunTimeSelectionTable(searchableSurface, dict);
 
-    template<>
-    const char* CML::NamedEnum
-    <
-        CML::searchableSurface::volumeType,
-        4
-    >::names[] =
-    {
-        "unknown",
-        "mixed",
-        "inside",
-        "outside"
-    };
 }
-
-const CML::NamedEnum<CML::searchableSurface::volumeType, 4>
-    CML::searchableSurface::volumeTypeNames;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -89,6 +74,23 @@ CML::searchableSurface::searchableSurface(const IOobject& io)
 
 CML::searchableSurface::~searchableSurface()
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void CML::searchableSurface::findNearest
+(
+    const pointField& sample,
+    const scalarField& nearestDistSqr,
+    List<pointIndexHit>& info,
+    vectorField& normal,
+    labelList& region
+) const
+{
+    findNearest(sample, nearestDistSqr, info);
+    getNormal(info, normal);
+    getRegion(info, region);
+}
 
 
 // ************************************************************************* //

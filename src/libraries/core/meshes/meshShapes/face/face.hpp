@@ -47,6 +47,7 @@ SourceFiles
 #include "faceListFwd.hpp"
 #include "intersection.hpp"
 #include "pointHit.hpp"
+#include "ListListOps.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -380,7 +381,38 @@ public:
 };
 
 
+//- Hash specialization to offset faces in ListListOps::combineOffset
+template<>
+class offsetOp<face>
+{
+
+public:
+
+    inline face operator()
+    (
+        const face& x,
+        const label offset
+    ) const
+    {
+        face result(x.size());
+
+        forAll(x, xI)
+        {
+            result[xI] = x[xI] + offset;
+        }
+        return result;
+    }
+};
+
+
+// Global functions
+
+//- Find the longest edge on a face. Face point labels index into pts.
+label longestEdge(const face& f, const pointField& pts);
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 } // End namespace CML
 

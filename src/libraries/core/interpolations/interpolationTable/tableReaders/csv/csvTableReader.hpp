@@ -99,6 +99,13 @@ public:
         //- Read the table
         virtual void operator()(const fileName&, List<Tuple2<scalar, Type> >&);
 
+        //- Read 2D table
+        virtual void operator()
+        (
+            const fileName&,
+            List<Tuple2<scalar, List<Tuple2<scalar, Type> > > >&
+        );
+
         //- write the remaining parameters
         virtual void write(Ostream& os) const;
 };
@@ -249,6 +256,17 @@ void CML::csvTableReader<Type>::operator()
 
 
 template<class Type>
+void CML::csvTableReader<Type>::operator()
+(
+    const fileName& fName,
+    List<Tuple2<scalar, List<Tuple2<scalar, Type> > > >& data
+)
+{
+    notImplemented("csvTableReader<Type>::operator()");
+}
+
+
+template<class Type>
 void CML::csvTableReader<Type>::write(Ostream& os) const
 {
     tableReader<Type>::write(os);
@@ -257,8 +275,17 @@ void CML::csvTableReader<Type>::write(Ostream& os) const
         << headerLine_ << token::END_STATEMENT << nl;
     os.writeKeyword("timeColumn")
         << timeColumn_ << token::END_STATEMENT << nl;
-    os.writeKeyword("valueColumns")
-        << componentColumns_ << token::END_STATEMENT << nl;
+
+    // Force writing labelList in ascii
+    os.writeKeyword("valueColumns");
+    if (os.format() == IOstream::BINARY)
+    {
+        os.format(IOstream::ASCII);
+        os  << componentColumns_;
+        os.format(IOstream::BINARY);
+    }
+    os  << token::END_STATEMENT << nl;
+
     os.writeKeyword("separator")
         << string(separator_) << token::END_STATEMENT << nl;
 }

@@ -25,6 +25,8 @@ Description
 
     The write() method is used to sample and write files.
 
+SourceFiles
+    sampledSurfaces.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,9 +39,6 @@ Description
 #include "surfaceFieldsFwd.hpp"
 #include "wordReList.hpp"
 #include "IOobjectList.hpp"
-#include "volFields.hpp"
-#include "surfaceFields.hpp"
-#include "ListListOps.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,6 +57,7 @@ class sampledSurfaces
     public PtrList<sampledSurface>
 {
     // Private classes
+
 
         //- Class used for surface merging information
         class mergeInfo
@@ -85,6 +85,7 @@ class sampledSurfaces
         //- Tolerance for merging points (fraction of mesh bounding box)
         static scalar mergeTol_;
 
+
     // Private data
 
         //- Name of this set of surfaces,
@@ -109,6 +110,7 @@ class sampledSurfaces
             //- Interpolation scheme to use
             word interpolationScheme_;
 
+
         // surfaces
 
             //- Information for merging surfaces
@@ -124,7 +126,7 @@ class sampledSurfaces
     // Private Member Functions
 
 
-        // Return number of fields
+        //- Return number of fields
         label classifyFields();
 
         //- Write geometry only
@@ -155,8 +157,7 @@ class sampledSurfaces
         );
 
         //- Sample and write all sampled fields
-        template<class Type>
-        void sampleAndWrite(const IOobjectList&);
+        template<class Type> void sampleAndWrite(const IOobjectList& objects);
 
         //- Disallow default bitwise copy construct and assignment
         sampledSurfaces(const sampledSurfaces&);
@@ -216,6 +217,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Sample and write
         virtual void write();
 
@@ -230,7 +234,6 @@ public:
 
         //- Update for changes of mesh due to readUpdate - expires the surfaces
         virtual void readUpdate(const polyMesh::readUpdateState state);
-
 };
 
 
@@ -238,6 +241,12 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "volFields.hpp"
+#include "surfaceFields.hpp"
+#include "ListListOps.hpp"
+#include "stringListOps.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -323,9 +332,9 @@ void CML::sampledSurfaces::sampleAndWrite
 )
 {
     // interpolator for this field
-    autoPtr< interpolation<Type> > interpolator;
+    autoPtr<interpolation<Type> > interpolatorPtr;
 
-    const word& fieldName   = vField.name();
+    const word& fieldName = vField.name();
     const fileName outputDir = outputPath_/vField.time().timeName();
 
     forAll(*this, surfI)
@@ -336,16 +345,16 @@ void CML::sampledSurfaces::sampleAndWrite
 
         if (s.interpolate())
         {
-            if (interpolator.empty())
+            if (interpolatorPtr.empty())
             {
-                interpolator = interpolation<Type>::New
+                interpolatorPtr = interpolation<Type>::New
                 (
                     interpolationScheme_,
                     vField
                 );
             }
 
-            values = s.interpolate(interpolator());
+            values = s.interpolate(interpolatorPtr());
         }
         else
         {
@@ -355,6 +364,7 @@ void CML::sampledSurfaces::sampleAndWrite
         writeSurface<Type>(values, surfI, fieldName, outputDir);
     }
 }
+
 
 
 template<class Type>
@@ -369,58 +379,64 @@ void CML::sampledSurfaces::sampleAndWrite
     forAll(*this, surfI)
     {
         const sampledSurface& s = operator[](surfI);
-        Field<Type> values = s.sample(sField);
+        Field<Type> values(s.sample(sField));
         writeSurface<Type>(values, surfI, fieldName, outputDir);
     }
 }
 
 
 template<class GeoField>
-void CML::sampledSurfaces::sampleAndWrite(const IOobjectList& allObjects)
+void CML::sampledSurfaces::sampleAndWrite(const IOobjectList& objects)
 {
-    forAll (fieldSelection_, fieldI)
+    wordList names;
+    if (loadFromFiles_)
     {
-        const wordRe field = fieldSelection_[fieldI];
-        IOobject* fieldIOPtr = allObjects.lookup(field);
+        IOobjectList fieldObjects(objects.lookupClass(GeoField::typeName));
+        names = fieldObjects.names();
+    }
+    else
+    {
+        names = mesh_.thisDb().names<GeoField>();
+    }
 
-        if
-        (
-            fieldIOPtr != NULL
-          && fieldIOPtr->headerClassName() == GeoField::typeName
-        )
+    labelList nameIDs(findStrings(fieldSelection_, names));
+
+    wordHashSet fieldNames(wordList(names, nameIDs));
+
+    forAllConstIter(wordHashSet, fieldNames, iter)
+    {
+        const word& fieldName = iter.key();
+
+        if ((Pstream::master()) && verbose_)
         {
-            if (Pstream::master() && verbose_)
-            {
-                Pout<< "sampleAndWrite: " << field << endl;
-            }
+            Pout<< "sampleAndWrite: " << fieldName << endl;
+        }
 
-            if (loadFromFiles_)
-            {
-                const GeoField geoField
+        if (loadFromFiles_)
+        {
+            const GeoField fld
+            (
+                IOobject
                 (
-                    IOobject
-                    (
-                        field,
-                        mesh_.time().timeName(),
-                        mesh_,
-                        IOobject::MUST_READ
-                    ),
-                    mesh_
-                );
+                    fieldName,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::MUST_READ
+                ),
+                mesh_
+            );
 
-                sampleAndWrite(geoField);
-            }
-            else
-            {
-                sampleAndWrite
-                (
-                    mesh_.thisDb().lookupObject<GeoField>(field)
-                );
-            }
+            sampleAndWrite(fld);
+        }
+        else
+        {
+            sampleAndWrite
+            (
+                mesh_.thisDb().lookupObject<GeoField>(fieldName)
+            );
         }
     }
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

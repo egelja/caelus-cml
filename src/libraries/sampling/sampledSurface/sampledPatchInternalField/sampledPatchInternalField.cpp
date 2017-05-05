@@ -200,6 +200,7 @@ CML::tmp<CML::vectorField> CML::sampledPatchInternalField::interpolate
     return interpolateField(interpolator);
 }
 
+
 CML::tmp<CML::sphericalTensorField>
 CML::sampledPatchInternalField::interpolate
 (

@@ -166,13 +166,6 @@ public:
             //- Flag for whether the absorption/emission is for a grey gas
             virtual bool isGrey() const;
 
-            //- Add radiative intensity for ray i
-            virtual tmp<volScalarField> addIntensity
-            (
-                const label rayI,
-                const volScalarField& ILambda
-            ) const;
-
             //- Correct absorption coefficients
             virtual void correct
             (

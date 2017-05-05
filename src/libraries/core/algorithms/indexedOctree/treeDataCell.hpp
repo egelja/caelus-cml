@@ -34,6 +34,7 @@ SourceFiles
 
 #include "polyMesh.hpp"
 #include "treeBoundBoxList.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -75,6 +76,56 @@ class treeDataCell
         void update();
 
 public:
+
+
+    class findNearestOp
+    {
+        const indexedOctree<treeDataCell>& tree_;
+
+    public:
+
+        findNearestOp(const indexedOctree<treeDataCell>& tree);
+
+        void operator()
+        (
+            const labelUList& indices,
+            const point& sample,
+
+            scalar& nearestDistSqr,
+            label& minIndex,
+            point& nearestPoint
+        ) const;
+
+        void operator()
+        (
+            const labelUList& indices,
+            const linePointRef& ln,
+
+            treeBoundBox& tightest,
+            label& minIndex,
+            point& linePoint,
+            point& nearestPoint
+        ) const;
+    };
+
+
+    class findIntersectOp
+    {
+        const indexedOctree<treeDataCell>& tree_;
+
+    public:
+
+        findIntersectOp(const indexedOctree<treeDataCell>& tree);
+
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
 
     // Declare name of the class and its debug switch
     ClassName("treeDataCell");
@@ -142,7 +193,7 @@ public:
 
             //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
             //  Only makes sense for closed surfaces.
-            label getVolumeType
+            volumeType getVolumeType
             (
                 const indexedOctree<treeDataCell>&,
                 const point&
@@ -153,7 +204,7 @@ public:
                     "treeDataCell::getVolumeType"
                     "(const indexedOctree<treeDataCell>&, const point&)"
                 );
-                return -1;
+                return volumeType::UNKNOWN;
             }
 
             //- Does (bb of) shape at index overlap bb
@@ -169,49 +220,6 @@ public:
                 const label index,
                 const point& sample
             ) const;
-
-            //- Calculates nearest (to sample) point in shape.
-            //  Returns actual point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const point& sample,
-
-                scalar& nearestDistSqr,
-                label& nearestIndex,
-                point& nearestPoint
-            ) const;
-
-            //- Calculates nearest (to line) point in shape.
-            //  Returns point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const linePointRef& ln,
-
-                treeBoundBox& tightest,
-                label& minIndex,
-                point& linePoint,
-                point& nearestPoint
-            ) const
-            {
-                notImplemented
-                (
-                    "treeDataCell::findNearest"
-                    "(const labelUList&, const linePointRef&, ..)"
-                );
-            }
-
-            //- Calculate intersection of shape with ray. Sets result
-            //  accordingly
-            bool intersects
-            (
-                const label index,
-                const point& start,
-                const point& end,
-                point& result
-            ) const;
-
 };
 
 

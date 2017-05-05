@@ -645,22 +645,20 @@ void CML::refinementHistory::countProc
         // Increment parent if whole splitCell moves to same processor
         if (splitCellNum[index] == 8)
         {
-            Pout<< "Moving " << splitCellNum[index]
-                << " cells originating from cell " << index
-                << " from processor " << Pstream::myProcNo()
-                << " to processor " << splitCellProc[index]
-                << endl;
+            if (debug)
+            {
+                Pout<< "Moving " << splitCellNum[index]
+                    << " cells originating from cell " << index
+                    << " from processor " << Pstream::myProcNo()
+                    << " to processor " << splitCellProc[index]
+                    << endl;
+            }
 
             label parent = splitCells_[index].parent_;
 
             if (parent >= 0)
             {
-                string oldPrefix = Pout.prefix();
-                Pout.prefix() = "  " + oldPrefix;
-
                 countProc(parent, newProcNo, splitCellProc, splitCellNum);
-
-                Pout.prefix() = oldPrefix;
             }
         }
     }
@@ -920,7 +918,10 @@ void CML::refinementHistory::distribute(const mapDistributePolyMesh& map)
 
         forAll(newVisibleCells, i)
         {
-            visibleCells_[constructMap[i]] = newVisibleCells[i] + offset;
+            if (newVisibleCells[i] >= 0)
+            {
+                visibleCells_[constructMap[i]] = newVisibleCells[i] + offset;
+            }
         }
     }
     splitCells_.shrink();

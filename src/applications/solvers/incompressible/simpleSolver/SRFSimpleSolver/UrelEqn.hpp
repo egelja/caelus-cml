@@ -6,11 +6,13 @@
       + turbulence->divDevReff(Urel)
       + SRF->Su()
      ==
-        sources(Urel)
+        fvOptions(Urel)
     );
 
     UrelEqn().relax();
 
-    sources.constrain(UrelEqn());
+    fvOptions.constrain(UrelEqn());
 
     solve(UrelEqn() == -fvc::grad(p));
+
+    fvOptions.correct(Urel);

@@ -38,13 +38,10 @@ wallHeatFluxEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if wallHeatFluxEnv['WHICH_OS'] == "windows":
   wallHeatFluxEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u compressibleRASModelsLoad')
-  lib_link = ['libgenericPatchFields','libcompressibleRASModels',
-  'libreactionThermophysicalModels','libspecie','libbasicThermophysicalModels',
-  'libcompressibleTurbulenceModel']
-else:
-  lib_link = ['genericPatchFields','compressibleRASModels',
-  'reactionThermophysicalModels','specie','basicThermophysicalModels',
-  'compressibleTurbulenceModel']
+
+lib_link = ['genericPatchFields','compressibleRASModels',
+'reactionThermophysicalModels','specie','basicThermophysicalModels',
+'compressibleTurbulenceModel']
 
 wallHeatFluxEnv.Append(LIBS = lib_link)
 

@@ -22,7 +22,27 @@ Class
     CML::cyclicAMIFvPatchField
 
 Description
-    CML::cyclicAMIFvPatchField
+    This boundary condition enforces a cyclic condition between a pair of
+    boundaries, whereby communication between the patches is performed using
+    an arbitrary mesh interface (AMI) interpolation.
+
+    \heading Patch usage
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            cyclicAMI;
+    }
+    \endverbatim
+
+Note
+    The outer boundary of the patch pairs must be similar, i.e. if the owner
+    patch is transformed to the neighbour patch, the outer perimiter of each
+    patch should be identical (or very similar).
+
+SeeAlso
+    CML::AMIInterpolation
 
 
 \*---------------------------------------------------------------------------*/
@@ -324,21 +344,7 @@ CML::cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField
 template<class Type>
 bool CML::cyclicAMIFvPatchField<Type>::coupled() const
 {
-    if
-    (
-        Pstream::parRun()
-     || (
-            this->cyclicAMIPatch_.size()
-         && this->cyclicAMIPatch_.cyclicAMIPatch().neighbPatch().size()
-        )
-    )
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return cyclicAMIPatch_.coupled();
 }
 
 
@@ -352,7 +358,15 @@ CML::cyclicAMIFvPatchField<Type>::patchNeighbourField() const
 
     Field<Type> pnf(iField, nbrFaceCells);
 
-    tmp<Field<Type> > tpnf(new Field<Type>(cyclicAMIPatch_.interpolate(pnf)));
+    tmp<Field<Type> > tpnf;
+    if (cyclicAMIPatch_.applyLowWeightCorrection())
+    {
+        tpnf = cyclicAMIPatch_.interpolate(pnf, this->patchInternalField()());
+    }
+    else
+    {
+        tpnf = cyclicAMIPatch_.interpolate(pnf);
+    }
 
     if (doTransform())
     {
@@ -399,7 +413,15 @@ void CML::cyclicAMIFvPatchField<Type>::updateInterfaceMatrix
     // Transform according to the transformation tensors
     transformCoupleField(pnf, cmpt);
 
-    pnf = cyclicAMIPatch_.interpolate(pnf);
+    if (cyclicAMIPatch_.applyLowWeightCorrection())
+    {
+        scalarField pif(psiInternal, cyclicAMIPatch_.faceCells());
+        pnf = cyclicAMIPatch_.interpolate(pnf, pif);
+    }
+    else
+    {
+        pnf = cyclicAMIPatch_.interpolate(pnf);
+    }
 
     // Multiply the field by coefficients and add into the result
     const labelUList& faceCells = cyclicAMIPatch_.faceCells();

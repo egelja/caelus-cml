@@ -69,4 +69,4 @@ edgeMeshEnv.Install(install_dir, libedgeMesh)
 
 if (edgeMeshEnv['WHICH_OS'] == "darwin"):
 
-  edgeMeshEnv.Append(SHLINKFLAGS ='-install_name @' + edgeMeshEnv['LIB_PLATFORM_INSTALL'] + '/libedgeMesh.dylib')
+  edgeMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libedgeMesh.dylib')

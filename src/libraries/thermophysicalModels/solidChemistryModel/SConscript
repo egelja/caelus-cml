@@ -65,4 +65,4 @@ solidChemEnv.Install(install_dir, libsolidChemistryModel)
 
 if (solidChemEnv['WHICH_OS'] == "darwin"):
 
-  solidChemEnv.Append(SHLINKFLAGS ='-install_name @' + solidChemEnv['LIB_PLATFORM_INSTALL'] + '/libsolidChemistryModel.dylib')
+  solidChemEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidChemistryModel.dylib')

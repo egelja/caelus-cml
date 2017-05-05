@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +22,18 @@ Class
     CML::vanLeerLimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    vanLeer differencing scheme based on r obtained from the LimiterFunc
-    class.
+    Van Leer symmetric limiter function.
 
     Used in conjunction with the template class LimitedScheme.
 
 SourceFiles
     vanLeer.cpp
+
+References
+    [1] "Towards the ulitmate conservative difference scheme II. Monotonicity 
+         and Conservation Combined in Second Order Scheme", B. Van Leer,
+         J. Comp. Phys. 14 (4), pp 361-370, 1974
+        
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,14 +42,8 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class vanLeerLimiter Declaration
-\*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
 class vanLeerLimiter
@@ -77,13 +76,7 @@ public:
     }
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

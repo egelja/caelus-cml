@@ -95,6 +95,7 @@ for (dirpath, dirnames, filenames) in os.walk(path):
 #          filename.endswith('.C') or filename.endswith('.cpp') or 
 #          filename.endswith('.cxx') or
           filename.endswith('.h') or 
+          filename.endswith('.hh') or 
           filename.endswith('.H') or filename.endswith('.hpp') or  
           filename.endswith('.hxx') ):
         source = os.path.join(dirpath, filename)

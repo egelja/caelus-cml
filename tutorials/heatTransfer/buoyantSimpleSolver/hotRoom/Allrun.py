@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 4.10
+# Caelus 5.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -14,38 +14,40 @@ import shutil
 
 # Code name and version
 code = 'Caelus'
-version = 4.10
+version = 5.04
 
 # Starting up the meshing and solving
 print "**********************************"
 print "Starting %s %.2f simulation" % (code, version)
 print "**********************************"
 
+if sys.platform == 'win32':
+   pltfrm = True
+else:
+   pltfrm = False
+
 # Cleaning up the case
-os.system('CaelusCleanCase.py')
-os.system('CaelusClearPolyMesh.py')
+os.system('caelus-cleanCase.py')
+os.system('caelus-clearPolyMesh.py')
+
+# Copy of T field
+shutil.copy2('0/T.org', '0/T')
 
 # Executing BlockMesh utility
 print "Executing blockMesh"
-logfile = open('blockMesh.log', 'w')
-run = subprocess.Popen(['blockMesh'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'blockMesh'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing setFields
 print "Executing setFields"
-logfile = open('setFields.log', 'w')
-run = subprocess.Popen(['setFields'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'setFields'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing buoyantSimpleSolver
 print "Executing buoyantSimpleSolver"
-logfile = open('buoyantSimpleSolver.log', 'w')
-run = subprocess.Popen(['buoyantSimpleSolver'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'buoyantSimpleSolver'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 

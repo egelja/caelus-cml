@@ -146,7 +146,7 @@ public:
                     (-rAB + rA - rB)
                    *(-rAB - rA + rB)
                    *(-rAB + rA + rB)
-                   *( rAB + rA + rA)
+                   *( rAB + rA + rB)
                 );
         }
 

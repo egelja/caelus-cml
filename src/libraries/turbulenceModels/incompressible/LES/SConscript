@@ -69,4 +69,4 @@ turbInLESEnv.Install(install_dir, libincompressibleLESModels)
 
 if (turbInLESEnv['WHICH_OS'] == "darwin"):
 
-  turbInLESEnv.Append(SHLINKFLAGS ='-install_name @' + turbInLESEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleLESModels.dylib')
+  turbInLESEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleLESModels.dylib')

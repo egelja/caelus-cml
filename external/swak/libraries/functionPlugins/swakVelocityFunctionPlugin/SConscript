@@ -1,0 +1,66 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+swakVelEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = swakVelEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+swakVelEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../../swakParsers/lnInclude',
+src + '/sampling/lnInclude'
+]
+	
+swakVelEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+swakVelEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['swakParsers']
+
+swakVelEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_swakVel = Split("""
+  courantIncompressiblePluginFunction.cpp
+  courantCompressiblePluginFunction.cpp
+  """)
+
+src_files = src_files_swakVel
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libswakVels = swakVelEnv.SharedLibrary(target = 'libswakVelocityFunctionPlugin',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = swakVelEnv['LIB_PLATFORM_INSTALL']
+swakVelEnv.Alias('install', install_dir)
+swakVelEnv.Install(install_dir, libswakVels)
+
+if (swakVelEnv['WHICH_OS'] == "darwin"):
+
+  swakVelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakVelocityFunctionPlugin.dylib')

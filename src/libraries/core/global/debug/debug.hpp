@@ -43,7 +43,7 @@ class dictionary;
 namespace debug
 {
     //- The central control dictionary.
-    //  Located in ~/.CAELUS/VERSION or $WM_PROJECT_DIR/etc
+    //  Located in ~/.CAELUS/VERSION or $CAELUS_PROJECT_DIR/etc
     //  \sa CML::findEtcFile()
     dictionary& controlDict();
 

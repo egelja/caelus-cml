@@ -63,10 +63,11 @@ public:
             const label size,
             const label start,
             const label index,
-            const polyBoundaryMesh& bm
+            const polyBoundaryMesh& bm,
+            const word& patchType
         )
         :
-            cyclicPolyPatch(name, size, start, index, bm)
+            cyclicPolyPatch(name, size, start, index, bm, patchType)
         {}
 
         //- Construct from dictionary
@@ -75,10 +76,11 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyBoundaryMesh& bm
+            const polyBoundaryMesh& bm,
+            const word& patchType
         )
         :
-            cyclicPolyPatch(name, dict, index, bm)
+            cyclicPolyPatch(name, dict, index, bm, patchType)
         {}
 
         //- Construct as copy, resetting the boundary mesh

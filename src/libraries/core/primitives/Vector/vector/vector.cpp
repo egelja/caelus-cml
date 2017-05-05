@@ -49,6 +49,12 @@ const vector vector::max(VGREAT, VGREAT, VGREAT);
 template<>
 const vector vector::min(-VGREAT, -VGREAT, -VGREAT);
 
+template<>
+const vector vector::rootMax(ROOTVGREAT, ROOTVGREAT, ROOTVGREAT);
+
+template<>
+const vector vector::rootMin(-ROOTVGREAT, -ROOTVGREAT, -ROOTVGREAT);
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML

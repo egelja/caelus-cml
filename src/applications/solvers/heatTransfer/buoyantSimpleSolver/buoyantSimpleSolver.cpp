@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +19,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    buoyantSimpleFoam
+    buoyantSimpleSolver
 
 Description
     Steady-state solver for buoyant, turbulent flow of compressible fluids
@@ -31,8 +32,6 @@ Description
 #include "fixedGradientFvPatchFields.hpp"
 #include "simpleControl.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 int main(int argc, char *argv[])
 {
     #include "setRootCase.hpp"
@@ -43,8 +42,6 @@ int main(int argc, char *argv[])
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);
-
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
 
@@ -63,14 +60,7 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-#ifdef _WIN32
-        Info<< "ExecutionTime = " << static_cast<scalar>(runTime.elapsedCpuTime()) << " s"
-            << "  ClockTime = " << static_cast<scalar>(runTime.elapsedClockTime()) << " s"
-#else
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-#endif
-            << nl << endl;
+        #include "reportTimeStats.hpp"
     }
 
     Info<< "End\n" << endl;
@@ -79,4 +69,4 @@ int main(int argc, char *argv[])
 }
 
 
-// ************************************************************************* //
+

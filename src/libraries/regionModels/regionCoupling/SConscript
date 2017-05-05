@@ -76,4 +76,4 @@ regCoupEnv.Install(install_dir, libregionCoupling)
 
 if (regCoupEnv['WHICH_OS'] == "darwin"):
 
-  regCoupEnv.Append(SHLINKFLAGS ='-install_name @' + regCoupEnv['LIB_PLATFORM_INSTALL'] + '/libregionCoupling.dylib')
+  regCoupEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libregionCoupling.dylib')

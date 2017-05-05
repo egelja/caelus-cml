@@ -108,7 +108,7 @@ public:
         (
             const IOobject& io,
             const point& origin,
-            const point& span
+            const vector& span
         );
 
         //- Construct from dictionary (used by searchableSurface)
@@ -117,6 +117,7 @@ public:
             const IOobject& io,
             const dictionary& dict
         );
+
 
     //- Destructor
     virtual ~searchablePlate();
@@ -140,21 +141,21 @@ public:
 
         //- Get representative set of element coordinates
         //  Usually the element centres (should be of length size()).
-        virtual pointField coordinates() const
-        {
-            return pointField(1, origin_);
-        }
+        virtual tmp<pointField> coordinates() const;
+
+        //- Get bounding spheres (centre and radius squared), one per element.
+        //  Any point on element is guaranteed to be inside.
+        virtual void boundingSpheres
+        (
+            pointField& centres,
+            scalarField& radiusSqr
+        ) const;
+
+        //- Get the points that define the surface.
+        virtual tmp<pointField> points() const;
 
         //- Does any part of the surface overlap the supplied bound box?
-        virtual bool overlaps(const boundBox& bb) const
-        {
-            notImplemented
-            (
-                "searchablePlate::overlaps(const boundBox&) const"
-            );
-
-            return false;
-        }
+        virtual bool overlaps(const boundBox& bb) const;
 
 
         // Multiple point queries.
@@ -218,7 +219,6 @@ public:
                 notImplemented("searchablePlate::writeData(Ostream&) const");
                 return false;
             }
-
 };
 
 

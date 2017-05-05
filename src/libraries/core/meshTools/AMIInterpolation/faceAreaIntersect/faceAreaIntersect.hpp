@@ -37,6 +37,7 @@ SourceFiles
 #include "FixedList.hpp"
 #include "plane.hpp"
 #include "face.hpp"
+#include "NamedEnum.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,6 +59,8 @@ public:
         tmFan,
         tmMesh
     };
+
+    static const NamedEnum<triangulationMode, 2> triangulationModeNames_;
 
 
 private:

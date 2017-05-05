@@ -17,8 +17,7 @@ execFlowFOEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this executable
 #===============================================================================
-lib_inc = [src + '/postProcessing/postCalc',
-src + '/transportModels',
+lib_inc = [src + '/transportModels',
 src + '/transportModels/incompressible/lnInclude',
 src + '/turbulenceModels',
 src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',  
@@ -28,7 +27,9 @@ src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
 src + '/turbulenceModels/compressible/RAS/lnInclude', 
 src + '/turbulenceModels/compressible/LES/lnInclude',     
 src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude'
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude'
 ]    
 execFlowFOEnv.Prepend(CPPPATH = lib_inc)
 
@@ -43,29 +44,22 @@ execFlowFOEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if execFlowFOEnv['WHICH_OS'] == "windows":
   execFlowFOEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libincompressibleTransportModels',
-  'libincompressibleTurbulenceModel','libcompressibleTurbulenceModel',
-  'libincompressibleRASModels','libincompressibleLESModels',
-  'libbasicThermophysicalModels','libspecie','libcompressibleRASModels',
-  'libcompressibleLESModels','libgenericPatchFields']
-else:
-  lib_link = ['core','incompressibleTransportModels',
-  'incompressibleTurbulenceModel','compressibleTurbulenceModel',
-  'incompressibleRASModels','incompressibleLESModels',
-  'basicThermophysicalModels','specie','compressibleRASModels',
-  'compressibleLESModels','genericPatchFields']
+
+lib_link = ['core','incompressibleTransportModels',
+'incompressibleTurbulenceModel','compressibleTurbulenceModel',
+'incompressibleRASModels','incompressibleLESModels',
+'basicThermophysicalModels','specie','compressibleRASModels',
+'compressibleLESModels','genericPatchFields','fvOptions','sampling']
 execFlowFOEnv.Append(LIBS = lib_link)
 
 #===============================================================================
 # Sources for this executable
 #===============================================================================
-src_files_postCalc = [execFlowFOEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
 src_files_exec = Split("""
   execFlowFunctionObjects.cpp
   """)
 
-src_files = src_files_postCalc + src_files_exec
+src_files = src_files_exec
 #===============================================================================
 # Build this executable
 #===============================================================================

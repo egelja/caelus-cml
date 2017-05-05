@@ -31,9 +31,8 @@ caelusToEnsightPartsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusToEnsightPartsEnv['WHICH_OS'] == "windows":
   caelusToEnsightPartsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian','libconversion']
-else:
-  lib_link = ['genericPatchFields','lagrangian','conversion']
+
+lib_link = ['genericPatchFields','lagrangian','conversion']
      
 
 caelusToEnsightPartsEnv.Append(LIBS = lib_link)

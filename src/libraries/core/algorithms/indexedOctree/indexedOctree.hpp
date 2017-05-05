@@ -39,6 +39,7 @@ SourceFiles
 #include "HashSet.hpp"
 #include "labelBits.hpp"
 #include "PackedList.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,7 +63,7 @@ TemplateName(indexedOctree);
                            Class indexedOctree Declaration
 \*---------------------------------------------------------------------------*/
 
-template <class Type>
+template<class Type>
 class indexedOctree
 :
     public indexedOctreeName
@@ -70,16 +71,6 @@ class indexedOctree
 public:
 
     // Data types
-
-        //- volume types
-        enum volumeType
-        {
-            UNKNOWN = 0,
-            MIXED = 1,
-            INSIDE = 2,
-            OUTSIDE = 3
-        };
-
 
         //- Tree node. Has up pointer and down pointers.
         class node
@@ -209,6 +200,7 @@ private:
         // Query
 
             //- Find nearest point to line.
+            template<class FindNearestOp>
             void findNearest
             (
                 const label nodeI,
@@ -217,7 +209,9 @@ private:
                 treeBoundBox& tightest,
                 label& nearestShapeI,
                 point& linePoint,
-                point& nearestPoint
+                point& nearestPoint,
+
+                const FindNearestOp& fnOp
             ) const;
 
             //- Return bbox of octant
@@ -291,6 +285,7 @@ private:
             // intersection point.
             // findAny=true : return any intersection
             // findAny=false: return nearest (to start) intersection
+            template<class FindIntersectOp>
             void traverseNode
             (
                 const bool findAny,
@@ -303,10 +298,13 @@ private:
                 const direction octantI,
 
                 pointIndexHit& hitInfo,
-                direction& faceID
+                direction& faceID,
+
+                const FindIntersectOp& fiOp
             ) const;
 
             //- Find any or nearest intersection
+            template<class FindIntersectOp>
             pointIndexHit findLine
             (
                 const bool findAny,
@@ -314,15 +312,18 @@ private:
                 const point& treeEnd,
                 const label startNodeI,
                 const direction startOctantI,
+                const FindIntersectOp& fiOp,
                 const bool verbose = false
             ) const;
 
             //- Find any or nearest intersection of line between start and end.
+            template<class FindIntersectOp>
             pointIndexHit findLine
             (
                 const bool findAny,
                 const point& start,
-                const point& end
+                const point& end,
+                const FindIntersectOp& fiOp
             ) const;
 
             //- Find all elements intersecting box.
@@ -344,7 +345,7 @@ private:
             ) const;
 
 
-            template <class CompareOp>
+            template<class CompareOp>
             static void findNear
             (
                 const scalar nearDist,
@@ -518,18 +519,28 @@ public:
 
         // Queries
 
-            //- Calculate nearest point on nearest shape.
-            //  Returns
-            //  - bool : any point found nearer than nearestDistSqr
-            //  - label: index in shapes
-            //  - point: actual nearest point found
             pointIndexHit findNearest
             (
                 const point& sample,
                 const scalar nearestDistSqr
             ) const;
 
+            //- Calculate nearest point on nearest shape.
+            //  Returns
+            //  - bool : any point found nearer than nearestDistSqr
+            //  - label: index in shapes
+            //  - point: actual nearest point found
+            template<class FindNearestOp>
+            pointIndexHit findNearest
+            (
+                const point& sample,
+                const scalar nearestDistSqr,
+
+                const FindNearestOp& fnOp
+            ) const;
+
             //- Low level: calculate nearest starting from subnode.
+            template<class FindNearestOp>
             void findNearest
             (
                 const label nodeI,
@@ -537,7 +548,9 @@ public:
 
                 scalar& nearestDistSqr,
                 label& nearestShapeI,
-                point& nearestPoint
+                point& nearestPoint,
+
+                const FindNearestOp& fnOp
             ) const;
 
             //- Find nearest to line.
@@ -554,6 +567,16 @@ public:
                 point& linePoint
             ) const;
 
+            template<class FindNearestOp>
+            pointIndexHit findNearest
+            (
+                const linePointRef& ln,
+                treeBoundBox& tightest,
+                point& linePoint,
+
+                const FindNearestOp& fnOp
+            ) const;
+
             //- Find nearest intersection of line between start and end.
             pointIndexHit findLine
             (
@@ -566,6 +589,24 @@ public:
             (
                 const point& start,
                 const point& end
+            ) const;
+
+            //- Find nearest intersection of line between start and end.
+            template<class FindIntersectOp>
+            pointIndexHit findLine
+            (
+                const point& start,
+                const point& end,
+                const FindIntersectOp& fiOp
+            ) const;
+
+            //- Find any intersection of line between start and end.
+            template<class FindIntersectOp>
+            pointIndexHit findLineAny
+            (
+                const point& start,
+                const point& end,
+                const FindIntersectOp& fiOp
             ) const;
 
             //- Find (in no particular order) indices of all shapes inside or
@@ -617,7 +658,7 @@ public:
 
             //- Find near pairs and apply CompareOp to them.
             //  tree2 can be *this or different tree.
-            template <class CompareOp>
+            template<class CompareOp>
             void findNear
             (
                 const scalar nearDist,
@@ -666,7 +707,7 @@ CML::scalar CML::indexedOctree<Type>::perturbTol_ = 10*SMALL;
 
 // Does bb intersect a sphere around sample? Or is any corner point of bb
 // closer than nearestDistSqr to sample.
-template <class Type>
+template<class Type>
 bool CML::indexedOctree<Type>::overlaps
 (
     const point& p0,
@@ -675,42 +716,15 @@ bool CML::indexedOctree<Type>::overlaps
     const point& sample
 )
 {
-    // Find out where sample is in relation to bb.
-    // Find nearest point on bb.
-    scalar distSqr = 0;
+    boundBox bb(p0, p1);
 
-    for (direction dir = 0; dir < vector::nComponents; dir++)
-    {
-        scalar d0 = p0[dir] - sample[dir];
-        scalar d1 = p1[dir] - sample[dir];
-
-        if ((d0 > 0) != (d1 > 0))
-        {
-            // sample inside both extrema. This component does not add any
-            // distance.
-        }
-        else if (mag(d0) < mag(d1))
-        {
-            distSqr += d0*d0;
-        }
-        else
-        {
-            distSqr += d1*d1;
-        }
-
-        if (distSqr > nearestDistSqr)
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return bb.overlaps(sample, nearestDistSqr);
 }
 
 
 // Does bb intersect a sphere around sample? Or is any corner point of bb
 // closer than nearestDistSqr to sample.
-template <class Type>
+template<class Type>
 bool CML::indexedOctree<Type>::overlaps
 (
     const treeBoundBox& parentBb,
@@ -773,7 +787,7 @@ bool CML::indexedOctree<Type>::overlaps
 //
 
 // Split list of indices into 8 bins
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::divide
 (
     const labelList& indices,
@@ -816,7 +830,7 @@ void CML::indexedOctree<Type>::divide
 
 
 // Subdivide the (content) node.
-template <class Type>
+template<class Type>
 typename CML::indexedOctree<Type>::node
 CML::indexedOctree<Type>::divide
 (
@@ -886,7 +900,7 @@ CML::indexedOctree<Type>::divide
 
 
 // Split any contents node with more than minSize elements.
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::splitNodes
 (
     const label minSize,
@@ -941,7 +955,7 @@ void CML::indexedOctree<Type>::splitNodes
 
 // Reorder contents to be in same order as nodes. Returns number of nodes on
 // the compactLevel.
-template <class Type>
+template<class Type>
 CML::label CML::indexedOctree<Type>::compactContents
 (
     DynamicList<node>& nodes,
@@ -1011,16 +1025,15 @@ CML::label CML::indexedOctree<Type>::compactContents
 // Pre-calculates wherever possible the volume status per node/subnode.
 // Recurses to determine status of lowest level boxes. Level above is
 // combination of octants below.
-template <class Type>
-typename CML::indexedOctree<Type>::volumeType
-CML::indexedOctree<Type>::calcVolumeType
+template<class Type>
+CML::volumeType CML::indexedOctree<Type>::calcVolumeType
 (
     const label nodeI
 ) const
 {
     const node& nod = nodes_[nodeI];
 
-    volumeType myType = UNKNOWN;
+    volumeType myType = volumeType::UNKNOWN;
 
     for (direction octant = 0; octant < nod.subNodes_.size(); octant++)
     {
@@ -1037,7 +1050,7 @@ CML::indexedOctree<Type>::calcVolumeType
         {
             // Contents. Depending on position in box might be on either
             // side.
-            subType = MIXED;
+            subType = volumeType::MIXED;
         }
         else
         {
@@ -1045,10 +1058,7 @@ CML::indexedOctree<Type>::calcVolumeType
             // of its bounding box.
             const treeBoundBox subBb = nod.bb_.subBbox(octant);
 
-            subType = volumeType
-            (
-                shapes_.getVolumeType(*this, subBb.midpoint())
-            );
+            subType = shapes_.getVolumeType(*this, subBb.midpoint());
         }
 
         // Store octant type
@@ -1056,22 +1066,21 @@ CML::indexedOctree<Type>::calcVolumeType
 
         // Combine sub node types into type for treeNode. Result is 'mixed' if
         // types differ among subnodes.
-        if (myType == UNKNOWN)
+        if (myType == volumeType::UNKNOWN)
         {
             myType = subType;
         }
         else if (subType != myType)
         {
-            myType = MIXED;
+            myType = volumeType::MIXED;
         }
     }
     return myType;
 }
 
 
-template <class Type>
-typename CML::indexedOctree<Type>::volumeType
-CML::indexedOctree<Type>::getVolumeType
+template<class Type>
+CML::volumeType CML::indexedOctree<Type>::getVolumeType
 (
     const label nodeI,
     const point& sample
@@ -1081,22 +1090,22 @@ CML::indexedOctree<Type>::getVolumeType
 
     direction octant = nod.bb_.subOctant(sample);
 
-    volumeType octantType = volumeType(nodeTypes_.get((nodeI<<3)+octant));
+    volumeType octantType = volumeType::type(nodeTypes_.get((nodeI<<3)+octant));
 
-    if (octantType == INSIDE)
+    if (octantType == volumeType::INSIDE)
     {
         return octantType;
     }
-    else if (octantType == OUTSIDE)
+    else if (octantType == volumeType::OUTSIDE)
     {
         return octantType;
     }
-    else if (octantType == UNKNOWN)
+    else if (octantType == volumeType::UNKNOWN)
     {
         // Can happen for e.g. non-manifold surfaces.
         return octantType;
     }
-    else if (octantType == MIXED)
+    else if (octantType == volumeType::MIXED)
     {
         labelBits index = nod.subNodes_[octant];
 
@@ -1125,7 +1134,7 @@ CML::indexedOctree<Type>::getVolumeType
                 << "Empty subnode has invalid volume type MIXED."
                 << abort(FatalError);
 
-            return UNKNOWN;
+            return volumeType::UNKNOWN;
         }
     }
     else
@@ -1140,14 +1149,13 @@ CML::indexedOctree<Type>::getVolumeType
             << "Node has invalid volume type " << octantType
             << abort(FatalError);
 
-        return UNKNOWN;
+        return volumeType::UNKNOWN;
     }
 }
 
 
-template <class Type>
-typename CML::indexedOctree<Type>::volumeType
-CML::indexedOctree<Type>::getSide
+template<class Type>
+CML::volumeType CML::indexedOctree<Type>::getSide
 (
     const vector& outsideNormal,
     const vector& vec
@@ -1155,11 +1163,11 @@ CML::indexedOctree<Type>::getSide
 {
     if ((outsideNormal&vec) >= 0)
     {
-        return OUTSIDE;
+        return volumeType::OUTSIDE;
     }
     else
     {
-        return INSIDE;
+        return volumeType::INSIDE;
     }
 }
 
@@ -1169,8 +1177,10 @@ CML::indexedOctree<Type>::getSide
 // ~~~~~~~~~~~~~~
 //
 
+
 // Find nearest point starting from nodeI
-template <class Type>
+template<class Type>
+template<class FindNearestOp>
 void CML::indexedOctree<Type>::findNearest
 (
     const label nodeI,
@@ -1178,7 +1188,9 @@ void CML::indexedOctree<Type>::findNearest
 
     scalar& nearestDistSqr,
     label& nearestShapeI,
-    point& nearestPoint
+    point& nearestPoint,
+
+    const FindNearestOp& fnOp
 ) const
 {
     const node& nod = nodes_[nodeI];
@@ -1209,7 +1221,9 @@ void CML::indexedOctree<Type>::findNearest
 
                     nearestDistSqr,
                     nearestShapeI,
-                    nearestPoint
+                    nearestPoint,
+
+                    fnOp
                 );
             }
         }
@@ -1226,7 +1240,7 @@ void CML::indexedOctree<Type>::findNearest
                 )
             )
             {
-                shapes_.findNearest
+                fnOp
                 (
                     contents_[getContent(index)],
                     sample,
@@ -1242,7 +1256,8 @@ void CML::indexedOctree<Type>::findNearest
 
 
 // Find nearest point to line.
-template <class Type>
+template<class Type>
+template<class FindNearestOp>
 void CML::indexedOctree<Type>::findNearest
 (
     const label nodeI,
@@ -1251,7 +1266,9 @@ void CML::indexedOctree<Type>::findNearest
     treeBoundBox& tightest,
     label& nearestShapeI,
     point& linePoint,
-    point& nearestPoint
+    point& nearestPoint,
+
+    const FindNearestOp& fnOp
 ) const
 {
     const node& nod = nodes_[nodeI];
@@ -1282,7 +1299,9 @@ void CML::indexedOctree<Type>::findNearest
                     tightest,
                     nearestShapeI,
                     linePoint,
-                    nearestPoint
+                    nearestPoint,
+
+                    fnOp
                 );
             }
         }
@@ -1292,7 +1311,7 @@ void CML::indexedOctree<Type>::findNearest
 
             if (subBb.overlaps(tightest))
             {
-                shapes_.findNearest
+                fnOp
                 (
                     contents_[getContent(index)],
                     ln,
@@ -1308,7 +1327,7 @@ void CML::indexedOctree<Type>::findNearest
 }
 
 
-template <class Type>
+template<class Type>
 CML::treeBoundBox CML::indexedOctree<Type>::subBbox
 (
     const label parentNodeI,
@@ -1334,7 +1353,7 @@ CML::treeBoundBox CML::indexedOctree<Type>::subBbox
 
 // Takes a bb and a point on/close to the edge of the bb and pushes the point
 // inside by a small fraction.
-template <class Type>
+template<class Type>
 CML::point CML::indexedOctree<Type>::pushPoint
 (
     const treeBoundBox& bb,
@@ -1405,7 +1424,7 @@ CML::point CML::indexedOctree<Type>::pushPoint
 
 // Takes a bb and a point on the edge of the bb and pushes the point
 // outside by a small fraction.
-template <class Type>
+template<class Type>
 CML::point CML::indexedOctree<Type>::pushPoint
 (
     const treeBoundBox& bb,
@@ -1518,7 +1537,7 @@ CML::point CML::indexedOctree<Type>::pushPoint
 // Guarantees that if pt is on a face it gets perturbed so it is away
 // from the face edges.
 // If pt is not on a face does nothing.
-template <class Type>
+template<class Type>
 CML::point CML::indexedOctree<Type>::pushPointIntoFace
 (
     const treeBoundBox& bb,
@@ -1678,7 +1697,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
 //// Takes a bb and a point on the outside of the bb. Checks if on multiple
 // faces
 //// and if so perturbs point so it is only on one face.
-//template <class Type>
+//template<class Type>
 //void CML::indexedOctree<Type>::checkMultipleFaces
 //(
 //    const treeBoundBox& bb,
@@ -1874,7 +1893,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
 
 
 // Get parent node and octant. Return false if top of tree reached.
-template <class Type>
+template<class Type>
 bool CML::indexedOctree<Type>::walkToParent
 (
     const label nodeI,
@@ -1924,7 +1943,7 @@ bool CML::indexedOctree<Type>::walkToParent
 // node and octant in this node and walks in the direction given by
 // the facePointBits (combination of treeBoundBox::LEFTBIT, TOPBIT etc.)
 // Returns false if edge of tree hit.
-template <class Type>
+template<class Type>
 bool CML::indexedOctree<Type>::walkToNeighbour
 (
     const point& facePoint,
@@ -2162,7 +2181,7 @@ bool CML::indexedOctree<Type>::walkToNeighbour
 }
 
 
-template <class Type>
+template<class Type>
 CML::word CML::indexedOctree<Type>::faceString
 (
     const direction faceID
@@ -2214,7 +2233,8 @@ CML::word CML::indexedOctree<Type>::faceString
 // Else return a miss and the bounding box face hit:
 //  hitInfo.point = coordinate of intersection of ray with bounding box
 //  hitBits  = posbits of point on bounding box
-template <class Type>
+template<class Type>
+template<class FindIntersectOp>
 void CML::indexedOctree<Type>::traverseNode
 (
     const bool findAny,
@@ -2227,7 +2247,9 @@ void CML::indexedOctree<Type>::traverseNode
     const direction octant,
 
     pointIndexHit& hitInfo,
-    direction& hitBits
+    direction& hitBits,
+
+    const FindIntersectOp& fiOp
 ) const
 {
     if (debug)
@@ -2242,7 +2264,6 @@ void CML::indexedOctree<Type>::traverseNode
                 << "does not contain point " << start << abort(FatalError);
         }
     }
-
 
     const node& nod = nodes_[nodeI];
 
@@ -2263,7 +2284,7 @@ void CML::indexedOctree<Type>::traverseNode
                     label shapeI = indices[elemI];
 
                     point pt;
-                    bool hit = shapes_.intersects(shapeI, start, end, pt);
+                    bool hit = fiOp(shapeI, start, end, pt);
 
                     // Note that intersection of shape might actually be
                     // in a neighbouring box. For findAny this is not important.
@@ -2291,13 +2312,7 @@ void CML::indexedOctree<Type>::traverseNode
                     label shapeI = indices[elemI];
 
                     point pt;
-                    bool hit = shapes_.intersects
-                    (
-                        shapeI,
-                        start,
-                        nearestPoint,
-                        pt
-                    );
+                    bool hit = fiOp(shapeI, start, nearestPoint, pt);
 
                     // Note that intersection of shape might actually be
                     // in a neighbouring box. Since we need to maintain strict
@@ -2370,14 +2385,17 @@ void CML::indexedOctree<Type>::traverseNode
             octant,
 
             hitInfo,
-            hitBits
+            hitBits,
+
+            fiOp
         );
     }
 }
 
 
 // Find first intersection
-template <class Type>
+template<class Type>
+template<class FindIntersectOp>
 CML::pointIndexHit CML::indexedOctree<Type>::findLine
 (
     const bool findAny,
@@ -2385,6 +2403,7 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
     const point& treeEnd,
     const label startNodeI,
     const direction startOctant,
+    const FindIntersectOp& fiOp,
     const bool verbose
 ) const
 {
@@ -2455,7 +2474,9 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
             octant,
 
             hitInfo,
-            hitFaceID
+            hitFaceID,
+
+            fiOp
         );
 
         // Did we hit a triangle?
@@ -2539,7 +2560,8 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
                 treeEnd,
                 startNodeI,
                 startOctant,
-                true            //verbose
+                fiOp,
+                true            //verbose,
             );
         }
         if (debug)
@@ -2565,12 +2587,14 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
 
 
 // Find first intersection
-template <class Type>
+template<class Type>
+template<class FindIntersectOp>
 CML::pointIndexHit CML::indexedOctree<Type>::findLine
 (
     const bool findAny,
     const point& start,
-    const point& end
+    const point& end,
+    const FindIntersectOp& fiOp
 ) const
 {
     pointIndexHit hitInfo;
@@ -2628,7 +2652,8 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
             trackStart,
             trackEnd,
             parentNodeI,
-            octant
+            octant,
+            fiOp
         );
     }
 
@@ -2636,7 +2661,7 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
 }
 
 
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::findBox
 (
     const label nodeI,
@@ -2683,7 +2708,7 @@ void CML::indexedOctree<Type>::findBox
 }
 
 
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::findSphere
 (
     const label nodeI,
@@ -2731,8 +2756,8 @@ void CML::indexedOctree<Type>::findSphere
 }
 
 
-template <class Type>
-template <class CompareOp>
+template<class Type>
+template<class CompareOp>
 void CML::indexedOctree<Type>::findNear
 (
     const scalar nearDist,
@@ -2906,7 +2931,7 @@ void CML::indexedOctree<Type>::findNear
 
 
 // Number of elements in node.
-template <class Type>
+template<class Type>
 CML::label CML::indexedOctree<Type>::countElements
 (
     const labelBits index
@@ -2939,7 +2964,7 @@ CML::label CML::indexedOctree<Type>::countElements
 }
 
 
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::writeOBJ
 (
     const label nodeI,
@@ -2988,7 +3013,7 @@ void CML::indexedOctree<Type>::writeOBJ
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::indexedOctree<Type>::indexedOctree(const Type& shapes)
 :
     shapes_(shapes),
@@ -2998,7 +3023,7 @@ CML::indexedOctree<Type>::indexedOctree(const Type& shapes)
 {}
 
 
-template <class Type>
+template<class Type>
 CML::indexedOctree<Type>::indexedOctree
 (
     const Type& shapes,
@@ -3013,7 +3038,7 @@ CML::indexedOctree<Type>::indexedOctree
 {}
 
 
-template <class Type>
+template<class Type>
 CML::indexedOctree<Type>::indexedOctree
 (
     const Type& shapes,
@@ -3118,7 +3143,7 @@ CML::indexedOctree<Type>::indexedOctree
 
     while (true)
     {
-        compactContents
+        label nNodes = compactContents
         (
             nodes,
             contents,
@@ -3128,6 +3153,12 @@ CML::indexedOctree<Type>::indexedOctree
             contents_,
             compactI
         );
+
+        if (compactI == 0 && nNodes == 0)
+        {
+            // Did not put contents anywhere - are outside bb!
+            break;
+        }
 
         if (compactI == contents_.size())
         {
@@ -3148,6 +3179,8 @@ CML::indexedOctree<Type>::indexedOctree
             nEntries += contents_[i].size();
         }
 
+
+
         Pout<< "indexedOctree<Type>::indexedOctree"
             << " : finished construction of tree of:" << shapes.typeName
             << nl
@@ -3165,7 +3198,7 @@ CML::indexedOctree<Type>::indexedOctree
 }
 
 
-template <class Type>
+template<class Type>
 CML::indexedOctree<Type>::indexedOctree
 (
     const Type& shapes,
@@ -3181,18 +3214,58 @@ CML::indexedOctree<Type>::indexedOctree
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::scalar& CML::indexedOctree<Type>::perturbTol()
 {
     return perturbTol_;
 }
 
 
-template <class Type>
+//template<class Type>
+//bool CML::indexedOctree<Type>::findAnyOverlap
+//(
+//    const point& sample,
+//    const scalar startDistSqr
+//) const
+//{
+//    if (nodes_.size())
+//    {
+//        return findAnyOverlap
+//        (
+//            0,
+//            sample,
+//            startDistSqr
+//        );
+//    }
+//
+//    return false;
+//}
+
+
+template<class Type>
 CML::pointIndexHit CML::indexedOctree<Type>::findNearest
 (
     const point& sample,
     const scalar startDistSqr
+) const
+{
+    return findNearest
+    (
+        sample,
+        startDistSqr,
+        typename Type::findNearestOp(*this)
+    );
+}
+
+
+template<class Type>
+template<class FindNearestOp>
+CML::pointIndexHit CML::indexedOctree<Type>::findNearest
+(
+    const point& sample,
+    const scalar startDistSqr,
+
+    const FindNearestOp& fnOp
 ) const
 {
     scalar nearestDistSqr = startDistSqr;
@@ -3208,7 +3281,9 @@ CML::pointIndexHit CML::indexedOctree<Type>::findNearest
 
             nearestDistSqr,
             nearestShapeI,
-            nearestPoint
+            nearestPoint,
+
+            fnOp
         );
     }
 
@@ -3216,7 +3291,7 @@ CML::pointIndexHit CML::indexedOctree<Type>::findNearest
 }
 
 
-template <class Type>
+template<class Type>
 CML::pointIndexHit CML::indexedOctree<Type>::findNearest
 (
     const linePointRef& ln,
@@ -3224,8 +3299,29 @@ CML::pointIndexHit CML::indexedOctree<Type>::findNearest
     point& linePoint
 ) const
 {
+    return findNearest
+    (
+        ln,
+        tightest,
+        linePoint,
+        typename Type::findNearestOp(*this)
+    );
+}
+
+
+template<class Type>
+template<class FindNearestOp>
+CML::pointIndexHit CML::indexedOctree<Type>::findNearest
+(
+    const linePointRef& ln,
+    treeBoundBox& tightest,
+    point& linePoint,
+
+    const FindNearestOp& fnOp
+) const
+{
     label nearestShapeI = -1;
-    point nearestPoint;
+    point nearestPoint = vector::zero;
 
     if (nodes_.size())
     {
@@ -3237,12 +3333,10 @@ CML::pointIndexHit CML::indexedOctree<Type>::findNearest
             tightest,
             nearestShapeI,
             linePoint,
-            nearestPoint
+            nearestPoint,
+
+            fnOp
         );
-    }
-    else
-    {
-        nearestPoint = vector::zero;
     }
 
     return pointIndexHit(nearestShapeI != -1, nearestPoint, nearestShapeI);
@@ -3250,30 +3344,70 @@ CML::pointIndexHit CML::indexedOctree<Type>::findNearest
 
 
 // Find nearest intersection
-template <class Type>
+template<class Type>
 CML::pointIndexHit CML::indexedOctree<Type>::findLine
 (
     const point& start,
     const point& end
 ) const
 {
-    return findLine(false, start, end);
+    return findLine
+    (
+        false,
+        start,
+        end,
+        typename Type::findIntersectOp(*this)
+    );
 }
 
 
 // Find nearest intersection
-template <class Type>
+template<class Type>
 CML::pointIndexHit CML::indexedOctree<Type>::findLineAny
 (
     const point& start,
     const point& end
 ) const
 {
-    return findLine(true, start, end);
+    return findLine
+    (
+        true,
+        start,
+        end,
+        typename Type::findIntersectOp(*this)
+    );
 }
 
 
-template <class Type>
+// Find nearest intersection
+template<class Type>
+template<class FindIntersectOp>
+CML::pointIndexHit CML::indexedOctree<Type>::findLine
+(
+    const point& start,
+    const point& end,
+    const FindIntersectOp& fiOp
+) const
+{
+    return findLine(false, start, end, fiOp);
+}
+
+
+// Find nearest intersection
+template<class Type>
+template<class FindIntersectOp>
+CML::pointIndexHit CML::indexedOctree<Type>::findLineAny
+(
+    const point& start,
+    const point& end,
+    const FindIntersectOp& fiOp
+) const
+{
+    return findLine(true, start, end, fiOp);
+}
+
+
+template<class Type>
 CML::labelList CML::indexedOctree<Type>::findBox
 (
     const treeBoundBox& searchBox
@@ -3291,7 +3425,7 @@ CML::labelList CML::indexedOctree<Type>::findBox
 }
 
 
-template <class Type>
+template<class Type>
 CML::labelList CML::indexedOctree<Type>::findSphere
 (
     const point& centre,
@@ -3311,7 +3445,7 @@ CML::labelList CML::indexedOctree<Type>::findSphere
 
 
 // Find node (as parent+octant) containing point
-template <class Type>
+template<class Type>
 CML::labelBits CML::indexedOctree<Type>::findNode
 (
     const label nodeI,
@@ -3358,7 +3492,7 @@ CML::labelBits CML::indexedOctree<Type>::findNode
 }
 
 
-template <class Type>
+template<class Type>
 CML::label CML::indexedOctree<Type>::findInside(const point& sample) const
 {
     labelBits index = findNode(0, sample);
@@ -3387,7 +3521,7 @@ CML::label CML::indexedOctree<Type>::findInside(const point& sample) const
 }
 
 
-template <class Type>
+template<class Type>
 const CML::labelList& CML::indexedOctree<Type>::findIndices
 (
     const point& sample
@@ -3412,24 +3546,30 @@ const CML::labelList& CML::indexedOctree<Type>::findIndices
 
 
 // Determine type (inside/outside/mixed) per node.
-template <class Type>
-typename CML::indexedOctree<Type>::volumeType
-CML::indexedOctree<Type>::getVolumeType
+template<class Type>
+CML::volumeType CML::indexedOctree<Type>::getVolumeType
 (
     const point& sample
 ) const
 {
     if (nodes_.empty())
     {
-        return UNKNOWN;
+        return volumeType::UNKNOWN;
     }
+
+//    // If the sample is not within the octree, then have to query shapes
+//    // directly
+//    if (!nodes_[0].bb_.contains(sample))
+//    {
+//        return volumeType(shapes_.getVolumeType(*this, sample));
+//    }
 
     if (nodeTypes_.size() != 8*nodes_.size())
     {
         // Calculate type for every octant of node.
 
         nodeTypes_.setSize(8*nodes_.size());
-        nodeTypes_ = UNKNOWN;
+        nodeTypes_ = volumeType::UNKNOWN;
 
         calcVolumeType(0);
 
@@ -3442,21 +3582,21 @@ CML::indexedOctree<Type>::getVolumeType
 
             forAll(nodeTypes_, i)
             {
-                volumeType type = volumeType(nodeTypes_.get(i));
+                volumeType type = volumeType::type(nodeTypes_.get(i));
 
-                if (type == UNKNOWN)
+                if (type == volumeType::UNKNOWN)
                 {
                     nUNKNOWN++;
                 }
-                else if (type == MIXED)
+                else if (type == volumeType::MIXED)
                 {
                     nMIXED++;
                 }
-                else if (type == INSIDE)
+                else if (type == volumeType::INSIDE)
                 {
                     nINSIDE++;
                 }
-                else if (type == OUTSIDE)
+                else if (type == volumeType::OUTSIDE)
                 {
                     nOUTSIDE++;
                 }
@@ -3482,8 +3622,8 @@ CML::indexedOctree<Type>::getVolumeType
 }
 
 
-template <class Type>
-template <class CompareOp>
+template<class Type>
+template<class CompareOp>
 void CML::indexedOctree<Type>::findNear
 (
     const scalar nearDist,
@@ -3507,7 +3647,7 @@ void CML::indexedOctree<Type>::findNear
 
 
 // Print contents of nodeI
-template <class Type>
+template<class Type>
 void CML::indexedOctree<Type>::print
 (
     prefixOSstream& os,
@@ -3581,7 +3721,7 @@ void CML::indexedOctree<Type>::print
 
 
 // Print contents of nodeI
-template <class Type>
+template<class Type>
 bool CML::indexedOctree<Type>::write(Ostream& os) const
 {
     os << *this;
@@ -3590,7 +3730,7 @@ bool CML::indexedOctree<Type>::write(Ostream& os) const
 }
 
 
-template <class Type>
+template<class Type>
 CML::Ostream& CML::operator<<(Ostream& os, const indexedOctree<Type>& t)
 {
     return

@@ -46,7 +46,7 @@ namespace CML
                            Class Tensor2D Declaration
 \*---------------------------------------------------------------------------*/
 
-template <class Cmpt>
+template<class Cmpt>
 class Tensor2D
 :
     public VectorSpace<Tensor2D<Cmpt>, Cmpt, 4>
@@ -71,6 +71,7 @@ public:
         static const Tensor2D one;
         static const Tensor2D max;
         static const Tensor2D min;
+        static const Tensor2D I;
 
 
     //- Component labeling enumeration

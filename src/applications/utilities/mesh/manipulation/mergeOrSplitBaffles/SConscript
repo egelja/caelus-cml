@@ -32,9 +32,8 @@ mergeOrSplitBafflesEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if mergeOrSplitBafflesEnv['WHICH_OS'] == "windows":
   mergeOrSplitBafflesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh', 'libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh', 'genericPatchFields']
+
+lib_link = ['dynamicMesh', 'genericPatchFields']
   
 mergeOrSplitBafflesEnv.Append(LIBS = lib_link)
 

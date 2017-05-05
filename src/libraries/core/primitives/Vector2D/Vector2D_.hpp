@@ -44,7 +44,7 @@ namespace CML
                            Class Vector2D Declaration
 \*---------------------------------------------------------------------------*/
 
-template <class Cmpt>
+template<class Cmpt>
 class Vector2D
 :
     public VectorSpace<Vector2D<Cmpt>, Cmpt, 2>

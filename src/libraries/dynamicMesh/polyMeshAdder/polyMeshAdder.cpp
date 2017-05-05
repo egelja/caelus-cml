@@ -65,7 +65,7 @@ void CML::polyMeshAdder::append
     DynamicList<label>& dynLst
 )
 {
-    dynLst.setSize(dynLst.size() + lst.size());
+    dynLst.setCapacity(dynLst.size() + lst.size());
 
     forAll(lst, i)
     {

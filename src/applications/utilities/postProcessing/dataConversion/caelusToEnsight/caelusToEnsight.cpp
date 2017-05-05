@@ -39,6 +39,9 @@ Usage
     \param -faceZones zoneList \n
     Specify faceZones to write, with wildcards
 
+    \param -cellZone zoneName \n
+    Specify single cellZone to write (not lagrangian)
+
 Note
     Parallel support for cloud data is not supported
     - writes to \a EnSight directory to avoid collisions with caelusToEnsightParts
@@ -65,6 +68,9 @@ Note
 
 #include "fvc.hpp"
 
+#include "cellSet.hpp"
+#include "fvMeshSubset.hpp"
+
 using namespace CML;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -87,7 +93,6 @@ bool inFileNameList
 }
 
 
-// Main program:
 
 int main(int argc, char *argv[])
 {
@@ -121,6 +126,18 @@ int main(int argc, char *argv[])
         "faceZones",
         "wordReList",
         "specify faceZones to write - eg '( slice \"mfp-.*\" )'."
+    );
+    argList::addOption
+    (
+        "fields",
+        "wordReList",
+        "specify fields to export (all by default) - eg '( \"U.*\" )'."
+    );
+    argList::addOption
+    (
+        "cellZone",
+        "word",
+        "specify cellZone to write"
     );
 
 #   include "setRootCase.hpp"
@@ -199,6 +216,7 @@ int main(int argc, char *argv[])
     {
         patchPatterns = wordReList(args.optionLookup("patches")());
     }
+
     const bool selectedZones = args.optionFound("faceZones");
     wordReList zonePatterns;
     if (selectedZones)
@@ -206,9 +224,35 @@ int main(int argc, char *argv[])
         zonePatterns = wordReList(args.optionLookup("faceZones")());
     }
 
+    const bool selectedFields = args.optionFound("fields");
+    wordReList fieldPatterns;
+    if (selectedFields)
+    {
+        fieldPatterns = wordReList(args.optionLookup("fields")());
+    }
+
+    word cellZoneName;
+    const bool doCellZone = args.optionReadIfPresent("cellZone", cellZoneName);
+
+    fvMeshSubset meshSubsetter(mesh);
+    if (doCellZone)
+    {
+        Info<< "Converting cellZone " << cellZoneName
+            << " only (puts outside faces into patch "
+            << mesh.boundaryMesh()[0].name()
+            << ")" << endl;
+        const cellZone& cz = mesh.cellZones()[cellZoneName];
+        cellSet c0(mesh, "c0", labelHashSet(cz));
+        meshSubsetter.setLargeCellSubset(c0, 0);
+    }
+
     ensightMesh eMesh
     (
-        mesh,
+        (
+            meshSubsetter.hasSubMesh()
+          ? meshSubsetter.subMesh()
+          : meshSubsetter.baseMesh()
+        ),
         args.optionFound("noPatches"),
         selectedPatches,
         patchPatterns,
@@ -234,12 +278,12 @@ int main(int argc, char *argv[])
     wordHashSet allCloudNames;
     if (Pstream::master())
     {
-        word geomFileName = prepend + "000";
+        word geomFileName = prepend + "0000";
 
         // test pre check variable if there is a moving mesh
         if (meshMoving)
         {
-            geomFileName = prepend + "***";
+            geomFileName = prepend + "****";
         }
 
         ensightCaseFile
@@ -343,6 +387,17 @@ int main(int argc, char *argv[])
         Info<< "Translating time = " << runTime.timeName() << nl;
 
         polyMesh::readUpdateState meshState = mesh.readUpdate();
+        if (timeIndex != 0 && meshSubsetter.hasSubMesh())
+        {
+            Info<< "Converting cellZone " << cellZoneName
+                << " only (puts outside faces into patch "
+                << mesh.boundaryMesh()[0].name()
+                << ")" << endl;
+            const cellZone& cz = mesh.cellZones()[cellZoneName];
+            cellSet c0(mesh, "c0", labelHashSet(cz));
+            meshSubsetter.setLargeCellSubset(c0, 0);
+        }
+
 
         if (meshState != polyMesh::UNCHANGED)
         {
@@ -382,6 +437,15 @@ int main(int argc, char *argv[])
             {
                 const word& fieldName = fieldNames[j];
 
+                // Check if the field has to be exported
+                if (selectedFields)
+                {
+                    if (!findStrings(fieldPatterns, fieldName))
+                    {
+                        continue;
+                    }
+                }
+
 #               include "checkData.hpp"
 
                 if (!variableGood)
@@ -400,9 +464,10 @@ int main(int argc, char *argv[])
 
                 if (volFieldTypes[i] == volScalarField::typeName)
                 {
+                    volScalarField vf(fieldObject, mesh);
                     ensightField<scalar>
                     (
-                        fieldObject,
+                        volField(meshSubsetter, vf),
                         eMesh,
                         ensightDir,
                         prepend,
@@ -414,9 +479,10 @@ int main(int argc, char *argv[])
                 }
                 else if (volFieldTypes[i] == volVectorField::typeName)
                 {
+                    volVectorField vf(fieldObject, mesh);
                     ensightField<vector>
                     (
-                        fieldObject,
+                        volField(meshSubsetter, vf),
                         eMesh,
                         ensightDir,
                         prepend,
@@ -428,9 +494,10 @@ int main(int argc, char *argv[])
                 }
                 else if (volFieldTypes[i] == volSphericalTensorField::typeName)
                 {
+                    volSphericalTensorField vf(fieldObject, mesh);
                     ensightField<sphericalTensor>
                     (
-                        fieldObject,
+                        volField(meshSubsetter, vf),
                         eMesh,
                         ensightDir,
                         prepend,
@@ -442,9 +509,10 @@ int main(int argc, char *argv[])
                 }
                 else if (volFieldTypes[i] == volSymmTensorField::typeName)
                 {
+                    volSymmTensorField vf(fieldObject, mesh);
                     ensightField<symmTensor>
                     (
-                        fieldObject,
+                        volField(meshSubsetter, vf),
                         eMesh,
                         ensightDir,
                         prepend,
@@ -456,9 +524,10 @@ int main(int argc, char *argv[])
                 }
                 else if (volFieldTypes[i] == volTensorField::typeName)
                 {
+                    volTensorField vf(fieldObject, mesh);
                     ensightField<tensor>
                     (
-                        fieldObject,
+                        volField(meshSubsetter, vf),
                         eMesh,
                         ensightDir,
                         prepend,

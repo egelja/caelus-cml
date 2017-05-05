@@ -58,6 +58,12 @@ class ParticleForceList
         //- Forces dictionary
         const dictionary dict_;
 
+        //- Calculate coupled forces flag
+        bool calcCoupled_;
+
+        //- Calculate non-coupled forces flag
+        bool calcNonCoupled_;
+
 
 public:
 
@@ -98,6 +104,12 @@ public:
 
             //- Return the forces dictionary
             inline const dictionary& dict() const;
+
+            //- Set the calcCoupled flag
+            inline void setCalcCoupled(bool flag);
+
+            //- Set the calcNonCoupled flag
+            inline void setCalcNonCoupled(bool flag);
 
 
         // Evaluation
@@ -161,6 +173,19 @@ inline const CML::dictionary& CML::ParticleForceList<CloudType>::dict() const
 }
 
 
+template<class CloudType>
+inline void CML::ParticleForceList<CloudType>::setCalcCoupled(bool flag)
+{
+    calcCoupled_ = flag;
+}
+
+
+template<class CloudType>
+inline void CML::ParticleForceList<CloudType>::setCalcNonCoupled(bool flag)
+{
+    calcNonCoupled_ = flag;
+}
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -173,7 +198,9 @@ CML::ParticleForceList<CloudType>::ParticleForceList
     PtrList<ParticleForce<CloudType> >(),
     owner_(owner),
     mesh_(mesh),
-    dict_(dictionary::null)
+    dict_(dictionary::null),
+    calcCoupled_(true),
+    calcNonCoupled_(true)
 {}
 
 
@@ -189,7 +216,9 @@ CML::ParticleForceList<CloudType>::ParticleForceList
     PtrList<ParticleForce<CloudType> >(),
     owner_(owner),
     mesh_(mesh),
-    dict_(dict)
+    dict_(dict),
+    calcCoupled_(true),
+    calcNonCoupled_(true)
 {
     if (readFields)
     {
@@ -286,9 +315,13 @@ CML::forceSuSp CML::ParticleForceList<CloudType>::calcCoupled
 ) const
 {
     forceSuSp value(vector::zero, 0.0);
-    forAll(*this, i)
+
+    if (calcCoupled_)
     {
-        value += this->operator[](i).calcCoupled(p, dt, mass, Re, muc);
+        forAll(*this, i)
+        {
+            value += this->operator[](i).calcCoupled(p, dt, mass, Re, muc);
+        }
     }
 
     return value;
@@ -306,9 +339,13 @@ CML::forceSuSp CML::ParticleForceList<CloudType>::calcNonCoupled
 ) const
 {
     forceSuSp value(vector::zero, 0.0);
-    forAll(*this, i)
+
+    if (calcNonCoupled_)
     {
-        value += this->operator[](i).calcNonCoupled(p, dt, mass, Re, muc);
+        forAll(*this, i)
+        {
+            value += this->operator[](i).calcNonCoupled(p, dt, mass, Re, muc);
+        }
     }
 
     return value;

@@ -45,7 +45,7 @@ namespace CML
     );
 
     template<class Type>
-    PtrList<List<Type> > readFields
+    void readFields
     (
         PtrList<List<Type> >& values,
         const List<word>& fields,
@@ -108,39 +108,57 @@ tmp<Field<Type> > readParticleField
         return tmp<Field<Type> >(new Field<Type>(newField.xfer()));
     }
 
-    Info<< "error: cloud field name " << name << " not found" << endl;
+    FatalErrorIn
+    (
+        "template<class Type>"
+        "void readParticleField"
+        "("
+            "const word&, "
+            "const IOobjectList"
+        ")"
+    )
+        << "error: cloud field name " << name << " not found"
+        << abort(FatalError);
 
     return Field<Type>::null();
 }
 
 
 template<class Type>
-PtrList<List<Type> > readFields
+void readFields
 (
     PtrList<List<Type> >& values,
-    const List<word>& fields,
+    const List<word>& fieldNames,
     const IOobjectList& cloudObjs
 )
 {
     IOobjectList objects(cloudObjs.lookupClass(IOField<Type>::typeName));
 
-    label fieldI = 0;
-    forAllConstIter(IOobjectList, objects, iter)
+    forAll(fieldNames, j)
     {
-        const IOobject& obj = *iter();
-        forAll(fields, j)
+        const IOobject* obj = objects.lookup(fieldNames[j]);
+        if (obj != NULL)
         {
-            if (obj.name() == fields[j])
-            {
-                Info<< "        reading field " << obj.name() << endl;
-                IOField<Type> newField(obj);
-                values.set(fieldI++, new List<Type>(newField.xfer()));
-                break;
-            }
+            Info<< "        reading field " << fieldNames[j] << endl;
+            IOField<Type> newField(*obj);
+            values.set(j, new List<Type>(newField.xfer()));
+        }
+        else
+        {
+            FatalErrorIn
+            (
+                "template<class Type>"
+                "void readFields"
+                "("
+                    "PtrList<List<Type> >&, "
+                    "const List<word>&, "
+                    "const IOobjectList&"
+                ")"
+            )
+                << "Unable to read field " << fieldNames[j]
+                << abort(FatalError);
         }
     }
-
-    return values;
 }
 
 
@@ -160,11 +178,11 @@ void writeVTKFields
 (
     OFstream& os,
     const PtrList<List<Type> >& values,
-    const List<SortableList<scalar> >& agePerTrack,
+    const List<List<label> >& addr,
     const List<word>& fieldNames
 )
 {
-    label step = max(floor(static_cast<scalar>(8/pTraits<Type>::nComponents)), 1);
+    label step = max(floor(8/pTraits<Type>::nComponents), 1);
 
     forAll(values, fieldI)
     {
@@ -172,9 +190,9 @@ void writeVTKFields
         os  << nl << fieldNames[fieldI] << ' ' << pTraits<Type>::nComponents
             << ' ' << values[fieldI].size() << " float" << nl;
         label offset = 0;
-        forAll(agePerTrack, trackI)
+        forAll(addr, trackI)
         {
-            const List<label> ids = agePerTrack[trackI].indices() + offset;
+            const List<label> ids(addr[trackI]);
 
             List<Type> data(UIndirectList<Type>(values[fieldI], ids));
             label nData = data.size() - 1;
@@ -200,7 +218,7 @@ template<class Type>
 void processFields
 (
     OFstream& os,
-    const List<SortableList<scalar> >& agePerTrack,
+    const List<List<label> >& addr,
     const List<word>& userFieldNames,
     const IOobjectList& cloudObjs
 )
@@ -227,8 +245,8 @@ void processFields
         (
             os,
             values,
-            agePerTrack,
-            fieldNames.xfer()
+            addr,
+            fieldNames
         );
     }
 }

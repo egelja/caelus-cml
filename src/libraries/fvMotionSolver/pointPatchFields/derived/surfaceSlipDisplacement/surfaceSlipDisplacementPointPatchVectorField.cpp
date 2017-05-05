@@ -395,7 +395,8 @@ surfaceSlipDisplacementPointPatchVectorField::surfaces() const
                     IOobject::MUST_READ,
                     IOobject::NO_WRITE
                 ),
-                surfacesDict_
+                surfacesDict_,
+                true    // use single region naming shortcut
             )
         );
     }

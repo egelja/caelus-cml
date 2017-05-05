@@ -242,7 +242,7 @@ void CML::CellZoneInjection<CloudType>::setPositions
 
             injectorCells.append(cellI);
             injectorTetFaces.append(cellTetIs[tetI].face());
-            injectorTetPts.append(cellTetIs[tetI].faceBasePt());
+            injectorTetPts.append(cellTetIs[tetI].tetPt());
         }
     }
 
@@ -353,7 +353,7 @@ CML::CellZoneInjection<CloudType>::CellZoneInjection
     Info<< "    cell zone size      = " << nCellsTotal << endl;
     Info<< "    cell zone volume    = " << VCellsTotal << endl;
 
-    if ((nCells == 0) || (VCellsTotal*numberDensity_ < 1))
+    if ((nCellsTotal == 0) || (VCellsTotal*numberDensity_ < 1))
     {
         WarningIn
         (

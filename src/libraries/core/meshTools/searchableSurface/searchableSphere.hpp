@@ -56,7 +56,7 @@ private:
         //- Centre point
         const point centre_;
 
-        //- Radius squared
+        //- Radius
         const scalar radius_;
 
         //- Names of regions
@@ -129,21 +129,28 @@ public:
 
         //- Get representative set of element coordinates
         //  Usually the element centres (should be of length size()).
-        virtual pointField coordinates() const
+        virtual tmp<pointField> coordinates() const
         {
-            return pointField(1, centre_);
+            tmp<pointField> tCtrs(new pointField(1, centre_));
+            return tCtrs;
+        }
+
+        //- Get bounding spheres (centre and radius squared), one per element.
+        //  Any point on element is guaranteed to be inside.
+        virtual void boundingSpheres
+        (
+            pointField& centres,
+            scalarField& radiusSqr
+        ) const;
+
+        //- Get the points that define the surface.
+        virtual tmp<pointField> points() const
+        {
+            return coordinates();
         }
 
         //- Does any part of the surface overlap the supplied bound box?
-        virtual bool overlaps(const boundBox& bb) const
-        {
-            notImplemented
-            (
-                "searchableSphere::overlaps(const boundBox&) const"
-            );
-
-            return false;
-        }
+        virtual bool overlaps(const boundBox& bb) const;
 
 
         // Multiple point queries.

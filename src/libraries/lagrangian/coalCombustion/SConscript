@@ -80,4 +80,4 @@ lagCoalCombEnv.Install(install_dir, libcoalCombustion)
 
 if (lagCoalCombEnv['WHICH_OS'] == "darwin"):
 
-  lagCoalCombEnv.Append(SHLINKFLAGS ='-install_name @' + lagCoalCombEnv['LIB_PLATFORM_INSTALL'] + '/libcoalCombustion.dylib')
+  lagCoalCombEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcoalCombustion.dylib')

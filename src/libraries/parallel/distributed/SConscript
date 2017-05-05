@@ -56,4 +56,4 @@ distribEnv.Install(install_dir, libdistributed)
 
 if (distribEnv['WHICH_OS'] == "darwin"):
 
-  distribEnv.Append(SHLINKFLAGS ='-install_name @' + distribEnv['LIB_PLATFORM_INSTALL'] + '/libdistributed.dylib')
+  distribEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdistributed.dylib')

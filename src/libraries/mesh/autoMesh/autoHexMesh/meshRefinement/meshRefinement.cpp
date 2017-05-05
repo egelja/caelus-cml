@@ -1738,7 +1738,7 @@ CML::label CML::meshRefinement::addPatch
     oldToNew[addedPatchI] = insertPatchI;
 
     // Shuffle into place
-    polyPatches.reorder(oldToNew);
+    polyPatches.reorder(oldToNew, true);
     fvPatches.reorder(oldToNew);
 
     reorderPatchFields<volScalarField>(mesh, oldToNew);

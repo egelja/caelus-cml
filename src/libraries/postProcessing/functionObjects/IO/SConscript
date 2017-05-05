@@ -57,4 +57,4 @@ funcObjIOEnv.Install(install_dir, libIOFunctionObjects)
 
 if (funcObjIOEnv['WHICH_OS'] == "darwin"):
 
-  funcObjIOEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjIOEnv['LIB_PLATFORM_INSTALL'] + '/libIOFunctionObjects.dylib')
+  funcObjIOEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libIOFunctionObjects.dylib')

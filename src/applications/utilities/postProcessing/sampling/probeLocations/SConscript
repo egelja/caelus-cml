@@ -31,9 +31,8 @@ probeLocationsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if probeLocationsEnv['WHICH_OS'] == "windows":
   probeLocationsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libsampling','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','sampling','lagrangian']
+
+lib_link = ['genericPatchFields','sampling','lagrangian']
 
 probeLocationsEnv.Append(LIBS = lib_link)
 

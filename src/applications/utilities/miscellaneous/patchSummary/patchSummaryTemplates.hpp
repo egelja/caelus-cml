@@ -29,20 +29,28 @@ License
 
 namespace CML
 {
-    template<class Type>
+    template<class GeoField>
     void addToFieldList
     (
-        PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+        PtrList<GeoField>& fieldList,
         const IOobject& obj,
         const label fieldI,
-        const fvMesh& mesh
+        const typename GeoField::Mesh& mesh
     );
 
-    template<class Type>
+    template<class GeoField>
     void outputFieldList
     (
-        PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+        const PtrList<GeoField>& fieldList,
         const label patchI
+    );
+
+    template<class GeoField>
+    void collectFieldList
+    (
+        const PtrList<GeoField>& fieldList,
+        const label patchI,
+        HashTable<word>& fieldToType
     );
 } // End namespace CML
 
@@ -53,33 +61,33 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<class Type>
+template<class GeoField>
 void CML::addToFieldList
 (
-    PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+    PtrList<GeoField>& fieldList,
     const IOobject& obj,
     const label fieldI,
-    const fvMesh& mesh
+    const typename GeoField::Mesh& mesh
 )
 {
-    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+    typedef GeoField fieldType;
 
-    if (obj.headerClassName() == fieldType::typeName)
+    if (obj.headerClassName() == GeoField::typeName)
     {
         fieldList.set
         (
             fieldI,
-            new fieldType(obj, mesh)
+            new GeoField(obj, mesh)
         );
-        Info<< "    " << fieldType::typeName << tab << obj.name() << endl;
+        Info<< "    " << GeoField::typeName << tab << obj.name() << endl;
     }
 }
 
 
-template<class Type>
+template<class GeoField>
 void CML::outputFieldList
 (
-    PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+    const PtrList<GeoField>& fieldList,
     const label patchI
 )
 {
@@ -87,7 +95,8 @@ void CML::outputFieldList
     {
         if (fieldList.set(fieldI))
         {
-            Info<< "    " << pTraits<Type>::typeName << tab << tab
+            Info<< "    " << pTraits<typename GeoField::value_type>::typeName
+                << tab << tab
                 << fieldList[fieldI].name() << tab << tab
                 << fieldList[fieldI].boundaryField()[patchI].type() << nl;
         }
@@ -95,6 +104,26 @@ void CML::outputFieldList
 }
 
 
+template<class GeoField>
+void CML::collectFieldList
+(
+    const PtrList<GeoField>& fieldList,
+    const label patchI,
+    HashTable<word>& fieldToType
+)
+{
+    forAll(fieldList, fieldI)
+    {
+        if (fieldList.set(fieldI))
+        {
+            fieldToType.insert
+            (
+                fieldList[fieldI].name(),
+                fieldList[fieldI].boundaryField()[patchI].type()
+            );
+        }
+    }
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

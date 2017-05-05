@@ -31,9 +31,8 @@ removeFacesEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if removeFacesEnv['WHICH_OS'] == "windows":
   removeFacesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh','libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh','genericPatchFields']
+
+lib_link = ['dynamicMesh','genericPatchFields']
      
 
 removeFacesEnv.Append(LIBS = lib_link)

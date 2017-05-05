@@ -39,7 +39,7 @@ namespace CML
 {
 
 //- Maps lagrangian positions and fields
-void mapLagrangian(const meshToMesh& meshToMeshInterp);
+void mapLagrangian(const meshToMesh& interp);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

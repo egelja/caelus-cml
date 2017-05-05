@@ -231,17 +231,6 @@ bool CML::radiation::absorptionEmissionModel::isGrey() const
 }
 
 
-CML::tmp<CML::volScalarField>
-CML::radiation::absorptionEmissionModel::addIntensity
-(
-    const label rayI,
-    const volScalarField& ILambda
-) const
-{
-    return ILambda;
-}
-
-
 void CML::radiation::absorptionEmissionModel::correct
 (
     volScalarField& a,

@@ -29,10 +29,7 @@ caelusToTetDualMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if caelusToTetDualMeshEnv['WHICH_OS'] == "windows":
-  lib_link = []
-else:
-  lib_link = []
+lib_link = []
      
 
 caelusToTetDualMeshEnv.Append(LIBS = lib_link)

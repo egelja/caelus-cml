@@ -17,7 +17,7 @@ createBafflesEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this executable
 #===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
+lib_inc = ['faceSelection', src + '/dynamicMesh/lnInclude']
 
 createBafflesEnv.Prepend(CPPPATH = lib_inc)
 
@@ -32,9 +32,8 @@ createBafflesEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if createBafflesEnv['WHICH_OS'] == "windows":
   createBafflesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh', 'libgenericPatchFields']
-else:
-  lib_link = ['dynamicMesh', 'genericPatchFields']
+
+lib_link = ['dynamicMesh', 'genericPatchFields']
   
 createBafflesEnv.Append(LIBS = lib_link)
 
@@ -42,6 +41,9 @@ createBafflesEnv.Append(LIBS = lib_link)
 # Sources for this executable
 #===============================================================================
 src_files = Split("""
+  faceSelection/faceSelection.cpp
+  faceSelection/faceZoneSelection.cpp
+  faceSelection/searchableSurfaceSelection.cpp
   createBaffles.cpp
   """)
 

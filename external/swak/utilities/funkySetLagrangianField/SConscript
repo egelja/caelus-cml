@@ -1,0 +1,71 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funkySetLagEnv = globalEnv.Clone()
+
+# Path to source
+src = funkySetLagEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+funkySetLagEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [
+'../../libraries/swakLagrangianParser/lnInclude',
+'../../libraries/swakParsers/lnInclude',
+src + '/thermophysicalModels/radiationModels/lnInclude',
+src + '/sampling/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/lagrangian/basic/lnInclude'
+]
+
+funkySetLagEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+
+funkySetLagEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if funkySetLagEnv['WHICH_OS'] == "windows":
+  funkySetLagEnv.Prepend(LINKFLAGS = '')
+  lib_link = ['libbasicThermophysicalModels','libbasicSolidThermo',
+'libradiationModels','libfvOptions','liblagrangian','libswakLagrangianParser',
+'libswakParsers']
+else:
+  lib_link = ['basicThermophysicalModels','basicSolidThermo',
+'radiationModels','fvOptions','lagrangian','swakLagrangianParser',
+'swakParsers']
+    
+funkySetLagEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""  
+  funkySetLagrangianField.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binfunkySetLag = funkySetLagEnv.Program(target = 
+'funkySetLagrangianField', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = funkySetLagEnv['BIN_PLATFORM_INSTALL']
+funkySetLagEnv.Alias('install', install_dir)
+funkySetLagEnv.Install(install_dir, binfunkySetLag)

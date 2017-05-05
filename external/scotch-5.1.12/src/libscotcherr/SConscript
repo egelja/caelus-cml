@@ -11,7 +11,7 @@ sl = scotchErrEnv['SLASH']
 # Path to source
 src = scotchErrEnv['LIB_SRC']
 
-scotchErrEnv.Append(CCFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 '\
+scotchErrEnv.Append(CCFLAGS = ' -DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 '\
                               '-DSCOTCH_PATCHLEVEL=12')
 
 #===============================================================================
@@ -42,4 +42,4 @@ scotchErrEnv.Install(install_dir, libscotchErr)
 
 if (scotchErrEnv['WHICH_OS'] == "darwin"):
 
-  scotchErrEnv.Append(SHLINKFLAGS ='-install_name @' + scotchErrEnv['LIB_PLATFORM_INSTALL'] + '/libscotchErr.dylib')
+  scotchErrEnv.Append(SHLINKFLAGS ='-install_name @loader_path/../../../external/scotch-5.1.12/lib/libscotchErr.dylib')

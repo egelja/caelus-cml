@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,10 +21,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "DICSmoother.hpp"
-#include "DICPreconditioner.hpp"
 #include "restrict.hpp"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
 {
@@ -32,9 +30,6 @@ namespace CML
     lduMatrix::smoother::addsymMatrixConstructorToTable<DICSmoother>
         addDICSmootherSymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::DICSmoother::DICSmoother
 (
@@ -53,64 +48,89 @@ CML::DICSmoother::DICSmoother
         interfaceIntCoeffs,
         interfaces
     ),
-    rD_(matrix_.diag())
+    rD_(matrix_.diag()),
+    rDuUpper_(matrix_.upper().size()),
+    rDlUpper_(matrix_.upper().size())
 {
-    DICPreconditioner::calcReciprocalD(rD_, matrix_);
+    scalar* RESTRICT rDPtr = rD_.begin();
+    scalar* RESTRICT rDuUpperPtr = rDuUpper_.begin();
+    scalar* RESTRICT rDlUpperPtr = rDlUpper_.begin();
+
+    const label* const RESTRICT uPtr =
+        matrix_.lduAddr().upperAddr().begin();
+    const label* const RESTRICT lPtr =
+        matrix_.lduAddr().lowerAddr().begin();
+    const scalar* const RESTRICT upperPtr =
+        matrix_.upper().begin();
+
+    register label nCells = rD_.size();
+    register label nFaces = matrix_.upper().size();
+
+    for (register label face=0; face<nFaces; face++)
+    {
+        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/rDPtr[lPtr[face]];
+    }
+
+    // Generate reciprocal DIC
+    for (register label cell=0; cell<nCells; cell++)
+    {
+        rDPtr[cell] = 1.0/rDPtr[cell];
+    }
+
+    for (register label face=0; face<nFaces; face++)
+    {
+        rDuUpperPtr[face] = rDPtr[uPtr[face]]*upperPtr[face];
+        rDlUpperPtr[face] = rDPtr[lPtr[face]]*upperPtr[face];
+    }
 }
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::DICSmoother::smooth
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt,
     const label nSweeps
 ) const
 {
-    const scalar* const RESTRICT rDPtr = rD_.begin();
-    const scalar* const RESTRICT upperPtr = matrix_.upper().begin();
+    const scalar* const RESTRICT rDuUpperPtr = rDuUpper_.begin();
+    const scalar* const RESTRICT rDlUpperPtr = rDlUpper_.begin();
+
     const label* const RESTRICT uPtr =
         matrix_.lduAddr().upperAddr().begin();
     const label* const RESTRICT lPtr =
         matrix_.lduAddr().lowerAddr().begin();
 
     // Temporary storage for the residual
-    scalarField rA(rD_.size());
-    scalar* RESTRICT rAPtr = rA.begin();
+    scalarField r(rD_.size());
+    scalar* RESTRICT rPtr = r.begin();
 
     for (label sweep=0; sweep<nSweeps; sweep++)
     {
         matrix_.residual
         (
-            rA,
-            psi,
-            source,
+            r,
+            x,
+            b,
             interfaceBouCoeffs_,
             interfaces_,
             cmpt
         );
 
-        rA *= rD_;
+        r *= rD_;
 
         register label nFaces = matrix_.upper().size();
         for (register label face=0; face<nFaces; face++)
         {
-            register label u = uPtr[face];
-            rAPtr[u] -= rDPtr[u]*upperPtr[face]*rAPtr[lPtr[face]];
+            rPtr[uPtr[face]] -= rDuUpperPtr[face]*rPtr[lPtr[face]];
         }
 
         register label nFacesM1 = nFaces - 1;
         for (register label face=nFacesM1; face>=0; face--)
         {
-            register label l = lPtr[face];
-            rAPtr[l] -= rDPtr[l]*upperPtr[face]*rAPtr[uPtr[face]];
+            rPtr[lPtr[face]] -= rDlUpperPtr[face]*rPtr[uPtr[face]];
         }
 
-        psi += rA;
+        x += r;
     }
 }
 
-
-// ************************************************************************* //

@@ -61,4 +61,4 @@ LESDeltasEnv.Install(install_dir, libLESdeltas)
 
 if (LESDeltasEnv['WHICH_OS'] == "darwin"):
 
-  LESDeltasEnv.Append(SHLINKFLAGS ='-install_name @' + LESDeltasEnv['LIB_PLATFORM_INSTALL'] + '/libLESdeltas.dylib')
+  LESDeltasEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libLESdeltas.dylib')

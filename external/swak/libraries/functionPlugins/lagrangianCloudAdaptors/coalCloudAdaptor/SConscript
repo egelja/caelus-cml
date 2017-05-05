@@ -1,0 +1,96 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+coalClAdptEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = coalClAdptEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+coalClAdptEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../../../swakParsers/lnInclude',
+'../../../swakLagrangianParser/lnInclude',
+'../../swakLagrangianCloudSourcesFunctionPlugin/lnInclude',
+src + '/sampling/lnInclude',
+src + '/thermophysicalModels/pdfs/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/liquids/lnInclude',
+src + '/thermophysicalModels/liquidMixture/lnInclude',
+src + '/thermophysicalModels/solids/lnInclude',
+src + '/thermophysicalModels/solidMixture/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/radiation/lnInclude',
+src + '/regionModels/regionModel/lnInclude',
+src + '/thermophysicalModels/SLGThermo/lnInclude',
+src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
+src + '/regionModels/surfaceFilmModels/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+src + '/lagrangian/intermediate/lnInclude',
+src + '/lagrangian/coalCombustion/lnInclude'
+]
+	
+coalClAdptEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+coalClAdptEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['sampling','swakParsers','SLGThermo',
+  'swakLagrangianParser','swakLagrangianCloudSourcesFunctionPlugin','lagrangian',
+  'lagrangianIntermediate','thermophysicalFunctions','radiationModels','coalCombustion']
+
+coalClAdptEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_coalClAdpt = Split("""
+  coalCloudEnthalpySourcePluginFunction.cpp
+  coalCloudMassFractionPluginFunction.cpp
+  coalCloudMassSourcePluginFunction.cpp
+  coalCloudMomentumSourcePluginFunction.cpp
+  coalCloudRhoEffPluginFunction.cpp
+  coalCloudScatteringFactorPluginFunction.cpp
+  coalCloudSpeciesSourcePluginFunction.cpp
+  coalCloudVolumeFractionPluginFunction.cpp
+  makeCoalCloudProxys.cpp
+  """)
+
+src_files = src_files_coalClAdpt
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libcoalClAdpts = coalClAdptEnv.SharedLibrary(target = 'libswakCoalCloudAdaptor',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = coalClAdptEnv['LIB_PLATFORM_INSTALL']
+coalClAdptEnv.Alias('install', install_dir)
+coalClAdptEnv.Install(install_dir, libcoalClAdpts)
+
+if (coalClAdptEnv['WHICH_OS'] == "darwin"):
+
+  coalClAdptEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakCoalCloudAdapter.dylib')

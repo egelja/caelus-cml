@@ -89,6 +89,22 @@ CML::treeDataEdge::treeDataEdge
 }
 
 
+CML::treeDataEdge::findNearestOp::findNearestOp
+(
+    const indexedOctree<treeDataEdge>& tree
+)
+:
+    tree_(tree)
+{}
+
+
+CML::treeDataEdge::findIntersectOp::findIntersectOp
+(
+    const indexedOctree<treeDataEdge>& tree
+)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::pointField CML::treeDataEdge::shapePoints() const
@@ -107,13 +123,13 @@ CML::pointField CML::treeDataEdge::shapePoints() const
 
 //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
 //  Only makes sense for closed surfaces.
-CML::label CML::treeDataEdge::getVolumeType
+CML::volumeType CML::treeDataEdge::getVolumeType
 (
     const indexedOctree<treeDataEdge>& oc,
     const point& sample
 ) const
 {
-    return indexedOctree<treeDataEdge>::UNKNOWN;
+    return volumeType::UNKNOWN;
 }
 
 
@@ -124,20 +140,41 @@ bool CML::treeDataEdge::overlaps
     const treeBoundBox& cubeBb
 ) const
 {
-    if (cacheBb_)
-    {
-        return cubeBb.overlaps(bbs_[index]);
-    }
-    else
-    {
-        return cubeBb.overlaps(calcBb(edgeLabels_[index]));
-    }
+    const edge& e = edges_[edgeLabels_[index]];
+
+    const point& start = points_[e.start()];
+    const point& end = points_[e.end()];
+
+    point intersect;
+
+    return cubeBb.intersects(start, end, intersect);
 }
 
 
-// Calculate nearest point to sample. Updates (if any) nearestDistSqr, minIndex,
-// nearestPoint.
-void CML::treeDataEdge::findNearest
+// Check if any point on shape is inside sphere.
+bool CML::treeDataEdge::overlaps
+(
+    const label index,
+    const point& centre,
+    const scalar radiusSqr
+) const
+{
+    const edge& e = edges_[edgeLabels_[index]];
+
+    const pointHit nearHit = e.line(points_).nearestDist(centre);
+
+    const scalar distSqr = sqr(nearHit.distance());
+
+    if (distSqr <= radiusSqr)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+void CML::treeDataEdge::findNearestOp::operator()
 (
     const labelUList& indices,
     const point& sample,
@@ -147,13 +184,15 @@ void CML::treeDataEdge::findNearest
     point& nearestPoint
 ) const
 {
+    const treeDataEdge& shape = tree_.shapes();
+
     forAll(indices, i)
     {
         const label index = indices[i];
 
-        const edge& e = edges_[edgeLabels_[index]];
+        const edge& e = shape.edges()[shape.edgeLabels()[index]];
 
-        pointHit nearHit = e.line(points_).nearestDist(sample);
+        pointHit nearHit = e.line(shape.points()).nearestDist(sample);
 
         scalar distSqr = sqr(nearHit.distance());
 
@@ -167,9 +206,7 @@ void CML::treeDataEdge::findNearest
 }
 
 
-//- Calculates nearest (to line) point in shape.
-//  Returns point and distance (squared)
-void CML::treeDataEdge::findNearest
+void CML::treeDataEdge::findNearestOp::operator()
 (
     const labelUList& indices,
     const linePointRef& ln,
@@ -180,6 +217,8 @@ void CML::treeDataEdge::findNearest
     point& nearestPoint
 ) const
 {
+    const treeDataEdge& shape = tree_.shapes();
+
     // Best so far
     scalar nearestDistSqr = magSqr(linePoint - nearestPoint);
 
@@ -187,13 +226,13 @@ void CML::treeDataEdge::findNearest
     {
         const label index = indices[i];
 
-        const edge& e = edges_[edgeLabels_[index]];
+        const edge& e = shape.edges()[shape.edgeLabels()[index]];
 
         // Note: could do bb test ? Worthwhile?
 
         // Nearest point on line
         point ePoint, lnPt;
-        scalar dist = e.line(points_).nearestDist(ln, ePoint, lnPt);
+        scalar dist = e.line(shape.points()).nearestDist(ln, ePoint, lnPt);
         scalar distSqr = sqr(dist);
 
         if (distSqr < nearestDistSqr)
@@ -219,6 +258,23 @@ void CML::treeDataEdge::findNearest
             }
         }
     }
+}
+
+
+bool CML::treeDataEdge::findIntersectOp::operator()
+(
+    const label index,
+    const point& start,
+    const point& end,
+    point& result
+) const
+{
+    notImplemented
+    (
+        "treeDataEdge::intersects(const label, const point&,"
+        "const point&, point&)"
+    );
+    return false;
 }
 
 

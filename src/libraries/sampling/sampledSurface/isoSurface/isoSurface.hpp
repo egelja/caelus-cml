@@ -403,7 +403,7 @@ public:
             const scalarField& pointIsoVals,
             const scalar iso,
             const bool regularise,
-            const scalar mergeTol = 1E-6    // fraction of bounding box
+            const scalar mergeTol = 1e-6    // fraction of bounding box
         );
 
 
@@ -423,7 +423,7 @@ public:
 
         //- Interpolates cCoords,pCoords. Uses the references to the original
         //  fields used to create the iso surface.
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > interpolate
         (
             const GeometricField<Type, fvPatchField, volMesh>& cCoords,
@@ -436,6 +436,8 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "polyMesh.hpp"
 #include "syncTools.hpp"
@@ -1094,7 +1096,7 @@ void CML::isoSurface::generateTriPoints
 }
 
 
-//template <class Type>
+//template<class Type>
 //CML::tmp<CML::Field<Type> >
 //CML::isoSurface::sample(const Field<Type>& vField) const
 //{
@@ -1102,7 +1104,7 @@ void CML::isoSurface::generateTriPoints
 //}
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::isoSurface::interpolate
 (

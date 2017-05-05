@@ -121,6 +121,11 @@ public:
 
     // Member functions
 
+            virtual bool fixesGradient() const
+            {
+                return true;
+            }
+
         // Return defining fields
 
             //- Return gradient at boundary

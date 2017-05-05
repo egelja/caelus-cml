@@ -90,7 +90,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const word& axis,
             const List<point>& sampleCoords,
             const labelHashSet& patchSet,
@@ -102,7 +102,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const dictionary& dict
         );
 

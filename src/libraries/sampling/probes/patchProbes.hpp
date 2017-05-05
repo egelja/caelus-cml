@@ -32,8 +32,6 @@ Description
 #define patchProbes_H
 
 #include "probes.hpp"
-#include "volFields.hpp"
-#include "IOmanip.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -79,7 +77,7 @@ class patchProbes
 
 
         //- Sample and write all the fields of the given type
-        template <class Type>
+        template<class Type>
         void sampleAndWrite(const fieldGroup<Type>&);
 
 
@@ -105,7 +103,7 @@ class patchProbes
 
 
         //- Sample a single field on all sample locations
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sample(const word& fieldName) const;
 
 
@@ -148,13 +146,16 @@ public:
 
         //- Find elements containing patchProbes
         virtual void findElements(const fvMesh&);
-
-
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "volFields.hpp"
+#include "IOmanip.hpp"
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -172,7 +173,9 @@ void CML::patchProbes::sampleAndWrite
         unsigned int w = IOstream::defaultPrecision() + 7;
         OFstream& probeStream = *probeFilePtrs_[vField.name()];
 
-        probeStream << setw(w) << vField.time().value();
+        probeStream
+            << setw(w)
+            << vField.time().timeToUserTime(vField.time().value());
 
         forAll(values, probeI)
         {
@@ -196,7 +199,9 @@ void CML::patchProbes::sampleAndWrite
         unsigned int w = IOstream::defaultPrecision() + 7;
         OFstream& probeStream = *probeFilePtrs_[sField.name()];
 
-        probeStream << setw(w) << sField.time().value();
+        probeStream
+            << setw(w)
+            << sField.time().timeToUserTime(sField.time().value());
 
         forAll(values, probeI)
         {
@@ -207,7 +212,7 @@ void CML::patchProbes::sampleAndWrite
 }
 
 
-template <class Type>
+template<class Type>
 void CML::patchProbes::sampleAndWrite
 (
     const fieldGroup<Type>& fields
@@ -399,6 +404,7 @@ CML::patchProbes::sample
 
     return tValues;
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

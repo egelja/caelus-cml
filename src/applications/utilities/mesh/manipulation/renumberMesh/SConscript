@@ -34,9 +34,8 @@ renumberMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if renumberMeshEnv['WHICH_OS'] == "windows":
   renumberMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libdynamicMesh','libgenericPatchFields','libdecompositionMethods']
-else:
-  lib_link = ['dynamicMesh','genericPatchFields','decompositionMethods']
+
+lib_link = ['dynamicMesh','genericPatchFields','decompositionMethods']
   
 renumberMeshEnv.Append(LIBS = lib_link)
 

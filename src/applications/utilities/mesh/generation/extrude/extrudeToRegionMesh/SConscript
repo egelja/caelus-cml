@@ -18,7 +18,7 @@ extrudeToRegionMeshEnv.Prepend(CPPPATH = lib_inc)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-lib_link = ['libdynamicMesh','libextrudeModel']
+lib_link = ['dynamicMesh','extrudeModel']
   
 extrudeToRegionMeshEnv.Append(LIBS = lib_link)
 

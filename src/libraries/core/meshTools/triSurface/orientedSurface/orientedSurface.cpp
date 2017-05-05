@@ -200,7 +200,7 @@ void CML::orientedSurface::propagateOrientation
     if (side == triSurfaceTools::UNKNOWN)
     {
         // Non-closed surface. Do what? For now behave as if no flipping
-        // nessecary
+        // necessary
         flipState[nearestFaceI] = NOFLIP;
     }
     else if ((side == triSurfaceTools::OUTSIDE) == orientOutside)
@@ -251,7 +251,8 @@ void CML::orientedSurface::findZoneSide
     zoneFaceI = -1;
     isOutside = false;
 
-    List<pointIndexHit> hits;
+    pointField start(1, outsidePoint);
+    List<List<pointIndexHit> > hits(1, List<pointIndexHit>());
 
     forAll(faceZone, faceI)
     {
@@ -266,7 +267,7 @@ void CML::orientedSurface::findZoneSide
             // Check if normal different enough to decide upon
             if (magD > SMALL && (mag(n & d/magD) > 1e-6))
             {
-                point end = fc + d;
+                pointField end(1, fc + d);
 
                 //Info<< "Zone " << zoneI << " : Shooting ray"
                 //    << " from " << outsidePoint
@@ -274,12 +275,13 @@ void CML::orientedSurface::findZoneSide
                 //    << " to pierce triangle " << faceI
                 //    << " with centre " << fc << endl;
 
-                surfSearches.findLineAll(outsidePoint, end, hits);
+
+                surfSearches.findLineAll(start, end, hits);
 
                 label zoneIndex = -1;
-                forAll(hits, i)
+                forAll(hits[0], i)
                 {
-                    if (hits[i].index() == faceI)
+                    if (hits[0][i].index() == faceI)
                     {
                         zoneIndex = i;
                         break;

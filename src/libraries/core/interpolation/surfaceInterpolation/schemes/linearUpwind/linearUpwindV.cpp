@@ -66,8 +66,8 @@ CML::linearUpwindV<Type>::correction
     const labelList& own = mesh.owner();
     const labelList& nei = mesh.neighbour();
 
-    const vectorField& C = mesh.C();
-    const vectorField& Cf = mesh.Cf();
+    const volVectorField& C = mesh.C();
+    const surfaceVectorField& Cf = mesh.Cf();
 
     tmp
     <
@@ -93,8 +93,7 @@ CML::linearUpwindV<Type>::correction
         if (faceFlux[facei] > 0.0)
         {
             maxCorr =
-                (1.0 - w[facei])
-               *(vf[nei[facei]] - vf[own[facei]]);
+                (1.0 - w[facei])*(vf[nei[facei]] - vf[own[facei]]);
 
             sfCorr[facei] =
                 (Cf[facei] - C[own[facei]]) & gradVf[own[facei]];
@@ -134,6 +133,87 @@ CML::linearUpwindV<Type>::correction
             }
         }
     }
+
+
+    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
+        GeometricBoundaryField& bSfCorr = sfCorr.boundaryField();
+
+    forAll(bSfCorr, patchi)
+    {
+        fvsPatchField<Type>& pSfCorr = bSfCorr[patchi];
+
+        if (pSfCorr.coupled())
+        {
+            const labelUList& pOwner =
+                mesh.boundary()[patchi].faceCells();
+
+            const vectorField& pCf = Cf.boundaryField()[patchi];
+            const scalarField& pW = w.boundaryField()[patchi];
+
+            const scalarField& pFaceFlux = faceFlux.boundaryField()[patchi];
+
+            const Field<typename outerProduct<vector, Type>::type> pGradVfNei
+            (
+                gradVf.boundaryField()[patchi].patchNeighbourField()
+            );
+
+            const Field<Type> pVfNei
+            (
+                vf.boundaryField()[patchi].patchNeighbourField()
+            );
+
+            // Build the d-vectors
+            vectorField pd(Cf.boundaryField()[patchi].patch().delta());
+
+            forAll(pOwner, facei)
+            {
+                label own = pOwner[facei];
+
+                vector maxCorr;
+
+                if (pFaceFlux[facei] > 0)
+                {
+                    pSfCorr[facei] = (pCf[facei] - C[own]) & gradVf[own];
+
+                    maxCorr = (1.0 - pW[facei])*(pVfNei[facei] - vf[own]);
+                }
+                else
+                {
+                    pSfCorr[facei] =
+                        (pCf[facei] - pd[facei] - C[own]) & pGradVfNei[facei];
+
+                    maxCorr = pW[facei]*(vf[own] - pVfNei[facei]);
+                }
+
+                scalar pSfCorrs = magSqr(pSfCorr[facei]);
+                scalar maxCorrs = pSfCorr[facei] & maxCorr;
+
+                if (pSfCorrs > 0)
+                {
+                    if (maxCorrs < 0)
+                    {
+                        pSfCorr[facei] = vector::zero;
+                    }
+                    else if (pSfCorrs > maxCorrs)
+                    {
+                        pSfCorr[facei] *= maxCorrs/(pSfCorrs + VSMALL);
+                    }
+                }
+                else if (pSfCorrs < 0)
+                {
+                    if (maxCorrs > 0)
+                    {
+                        pSfCorr[facei] = vector::zero;
+                    }
+                    else if (pSfCorrs < maxCorrs)
+                    {
+                        pSfCorr[facei] *= maxCorrs/(pSfCorrs - VSMALL);
+                    }
+                }
+            }
+        }
+    }
+
 
     return tsfCorr;
 }

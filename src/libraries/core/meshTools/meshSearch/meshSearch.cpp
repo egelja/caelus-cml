@@ -31,7 +31,7 @@ License
 
 defineTypeNameAndDebug(CML::meshSearch, 0);
 
-CML::scalar CML::meshSearch::tol_ = 1E-3;
+CML::scalar CML::meshSearch::tol_ = 1e-3;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -563,7 +563,7 @@ const CML::indexedOctree<CML::treeDataFace>& CML::meshSearch::boundaryTree()
 
             treeBoundBox& overallBb = overallBbPtr_();
             // Extend slightly and make 3D
-            overallBb = overallBb.extend(rndGen, 1E-4);
+            overallBb = overallBb.extend(rndGen, 1e-4);
             overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
             overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
         }
@@ -616,7 +616,7 @@ const
 
             treeBoundBox& overallBb = overallBbPtr_();
             // Extend slightly and make 3D
-            overallBb = overallBb.extend(rndGen, 1E-4);
+            overallBb = overallBb.extend(rndGen, 1e-4);
             overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
             overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
         }
@@ -795,7 +795,7 @@ CML::label CML::meshSearch::findCell
         }
         else
         {
-             return findCellLinear(location);
+            return findCellLinear(location);
         }
     }
     else
@@ -940,9 +940,7 @@ CML::List<CML::pointIndexHit> CML::meshSearch::intersections
 
 bool CML::meshSearch::isInside(const point& p) const
 {
-    return
-        boundaryTree().getVolumeType(p)
-     == indexedOctree<treeDataFace>::INSIDE;
+    return (boundaryTree().getVolumeType(p) == volumeType::INSIDE);
 }
 
 

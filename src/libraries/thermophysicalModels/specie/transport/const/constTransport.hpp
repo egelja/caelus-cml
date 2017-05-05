@@ -151,10 +151,13 @@ public:
 
     // Member operators
 
-        inline constTransport& operator=
-        (
-            const constTransport&
-        );
+        inline constTransport& operator=(const constTransport&);
+
+        inline void operator+=(const constTransport&);
+
+        inline void operator-=(const constTransport&);
+
+        inline void operator*=(const scalar);
 
 
     // Friend operators
@@ -312,6 +315,52 @@ inline CML::constTransport<Thermo>& CML::constTransport<Thermo>::operator=
 }
 
 
+template<class Thermo>
+inline void CML::constTransport<Thermo>::operator+=
+(
+    const constTransport<Thermo>& st
+)
+{
+    scalar molr1 = this->nMoles();
+
+    Thermo::operator+=(st);
+
+    molr1 /= this->nMoles();
+    scalar molr2 = st.nMoles()/this->nMoles();
+
+    mu_ = molr1*mu_ + molr2*st.mu_;
+    rPr_ = 1.0/(molr1/rPr_ + molr2/st.rPr_);
+}
+
+
+template<class Thermo>
+inline void CML::constTransport<Thermo>::operator-=
+(
+    const constTransport<Thermo>& st
+)
+{
+    scalar molr1 = this->nMoles();
+
+    Thermo::operator-=(st);
+
+    molr1 /= this->nMoles();
+    scalar molr2 = st.nMoles()/this->nMoles();
+
+    mu_ = molr1*mu_ - molr2*st.mu_;
+    rPr_ = 1.0/(molr1/rPr_ - molr2/st.rPr_);
+}
+
+
+template<class Thermo>
+inline void CML::constTransport<Thermo>::operator*=
+(
+    const scalar s
+)
+{
+    Thermo::operator*=(s);
+}
+
+
 // * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 template<class Thermo>
@@ -333,7 +382,7 @@ inline CML::constTransport<Thermo> CML::operator+
     (
         t,
         molr1*ct1.mu_ + molr2*ct2.mu_,
-        molr1*ct1.rPr_ + molr2*ct2.rPr_
+        1.0/(molr1/ct1.rPr_ + molr2/ct2.rPr_)
     );
 }
 
@@ -357,7 +406,7 @@ inline CML::constTransport<Thermo> CML::operator-
     (
         t,
         molr1*ct1.mu_ - molr2*ct2.mu_,
-        molr1*ct1.rPr_ - molr2*ct2.rPr_
+        1.0/(molr1/ct1.rPr_ - molr2/ct2.rPr_)
     );
 }
 
@@ -373,7 +422,7 @@ inline CML::constTransport<Thermo> CML::operator*
     (
         s*static_cast<const Thermo&>(ct),
         ct.mu_,
-        ct.rPr_
+        1.0/ct.rPr_
     );
 }
 

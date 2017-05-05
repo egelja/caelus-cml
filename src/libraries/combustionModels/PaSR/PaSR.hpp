@@ -199,25 +199,14 @@ void CML::combustionModels::PaSR<CombThermoType>::correct()
             tmp<volScalarField> ttc(tc());
             const volScalarField& tc = ttc();
 
-            const scalar dt = this->mesh().time().deltaTValue();
-
             forAll(epsilon, i)
             {
-                if (epsilon[i] > 0)
-                {
-                    scalar tk =
-                        Cmix_.value()
-                       *CML::sqrt(muEff[i]/rho[i]/(epsilon[i] + SMALL));
+                scalar tk =
+                    Cmix_.value()*CML::sqrt(muEff[i]/rho[i]/(epsilon[i] + SMALL));
 
-                    // Chalmers PaSR model
-                    if (!useReactionRate_)
-                    {
-                        kappa_[i] = (dt + tc[i])/(dt + tc[i] + tk);
-                    }
-                    else
-                    {
-                        kappa_[i] = tc[i]/(tc[i] + tk);
-                    }
+                if (tk > SMALL)
+                {
+                    kappa_[i] = tc[i]/(tc[i] + tk);
                 }
                 else
                 {

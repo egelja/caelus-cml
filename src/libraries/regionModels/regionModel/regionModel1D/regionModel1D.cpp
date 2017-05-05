@@ -35,6 +35,7 @@ namespace regionModels
 
 void CML::regionModels::regionModel1D::constructMeshObjects()
 {
+
     nMagSfPtr_.reset
     (
         new surfaceScalarField
@@ -112,9 +113,12 @@ void CML::regionModels::regionModel1D::initialise()
     }
 
     boundaryFaceOppositeFace_.setSize(localPyrolysisFaceI);
+    boundaryFaceFaces_.setSize(localPyrolysisFaceI);
+    boundaryFaceCells_.setSize(localPyrolysisFaceI);
 
     surfaceScalarField& nMagSf = nMagSfPtr_();
 
+    localPyrolysisFaceI = 0;
     forAll(intCoupledPatchIDs_, i)
     {
         const label patchI = intCoupledPatchIDs_[i];
@@ -125,7 +129,7 @@ void CML::regionModels::regionModel1D::initialise()
         forAll(pNormals, localFaceI)
         {
             const vector& n = pNormals[localFaceI];
-            const labelList& faces = boundaryFaceFaces_[localFaceI];
+            const labelList& faces = boundaryFaceFaces_[localPyrolysisFaceI++];
             forAll (faces, faceI)
             {
                 const label faceID = faces[faceI];

@@ -116,6 +116,13 @@ public:
                 return cyclicAMIPolyPatch_.AMI();
             }
 
+            //- Return true if applying the low weight correction
+            virtual bool applyLowWeightCorrection() const
+            {
+                return cyclicAMIPolyPatch_.applyLowWeightCorrection();
+            }
+
+
             //- Are the cyclic planes parallel
             virtual bool parallel() const
             {
@@ -142,19 +149,32 @@ public:
                 );
             }
 
+            //- Return true if this patch is coupled. This is equivalent
+            //  to the coupledPolyPatch::coupled() if parallel running or
+            //  both sides present, false otherwise
+            virtual bool coupled() const;
+
             //- Return delta (P to N) vectors across coupled patch
             virtual tmp<vectorField> delta() const;
 
             template<class Type>
-            tmp<Field<Type> > interpolate(const Field<Type>& fld) const
+            tmp<Field<Type> > interpolate
+            (
+                const Field<Type>& fld,
+                const UList<Type>& defaultValues = UList<Type>()
+            ) const
             {
-                return cyclicAMIPolyPatch_.interpolate(fld);
+                return cyclicAMIPolyPatch_.interpolate(fld, defaultValues);
             }
 
             template<class Type>
-            tmp<Field<Type> > interpolate(const tmp<Field<Type> >& tFld) const
+            tmp<Field<Type> > interpolate
+            (
+                const tmp<Field<Type> >& tFld,
+                const UList<Type>& defaultValues = UList<Type>()
+            ) const
             {
-                return cyclicAMIPolyPatch_.interpolate(tFld);
+                return cyclicAMIPolyPatch_.interpolate(tFld, defaultValues);
             }
 
 

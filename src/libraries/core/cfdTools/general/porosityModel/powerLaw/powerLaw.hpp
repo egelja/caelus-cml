@@ -122,6 +122,9 @@ public:
 
     // Member Functions
 
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
+
         //- Calculate the porosity force
         virtual void calcForce
         (
@@ -177,9 +180,9 @@ void CML::porosityModels::powerLaw::apply
     const scalar C0 = C0_;
     const scalar C1m1b2 = (C1_ - 1.0)/2.0;
 
-    forAll(cellZoneIds_, zoneI)
+    forAll(cellZoneIDs_, zoneI)
     {
-        const labelList& cells = mesh_.cellZones()[cellZoneIds_[zoneI]];
+        const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
         forAll(cells, i)
         {
@@ -203,9 +206,9 @@ void CML::porosityModels::powerLaw::apply
     const scalar C0 = C0_;
     const scalar C1m1b2 = (C1_ - 1.0)/2.0;
 
-    forAll(cellZoneIds_, zoneI)
+    forAll(cellZoneIDs_, zoneI)
     {
-        const labelList& cells = mesh_.cellZones()[cellZoneIds_[zoneI]];
+        const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
         forAll(cells, i)
         {

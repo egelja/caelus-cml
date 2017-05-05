@@ -70,4 +70,4 @@ chemModelEnv.Install(install_dir, libchemistryModel)
 
 if (chemModelEnv['WHICH_OS'] == "darwin"):
 
-  chemModelEnv.Append(SHLINKFLAGS ='-install_name @' + chemModelEnv['LIB_PLATFORM_INSTALL'] + '/libchemistryModel.dylib')
+  chemModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libchemistryModel.dylib')

@@ -94,7 +94,7 @@ void ensightCloudField
         ensightCaseFile.setf(ios_base::left);
         ensightCaseFile
             << ("c" + fieldObject.name()).c_str()
-            << (' ' + prepend + "***." + cloudName
+            << (' ' + prepend + "****." + cloudName
               + "." + fieldObject.name()).c_str()
             << nl;
     }

@@ -426,7 +426,8 @@ CML::extrudedMesh::extrudedMesh
         sz,
         facei,
         0,
-        boundaryMesh()
+        boundaryMesh(),
+        wallPolyPatch::typeName
     );
 
     facei += sz;
@@ -437,7 +438,8 @@ CML::extrudedMesh::extrudedMesh
         extrudePatch.size(),
         facei,
         1,
-        boundaryMesh()
+        boundaryMesh(),
+        polyPatch::typeName
     );
 
     facei += extrudePatch.size();
@@ -448,7 +450,8 @@ CML::extrudedMesh::extrudedMesh
         extrudePatch.size(),
         facei,
         2,
-        boundaryMesh()
+        boundaryMesh(),
+        polyPatch::typeName
     );
 
     addPatches(patches);

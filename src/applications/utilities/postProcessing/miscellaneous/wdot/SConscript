@@ -31,9 +31,8 @@ wdotEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if wdotEnv['WHICH_OS'] == "windows":
   wdotEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
      
 
 wdotEnv.Append(LIBS = lib_link)

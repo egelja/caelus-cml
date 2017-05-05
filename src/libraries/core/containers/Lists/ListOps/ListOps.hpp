@@ -33,6 +33,7 @@ SourceFiles
 #define ListOps_H
 
 #include "labelList.hpp"
+#include "ops.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -87,13 +88,22 @@ void inplaceMapKey(const labelUList& oldToNew, Container&);
 template<class T>
 void sortedOrder(const UList<T>&, labelList& order);
 
+template<class T, class Cmp>
+void sortedOrder(const UList<T>&, labelList& order, const Cmp& cmp);
+
 //- Generate (sorted) indices corresponding to duplicate list values
 template<class T>
 void duplicateOrder(const UList<T>&, labelList& order);
 
+template<class T, class Cmp>
+void duplicateOrder(const UList<T>&, labelList& order, const Cmp& cmp);
+
 //- Generate (sorted) indices corresponding to unique list values
 template<class T>
 void uniqueOrder(const UList<T>&, labelList& order);
+
+template<class T, class Cmp>
+void uniqueOrder(const UList<T>&, labelList& order, const Cmp& cmp);
 
 //- Extract elements of List when select is a certain value.
 //  eg, to extract all selected elements:
@@ -207,6 +217,18 @@ label findSortedIndex
 
 //- Find last element < given value in sorted list and return index,
 //  return -1 if not found. Binary search.
+template<class ListType, class BinaryOp>
+label findLower
+(
+    const ListType&,
+    typename ListType::const_reference,
+    const label stary,
+    const BinaryOp& bop
+);
+
+
+//- Find last element < given value in sorted list and return index,
+//  return -1 if not found. Binary search.
 template<class ListType>
 label findLower
 (
@@ -226,6 +248,36 @@ List<Container> initList(const T[nRows]);
 //  to initialise e.g. faceList from arrays of labels.
 template<class Container, class T, int nRows, int nColumns>
 List<Container> initListList(const T[nRows][nColumns]);
+
+
+//- Helper class for list to append y onto the end of x
+template<class T>
+class ListAppendEqOp
+{
+public:
+    void operator()(List<T>& x, const List<T>& y) const;
+};
+
+
+//- Reverse a list. First element becomes last element etc.
+template<class ListType>
+ListType reverseList(const ListType& list);
+
+
+//- Inplace reversal of a list using Swap.
+template<class ListType>
+void inplaceReverseList(ListType& list);
+
+
+//- Rotate a list by n places. If n is positive rotate clockwise/right/down.
+//  If n is negative rotate anti-clockwise/left/up.
+template<class ListType>
+ListType rotateList(const ListType& list, const label n);
+
+
+//- Inplace reversal of a list using the Reversal Block Swapping algorithm.
+template<template<typename> class ListType, class DataType>
+void inplaceRotateList(ListType<DataType>& list, label n);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -388,6 +440,18 @@ void CML::sortedOrder
     labelList& order
 )
 {
+    sortedOrder(lst, order, typename UList<T>::less(lst));
+}
+
+
+template<class T, class Cmp>
+void CML::sortedOrder
+(
+    const UList<T>& lst,
+    labelList& order,
+    const Cmp& cmp
+)
+{
     // list lengths must be identical
     if (order.size() != lst.size())
     {
@@ -400,7 +464,7 @@ void CML::sortedOrder
     {
         order[elemI] = elemI;
     }
-    CML::stableSort(order, typename UList<T>::less(lst));
+    CML::stableSort(order, cmp);
 }
 
 
@@ -411,13 +475,25 @@ void CML::duplicateOrder
     labelList& order
 )
 {
+    duplicateOrder(lst, order, typename UList<T>::less(lst));
+}
+
+
+template<class T, class Cmp>
+void CML::duplicateOrder
+(
+    const UList<T>& lst,
+    labelList& order,
+    const Cmp& cmp
+)
+{
     if (lst.size() < 2)
     {
         order.clear();
         return;
     }
 
-    sortedOrder(lst, order);
+    sortedOrder(lst, order, cmp);
 
     label n = 0;
     for (label i = 0; i < order.size() - 1; ++i)
@@ -438,7 +514,19 @@ void CML::uniqueOrder
     labelList& order
 )
 {
-    sortedOrder(lst, order);
+    uniqueOrder(lst, order, typename UList<T>::less(lst));
+}
+
+
+template<class T, class Cmp>
+void CML::uniqueOrder
+(
+    const UList<T>& lst,
+    labelList& order,
+    const Cmp& cmp
+)
+{
+    sortedOrder(lst, order, cmp);
 
     if (order.size() > 1)
     {
@@ -799,12 +887,13 @@ CML::label CML::findSortedIndex
 }
 
 
-template<class ListType>
+template<class ListType, class BinaryOp>
 CML::label CML::findLower
 (
     const ListType& l,
     typename ListType::const_reference t,
-    const label start
+    const label start,
+    const BinaryOp& bop
 )
 {
     if (start >= l.size())
@@ -819,7 +908,7 @@ CML::label CML::findLower
     {
         label mid = (low + high)/2;
 
-        if (l[mid] < t)
+        if (bop(l[mid], t))
         {
             low = mid;
         }
@@ -829,13 +918,13 @@ CML::label CML::findLower
         }
     }
 
-    if (l[high] < t)
+    if (bop(l[high], t))
     {
         return high;
     }
     else
     {
-        if (l[low] < t)
+        if (bop(l[low], t))
         {
             return low;
         }
@@ -844,6 +933,18 @@ CML::label CML::findLower
             return -1;
         }
     }
+}
+
+
+template<class ListType>
+CML::label CML::findLower
+(
+    const ListType& l,
+    typename ListType::const_reference t,
+    const label start
+)
+{
+    return findLower(l, t, start, lessOp<typename ListType::value_type>());
 }
 
 
@@ -875,6 +976,107 @@ CML::List<Container> CML::initListList(const T elems[nRows][nColumns])
         lst[rowI] = cols;
     }
     return lst;
+}
+
+
+template<class T>
+void CML::ListAppendEqOp<T>::operator()(List<T>& x, const List<T>& y) const
+{
+    if (y.size())
+    {
+        if (x.size())
+        {
+            label sz = x.size();
+            x.setSize(sz + y.size());
+            forAll(y, i)
+            {
+                x[sz++] = y[i];
+            }
+        }
+        else
+        {
+            x = y;
+        }
+    }
+}
+
+
+template<class ListType>
+ListType CML::reverseList(const ListType& list)
+{
+    const label listSize = list.size();
+    const label lastIndex = listSize - 1;
+
+    ListType tmpList(listSize);
+
+    forAll(tmpList, elemI)
+    {
+        tmpList[elemI] = list[lastIndex - elemI];
+    }
+
+    return tmpList;
+}
+
+
+template<class ListType>
+void CML::inplaceReverseList(ListType& list)
+{
+    const label listSize = list.size();
+    const label lastIndex = listSize - 1;
+    const label nIterations = listSize >> 1;
+
+    label elemI = 0;
+    while (elemI < nIterations)
+    {
+        Swap(list[elemI], list[lastIndex - elemI]);
+
+        elemI++;
+    }
+}
+
+
+template<class ListType>
+ListType CML::rotateList(const ListType& list, const label n)
+{
+    const label listSize = list.size();
+
+    ListType tmpList(listSize);
+
+    forAll(tmpList, elemI)
+    {
+        label index = (elemI - n) % listSize;
+
+        if (index < 0)
+        {
+            index += listSize;
+        }
+
+        tmpList[elemI] = list[index];
+    }
+
+    return tmpList;
+}
+
+
+template<template<typename> class ListType, class DataType>
+void CML::inplaceRotateList(ListType<DataType>& list, label n)
+{
+    const label listSize = list.size();
+
+    n = (listSize - n) % listSize;
+
+    if (n < 0)
+    {
+        n += listSize;
+    }
+
+    SubList<DataType> firstHalf(list, n, 0);
+    SubList<DataType> secondHalf(list, listSize - n, n);
+
+    inplaceReverseList(firstHalf);
+    inplaceReverseList(secondHalf);
+
+    inplaceReverseList(list);
 }
 
 

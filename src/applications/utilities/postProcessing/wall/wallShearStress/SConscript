@@ -40,15 +40,11 @@ wallShearStressEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if wallShearStressEnv['WHICH_OS'] == "windows":
   wallShearStressEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad')
-  lib_link = ['libgenericPatchFields','libcompressibleRASModels',
-  'libreactionThermophysicalModels','libspecie','libbasicThermophysicalModels',
-  'libcompressibleTurbulenceModel','libincompressibleRASModels',
-  'libincompressibleTransportModels','libincompressibleTurbulenceModel']
-else:
-  lib_link = ['genericPatchFields','compressibleRASModels',
-  'reactionThermophysicalModels','specie','basicThermophysicalModels',
-  'compressibleTurbulenceModel','incompressibleRASModels',
-  'incompressibleTransportModels','incompressibleTurbulenceModel']
+
+lib_link = ['genericPatchFields','compressibleRASModels',
+'reactionThermophysicalModels','specie','basicThermophysicalModels',
+'compressibleTurbulenceModel','incompressibleRASModels',
+'incompressibleTransportModels','incompressibleTurbulenceModel']
 
 wallShearStressEnv.Append(LIBS = lib_link)
 

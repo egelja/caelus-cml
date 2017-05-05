@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +22,16 @@ Class
     CML::vanAlbadaLimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    vanAlbada differencing scheme based on r obtained from the LimiterFunc
-    class.
+    Symmetric vanAlbada limiter function.
 
     Used in conjunction with the template class LimitedScheme.
 
 SourceFiles
     vanAlbada.cpp
+
+References
+    [1] "A comparative study of computational methods in cosmic gas dynamics",
+         G.D., Van Albada, Astronomy and Astrophysics 108, pp. 76–84
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,14 +40,8 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class vanAlbadaLimiter Declaration
-\*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
 class vanAlbadaLimiter
@@ -73,17 +70,11 @@ public:
             faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return r*(r + 1)/(sqr(r) + 1);
+        return (r+1)/(r+1/stabilise(r,VSMALL));
     }
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-// ************************************************************************* //

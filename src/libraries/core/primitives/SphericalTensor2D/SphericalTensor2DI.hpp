@@ -29,13 +29,13 @@ namespace CML
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct null
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>::SphericalTensor2D()
 {}
 
 
 // Construct given VectorSpace
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>::SphericalTensor2D
 (
     const VectorSpace<SphericalTensor2D<Cmpt>, Cmpt, 1>& vs
@@ -46,7 +46,7 @@ inline SphericalTensor2D<Cmpt>::SphericalTensor2D
 
 
 // Construct given three Cmpts
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>::SphericalTensor2D(const Cmpt& stii)
 {
     this->v_[II] = stii;
@@ -54,7 +54,7 @@ inline SphericalTensor2D<Cmpt>::SphericalTensor2D(const Cmpt& stii)
 
 
 // Construct from Istream
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>::SphericalTensor2D(Istream& is)
 :
     VectorSpace<SphericalTensor2D<Cmpt>, Cmpt, 1>(is)
@@ -63,14 +63,14 @@ inline SphericalTensor2D<Cmpt>::SphericalTensor2D(Istream& is)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template <class Cmpt>
+template<class Cmpt>
 inline const Cmpt&  SphericalTensor2D<Cmpt>::ii() const
 {
     return this->v_[II];
 }
 
 
-template <class Cmpt>
+template<class Cmpt>
 inline Cmpt& SphericalTensor2D<Cmpt>::ii()
 {
     return this->v_[II];
@@ -80,7 +80,7 @@ inline Cmpt& SphericalTensor2D<Cmpt>::ii()
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
 //- Inner-product between two spherical tensors
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>
 operator&
 (
@@ -93,7 +93,7 @@ operator&
 
 
 //- Inner-product between a spherical tensor and a vector
-template <class Cmpt>
+template<class Cmpt>
 inline Vector2D<Cmpt>
 operator&(const SphericalTensor2D<Cmpt>& st, const Vector2D<Cmpt>& v)
 {
@@ -106,7 +106,7 @@ operator&(const SphericalTensor2D<Cmpt>& st, const Vector2D<Cmpt>& v)
 
 
 //- Inner-product between a vector and a spherical tensor
-template <class Cmpt>
+template<class Cmpt>
 inline Vector2D<Cmpt>
 operator&(const Vector2D<Cmpt>& v, const SphericalTensor2D<Cmpt>& st)
 {
@@ -119,7 +119,7 @@ operator&(const Vector2D<Cmpt>& v, const SphericalTensor2D<Cmpt>& st)
 
 
 //- Division of a scalar by a sphericalTensor2D
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt>
 operator/(const scalar s, const SphericalTensor2D<Cmpt>& st)
 {
@@ -128,7 +128,7 @@ operator/(const scalar s, const SphericalTensor2D<Cmpt>& st)
 
 
 //- Return the trace of a spherical tensor
-template <class Cmpt>
+template<class Cmpt>
 inline Cmpt tr(const SphericalTensor2D<Cmpt>& st)
 {
     return 2*st.ii();
@@ -136,7 +136,7 @@ inline Cmpt tr(const SphericalTensor2D<Cmpt>& st)
 
 
 //- Return the spherical part of a spherical tensor, i.e. itself
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt> sph(const SphericalTensor2D<Cmpt>& st)
 {
     return st;
@@ -144,7 +144,7 @@ inline SphericalTensor2D<Cmpt> sph(const SphericalTensor2D<Cmpt>& st)
 
 
 //- Return the determinant of a spherical tensor
-template <class Cmpt>
+template<class Cmpt>
 inline Cmpt det(const SphericalTensor2D<Cmpt>& st)
 {
     return st.ii()*st.ii();
@@ -152,7 +152,7 @@ inline Cmpt det(const SphericalTensor2D<Cmpt>& st)
 
 
 //- Return the inverse of a symmetric tensor
-template <class Cmpt>
+template<class Cmpt>
 inline SphericalTensor2D<Cmpt> inv(const SphericalTensor2D<Cmpt>& st)
 {
     return SphericalTensor2D<Cmpt>(1.0/st.ii());

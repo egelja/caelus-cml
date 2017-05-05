@@ -222,6 +222,28 @@ class primitiveMesh
                 const labelList&
             );
 
+protected:
+
+    // Static data members
+
+        //- Static data to control mesh checking
+
+            //- Cell closedness warning threshold
+            //  set as the fraction of un-closed area to closed area
+            static scalar closedThreshold_;
+
+            //- Aspect ratio warning threshold
+            static scalar aspectThreshold_;
+
+            //- Non-orthogonality warning threshold in deg
+            static scalar nonOrthThreshold_;
+
+            //- Skewness warning threshold
+            static scalar skewThreshold_;
+
+            //- Threshold where faces are considered coplanar
+            static scalar planarCosAngle_;
+
 
         // Geometrical calculations
 
@@ -268,28 +290,10 @@ class primitiveMesh
             ) const;
 
 
-    // Static data members
-
-        //- Static data to control mesh checking
-
-            //- Cell closedness warning threshold
-            //  set as the fraction of un-closed area to closed area
-            static scalar closedThreshold_;
-
-            //- Aspect ratio warning threshold
-            static scalar aspectThreshold_;
-
-            //- Non-orthogonality warning threshold in deg
-            static scalar nonOrthThreshold_;
-
-            //- Skewness warning threshold
-            static scalar skewThreshold_;
-
-            //- Threshold where faces are considered coplanar
-            static scalar planarCosAngle_;
 
 
-protected:
+
+
 
         //- Construct null
         primitiveMesh();

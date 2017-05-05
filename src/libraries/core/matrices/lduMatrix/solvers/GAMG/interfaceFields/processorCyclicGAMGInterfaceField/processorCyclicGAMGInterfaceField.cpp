@@ -34,6 +34,12 @@ namespace CML
         processorCyclicGAMGInterfaceField,
         lduInterface
     );
+    addToRunTimeSelectionTable
+    (
+        GAMGInterfaceField,
+        processorCyclicGAMGInterfaceField,
+        lduInterfaceField
+    );
 }
 
 
@@ -49,55 +55,21 @@ CML::processorCyclicGAMGInterfaceField::processorCyclicGAMGInterfaceField
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::processorCyclicGAMGInterfaceField::~processorCyclicGAMGInterfaceField()
+CML::processorCyclicGAMGInterfaceField::processorCyclicGAMGInterfaceField
+(
+    const GAMGInterface& GAMGCp,
+    const bool doTransform,
+    const int rank
+)
+:
+    processorGAMGInterfaceField(GAMGCp, doTransform, rank)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//void CML::processorCyclicGAMGInterfaceField::initInterfaceMatrixUpdate
-//(
-//    const scalarField& psiInternal,
-//    scalarField&,
-//    const lduMatrix&,
-//    const scalarField&,
-//    const direction,
-//    const Pstream::commsTypes commsType
-//) const
-//{
-//    procInterface_.compressedSend
-//    (
-//        commsType,
-//        procInterface_.interfaceInternalField(psiInternal)()
-//    );
-//}
-//
-//
-//void CML::processorCyclicGAMGInterfaceField::updateInterfaceMatrix
-//(
-//    const scalarField&,
-//    scalarField& result,
-//    const lduMatrix&,
-//    const scalarField& coeffs,
-//    const direction cmpt,
-//    const Pstream::commsTypes commsType
-//) const
-//{
-//    scalarField pnf
-//    (
-//        procInterface_.compressedReceive<scalar>(commsType, coeffs.size())
-//    );
-//    transformCoupleField(pnf, cmpt);
-//
-//    const labelUList& faceCells = procInterface_.faceCells();
-//
-//    forAll(faceCells, elemI)
-//    {
-//        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
-//    }
-//}
+CML::processorCyclicGAMGInterfaceField::~processorCyclicGAMGInterfaceField()
+{}
 
 
 // ************************************************************************* //

@@ -31,7 +31,7 @@ inter2PropEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['core','interfaceProperties']
+lib_link = ['core']
 inter2PropEnv.Append(LIBS = lib_link)
    
 #===============================================================================
@@ -60,4 +60,4 @@ inter2PropEnv.Install(install_dir, libtwoPhaseInterfaceProperties)
 
 if (inter2PropEnv['WHICH_OS'] == "darwin"):
 
-  inter2PropEnv.Append(SHLINKFLAGS ='-install_name @' + inter2PropEnv['LIB_PLATFORM_INSTALL'] + '/libtwoPhaseInterfaceProperties.dylib')
+  inter2PropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libtwoPhaseInterfaceProperties.dylib')

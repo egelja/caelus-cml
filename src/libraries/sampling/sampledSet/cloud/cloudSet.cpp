@@ -106,7 +106,7 @@ CML::cloudSet::cloudSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const List<point>& sampleCoords
 )
@@ -127,7 +127,7 @@ CML::cloudSet::cloudSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :

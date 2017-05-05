@@ -70,4 +70,4 @@ turbCompModelEnv.Install(install_dir, libcompressibleTurbulenceModel)
 
 if (turbCompModelEnv['WHICH_OS'] == "darwin"):
 
-  turbCompModelEnv.Append(SHLINKFLAGS ='-install_name @' + turbCompModelEnv['LIB_PLATFORM_INSTALL'] + '/libcompressibleTurbulenceModel.dylib')
+  turbCompModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcompressibleTurbulenceModel.dylib')

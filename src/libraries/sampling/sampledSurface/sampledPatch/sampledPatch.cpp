@@ -244,6 +244,7 @@ CML::tmp<CML::vectorField> CML::sampledPatch::sample
     return sampleField(vField);
 }
 
+
 CML::tmp<CML::sphericalTensorField> CML::sampledPatch::sample
 (
     const volSphericalTensorField& vField
@@ -288,6 +289,7 @@ CML::tmp<CML::vectorField> CML::sampledPatch::sample
     return sampleField(sField);
 }
 
+
 CML::tmp<CML::sphericalTensorField> CML::sampledPatch::sample
 (
     const surfaceSphericalTensorField& sField
@@ -331,6 +333,7 @@ CML::tmp<CML::vectorField> CML::sampledPatch::interpolate
 {
     return interpolateField(interpolator);
 }
+
 
 CML::tmp<CML::sphericalTensorField> CML::sampledPatch::interpolate
 (

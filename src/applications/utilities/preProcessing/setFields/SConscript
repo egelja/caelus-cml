@@ -32,9 +32,8 @@ setFieldsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if setFieldsEnv['WHICH_OS'] == "windows":
   setFieldsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
     
 setFieldsEnv.Append(LIBS = lib_link)
     

@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
             }
         }
 
+
         if (nTracks == 0)
         {
             Info<< "\n    No track data" << endl;
@@ -188,7 +189,6 @@ int main(int argc, char *argv[])
         {
             Info<< "\n    Generating " << nTracks << " tracks" << endl;
 
-            // determine length of each track
             labelList trackLengths(nTracks, 0);
             forAll(particleToTrack, i)
             {
@@ -198,11 +198,13 @@ int main(int argc, char *argv[])
 
             // particle "age" property used to sort the tracks
             List<SortableList<scalar> > agePerTrack(nTracks);
+            List<List<label> > particleMap(nTracks);
 
             forAll(trackLengths, i)
             {
                 const label length = trackLengths[i];
                 agePerTrack[i].setSize(length);
+                particleMap[i].setSize(length);
             }
 
             // store the particle age per track
@@ -224,6 +226,7 @@ int main(int argc, char *argv[])
                     const label trackI = particleToTrack[i];
                     const label sampleI = trackSamples[trackI];
                     agePerTrack[trackI][sampleI] = age[i];
+                    particleMap[trackI][sampleI] = i;
                     trackSamples[trackI]++;
                 }
                 tage.clear();
@@ -247,21 +250,30 @@ int main(int argc, char *argv[])
                 Info<< "\n    Writing points" << endl;
 
                 {
-                    label offset = 0;
                     forAll(agePerTrack, i)
                     {
                         agePerTrack[i].sort();
+
                         const labelList& ids = agePerTrack[i].indices();
+                        labelList& particleIds = particleMap[i];
+
+                        {
+                            // update addressing
+                            List<label> sortedIds(ids);
+                            forAll(sortedIds, j)
+                            {
+                                sortedIds[j] = particleIds[ids[j]];
+                            }
+                            particleIds = sortedIds;
+                        }
 
                         forAll(ids, j)
                         {
-                            const label localId = offset + ids[j];
+                            const label localId = particleIds[j];
                             const vector& pos = particles[localId].position();
                             os  << pos.x() << ' ' << pos.y() << ' ' << pos.z()
                                 << nl;
                         }
-
-                        offset += trackLengths[i];
                     }
                 }
 
@@ -274,13 +286,14 @@ int main(int argc, char *argv[])
                 // Write ids of track points to file
                 {
                     label globalPtI = 0;
-                    forAll(agePerTrack, i)
+                    forAll(particleMap, i)
                     {
-                        os  << agePerTrack[i].size() << nl;
+                        os  << particleMap[i].size() << nl;
 
-                        forAll(agePerTrack[i], j)
+                        forAll(particleMap[i], j)
                         {
                             os  << ' ' << globalPtI++;
+
                             if (((j + 1) % 10 == 0) && (j != 0))
                             {
                                 os  << nl;
@@ -299,14 +312,14 @@ int main(int argc, char *argv[])
 
                 Info<< "\n    Processing fields" << nl << endl;
 
-                processFields<label>(os, agePerTrack, userFields, cloudObjs);
-                processFields<scalar>(os, agePerTrack, userFields, cloudObjs);
-                processFields<vector>(os, agePerTrack, userFields, cloudObjs);
+                processFields<label>(os, particleMap, userFields, cloudObjs);
+                processFields<scalar>(os, particleMap, userFields, cloudObjs);
+                processFields<vector>(os, particleMap, userFields, cloudObjs);
                 processFields<sphericalTensor>
-                    (os, agePerTrack, userFields, cloudObjs);
+                    (os, particleMap, userFields, cloudObjs);
                 processFields<symmTensor>
-                    (os, agePerTrack, userFields, cloudObjs);
-                processFields<tensor>(os, agePerTrack, userFields, cloudObjs);
+                    (os, particleMap, userFields, cloudObjs);
+                processFields<tensor>(os, particleMap, userFields, cloudObjs);
 
             }
         }

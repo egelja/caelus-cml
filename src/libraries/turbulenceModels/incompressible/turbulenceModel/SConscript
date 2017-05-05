@@ -55,4 +55,4 @@ turbModelEnv.Install(install_dir, libincompressibleTurbulenceModel)
 
 if (turbModelEnv['WHICH_OS'] == "darwin"):
 
-  turbModelEnv.Append(SHLINKFLAGS ='-install_name @' + turbModelEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleTurbulenceModel.dylib')
+  turbModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleTurbulenceModel.dylib')

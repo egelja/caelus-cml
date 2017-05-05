@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,14 +39,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class smoothSolver Declaration
-\*---------------------------------------------------------------------------*/
 
 class smoothSolver
 :
@@ -90,19 +85,13 @@ public:
         //- Solve the matrix with this solver
         virtual lduMatrix::solverPerformance solve
         (
-            scalarField& psi,
-            const scalarField& source,
+            scalarField& x,
+            const scalarField& b,
             const direction cmpt=0
         ) const;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-// ************************************************************************* //

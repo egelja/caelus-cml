@@ -1,0 +1,68 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+swakLocCalEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = swakLocCalEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+swakLocCalEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../../swakParsers/lnInclude',
+src + '/sampling/lnInclude'
+]
+	
+swakLocCalEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+swakLocCalEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['swakParsers']
+
+swakLocCalEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_swakLocCal = Split("""
+  localCellCalculationFunction.cpp
+  lcFaceMinimumPluginFunction.cpp
+  lcFaceMaximumPluginFunction.cpp
+  lcLocalAveragePluginFunction.cpp
+  """)
+
+src_files = src_files_swakLocCal
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libswakLocCals = swakLocCalEnv.SharedLibrary(target = 'libswakLocalCalculationsFunctionPlugin',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = swakLocCalEnv['LIB_PLATFORM_INSTALL']
+swakLocCalEnv.Alias('install', install_dir)
+swakLocCalEnv.Install(install_dir, libswakLocCals)
+
+if (swakLocCalEnv['WHICH_OS'] == "darwin"):
+
+  swakLocCalEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakLocalCalculationsFunctionPlugin.dylib')

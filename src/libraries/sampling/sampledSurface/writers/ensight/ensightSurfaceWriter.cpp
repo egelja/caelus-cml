@@ -25,6 +25,7 @@ License
 #include "OSspecific.hpp"
 #include "IOmanip.hpp"
 #include "ensightPartFaces.hpp"
+#include "ensightPTraits.hpp"
 
 #include "makeSurfaceWriterMethods.hpp"
 
@@ -85,7 +86,7 @@ void CML::ensightSurfaceWriter::writeTemplate
         << "model:        1     " << osGeom.name().name() << nl
         << nl
         << "VARIABLE" << nl
-        << pTraits<Type>::typeName << " per "
+        << ensightPTraits<Type>::typeName << " per "
         << word(isNodeValues ? "node:" : "element:") << setw(10) << 1
         << "       " << fieldName
         << "       " << surfaceName.c_str() << ".***." << fieldName << nl
@@ -103,7 +104,7 @@ void CML::ensightSurfaceWriter::writeTemplate
     osGeom << ensPart;
 
     // Write field
-    osField.writeKeyword(pTraits<Type>::typeName);
+    osField.writeKeyword(ensightPTraits<Type>::typeName);
     ensPart.writeField(osField, values, isNodeValues);
 }
 

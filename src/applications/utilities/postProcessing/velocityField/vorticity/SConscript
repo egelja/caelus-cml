@@ -31,9 +31,8 @@ vorticityEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if vorticityEnv['WHICH_OS'] == "windows":
   vorticityEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 vorticityEnv.Append(LIBS = lib_link)
 

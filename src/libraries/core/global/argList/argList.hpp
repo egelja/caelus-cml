@@ -23,7 +23,7 @@ Class
 
 Description
     Extract command arguments and options from the supplied
-    \a argc and @a argv parameters.
+    \a argc and \a argv parameters.
 
     Sequences with "(" ... ")" are transformed into a stringList.
     For example,
@@ -101,6 +101,10 @@ class argList
     // Private data
         static bool bannerEnabled;
 
+        //- Switch on/off parallel mode. Has to be first to be constructed
+        //  so destructor is done last.
+        ParRunControl parRunControl_;
+
         stringList args_;
         HashTable<string> options_;
 
@@ -108,8 +112,6 @@ class argList
         fileName rootPath_;
         fileName globalCase_;
         fileName case_;
-
-        ParRunControl parRunControl_;
 
         // Signal handlers
         sigFpe sigFpe_;
@@ -267,7 +269,7 @@ public:
             ) const;
 
             //- Read a value from the named option if present.
-            //  Return true if the named option was found.
+            //  Return supplied default otherwise.
             template<class T>
             inline T optionLookupOrDefault
             (

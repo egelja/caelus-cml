@@ -58,4 +58,4 @@ lagBasicEnv.Install(install_dir, liblagrangian)
 
 if (lagBasicEnv['WHICH_OS'] == "darwin"):
 
-  lagBasicEnv.Append(SHLINKFLAGS ='-install_name @' + lagBasicEnv['LIB_PLATFORM_INSTALL'] + '/liblagrangian.dylib')
+  lagBasicEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangian.dylib')

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 4.10
+Caelus 5.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -20,6 +20,7 @@ boundaryField
     inlet
     {
         type            timeVaryingMappedFixedValue;
+        offset          (0 0 0);
         setAverage      off;
     }
 

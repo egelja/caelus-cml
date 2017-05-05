@@ -960,7 +960,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
 
         if (td.cloud().solution().coupled())
         {
-            scalar dm = np0*mass1;
+            scalar dm = np0*mass0;
 
             // Absorb parcel into carrier phase
             forAll(YGas_, i)
@@ -985,7 +985,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
 
             td.cloud().hsTrans()[cellI] += dm*HsEff(td, pc, T0, idG, idL, idS);
 
-            td.cloud().phaseChange().addToPhaseChangeMass(dm);
+            td.cloud().phaseChange().addToPhaseChangeMass(np0*mass1);
         }
 
         return;

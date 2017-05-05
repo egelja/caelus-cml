@@ -107,7 +107,7 @@ void CML::primitiveMesh::makeCellCentresAndVols
     {
         // Calculate 3*face-pyramid volume
         scalar pyr3Vol =
-            max(fAreas[facei] & (fCtrs[facei] - cEst[own[facei]]), VSMALL);
+            fAreas[facei] & (fCtrs[facei] - cEst[own[facei]]);
 
         // Calculate face-pyramid centre
         vector pc = (3.0/4.0)*fCtrs[facei] + (1.0/4.0)*cEst[own[facei]];
@@ -123,7 +123,7 @@ void CML::primitiveMesh::makeCellCentresAndVols
     {
         // Calculate 3*face-pyramid volume
         scalar pyr3Vol =
-            max(fAreas[facei] & (cEst[nei[facei]] - fCtrs[facei]), VSMALL);
+            fAreas[facei] & (cEst[nei[facei]] - fCtrs[facei]);
 
         // Calculate face-pyramid centre
         vector pc = (3.0/4.0)*fCtrs[facei] + (1.0/4.0)*cEst[nei[facei]];
@@ -135,7 +135,18 @@ void CML::primitiveMesh::makeCellCentresAndVols
         cellVols[nei[facei]] += pyr3Vol;
     }
 
-    cellCtrs /= cellVols;
+    forAll(cellCtrs, celli)
+    {
+        if (mag(cellVols[celli]) > VSMALL)
+        {
+            cellCtrs[celli] /= cellVols[celli];
+        }
+        else
+        {
+            cellCtrs[celli] = cEst[celli];
+        }
+    }
+
     cellVols *= (1.0/3.0);
 }
 

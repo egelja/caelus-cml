@@ -199,7 +199,6 @@ CML::searchableSurfaceCollection::searchableSurfaceCollection
                 surfI,
                 coordinateSystem::New
                 (
-                    "",
                     subDict.subDict("transform")
                 )
             );
@@ -243,6 +242,35 @@ CML::searchableSurfaceCollection::searchableSurfaceCollection
     transform_.setSize(surfI);
     subGeom_.setSize(surfI);
     indexOffset_.setSize(surfI+1);
+
+    // Bounds is the overall bounds
+    bounds() = boundBox(point::max, point::min);
+
+    forAll(subGeom_, surfI)
+    {
+        const boundBox& surfBb = subGeom_[surfI].bounds();
+
+        // Transform back to global coordinate sys.
+        const point surfBbMin = transform_[surfI].globalPosition
+        (
+            cmptMultiply
+            (
+                surfBb.min(),
+                scale_[surfI]
+            )
+        );
+        const point surfBbMax = transform_[surfI].globalPosition
+        (
+            cmptMultiply
+            (
+                surfBb.max(),
+                scale_[surfI]
+            )
+        );
+
+        bounds().min() = min(bounds().min(), surfBbMin);
+        bounds().max() = max(bounds().max(), surfBbMax);
+    }
 }
 
 
@@ -292,21 +320,22 @@ CML::label CML::searchableSurfaceCollection::size() const
 }
 
 
-CML::pointField CML::searchableSurfaceCollection::coordinates() const
+CML::tmp<CML::pointField>
+CML::searchableSurfaceCollection::coordinates() const
 {
-    // Get overall size
-    pointField coords(size());
+    tmp<pointField> tCtrs = tmp<pointField>(new pointField(size()));
+    pointField& ctrs = tCtrs();
 
     // Append individual coordinates
     label coordI = 0;
 
     forAll(subGeom_, surfI)
     {
-        const pointField subCoords = subGeom_[surfI].coordinates();
+        const pointField subCoords(subGeom_[surfI].coordinates());
 
         forAll(subCoords, i)
         {
-            coords[coordI++] = transform_[surfI].globalPosition
+            ctrs[coordI++] = transform_[surfI].globalPosition
             (
                 cmptMultiply
                 (
@@ -317,7 +346,82 @@ CML::pointField CML::searchableSurfaceCollection::coordinates() const
         }
     }
 
-    return coords;
+    return tCtrs;
+}
+
+
+void CML::searchableSurfaceCollection::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(size());
+    radiusSqr.setSize(centres.size());
+
+    // Append individual coordinates
+    label coordI = 0;
+
+    forAll(subGeom_, surfI)
+    {
+        scalar maxScale = cmptMax(scale_[surfI]);
+
+        pointField subCentres;
+        scalarField subRadiusSqr;
+        subGeom_[surfI].boundingSpheres(subCentres, subRadiusSqr);
+
+        forAll(subCentres, i)
+        {
+            centres[coordI] = transform_[surfI].globalPosition
+            (
+                cmptMultiply
+                (
+                    subCentres[i],
+                    scale_[surfI]
+                )
+            );
+            radiusSqr[coordI] = maxScale*subRadiusSqr[i];
+            coordI++;
+        }
+    }
+}
+
+
+CML::tmp<CML::pointField>
+CML::searchableSurfaceCollection::points() const
+{
+    // Get overall size
+    label nPoints = 0;
+
+    forAll(subGeom_, surfI)
+    {
+        nPoints += subGeom_[surfI].points()().size();
+    }
+
+    tmp<pointField> tPts(new pointField(nPoints));
+    pointField& pts = tPts();
+
+    // Append individual coordinates
+    nPoints = 0;
+
+    forAll(subGeom_, surfI)
+    {
+        const pointField subCoords(subGeom_[surfI].points());
+
+        forAll(subCoords, i)
+        {
+            pts[nPoints++] = transform_[surfI].globalPosition
+            (
+                cmptMultiply
+                (
+                    subCoords[i],
+                    scale_[surfI]
+                )
+            );
+        }
+    }
+
+    return tPts;
 }
 
 
@@ -574,6 +678,9 @@ void CML::searchableSurfaceCollection::getNormal
         {
             vectorField surfNormal;
             subGeom_[surfI].getNormal(surfInfo[surfI], surfNormal);
+
+            // Transform back to global coordinate sys.
+            surfNormal = transform_[surfI].globalVector(surfNormal);
 
             const labelList& map = infoMap[surfI];
             forAll(map, i)

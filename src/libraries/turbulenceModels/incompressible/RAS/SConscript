@@ -40,6 +40,7 @@ src_files = Split("""
   laminar/laminar.cpp
   realizableKE/realizableKE.cpp
   kOmegaSST/kOmegaSST.cpp
+  kOmegaSSTSAS/kOmegaSSTSAS.cpp
   SpalartAllmaras/SpalartAllmaras.cpp
   derivedFvPatchFields/wallFunctions/nutWallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkWallFunction/nutkWallFunctionFvPatchScalarField.cpp
@@ -53,7 +54,7 @@ src_files = Split("""
   derivedFvPatchFields/wallFunctions/epsilonWallFunctions/epsilonWallFunction/epsilonWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/omegaWallFunctions/omegaWallFunction/omegaWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
-  derivedFvPatchFields/wallFunctions/kappatWallFunctions/kappatJayatillekeWallFunction/kappatJayatillekeWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/alphatWallFunctions/alphatJayatillekeWallFunction/alphatJayatillekeWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.cpp
   derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.cpp
   derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.cpp
@@ -77,4 +78,4 @@ turbInRASEnv.Install(install_dir, libincompressibleRASModels)
 
 if (turbInRASEnv['WHICH_OS'] == "darwin"):
 
-  turbInRASEnv.Append(SHLINKFLAGS ='-install_name @' + turbInRASEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleRASModels.dylib')
+  turbInRASEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleRASModels.dylib')

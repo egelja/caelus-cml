@@ -54,7 +54,7 @@ using namespace CML;
 
 
 // Max cos angle for edges to be considered aligned with axis.
-static const scalar edgeTol = 1E-3;
+static const scalar edgeTol = 1e-3;
 
 
 void writeSet(const cellSet& cells, const string& msg)
@@ -204,7 +204,8 @@ label addPatch(polyMesh& mesh, const word& patchName)
                 0,
                 mesh.nInternalFaces(),
                 patchI,
-                patches
+                patches,
+                emptyPolyPatch::typeName
             );
 
         forAll(patches, i)
@@ -531,7 +532,7 @@ void subsetMesh
         Info<< "Writing refined mesh to time " << runTime.timeName() << nl
             << endl;
 
-        IOstream::defaultPrecision(10);
+        IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
         mesh.write();
         refLevel.write();
     }
@@ -901,7 +902,7 @@ int main(int argc, char *argv[])
             Info<< "    Writing refined mesh to time " << runTime.timeName()
                 << nl << endl;
 
-            IOstream::defaultPrecision(10);
+            IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
             mesh.write();
             refLevel.write();
         }
@@ -972,7 +973,7 @@ int main(int argc, char *argv[])
             << endl;
 
         // Write final mesh
-        IOstream::defaultPrecision(10);
+        IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
         mesh.write();
         refLevel.write();
 
@@ -983,7 +984,7 @@ int main(int argc, char *argv[])
             << endl;
 
         // Write final mesh. (will have been written already if writeMesh=true)
-        IOstream::defaultPrecision(10);
+        IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
         mesh.write();
         refLevel.write();
     }

@@ -81,7 +81,7 @@ const CML::coordinateSystems& CML::coordinateSystems::New
                 IOobject
                 (
                     typeName,
-                    "constant",
+                    obr.time().constant(),
                     obr,
                     IOobject::READ_IF_PRESENT,
                     IOobject::NO_WRITE

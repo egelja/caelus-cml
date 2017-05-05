@@ -280,7 +280,7 @@ snGradScheme<Type>::snGrad
     const fvMesh& mesh = vf.mesh();
 
     // construct GeometricField<Type, fvsPatchField, surfaceMesh>
-    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tssf
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsf
     (
         new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
@@ -296,7 +296,7 @@ snGradScheme<Type>::snGrad
             vf.dimensions()*tdeltaCoeffs().dimensions()
         )
     );
-    GeometricField<Type, fvsPatchField, surfaceMesh>& ssf = tssf();
+    GeometricField<Type, fvsPatchField, surfaceMesh>& ssf = tsf();
 
     // set reference to difference factors array
     const scalarField& deltaCoeffs = tdeltaCoeffs().internalField();
@@ -313,10 +313,20 @@ snGradScheme<Type>::snGrad
 
     forAll(vf.boundaryField(), patchI)
     {
-        ssf.boundaryField()[patchI] = vf.boundaryField()[patchI].snGrad();
+        const fvPatchField<Type>& pvf = vf.boundaryField()[patchI];
+
+        if (pvf.coupled())
+        {
+            ssf.boundaryField()[patchI] =
+                pvf.snGrad(tdeltaCoeffs().boundaryField()[patchI]);
+        }
+        else
+        {
+            ssf.boundaryField()[patchI] = pvf.snGrad();
+        }
     }
 
-    return tssf;
+    return tsf;
 }
 
 

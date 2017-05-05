@@ -26,6 +26,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
+#include "wallFvPatch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -33,9 +34,9 @@ int main(int argc, char *argv[])
 {
     timeSelector::addOptions();
     #include "setRootCase.hpp"
-#   include "createTime.hpp"
+    #include "createTime.hpp"
     instantList timeDirs = timeSelector::select0(runTime, args);
-#   include "createMesh.hpp"
+    #include "createMesh.hpp"
 
     forAll(timeDirs, timeI)
     {
@@ -79,10 +80,17 @@ int main(int argc, char *argv[])
                 )
             );
 
+            const fvPatchList& patches = mesh.boundary();
+
             forAll(wallGradU.boundaryField(), patchi)
             {
-                wallGradU.boundaryField()[patchi] =
-                    -U.boundaryField()[patchi].snGrad();
+                const fvPatch& currPatch = patches[patchi];
+
+                if (isA<wallFvPatch>(currPatch))
+                {
+                    wallGradU.boundaryField()[patchi] =
+                        -U.boundaryField()[patchi].snGrad();
+                }
             }
 
             wallGradU.write();

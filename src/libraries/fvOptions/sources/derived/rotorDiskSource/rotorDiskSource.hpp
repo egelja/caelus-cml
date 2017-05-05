@@ -87,6 +87,7 @@ SourceFiles
 
 #include "fvOption.hpp"
 #include "cylindricalCS.hpp"
+#include "localAxesRotation.hpp"
 #include "NamedEnum.hpp"
 #include "bladeModel.hpp"
 #include "profileModelList.hpp"
@@ -184,8 +185,11 @@ protected:
         //- Area [m2]
         List<scalar> area_;
 
-        //- Rotor co-ordinate system (r, theta, z)
+        //- Rotor local cylindrical co-ordinate system (r, theta, z)
         cylindricalCS coordSys_;
+
+         //- Rotor transformation co-ordinate system
+        autoPtr<localAxesRotation> localAxesRotation_;
 
         //- Maximum radius
         scalar rMax_;

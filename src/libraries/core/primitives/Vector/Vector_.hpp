@@ -50,7 +50,7 @@ template<class T> class List;
                            Class Vector Declaration
 \*---------------------------------------------------------------------------*/
 
-template <class Cmpt>
+template<class Cmpt>
 class Vector
 :
     public VectorSpace<Vector<Cmpt>, Cmpt, 3>
@@ -78,6 +78,8 @@ public:
         static const Vector one;
         static const Vector max;
         static const Vector min;
+        static const Vector rootMax;
+        static const Vector rootMin;
 
 
     //- Component labeling enumeration
@@ -89,8 +91,9 @@ public:
         //- Construct null
         inline Vector();
 
-        //- Construct given VectorSpace
-        inline Vector(const VectorSpace<Vector<Cmpt>, Cmpt, 3>&);
+        //- Construct given VectorSpace of the same rank
+        template<class Cmpt2>
+        inline Vector(const VectorSpace<Vector<Cmpt2>, Cmpt2, 3>&);
 
         //- Construct given three components
         inline Vector(const Cmpt& vx, const Cmpt& vy, const Cmpt& vz);
@@ -117,6 +120,7 @@ public:
             const CML::List<Vector<Cmpt> >&
         ) const;
 };
+
 
 template<class Cmpt>
 class typeOfRank<Cmpt, 1>

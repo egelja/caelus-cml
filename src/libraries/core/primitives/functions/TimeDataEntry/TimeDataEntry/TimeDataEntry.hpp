@@ -171,8 +171,13 @@ CML::TimeDataEntry<Type>::TimeDataEntry
 :
     time_(tde.time_),
     name_(tde.name_),
-    entry_(tde.entry_->clone().ptr())
-{}
+    entry_()
+{
+    if (tde.entry_.valid())
+    {
+        entry_.reset(tde.entry_->clone().ptr());
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

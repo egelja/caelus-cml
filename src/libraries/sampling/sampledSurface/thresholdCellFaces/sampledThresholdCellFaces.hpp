@@ -34,10 +34,6 @@ SourceFiles
 
 #include "sampledSurface.hpp"
 #include "MeshedSurface.hpp"
-#include "thresholdCellFaces.hpp"
-#include "volFieldsFwd.hpp"
-#include "pointFields.hpp"
-#include "volPointInterpolation.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -89,14 +85,14 @@ class sampledThresholdCellFaces
         bool updateGeometry() const;
 
         //- sample field on faces
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sampleField
         (
             const GeometricField<Type, fvPatchField, volMesh>& vField
         ) const;
 
 
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> >
         interpolateField(const interpolation<Type>&) const;
 
@@ -208,10 +204,16 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "thresholdCellFaces.hpp"
+#include "volFieldsFwd.hpp"
+#include "pointFields.hpp"
+#include "volPointInterpolation.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledThresholdCellFaces::sampleField
 (
@@ -225,7 +227,7 @@ CML::sampledThresholdCellFaces::sampleField
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledThresholdCellFaces::interpolateField
 (

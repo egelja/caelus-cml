@@ -55,4 +55,4 @@ funcObjJobEnv.Install(install_dir, libjobControl)
 
 if (funcObjJobEnv['WHICH_OS'] == "darwin"):
 
-  funcObjJobEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjJobEnv['LIB_PLATFORM_INSTALL'] + '/libjobControl.dylib')
+  funcObjJobEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libjobControl.dylib')

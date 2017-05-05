@@ -49,7 +49,7 @@ install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
  (colors['green'], colors['purple'], colors['yellow'], colors['end'])
  
 #===============================================================================
-# Pass operating system environment
+# Pass operating system envrionment
 #===============================================================================
 
 # Just grab the type of operating system
@@ -78,6 +78,7 @@ globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
 globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
 globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
 globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(INT_TYPE = globalEnv['ENV']['INT_TYPE'])
 globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
 globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
 globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
@@ -136,6 +137,9 @@ print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
 # build precision
 print ">> Build precision : " + globalEnv['PRECISION_OPTION'] 
 
+# integer type
+print ">> Integer type : " + globalEnv['INT_TYPE'] + 'bit'
+
 #===============================================================================
 # Common compiler flags
 #===============================================================================
@@ -177,19 +181,25 @@ elif which_os == "darwin" :
   globalEnv.Replace(CXX = globalEnv['COMPILER'])
   
   #empty compiler flag for now
-  GFLAGS = '-m64' + ' -fsignaling-nans -ftrapping-math' + ' -D' + which_os \
+#  GFLAGS = '-m64' + ' -fsignaling-nans -ftrapping-math' + ' -D' + which_os \
+#            + ' -DWM_'+globalEnv['PRECISION_OPTION']
+  GFLAGS = '-m64' + '  -std=c++11' + ' -D' + which_os \
             + ' -DWM_'+globalEnv['PRECISION_OPTION']
 
   # Warning compiler flags
+#  CCWARN = Split(
+#    '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor')
   CCWARN = Split(
-    '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor')
+     '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor -Wold-style-cast -Wno-overloaded-virtual -Wno-unused-comparison -Wno-deprecated-register')
 
   if  globalEnv['BUILD_TYPE'] == 'Debug':
   # Debug
     # Optimisation compiler flags
-    CCOPT  = Split('-O0 -fdefault-inline')  
+#    CCOPT  = Split('-O0 -fdefault-inline')  
+    CCOPT  = Split('-O0') 
     #Debug compiler flags
-    CCDBUG = Split('-ggdb2 -DFULLDEBUG')
+#    CCDBUG = Split('-ggdb2 -DFULLDEBUG')
+    CCDBUG = Split('-g -DFULLDEBUG')
 
   elif  globalEnv['BUILD_TYPE'] == 'Prof':
   # Profiling
@@ -201,7 +211,8 @@ elif which_os == "darwin" :
   else:
   # Optimised     
     # Optimisation compiler flags
-    CCOPT  = Split('-O2')
+#    CCOPT  = Split('-O2')
+    CCOPT  = Split('-O3')
     #Debug compiler flags
     CCDBUG = Split('')
 
@@ -213,6 +224,10 @@ else :
   # General compiler flags
   GFLAGS = '-m64' + ' -D' + which_os + globalEnv['COMPILER_ARCH'] + ' -DWM_' \
            + globalEnv['PRECISION_OPTION']
+
+  # Flag to turn label into 64bit int during compilation
+  if  globalEnv['INT_TYPE'] == '64':
+    GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
 
   # Warning compiler flags
   CCWARN = Split(
@@ -243,7 +258,7 @@ else :
   ptFLAGS = Split('-ftemplate-depth-100')
 #end of linux compiler flags
 
-# Set up full compiler flags
+# Setup full compiler flags
 globalEnv.Append(CXXFLAGS = GFLAGS)
 globalEnv.Append(CXXFLAGS = CCWARN)
 globalEnv.Append(CXXFLAGS = CCOPT)
@@ -366,7 +381,6 @@ subdirs = [
   'thermophysicalModels/laminarFlameSpeed',
   'thermophysicalModels/chemistryModel',
   'thermophysicalModels/barotropicCompressibilityModel',
-  'thermophysicalModels/thermalPorousZone',
   'thermophysicalModels/SLGThermo',
   'thermophysicalModels/basicSolidThermo',
   'thermophysicalModels/solidChemistryModel',

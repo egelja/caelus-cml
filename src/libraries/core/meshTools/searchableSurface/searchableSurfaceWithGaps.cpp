@@ -183,6 +183,8 @@ CML::searchableSurfaceWithGaps::searchableSurfaceWithGaps
         io.db().lookupObject<searchableSurface>(subGeomName);
 
     subGeom_.set(0, &const_cast<searchableSurface&>(s));
+
+    bounds() = subGeom_[0].bounds();
 }
 
 
@@ -236,7 +238,7 @@ void CML::searchableSurfaceWithGaps::findLine
         // test in pairs: only if both perturbations hit something
         // do we accept the hit.
 
-        const vectorField smallVec(1E-6*(compactEnd-compactStart));
+        const vectorField smallVec(1e-6*(compactEnd-compactStart));
 
         List<pointIndexHit> plusInfo;
         surface().findLine
@@ -290,7 +292,7 @@ void CML::searchableSurfaceWithGaps::findLine
             offset0.setSize(plusMissMap.size());
             offset1.setSize(plusMissMap.size());
 
-            const vectorField smallVec(1E-6*(compactEnd-compactStart));
+            const vectorField smallVec(1e-6*(compactEnd-compactStart));
 
             surface().findLine
             (

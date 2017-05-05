@@ -22,8 +22,6 @@ License
 
 #include "smoothSolver.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(smoothSolver, 0);
@@ -34,9 +32,6 @@ namespace CML
     lduMatrix::solver::addasymMatrixConstructorToTable<smoothSolver>
         addsmoothSolverAsymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::smoothSolver::smoothSolver
 (
@@ -61,9 +56,6 @@ CML::smoothSolver::smoothSolver
     readControls();
 }
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 void CML::smoothSolver::readControls()
 {
     lduMatrix::solver::readControls();
@@ -73,8 +65,8 @@ void CML::smoothSolver::readControls()
 
 CML::lduMatrix::solverPerformance CML::smoothSolver::solve
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt
 ) const
 {
@@ -96,8 +88,8 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
 
         smootherPtr->smooth
         (
-            psi,
-            source,
+            x,
+            b,
             cmpt,
             -nSweeps_
         );
@@ -109,17 +101,17 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
         scalar normFactor = 0;
 
         {
-            scalarField Apsi(psi.size());
-            scalarField temp(psi.size());
+            scalarField Ax(x.size());
+            scalarField temp(x.size());
 
-            // Calculate A.psi
-            matrix_.Amul(Apsi, psi, interfaceBouCoeffs_, interfaces_, cmpt);
+            // Calculate matrix-vector multiply A.x
+            matrix_.Amul(Ax, x, interfaceBouCoeffs_, interfaces_, cmpt);
 
             // Calculate normalisation factor
-            normFactor = this->normFactor(psi, source, Apsi, temp);
+            normFactor = this->normFactor(x, b, Ax, temp);
 
             // Calculate residual magnitude
-            solverPerf.initialResidual() = gSumMag(source - Apsi)/normFactor;
+            solverPerf.initialResidual() = gSumMag(b - Ax)/normFactor;
             solverPerf.finalResidual() = solverPerf.initialResidual();
         }
 
@@ -154,8 +146,8 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
             {
                 smootherPtr->smooth
                 (
-                    psi,
-                    source,
+                    x,
+                    b,
                     cmpt,
                     nSweeps_
                 );
@@ -165,8 +157,8 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
                 (
                     matrix_.residual
                     (
-                        psi,
-                        source,
+                        x,
+                        b,
                         interfaceBouCoeffs_,
                         interfaces_,
                         cmpt
@@ -192,5 +184,3 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
     return solverPerf;
 }
 
-
-// ************************************************************************* //

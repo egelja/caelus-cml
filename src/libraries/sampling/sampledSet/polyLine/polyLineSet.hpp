@@ -61,6 +61,7 @@ class polyLineSet
         //  Returns false if end of samples reached.
         bool trackToBoundary
         (
+            passiveParticleCloud& particleCloud,
             passiveParticle& singleParticle,
             label& sampleI,
             DynamicList<point>& samplingPts,
@@ -97,7 +98,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const word& axis,
             const List<point>& samplePoints
         );
@@ -107,7 +108,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const dictionary& dict
         );
 

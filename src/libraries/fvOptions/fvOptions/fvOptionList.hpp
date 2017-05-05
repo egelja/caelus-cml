@@ -58,6 +58,12 @@ protected:
 
     // Protected Member Functions
 
+        //- Return the "options" sub-dictionary if present otherwise return dict
+        const dictionary& optionsDict(const dictionary& dict) const;
+
+        //- Read options dictionary
+        bool readOptions(const dictionary& dict);
+
         //- Check that all sources have been applied
         void checkApplied() const;
 
@@ -116,18 +122,37 @@ public:
             );
 
             //- Return source for equation
-            template<class Type, class RhoType>
+            template<class Type>
             tmp<fvMatrix<Type> > operator()
             (
-                const RhoType& rho,
+                const volScalarField& rho,
                 GeometricField<Type, fvPatchField, volMesh>& fld
             );
 
             //- Return source for equation with specified name
-            template<class Type, class RhoType>
+            template<class Type>
             tmp<fvMatrix<Type> > operator()
             (
-                const RhoType& rho,
+                const volScalarField& rho,
+                GeometricField<Type, fvPatchField, volMesh>& fld,
+                const word& fieldName
+            );
+
+            //- Return source for equation
+            template<class Type>
+            tmp<fvMatrix<Type> > operator()
+            (
+                const volScalarField& alpha,
+                const volScalarField& rho,
+                GeometricField<Type, fvPatchField, volMesh>& fld
+            );
+
+            //- Return source for equation with specified name
+            template<class Type>
+            tmp<fvMatrix<Type> > operator()
+            (
+                const volScalarField& alpha,
+                const volScalarField& rho,
                 GeometricField<Type, fvPatchField, volMesh>& fld,
                 const word& fieldName
             );
@@ -139,28 +164,30 @@ public:
             template<class Type>
             void constrain(fvMatrix<Type>& eqn);
 
-            //- Apply constraints to equation with specified name
-            template<class Type>
-            void constrain(fvMatrix<Type>& eqn, const word& fieldName);
-
 
         // Flux manipulations
 
             //- Make the given absolute flux relative
-            void relativeFlux(surfaceScalarField& phi) const;
+            void makeRelative(surfaceScalarField& phi) const;
 
             //- Make the given absolute mass-flux relative
-            void relativeFlux
+            void makeRelative
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi
             ) const;
 
+            //- Return the given absolute boundary flux relative
+            tmp<FieldField<fvsPatchField, scalar> > relative
+            (
+                const tmp<FieldField<fvsPatchField, scalar> >& tphi
+            ) const;
+
             //- Make the given relative flux absolute
-            void absoluteFlux(surfaceScalarField& phi) const;
+            void makeAbsolute(surfaceScalarField& phi) const;
 
             //- Make the given relative mass-flux absolute
-            void absoluteFlux
+            void makeAbsolute
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi
@@ -242,9 +269,7 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
     const dimensionSet ds = fld.dimensions()/dimTime*dimVolume;
 
     tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
-
     fvMatrix<Type>& mtx = tmtx();
-
 
     forAll(*this, i)
     {
@@ -273,10 +298,10 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 }
 
 
-template<class Type, class RhoType>
+template<class Type>
 CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 (
-    const RhoType& rho,
+    const volScalarField& rho,
     GeometricField<Type, fvPatchField, volMesh>& fld
 )
 {
@@ -284,10 +309,10 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 }
 
 
-template<class Type, class RhoType>
+template<class Type>
 CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 (
-    const RhoType& rho,
+    const volScalarField& rho,
     GeometricField<Type, fvPatchField, volMesh>& fld,
     const word& fieldName
 )
@@ -297,9 +322,7 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
     const dimensionSet ds = rho.dimensions()*fld.dimensions()/dimTime*dimVolume;
 
     tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
-
     fvMatrix<Type>& mtx = tmtx();
-
 
     forAll(*this, i)
     {
@@ -319,7 +342,63 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
                         << fieldName << endl;
                 }
 
-                source.addSup(mtx, fieldI);
+                source.addSup(rho, mtx, fieldI);
+            }
+        }
+    }
+
+    return tmtx;
+}
+
+
+template<class Type>
+CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    GeometricField<Type, fvPatchField, volMesh>& fld
+)
+{
+    return this->operator()(alpha, rho, fld, fld.name());
+}
+
+
+template<class Type>
+CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    GeometricField<Type, fvPatchField, volMesh>& fld,
+    const word& fieldName
+)
+{
+    checkApplied();
+
+    const dimensionSet ds =
+        alpha.dimensions()*rho.dimensions()*fld.dimensions()/dimTime*dimVolume;
+
+    tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
+    fvMatrix<Type>& mtx = tmtx();
+
+    forAll(*this, i)
+    {
+        option& source = this->operator[](i);
+
+        label fieldI = source.applyToField(fieldName);
+
+        if (fieldI != -1)
+        {
+            source.setApplied(fieldI);
+
+            if (source.isActive())
+            {
+                if (debug)
+                {
+                    Info<< "Applying source " << source.name() << " to field "
+                        << fieldName << endl;
+                }
+
+                source.addSup(alpha, rho, mtx, fieldI);
             }
         }
     }
@@ -331,24 +410,13 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 template<class Type>
 void CML::fv::optionList::constrain(fvMatrix<Type>& eqn)
 {
-    constrain(eqn, eqn.psi().name());
-}
-
-
-template<class Type>
-void CML::fv::optionList::constrain
-(
-    fvMatrix<Type>& eqn,
-    const word& fieldName
-)
-{
     checkApplied();
 
     forAll(*this, i)
     {
         option& source = this->operator[](i);
 
-        label fieldI = source.applyToField(fieldName);
+        label fieldI = source.applyToField(eqn.psi().name());
 
         if (fieldI != -1)
         {
@@ -359,7 +427,7 @@ void CML::fv::optionList::constrain
                 if (debug)
                 {
                     Info<< "Applying constraint " << source.name()
-                        << " to field " << fieldName << endl;
+                        << " to field " << eqn.psi().name() << endl;
                 }
 
                 source.setValue(eqn, fieldI);

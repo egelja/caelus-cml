@@ -32,9 +32,8 @@ patchIntegrateEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if patchIntegrateEnv['WHICH_OS'] == "windows":
   patchIntegrateEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','lagrangian']
+
+lib_link = ['genericPatchFields','lagrangian']
      
 patchIntegrateEnv.Append(LIBS = lib_link)
 

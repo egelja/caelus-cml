@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +22,17 @@ Class
     CML::OSPRELimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    OSPRE differencing scheme based on r obtained from the LimiterFunc
-    class.
+    Symmetric OSPRE limiter function. 
 
     Used in conjunction with the template class LimitedScheme.
 
 SourceFiles
     OSPRE.cpp
+
+References
+    [1] "A unified approach to the design and application of bounded 
+         higher-order convection schemes", N.P., Waterson, H. Deconinck,
+         VKI report 1995-1, 1995
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,14 +41,8 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class OSPRELimiter Declaration
-\*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
 class OSPRELimiter
@@ -78,13 +76,7 @@ public:
     }
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

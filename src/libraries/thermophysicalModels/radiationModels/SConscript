@@ -91,4 +91,4 @@ radModelEnv.Install(install_dir, libradiationModels)
 
 if (radModelEnv['WHICH_OS'] == "darwin"):
 
-  radModelEnv.Append(SHLINKFLAGS ='-install_name @' + radModelEnv['LIB_PLATFORM_INSTALL'] + '/libradiationModels.dylib')
+  radModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libradiationModels.dylib')

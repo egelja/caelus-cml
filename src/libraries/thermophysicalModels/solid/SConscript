@@ -58,4 +58,4 @@ thermoSolidEnv.Install(install_dir, libsolid)
 
 if (thermoSolidEnv['WHICH_OS'] == "darwin"):
 
-  thermoSolidEnv.Append(SHLINKFLAGS ='-install_name @' + thermoSolidEnv['LIB_PLATFORM_INSTALL'] + '/libsolid.dylib')
+  thermoSolidEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolid.dylib')

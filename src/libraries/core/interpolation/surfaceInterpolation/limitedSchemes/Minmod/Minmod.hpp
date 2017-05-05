@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,13 +22,16 @@ Class
     CML::MinmodLimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    Minmod differencing scheme.
+    Symmetric Minmod limiter.
 
     Used in conjunction with the template class LimitedScheme.
 
 SourceFiles
     Minmod.cpp
+
+References
+    [1] "Cahracteristic-based schemes for the Euler Equations", P.L., Roe,
+        Ann. Rev. Fluid Mech. 18: pp 337-365, 1986
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,14 +40,8 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                       Class MinmodLimiter Declaration
-\*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
 class MinmodLimiter
@@ -76,13 +74,7 @@ public:
     }
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

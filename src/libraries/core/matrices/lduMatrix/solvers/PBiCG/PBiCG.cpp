@@ -23,8 +23,6 @@ License
 #include "PBiCG.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(PBiCG, 0);
@@ -32,9 +30,6 @@ namespace CML
     lduMatrix::solver::addasymMatrixConstructorToTable<PBiCG>
         addPBiCGAsymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::PBiCG::PBiCG
 (
@@ -57,68 +52,83 @@ CML::PBiCG::PBiCG
     )
 {}
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 CML::lduMatrix::solverPerformance CML::PBiCG::solve
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt
 ) const
 {
-    // --- Setup class containing solver performance data
+    // Setup class containing solver performance data
     lduMatrix::solverPerformance solverPerf
     (
         lduMatrix::preconditioner::getName(controlDict_) + typeName,
         fieldName_
     );
 
-    register label nCells = psi.size();
+    register label nCells = x.size();
 
-    scalar* RESTRICT psiPtr = psi.begin();
+    scalar* RESTRICT xPtr = x.begin();
 
-    scalarField pA(nCells);
-    scalar* RESTRICT pAPtr = pA.begin();
+    scalarField p(nCells);
+    scalar* RESTRICT pPtr = p.begin();
 
     scalarField pT(nCells, 0.0);
     scalar* RESTRICT pTPtr = pT.begin();
 
-    scalarField wA(nCells);
-    scalar* RESTRICT wAPtr = wA.begin();
+    scalarField w(nCells);
+    scalar* RESTRICT wPtr = w.begin();
 
     scalarField wT(nCells);
     scalar* RESTRICT wTPtr = wT.begin();
 
-    scalar wArT = matrix_.great_;
-    scalar wArTold = wArT;
+    scalar rho = matrix_.great_;
+    scalar rhoOld = rho;
 
-    // --- Calculate A.psi and T.psi
-    matrix_.Amul(wA, psi, interfaceBouCoeffs_, interfaces_, cmpt);
-    matrix_.Tmul(wT, psi, interfaceIntCoeffs_, interfaces_, cmpt);
+    // Calculate matrix-vector products A.x and T.x
+    matrix_.Amul(w, x, interfaceBouCoeffs_, interfaces_, cmpt);
+    matrix_.Tmul(wT, x, interfaceIntCoeffs_, interfaces_, cmpt);
 
-    // --- Calculate initial residual and transpose residual fields
-    scalarField rA(source - wA);
-    scalarField rT(source - wT);
-    scalar* RESTRICT rAPtr = rA.begin();
+    // Calculate initial residual and transpose residual fields
+    scalarField r(b - w);
+    scalarField rT(b - wT);
+    scalar* RESTRICT rPtr = r.begin();
     scalar* RESTRICT rTPtr = rT.begin();
 
-    // --- Calculate normalisation factor
-    scalar normFactor = this->normFactor(psi, source, wA, pA);
+    // Calculate normalisation factor
+    scalar normFactor = this->normFactor(x, b, w, p);
 
     if (lduMatrix::debug >= 2)
     {
         Info<< "   Normalisation factor = " << normFactor << endl;
     }
 
-    // --- Calculate normalised residual norm
-    solverPerf.initialResidual() = gSumMag(rA)/normFactor;
+    // Calculate normalised residual norm
+    solverPerf.initialResidual() = gSumMag(r)/normFactor;
     solverPerf.finalResidual() = solverPerf.initialResidual();
 
-    // --- Check convergence, solve if not converged
-    if (!solverPerf.checkConvergence(tolerance_, relTol_,solverPerf.nIterations(),minIter_))
+    // Check convergence, solve if not converged
+    if (this->eps_ >= solverPerf.initialResidual())
     {
-        // --- Select and construct the preconditioner
+        !solverPerf.checkConvergence
+        (
+            this->tolerance_, 
+            solverPerf.nIterations(),
+            this->minIter_
+        );
+    }
+    else
+    {
+        !solverPerf.checkConvergence
+        (
+            this->tolerance_, 
+            this->relTol_,
+            solverPerf.nIterations(),
+            this->minIter_
+        );
+    }
+    {
+        // Select and construct the preconditioner
         autoPtr<lduMatrix::preconditioner> preconPtr =
         lduMatrix::preconditioner::New
         (
@@ -126,62 +136,70 @@ CML::lduMatrix::solverPerformance CML::PBiCG::solve
             controlDict_
         );
 
-        // --- Solver iteration
+        // Iterate
         do
         {
-            // --- Store previous wArT
-            wArTold = wArT;
+            // Store previous rho
+            rhoOld = rho;
 
-            // --- Precondition residuals
-            preconPtr->precondition(wA, rA, cmpt);
+            // Apply precodnitioner to original and transposed systems
+            preconPtr->precondition(w, r, cmpt);
             preconPtr->preconditionT(wT, rT, cmpt);
 
-            // --- Update search directions:
-            wArT = gSumProd(wA, rT);
+            if (0 == rhoOld)
+            {
+                // Attempt to restart
+                rT = w;
+                rho = gSumProd(w,rT);
+            }
+            else
+            {
+                // Update rho:
+                rho = gSumProd(w, rT);   
+	    }
 
             if (solverPerf.nIterations() == 0)
             {
                 for (register label cell=0; cell<nCells; cell++)
                 {
-                    pAPtr[cell] = wAPtr[cell];
+                    pPtr[cell] = wPtr[cell];
                     pTPtr[cell] = wTPtr[cell];
                 }
             }
             else
             {
-                scalar beta = wArT/wArTold;
+                scalar beta = rho/rhoOld;
 
                 for (register label cell=0; cell<nCells; cell++)
                 {
-                    pAPtr[cell] = wAPtr[cell] + beta*pAPtr[cell];
+                    pPtr[cell] = wPtr[cell] + beta*pPtr[cell];
                     pTPtr[cell] = wTPtr[cell] + beta*pTPtr[cell];
                 }
             }
 
 
-            // --- Update preconditioned residuals
-            matrix_.Amul(wA, pA, interfaceBouCoeffs_, interfaces_, cmpt);
+            // Form Krylov subspace basis vectors
+            matrix_.Amul(w, p, interfaceBouCoeffs_, interfaces_, cmpt);
             matrix_.Tmul(wT, pT, interfaceIntCoeffs_, interfaces_, cmpt);
 
-            scalar wApT = gSumProd(wA, pT);
+            scalar wpT = gSumProd(w, pT);
 
 
-            // --- Test for singularity
-            if (solverPerf.checkSingularity(mag(wApT)/normFactor)) break;
+            // Test for singularity
+            if (solverPerf.checkSingularity(mag(wpT)/normFactor)) break;
 
 
-            // --- Update solution and residual:
-
-            scalar alpha = wArT/wApT;
+            // Update solution and residual:
+            scalar alpha = rho/wpT;
 
             for (register label cell=0; cell<nCells; cell++)
             {
-                psiPtr[cell] += alpha*pAPtr[cell];
-                rAPtr[cell] -= alpha*wAPtr[cell];
+                xPtr[cell] += alpha*pPtr[cell];
+                rPtr[cell] -= alpha*wPtr[cell];
                 rTPtr[cell] -= alpha*wTPtr[cell];
             }
 
-            solverPerf.finalResidual() = gSumMag(rA)/normFactor;
+            solverPerf.finalResidual() = gSumMag(r)/normFactor;
 
         } while
         (
@@ -202,5 +220,3 @@ CML::lduMatrix::solverPerformance CML::PBiCG::solve
     return solverPerf;
 }
 
-
-// ************************************************************************* //

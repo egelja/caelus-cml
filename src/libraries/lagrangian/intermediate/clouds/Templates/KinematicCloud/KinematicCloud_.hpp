@@ -392,6 +392,9 @@ public:
 //            inline const typename parcelType::forceType& forces() const;
             inline const forceType& forces() const;
 
+            //- Return the optional particle forces
+            inline forceType& forces();
+
             //- Optional cloud function objects
             inline functionType& functions();
 
@@ -709,6 +712,14 @@ template<class CloudType>
 //inline const typename CloudType::parcelType::forceType&
 inline const typename CML::KinematicCloud<CloudType>::forceType&
 CML::KinematicCloud<CloudType>::forces() const
+{
+    return forces_;
+}
+
+
+template<class CloudType>
+inline typename CML::KinematicCloud<CloudType>::forceType&
+CML::KinematicCloud<CloudType>::forces()
 {
     return forces_;
 }

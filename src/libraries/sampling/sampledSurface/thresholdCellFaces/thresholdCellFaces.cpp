@@ -30,7 +30,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::thresholdCellFaces, 0);
+namespace CML
+{
+defineTypeNameAndDebug(thresholdCellFaces, 0);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

@@ -138,6 +138,24 @@ CML::treeDataFace::treeDataFace
 }
 
 
+CML::treeDataFace::findNearestOp::findNearestOp
+(
+    const indexedOctree<treeDataFace>& tree
+)
+:
+    tree_(tree)
+{}
+
+
+CML::treeDataFace::findIntersectOp::findIntersectOp
+(
+    const indexedOctree<treeDataFace>& tree
+)
+:
+    tree_(tree)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::pointField CML::treeDataFace::shapePoints() const
@@ -155,7 +173,7 @@ CML::pointField CML::treeDataFace::shapePoints() const
 
 //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
 //  Only makes sense for closed surfaces.
-CML::label CML::treeDataFace::getVolumeType
+CML::volumeType CML::treeDataFace::getVolumeType
 (
     const indexedOctree<treeDataFace>& oc,
     const point& sample
@@ -408,7 +426,7 @@ CML::label CML::treeDataFace::getVolumeType
     // - tolerances are wrong. (if e.g. face has zero area)
     // - or (more likely) surface is not closed.
 
-    return indexedOctree<treeDataFace>::UNKNOWN;
+    return volumeType::UNKNOWN;
 }
 
 
@@ -470,9 +488,7 @@ bool CML::treeDataFace::overlaps
 }
 
 
-// Calculate nearest point to sample. Updates (if any) nearestDistSqr, minIndex,
-// nearestPoint.
-void CML::treeDataFace::findNearest
+void CML::treeDataFace::findNearestOp::operator()
 (
     const labelUList& indices,
     const point& sample,
@@ -482,13 +498,15 @@ void CML::treeDataFace::findNearest
     point& nearestPoint
 ) const
 {
+    const treeDataFace& shape = tree_.shapes();
+
     forAll(indices, i)
     {
         const label index = indices[i];
 
-        const face& f = mesh_.faces()[faceLabels_[index]];
+        const face& f = shape.mesh().faces()[shape.faceLabels()[index]];
 
-        pointHit nearHit = f.nearestPoint(sample, mesh_.points());
+        pointHit nearHit = f.nearestPoint(sample, shape.mesh().points());
         scalar distSqr = sqr(nearHit.distance());
 
         if (distSqr < nearestDistSqr)
@@ -501,7 +519,33 @@ void CML::treeDataFace::findNearest
 }
 
 
-bool CML::treeDataFace::intersects
+void CML::treeDataFace::findNearestOp::operator()
+(
+    const labelUList& indices,
+    const linePointRef& ln,
+
+    treeBoundBox& tightest,
+    label& minIndex,
+    point& linePoint,
+    point& nearestPoint
+) const
+{
+    notImplemented
+    (
+        "treeDataFace::findNearestOp::operator()"
+        "("
+        "    const labelUList&,"
+        "    const linePointRef&,"
+        "    treeBoundBox&,"
+        "    label&,"
+        "    point&,"
+        "    point&"
+        ") const"
+    );
+}
+
+
+bool CML::treeDataFace::findIntersectOp::operator()
 (
     const label index,
     const point& start,
@@ -509,10 +553,12 @@ bool CML::treeDataFace::intersects
     point& intersectionPoint
 ) const
 {
+    const treeDataFace& shape = tree_.shapes();
+
     // Do quick rejection test
-    if (cacheBb_)
+    if (shape.cacheBb_)
     {
-        const treeBoundBox& faceBb = bbs_[index];
+        const treeBoundBox& faceBb = shape.bbs_[index];
 
         if ((faceBb.posBits(start) & faceBb.posBits(end)) != 0)
         {
@@ -521,16 +567,16 @@ bool CML::treeDataFace::intersects
         }
     }
 
-    const label faceI = faceLabels_[index];
+    const label faceI = shape.faceLabels_[index];
 
     const vector dir(end - start);
 
-    pointHit inter = mesh_.faces()[faceI].intersection
+    pointHit inter = shape.mesh_.faces()[faceI].intersection
     (
         start,
         dir,
-        mesh_.faceCentres()[faceI],
-        mesh_.points(),
+        shape.mesh_.faceCentres()[faceI],
+        shape.mesh_.points(),
         intersection::HALF_RAY
     );
 

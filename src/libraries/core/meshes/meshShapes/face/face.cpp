@@ -24,6 +24,7 @@ License
 #include "triPointRef.hpp"
 #include "mathematicalConstants.hpp"
 #include "Swap.hpp"
+#include "const_circulator.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -295,7 +296,6 @@ CML::face::face(const triFace& f)
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
 
-
 // return
 //   0: no match
 //  +1: identical
@@ -310,138 +310,95 @@ int CML::face::compare(const face& a, const face& b)
     label sizeA = a.size();
     label sizeB = b.size();
 
-    if (sizeA != sizeB)
+    if (sizeA != sizeB || sizeA == 0)
+    {
+        return 0;
+    }
+    else if (sizeA == 1)
+    {
+        if (a[0] == b[0])
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    const_circulator<face> aCirc(a);
+    const_circulator<face> bCirc(b);
+
+    // Rotate face b until its element matches the starting element of face a.
+    do
+    {
+        if (aCirc() == bCirc())
+        {
+            // Set bCirc fulcrum to its iterator and increment the iterators
+            bCirc.setFulcrumToIterator();
+            ++aCirc;
+            ++bCirc;
+
+            break;
+        }
+    } while (bCirc.circulate(CirculatorBase::CLOCKWISE));
+
+    // If the circulator has stopped then faces a and b do not share a matching
+    // point. Doesn't work on matching, single element face.
+    if (!bCirc.circulate())
     {
         return 0;
     }
 
-
-    // Full list comparison
-    const label firstA = a[0];
-    label Bptr = -1;
-
-    forAll(b, i)
+    // Look forwards around the faces for a match
+    do
     {
-        if (b[i] == firstA)
+        if (aCirc() != bCirc())
         {
-            Bptr = i;        // 'found match' at element 'i'
             break;
         }
     }
+    while
+    (
+        aCirc.circulate(CirculatorBase::CLOCKWISE),
+        bCirc.circulate(CirculatorBase::CLOCKWISE)
+    );
 
-    // If no match was found, return 0
-    if (Bptr < 0)
+    // If the circulator has stopped then faces a and b matched.
+    if (!aCirc.circulate())
     {
-        return 0;
-    }
-
-    // Now we must look for the direction, if any
-    label secondA = a[1];
-
-    if (sizeA > 1 && (secondA == firstA || firstA == a[sizeA - 1]))
-    {
-        face ca = a;
-        ca.collapse();
-
-        face cb = b;
-        cb.collapse();
-
-        return face::compare(ca, cb);
-    }
-
-    int dir = 0;
-
-    // Check whether at top of list
-    Bptr++;
-    if (Bptr == b.size())
-    {
-        Bptr = 0;
-    }
-
-    // Test whether upward label matches second A label
-    if (b[Bptr] == secondA)
-    {
-        // Yes - direction is 'up'
-        dir = 1;
+        return 1;
     }
     else
     {
-        // No - so look downwards, checking whether at bottom of list
-        Bptr -= 2;
-
-        if (Bptr < 0)
-        {
-            // wraparound
-            Bptr += b.size();
-        }
-
-        // Test whether downward label matches second A label
-        if (b[Bptr] == secondA)
-        {
-            // Yes - direction is 'down'
-            dir = -1;
-        }
+        // Reset the circulators back to their fulcrum
+        aCirc.setIteratorToFulcrum();
+        bCirc.setIteratorToFulcrum();
+        ++aCirc;
+        --bCirc;
     }
 
-    // Check whether a match was made at all, and exit 0 if not
-    if (dir == 0)
+    // Look backwards around the faces for a match
+    do
     {
-        return 0;
-    }
-
-    // Decrement size by 2 to account for first searches
-    sizeA -= 2;
-
-    // We now have both direction of search and next element
-    // to search, so we can continue search until no more points.
-    label Aptr = 1;
-    if (dir > 0)
-    {
-        while (sizeA--)
+        if (aCirc() != bCirc())
         {
-            Aptr++;
-            if (Aptr >= a.size())
-            {
-                Aptr = 0;
-            }
-
-            Bptr++;
-            if (Bptr >= b.size())
-            {
-                Bptr = 0;
-            }
-
-            if (a[Aptr] != b[Bptr])
-            {
-                return 0;
-            }
+            break;
         }
     }
-    else
+    while
+    (
+        aCirc.circulate(CirculatorBase::CLOCKWISE),
+        bCirc.circulate(CirculatorBase::ANTICLOCKWISE)
+    );
+
+    // If the circulator has stopped then faces a and b matched.
+    if (!aCirc.circulate())
     {
-        while (sizeA--)
-        {
-            Aptr++;
-            if (Aptr >= a.size())
-            {
-                Aptr = 0;
-            }
-
-            Bptr--;
-            if (Bptr < 0)
-            {
-                Bptr = b.size() - 1;
-            }
-
-            if (a[Aptr] != b[Bptr])
-            {
-                return 0;
-            }
-        }
+        return -1;
     }
 
-    // They must be equal - return direction
-    return dir;
+    return 0;
 }
 
 
@@ -686,38 +643,39 @@ CML::scalar CML::face::sweptVol
 
     label nPoints = size();
 
-    point nextOldPoint = centreOldPoint;
-    point nextNewPoint = centreNewPoint;
-
-    for (register label pI = 0; pI < nPoints; ++pI)
+    for (register label pi=0; pi<nPoints-1; ++pi)
     {
-        if (pI < nPoints - 1)
-        {
-            nextOldPoint = oldPoints[operator[](pI + 1)];
-            nextNewPoint = newPoints[operator[](pI + 1)];
-        }
-        else
-        {
-            nextOldPoint = oldPoints[operator[](0)];
-            nextNewPoint = newPoints[operator[](0)];
-        }
-
         // Note: for best accuracy, centre point always comes last
         sv += triPointRef
-              (
-                  centreOldPoint,
-                  oldPoints[operator[](pI)],
-                  nextOldPoint
-              ).sweptVol
-              (
-                  triPointRef
-                  (
-                      centreNewPoint,
-                      newPoints[operator[](pI)],
-                      nextNewPoint
-                  )
-              );
+        (
+            centreOldPoint,
+            oldPoints[operator[](pi)],
+            oldPoints[operator[](pi + 1)]
+        ).sweptVol
+        (
+            triPointRef
+            (
+                centreNewPoint,
+                newPoints[operator[](pi)],
+                newPoints[operator[](pi + 1)]
+            )
+        );
     }
+
+    sv += triPointRef
+    (
+        centreOldPoint,
+        oldPoints[operator[](nPoints-1)],
+        oldPoints[operator[](0)]
+    ).sweptVol
+    (
+        triPointRef
+        (
+            centreNewPoint,
+            newPoints[operator[](nPoints-1)],
+            newPoints[operator[](0)]
+        )
+    );
 
     return sv;
 }
@@ -865,6 +823,28 @@ CML::label CML::face::trianglesQuads
 ) const
 {
     return split(SPLITQUAD, points, triI, quadI, triFaces, quadFaces);
+}
+
+
+CML::label CML::longestEdge(const face& f, const pointField& pts)
+{
+    const edgeList& eds = f.edges();
+
+    label longestEdgeI = -1;
+    scalar longestEdgeLength = -SMALL;
+
+    forAll(eds, edI)
+    {
+        scalar edgeLength = eds[edI].mag(pts);
+
+        if (edgeLength > longestEdgeLength)
+        {
+            longestEdgeI = edI;
+            longestEdgeLength = edgeLength;
+        }
+    }
+
+    return longestEdgeI;
 }
 
 

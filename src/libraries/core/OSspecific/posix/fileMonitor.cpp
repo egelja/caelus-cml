@@ -129,7 +129,8 @@ namespace CML
         //- initialise inotify
         inline fileMonitorWatcher(const bool useInotify, const label sz = 20)
         :
-            useInotify_(useInotify)
+            useInotify_(useInotify),
+            inotifyFd_(-1)
         {
             if (useInotify_)
             {

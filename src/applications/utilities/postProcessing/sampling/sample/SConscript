@@ -33,10 +33,8 @@ sampleEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if sampleEnv['WHICH_OS'] == "windows":
   sampleEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libsampling','libsurfMesh',
-  'liblagrangian']
-else:
-  lib_link = ['genericPatchFields','sampling','surfMesh','lagrangian']
+
+lib_link = ['genericPatchFields','sampling','surfMesh','lagrangian']
  
 sampleEnv.Append(LIBS = lib_link)
 

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,8 +23,6 @@ License
 #include "DILUPreconditioner.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(DILUPreconditioner, 0);
@@ -32,9 +31,6 @@ namespace CML
         addasymMatrixConstructorToTable<DILUPreconditioner>
         addDILUPreconditionerAsymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::DILUPreconditioner::DILUPreconditioner
 (
@@ -47,9 +43,6 @@ CML::DILUPreconditioner::DILUPreconditioner
 {
     calcReciprocalD(rD_, sol.matrix());
 }
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::DILUPreconditioner::calcReciprocalD
 (
@@ -81,16 +74,15 @@ void CML::DILUPreconditioner::calcReciprocalD
     }
 }
 
-
 void CML::DILUPreconditioner::precondition
 (
-    scalarField& wA,
-    const scalarField& rA,
+    scalarField& w,
+    const scalarField& r,
     const direction
 ) const
 {
-    scalar* RESTRICT wAPtr = wA.begin();
-    const scalar* RESTRICT rAPtr = rA.begin();
+    scalar* RESTRICT wPtr = w.begin();
+    const scalar* RESTRICT rPtr = r.begin();
     const scalar* RESTRICT rDPtr = rD_.begin();
 
     const label* const RESTRICT uPtr =
@@ -105,13 +97,13 @@ void CML::DILUPreconditioner::precondition
     const scalar* const RESTRICT lowerPtr =
         solver_.matrix().lower().begin();
 
-    register label nCells = wA.size();
+    register label nCells = w.size();
     register label nFaces = solver_.matrix().upper().size();
     register label nFacesM1 = nFaces - 1;
 
     for (register label cell=0; cell<nCells; cell++)
     {
-        wAPtr[cell] = rDPtr[cell]*rAPtr[cell];
+        wPtr[cell] = rDPtr[cell]*rPtr[cell];
     }
 
 
@@ -120,17 +112,16 @@ void CML::DILUPreconditioner::precondition
     for (register label face=0; face<nFaces; face++)
     {
         sface = losortPtr[face];
-        wAPtr[uPtr[sface]] -=
-            rDPtr[uPtr[sface]]*lowerPtr[sface]*wAPtr[lPtr[sface]];
+        wPtr[uPtr[sface]] -=
+            rDPtr[uPtr[sface]]*lowerPtr[sface]*wPtr[lPtr[sface]];
     }
 
     for (register label face=nFacesM1; face>=0; face--)
     {
-        wAPtr[lPtr[face]] -=
-            rDPtr[lPtr[face]]*upperPtr[face]*wAPtr[uPtr[face]];
+        wPtr[lPtr[face]] -=
+            rDPtr[lPtr[face]]*upperPtr[face]*wPtr[uPtr[face]];
     }
 }
-
 
 void CML::DILUPreconditioner::preconditionT
 (
@@ -170,7 +161,6 @@ void CML::DILUPreconditioner::preconditionT
             rDPtr[uPtr[face]]*upperPtr[face]*wTPtr[lPtr[face]];
     }
 
-
     register label sface;
 
     for (register label face=nFacesM1; face>=0; face--)
@@ -181,5 +171,3 @@ void CML::DILUPreconditioner::preconditionT
     }
 }
 
-
-// ************************************************************************* //

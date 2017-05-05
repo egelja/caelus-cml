@@ -79,6 +79,24 @@ void CML::lduMatrix::sumMagOffDiag
     }
 }
 
+void CML::lduMatrix::rowSum(scalarField& s) const
+{
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
+
+    scalarField const& Diag = diag();
+    s = Diag;
+
+    const labelUList& l = lduAddr().lowerAddr();
+    const labelUList& u = lduAddr().upperAddr();
+
+    for (register label face = 0; face < l.size(); face++)
+    {
+        s[u[face]] += Upper[face];
+        s[l[face]] += Lower[face];
+    }
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

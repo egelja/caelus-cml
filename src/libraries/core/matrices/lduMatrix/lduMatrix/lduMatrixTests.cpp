@@ -59,7 +59,6 @@ bool CML::lduMatrix::solverPerformance::checkConvergence
      )
      &&
      iter >= minIter
-  // || (solverName == "symSolve" && iter == 0)
     )
     {
         converged_ = true;
@@ -72,6 +71,32 @@ bool CML::lduMatrix::solverPerformance::checkConvergence
     return converged_;
 }
 
+bool CML::lduMatrix::solverPerformance::checkConvergence
+(
+    const scalar Tolerance,
+    const label  iter,
+    const label  minIter
+)
+{
+    if (debug >= 2)
+    {
+        Info<< solverName_
+            << ":  Iteration " << noIterations_
+            << " residual = " << finalResidual_
+            << endl;
+    }
+
+    if (finalResidual_ < Tolerance)
+    {
+        converged_ = true;
+    }
+    else
+    {
+        converged_ = false;
+    }
+
+    return converged_;
+}
 
 bool CML::lduMatrix::solverPerformance::checkSingularity
 (

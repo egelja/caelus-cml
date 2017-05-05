@@ -244,7 +244,7 @@ void CML::radiation::radiativeIntensityRay::addIntensity()
 
     forAll(ILambda_, lambdaI)
     {
-        I_ += absorptionEmission_.addIntensity(lambdaI, ILambda_[lambdaI]);
+        I_ += ILambda_[lambdaI];
     }
 }
 

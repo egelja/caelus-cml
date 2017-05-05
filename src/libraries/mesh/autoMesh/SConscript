@@ -76,4 +76,4 @@ autoMeshEnv.Install(install_dir, libautoMesh)
 
 if (autoMeshEnv['WHICH_OS'] == "darwin"):
 
-  autoMeshEnv.Append(SHLINKFLAGS ='-install_name @' + autoMeshEnv['LIB_PLATFORM_INSTALL'] + '/libautoMesh.dylib')
+  autoMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libautoMesh.dylib')

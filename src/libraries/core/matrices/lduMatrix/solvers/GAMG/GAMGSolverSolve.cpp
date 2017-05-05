@@ -21,11 +21,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "GAMGSolver.hpp"
-#include "ICCG.hpp"
-#include "BICCG.hpp"
+#include "coarsePCG.hpp"
+#include "coarsePBiCG.hpp"
 #include "SubField.hpp"
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::lduMatrix::solverPerformance CML::GAMGSolver::solve
 (
@@ -128,7 +126,6 @@ CML::lduMatrix::solverPerformance CML::GAMGSolver::solve
     return solverPerf;
 }
 
-
 void CML::GAMGSolver::Vcycle
 (
     const PtrList<lduMatrix::smoother>& smoothers,
@@ -153,7 +150,6 @@ void CML::GAMGSolver::Vcycle
     {
         Pout<< "Pre-smoothing scaling factors: ";
     }
-
 
     // Residual restriction (going to coarser levels)
     for (label leveli = 0; leveli < coarsestLevel; leveli++)
@@ -426,7 +422,6 @@ void CML::GAMGSolver::initVcycle
     }
 }
 
-
 void CML::GAMGSolver::solveCoarsestLevel
 (
     scalarField& coarsestCorrField,
@@ -446,7 +441,7 @@ void CML::GAMGSolver::solveCoarsestLevel
 
         if (matrixLevels_[coarsestLevel].asymmetric())
         {
-            coarseSolverPerf = BICCG
+	    coarseSolverPerf = CoarsePBiCG
             (
                 "coarsestLevelCorr",
                 matrixLevels_[coarsestLevel],
@@ -463,7 +458,7 @@ void CML::GAMGSolver::solveCoarsestLevel
         }
         else
         {
-            coarseSolverPerf = ICCG
+            coarseSolverPerf = CoarsePCG
             (
                 "coarsestLevelCorr",
                 matrixLevels_[coarsestLevel],
@@ -486,5 +481,3 @@ void CML::GAMGSolver::solveCoarsestLevel
     }
 }
 
-
-// ************************************************************************* //

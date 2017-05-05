@@ -92,7 +92,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const word& axis,
             const coordinateSystem& coordSys,
             const Vector<label>& pointsDensity,
@@ -104,7 +104,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const dictionary& dict
         );
 

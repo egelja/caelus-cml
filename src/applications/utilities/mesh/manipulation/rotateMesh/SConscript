@@ -31,10 +31,7 @@ rotateMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if rotateMeshEnv['WHICH_OS'] == "windows":
-  lib_link = []
-else:
-  lib_link = []
+lib_link = []
   
 rotateMeshEnv.Append(LIBS = lib_link)
 

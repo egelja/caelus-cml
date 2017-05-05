@@ -84,13 +84,24 @@
         INTEGER SCOTCH_MESHDIM
         INTEGER SCOTCH_ORDERDIM
         INTEGER SCOTCH_STRATDIM
+#ifdef CAELUS_LABEL64
+        PARAMETER (SCOTCH_ARCHDIM          = 9)
+#else
         PARAMETER (SCOTCH_ARCHDIM          = 5)
+#endif
         PARAMETER (SCOTCH_DGRAPHDIM        = 1)
         PARAMETER (SCOTCH_DGRAPHHALOREQDIM = 1)
         PARAMETER (SCOTCH_DORDERDIM        = 1)
         PARAMETER (SCOTCH_GEOMDIM          = 2)
+#ifdef CAELUS_LABEL64
+        PARAMETER (SCOTCH_GRAPHDIM         = 15)
+        PARAMETER (SCOTCH_MAPDIM           = 22)
+        PARAMETER (SCOTCH_MESHDIM          = 20)
+        PARAMETER (SCOTCH_ORDERDIM         = 15)
+#else
         PARAMETER (SCOTCH_GRAPHDIM         = 12)
         PARAMETER (SCOTCH_MAPDIM           = 13)
         PARAMETER (SCOTCH_MESHDIM          = 15)
         PARAMETER (SCOTCH_ORDERDIM         = 12)
+#endif
         PARAMETER (SCOTCH_STRATDIM         = 1)

@@ -40,10 +40,11 @@ CML::wallPolyPatch::wallPolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    polyPatch(name, size, start, index, bm)
+    polyPatch(name, size, start, index, bm, patchType)
 {}
 
 
@@ -52,10 +53,11 @@ CML::wallPolyPatch::wallPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    polyPatch(name, dict, index, bm)
+    polyPatch(name, dict, index, bm, patchType)
 {}
 
 

@@ -55,6 +55,9 @@ class pointToPointPlanarInterpolation
         //- Coordinate system
         coordinateSystem referenceCS_;
 
+        //- Number of source points (for checking)
+        label nPoints_;
+
         //- Current interpolation addressing to face centres of underlying
         //  patch
         List<FixedList<label, 3> > nearestVertex_;
@@ -110,6 +113,12 @@ public:
             return referenceCS_;
         }
 
+        //- Number of source points
+        label sourceSize() const
+        {
+            return nPoints_;
+        }
+
         //  patch
         const List<FixedList<label, 3> >& nearestVertex() const
         {
@@ -157,6 +166,17 @@ CML::tmp<CML::Field<Type> > CML::pointToPointPlanarInterpolation::interpolate
     const Field<Type>& sourceFld
 ) const
 {
+    if (nPoints_ != sourceFld.size())
+    {
+        FatalErrorIn
+        (
+            "pointToPointPlanarInterpolation::interpolate"
+            "(const Field<Type>&) const"
+        )   << "Number of source points = " << nPoints_
+            << " number of values = " << sourceFld.size()
+            << exit(FatalError);
+    }
+
     tmp<Field<Type> > tfld(new Field<Type>(nearestVertex_.size()));
     Field<Type>& fld = tfld();
 

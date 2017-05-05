@@ -23,6 +23,8 @@ Class
 Description
     A sampledSurface defined by a distance to a surface.
 
+    Uses either isoSurfaceCell or isoSurface.
+
 SourceFiles
     distanceSurface.cpp
 
@@ -33,11 +35,8 @@ SourceFiles
 
 #include "sampledSurface.hpp"
 #include "searchableSurface.hpp"
-//#include "isoSurfaceCell.hpp"
+#include "isoSurfaceCell.hpp"
 #include "isoSurface.hpp"
-#include "volFieldsFwd.hpp"
-#include "pointFields.hpp"
-#include "volPointInterpolation.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,6 +62,9 @@ class distanceSurface
         //- signed distance
         const bool signed_;
 
+        //- Whether to use isoSurfaceCell or isoSurface
+        const bool cell_;
+
         //- Whether to coarsen
         const Switch regularise_;
 
@@ -83,7 +85,9 @@ class distanceSurface
         scalarField pointDistance_;
 
         //- Constructed iso surface
-        //autoPtr<isoSurfaceCell> isoSurfPtr_;
+        autoPtr<isoSurfaceCell> isoSurfCellPtr_;
+
+        //- Constructed iso surface
         autoPtr<isoSurface> isoSurfPtr_;
 
         //- triangles converted to faceList
@@ -96,14 +100,14 @@ class distanceSurface
         void createGeometry();
 
         //- sample field on faces
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sampleField
         (
             const GeometricField<Type, fvPatchField, volMesh>& vField
         ) const;
 
 
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> >
         interpolateField(const interpolation<Type>&) const;
 
@@ -122,6 +126,21 @@ public:
             const word& name,
             const polyMesh& mesh,
             const dictionary& dict
+        );
+
+        //- Construct from components
+        distanceSurface
+        (
+            const word& name,
+            const polyMesh& mesh,
+            const bool interpolate,
+            const word& surfaceType,
+            const word& surfaceName,
+            const scalar distance,
+            const bool signedDistance,
+            const bool cell,
+            const Switch regularise,
+            const Switch average
         );
 
 
@@ -166,11 +185,16 @@ public:
             return facesPtr_;
         }
 
-
-        //const isoSurfaceCell& surface() const
-        const isoSurface& surface() const
+        const triSurface& surface() const
         {
-            return isoSurfPtr_();
+            if (cell_)
+            {
+                return isoSurfCellPtr_();
+            }
+            else
+            {
+                return isoSurfPtr_();
+            }
         }
 
         //- sample field on surface
@@ -243,21 +267,39 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "volFieldsFwd.hpp"
+#include "pointFields.hpp"
+#include "volPointInterpolation.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::distanceSurface::sampleField
 (
     const GeometricField<Type, fvPatchField, volMesh>& vField
 ) const
 {
-    return tmp<Field<Type> >(new Field<Type>(vField, surface().meshCells()));
+    if (cell_)
+    {
+        return tmp<Field<Type> >
+        (
+            new Field<Type>(vField, isoSurfCellPtr_().meshCells())
+        );
+    }
+    else
+    {
+        return tmp<Field<Type> >
+        (
+            new Field<Type>(vField, isoSurfPtr_().meshCells())
+        );
+    }
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::distanceSurface::interpolateField
 (
@@ -276,15 +318,30 @@ CML::distanceSurface::interpolateField
     );
 
     // Sample.
-    return surface().interpolate
-    (
+    if (cell_)
+    {
+        return isoSurfCellPtr_().interpolate
         (
-            average_
-          ? pointAverage(pointFld())()
-          : volFld
-        ),
-        pointFld()
-    );
+            (
+                average_
+              ? pointAverage(pointFld())()
+              : volFld
+            ),
+            pointFld()
+        );
+    }
+    else
+    {
+        return isoSurfPtr_().interpolate
+        (
+            (
+                average_
+              ? pointAverage(pointFld())()
+              : volFld
+            ),
+            pointFld()
+        );
+    }
 }
 
 

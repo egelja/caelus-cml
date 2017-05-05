@@ -21,7 +21,6 @@ License
 
 #include "error.hpp"
 #include "label.hpp"
-#include "Istream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -35,6 +34,8 @@ const label pTraits<label>::zero = 0;
 const label pTraits<label>::one = 1;
 const label pTraits<label>::min = labelMin;
 const label pTraits<label>::max = labelMax;
+const label pTraits<label>::rootMin = pTraits<label>::min;
+const label pTraits<label>::rootMax = pTraits<label>::max;
 
 const char* pTraits<label>::componentNames[] = { "x" };
 
@@ -56,6 +57,8 @@ const int pTraits<int>::zero = 0;
 const int pTraits<int>::one = 1;
 const int pTraits<int>::min = INT_MIN;
 const int pTraits<int>::max = INT_MAX;
+const int pTraits<int>::rootMin = pTraits<int>::min;
+const int pTraits<int>::rootMax = pTraits<int>::max;
 
 const char* pTraits<int>::componentNames[] = { "x" };
 

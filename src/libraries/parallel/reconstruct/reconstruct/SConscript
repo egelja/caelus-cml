@@ -57,4 +57,4 @@ reconstructEnv.Install(install_dir, libreconstruct)
 
 if (reconstructEnv['WHICH_OS'] == "darwin"):
 
-  reconstructEnv.Append(SHLINKFLAGS ='-install_name @' + reconstructEnv['LIB_PLATFORM_INSTALL'] + '/libreconstruct.dylib')
+  reconstructEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libreconstruct.dylib')

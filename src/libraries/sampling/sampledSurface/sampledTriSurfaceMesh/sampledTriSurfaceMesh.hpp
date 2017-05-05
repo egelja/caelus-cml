@@ -26,7 +26,7 @@ Description
 
     - it either samples cells or (non-coupled) boundary faces
 
-    - 4 different modes:
+    - 6 different modes:
         - source=cells, interpolate=false:
             finds per triangle centre the nearest cell centre and uses its value
         - source=cells, interpolate=true
@@ -35,6 +35,12 @@ Description
             point; otherwise projects the point onto the nearest point on
             the boundary of the cell (to make sure interpolateCellPoint
             gets a valid location)
+
+        - source=insideCells, interpolate=false:
+            finds per triangle centre the cell containing it and uses its value.
+            Trims triangles outside mesh.
+        - source=insideCells, interpolate=true
+            Per surface point interpolate cell containing it.
 
         - source=boundaryFaces, interpolate=false:
             finds per triangle centre the nearest point on the boundary
@@ -68,6 +74,7 @@ namespace CML
 {
 
 class treeDataFace;
+class meshSearch;
 
 /*---------------------------------------------------------------------------*\
                        Class sampledTriSurfaceMesh Declaration
@@ -83,7 +90,8 @@ public:
         enum samplingSource
         {
             cells,
-            boundaryFaces
+            insideCells,
+            boundaryFaces,
         };
 
 private:
@@ -94,7 +102,7 @@ private:
 
     // Private data
 
-        static const NamedEnum<samplingSource, 2> samplingSourceNames_;
+        static const NamedEnum<samplingSource, 3> samplingSourceNames_;
 
         //- Surface to sample on
         const triSurfaceMesh surface_;
@@ -121,16 +129,18 @@ private:
         const indexedOctree<treeDataFace>& nonCoupledboundaryTree() const;
 
         //- sample field on faces
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sampleField
         (
             const GeometricField<Type, fvPatchField, volMesh>& vField
         ) const;
 
 
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> >
         interpolateField(const interpolation<Type>&) const;
+
+        bool update(const meshSearch& meshSearcher);
 
 public:
 
@@ -157,6 +167,15 @@ public:
             const dictionary& dict
         );
 
+        //- Construct from triSurface
+        sampledTriSurfaceMesh
+        (
+            const word& name,
+            const polyMesh& mesh,
+            const triSurface& surface,
+            const word& sampleSourceName
+        );
+
 
     //- Destructor
     virtual ~sampledTriSurfaceMesh();
@@ -176,6 +195,10 @@ public:
         //  Do nothing (and return false) if no update was needed
         virtual bool update();
 
+        //- Update the surface using a bound box to limit the searching.
+        //  For direct use, i.e. not through sample.
+        //  Do nothing (and return false) if no update was needed
+        bool update(const treeBoundBox&);
 
         //- Points of surface
         virtual const pointField& points() const
@@ -261,9 +284,11 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledTriSurfaceMesh::sampleField
 (
@@ -274,7 +299,7 @@ CML::sampledTriSurfaceMesh::sampleField
     tmp<Field<Type> > tvalues(new Field<Type>(sampleElements_.size()));
     Field<Type>& values = tvalues();
 
-    if (sampleSource_ == cells)
+    if (sampleSource_ == cells || sampleSource_ == insideCells)
     {
         // Sample cells
 
@@ -319,7 +344,7 @@ CML::sampledTriSurfaceMesh::sampleField
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledTriSurfaceMesh::interpolateField
 (
@@ -330,7 +355,7 @@ CML::sampledTriSurfaceMesh::interpolateField
     tmp<Field<Type> > tvalues(new Field<Type>(sampleElements_.size()));
     Field<Type>& values = tvalues();
 
-    if (sampleSource_ == cells)
+    if (sampleSource_ == cells || sampleSource_ == insideCells)
     {
         // Sample cells.
 

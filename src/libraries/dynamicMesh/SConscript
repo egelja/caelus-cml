@@ -102,6 +102,7 @@ src_files = Split("""
   fvMeshDistribute/fvMeshDistribute.cpp
   polyMeshAdder/faceCoupleInfo.cpp
   polyMeshAdder/polyMeshAdder.cpp
+  fvMeshTools/fvMeshTools.cpp
   motionSmoother/motionSmoother.cpp
   motionSmoother/motionSmootherCheck.cpp
   motionSmoother/polyMeshGeometry/polyMeshGeometry.cpp
@@ -123,4 +124,4 @@ dynamicEnv.Install(install_dir, libdynamicMesh)
 
 if (dynamicEnv['WHICH_OS'] == "darwin"):
 
-  dynamicEnv.Append(SHLINKFLAGS ='-install_name @' + dynamicEnv['LIB_PLATFORM_INSTALL'] + '/libdynamicMesh.dylib')
+  dynamicEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdynamicMesh.dylib')

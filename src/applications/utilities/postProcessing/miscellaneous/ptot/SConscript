@@ -31,9 +31,8 @@ pTotEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if pTotEnv['WHICH_OS'] == "windows":
   pTotEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
      
 
 pTotEnv.Append(LIBS = lib_link)

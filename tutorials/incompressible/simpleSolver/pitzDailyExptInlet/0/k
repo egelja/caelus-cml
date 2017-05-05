@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 4.10
+Caelus 5.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -22,6 +22,7 @@ boundaryField
     {
         type            timeVaryingMappedFixedValue;
         setAverage      0;
+        offset          0;
         value           nonuniform List<scalar>
 30
 (

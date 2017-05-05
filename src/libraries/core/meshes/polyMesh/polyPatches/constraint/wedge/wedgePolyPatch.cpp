@@ -105,10 +105,11 @@ CML::wedgePolyPatch::wedgePolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    polyPatch(name, size, start, index, bm)
+    polyPatch(name, size, start, index, bm, patchType)
 {
     initTransforms();
 }
@@ -119,10 +120,11 @@ CML::wedgePolyPatch::wedgePolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    polyPatch(name, dict, index, bm)
+    polyPatch(name, dict, index, bm, patchType)
 {
     initTransforms();
 }

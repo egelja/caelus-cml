@@ -32,9 +32,8 @@ Lambda2Env.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if Lambda2Env['WHICH_OS'] == "windows":
   Lambda2Env.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 Lambda2Env.Append(LIBS = lib_link)
 

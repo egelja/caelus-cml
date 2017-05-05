@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,8 +23,6 @@ License
 #include "diagonalPreconditioner.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(diagonalPreconditioner, 0);
@@ -37,9 +36,6 @@ namespace CML
         adddiagonalPreconditionerAsymMatrixConstructorToTable_;
 }
 
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
 CML::diagonalPreconditioner::diagonalPreconditioner
 (
     const lduMatrix::solver& sol,
@@ -47,12 +43,12 @@ CML::diagonalPreconditioner::diagonalPreconditioner
 )
 :
     lduMatrix::preconditioner(sol),
-    rD(sol.matrix().diag().size())
+    rD_(sol.matrix().diag().size())
 {
-    scalar* RESTRICT rDPtr = rD.begin();
+    scalar* RESTRICT rDPtr = rD_.begin();
     const scalar* RESTRICT DPtr = solver_.matrix().diag().begin();
 
-    register label nCells = rD.size();
+    register label nCells = rD_.size();
 
     // Generate reciprocal diagonal
     for (register label cell=0; cell<nCells; cell++)
@@ -61,27 +57,23 @@ CML::diagonalPreconditioner::diagonalPreconditioner
     }
 }
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 void CML::diagonalPreconditioner::precondition
 (
-    scalarField& wA,
-    const scalarField& rA,
+    scalarField& w,
+    const scalarField& r,
     const direction
 ) const
 {
-    scalar* RESTRICT wAPtr = wA.begin();
-    const scalar* RESTRICT rAPtr = rA.begin();
-    const scalar* RESTRICT rDPtr = rD.begin();
+    scalar* RESTRICT wPtr = w.begin();
+    const scalar* RESTRICT rPtr = r.begin();
+    const scalar* RESTRICT rDPtr = rD_.begin();
 
-    register label nCells = wA.size();
+    register label nCells = w.size();
 
     for (register label cell=0; cell<nCells; cell++)
     {
-        wAPtr[cell] = rDPtr[cell]*rAPtr[cell];
+        wPtr[cell] = rDPtr[cell]*rPtr[cell];
     }
 }
 
 
-// ************************************************************************* //

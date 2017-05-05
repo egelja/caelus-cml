@@ -110,6 +110,13 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         );
 
+        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
+        (
+            const volScalarField& alpha,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& psi
+        );
+
         tmp<fvMatrix<Type> > fvmDdt
         (
             const GeometricField<Type, fvPatchField, volMesh>&
@@ -127,13 +134,33 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         );
 
+        tmp<fvMatrix<Type> > fvmDdt
+        (
+            const volScalarField& alpha,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& psi
+        );
+
         typedef typename ddtScheme<Type>::fluxFieldType fluxFieldType;
+
+        tmp<fluxFieldType> fvcDdtUfCorr
+        (
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
+        );
 
         tmp<fluxFieldType> fvcDdtPhiCorr
         (
             const volScalarField& rA,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
+        );
+
+        tmp<fluxFieldType> fvcDdtUfCorr
+        (
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
         );
 
         tmp<fluxFieldType> fvcDdtPhiCorr
@@ -152,6 +179,13 @@ public:
 
 
 template<>
+tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtUfCorr
+(
+    const GeometricField<scalar, fvPatchField, volMesh>& U,
+    const GeometricField<scalar, fvsPatchField, surfaceMesh>& Uf
+);
+
+template<>
 tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtPhiCorr
 (
     const volScalarField& rA,
@@ -159,6 +193,13 @@ tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtPhiCorr
     const surfaceScalarField& phi
 );
 
+template<>
+tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtUfCorr
+(
+    const volScalarField& rho,
+    const volScalarField& U,
+    const surfaceScalarField& Uf
+);
 
 template<>
 tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtPhiCorr
@@ -314,6 +355,37 @@ steadyStateDdtScheme<Type>::fvcDdt
 
 
 template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> >
+steadyStateDdtScheme<Type>::fvcDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return tmp<GeometricField<Type, fvPatchField, volMesh> >
+    (
+        new GeometricField<Type, fvPatchField, volMesh>
+        (
+            IOobject
+            (
+                "ddt("+alpha.name()+','+rho.name()+','+vf.name()+')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<Type>
+            (
+                "0",
+                rho.dimensions()*vf.dimensions()/dimTime,
+                pTraits<Type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
 tmp<fvMatrix<Type> >
 steadyStateDdtScheme<Type>::fvmDdt
 (
@@ -376,6 +448,58 @@ steadyStateDdtScheme<Type>::fvmDdt
 
 
 template<class Type>
+tmp<fvMatrix<Type> >
+steadyStateDdtScheme<Type>::fvmDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    tmp<fvMatrix<Type> > tfvm
+    (
+        new fvMatrix<Type>
+        (
+            vf,
+            alpha.dimensions()*rho.dimensions()*vf.dimensions()*dimVol/dimTime
+        )
+    );
+
+    return tfvm;
+}
+
+
+template<class Type>
+tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
+steadyStateDdtScheme<Type>::fvcDdtUfCorr
+(
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
+)
+{
+    return tmp<fluxFieldType>
+    (
+        new fluxFieldType
+        (
+            IOobject
+            (
+                "ddtCorr(" + U.name() + ',' + Uf.name() + ')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<typename flux<Type>::type>
+            (
+                "0",
+                mesh().Sf().dimensions()*Uf.dimensions()*dimArea/dimTime,
+                pTraits<typename flux<Type>::type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
 tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
 steadyStateDdtScheme<Type>::fvcDdtPhiCorr
 (
@@ -400,6 +524,39 @@ steadyStateDdtScheme<Type>::fvcDdtPhiCorr
             (
                 "0",
                 rA.dimensions()*phi.dimensions()/dimTime,
+                pTraits<typename flux<Type>::type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
+tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
+steadyStateDdtScheme<Type>::fvcDdtUfCorr
+(
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
+)
+{
+    return tmp<fluxFieldType>
+    (
+        new fluxFieldType
+        (
+            IOobject
+            (
+                "ddtCorr("
+              + rho.name()
+              + ',' + U.name() + ',' + Uf.name() + ')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<typename flux<Type>::type>
+            (
+                "0",
+                rho.dimensions()*Uf.dimensions()*dimArea/dimTime,
                 pTraits<typename flux<Type>::type>::zero
             )
         )
@@ -455,7 +612,10 @@ tmp<surfaceScalarField> steadyStateDdtScheme<Type>::meshPhi
             (
                 "meshPhi",
                 mesh().time().timeName(),
-                mesh()
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
             ),
             mesh(),
             dimensionedScalar("0", dimVolume/dimTime, 0.0)

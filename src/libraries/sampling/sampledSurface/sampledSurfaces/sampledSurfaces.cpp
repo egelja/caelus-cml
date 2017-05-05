@@ -24,42 +24,20 @@ License
 #include "dictionary.hpp"
 #include "Time.hpp"
 #include "IOmanip.hpp"
-#include "ListListOps.hpp"
-#include "mergePoints.hpp"
 #include "volPointInterpolation.hpp"
+#include "PatchTools.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::sampledSurfaces, 0);
-bool CML::sampledSurfaces::verbose_ = false;
-CML::scalar CML::sampledSurfaces::mergeTol_ = 1e-10;
-
 namespace CML
 {
-    //- Used to offset faces in Pstream::combineOffset
-    template <>
-    class offsetOp<face>
-    {
-
-    public:
-
-        face operator()
-        (
-            const face& x,
-            const label offset
-        ) const
-        {
-            face result(x.size());
-
-            forAll(x, xI)
-            {
-                result[xI] = x[xI] + offset;
-            }
-            return result;
-        }
-    };
-
+defineTypeNameAndDebug(sampledSurfaces, 0);
 }
+
+
+bool CML::sampledSurfaces::verbose_ = false;
+
+CML::scalar CML::sampledSurfaces::mergeTol_ = 1e-10;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -124,11 +102,11 @@ CML::sampledSurfaces::sampledSurfaces
 {
     if (Pstream::parRun())
     {
-        outputPath_ = mesh_.time().path()/".."/name_;
+        outputPath_ = mesh_.time().path()/".."/"postProcessing"/name_;
     }
     else
     {
-        outputPath_ = mesh_.time().path()/name_;
+        outputPath_ = mesh_.time().path()/"postProcessing"/name_;
     }
 
     read(dict);
@@ -161,6 +139,12 @@ void CML::sampledSurfaces::end()
 }
 
 
+void CML::sampledSurfaces::timeSet()
+{
+    // Do nothing - only valid on write
+}
+
+
 void CML::sampledSurfaces::write()
 {
     if (size())
@@ -176,6 +160,7 @@ void CML::sampledSurfaces::write()
             {
                 Pout<< "Creating directory "
                     << outputPath_/mesh_.time().timeName() << nl << endl;
+
             }
 
             mkDir(outputPath_/mesh_.time().timeName());
@@ -369,80 +354,18 @@ bool CML::sampledSurfaces::update()
             continue;
         }
 
-
-        // Collect points from all processors
-        List<pointField> gatheredPoints(Pstream::nProcs());
-        gatheredPoints[Pstream::myProcNo()] = s.points();
-        Pstream::gatherList(gatheredPoints);
-
-        if (Pstream::master())
-        {
-            mergeList_[surfI].points = ListListOps::combine<pointField>
-            (
-                gatheredPoints,
-                accessOp<pointField>()
-            );
-        }
-
-        // Collect faces from all processors and renumber using sizes of
-        // gathered points
-        List<faceList> gatheredFaces(Pstream::nProcs());
-        gatheredFaces[Pstream::myProcNo()] = s.faces();
-        Pstream::gatherList(gatheredFaces);
-
-        if (Pstream::master())
-        {
-            mergeList_[surfI].faces = static_cast<const faceList&>
-            (
-                ListListOps::combineOffset<faceList>
-                (
-                    gatheredFaces,
-                    ListListOps::subSizes
-                    (
-                        gatheredPoints,
-                        accessOp<pointField>()
-                    ),
-                    accessOp<faceList>(),
-                    offsetOp<face>()
-                )
-            );
-        }
-
-        pointField newPoints;
-        labelList oldToNew;
-
-        bool hasMerged = mergePoints
+        PatchTools::gatherAndMerge
         (
-            mergeList_[surfI].points,
             mergeDim,
-            false,                  // verbosity
-            oldToNew,
-            newPoints
+            primitivePatch
+            (
+                SubList<face>(s.faces(), s.faces().size()),
+                s.points()
+            ),
+            mergeList_[surfI].points,
+            mergeList_[surfI].faces,
+            mergeList_[surfI].pointsMap
         );
-
-        if (hasMerged)
-        {
-            // Store point mapping
-            mergeList_[surfI].pointsMap.transfer(oldToNew);
-
-            // Copy points
-            mergeList_[surfI].points.transfer(newPoints);
-
-            // Relabel faces
-            faceList& faces = mergeList_[surfI].faces;
-
-            forAll(faces, faceI)
-            {
-                inplaceRenumber(mergeList_[surfI].pointsMap, faces[faceI]);
-            }
-
-            if (Pstream::master() && debug)
-            {
-                Pout<< "For surface " << surfI << " merged from "
-                    << mergeList_[surfI].pointsMap.size() << " points down to "
-                    << mergeList_[surfI].points.size()    << " points" << endl;
-            }
-        }
     }
 
     return updated;

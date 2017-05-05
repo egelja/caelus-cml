@@ -88,7 +88,7 @@ void CML::fv::rotorDiskSource::checkData()
                     (
                         readScalar(coeffs_.lookup("inletNormalVelocity"))
                     );
-                    inletVelocity_ = -coordSys_.e3()*UIn;
+                    inletVelocity_ = -coordSys_.R().e3()*UIn;
                     break;
                 }
                 case ifLocal:
@@ -308,6 +308,17 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
 
             coeffs_.lookup("refDirection") >> refDir;
 
+            localAxesRotation_.reset
+            (
+                new localAxesRotation
+                (
+                    mesh_,
+                    axis,
+                    origin,
+                    cells_
+                )
+            );
+
             // set the face areas and apply correction to calculated axis
             // e.g. if cellZone is more than a single layer in thickness
             setFaceArea(axis, true);
@@ -319,6 +330,17 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             coeffs_.lookup("origin") >> origin;
             coeffs_.lookup("axis") >> axis;
             coeffs_.lookup("refDirection") >> refDir;
+
+            localAxesRotation_.reset
+            (
+                new localAxesRotation
+                (
+                    mesh_,
+                    axis,
+                    origin,
+                    cells_
+                )
+            );
 
             setFaceArea(axis, false);
 
@@ -341,9 +363,9 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
         << "    - disk diameter = " << diameter << nl
         << "    - disk area     = " << sumArea << nl
         << "    - origin        = " << coordSys_.origin() << nl
-        << "    - r-axis        = " << coordSys_.e1() << nl
-        << "    - psi-axis      = " << coordSys_.e2() << nl
-        << "    - z-axis        = " << coordSys_.e3() << endl;
+        << "    - r-axis        = " << coordSys_.R().e1() << nl
+        << "    - psi-axis      = " << coordSys_.R().e2() << nl
+        << "    - z-axis        = " << coordSys_.R().e3() << endl;
 }
 
 
@@ -444,6 +466,7 @@ CML::fv::rotorDiskSource::rotorDiskSource
     invR_(cells_.size(), I),
     area_(cells_.size(), 0.0),
     coordSys_(false),
+    localAxesRotation_(),
     rMax_(0.0),
     trim_(trimModel::New(*this, coeffs_)),
     blade_(coeffs_.subDict("blade")),
@@ -489,7 +512,7 @@ void CML::fv::rotorDiskSource::calculate
             const scalar radius = x_[i].x();
 
             // velocity in local cylindrical reference frame
-            vector Uc = coordSys_.localVector(U[cellI]);
+            vector Uc = localAxesRotation_->transform(U[cellI], i);
 
             // transform from rotor cylindrical into local coning system
             Uc = R_[i] & Uc;
@@ -558,7 +581,7 @@ void CML::fv::rotorDiskSource::calculate
             localForce = invR_[i] & localForce;
 
             // convert force to global cartesian co-ordinate system
-            force[cellI] = coordSys_.globalVector(localForce);
+            force[cellI] = localAxesRotation_->invTransform(localForce, i);
 
             if (divideVolume)
             {
@@ -566,7 +589,6 @@ void CML::fv::rotorDiskSource::calculate
             }
         }
     }
-
 
     if (output)
     {
@@ -648,7 +670,6 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
     {
         coeffs_.lookup("fieldNames") >> fieldNames_;
         applied_.setSize(fieldNames_.size(), false);
-
 
         // read co-ordinate system/geometry invariant properties
         scalar rpm(readScalar(coeffs_.lookup("rpm")));

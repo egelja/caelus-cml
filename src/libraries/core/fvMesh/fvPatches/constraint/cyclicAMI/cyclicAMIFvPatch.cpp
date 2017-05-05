@@ -35,60 +35,110 @@ namespace CML
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+bool CML::cyclicAMIFvPatch::coupled() const
+{
+    return Pstream::parRun() || (this->size() && neighbFvPatch().size());
+}
+
+
 void CML::cyclicAMIFvPatch::makeWeights(scalarField& w) const
 {
-    const cyclicAMIFvPatch& nbrPatch = neighbFvPatch();
-
-    const scalarField deltas(nf() & fvPatch::delta());
-
-    const scalarField nbrDeltas
-    (
-        interpolate(nbrPatch.nf() & nbrPatch.fvPatch::delta())
-    );
-
-    forAll(deltas, faceI)
+    if (coupled())
     {
-        scalar di = deltas[faceI];
-        scalar dni = nbrDeltas[faceI];
+        const cyclicAMIFvPatch& nbrPatch = neighbFvPatch();
 
-        w[faceI] = dni/(di + dni);
+        const scalarField deltas(nf() & coupledFvPatch::delta());
+
+        tmp<scalarField> tnbrDeltas;
+        if (applyLowWeightCorrection())
+        {
+            tnbrDeltas =
+                interpolate
+                (
+                    nbrPatch.nf() & nbrPatch.coupledFvPatch::delta(),
+                    scalarField(this->size(), 1.0)
+                );
+        }
+        else
+        {
+            tnbrDeltas =
+                interpolate(nbrPatch.nf() & nbrPatch.coupledFvPatch::delta());
+        }
+
+        const scalarField& nbrDeltas = tnbrDeltas();
+
+        forAll(deltas, faceI)
+        {
+            scalar di = deltas[faceI];
+            scalar dni = nbrDeltas[faceI];
+
+            w[faceI] = dni/(di + dni);
+        }
+    }
+    else
+    {
+        // Behave as uncoupled patch
+        fvPatch::makeWeights(w);
     }
 }
 
 
 CML::tmp<CML::vectorField> CML::cyclicAMIFvPatch::delta() const
 {
-    const vectorField patchD(fvPatch::delta());
-
     const cyclicAMIFvPatch& nbrPatch = neighbFvPatch();
-    const vectorField nbrPatchD(interpolate(nbrPatch.fvPatch::delta()));
 
-    tmp<vectorField> tpdv(new vectorField(patchD.size()));
-    vectorField& pdv = tpdv();
-
-    // do the transformation if necessary
-    if (parallel())
+    if (coupled())
     {
-        forAll(patchD, faceI)
-        {
-            vector ddi = patchD[faceI];
-            vector dni = nbrPatchD[faceI];
+        const vectorField patchD(coupledFvPatch::delta());
 
-            pdv[faceI] = ddi - dni;
+        tmp<vectorField> tnbrPatchD;
+        if (applyLowWeightCorrection())
+        {
+            tnbrPatchD =
+                interpolate
+                (
+                    nbrPatch.coupledFvPatch::delta(),
+                    vectorField(this->size(), vector::zero)
+                );
         }
+        else
+        {
+            tnbrPatchD = interpolate(nbrPatch.coupledFvPatch::delta());
+        }
+
+        const vectorField& nbrPatchD = tnbrPatchD();
+
+        tmp<vectorField> tpdv(new vectorField(patchD.size()));
+        vectorField& pdv = tpdv();
+
+        // do the transformation if necessary
+        if (parallel())
+        {
+            forAll(patchD, faceI)
+            {
+                const vector& ddi = patchD[faceI];
+                const vector& dni = nbrPatchD[faceI];
+
+                pdv[faceI] = ddi - dni;
+            }
+        }
+        else
+        {
+            forAll(patchD, faceI)
+            {
+                const vector& ddi = patchD[faceI];
+                const vector& dni = nbrPatchD[faceI];
+
+                pdv[faceI] = ddi - transform(forwardT()[0], dni);
+            }
+        }
+
+        return tpdv;
     }
     else
     {
-        forAll(patchD, faceI)
-        {
-            vector ddi = patchD[faceI];
-            vector dni = nbrPatchD[faceI];
-
-            pdv[faceI] = ddi - transform(forwardT()[0], dni);
-        }
+        return coupledFvPatch::delta();
     }
-
-    return tpdv;
 }
 
 

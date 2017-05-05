@@ -90,7 +90,7 @@ void CML::patchCloudSet::calcSamples
     // Not very random
     Random rndGen(123456);
     // Make bb asymetric just to avoid problems on symmetric meshes
-    bb = bb.extend(rndGen, 1E-4);
+    bb = bb.extend(rndGen, 1e-4);
 
     // Make sure bb is 3D.
     bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
@@ -110,6 +110,8 @@ void CML::patchCloudSet::calcSamples
         10,             // leafsize
         3.0             // duplicity
     );
+
+    // Force calculation of face-diagonal decomposition
     (void)mesh().tetBasePtIs();
 
 
@@ -262,7 +264,7 @@ CML::patchCloudSet::patchCloudSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const List<point>& sampleCoords,
     const labelHashSet& patchSet,
@@ -287,7 +289,7 @@ CML::patchCloudSet::patchCloudSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :

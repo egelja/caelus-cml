@@ -187,6 +187,35 @@ externalWallHeatFluxTemperatureFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void CML::externalWallHeatFluxTemperatureFvPatchScalarField::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    mixedFvPatchScalarField::autoMap(m);
+    q_.autoMap(m);
+    h_.autoMap(m);
+    Ta_.autoMap(m);
+}
+
+
+void CML::externalWallHeatFluxTemperatureFvPatchScalarField::rmap
+(
+    const fvPatchScalarField& ptf,
+    const labelList& addr
+)
+{
+    mixedFvPatchScalarField::rmap(ptf, addr);
+
+    const externalWallHeatFluxTemperatureFvPatchScalarField& tiptf =
+        refCast<const externalWallHeatFluxTemperatureFvPatchScalarField>(ptf);
+
+    q_.rmap(tiptf.q_, addr);
+    h_.rmap(tiptf.h_, addr);
+    Ta_.rmap(tiptf.Ta_, addr);
+}
+
+
 void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -197,6 +226,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     scalarField q(size(), 0.0);
     scalarField KWall(K(*this));
     scalarField KDelta(KWall*patch().deltaCoeffs());
+    scalarField Tc(patchInternalField());
 
     if (oldMode_ == fixedHeatFlux)
     {
@@ -204,7 +234,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     }
     else if (oldMode_ == fixedHeatTransferCoeff)
     {
-        q = (Ta_ - *this)*h_;
+        q = (Ta_ - Tc)*h_;
     }
     else
     {
@@ -212,7 +242,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
         (
             "externalWallHeatFluxTemperatureFvPatchScalarField"
             "::updateCoeffs()"
-        )   << "Illegal mode " << operationModeNames[oldMode_]
+        )   << "Illegal heat flux mode " << operationModeNames[oldMode_]
             << exit(FatalError);
     }
 
@@ -227,7 +257,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
         else //out
         {
             this->refGrad()[i] = 0.0;
-            this->refValue()[i] = q[i]/KDelta[i] + patchInternalField()()[i];
+            this->refValue()[i] = q[i]/KDelta[i] + Tc[i];
             this->valueFraction()[i] = 1.0;
         }
     }
@@ -241,7 +271,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
         Info<< patch().boundaryMesh().mesh().name() << ':'
             << patch().name() << ':'
             << this->dimensionedInternalField().name() << " :"
-            << " heatFlux:" << Q
+            << " heat transfer rate:" << Q
             << " walltemperature "
             << " min:" << gMin(*this)
             << " max:" << gMax(*this)
@@ -258,6 +288,7 @@ void CML::externalWallHeatFluxTemperatureFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     temperatureCoupledBase::write(os);
+
     switch (oldMode_)
     {
         case fixedHeatFlux:

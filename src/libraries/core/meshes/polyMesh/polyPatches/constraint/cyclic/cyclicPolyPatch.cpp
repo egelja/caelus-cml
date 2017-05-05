@@ -32,6 +32,7 @@ License
 #include "diagTensor.hpp"
 #include "transformField.hpp"
 #include "SubField.hpp"
+#include "unitConversion.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -160,16 +161,16 @@ void CML::cyclicPolyPatch::calcTransforms
             << exit(FatalError);
     }
 
-    if (transform_ != neighbPatch().transform_)
+    if (transform() != neighbPatch().transform())
     {
         FatalErrorIn
         (
             "cyclicPolyPatch::calcTransforms()"
         )   << "Patch " << name()
-            << " has transform type " << transformTypeNames[transform_]
+            << " has transform type " << transformTypeNames[transform()]
             << ", neighbour patch " << neighbPatchName_
             << " has transform type "
-            << neighbPatch().transformTypeNames[transform_]
+            << neighbPatch().transformTypeNames[transform()]
             << exit(FatalError);
     }
 
@@ -257,7 +258,7 @@ void CML::cyclicPolyPatch::calcTransforms
 
         // Calculate transformation tensors
 
-        if (transform_ == ROTATIONAL)
+        if (transform() == ROTATIONAL)
         {
             // Calculate using the given rotation axis and centre. Do not
             // use calculated normals.
@@ -268,10 +269,14 @@ void CML::cyclicPolyPatch::calcTransforms
 
             if (debug)
             {
+                scalar theta = radToDeg(acos(n0 & n1));
+
                 Pout<< "cyclicPolyPatch::calcTransforms :"
                     << " patch:" << name()
                     << " Specified rotation :"
-                    << " n0:" << n0 << " n1:" << n1 << endl;
+                    << " n0:" << n0 << " n1:" << n1
+                    << " swept angle: " << theta << " [deg]"
+                    << endl;
             }
 
             // Extended tensor from two local coordinate systems calculated
@@ -316,11 +321,11 @@ void CML::cyclicPolyPatch::calcTransforms
                 half1Normals,
                 half0Tols,
                 matchTolerance(),
-                transform_
+                transform()
             );
 
 
-            if (transform_ == TRANSLATIONAL)
+            if (transform() == TRANSLATIONAL)
             {
                 if (debug)
                 {
@@ -402,7 +407,7 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
 {
     // Get geometric data on both halves.
     half0Ctrs = pp0.faceCentres();
-    anchors0 = getAnchorPoints(pp0, pp0.points());
+    anchors0 = getAnchorPoints(pp0, pp0.points(), transform());
     half1Ctrs = pp1.faceCentres();
 
     if (debug)
@@ -417,7 +422,7 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
 
     if (half0Ctrs.size())
     {
-        switch (transform_)
+        switch (transform())
         {
             case ROTATIONAL:
             {
@@ -428,10 +433,14 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
 
                 if (debug)
                 {
+                    scalar theta = radToDeg(acos(n0 & n1));
+
                     Pout<< "cyclicPolyPatch::getCentresAndAnchors :"
                         << " patch:" << name()
                         << " Specified rotation :"
-                        << " n0:" << n0 << " n1:" << n1 << endl;
+                        << " n0:" << n0 << " n1:" << n1
+                        << " swept angle: " << theta << " [deg]"
+                        << endl;
                 }
 
                 // Extended tensor from two local coordinate systems calculated
@@ -492,7 +501,7 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
             }
             default:
             {
-                // Assumes that cyclic is planar. This is also the initial
+                // Assumes that cyclic is rotational. This is also the initial
                 // condition for patches without faces.
 
                 // Determine the face with max area on both halves. These
@@ -596,13 +605,14 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType,
+    const transformType transform
 )
 :
-    coupledPolyPatch(name, size, start, index, bm),
+    coupledPolyPatch(name, size, start, index, bm, patchType, transform),
     neighbPatchName_(word::null),
     neighbPatchID_(-1),
-    transform_(UNKNOWN),
     rotationAxis_(vector::zero),
     rotationCentre_(point::zero),
     separationVector_(vector::zero),
@@ -628,10 +638,9 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     const vector& separationVector
 )
 :
-    coupledPolyPatch(name, size, start, index, bm),
+    coupledPolyPatch(name, size, start, index, bm, typeName, transform),
     neighbPatchName_(neighbPatchName),
     neighbPatchID_(-1),
-    transform_(transform),
     rotationAxis_(rotationAxis),
     rotationCentre_(rotationCentre),
     separationVector_(separationVector),
@@ -648,13 +657,13 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    coupledPolyPatch(name, dict, index, bm),
+    coupledPolyPatch(name, dict, index, bm, patchType),
     neighbPatchName_(dict.lookupOrDefault("neighbourPatch", word::null)),
     neighbPatchID_(-1),
-    transform_(UNKNOWN),
     rotationAxis_(vector::zero),
     rotationCentre_(point::zero),
     separationVector_(vector::zero),
@@ -687,37 +696,33 @@ CML::cyclicPolyPatch::cyclicPolyPatch
             << exit(FatalIOError);
     }
 
-    if (dict.found("transform"))
+    switch (transform())
     {
-        transform_ = transformTypeNames.read(dict.lookup("transform"));
-        switch (transform_)
+        case ROTATIONAL:
         {
-            case ROTATIONAL:
-            {
-                dict.lookup("rotationAxis") >> rotationAxis_;
-                dict.lookup("rotationCentre") >> rotationCentre_;
+            dict.lookup("rotationAxis") >> rotationAxis_;
+            dict.lookup("rotationCentre") >> rotationCentre_;
 
-                scalar magRot = mag(rotationAxis_);
-                if (magRot < SMALL)
-                {
-                    FatalIOErrorIn("cyclicPolyPatch::cyclicPolyPatch(..)", dict)
-                        << "Illegal rotationAxis " << rotationAxis_ << endl
-                        << "Please supply a non-zero vector."
-                        << exit(FatalIOError);
-                }
-                rotationAxis_ /= magRot;
+            scalar magRot = mag(rotationAxis_);
+            if (magRot < SMALL)
+            {
+                FatalIOErrorIn("cyclicPolyPatch::cyclicPolyPatch(..)", dict)
+                    << "Illegal rotationAxis " << rotationAxis_ << endl
+                    << "Please supply a non-zero vector."
+                    << exit(FatalIOError);
+            }
+            rotationAxis_ /= magRot;
 
-                break;
-            }
-            case TRANSLATIONAL:
-            {
-                dict.lookup("separationVector") >> separationVector_;
-                break;
-            }
-            default:
-            {
-                // no additional info required
-            }
+            break;
+        }
+        case TRANSLATIONAL:
+        {
+            dict.lookup("separationVector") >> separationVector_;
+            break;
+        }
+        default:
+        {
+            // no additional info required
         }
     }
 
@@ -735,7 +740,6 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     coupledPolyPatch(pp, bm),
     neighbPatchName_(pp.neighbPatchName()),
     neighbPatchID_(-1),
-    transform_(pp.transform_),
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
@@ -760,7 +764,6 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     coupledPolyPatch(pp, bm, index, newSize, newStart),
     neighbPatchName_(neighbPatchName),
     neighbPatchID_(-1),
-    transform_(pp.transform_),
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
@@ -792,7 +795,6 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     coupledPolyPatch(pp, bm, index, mapAddressing, newStart),
     neighbPatchName_(pp.neighbPatchName_),
     neighbPatchID_(-1),
-    transform_(pp.transform_),
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
@@ -851,7 +853,7 @@ void CML::cyclicPolyPatch::transformPosition(pointField& l) const
 {
     if (!parallel())
     {
-        if (transform_ == ROTATIONAL)
+        if (transform() == ROTATIONAL)
         {
             l =
                 CML::transform(forwardT(), l-rotationCentre_)
@@ -894,7 +896,7 @@ void CML::cyclicPolyPatch::transformPosition(point& l, const label facei) const
           : forwardT()[facei]
         );
 
-        if (transform_ == ROTATIONAL)
+        if (transform() == ROTATIONAL)
         {
             l = CML::transform(T, l-rotationCentre_) + rotationCentre_;
         }
@@ -1268,7 +1270,7 @@ bool CML::cyclicPolyPatch::order
     rotation.setSize(pp.size());
     rotation = 0;
 
-    if (transform_ == NOORDERING)
+    if (transform() == NOORDERING)
     {
         // No faces, nothing to change.
         return false;
@@ -1449,12 +1451,10 @@ void CML::cyclicPolyPatch::write(Ostream& os) const
     coupledPolyPatch::write(os);
     os.writeKeyword("neighbourPatch") << neighbPatchName_
         << token::END_STATEMENT << nl;
-    switch (transform_)
+    switch (transform())
     {
         case ROTATIONAL:
         {
-            os.writeKeyword("transform") << transformTypeNames[transform_]
-                << token::END_STATEMENT << nl;
             os.writeKeyword("rotationAxis") << rotationAxis_
                 << token::END_STATEMENT << nl;
             os.writeKeyword("rotationCentre") << rotationCentre_
@@ -1463,16 +1463,12 @@ void CML::cyclicPolyPatch::write(Ostream& os) const
         }
         case TRANSLATIONAL:
         {
-            os.writeKeyword("transform") << transformTypeNames[transform_]
-                << token::END_STATEMENT << nl;
             os.writeKeyword("separationVector") << separationVector_
                 << token::END_STATEMENT << nl;
             break;
         }
         case NOORDERING:
         {
-            os.writeKeyword("transform") << transformTypeNames[transform_]
-                << token::END_STATEMENT << nl;
             break;
         }
         default:

@@ -71,13 +71,25 @@
 #endif /* SCOTCH_PTSCOTCH */
 
 /*+ Integer type. +*/
+#ifdef CAELUS_LABEL64
+typedef int64_t SCOTCH_Idx;
 
+typedef int64_t SCOTCH_Num;
+
+#define SCOTCH_NUMMAX               ((int64_t) (((u_int64_t) 1 << ((sizeof (int64_t) << 3) - 1)) - 1))
+#define SCOTCH_NUMSTRING            "%lld"
+
+#else
 typedef int SCOTCH_Idx;
 
 typedef int SCOTCH_Num;
 
 #define SCOTCH_NUMMAX               ((int) (((unsigned int) 1 << ((sizeof (int) << 3) - 1)) - 1))
 #define SCOTCH_NUMSTRING            "%d"
+
+#endif
+
+
 
 /*+ Strategy string parametrization values +*/
 
@@ -93,7 +105,12 @@ objects, computed at compile-time by program
 proper padding                               +*/
 
 typedef struct {
+#ifdef CAELUS_LABEL64
+  double                    dummy[9];
+#else
   double                    dummy[5];
+#endif
+
 } SCOTCH_Arch;
 
 #ifdef SCOTCH_PTSCOTCH
@@ -119,19 +136,35 @@ typedef struct {
 } SCOTCH_Geom;
 
 typedef struct {
+#ifdef CAELUS_LABEL64
+  double                    dummy[15];
+#else
   double                    dummy[12];
+#endif
 } SCOTCH_Graph;
 
 typedef struct {
+#ifdef CAELUS_LABEL64
+  double                    dummy[20];
+#else
   double                    dummy[15];
+#endif
 } SCOTCH_Mesh;
 
 typedef struct {
+#ifdef CAELUS_LABEL64
+  double                    dummy[22];
+#else
   double                    dummy[13];
+#endif
 } SCOTCH_Mapping;
 
 typedef struct {
+#ifdef CAELUS_LABEL64
+  double                    dummy[15];
+#else
   double                    dummy[12];
+#endif
 } SCOTCH_Ordering;
 
 typedef struct {

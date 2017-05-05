@@ -33,7 +33,11 @@
 #if defined (windows) 
   #define IDXTYPEWIDTH 32
 #else
-  #define IDXTYPEWIDTH 32 // if this is 64 then clash with CML int 
+  #if CAELUS_LABEL64
+    #define IDXTYPEWIDTH 64 // if this is 64 then CML int is a long int
+  #else
+    #define IDXTYPEWIDTH 32 // if this is 32 then CML int is int
+  #endif 
 #endif
 
 /*--------------------------------------------------------------------------
@@ -43,11 +47,9 @@
    32 : single precission floating point (float)
    64 : double precission floating point (double)
 --------------------------------------------------------------------------*/
-#if defined(windows)
-  #define REALTYPEWIDTH 32
-#else
-  #define REALTYPEWIDTH 32 // if this is 64 then clash with CML int 
-#endif
+
+#define REALTYPEWIDTH 64 // Assumes Caelus is in DP. 
+// Otherwise the scalar definition in Caelus will clash with this setting
 
 
 /****************************************************************************

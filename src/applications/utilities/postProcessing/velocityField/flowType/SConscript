@@ -31,9 +31,8 @@ flowTypeEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if flowTypeEnv['WHICH_OS'] == "windows":
   flowTypeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 flowTypeEnv.Append(LIBS = lib_link)
 

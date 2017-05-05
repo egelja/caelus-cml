@@ -61,7 +61,7 @@ template
 <
     class PrimitivePatchType,
     class Type,
-    class TrackingData = int
+    class TrackingData = label
 >
 class PatchEdgeFaceWave
 :
@@ -259,7 +259,7 @@ template
 <
     class PrimitivePatchType,
     class Type,
-    class TrackingData = int
+    class TrackingData = label
 >
 class updateOp
 {
@@ -299,7 +299,7 @@ template
 <
     class PrimitivePatchType,
     class Type,
-    class TrackingData = int
+    class TrackingData = label
 >
 class transformOp
 {

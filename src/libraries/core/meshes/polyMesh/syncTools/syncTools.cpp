@@ -23,7 +23,44 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// Determines for every point whether it is coupled and if so sets only one.
+void CML::syncTools::swapBoundaryCellPositions
+(
+    const polyMesh& mesh,
+    const UList<point>& cellData,
+    List<point>& neighbourCellData
+)
+{
+    if (cellData.size() != mesh.nCells())
+    {
+        FatalErrorIn
+        (
+            "syncTools<class T>::swapBoundaryCellPositions"
+            "(const polyMesh&, const UList<T>&, List<T>&)"
+        )   << "Number of cell values " << cellData.size()
+            << " is not equal to the number of cells in the mesh "
+            << mesh.nCells() << abort(FatalError);
+    }
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    label nBnd = mesh.nFaces()-mesh.nInternalFaces();
+
+    neighbourCellData.setSize(nBnd);
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+        const labelUList& faceCells = pp.faceCells();
+        forAll(faceCells, i)
+        {
+            label bFaceI = pp.start()+i-mesh.nInternalFaces();
+            neighbourCellData[bFaceI] = cellData[faceCells[i]];
+        }
+    }
+    syncTools::swapBoundaryFacePositions(mesh, neighbourCellData);
+}
+
+
 CML::PackedBoolList CML::syncTools::getMasterPoints(const polyMesh& mesh)
 {
     PackedBoolList isMasterPoint(mesh.nPoints());
@@ -68,7 +105,6 @@ CML::PackedBoolList CML::syncTools::getMasterPoints(const polyMesh& mesh)
 }
 
 
-// Determines for every edge whether it is coupled and if so sets only one.
 CML::PackedBoolList CML::syncTools::getMasterEdges(const polyMesh& mesh)
 {
     PackedBoolList isMasterEdge(mesh.nEdges());
@@ -113,7 +149,6 @@ CML::PackedBoolList CML::syncTools::getMasterEdges(const polyMesh& mesh)
 }
 
 
-// Determines for every face whether it is coupled and if so sets only one.
 CML::PackedBoolList CML::syncTools::getMasterFaces(const polyMesh& mesh)
 {
     PackedBoolList isMasterFace(mesh.nFaces(), 1);
@@ -133,6 +168,68 @@ CML::PackedBoolList CML::syncTools::getMasterFaces(const polyMesh& mesh)
                 {
                     isMasterFace.unset(pp.start()+i);
                 }
+            }
+        }
+    }
+
+    return isMasterFace;
+}
+
+
+CML::PackedBoolList CML::syncTools::getInternalOrMasterFaces
+(
+    const polyMesh& mesh
+)
+{
+    PackedBoolList isMasterFace(mesh.nFaces(), 1);
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+
+        if (pp.coupled())
+        {
+            if (!refCast<const coupledPolyPatch>(pp).owner())
+            {
+                forAll(pp, i)
+                {
+                    isMasterFace.unset(pp.start()+i);
+                }
+            }
+        }
+        else
+        {
+            forAll(pp, i)
+            {
+                isMasterFace.unset(pp.start()+i);
+            }
+        }
+    }
+
+    return isMasterFace;
+}
+
+
+CML::PackedBoolList CML::syncTools::getInternalOrCoupledFaces
+(
+    const polyMesh& mesh
+)
+{
+    PackedBoolList isMasterFace(mesh.nFaces(), 1);
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+
+        if (!pp.coupled())
+        {
+            forAll(pp, i)
+            {
+                isMasterFace.unset(pp.start()+i);
             }
         }
     }

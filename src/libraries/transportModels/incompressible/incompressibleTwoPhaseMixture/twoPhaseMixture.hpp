@@ -96,12 +96,12 @@ public:
 
     // Member Functions
 
-        const word phase1Name() const
+        const word& phase1Name() const
         {
             return phase1Name_;
         }
 
-        const word phase2Name() const
+        const word& phase2Name() const
         {
             return phase2Name_;
         }

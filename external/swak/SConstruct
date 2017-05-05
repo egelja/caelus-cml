@@ -1,0 +1,356 @@
+#Copyright (C) 2015 Applied CCM
+import os
+import sys
+import platform
+import subprocess
+import re
+
+#===============================================================================
+# Define colours for pretty output (non-Windows only)
+#===============================================================================
+colors = {}
+colors['cyan']   = '\033[1;36m'
+colors['purple'] = '\033[1;35m'
+colors['blue']   = '\033[1;34m'
+colors['green']  = '\033[1;32m'
+colors['yellow'] = '\033[1;33m'
+colors['red']    = '\033[0;31m'
+colors['end']    = '\033[0m'
+colors['white']  = '\033[1;37m'
+colors['bluebg']  = '\033[44;37m'
+
+#If the output is not a terminal, remove the colours
+if not sys.stdout.isatty():
+ for key, value in colors.iteritems():
+    colors[key] = ''
+
+compile_source_message = '%sCompiling %s==> %s$SOURCE%s' % \
+ (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
+
+compile_shared_source_message = '%sCompiling shared %s==> %s$SOURCE%s' % \
+ (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
+
+link_program_message = '%sLinking Program %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+link_library_message = '%sLinking Static Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+ranlib_library_message = '%sRanlib Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
+ (colors['green'], colors['purple'], colors['yellow'], colors['end'])
+
+#===============================================================================
+# Pass operating system envrionment
+#===============================================================================
+
+# Just grab the type of operating system
+which_os = os.environ['WHICH_OS']
+
+# Default Global Environment is dependent on the type of operating system
+if which_os == 'windows' :
+  globalEnv = Environment(tools = ['mingw'], ENV = os.environ)
+  globalEnv.Append(OSTYPE = 'windows')
+else:
+  globalEnv = Environment(ENV = os.environ)
+  globalEnv.Append(OSTYPE = os.name)
+
+# Slash for paths
+sl = globalEnv['ENV']['SLASH']
+
+
+#===============================================================================
+# Common environment variables
+#===============================================================================
+# The OS environment is placed inside the ENV dictionary, we don't want to index 
+# into this every time so we now create local copies of the variables
+globalEnv.Append(SLASH = globalEnv['ENV']['SLASH'])
+globalEnv.Append(WHICH_OS = globalEnv['ENV']['WHICH_OS'])
+globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
+globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
+globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
+globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(INT_TYPE = globalEnv['ENV']['INT_TYPE'])
+globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
+globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
+globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
+globalEnv.Append(CAELUS_PROJECT_DIR=globalEnv['ENV']['CAELUS_PROJECT_DIR'])
+globalEnv.Append(EXTERNAL_DIR = globalEnv['ENV']['EXTERNAL_DIR'])
+globalEnv.Append(BUILD_OPTION = globalEnv['ENV']['BUILD_OPTION'])
+globalEnv.Append(LIB_SRC = globalEnv['ENV']['LIB_SRC'])
+globalEnv.Append(BIN_PLATFORM_INSTALL = globalEnv['ENV']['BIN_PLATFORM_INSTALL'])
+globalEnv.Append(LIB_PLATFORM_INSTALL = globalEnv['ENV']['LIB_PLATFORM_INSTALL'])
+globalEnv.Append(PROJECT_INC = globalEnv['LIB_SRC'] + '/core/lnInclude')
+globalEnv.Append(MPI_LIB = globalEnv['ENV']['MPI_LIB'])
+globalEnv.Append(MPI_INC = globalEnv['ENV']['MPI_INC'])
+globalEnv.Append(MPI_LIB_NAME = globalEnv['ENV']['MPI_LIB_NAME'])
+globalEnv.Append(SCOTCH_PATH = globalEnv['ENV']['SCOTCH_PATH'])
+globalEnv.Append(METIS_PATH = globalEnv['ENV']['METIS_PATH'])
+globalEnv.Append(ZLIB_PATH = globalEnv['ENV']['ZLIB_PATH'])
+globalEnv.Append(FLEXXX_PATH = globalEnv['ENV']['FLEXXX_PATH'])
+
+# Override default Lexer flags as they don't work with the Caelus lex files
+globalEnv.Replace(LEXCOM = '$LEX $LEXFLAGS -o$TARGET -f $SOURCES')
+
+# Check if 64-bit ints are being
+if Caelus.INT_TYPE == 64:
+   sys.exit('ERROR: swak not compliant with 64-bit integers yet')
+
+#===============================================================================
+# Add colourful output
+if (globalEnv['COLOUR_BUILD'] =='on'):
+  globalEnv.Append(CXXCOMSTR = compile_source_message)
+  globalEnv.Append(CCCOMSTR = compile_source_message)
+  globalEnv.Append(SHCCCOMSTR = compile_shared_source_message)
+  globalEnv.Append(SHCXXCOMSTR = compile_shared_source_message)
+  globalEnv.Append(ARCOMSTR = link_library_message)
+  globalEnv.Append(RANLIBCOMSTR = ranlib_library_message)
+  globalEnv.Append(SHLINKCOMSTR = link_shared_library_message)
+  globalEnv.Append(LINKCOMSTR = link_program_message)
+  globalEnv.Append(JARCOMSTR = java_library_message)
+  globalEnv.Append(JAVACCOMSTR = compile_source_message)
+  globalEnv.Append(INSTALLSTR = install_library_message)
+
+# Output system architecture        
+if platform.machine().endswith('64'):
+  platform_arch = '64bit'
+  print ">> Architecture : " + platform_arch
+else:
+  platform_arch = '32bit'
+  print ">> Architecture : " + platform_arch
+
+# Warn user if requested compiler architecture is different from system
+if platform_arch != globalEnv['COMPILER_ARCH']+'bit' :
+  print '! You have request a ', globalEnv['COMPILER_ARCH']+'bit','build on a',\
+        platform_arch, 'system, this may not be possible'
+
+# build type
+print ">> Build type : " + globalEnv['BUILD_TYPE']
+
+# build architecture
+print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
+
+# build precision
+print ">> Build precision : " + globalEnv['PRECISION_OPTION']
+
+# integer type
+print ">> Integer type : " + globalEnv['INT_TYPE'] + 'bit'
+
+#===============================================================================
+# Common compiler flags
+#===============================================================================
+if which_os == "windows" :
+  # General compiler flags
+  GFLAGS = '-m64' + ' -D' + which_os + ' -DWM_' + globalEnv['PRECISION_OPTION']
+
+  # Warning compiler flags
+  CCWARN = Split(
+    '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0 -fdefault-inline')  
+    #Debug compiler flags
+    CCDBUG = Split('-ggdb3 -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O3')  
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of windows compiler flags
+
+elif which_os == "darwin" :
+  # Set the C++ compiler
+  globalEnv.Replace(CXX = globalEnv['COMPILER'])
+  
+  #empty compiler flag for now
+  GFLAGS = '-m64' + '  -std=c++11' + ' -D' + which_os \
+            + ' -DWM_'+globalEnv['PRECISION_OPTION']
+
+  # Warning compiler flags
+  CCWARN = Split(
+     '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor -Wold-style-cast -Wno-overloaded-virtual -Wno-unused-comparison -Wno-deprecated-register')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0') 
+    #Debug compiler flags
+    CCDBUG = Split('-g -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O3')
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of macosx compiler flags
+
+else :
+  # General compiler flags
+  GFLAGS = '-m64' + ' -D' + which_os + globalEnv['COMPILER_ARCH'] + ' -DWM_' \
+           + globalEnv['PRECISION_OPTION']
+
+  # Flag to turn label into 64bit int during compilation
+  if  globalEnv['INT_TYPE'] == '64':
+    GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
+
+  # Warning compiler flags
+  CCWARN = Split(
+    '-Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wnon-virtual-dtor')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0 -fdefault-inline')  
+    #Debug compiler flags
+    CCDBUG = Split('-ggdb3 -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O3')  
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of linux compiler flags
+
+# Setup full compiler flags
+globalEnv.Append(CXXFLAGS = GFLAGS)
+globalEnv.Append(CXXFLAGS = CCWARN)
+globalEnv.Append(CXXFLAGS = CCOPT)
+globalEnv.Append(CXXFLAGS = CCDBUG)
+globalEnv.Append(CXXFLAGS = ptFLAGS)
+
+#===============================================================================
+# Common include path(s)
+#===============================================================================
+globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC']])
+
+#===============================================================================
+# Common linker flags
+#===============================================================================
+if which_os == "windows" :
+  globalEnv.Prepend(LINKFLAGS = '-Xlinker --add-needed -Xlinker --no-as-needed')
+
+elif which_os == "darwin" :
+  globalEnv.Prepend(LINKFLAGS = '-undefined dynamic_lookup' )
+
+else :
+  globalEnv.Prepend(LINKFLAGS = '-Xlinker --add-needed -Xlinker --no-as-needed')
+
+#===============================================================================
+# Common link library path(s)
+#===============================================================================
+globalEnv.Append(LIBPATH = [globalEnv['LIB_PLATFORM_INSTALL']])
+
+#===============================================================================
+# Common link library(ies)
+#===============================================================================
+if which_os == "windows" :
+  globalEnv.Append(LIBS = ['core'])
+
+elif which_os == "darwin" :
+  globalEnv.Append(LIBS = ['core','pthread'])
+
+else :
+  globalEnv.Append(LIBS = ['core'])
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+  'libraries/swakParsers',
+  'libraries/swakLagrangianParser',
+  'libraries/groovyBC',
+  'libraries/swakFunctionObjects',
+  'libraries/simpleFunctionObjects',
+  'libraries/simpleLagrangianFunctionObjects',
+  'libraries/simpleSearchableSurfaces',
+  'libraries/simpleSwakFunctionObjects',
+  'libraries/swakTopoSources',
+  'libraries/swakSourceFields',
+  'libraries/groovyStandardBCs',
+  'libraries/functionPlugins/swakMeshQualityFunctionPlugin',
+  'libraries/functionPlugins/swakLocalCalculationsFunctionPlugin',
+  'libraries/functionPlugins/swakRandomFunctionPlugin',
+  'libraries/functionPlugins/swakFvcSchemesFunctionPlugin',
+  'libraries/functionPlugins/swakThermoTurbFunctionPlugin',
+  'libraries/functionPlugins/swakTransportTurbFunctionPlugin',
+  'libraries/functionPlugins/swakSurfacesAndSetsFunctionPlugin',
+  'libraries/functionPlugins/swakLagrangianCloudSourcesFunctionPlugin',
+  'libraries/functionPlugins/swakVelocityFunctionPlugin',
+  'libraries/functionPlugins/swakChemistryModelFunctionPlugin',
+  'libraries/functionPlugins/swakRadiationModelFunctionPlugin',
+  'libraries/functionPlugins/lagrangianCloudAdaptors/coalCloudAdaptor',
+  'utilities/calcNonUniformOffsetsForMapped',
+  'utilities/fieldReport',
+  'utilities/funkyDoCalc',
+  'utilities/funkySetBoundaryField',
+  'utilities/funkySetFields',
+  'utilities/funkySetLagrangianField',
+  'utilities/funkyWarpMesh',
+  'utilities/replayTransientBC'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    print ">> Removing lnInclude directory for " + dir
+    subprocess.call(['python', 
+    globalEnv['CAELUS_PROJECT_DIR'] + '/bin/cleanLnInclude.py', '-s', dir])
+	
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+  else:
+    print ">> Creating lnInclude directory for " + dir
+    subprocess.call(['python', 
+    globalEnv['CAELUS_PROJECT_DIR'] + '/bin/createLnInclude.py', '-s', dir])
+	
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+
+#===============================================================================
+# That's All Folks!
+#===============================================================================

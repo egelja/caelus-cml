@@ -61,4 +61,4 @@ thermoFuncEnv.Install(install_dir, libthermophysicalFunctions)
 
 if (thermoFuncEnv['WHICH_OS'] == "darwin"):
 
-  thermoFuncEnv.Append(SHLINKFLAGS ='-install_name @' + thermoFuncEnv['LIB_PLATFORM_INSTALL'] + '/libthermophysicalFunctions.dylib')
+  thermoFuncEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libthermophysicalFunctions.dylib')

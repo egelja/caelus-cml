@@ -380,18 +380,18 @@ void SpalartAllmaras::correct()
 
     const volScalarField chi(this->chi());
     const volScalarField fv1(this->fv1(chi));
-    volTensorField const Omegaij = skew(fvc::grad(this->U_));
-    volScalarField const sqrOmega = 2*magSqr(Omegaij);
+    const volTensorField Omegaij(skew(fvc::grad(this->U_)));
+    const volScalarField sqrOmega(2*magSqr(Omegaij));
 
     // Curvature correction terms
-    volSymmTensorField const Sij = symm(fvc::grad(this->U_));    
-    volScalarField const sqrS = 2*magSqr(Sij);
+    const volSymmTensorField Sij(symm(fvc::grad(this->U_)));    
+    const volScalarField sqrS(2*magSqr(Sij));
     dimensionedScalar smallOmega("smallOmega",sqrOmega.dimensions(),SMALL);
-    volScalarField const sqrD = 0.5*(sqrS + sqrOmega + smallOmega);
-    volScalarField const rStar = sqrt(sqrS)/sqrt(sqrOmega+smallOmega);
-    volSymmTensorField const DSijDt = fvc::DDt(this->phi_,Sij);
-    volScalarField const rTilda =  
-        (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt));
+    const volScalarField sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+    const volScalarField rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+    const volSymmTensorField DSijDt(fvc::DDt(this->phi_,Sij));
+    const volScalarField rTilda(  
+        (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
     fr1_ = 
         (scalar(1.0) + Cr1_)*scalar(2.0)*rStar/(scalar(1.0) + rStar)
         *

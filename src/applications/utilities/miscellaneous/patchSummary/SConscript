@@ -31,9 +31,8 @@ patchSummaryEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if patchSummaryEnv['WHICH_OS'] == "windows":
   patchSummaryEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
      
 
 patchSummaryEnv.Append(LIBS = lib_link)

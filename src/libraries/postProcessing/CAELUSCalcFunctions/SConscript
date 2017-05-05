@@ -62,4 +62,4 @@ caelusCalcFuncEnv.Install(install_dir, libcaelusCalcFunctions)
 
 if (caelusCalcFuncEnv['WHICH_OS'] == "darwin"):
 
-  caelusCalcFuncEnv.Append(SHLINKFLAGS ='-install_name @' + caelusCalcFuncEnv['LIB_PLATFORM_INSTALL'] + '/libcaelusCalcFunctions.dylib')
+  caelusCalcFuncEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcaelusCalcFunctions.dylib')

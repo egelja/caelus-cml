@@ -110,7 +110,8 @@ public:
             (   
                 parcelType& p,
                 const label cellI,
-                const scalar dt
+                const scalar dt,
+                const point& position0
             );
 };
 
@@ -221,7 +222,8 @@ void CML::VoidFraction<CloudType>::postMove
 (
     parcelType& p,
     const label cellI,
-    const scalar dt
+    const scalar dt,
+    const point&
 )
 {
     volScalarField& theta = thetaPtr_();

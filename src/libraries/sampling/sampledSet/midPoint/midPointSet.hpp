@@ -66,7 +66,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const word& axis,
             const point& start,
             const point& end
@@ -77,7 +77,7 @@ public:
         (
             const word& name,
             const polyMesh& mesh,
-            meshSearch& searchEngine,
+            const meshSearch& searchEngine,
             const dictionary& dict
         );
 

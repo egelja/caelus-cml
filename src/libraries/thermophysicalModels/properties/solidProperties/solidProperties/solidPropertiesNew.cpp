@@ -53,19 +53,7 @@ CML::autoPtr<CML::solidProperties> CML::solidProperties::New(Istream& is)
     }
     else if (coeffs == "coeffs")
     {
-        IstreamConstructorTable::iterator cstrIter =
-            IstreamConstructorTablePtr_->find(solidType);
-
-        if (cstrIter == IstreamConstructorTablePtr_->end())
-        {
-            FatalErrorIn("solidProperties::New(Istream&)")
-                << "Unknown solidProperties type " << solidType << nl << nl
-                << "Valid solidProperties types are :" << endl
-                << IstreamConstructorTablePtr_->sortedToc()
-                << exit(FatalError);
-        }
-
-        return autoPtr<solidProperties>(cstrIter()(is));
+        return autoPtr<solidProperties>(new solidProperties(is));
     }
     else
     {
@@ -112,19 +100,13 @@ CML::autoPtr<CML::solidProperties> CML::solidProperties::New
     }
     else
     {
-        dictionaryConstructorTable::iterator cstrIter =
-            dictionaryConstructorTablePtr_->find(solidType);
-
-        if (cstrIter == dictionaryConstructorTablePtr_->end())
-        {
-            FatalErrorIn("solidProperties::New(const dictionary&)")
-                << "Unknown solidProperties type " << solidType << nl << nl
-                << "Valid solidProperties types are :" << endl
-                << dictionaryConstructorTablePtr_->sortedToc()
-                << exit(FatalError);
-        }
-
-        return autoPtr<solidProperties>(cstrIter()(dict));
+        return autoPtr<solidProperties>
+        (
+            new solidProperties
+            (
+                dict.subDict(solidType + "Coeffs")
+            )
+        );
     }
 }
 

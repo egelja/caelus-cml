@@ -58,7 +58,7 @@ public:
         // Private Member Functions
 
             //- Update. Gets information from neighbouring face/cell and
-            //  uses this to update itself (if nessecary) and return true.
+            //  uses this to update itself (if necessary) and return true.
             template<class TrackingData>
             inline bool update
             (
@@ -76,7 +76,7 @@ public:
             //- Construct null
             inline deltaData();
 
-            //- Construct from origin, yStar, distance
+            //- Construct from delta value
             inline deltaData(const scalar delta);
 
 

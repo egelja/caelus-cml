@@ -35,8 +35,133 @@ namespace CML
         STARCDCoordinateRotation,
         dictionary
     );
+    addToRunTimeSelectionTable
+    (
+        coordinateRotation,
+        STARCDCoordinateRotation,
+        objectRegistry
+    );
 }
 
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+CML::vector CML::STARCDCoordinateRotation::transform(const vector& st) const
+{
+    return (R_ & st);
+}
+
+
+CML::vector CML::STARCDCoordinateRotation::invTransform
+(
+    const vector& st
+) const
+{
+    return (Rtr_ & st);
+}
+
+
+CML::tmp<CML::vectorField> CML::STARCDCoordinateRotation::transform
+(
+    const vectorField& st
+) const
+{
+    notImplemented
+    (
+        "tmp<vectorField> CML::STARCDCoordinateRotation:: "
+        "transform(const vectorField& st) const"
+    );
+    return tmp<vectorField>(NULL);
+}
+
+
+CML::tmp<CML::vectorField> CML::STARCDCoordinateRotation::invTransform
+(
+    const vectorField& st
+) const
+{
+    notImplemented
+    (
+        "tmp<vectorField>  CML::STARCDCoordinateRotation::"
+        "invTransform(const vectorField& st) const"
+    );
+    return tmp<vectorField>(NULL);
+}
+
+
+const CML::tensorField& CML::STARCDCoordinateRotation::Tr() const
+{
+    notImplemented
+    (
+        "const tensorField& STARCDCoordinateRotatio::Tr() const"
+    );
+     return *reinterpret_cast<const tensorField*>(0);
+}
+
+
+CML::tmp<CML::tensorField> CML::STARCDCoordinateRotation::transformTensor
+(
+    const tensorField& st
+) const
+{
+     notImplemented
+    (
+        "tmp<CML::tensorField> STARCDCoordinateRotation::transformTensor()"
+    );
+    return tmp<tensorField>(NULL);
+}
+
+
+CML::tensor CML::STARCDCoordinateRotation::transformTensor
+(
+    const tensor& st
+) const
+{
+    return (R_ & st & Rtr_);
+}
+
+
+CML::tmp<CML::tensorField> CML::STARCDCoordinateRotation::transformTensor
+(
+    const tensorField& st,
+    const labelList& cellMap
+) const
+{
+    notImplemented
+    (
+        "tmp<CML::tensorField> STARCDCoordinateRotation::transformTensor "
+        " const tensorField& st,"
+        " const labelList& cellMap "
+        ") const"
+    );
+    return tmp<tensorField>(NULL);
+}
+
+
+CML::tmp<CML::symmTensorField> CML::STARCDCoordinateRotation::
+transformVector
+(
+    const vectorField& st
+) const
+{
+    tmp<symmTensorField> tfld(new symmTensorField(st.size()));
+    symmTensorField& fld = tfld();
+
+    forAll(fld, i)
+    {
+        fld[i] = transformPrincipal(R_, st[i]);
+    }
+    return tfld;
+}
+
+
+CML::symmTensor CML::STARCDCoordinateRotation::transformVector
+(
+    const vector& st
+) const
+{
+    return transformPrincipal(R_, st);
+}
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -59,7 +184,7 @@ void CML::STARCDCoordinateRotation::calcTransform
         z *= constant::mathematical::pi/180.0;
     }
 
-    tensor::operator=
+    R_ =
     (
         tensor
         (
@@ -76,6 +201,8 @@ void CML::STARCDCoordinateRotation::calcTransform
             cos(x)*cos(y)
         )
     );
+
+    Rtr_ = R_.T();
 }
 
 
@@ -83,7 +210,8 @@ void CML::STARCDCoordinateRotation::calcTransform
 
 CML::STARCDCoordinateRotation::STARCDCoordinateRotation()
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {}
 
 
@@ -93,7 +221,8 @@ CML::STARCDCoordinateRotation::STARCDCoordinateRotation
     const bool inDegrees
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     calcTransform
     (
@@ -113,7 +242,8 @@ CML::STARCDCoordinateRotation::STARCDCoordinateRotation
     const bool inDegrees
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     calcTransform(rotZ, rotX, rotY, inDegrees);
 }
@@ -124,7 +254,8 @@ CML::STARCDCoordinateRotation::STARCDCoordinateRotation
     const dictionary& dict
 )
 :
-    coordinateRotation()
+    R_(sphericalTensor::I),
+    Rtr_(R_)
 {
     vector rotation(dict.lookup("rotation"));
 
@@ -135,6 +266,32 @@ CML::STARCDCoordinateRotation::STARCDCoordinateRotation
         rotation.component(vector::Z),
         dict.lookupOrDefault("degrees", true)
     );
+}
+
+
+CML::STARCDCoordinateRotation::STARCDCoordinateRotation
+(
+    const dictionary& dict,
+    const objectRegistry&
+)
+{
+    vector rotation(dict.lookup("rotation"));
+
+    calcTransform
+    (
+        rotation.component(vector::X),
+        rotation.component(vector::Y),
+        rotation.component(vector::Z),
+        dict.lookupOrDefault("degrees", true)
+    );
+}
+
+
+void CML::STARCDCoordinateRotation::write(Ostream& os) const
+{
+     os.writeKeyword("e1") << e1() << token::END_STATEMENT << nl;
+     os.writeKeyword("e2") << e2() << token::END_STATEMENT << nl;
+     os.writeKeyword("e3") << e3() << token::END_STATEMENT << nl;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

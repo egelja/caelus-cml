@@ -23,6 +23,19 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+namespace CML
+{
+    template<>
+    const char* NamedEnum<faceAreaIntersect::triangulationMode, 2>::names[] =
+    {
+        "fan",
+        "mesh"
+    };
+}
+
+const CML::NamedEnum<CML::faceAreaIntersect::triangulationMode, 2>
+    CML::faceAreaIntersect::triangulationModeNames_;
+
 CML::scalar CML::faceAreaIntersect::tol = 1e-6;
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //

@@ -52,7 +52,8 @@ void processorFvPatch::makeWeights(scalarField& w) const
             - procPolyPatch_.neighbFaceCellCentres())
         );
 
-        w = neighbFaceCentresCn/((nf()&fvPatch::delta()) + neighbFaceCentresCn);
+        w = neighbFaceCentresCn
+           /((nf()&coupledFvPatch::delta()) + neighbFaceCentresCn);
     }
     else
     {
@@ -69,7 +70,7 @@ tmp<vectorField> processorFvPatch::delta() const
         if (parallel())
         {
             return
-                fvPatch::delta()
+                coupledFvPatch::delta()
               - (
                     procPolyPatch_.neighbFaceCentres()
                   - procPolyPatch_.neighbFaceCellCentres()
@@ -78,7 +79,7 @@ tmp<vectorField> processorFvPatch::delta() const
         else
         {
             return
-                fvPatch::delta()
+                coupledFvPatch::delta()
               - transform
                 (
                     forwardT(),
@@ -91,7 +92,7 @@ tmp<vectorField> processorFvPatch::delta() const
     }
     else
     {
-        return fvPatch::delta();
+        return coupledFvPatch::delta();
     }
 }
 

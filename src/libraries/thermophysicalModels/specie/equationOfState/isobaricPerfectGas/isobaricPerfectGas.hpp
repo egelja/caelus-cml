@@ -60,7 +60,14 @@ public:
     // Constructors
 
         //- Construct from components
-        inline isobaricPerfectGas(const specie& sp);
+        inline isobaricPerfectGas
+        (
+            const specie& sp,
+            const scalar pRef
+        );
+
+        //- Construct as copy
+        inline isobaricPerfectGas(const isobaricPerfectGas& sp);
 
         //- Construct from Istream
         isobaricPerfectGas(Istream&);
@@ -103,6 +110,7 @@ public:
 
     // Member operators
 
+        inline isobaricPerfectGas& operator=(const isobaricPerfectGas&);
         inline void operator+=(const isobaricPerfectGas&);
         inline void operator-=(const isobaricPerfectGas&);
 

@@ -62,4 +62,4 @@ lamFlameSpdEnv.Install(install_dir, liblaminarFlameSpeedModels)
 
 if (lamFlameSpdEnv['WHICH_OS'] == "darwin"):
 
-  lamFlameSpdEnv.Append(SHLINKFLAGS ='-install_name @' + lamFlameSpdEnv['LIB_PLATFORM_INSTALL'] + '/liblaminarFlameSpeedModels.dylib')
+  lamFlameSpdEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblaminarFlameSpeedModels.dylib')

@@ -48,7 +48,6 @@ SourceFiles
 #define DarcyForchheimer_H
 
 #include "porosityModel.hpp"
-#include "coordinateSystem.hpp"
 #include "dimensionedTensor.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -70,14 +69,17 @@ private:
 
     // Private data
 
-        //- Local co-ordinate system
-        coordinateSystem coordSys_;
+        //- Darcy coeffient XYZ components (user-supplied) [1/m2]
+        dimensionedVector dXYZ_;
 
-        //- Darcy coefficient [1/m2]
-        dimensionedTensor D_;
+        //- Forchheimer coeffient XYZ components (user-supplied) [1/m]
+        dimensionedVector fXYZ_;
 
-        //- Forchheimer coefficient [1/m]
-        dimensionedTensor F_;
+        //- Darcy coefficient - converted from dXYZ [1/m2]
+        List<tensorField> D_;
+
+        //- Forchheimer coefficient - converted from fXYZ [1/m]
+        List<tensorField> F_;
 
         //- Name of density field
         word rhoName_;
@@ -141,6 +143,9 @@ public:
 
     // Member Functions
 
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
+
         //- Calculate the porosity force
         virtual void calcForce
         (
@@ -165,7 +170,7 @@ public:
         virtual void correct
         (
             const fvVectorMatrix& UEqn,
-            volTensorField& AU            
+            volTensorField& AU
         ) const;
 
 
@@ -195,18 +200,19 @@ void CML::porosityModels::DarcyForchheimer::apply
     const vectorField& U
 ) const
 {
-    const tensor& D = D_.value();
-    const tensor& F = F_.value();
-
-    forAll(cellZoneIds_, zoneI)
+    forAll(cellZoneIDs_, zoneI)
     {
-        const labelList& cells = mesh_.cellZones()[cellZoneIds_[zoneI]];
+        const tensorField& dZones = D_[zoneI];
+        const tensorField& fZones = F_[zoneI];
+
+        const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
         forAll(cells, i)
         {
             const label cellI = cells[i];
-
-            const tensor Cd = mu[cellI]*D + (rho[cellI]*mag(U[cellI]))*F;
+            const label j = this->fieldIndex(i);
+            const tensor Cd =
+                mu[cellI]*dZones[j] + (rho[cellI]*mag(U[cellI]))*fZones[j];
 
             const scalar isoCd = tr(Cd);
 
@@ -226,16 +232,20 @@ void CML::porosityModels::DarcyForchheimer::apply
     const vectorField& U
 ) const
 {
-    const tensor& D = D_.value();
-    const tensor& F = F_.value();
-
-    forAll(cellZoneIds_, zoneI)
+    forAll(cellZoneIDs_, zoneI)
     {
-        const labelList& cells = mesh_.cellZones()[cellZoneIds_[zoneI]];
+        const tensorField& dZones = D_[zoneI];
+        const tensorField& fZones = F_[zoneI];
+
+        const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
         forAll(cells, i)
         {
             const label cellI = cells[i];
+            const label j = this->fieldIndex(i);
+            const tensor D = dZones[j];
+            const tensor F = fZones[j];
+
             AU[cellI] += mu[cellI]*D + (rho[cellI]*mag(U[cellI]))*F;
         }
     }

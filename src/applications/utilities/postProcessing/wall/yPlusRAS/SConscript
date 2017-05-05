@@ -44,15 +44,11 @@ yPlusRASEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if yPlusRASEnv['WHICH_OS'] == "windows":
   yPlusRASEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad')
-  lib_link = ['libgenericPatchFields','libcompressibleRASModels',
-  'libspecie','libbasicThermophysicalModels','libsampling',
-  'libcompressibleTurbulenceModel','libincompressibleRASModels',
-  'libincompressibleTransportModels','libincompressibleTurbulenceModel']
-else:
-  lib_link = ['genericPatchFields','compressibleRASModels',
-  'specie','basicThermophysicalModels','sampling',
-  'compressibleTurbulenceModel','incompressibleRASModels',
-  'incompressibleTransportModels','incompressibleTurbulenceModel']
+
+lib_link = ['genericPatchFields','compressibleRASModels',
+'specie','basicThermophysicalModels','sampling',
+'compressibleTurbulenceModel','incompressibleRASModels',
+'incompressibleTransportModels','incompressibleTurbulenceModel']
 
 yPlusRASEnv.Append(LIBS = lib_link)
 

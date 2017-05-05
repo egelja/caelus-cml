@@ -61,7 +61,7 @@ class syncTools
     // Private Member Functions
 
         //- Combine value with existing value in map.
-        template <class T, class CombineOp>
+        template<class T, class CombineOp>
         static void combine
         (
             Map<T>& pointValues,
@@ -71,7 +71,7 @@ class syncTools
         );
 
         //- Combine val with existing value at (implicit index) e.
-        template <class T, class CombineOp>
+        template<class T, class CombineOp>
         static void combine
         (
             EdgeMap<T>& edgeValues,
@@ -88,7 +88,7 @@ public:
         // use specialisations below.
 
             //- Synchronize values on selected points.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncPointMap
             (
                 const polyMesh&,
@@ -98,7 +98,7 @@ public:
             );
 
             //- Synchronize values on selected edges.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncEdgeMap
             (
                 const polyMesh&,
@@ -108,7 +108,7 @@ public:
             );
 
             //- Synchronize values on all mesh points.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncPointList
             (
                 const polyMesh&,
@@ -119,7 +119,7 @@ public:
             );
 
             //- Synchronize values on selected mesh points.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncPointList
             (
                 const polyMesh&,
@@ -131,7 +131,7 @@ public:
             );
 
             //- Synchronize values on all mesh edges.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncEdgeList
             (
                 const polyMesh&,
@@ -142,7 +142,7 @@ public:
             );
 
             //- Synchronize values on selected mesh edges.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncEdgeList
             (
                 const polyMesh&,
@@ -154,7 +154,7 @@ public:
             );
 
             //- Synchronize values on boundary faces only.
-            template <class T, class CombineOp, class TransformOp>
+            template<class T, class CombineOp, class TransformOp>
             static void syncBoundaryFaceList
             (
                 const polyMesh&,
@@ -167,7 +167,7 @@ public:
         // Synchronise point-wise data
 
             //- Synchronize values on all mesh points.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncPointList
             (
                 const polyMesh& mesh,
@@ -187,7 +187,7 @@ public:
             }
 
             //- Synchronize locations on all mesh points.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncPointPositions
             (
                 const polyMesh& mesh,
@@ -207,7 +207,7 @@ public:
             }
 
             //- Synchronize values on selected mesh points.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncPointList
             (
                 const polyMesh& mesh,
@@ -229,7 +229,7 @@ public:
             }
 
             //- Synchronize locations on selected mesh points.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncPointPositions
             (
                 const polyMesh& mesh,
@@ -254,7 +254,7 @@ public:
         // Synchronise edge-wise data
 
             //- Synchronize values on all mesh edges.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncEdgeList
             (
                 const polyMesh& mesh,
@@ -274,7 +274,7 @@ public:
             }
 
             //- Synchronize locations on all mesh edges.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncEdgePositions
             (
                 const polyMesh& mesh,
@@ -294,7 +294,7 @@ public:
             }
 
             //- Synchronize values on selected mesh edges.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncEdgeList
             (
                 const polyMesh& mesh,
@@ -316,7 +316,7 @@ public:
             }
 
             //- Synchronize locations on selected mesh edges.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncEdgePositions
             (
                 const polyMesh& mesh,
@@ -342,7 +342,7 @@ public:
         // Synchronise face-wise data
 
             //- Synchronize values on boundary faces only.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncBoundaryFaceList
             (
                 const polyMesh& mesh,
@@ -354,7 +354,7 @@ public:
             }
 
             //- Synchronize locations on boundary faces only.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncBoundaryFacePositions
             (
                 const polyMesh& mesh,
@@ -372,7 +372,7 @@ public:
             }
 
             //- Synchronize values on all mesh faces.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncFaceList
             (
                 const polyMesh& mesh,
@@ -397,7 +397,7 @@ public:
             }
 
             //- Synchronize locations on all mesh faces.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncFacePositions
             (
                 const polyMesh& mesh,
@@ -421,7 +421,7 @@ public:
             }
 
             //- Swap coupled boundary face values.
-            template <class T>
+            template<class T>
             static void swapBoundaryFaceList
             (
                 const polyMesh& mesh,
@@ -438,24 +438,23 @@ public:
             }
 
              //- Swap coupled positions.
-            template <class T>
             static void swapBoundaryFacePositions
             (
                 const polyMesh& mesh,
-                UList<T>& l
+                UList<point>& l
             )
             {
                 syncBoundaryFaceList
                 (
                     mesh,
                     l,
-                    eqOp<T>(),
+                    eqOp<point>(),
                     mapDistribute::transformPosition()
                 );
             }
 
             //- Swap coupled face values.
-            template <class T>
+            template<class T>
             static void swapFaceList
             (
                 const polyMesh& mesh,
@@ -477,10 +476,27 @@ public:
                 );
             }
 
+            //- Swap to obtain neighbour cell values for all boundary faces
+            template<class T>
+            static void swapBoundaryCellList
+            (
+                const polyMesh& mesh,
+                const UList<T>& cellData,
+                List<T>& neighbourCellData
+            );
+
+            //- Swap to obtain neighbour cell positions for all boundary faces
+            static void swapBoundaryCellPositions
+            (
+                const polyMesh& mesh,
+                const UList<point>& cellData,
+                List<point>& neighbourCellData
+            );
+
         // Sparse versions
 
             //- Synchronize values on selected points.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncPointMap
             (
                 const polyMesh& mesh,
@@ -492,7 +508,7 @@ public:
             }
 
             //- Synchronize locations on selected points.
-            template <class CombineOp>
+            template<class CombineOp>
             static void syncPointPositions
             (
                 const polyMesh& mesh,
@@ -506,7 +522,7 @@ public:
             //- Synchronize values on selected edges. Edges are represented
             //  by the two vertices that make it up so global edges never get
             //  constructed.
-            template <class T, class CombineOp>
+            template<class T, class CombineOp>
             static void syncEdgeMap
             (
                 const polyMesh& mesh,
@@ -518,11 +534,11 @@ public:
             }
 
             //- Synchronize locations on selected edges.
-            template <class T, class CombineOp>
+            template<class CombineOp>
             static void syncEdgePositions
             (
                 const polyMesh& mesh,
-                EdgeMap<T>& l,
+                EdgeMap<point>& l,
                 const CombineOp& cop
             )
             {
@@ -531,7 +547,7 @@ public:
 
         // PackedList versions
 
-            template <unsigned nBits, class CombineOp>
+            template<unsigned nBits, class CombineOp>
             static void syncFaceList
             (
                 const polyMesh& mesh,
@@ -539,14 +555,14 @@ public:
                 const CombineOp& cop
             );
 
-            template <unsigned nBits>
+            template<unsigned nBits>
             static void swapFaceList
             (
                 const polyMesh& mesh,
                 PackedList<nBits>& faceValues
             );
 
-            template <unsigned nBits, class CombineOp>
+            template<unsigned nBits, class CombineOp>
             static void syncPointList
             (
                 const polyMesh& mesh,
@@ -555,7 +571,7 @@ public:
                 const unsigned int nullValue
             );
 
-            template <unsigned nBits, class CombineOp>
+            template<unsigned nBits, class CombineOp>
             static void syncEdgeList
             (
                 const polyMesh& mesh,
@@ -566,14 +582,24 @@ public:
 
         // Other
 
-            //- Get per point whether is it master (of a coupled set of points)
+            //- Get per point whether it is uncoupled or a master of a
+            //  coupled set of points
             static PackedBoolList getMasterPoints(const polyMesh&);
 
-            //- Get per edge whether is it master (of a coupled set of edges)
+            //- Get per edge whether it is uncoupled or a master of a
+            //  coupled set of edges
             static PackedBoolList getMasterEdges(const polyMesh&);
 
-            //- Get per face whether is it master (of a coupled set of faces)
+            //- Get per face whether it is uncoupled or a master of a
+            //  coupled set of faces
             static PackedBoolList getMasterFaces(const polyMesh&);
+
+            //- Get per face whether it is internal or a master of a
+            //  coupled set of faces
+            static PackedBoolList getInternalOrMasterFaces(const polyMesh&);
+
+            //- Get per face whether it is internal or coupled
+            static PackedBoolList getInternalOrCoupledFaces(const polyMesh&);
 
 };
 
@@ -596,7 +622,7 @@ public:
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // Combine val with existing value at index
-template <class T, class CombineOp>
+template<class T, class CombineOp>
 void CML::syncTools::combine
 (
     Map<T>& pointValues,
@@ -619,7 +645,7 @@ void CML::syncTools::combine
 
 
 // Combine val with existing value at (implicit index) e.
-template <class T, class CombineOp>
+template<class T, class CombineOp>
 void CML::syncTools::combine
 (
     EdgeMap<T>& edgeValues,
@@ -641,7 +667,7 @@ void CML::syncTools::combine
 }
 
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncPointMap
 (
     const polyMesh& mesh,
@@ -946,7 +972,7 @@ void CML::syncTools::syncPointMap
 }
 
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncEdgeMap
 (
     const polyMesh& mesh,
@@ -1233,7 +1259,7 @@ void CML::syncTools::syncEdgeMap
 
 
     // Now sharedEdgeValues will contain per potential sharedEdge the value.
-    // (potential since an edge having two shared points is not nessecary a
+    // (potential since an edge having two shared points is not necessary a
     //  shared edge).
     // Reduce this on the master.
 
@@ -1321,7 +1347,7 @@ void CML::syncTools::syncEdgeMap
 }
 
 
-//template <class T, class CombineOp, class TransformOp>
+//template<class T, class CombineOp, class TransformOp>
 //void CML::syncTools::syncPointList
 //(
 //    const polyMesh& mesh,
@@ -1497,7 +1523,7 @@ void CML::syncTools::syncEdgeMap
 //}
 
 
-//template <class T, class CombineOp, class TransformOp>
+//template<class T, class CombineOp, class TransformOp>
 //void CML::syncTools::syncPointList
 //(
 //    const polyMesh& mesh,
@@ -1547,7 +1573,7 @@ void CML::syncTools::syncEdgeMap
 //    }
 //}
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncPointList
 (
     const polyMesh& mesh,
@@ -1573,7 +1599,7 @@ void CML::syncTools::syncPointList
 }
 
 
-//template <class CombineOp>
+//template<class CombineOp>
 //void CML::syncTools::syncPointPositions
 //(
 //    const polyMesh& mesh,
@@ -1597,7 +1623,7 @@ void CML::syncTools::syncPointList
 //}
 
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncPointList
 (
     const polyMesh& mesh,
@@ -1657,7 +1683,7 @@ void CML::syncTools::syncPointList
 }
 
 
-//template <class CombineOp>
+//template<class CombineOp>
 //void CML::syncTools::syncPointPositions
 //(
 //    const polyMesh& mesh,
@@ -1717,7 +1743,7 @@ void CML::syncTools::syncPointList
 //}
 
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncEdgeList
 (
     const polyMesh& mesh,
@@ -1764,7 +1790,7 @@ void CML::syncTools::syncEdgeList
 }
 
 
-//template <class CombineOp>
+//template<class CombineOp>
 //void CML::syncTools::syncEdgePositions
 //(
 //    const polyMesh& mesh,
@@ -1811,7 +1837,7 @@ void CML::syncTools::syncEdgeList
 //}
 
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncEdgeList
 (
     const polyMesh& mesh,
@@ -1870,7 +1896,7 @@ void CML::syncTools::syncEdgeList
     }
 }
 
-template <class T, class CombineOp, class TransformOp>
+template<class T, class CombineOp, class TransformOp>
 void CML::syncTools::syncBoundaryFaceList
 (
     const polyMesh& mesh,
@@ -1996,7 +2022,7 @@ void CML::syncTools::syncBoundaryFaceList
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template <unsigned nBits, class CombineOp>
+template<unsigned nBits, class CombineOp>
 void CML::syncTools::syncFaceList
 (
     const polyMesh& mesh,
@@ -2113,7 +2139,46 @@ void CML::syncTools::syncFaceList
 }
 
 
-template <unsigned nBits>
+template<class T>
+void CML::syncTools::swapBoundaryCellList
+(
+    const polyMesh& mesh,
+    const UList<T>& cellData,
+    List<T>& neighbourCellData
+)
+{
+    if (cellData.size() != mesh.nCells())
+    {
+        FatalErrorIn
+        (
+            "syncTools<class T>::swapBoundaryCellList"
+            "(const polyMesh&, const UList<T>&, List<T>&)"
+        )   << "Number of cell values " << cellData.size()
+            << " is not equal to the number of cells in the mesh "
+            << mesh.nCells() << abort(FatalError);
+    }
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    label nBnd = mesh.nFaces()-mesh.nInternalFaces();
+
+    neighbourCellData.setSize(nBnd);
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+        const labelUList& faceCells = pp.faceCells();
+        forAll(faceCells, i)
+        {
+            label bFaceI = pp.start()+i-mesh.nInternalFaces();
+            neighbourCellData[bFaceI] = cellData[faceCells[i]];
+        }
+    }
+    syncTools::swapBoundaryFaceList(mesh, neighbourCellData);
+}
+
+
+template<unsigned nBits>
 void CML::syncTools::swapFaceList
 (
     const polyMesh& mesh,
@@ -2124,7 +2189,7 @@ void CML::syncTools::swapFaceList
 }
 
 
-template <unsigned nBits, class CombineOp>
+template<unsigned nBits, class CombineOp>
 void CML::syncTools::syncPointList
 (
     const polyMesh& mesh,
@@ -2171,7 +2236,7 @@ void CML::syncTools::syncPointList
 }
 
 
-template <unsigned nBits, class CombineOp>
+template<unsigned nBits, class CombineOp>
 void CML::syncTools::syncEdgeList
 (
     const polyMesh& mesh,

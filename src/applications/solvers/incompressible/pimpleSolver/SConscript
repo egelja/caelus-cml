@@ -16,7 +16,9 @@ lib_inc = [src + '/turbulenceModels/incompressible/turbulenceModel',
 src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
 src + '/transportModels',
 src + '/transportModels/incompressible/singlePhaseTransportModel',
-src + '/transportModels/incompressible/lnInclude'
+src + '/transportModels/incompressible/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude'
 ]
 pimpleSolEnv.Prepend(CPPPATH = lib_inc)
 
@@ -25,11 +27,9 @@ pimpleSolEnv.Prepend(CPPPATH = lib_inc)
 #===============================================================================
 if pimpleSolEnv['WHICH_OS'] == "windows":
   pimpleSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad')
-  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-  'libincompressibleLESModels','libincompressibleTransportModels']
-else:
-  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-  'libincompressibleLESModels','libincompressibleTransportModels']
+
+lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
+'libincompressibleLESModels','libincompressibleTransportModels', 'fvOptions', 'sampling']
 pimpleSolEnv.Append(LIBS = lib_link)
 
 #===============================================================================

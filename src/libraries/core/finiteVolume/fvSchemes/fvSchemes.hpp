@@ -75,6 +75,10 @@ class fvSchemes
         dictionary fluxRequired_;
         bool defaultFluxRequired_;
 
+        //- Steady-state run indicator
+        //  Set true if the default ddtScheme is steadyState
+        bool steady_;
+
 
     // Private Member Functions
 
@@ -124,6 +128,18 @@ public:
             ITstream& laplacianScheme(const word& name) const;
 
             bool fluxRequired(const word& name) const;
+
+            //- Return true if the default ddtScheme is steadyState
+            bool steady() const
+            {
+                return steady_;
+            }
+
+            //- Return true if the default ddtScheme is not steadyState
+            bool transient() const
+            {
+                return !steady_;
+            }
 
 
         // Read

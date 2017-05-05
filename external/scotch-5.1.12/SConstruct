@@ -44,9 +44,9 @@ link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
 
 java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
  (colors['red'], colors['purple'], colors['yellow'], colors['end'])
-
+ 
 install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
- (colors['green'], colors['purple'], colors['yellow'], colors['end']) 
+ (colors['green'], colors['purple'], colors['yellow'], colors['end'])
 
 #===============================================================================
 # Pass operating system envrionment
@@ -78,6 +78,7 @@ globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
 globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
 globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
 globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(INT_TYPE = globalEnv['ENV']['INT_TYPE'])
 globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
 globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
 globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
@@ -120,6 +121,15 @@ if platform_arch != globalEnv['COMPILER_ARCH']+'bit' :
   print '! You have request a ', globalEnv['COMPILER_ARCH']+'bit','build on a',\
         platform_arch, 'system, this may not be possible'
 
+# build architecture
+print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
+
+# build precision
+print ">> Build precision : " + globalEnv['PRECISION_OPTION'] 
+
+# integer type
+print ">> Integer type : " + globalEnv['INT_TYPE'] + 'bit'
+
 #===============================================================================
 # Common compiler flags
 #===============================================================================
@@ -135,16 +145,24 @@ if which_os == "windows" :
 elif which_os == "darwin" :
   # Set the C++ compiler
   globalEnv.Replace(CXX = globalEnv['COMPILER'])
+  if globalEnv['COMPILER'] == 'clang++':
+    globalEnv.Replace(CC = 'clang')
   
   # General compiler flags
   GFLAGS = '-O3' + ' -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_RANDOM_FIXED_SEED ' \
-  + '-DSCOTCH_RENAME -DSCOTCH_RENAME_PARSER -DCOMMON_TIMING_OLD'
+  + '-DSCOTCH_RENAME -DCOMMON_TIMING_OLD -Wno-switch -Wno-implicit-int '  \
+  + '-Wno-empty-body -Wno-format-security'
 #end of macosx compiler flags
 
 else :
   # General compiler flags
   GFLAGS = '-O3' + ' -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_RANDOM_FIXED_SEED ' \
-  + '-DSCOTCH_RENAME -DSCOTCH_RENAME_PARSER '
+  + '-DSCOTCH_RENAME -DSCOTCH_RENAME_PARSER'
+
+  # Flag to turn label into 64bit int during compilation
+  if  globalEnv['INT_TYPE'] == '64':
+    GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
+
 #end of linux compiler flags
 
 # Setup full compiler flags

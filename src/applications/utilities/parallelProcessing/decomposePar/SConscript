@@ -34,11 +34,9 @@ decomposeParEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if decomposeParEnv['WHICH_OS'] == "windows":
   decomposeParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u scotchDecompLoad -u metisDecompLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian','libdecompose',
-  'libdecompositionMethods','libscotchDecomp','libmetisDecomp']
-else:
-  lib_link = ['genericPatchFields','lagrangian','decompose',
-  'decompositionMethods','scotchDecomp','metisDecomp']
+
+lib_link = ['genericPatchFields','lagrangian','decompose',
+'decompositionMethods','scotchDecomp','metisDecomp']
    
 decomposeParEnv.Append(LIBS = lib_link)
 

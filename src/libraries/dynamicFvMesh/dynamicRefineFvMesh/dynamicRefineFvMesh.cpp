@@ -1089,7 +1089,7 @@ bool CML::dynamicRefineFvMesh::update()
 
     if (refineInterval == 0)
     {
-        changing(hasChanged);
+        topoChanging(hasChanged);
 
         return false;
     }
@@ -1258,7 +1258,13 @@ bool CML::dynamicRefineFvMesh::update()
         nRefinementIterations_++;
     }
 
-    changing(hasChanged);
+    topoChanging(hasChanged);
+    if (hasChanged)
+    {
+        // Reset moving flag (if any). If not using inflation we'll not move,
+        // if are using inflation any follow on movePoints will set it.
+        moving(false);
+    }
 
     return hasChanged;
 }

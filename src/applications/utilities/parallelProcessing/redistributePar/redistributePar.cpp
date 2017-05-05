@@ -720,6 +720,8 @@ int main(int argc, char *argv[])
         "specify the merge distance relative to the bounding box size "
         "(default 1E-6)"
     );
+    // Include explicit constant options, have zero from time range
+    timeSelector::addOptions();
 #   include "setRootCase.hpp"
 
     if (env("FOAM_SIGFPE"))
@@ -743,6 +745,11 @@ int main(int argc, char *argv[])
     // Make sure we do not use the master-only reading.
     regIOobject::fileModificationChecking = regIOobject::timeStamp;
 #   include "createTime.hpp"
+    // Allow override of time
+    instantList times = timeSelector::selectIfPresent(runTime, args);
+    runTime.setTime(times[0], 0);
+
+    runTime.functionObjects().off();
 
     word regionName = polyMesh::defaultRegion;
     fileName meshSubDir;

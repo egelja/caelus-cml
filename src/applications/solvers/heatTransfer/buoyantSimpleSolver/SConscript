@@ -37,11 +37,9 @@ buoyantSimpleSolverEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if buoyantSimpleSolverEnv['WHICH_OS'] == "windows":
   buoyantSimpleSolverEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad')
-  lib_link = ['libcompressibleTurbulenceModel', 'libcompressibleRASModels',
-  'libbasicThermophysicalModels','libspecie']
-else:
-  lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
-  'basicThermophysicalModels','specie']
+
+lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
+'basicThermophysicalModels','specie']
 
 buoyantSimpleSolverEnv.Append(LIBS = lib_link)
 

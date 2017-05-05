@@ -360,7 +360,9 @@ bool CML::OutputFilterFunctionObject<OutputFilter>::execute
 template<class OutputFilter>
 bool CML::OutputFilterFunctionObject<OutputFilter>::end()
 {
-    if (active())
+    // note: use enabled_ here instead of active() since end should be called
+    // even if out of time bounds
+    if (enabled_)
     {
         if (!storeFilter_)
         {

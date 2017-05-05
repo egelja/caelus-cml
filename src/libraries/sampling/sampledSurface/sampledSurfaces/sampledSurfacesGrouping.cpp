@@ -28,23 +28,18 @@ License
 
 CML::label CML::sampledSurfaces::classifyFields()
 {
-    // check files for a particular time
+     // check files for a particular time
     if (loadFromFiles_)
     {
         IOobjectList objects(mesh_, mesh_.time().timeName());
         wordList allFields = objects.sortedNames();
-
         labelList indices = findStrings(fieldSelection_, allFields);
-
         return indices.size();
-
     }
-
     else
     {
         wordList allFields = mesh_.sortedNames();
         labelList indices = findStrings(fieldSelection_, allFields);
-
         return indices.size();
     }
 }

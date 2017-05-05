@@ -33,9 +33,8 @@ enstrophyEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if enstrophyEnv['WHICH_OS'] == "windows":
   enstrophyEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 enstrophyEnv.Append(LIBS = lib_link)
 

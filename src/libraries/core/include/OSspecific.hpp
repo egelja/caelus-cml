@@ -102,14 +102,8 @@ bool chDir(const fileName& dir);
 //  - \b user settings:
 //    - ~/.CAELUS/\<VERSION\>
 //    - ~/.CAELUS/
-//  - \b group (site) settings (when $WM_PROJECT_SITE is set):
-//    - $WM_PROJECT_SITE/\<VERSION\>
-//    - $WM_PROJECT_SITE
-//  - \b group (site) settings (when $WM_PROJECT_SITE is not set):
-//    - $WM_PROJECT_INST_DIR/site/\<VERSION\>
-//    - $WM_PROJECT_INST_DIR/site/
 //  - \b other (shipped) settings:
-//    - $WM_PROJECT_DIR/etc/
+//    - $CAELUS_PROJECT_DIR/etc/
 //
 //  \return The list of full paths of all the matching files or
 //  an empty list if the name cannot be found.

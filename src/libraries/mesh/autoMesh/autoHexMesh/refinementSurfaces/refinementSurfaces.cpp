@@ -27,6 +27,7 @@ License
 #include "labelPair.hpp"
 #include "searchableSurfacesQueries.hpp"
 #include "UPtrList.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -484,7 +485,7 @@ void CML::refinementSurfaces::setMinLevelFields
         if (geom.regions().size() > 1 && geom.globalSize() > 10)
         {
             // Representative local coordinates
-            const pointField ctrs = geom.coordinates();
+            const pointField ctrs = (geom.coordinates())();
 
             labelList minLevelField(ctrs.size(), -1);
             {
@@ -1150,7 +1151,7 @@ void CML::refinementSurfaces::findInside
 
         if (allGeometry_[surfaces_[surfI]].hasVolumeType())
         {
-            List<searchableSurface::volumeType> volType;
+            List<volumeType> volType;
             allGeometry_[surfaces_[surfI]].getVolumeType(pt, volType);
 
             forAll(volType, pointI)
@@ -1160,11 +1161,11 @@ void CML::refinementSurfaces::findInside
                     if
                     (
                         (
-                            volType[pointI] == triSurfaceMesh::INSIDE
+                            volType[pointI] == volumeType::INSIDE
                          && zoneInside_[surfI] == INSIDE
                         )
                      || (
-                            volType[pointI] == triSurfaceMesh::OUTSIDE
+                            volType[pointI] == volumeType::OUTSIDE
                          && zoneInside_[surfI] == OUTSIDE
                         )
                     )

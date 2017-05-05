@@ -161,7 +161,10 @@ public:
             virtual void evaluate(const Pstream::commsTypes commsType);
 
             //- Return patch-normal gradient
-            virtual tmp<Field<Type> > snGrad() const;
+            virtual tmp<Field<Type> > snGrad
+            (
+                const scalarField& deltaCoeffs
+            ) const;
 
             //- Initialise neighbour matrix update
             virtual void initInterfaceMatrixUpdate
@@ -229,15 +232,10 @@ public:
 #include "demandDrivenData.hpp"
 #include "transformField.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
 
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF
@@ -249,7 +247,7 @@ processorFvPatchField<Type>::processorFvPatchField
 
 
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -263,7 +261,7 @@ processorFvPatchField<Type>::processorFvPatchField
 
 // Construct by mapping given processorFvPatchField<Type>
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const processorFvPatchField<Type>& ptf,
     const fvPatch& p,
@@ -296,7 +294,7 @@ processorFvPatchField<Type>::processorFvPatchField
 
 
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -328,7 +326,7 @@ processorFvPatchField<Type>::processorFvPatchField
 
 
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const processorFvPatchField<Type>& ptf
 )
@@ -340,7 +338,7 @@ processorFvPatchField<Type>::processorFvPatchField
 
 
 template<class Type>
-processorFvPatchField<Type>::processorFvPatchField
+CML::processorFvPatchField<Type>::processorFvPatchField
 (
     const processorFvPatchField<Type>& ptf,
     const DimensionedField<Type, volMesh>& iF
@@ -354,21 +352,22 @@ processorFvPatchField<Type>::processorFvPatchField
 // * * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
 
 template<class Type>
-processorFvPatchField<Type>::~processorFvPatchField()
+CML::processorFvPatchField<Type>::~processorFvPatchField()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<Field<Type> > processorFvPatchField<Type>::patchNeighbourField() const
+CML::tmp<CML::Field<Type> >
+CML::processorFvPatchField<Type>::patchNeighbourField() const
 {
     return *this;
 }
 
 
 template<class Type>
-void processorFvPatchField<Type>::initEvaluate
+void CML::processorFvPatchField<Type>::initEvaluate
 (
     const Pstream::commsTypes commsType
 )
@@ -381,7 +380,7 @@ void processorFvPatchField<Type>::initEvaluate
 
 
 template<class Type>
-void processorFvPatchField<Type>::evaluate
+void CML::processorFvPatchField<Type>::evaluate
 (
     const Pstream::commsTypes commsType
 )
@@ -399,14 +398,18 @@ void processorFvPatchField<Type>::evaluate
 
 
 template<class Type>
-tmp<Field<Type> > processorFvPatchField<Type>::snGrad() const
+CML::tmp<CML::Field<Type> >
+CML::processorFvPatchField<Type>::snGrad
+(
+    const scalarField& deltaCoeffs
+) const
 {
-    return this->patch().deltaCoeffs()*(*this - this->patchInternalField());
+    return deltaCoeffs*(*this - this->patchInternalField());
 }
 
 
 template<class Type>
-void processorFvPatchField<Type>::initInterfaceMatrixUpdate
+void CML::processorFvPatchField<Type>::initInterfaceMatrixUpdate
 (
     const scalarField& psiInternal,
     scalarField&,
@@ -425,7 +428,7 @@ void processorFvPatchField<Type>::initInterfaceMatrixUpdate
 
 
 template<class Type>
-void processorFvPatchField<Type>::updateInterfaceMatrix
+void CML::processorFvPatchField<Type>::updateInterfaceMatrix
 (
     const scalarField&,
     scalarField& result,
@@ -453,10 +456,6 @@ void processorFvPatchField<Type>::updateInterfaceMatrix
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

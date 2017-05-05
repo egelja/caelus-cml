@@ -25,6 +25,8 @@ Description
 
     Call write() to sample and write files.
 
+SourceFiles
+    probes.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -39,9 +41,6 @@ Description
 #include "surfaceFieldsFwd.hpp"
 #include "surfaceMesh.hpp"
 #include "wordReList.hpp"
-#include "volFields.hpp"
-#include "surfaceFields.hpp"
-#include "IOmanip.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -78,7 +77,6 @@ protected:
             :
                 DynamicList<word>(0)
             {}
-
         };
 
 
@@ -99,6 +97,16 @@ protected:
 
             //- Names of fields to probe
             wordReList fieldSelection_;
+
+            //- Fixed locations, default = yes
+            //  Note: set to false for moving mesh calations where locations
+            //        should move with the mesh
+            bool fixedLocations_;
+
+            //- Interpolation scheme name
+            /// Note: only possible when fixedLocations_ is true
+            word interpolationScheme_;
+
 
         // Calculated
 
@@ -137,12 +145,13 @@ protected:
         //- Classify field types, returns the number of fields
         label classifyFields();
 
-        //- Find cells containing probes
+        //- Find cells and faces containing probes
         virtual void findElements(const fvMesh&);
 
         //- Classify field type and Open/close file streams,
-        //  returns number of fields
+        //  returns number of fields to sample
         label prepare();
+
 
 private:
 
@@ -237,6 +246,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Sample and write
         virtual void write();
 
@@ -244,12 +256,10 @@ public:
         virtual void read(const dictionary&);
 
         //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
+        virtual void updateMesh(const mapPolyMesh&);
 
         //- Update for changes of mesh
-        virtual void movePoints(const pointField&)
-        {}
+        virtual void movePoints(const pointField&);
 
         //- Update for changes of mesh due to readUpdate
         virtual void readUpdate(const polyMesh::readUpdateState state)
@@ -263,11 +273,11 @@ public:
         ) const;
 
         //- Sample a single vol field on all sample locations
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sample(const word& fieldName) const;
 
         //- Sample a single scalar field on all sample locations
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sampleSurfaceFields(const word& fieldName) const;
 
         //- Sample a surface field at all locations
@@ -276,7 +286,6 @@ public:
         (
             const GeometricField<Type, fvsPatchField, surfaceMesh>&
         ) const;
-
 };
 
 
@@ -284,6 +293,12 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "volFields.hpp"
+#include "surfaceFields.hpp"
+#include "IOmanip.hpp"
+#include "interpolation.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -333,7 +348,7 @@ void CML::probes::sampleAndWrite
         unsigned int w = IOstream::defaultPrecision() + 7;
         OFstream& os = *probeFilePtrs_[vField.name()];
 
-        os  << setw(w) << vField.time().value();
+        os  << setw(w) << vField.time().timeToUserTime(vField.time().value());
 
         forAll(values, probeI)
         {
@@ -347,17 +362,17 @@ void CML::probes::sampleAndWrite
 template<class Type>
 void CML::probes::sampleAndWrite
 (
-    const GeometricField<Type, fvsPatchField, surfaceMesh>& vField
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& sField
 )
 {
-    Field<Type> values(sample(vField));
+    Field<Type> values(sample(sField));
 
     if (Pstream::master())
     {
         unsigned int w = IOstream::defaultPrecision() + 7;
-        OFstream& os = *probeFilePtrs_[vField.name()];
+        OFstream& os = *probeFilePtrs_[sField.name()];
 
-        os  << setw(w) << vField.time().value();
+        os  << setw(w) << sField.time().timeToUserTime(sField.time().value());
 
         forAll(values, probeI)
         {
@@ -368,7 +383,7 @@ void CML::probes::sampleAndWrite
 }
 
 
-template <class Type>
+template<class Type>
 void CML::probes::sampleAndWrite(const fieldGroup<Type>& fields)
 {
     forAll(fields, fieldI)
@@ -483,11 +498,36 @@ CML::probes::sample
 
     Field<Type>& values = tValues();
 
-    forAll(*this, probeI)
+    if (fixedLocations_)
     {
-        if (elementList_[probeI] >= 0)
+        autoPtr<interpolation<Type> > interpolator
+        (
+            interpolation<Type>::New(interpolationScheme_, vField)
+        );
+
+        forAll(*this, probeI)
         {
-            values[probeI] = vField[elementList_[probeI]];
+            if (elementList_[probeI] >= 0)
+            {
+                const vector& position = operator[](probeI);
+
+                values[probeI] = interpolator().interpolate
+                (
+                    position,
+                    elementList_[probeI],
+                    -1
+                );
+            }
+        }
+    }
+    else
+    {
+        forAll(*this, probeI)
+        {
+            if (elementList_[probeI] >= 0)
+            {
+                values[probeI] = vField[elementList_[probeI]];
+            }
         }
     }
 
@@ -516,7 +556,7 @@ template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::probes::sample
 (
-    const GeometricField<Type, fvsPatchField, surfaceMesh>& vField
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& sField
 ) const
 {
     const Type unsetVal(-VGREAT*pTraits<Type>::one);
@@ -532,7 +572,7 @@ CML::probes::sample
     {
         if (faceList_[probeI] >= 0)
         {
-            values[probeI] = vField[faceList_[probeI]];
+            values[probeI] = sField[faceList_[probeI]];
         }
     }
 

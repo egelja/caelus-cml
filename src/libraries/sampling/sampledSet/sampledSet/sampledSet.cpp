@@ -402,7 +402,7 @@ CML::sampledSet::sampledSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis
 )
 :
@@ -419,7 +419,7 @@ CML::sampledSet::sampledSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :
@@ -444,7 +444,7 @@ CML::autoPtr<CML::sampledSet> CML::sampledSet::New
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 {
@@ -458,7 +458,8 @@ CML::autoPtr<CML::sampledSet> CML::sampledSet::New
         FatalErrorIn
         (
             "sampledSet::New"
-            "(const word&, const polyMesh&, meshSearch&, const dictionary&)"
+            "(const word&, const polyMesh&, const meshSearch&"
+            ", const dictionary&)"
         )   << "Unknown sample type "
             << sampleType << nl << nl
             << "Valid sample types : " << endl

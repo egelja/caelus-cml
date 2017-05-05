@@ -228,9 +228,10 @@ const CML::wordList& CML::searchableBox::regions() const
 }
 
 
-CML::pointField CML::searchableBox::coordinates() const
+CML::tmp<CML::pointField> CML::searchableBox::coordinates() const
 {
-    pointField ctrs(6);
+    tmp<pointField> tCtrs = tmp<pointField>(new pointField(6));
+    pointField& ctrs = tCtrs();
 
     const pointField pts(treeBoundBox::points());
     const faceList& fcs = treeBoundBox::faces;
@@ -239,7 +240,49 @@ CML::pointField CML::searchableBox::coordinates() const
     {
         ctrs[i] = fcs[i].centre(pts);
     }
-    return ctrs;
+
+    return tCtrs;
+}
+
+
+void CML::searchableBox::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(size());
+    radiusSqr.setSize(size());
+    radiusSqr = 0.0;
+
+    const pointField pts(treeBoundBox::points());
+    const faceList& fcs = treeBoundBox::faces;
+
+    forAll(fcs, i)
+    {
+        const face& f = fcs[i];
+
+        centres[i] = f.centre(pts);
+        forAll(f, fp)
+        {
+            const point& pt = pts[f[fp]];
+
+            radiusSqr[i] = CML::max
+            (
+                radiusSqr[i],
+                CML::magSqr(pt-centres[i])
+            );
+        }
+    }
+
+    // Add a bit to make sure all points are tested inside
+    radiusSqr += CML::sqr(SMALL);
+}
+
+
+CML::tmp<CML::pointField> CML::searchableBox::points() const
+{
+    return treeBoundBox::points();
 }
 
 
@@ -571,7 +614,7 @@ void CML::searchableBox::getVolumeType
 ) const
 {
     volType.setSize(points.size());
-    volType = INSIDE;
+    volType = volumeType::INSIDE;
 
     forAll(points, pointI)
     {
@@ -581,7 +624,7 @@ void CML::searchableBox::getVolumeType
         {
             if (pt[dir] < min()[dir] || pt[dir] > max()[dir])
             {
-                volType[pointI] = OUTSIDE;
+                volType[pointI] = volumeType::OUTSIDE;
                 break;
             }
         }

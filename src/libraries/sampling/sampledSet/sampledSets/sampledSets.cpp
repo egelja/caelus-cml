@@ -29,8 +29,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::sampledSets, 0);
-bool CML::sampledSets::verbose_ = false;
+namespace CML
+{
+defineTypeNameAndDebug(sampledSets, 0);
+bool sampledSets::verbose_ = false;
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -140,11 +143,11 @@ CML::sampledSets::sampledSets
 {
     if (Pstream::parRun())
     {
-        outputPath_ = mesh_.time().path()/".."/name_;
+        outputPath_ = mesh_.time().path()/".."/"postProcessing"/name_;
     }
     else
     {
-        outputPath_ = mesh_.time().path()/name_;
+        outputPath_ = mesh_.time().path()/"postProcessing"/name_;
     }
     if (mesh_.name() != fvMesh::defaultRegion)
     {
@@ -176,6 +179,12 @@ void CML::sampledSets::execute()
 
 
 void CML::sampledSets::end()
+{
+    // Do nothing - only valid on write
+}
+
+
+void CML::sampledSets::timeSet()
 {
     // Do nothing - only valid on write
 }
@@ -275,10 +284,6 @@ void CML::sampledSets::correct()
     bool setsFound = dict_.found("sets");
     if (setsFound)
     {
-        // reset interpolation
-        pointMesh::Delete(mesh_);
-        volPointInterpolation::Delete(mesh_);
-
         searchEngine_.correct();
 
         PtrList<sampledSet> newList

@@ -33,6 +33,7 @@ SourceFiles
 
 #include "searchableSurface.hpp"
 #include "labelPair.hpp"
+#include "writer.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,6 +41,7 @@ namespace CML
 {
 
 // Forward declaration of classes
+class triSurface;
 
 /*---------------------------------------------------------------------------*\
                            Class searchableSurfaces Declaration
@@ -66,6 +68,15 @@ class searchableSurfaces
 
     // Private Member Functions
 
+        //- Is edge on face
+        static bool connected
+        (
+            const triSurface& s,
+            const label edgeI,
+            const pointIndexHit& hit
+        );
+
+
         //- Disallow default bitwise copy construct
         searchableSurfaces(const searchableSurfaces&);
 
@@ -86,8 +97,16 @@ public:
         ////- Construct from list of dictionaries
         //searchableSurfaces(const IOobject&, const PtrList<dictionary>&);
 
-        //- Construct from dictionary
-        searchableSurfaces(const IOobject&, const dictionary&);
+        //- Construct from dictionary and whether to construct names always
+        //  as surfaceName "_" regionName (singleRegionName false) or
+        //  for single region surfaces as surfaceName only (singleRegionName
+        //  true)
+        searchableSurfaces
+        (
+            const IOobject&,
+            const dictionary&,
+            const bool singleRegionName
+        );
 
 
     // Member Functions
@@ -125,6 +144,11 @@ public:
         //- Find index of surface. Return -1 if not found.
         label findSurfaceID(const word& name) const;
 
+        label findSurfaceRegionID
+        (
+            const word& surfaceName,
+            const word& regionName
+        ) const;
 
         // Multiple point queries.
 
@@ -170,6 +194,15 @@ public:
                 List<pointIndexHit>&
             ) const;
 
+            void findNearest
+            (
+                const pointField& samples,
+                const scalarField& nearestDistSqr,
+                const labelList& regionIndices,
+                labelList& nearestSurfaces,
+                List<pointIndexHit>& nearestInfo
+            ) const;
+
             //- Calculate bounding box
             boundBox bounds() const;
 
@@ -183,6 +216,49 @@ public:
                 const scalar convergenceDistSqr,
                 const point& start
             ) const;
+
+
+        // Checking
+
+            //- Are all surfaces closed and manifold
+            bool checkClosed(const bool report) const;
+
+            //- Are all (triangulated) surfaces consistent normal orientation
+            bool checkNormalOrientation(const bool report) const;
+
+            //- Are all bounding boxes of similar size
+            bool checkSizes(const scalar maxRatio, const bool report) const;
+
+            //- Do surfaces self-intersect or intersect others
+            bool checkIntersection
+            (
+                const scalar tol,
+                const autoPtr<writer<scalar> >&,
+                const bool report
+            ) const;
+
+            //- Check triangle quality
+            bool checkQuality
+            (
+                const scalar minQuality,
+                const bool report
+            ) const;
+
+            //- All topological checks. Return number of failed checks
+            label checkTopology(const bool report) const;
+
+            //- All geometric checks. Return number of failed checks
+            label checkGeometry
+            (
+                const scalar maxRatio,
+                const scalar tolerance,
+                const autoPtr<writer<scalar> >& setWriter,
+                const scalar minQuality,
+                const bool report
+            ) const;
+
+            //- Write some stats
+            void writeStats(const List<wordList>&, Ostream&) const;
 
 
     // Member Operators

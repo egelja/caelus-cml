@@ -21,18 +21,48 @@ Class
     CML::incompressible::turbulentMixingLengthFrequencyInletFvPatchScalarField
 
 Description
-    Calculate omega via the mixing length
+    This boundary condition provides a turbulence specific dissipation,
+    \f$\omega\f$ (omega) inlet condition based on a specified mixing length.
+    The patch values are calculated using:
+
+        \f[
+            \omega_p = \frac{k^{0.5}}{C_{\mu}^{0.25} L}
+        \f]
+   
+    where
+
+    \vartable
+        \omega_p | patch omega values
+        C_{\mu} | Model coefficient, set to 0.09
+        k       | turbulence kinetic energy
+        L       | length scale
+    \endvartable
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        mixingLength | Length scale [m]        | yes         |
+        phi          | flux field name         | no          | phi
+        k            | turbulence kinetic energy field name | no | k
+    \endtable
 
     Example of the boundary condition specification:
     \verbatim
-        inlet
-        {
-            type            turbulentMixingLengthFrequencyInlet;
-            mixingLength    0.005;         // 5 mm
-            k               k;             // turbulent k field
-            value           uniform 5;     // initial value
-        }
+    myPatch
+    {
+        type            turbulentMixingLengthFrequencyInlet;
+        mixingLength    0.005;
+        value           uniform 200;   // placeholder
+    }
     \endverbatim
+
+Note
+    In the event of reverse flow, a zero-gradient condition is applied
+
+SeeAlso
+    CML::inletOutletFvPatchField
+
 
 SourceFiles
     turbulentMixingLengthFrequencyInletFvPatchScalarField.cpp
@@ -63,9 +93,6 @@ class turbulentMixingLengthFrequencyInletFvPatchScalarField
 
         //- Turbulent length scale
         scalar mixingLength_;
-
-        //- Name of the flux field
-        word phiName_;
 
         //- Name of the turbulent kinetic energy field
         word kName_;

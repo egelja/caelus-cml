@@ -56,4 +56,4 @@ odeEnv.Install(install_dir, libODE)
 
 if (odeEnv['WHICH_OS'] == "darwin"):
 
-  odeEnv.Append(SHLINKFLAGS ='-install_name @' + odeEnv['LIB_PLATFORM_INSTALL'] + '/libODE.dylib')
+  odeEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libODE.dylib')

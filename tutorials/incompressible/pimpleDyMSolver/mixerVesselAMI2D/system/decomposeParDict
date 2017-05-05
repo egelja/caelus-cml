@@ -1,0 +1,28 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      decomposeParDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Force AMI to be on single processor. Can cause imbalance with some
+//  decomposers.
+//singleProcessorFaceSets ((AMI -1));
+
+numberOfSubdomains 4;
+
+method          scotch;
+
+distributed     no;
+
+roots           ( );
+
+
+// ************************************************************************* //

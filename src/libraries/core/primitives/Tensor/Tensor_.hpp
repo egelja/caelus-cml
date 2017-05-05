@@ -50,7 +50,7 @@ class SymmTensor;
                            Class Tensor Declaration
 \*---------------------------------------------------------------------------*/
 
-template <class Cmpt>
+template<class Cmpt>
 class Tensor
 :
     public VectorSpace<Tensor<Cmpt>, Cmpt, 9>
@@ -79,6 +79,7 @@ public:
         static const Tensor one;
         static const Tensor max;
         static const Tensor min;
+        static const Tensor I;
 
 
     //- Component labeling enumeration
@@ -90,14 +91,18 @@ public:
         //- Construct null
         inline Tensor();
 
-        //- Construct given VectorSpace
-        inline Tensor(const VectorSpace<Tensor<Cmpt>, Cmpt, 9>&);
+        //- Construct given VectorSpace of the same rank
+        template<class Cmpt2>
+        inline Tensor(const VectorSpace<Tensor<Cmpt2>, Cmpt2, 9>&);
 
         //- Construct given SphericalTensor
         inline Tensor(const SphericalTensor<Cmpt>&);
 
         //- Construct given SymmTensor
         inline Tensor(const SymmTensor<Cmpt>&);
+
+        //- Construct given triad
+        inline Tensor(const Vector<Vector<Cmpt> >&);
 
         //- Construct given the three vector components
         inline Tensor
@@ -144,11 +149,11 @@ public:
             inline Cmpt& zz();
 
             // Access vector components.
-            // Note: returning const only to find out lhs usage
 
-            inline const Vector<Cmpt> x() const;
-            inline const Vector<Cmpt> y() const;
-            inline const Vector<Cmpt> z() const;
+            inline Vector<Cmpt> x() const;
+            inline Vector<Cmpt> y() const;
+            inline Vector<Cmpt> z() const;
+            inline Vector<Cmpt> vectorComponent(const direction) const;
 
         //- Transpose
         inline Tensor<Cmpt> T() const;
@@ -161,6 +166,9 @@ public:
 
         //- Assign to a SymmTensor
         inline void operator=(const SymmTensor<Cmpt>&);
+
+        //- Assign to a triad
+        inline void operator=(const Vector<Vector<Cmpt> >&);
 };
 
 

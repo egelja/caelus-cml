@@ -52,10 +52,11 @@ CML::mappedVariableThicknessWallPolyPatch::mappedVariableThicknessWallPolyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    mappedWallPolyPatch(name, size, start, index, bm),
+    mappedWallPolyPatch(name, size, start, index, bm, patchType),
     thickness_(size)
 {}
 
@@ -73,7 +74,7 @@ CML::mappedVariableThicknessWallPolyPatch::mappedVariableThicknessWallPolyPatch
     const polyBoundaryMesh& bm
 )
 :
-    mappedWallPolyPatch(name, size, start, index, bm),
+    mappedWallPolyPatch(name, size, start, index, bm, typeName),
     thickness_(size)
 {}
 
@@ -91,7 +92,7 @@ CML::mappedVariableThicknessWallPolyPatch::mappedVariableThicknessWallPolyPatch
     const polyBoundaryMesh& bm
 )
 :
-    mappedWallPolyPatch(name, size, start, index, bm),
+    mappedWallPolyPatch(name, size, start, index, bm, typeName),
     thickness_(size)
 {}
 
@@ -101,10 +102,11 @@ CML::mappedVariableThicknessWallPolyPatch::mappedVariableThicknessWallPolyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
-    mappedWallPolyPatch(name, dict, index, bm),
+    mappedWallPolyPatch(name, dict, index, bm, patchType),
     thickness_(scalarField("thickness", dict, this->size()))
 {}
 

@@ -3140,7 +3140,9 @@ CML::autoPtr<CML::mapPolyMesh> CML::polyTopoChange::changeMesh
             syncParallel
         );
 
-        mesh.changing(true);
+        mesh.topoChanging(true);
+        // Note: could already set moving flag as well
+        //       mesh.moving(true);
     }
     else
     {
@@ -3155,7 +3157,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::polyTopoChange::changeMesh
             patchStarts,
             syncParallel
         );
-        mesh.changing(true);
+        mesh.topoChanging(true);
     }
 
     // Clear out primitives

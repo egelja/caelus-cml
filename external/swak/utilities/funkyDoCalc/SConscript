@@ -1,0 +1,68 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funkyDoCalcEnv = globalEnv.Clone()
+
+# Path to source
+src = funkyDoCalcEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+funkyDoCalcEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [
+'../../libraries/simpleFunctionObjects/lnInclude',
+'../../libraries/swakParsers/lnInclude',
+src + '/thermophysicalModels/radiationModels/lnInclude',
+src + '/sampling/lnInclude',
+src + '/fvOptions/lnInclude'
+]
+
+funkyDoCalcEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+
+funkyDoCalcEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if funkyDoCalcEnv['WHICH_OS'] == "windows":
+  funkyDoCalcEnv.Prepend(LINKFLAGS = '')
+  lib_link = ['libbasicThermophysicalModels','libbasicSolidThermo',
+'libradiationModels','libfvOptions','libswakParsers']
+else:
+  lib_link = ['basicThermophysicalModels','basicSolidThermo',
+'radiationModels','fvOptions','swakParsers']
+    
+funkyDoCalcEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""  
+  funkyDoCalc.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binfunkyDoCalc = funkyDoCalcEnv.Program(target = 
+'funkyDoCalc', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = funkyDoCalcEnv['BIN_PLATFORM_INSTALL']
+funkyDoCalcEnv.Alias('install', install_dir)
+funkyDoCalcEnv.Install(install_dir, binfunkyDoCalc)

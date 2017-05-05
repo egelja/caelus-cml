@@ -77,6 +77,15 @@ public:
 
     // Constructors
 
+        //- Construct null
+        PointHit()
+        :
+            hit_(false),
+            hitPoint_(vector::zero),
+            distance_(GREAT),
+            eligibleMiss_(false)
+        {}
+
         //- Construct from components
         PointHit
         (

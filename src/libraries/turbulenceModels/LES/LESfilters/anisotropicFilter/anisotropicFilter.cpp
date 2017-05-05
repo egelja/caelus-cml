@@ -62,8 +62,12 @@ CML::anisotropicFilter::anisotropicFilter
         coeff_.internalField().replace
         (
             d,
-            (2.0/widthCoeff_)*mesh.V()
-           /fvc::surfaceSum(mag(mesh.Sf().component(d)))().internalField()
+            (1/widthCoeff_)*
+            sqr
+            (
+                2.0*mesh.V()
+               /fvc::surfaceSum(mag(mesh.Sf().component(d)))().internalField()
+            )
         );
     }
 }
@@ -95,8 +99,12 @@ CML::anisotropicFilter::anisotropicFilter
         coeff_.internalField().replace
         (
             d,
-            (2.0/widthCoeff_)*mesh.V()
-            /fvc::surfaceSum(mag(mesh.Sf().component(d)))().internalField()
+            (1/widthCoeff_)*
+            sqr
+            (
+                2.0*mesh.V()
+               /fvc::surfaceSum(mag(mesh.Sf().component(d)))().internalField()
+            )
         );
     }
 }

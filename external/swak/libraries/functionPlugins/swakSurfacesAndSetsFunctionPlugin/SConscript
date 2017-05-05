@@ -1,0 +1,83 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+swakSurfSetEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = swakSurfSetEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+swakSurfSetEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../../swakParsers/lnInclude',
+src + '/sampling/lnInclude',
+src + '/lagrangian/basic/lnInclude'
+]
+	
+swakSurfSetEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+swakSurfSetEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['sampling','swakParsers','lagrangian']
+
+swakSurfSetEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_swakSurfSet = Split("""
+  GeneralSurfacesPluginFunction.cpp
+  surfaceAreaPluginFunction.cpp
+  surfaceRelativeSurfacePluginFunction.cpp
+  surfaceNrOfFacesInCellPluginFunction.cpp
+  surfaceHasSurfacePluginFunction.cpp
+  surfaceDistancePluginFunction.cpp
+  GeneralSurfaceEvaluationPluginFunction.cpp
+  surfaceValueAveragePluginFunction.cpp
+  surfaceValueMinimumPluginFunction.cpp
+  surfaceValueMaximumPluginFunction.cpp
+  GeneralSetsPluginFunction.cpp
+  setHasSetPluginFunction.cpp
+  setNrOfPointsInCellPluginFunction.cpp
+  setDistancePluginFunction.cpp
+  GeneralSetEvaluationPluginFunction.cpp
+  setValueAveragePluginFunction.cpp
+  setValueMinimumPluginFunction.cpp
+  setValueMaximumPluginFunction.cpp
+  """)
+
+src_files = src_files_swakSurfSet
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libswakSurfSets = swakSurfSetEnv.SharedLibrary(target = 'libswakSurfacesAndSetsFunctionPlugin',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = swakSurfSetEnv['LIB_PLATFORM_INSTALL']
+swakSurfSetEnv.Alias('install', install_dir)
+swakSurfSetEnv.Install(install_dir, libswakSurfSets)
+
+if (swakSurfSetEnv['WHICH_OS'] == "darwin"):
+
+  swakSurfSetEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakSurfaceAndSetsFunctionPlugin.dylib')

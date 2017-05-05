@@ -165,8 +165,8 @@ private:
             //- Is the mesh moving
             bool moving_;
 
-            //- Is the mesh changing (moving and/or topology changing)
-            bool changing_;
+            //- Is the mesh topology changing
+            bool topoChanging_;
 
             //- Current time index for mesh motion
             mutable label curMotionTimeIndex_;
@@ -246,7 +246,7 @@ public:
         //- Construct from IOobject
         explicit polyMesh(const IOobject& io);
 
-        //- Construct without boundary from components.
+        //- Construct from IOobject or from components.
         //  Boundary is added using addPatches() member function
         polyMesh
         (
@@ -330,6 +330,12 @@ public:
 
             //- Return raw points
             virtual const pointField& points() const;
+
+            //- Return true if io is up-to-date with points
+            virtual bool upToDatePoints(const regIOobject& io) const;
+
+            //- Set io to be up-to-date with points
+            virtual void setUpToDatePoints(regIOobject& io) const;
 
             //- Return raw faces
             virtual const faceList& faces() const;
@@ -420,22 +426,27 @@ public:
             {
                 bool m0 = moving_;
                 moving_ = m;
-                changing_ = changing_ || moving_;
                 return m0;
+            }
+
+            //- Is mesh topology changing
+            bool topoChanging() const
+            {
+                return topoChanging_;
+            }
+
+            //- Set the mesh topology to be changing
+            bool topoChanging(const bool c)
+            {
+                bool c0 = topoChanging_;
+                topoChanging_ = c;
+                return c0;
             }
 
             //- Is mesh changing (topology changing and/or moving)
             bool changing() const
             {
-                return changing_;
-            }
-
-            //- Set the mesh to be changing
-            bool changing(const bool c)
-            {
-                bool c0 = changing_;
-                changing_ = c;
-                return c0;
+                return moving()||topoChanging();
             }
 
             //- Move points, returns volumes swept by faces in motion
@@ -511,7 +522,7 @@ public:
             void clearGeom();
 
             //- Clear addressing
-            void clearAddressing();
+            void clearAddressing(const bool isMeshUpdate = false);
 
             //- Clear all geometry and addressing unnecessary for CFD
             void clearOut();

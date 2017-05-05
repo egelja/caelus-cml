@@ -67,7 +67,7 @@ tmp<volScalarField> SpalartAllmarasIDDES::fd(const volScalarField& S) const
 
 tmp<volScalarField> SpalartAllmarasIDDES::S(const volTensorField& gradU) const
 {
-    const volScalarField contraction = (gradU && gradU);
+    const volScalarField contraction(gradU && gradU);
     return sqrt(contraction);
 }
 
@@ -101,7 +101,7 @@ tmp<volScalarField> SpalartAllmarasIDDES::dTilda(const volScalarField& S) const
      
     tmp<volScalarField> fdt = 1 - tanh(pow3(8*rdt));
 
-    const volScalarField fdTilda = max((1-fdt),fb); 
+    const volScalarField fdTilda(max((1-fdt),fb)); 
 
     return max
     (

@@ -6,19 +6,19 @@ Import('globalEnv')
 # libraries
 metisEnv = globalEnv.Clone()
 
-metisEnv.Append(CXXFLAGS = '')
+#metisEnv.Append(CXXFLAGS = '')
 
 #===============================================================================
 # Additions to include directories for this library
 #===============================================================================
-lib_inc = ['.','../GKlib']
-metisEnv.Prepend(CPPPATH = lib_inc)
+#lib_inc = []
+#metisEnv.Prepend(CPPPATH = lib_inc)
 
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = [''] 
-metisEnv.Append(LIBS = lib_link)
+#lib_link = [] 
+#metisEnv.Append(LIBS = lib_link)
 
 #===============================================================================
 # Sources for this library
@@ -102,4 +102,4 @@ metisEnv.Install(install_dir, libmetis)
 
 if (metisEnv['WHICH_OS'] == "darwin"):
 
-  metisEnv.Append(SHLINKFLAGS ='-install_name @' + metisEnv['LIB_PLATFORM_INSTALL'] + '/libmetis.dylib')
+  metisEnv.Append(SHLINKFLAGS ='-install_name @loader_path/../../../external/metis-5.1.0/lib/libmetis.dylib')

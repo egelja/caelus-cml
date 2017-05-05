@@ -1,0 +1,91 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+simpLagFuncObjEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = simpLagFuncObjEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+simpLagFuncObjEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../swakParsers/lnInclude',
+src + '/sampling/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/SLGThermo/lnInclude',
+src + '/thermophysicalModels/pdfs/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/liquids/lnInclude',
+src + '/thermophysicalModels/liquidMixture/lnInclude',
+src + '/thermophysicalModels/solids/lnInclude',
+src + '/thermophysicalModels/solidMixture/lnInclude',
+src + '/thermophysicalModels/radiation/lnInclude',
+src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
+src + '/regionModels/regionModel/lnInclude',
+src + '/regionModels/surfaceFilmModels/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+src + '/lagrangian/intermediate/lnInclude',
+src + '/lagrangian/solidParticle/lnInclude'
+]
+	
+simpLagFuncObjEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+simpLagFuncObjEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['swakParsers','surfaceFilmModels','SLGThermo','sampling',
+'lagrangian','lagrangianIntermediate','thermophysicalFunctions','solidParticle',
+'radiationModels','specie']
+
+simpLagFuncObjEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_simpLagFuncObj = Split("""
+  EvolveSolidParticleCloudFunctionObject.cpp
+  EvolveKinematicCloudFunctionObject.cpp
+  EvolveThermoCloudFunctionObject.cpp
+  EvolveReactingCloudFunctionObject.cpp
+  EvolveReactingMultiphaseCloudFunctionObject.cpp
+  """)
+
+src_files = src_files_simpLagFuncObj
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libsimpLagFuncObjs = simpLagFuncObjEnv.SharedLibrary(target = 'libsimpleLagrangianFunctionObjects',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = simpLagFuncObjEnv['LIB_PLATFORM_INSTALL']
+simpLagFuncObjEnv.Alias('install', install_dir)
+simpLagFuncObjEnv.Install(install_dir, libsimpLagFuncObjs)
+
+if (simpLagFuncObjEnv['WHICH_OS'] == "darwin"):
+
+  simpLagFuncObjEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsimpleLagrangianFunctionObjects.dylib')

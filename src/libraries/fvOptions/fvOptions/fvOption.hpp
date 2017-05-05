@@ -47,7 +47,7 @@ SourceFiles
 #include "volFieldsFwd.hpp"
 #include "cellSet.hpp"
 #include "autoPtr.hpp"
-#include "meshToMeshNew.hpp"
+#include "meshToMesh.hpp"
 
 #include "runTimeSelectionTables.hpp"
 
@@ -91,7 +91,10 @@ protected:
     // Protected data
 
         //- Source name
-        word name_;
+        const word name_;
+
+        //- Model type
+        const word modelType_;
 
         //- Reference to the mesh database
         const fvMesh& mesh_;
@@ -129,7 +132,7 @@ protected:
         // Data for smMapRegion only
 
             //- Mesh to mesh interpolation object
-            autoPtr<meshToMeshNew> meshInterpPtr_;
+            autoPtr<meshToMesh> meshInterpPtr_;
 
             //- Name of the neighbour region to map
             word nbrRegionName_;
@@ -287,7 +290,7 @@ public:
             inline const word& nbrRegionName() const;
 
             //- Return const access to the mapToMap pointer
-            inline const meshToMeshNew& meshInterp() const;
+            inline const meshToMesh& meshInterp() const;
 
             //- Return const access to the cell set
             inline const labelList& cells() const;
@@ -378,6 +381,97 @@ public:
                 );
 
 
+            // Add explicit and implicit contributions to compressible equations
+
+                //- Scalar
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<scalar>& eqn,
+                    const label fieldI
+                );
+
+                //- Vector
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<vector>& eqn,
+                    const label fieldI
+                );
+
+                //- Spherical tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<symmTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Symmetric tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<sphericalTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<tensor>& eqn,
+                    const label fieldI
+                );
+
+
+            // Add explicit and implicit contributions to phase equations
+
+                //- Scalar
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<scalar>& eqn,
+                    const label fieldI
+                );
+
+                //- Vector
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<vector>& eqn,
+                    const label fieldI
+                );
+
+                //- Spherical tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<symmTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Symmetric tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<sphericalTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<tensor>& eqn,
+                    const label fieldI
+                );
+
+
             // Set values directly
 
                 //- Scalar
@@ -419,20 +513,26 @@ public:
             // Flux manipulations
 
                 //- Make the given absolute flux relative
-                virtual void relativeFlux(surfaceScalarField& phi) const;
+                virtual void makeRelative(surfaceScalarField& phi) const;
+
+                //- Make the given absolute boundary flux relative
+                virtual void makeRelative
+                (
+                    FieldField<fvsPatchField, scalar>& phi
+                ) const;
 
                 //- Make the given absolute mass-flux relative
-                virtual void relativeFlux
+                virtual void makeRelative
                 (
                     const surfaceScalarField& rho,
                     surfaceScalarField& phi
                 ) const;
 
                 //- Make the given relative flux absolute
-                virtual void absoluteFlux(surfaceScalarField& phi) const;
+                virtual void makeAbsolute(surfaceScalarField& phi) const;
 
                 //- Make the given relative mass-flux absolute
-                virtual void absoluteFlux
+                virtual void makeAbsolute
                 (
                     const surfaceScalarField& rho,
                     surfaceScalarField& phi

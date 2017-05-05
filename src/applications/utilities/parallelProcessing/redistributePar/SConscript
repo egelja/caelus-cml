@@ -33,9 +33,8 @@ redistributeParEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if redistributeParEnv['WHICH_OS'] == "windows":
   redistributeParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libdecompositionMethods','libdynamicMesh']
-else:
-  lib_link = ['genericPatchFields','decompositionMethods','dynamicMesh']
+
+lib_link = ['genericPatchFields','decompositionMethods','dynamicMesh']
   
 redistributeParEnv.Append(LIBS = lib_link)
 

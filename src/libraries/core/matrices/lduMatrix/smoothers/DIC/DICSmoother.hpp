@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,27 +25,28 @@ Description
     Simplified diagonal-based incomplete Cholesky smoother for symmetric
     matrices.
 
-    To improve efficiency, the residual is evaluated after every nSweeps
-    sweeps.
-
 SourceFiles
     DICSmoother.cpp
 
+References
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
+
 \*---------------------------------------------------------------------------*/
 
-#ifndef DICSmoother_H
-#define DICSmoother_H
+#ifndef DICSmoother_HPP
+#define DICSmoother_HPP
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class DICSmoother Declaration
-\*---------------------------------------------------------------------------*/
 
 class DICSmoother
 :
@@ -54,7 +56,9 @@ class DICSmoother
 
         //- The reciprocal preconditioned diagonal
         scalarField rD_;
-
+        // - Cached arrays 
+        scalarField rDuUpper_;
+        scalarField rDlUpper_;
 
 public:
 
@@ -80,20 +84,14 @@ public:
         //- Smooth the solution for a given number of sweeps
         void smooth
         (
-            scalarField& psi,
-            const scalarField& source,
+            scalarField& x,
+            const scalarField& b,
             const direction cmpt,
             const label nSweeps
         ) const;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

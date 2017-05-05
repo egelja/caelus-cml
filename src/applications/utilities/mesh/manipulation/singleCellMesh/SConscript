@@ -31,10 +31,7 @@ singleCellMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if singleCellMeshEnv['WHICH_OS'] == "windows":
-  lib_link = []
-else:
-  lib_link = []
+lib_link = []
   
 singleCellMeshEnv.Append(LIBS = lib_link)
 

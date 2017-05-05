@@ -98,7 +98,7 @@ CML::radiation::wideBandAbsorptionEmission::wideBandAbsorptionEmission
                         << nl << exit(FatalError);
                 }
             }
-            coeffs_[nSpec][nBand].initialise(specDicts.subDict(key));
+            coeffs_[nBand][nSpec].initialise(specDicts.subDict(key));
             nSpec++;
         }
         nBand++;
@@ -264,15 +264,6 @@ CML::radiation::wideBandAbsorptionEmission::ECont(const label bandI) const
     return E;
 }
 
-CML::tmp<CML::volScalarField>
-CML::radiation::wideBandAbsorptionEmission::addIntensity
-(
-    const label i,
-    const volScalarField& ILambda
-) const
-{
-    return ILambda*(iBands_[i][1] - iBands_[i][0])/totalWaveLength_;
-}
 
 
 void CML::radiation::wideBandAbsorptionEmission::correct

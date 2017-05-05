@@ -32,9 +32,8 @@ streamFunctionEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if streamFunctionEnv['WHICH_OS'] == "windows":
   streamFunctionEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 streamFunctionEnv.Append(LIBS = lib_link)
 

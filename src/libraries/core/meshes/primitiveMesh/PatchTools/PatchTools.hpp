@@ -29,10 +29,12 @@ SourceFiles
     PatchTools.cpp
     PatchToolsCheck.cpp
     PatchToolsEdgeOwner.cpp
+    PatchToolsGatherAndMerge.cpp
+    PatchToolsMatch.cpp
+    PatchToolsNormals.cpp
     PatchToolsSearch.cpp
     PatchToolsSortEdges.cpp
-    PatchToolsNormals.cpp
-    PatchToolsMatch.cpp
+    PatchToolsSortPoints.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -49,6 +51,7 @@ namespace CML
 
 class polyMesh;
 class PackedBoolList;
+class boundBox;
 
 /*---------------------------------------------------------------------------*\
                          Class PatchTools Declaration
@@ -135,6 +138,21 @@ public:
         labelList& faceMap
     );
 
+    //-
+    template
+    <
+        class Face,
+        template<class> class FaceList,
+        class PointField,
+        class PointType
+    >
+    static void calcBounds
+    (
+        const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
+        boundBox& bb,
+        label& nPoints
+    );
+
     //- Return edge-face addressing sorted by angle around the edge.
     //  Orientation is anticlockwise looking from edge.vec(localPoints())
     template
@@ -149,6 +167,18 @@ public:
         const PrimitivePatch<Face, FaceList, PointField, PointType>&
     );
 
+    //- Return point-edge addressing sorted by order around the point.
+    template
+    <
+        class Face,
+        template<class> class FaceList,
+        class PointField,
+        class PointType
+    >
+    static labelListList sortedPointEdges
+    (
+        const PrimitivePatch<Face, FaceList, PointField, PointType>&
+    );
 
     //- If 2 face neighbours: label of face where ordering of edge
     //  is consistent with righthand walk.
@@ -216,8 +246,7 @@ public:
     );
 
 
-    //- Return parallel consistent point normals for patches (on boundary faces)
-    //  using mesh points.
+    //- Return parallel consistent point normals for patches using mesh points.
     template
     <
         class Face,
@@ -228,10 +257,45 @@ public:
     static tmp<pointField> pointNormals
     (
         const polyMesh&,
-        const PrimitivePatch<Face, FaceList, PointField, PointType>&,
-        const labelList& meshFaces
+        const PrimitivePatch<Face, FaceList, PointField, PointType>&
     );
 
+
+    //- Return parallel consistent edge normals for patches using mesh points.
+    //  Supply with patch matching info from matchEdges.
+    template
+    <
+        class Face,
+        template<class> class FaceList,
+        class PointField,
+        class PointType
+    >
+    static tmp<pointField> edgeNormals
+    (
+        const polyMesh&,
+        const PrimitivePatch<Face, FaceList, PointField, PointType>&,
+        const labelList& patchEdges,
+        const labelList& coupledEdges
+    );
+
+
+    //- Gather points and faces onto master and merge into single patch.
+    //  Note: uses faces/points, not localFaces/localPoints.
+    template
+    <
+        class Face,
+        template<class> class FaceList,
+        class PointField,
+        class PointType
+    >
+    static void gatherAndMerge
+    (
+        const scalar mergeDist,
+        const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
+        Field<PointType>& mergedPoints,
+        List<Face>& mergedFaces,
+        labelList& pointMergeMap
+    );
 };
 
 
@@ -241,6 +305,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// PatchToolsCheck
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template
@@ -393,6 +458,8 @@ CML::PatchTools::checkOrientation
     return foundError;
 }
 
+
+// PatchToolsEdgeOwner
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template
@@ -459,6 +526,113 @@ CML::PatchTools::edgeOwner
 }
 
 
+// PatchToolsGatherAndMerge
+#include "ListListOps.hpp"
+#include "mergePoints.hpp"
+#include "face.hpp"
+#include "triFace.hpp"
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template
+<
+    class Face,
+    template<class> class FaceList,
+    class PointField,
+    class PointType
+>
+void CML::PatchTools::gatherAndMerge
+(
+    const scalar mergeDist,
+    const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
+    Field<PointType>& mergedPoints,
+    List<Face>& mergedFaces,
+    labelList& pointMergeMap
+)
+{
+    // Collect points from all processors
+    labelList pointSizes;
+    {
+        List<Field<PointType> > gatheredPoints(Pstream::nProcs());
+        gatheredPoints[Pstream::myProcNo()] = p.points();
+
+        Pstream::gatherList(gatheredPoints);
+
+        if (Pstream::master())
+        {
+            pointSizes = ListListOps::subSizes
+            (
+                gatheredPoints,
+                accessOp<Field<PointType> >()
+            );
+
+            mergedPoints = ListListOps::combine<Field<PointType> >
+            (
+                gatheredPoints,
+                accessOp<Field<PointType> >()
+            );
+        }
+    }
+
+    // Collect faces from all processors and renumber using sizes of
+    // gathered points
+    {
+        List<List<Face> > gatheredFaces(Pstream::nProcs());
+        gatheredFaces[Pstream::myProcNo()] = p;
+        Pstream::gatherList(gatheredFaces);
+
+        if (Pstream::master())
+        {
+            mergedFaces = static_cast<const List<Face>&>
+            (
+                ListListOps::combineOffset<List<Face> >
+                (
+                    gatheredFaces,
+                    pointSizes,
+                    accessOp<List<Face> >(),
+                    offsetOp<Face>()
+                )
+            );
+        }
+    }
+
+    if (Pstream::master())
+    {
+        Field<PointType> newPoints;
+        labelList oldToNew;
+
+        bool hasMerged = mergePoints
+        (
+            mergedPoints,
+            mergeDist,
+            false,                  // verbosity
+            oldToNew,
+            newPoints
+        );
+
+        if (hasMerged)
+        {
+            // Store point mapping
+            pointMergeMap.transfer(oldToNew);
+
+            // Copy points
+            mergedPoints.transfer(newPoints);
+
+            // Relabel faces
+            List<Face>& faces = mergedFaces;
+
+            forAll(faces, faceI)
+            {
+                inplaceRenumber(pointMergeMap, faces[faceI]);
+            }
+        }
+    }
+}
+
+
+// PatchToolsSearch
+#include "PackedBoolList.hpp"
+#include "boundBox.hpp"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // Finds area, starting at faceI, delimited by borderEdge.
@@ -652,6 +826,48 @@ CML::PatchTools::subsetMap
     pointMap.setSize(pointI);
 }
 
+
+template
+<
+    class Face,
+    template<class> class FaceList,
+    class PointField,
+    class PointType
+>
+void CML::PatchTools::calcBounds
+(
+    const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
+    boundBox& bb,
+    label& nPoints
+)
+{
+    // Unfortunately nPoints constructs meshPoints() so do compact version
+    // ourselves
+    const PointField& points = p.points();
+
+    PackedBoolList pointIsUsed(points.size());
+
+    nPoints = 0;
+    bb = boundBox::invertedBox;
+
+    forAll(p, faceI)
+    {
+        const Face& f = p[faceI];
+
+        forAll(f, fp)
+        {
+            label pointI = f[fp];
+            if (pointIsUsed.set(pointI, 1u))
+            {
+                bb.min() = ::CML::min(bb.min(), points[pointI]);
+                bb.max() = ::CML::max(bb.max(), points[pointI]);
+                nPoints++;
+            }
+        }
+    }
+}
+
+// PatchToolsSortEdges
 #include "SortableList.hpp"
 #include "transform.hpp"
 
@@ -694,16 +910,33 @@ CML::PatchTools::sortedEdgeFaces
             vector e2 = e.vec(localPoints);
             e2 /= mag(e2) + VSMALL;
 
-            // Get opposite vertex for 0th face
-            const Face& f = localFaces[faceNbs[0]];
+            // Get the vertex on 0th face that forms a vector with the first
+            // edge point that has the largest angle with the edge
+            const Face& f0 = localFaces[faceNbs[0]];
 
-            label fp0 = findIndex(f, e[0]);
-            label fp1 = f.fcIndex(fp0);
-            label vertI = (f[fp1] != e[1] ? f[fp1] : f.fcIndex(fp1));
+            scalar maxAngle = GREAT;
+            vector maxAngleEdgeDir(vector::max);
+
+            forAll(f0, fpI)
+            {
+                if (f0[fpI] != e.start())
+                {
+                    vector faceEdgeDir = localPoints[f0[fpI]] - edgePt;
+                    faceEdgeDir /= mag(faceEdgeDir) + VSMALL;
+
+                    const scalar angle = e2 & faceEdgeDir;
+
+                    if (mag(angle) < maxAngle)
+                    {
+                        maxAngle = angle;
+                        maxAngleEdgeDir = faceEdgeDir;
+                    }
+                }
+            }
 
             // Get vector normal both to e2 and to edge from opposite vertex
             // to edge (will be x-axis of our coordinate system)
-            vector e0 = e2 ^ (localPoints[vertI] - edgePt);
+            vector e0 = e2 ^ maxAngleEdgeDir;
             e0 /= mag(e0) + VSMALL;
 
             // Get y-axis of coordinate system
@@ -716,13 +949,31 @@ CML::PatchTools::sortedEdgeFaces
 
             for (label nbI = 1; nbI < faceNbs.size(); nbI++)
             {
-                // Get opposite vertex
+                // Get the vertex on face that forms a vector with the first
+                // edge point that has the largest angle with the edge
                 const Face& f = localFaces[faceNbs[nbI]];
-                label fp0 = findIndex(f, e[0]);
-                label fp1 = f.fcIndex(fp0);
-                label vertI = (f[fp1] != e[1] ? f[fp1] : f.fcIndex(fp1));
 
-                vector vec = e2 ^ (localPoints[vertI] - edgePt);
+                maxAngle = GREAT;
+                maxAngleEdgeDir = vector::max;
+
+                forAll(f, fpI)
+                {
+                    if (f[fpI] != e.start())
+                    {
+                        vector faceEdgeDir = localPoints[f[fpI]] - edgePt;
+                        faceEdgeDir /= mag(faceEdgeDir) + VSMALL;
+
+                        const scalar angle = e2 & faceEdgeDir;
+
+                        if (mag(angle) < maxAngle)
+                        {
+                            maxAngle = angle;
+                            maxAngleEdgeDir = faceEdgeDir;
+                        }
+                    }
+                }
+
+                vector vec = e2 ^ maxAngleEdgeDir;
                 vec /= mag(vec) + VSMALL;
 
                 faceAngles[nbI] = pseudoAngle
@@ -751,46 +1002,137 @@ CML::PatchTools::sortedEdgeFaces
     return sortedEdgeFaces;
 }
 
+// PatchToolsSortPoints
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template
+<
+    class Face,
+    template<class> class FaceList,
+    class PointField,
+    class PointType
+>
+
+CML::labelListList
+CML::PatchTools::sortedPointEdges
+(
+    const PrimitivePatch<Face, FaceList, PointField, PointType>& p
+)
+{
+    // Now order the edges of each point according to whether they share a
+    // face
+    const labelListList& pointEdges = p.pointEdges();
+    const edgeList& edges = p.edges();
+    const labelListList& edgeFaces = p.edgeFaces();
+    const labelListList& faceEdges = p.faceEdges();
+
+    // create the lists for the various results. (resized on completion)
+    labelListList sortedPointEdges(pointEdges);
+
+    DynamicList<label> newEdgeList;
+
+    forAll(pointEdges, pointI)
+    {
+        const labelList& pEdges = pointEdges[pointI];
+
+        label nPointEdges = pEdges.size();
+
+        label edgeI = pEdges[0];
+
+        label prevFaceI = edgeFaces[edgeI][0];
+
+        newEdgeList.clear();
+        newEdgeList.setCapacity(nPointEdges);
+
+        label nVisitedEdges = 0;
+
+        do
+        {
+            newEdgeList.append(edgeI);
+
+            // Cross edge to next face
+            const labelList& eFaces = edgeFaces[edgeI];
+
+            if (eFaces.size() != 2)
+            {
+                break;
+            }
+
+            label faceI = eFaces[0];
+            if (faceI == prevFaceI)
+            {
+                faceI = eFaces[1];
+            }
+
+            // Cross face to next edge
+            const labelList& fEdges = faceEdges[faceI];
+
+            forAll(fEdges, feI)
+            {
+                const label nextEdgeI = fEdges[feI];
+                const edge& nextEdge = edges[nextEdgeI];
+
+                if
+                (
+                    nextEdgeI != edgeI
+                 && (nextEdge.start() == pointI || nextEdge.end() == pointI)
+                )
+                {
+                    edgeI = nextEdgeI;
+                    break;
+                }
+            }
+
+            prevFaceI = faceI;
+
+            nVisitedEdges++;
+            if (nVisitedEdges > nPointEdges)
+            {
+                WarningIn("CML::PatchTools::sortedPointEdges()")
+                    << "Unable to order pointEdges as the face connections "
+                    << "are not circular" << nl
+                    << "    Original pointEdges = " << pEdges << nl
+                    << "    New pointEdges = " << newEdgeList
+                    << endl;
+
+                newEdgeList = pEdges;
+
+                break;
+            }
+
+        } while (edgeI != pEdges[0]);
+
+        if (newEdgeList.size() == nPointEdges)
+        {
+            forAll(pEdges, eI)
+            {
+                if (findIndex(newEdgeList, pEdges[eI]) == -1)
+                {
+                    WarningIn("CML::PatchTools::sortedPointEdges()")
+                        << "Cannot find all original edges in the new list"
+                        << nl
+                        << "    Original pointEdges = " << pEdges << nl
+                        << "    New pointEdges = " << newEdgeList
+                        << endl;
+
+                    newEdgeList = pEdges;
+
+                    break;
+                }
+            }
+
+            sortedPointEdges[pointI] = newEdgeList;
+        }
+    }
+
+    return sortedPointEdges;
+}
+
+
+// PatchToolsNormals
 #include "polyMesh.hpp"
 #include "indirectPrimitivePatch.hpp"
 #include "globalMeshData.hpp"
-
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-namespace CML
-{
-    //- Transformation
-    class listTransform
-    {
-    public:
-
-        void operator()
-        (
-            const vectorTensorTransform& vt,
-            const bool forward,
-            List<List<point> >& fld
-        ) const
-        {
-            const tensor T
-            (
-                forward
-              ? vt.R()
-              : vt.R().T()
-            );
-
-            forAll(fld, i)
-            {
-                List<point>& elems = fld[i];
-                forAll(elems, elemI)
-                {
-                    elems[elemI] = transform(T, elems[elemI]);
-                }
-            }
-        }
-    };
-}
-
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -806,19 +1148,117 @@ CML::tmp<CML::pointField>
 CML::PatchTools::pointNormals
 (
     const polyMesh& mesh,
-    const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
-    const labelList& meshFaces
+    const PrimitivePatch<Face, FaceList, PointField, PointType>& p
 )
 {
-    // Assume patch is smaller than the globalData().coupledPatch() (?) so
-    // loop over patch meshPoints.
-
     const globalMeshData& globalData = mesh.globalData();
     const indirectPrimitivePatch& coupledPatch = globalData.coupledPatch();
     const Map<label>& coupledPatchMP = coupledPatch.meshPointMap();
     const mapDistribute& map = globalData.globalPointSlavesMap();
     const globalIndexAndTransform& transforms =
         globalData.globalTransforms();
+
+
+
+
+    // Combine normals. Note: do on all master points. Cannot just use
+    // patch points since the master point does not have to be on the
+    // patch!
+
+    pointField coupledPointNormals(map.constructSize(), vector::zero);
+
+    {
+        // Collect local pointFaces (sized on patch points only)
+        List<List<point> > pointFaceNormals(map.constructSize());
+        forAll(p.meshPoints(), patchPointI)
+        {
+            label meshPointI = p.meshPoints()[patchPointI];
+            Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
+            if (fnd != coupledPatchMP.end())
+            {
+                label coupledPointI = fnd();
+
+                List<point>& pNormals = pointFaceNormals[coupledPointI];
+                const labelList& pFaces = p.pointFaces()[patchPointI];
+                pNormals.setSize(pFaces.size());
+                forAll(pFaces, i)
+                {
+                    pNormals[i] = p.faceNormals()[pFaces[i]];
+                }
+            }
+        }
+
+
+        // Pull remote data into local slots
+        map.distribute
+        (
+            transforms,
+            pointFaceNormals,
+            mapDistribute::transform()
+        );
+
+
+        // Combine all face normals (-local, -remote,untransformed,
+        //  -remote,transformed)
+
+        const labelListList& slaves = globalData.globalPointSlaves();
+        const labelListList& transformedSlaves =
+            globalData.globalPointTransformedSlaves();
+
+        forAll(slaves, coupledPointI)
+        {
+            const labelList& slaveSlots = slaves[coupledPointI];
+            const labelList& transformedSlaveSlots =
+                transformedSlaves[coupledPointI];
+
+            point& n = coupledPointNormals[coupledPointI];
+
+            // Local entries
+            const List<point>& local = pointFaceNormals[coupledPointI];
+
+            label nFaces =
+                local.size()
+              + slaveSlots.size()
+              + transformedSlaveSlots.size();
+
+            n = sum(local);
+
+            // Add any remote face normals
+            forAll(slaveSlots, i)
+            {
+                n += sum(pointFaceNormals[slaveSlots[i]]);
+            }
+            forAll(transformedSlaveSlots, i)
+            {
+                n += sum(pointFaceNormals[transformedSlaveSlots[i]]);
+            }
+
+            if (nFaces >= 1)
+            {
+                n /= mag(n)+VSMALL;
+            }
+
+            // Put back into slave slots
+            forAll(slaveSlots, i)
+            {
+                coupledPointNormals[slaveSlots[i]] = n;
+            }
+            forAll(transformedSlaveSlots, i)
+            {
+                coupledPointNormals[transformedSlaveSlots[i]] = n;
+            }
+        }
+
+
+        // Send back
+        map.reverseDistribute
+        (
+            transforms,
+            coupledPointNormals.size(),
+            coupledPointNormals,
+            mapDistribute::transform()
+        );
+    }
 
 
     // 1. Start off with local normals (note:without calculating pointNormals
@@ -843,99 +1283,7 @@ CML::PatchTools::pointNormals
     }
 
 
-    // Collect local pointFaces
-    List<List<point> > pointFaceNormals(map.constructSize());
-    forAll(p.meshPoints(), patchPointI)
-    {
-        label meshPointI = p.meshPoints()[patchPointI];
-        Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
-        if (fnd != coupledPatchMP.end())
-        {
-            label coupledPointI = fnd();
-
-            List<point>& pNormals = pointFaceNormals[coupledPointI];
-            const labelList& pFaces = p.pointFaces()[patchPointI];
-            pNormals.setSize(pFaces.size());
-            forAll(pFaces, i)
-            {
-                pNormals[i] = p.faceNormals()[pFaces[i]];
-            }
-        }
-    }
-
-
-    // Pull remote data into local slots
-    map.distribute
-    (
-        transforms,
-        pointFaceNormals,
-        listTransform()
-    );
-
-
-    // Combine normals
-    const labelListList& slaves = globalData.globalPointSlaves();
-    const labelListList& transformedSlaves =
-        globalData.globalPointTransformedSlaves();
-
-
-    pointField coupledPointNormals(map.constructSize(), vector::zero);
-
-    forAll(p.meshPoints(), patchPointI)
-    {
-        label meshPointI = p.meshPoints()[patchPointI];
-        Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
-        if (fnd != coupledPatchMP.end())
-        {
-            label coupledPointI = fnd();
-            const labelList& slaveSlots =
-                slaves[coupledPointI];
-            const labelList& transformedSlaveSlots =
-                transformedSlaves[coupledPointI];
-
-            label nFaces = slaveSlots.size()+transformedSlaveSlots.size();
-            if (nFaces > 0)
-            {
-                // Combine
-                point& n = coupledPointNormals[coupledPointI];
-
-                n += sum(pointFaceNormals[coupledPointI]);
-
-                forAll(slaveSlots, i)
-                {
-                    n += sum(pointFaceNormals[slaveSlots[i]]);
-                }
-                forAll(transformedSlaveSlots, i)
-                {
-                    n += sum(pointFaceNormals[transformedSlaveSlots[i]]);
-                }
-                n /= mag(n)+VSMALL;
-
-                // Put back into slave slots
-                forAll(slaveSlots, i)
-                {
-                    coupledPointNormals[slaveSlots[i]] = n;
-                }
-                forAll(transformedSlaveSlots, i)
-                {
-                    coupledPointNormals[transformedSlaveSlots[i]] = n;
-                }
-            }
-        }
-    }
-
-
-    // Send back
-    map.reverseDistribute
-    (
-        transforms,
-        coupledPointNormals.size(),
-        coupledPointNormals,
-        mapDistribute::transform()
-    );
-
-
-    // Override patch normals
+    // 2. Override patch normals on coupled points
     forAll(p.meshPoints(), patchPointI)
     {
         label meshPointI = p.meshPoints()[patchPointI];
@@ -951,8 +1299,93 @@ CML::PatchTools::pointNormals
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template
+<
+    class Face,
+    template<class> class FaceList,
+    class PointField,
+    class PointType
+>
 
+CML::tmp<CML::pointField>
+CML::PatchTools::edgeNormals
+(
+    const polyMesh& mesh,
+    const PrimitivePatch<Face, FaceList, PointField, PointType>& p,
+    const labelList& patchEdges,
+    const labelList& coupledEdges
+)
+{
+    // 1. Start off with local normals
+
+    tmp<pointField> tedgeNormals(new pointField(p.nEdges(), vector::zero));
+    pointField& edgeNormals = tedgeNormals();
+    {
+        const labelListList& edgeFaces = p.edgeFaces();
+        const vectorField& faceNormals = p.faceNormals();
+
+        forAll(edgeFaces, edgeI)
+        {
+            const labelList& eFaces = edgeFaces[edgeI];
+            forAll(eFaces, i)
+            {
+                edgeNormals[edgeI] += faceNormals[eFaces[i]];
+            }
+        }
+        edgeNormals /= mag(edgeNormals)+VSMALL;
+    }
+
+
+
+    const globalMeshData& globalData = mesh.globalData();
+    const mapDistribute& map = globalData.globalEdgeSlavesMap();
+
+
+    // Convert patch-edge data into cpp-edge data
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    //- Construct with all data in consistent orientation
+    pointField cppEdgeData(map.constructSize(), vector::zero);
+
+    forAll(patchEdges, i)
+    {
+        label patchEdgeI = patchEdges[i];
+        label coupledEdgeI = coupledEdges[i];
+        cppEdgeData[coupledEdgeI] = edgeNormals[patchEdgeI];
+    }
+
+
+    // Synchronise
+    // ~~~~~~~~~~~
+
+    globalData.syncData
+    (
+        cppEdgeData,
+        globalData.globalEdgeSlaves(),
+        globalData.globalEdgeTransformedSlaves(),
+        map,
+        globalData.globalTransforms(),
+        plusEqOp<point>(),              // add since normalised later on
+        mapDistribute::transform()
+    );
+    cppEdgeData /= mag(cppEdgeData)+VSMALL;
+
+
+    // Back from cpp-edge to patch-edge data
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    forAll(patchEdges, i)
+    {
+        label patchEdgeI = patchEdges[i];
+        label coupledEdgeI = coupledEdges[i];
+        edgeNormals[patchEdgeI] = cppEdgeData[coupledEdgeI];
+    }
+
+    return tedgeNormals;
+}
+
+
+// ************************************************************************* //// PatchToolsMatch
 template
 <
     class Face1,

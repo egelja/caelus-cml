@@ -107,7 +107,7 @@ CML::linearUpwind<Type>::correction
             );
 
             // Build the d-vectors
-            vectorField pd = Cf.boundaryField()[patchi].patch().delta();
+            vectorField pd(Cf.boundaryField()[patchi].patch().delta());
 
             forAll(pOwner, facei)
             {

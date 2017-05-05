@@ -258,7 +258,7 @@ CML::sampledCuttingPlane::sampledCuttingPlane
 :
     sampledSurface(name, mesh, dict),
     plane_(dict),
-    mergeTol_(dict.lookupOrDefault("mergeTol", 1E-6)),
+    mergeTol_(dict.lookupOrDefault("mergeTol", 1e-6)),
     regularise_(dict.lookupOrDefault("regularise", true)),
     average_(dict.lookupOrDefault("average", false)),
     zoneID_(dict.lookupOrDefault("zone", word::null), mesh.cellZones()),

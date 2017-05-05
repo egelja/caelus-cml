@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,8 +65,13 @@ CML::OFstreamAllocator::OFstreamAllocator
         {
             rm(pathname + ".gz");
         }
-
+#ifdef windows
+        // Use binary mode in case we write binary.
+        // Causes windows reading to fail if we don't
+        ofPtr_ = new ofstream(pathname.c_str(), ios_base::out|ios_base::binary);
+#else
         ofPtr_ = new ofstream(pathname.c_str());
+#endif
     }
 }
 

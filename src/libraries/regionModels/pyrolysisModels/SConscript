@@ -73,4 +73,4 @@ pyroModelsEnv.Install(install_dir, libpyrolysisModels)
 
 if (pyroModelsEnv['WHICH_OS'] == "darwin"):
 
-  pyroModelsEnv.Append(SHLINKFLAGS ='-install_name @' + pyroModelsEnv['LIB_PLATFORM_INSTALL'] + '/libpyrolysisModels.dylib')
+  pyroModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libpyrolysisModels.dylib')

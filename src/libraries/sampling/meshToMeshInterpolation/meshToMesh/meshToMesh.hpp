@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2012-2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,282 +21,499 @@ Class
     CML::meshToMesh
 
 Description
-    mesh to mesh interpolation class.
+    Class to calculate the cell-addressing between two overlapping meshes
+
+    Mapping is performed using a run-time selectable interpolation mothod
+
+SeeAlso
+    meshToMeshMethod
 
 SourceFiles
     meshToMesh.cpp
-    calculateMeshToMeshAddressing.cpp
-    calculateMeshToMeshWeights.cpp
+    meshToMeshParallelOps.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef meshtoMesh_H
-#define meshtoMesh_H
+#ifndef meshToMesh_H
+#define meshToMesh_H
 
-#include "fvMesh.hpp"
-#include "HashTable.hpp"
-#include "fvPatchMapper.hpp"
-#include "scalarList.hpp"
-#include "className.hpp"
-#include "volFields.hpp"
-#include "interpolationCellPoint.hpp"
-#include "SubField.hpp"
-#include "mixedFvPatchField.hpp"
+#include "polyMesh.hpp"
+#include "boundBox.hpp"
+#include "mapDistribute.hpp"
+#include "volFieldsFwd.hpp"
+#include "NamedEnum.hpp"
+#include "AMIPatchToPatchInterpolation.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
 
-template<class Type>
-class indexedOctree;
-
-class treeDataCell;
-
 /*---------------------------------------------------------------------------*\
-                         Class meshToMesh Declaration
+                          Class meshToMesh Declaration
 \*---------------------------------------------------------------------------*/
 
 class meshToMesh
 {
+public:
+
+    // Public data types
+
+        //- Enumeration specifying interpolation method
+        enum interpolationMethod
+        {
+            imDirect,
+            imMapNearest,
+            imCellVolumeWeight
+        };
+
+        static const NamedEnum<interpolationMethod, 3>
+            interpolationMethodNames_;
+
+private:
+
     // Private data
 
-        // mesh references
+        //- Reference to the source mesh
+        const polyMesh& srcRegion_;
 
-        const fvMesh& fromMesh_;
-        const fvMesh& toMesh_;
+        //- Reference to the target mesh
+        const polyMesh& tgtRegion_;
 
-        //- fromMesh patch labels
-        HashTable<label> fromMeshPatches_;
+        //- List of target patch IDs per source patch (local index)
+        List<label> srcPatchID_;
 
-        //- toMesh patch labels
-        HashTable<label> toMeshPatches_;
+        //- List of source patch IDs per target patch (local index)
+        List<label> tgtPatchID_;
 
-        //- Patch map
-        HashTable<word> patchMap_;
+        //- List of AMIs between source and target patches
+        PtrList<AMIPatchToPatchInterpolation> patchAMIs_;
 
-        //- toMesh patch labels which cut the from-mesh
-        HashTable<label> cuttingPatches_;
+        //- Cutting patches whose values are set using a zero-gradient condition
+        List<label> cuttingPatches_;
 
-        //- Cell addressing
-        labelList cellAddressing_;
+        //- Source to target cell addressing
+        labelListList srcToTgtCellAddr_;
 
-        //- Boundary addressing
-        labelListList boundaryAddressing_;
+        //- Target to source cell addressing
+        labelListList tgtToSrcCellAddr_;
 
-        //- Inverse-distance interpolation weights
-        mutable scalarListList* inverseDistanceWeightsPtr_;
+        //- Source to target cell interplation weights
+        scalarListList srcToTgtCellWght_;
+
+        //- Target to source cell interpolation weights
+        scalarListList tgtToSrcCellWght_;
+
+        //- Cell total volume in overlap region [m3]
+        scalar V_;
+
+        //- Index of processor that holds all of both sides. -1 in all other
+        //  cases
+        label singleMeshProc_;
+
+        //- Source map pointer - parallel running only
+        autoPtr<mapDistribute> srcMapPtr_;
+
+        //- Target map pointer - parallel running only
+        autoPtr<mapDistribute> tgtMapPtr_;
 
 
     // Private Member Functions
 
-        void calcAddressing();
+        //- Helper function to add a constant offset to a list
+        template<class Type>
+        void add(UList<Type>& fld, const label offset) const;
 
-        void cellAddresses
+        //- Return src cell IDs for the overlap region
+        labelList maskCells(const polyMesh& src, const polyMesh& tgt) const;
+
+        //- Normalise the interpolation weights
+        void normaliseWeights
         (
-            labelList& cells,
-            const pointField& points,
-            const fvMesh& fromMesh,
-            const List<bool>& boundaryCell,
-            const indexedOctree<treeDataCell>& oc
+            const word& descriptor,
+            const labelListList& addr,
+            scalarListList& wght
         ) const;
 
-        void calculateInverseDistanceWeights() const;
+        //- Calculate the addressing between overlapping regions of src and tgt
+        //  meshes
+        void calcAddressing
+        (
+            const word& methodName,
+            const polyMesh& src,
+            const polyMesh& tgt
+        );
 
-        const scalarListList& inverseDistanceWeights() const;
+        //- Calculate - main driver function
+        void calculate(const word& methodName);
+
+        //- Calculate patch overlap
+        void calculatePatchAMIs(const word& amiMethodName);
+
+        //- Constructor helper
+        void constructNoCuttingPatches
+        (
+            const word& methodName,
+            const word& AMIMethodName,
+            const bool interpAllPatches
+        );
+
+        //- Constructor helper
+        void constructFromCuttingPatches
+        (
+            const word& methodName,
+            const word& AMIMethodName,
+            const HashTable<word>& patchMap,
+            const wordList& cuttingPatches
+        );
+
+        //- Return the list of AMIs between source and target patches
+        inline const PtrList<AMIPatchToPatchInterpolation>&
+        patchAMIs() const;
 
 
-    // Private static data members
+        // Parallel operations
 
-        //- Direct hit tolerance
-        static const scalar directHitTol;
+            //- Determine whether the meshes are split across multiple pocessors
+            label calcDistribution
+            (
+                const polyMesh& src,
+                const polyMesh& tgt
+            ) const;
+
+            //- Determine which processor bounding-boxes overlap
+            label calcOverlappingProcs
+            (
+                const List<boundBox>& procBb,
+                const boundBox& bb,
+                boolList& overlaps
+            ) const;
+
+            //- Calculate the mapping between processors
+            autoPtr<mapDistribute> calcProcMap
+            (
+                const polyMesh& src,
+                const polyMesh& tgt
+            ) const;
+
+            //- Distribute mesh info from 'my' processor to others
+            void distributeCells
+            (
+                const mapDistribute& map,
+                const polyMesh& tgtMesh,
+                const globalIndex& globalI,
+                List<pointField>& points,
+                List<label>& nInternalFaces,
+                List<faceList>& faces,
+                List<labelList>& faceOwner,
+                List<labelList>& faceNeighbour,
+                List<labelList>& cellIDs,
+                List<labelList>& nbrProcIDs,
+                List<labelList>& procLocalFaceIDs
+            ) const;
+
+            //- Collect pieces of tgt mesh from other procssors and restructure
+            void distributeAndMergeCells
+            (
+                const mapDistribute& map,
+                const polyMesh& tgt,
+                const globalIndex& globalI,
+                pointField& tgtPoints,
+                faceList& tgtFaces,
+                labelList& tgtFaceOwners,
+                labelList& tgtFaceNeighbours,
+                labelList& tgtCellIDs
+            ) const;
+
+
+        //- Disallow default bitwise copy construct
+        meshToMesh(const meshToMesh&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const meshToMesh&);
 
 
 public:
 
-    // Declare name of the class and its debug switch
-    ClassName("meshToMesh");
+    //- Run-time type information
+    TypeName("meshToMesh");
 
 
-    //- Enumeration specifying required accuracy
-    enum order
-    {
-        MAP,
-        INTERPOLATE,
-        CELL_POINT_INTERPOLATE
-    };
+    //- Construct from source and target meshes
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const interpolationMethod& method,
+        const bool interpAllPatches = true
+    );
+
+    //- Construct from source and target meshes, generic mapping methods
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const word& methodName,     // internal mapping
+        const word& AMIMethodName,  // boundary mapping
+        const bool interpAllPatches = true
+    );
+
+    //- Construct from source and target meshes
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const interpolationMethod& method,
+        const HashTable<word>& patchMap,
+        const wordList& cuttingPatches
+    );
 
 
-    // Constructors
-
-        //- Construct from the two meshes, the patch name map for the patches
-        //  to be interpolated and the names of the toMesh-patches which
-        //  cut the fromMesh
-        meshToMesh
-        (
-            const fvMesh& fromMesh,
-            const fvMesh& toMesh,
-            const HashTable<word>& patchMap,
-            const wordList& cuttingPatchNames
-        );
-
-        //- Construct from the two meshes assuming there is an exact mapping
-        //  between the patches
-        meshToMesh
-        (
-            const fvMesh& fromMesh,
-            const fvMesh& toMesh
-        );
+    //- Construct from source and target meshes, generic mapping methods
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const word& methodName,     // internal mapping
+        const word& AMIMethodName,  // boundary mapping
+        const HashTable<word>& patchMap,
+        const wordList& cuttingPatches
+    );
 
 
     //- Destructor
-    ~meshToMesh();
-
-
-    //- Patch-field interpolation class
-    class patchFieldInterpolator
-    :
-        public fvPatchFieldMapper
-    {
-        const labelList& directAddressing_;
-
-    public:
-
-        // Constructors
-
-            //- Construct given addressing
-            patchFieldInterpolator(const labelList& addr)
-            :
-                directAddressing_(addr)
-            {}
-
-
-        //- Destructor
-        virtual ~patchFieldInterpolator()
-        {}
-
-
-        // Member Functions
-
-            label size() const
-            {
-                return directAddressing_.size();
-            }
-
-            bool direct() const
-            {
-                return true;
-            }
-
-            const labelList& directAddressing() const
-            {
-                return directAddressing_;
-            }
-    };
+    virtual ~meshToMesh();
 
 
     // Member Functions
 
         // Access
 
-            const fvMesh& fromMesh() const
-            {
-                return fromMesh_;
-            }
+            //- Return const access to the source mesh
+            inline const polyMesh& srcRegion() const;
 
-            const fvMesh& toMesh() const
-            {
-                return toMesh_;
-            }
+            //- Return const access to the target mesh
+            inline const polyMesh& tgtRegion() const;
 
-            //- From toMesh cells to fromMesh cells
-            const labelList& cellAddressing() const
-            {
-                return cellAddressing_;
-            }
+            //- Return const access to the source to target cell addressing
+            inline const labelListList& srcToTgtCellAddr() const;
 
-        // Interpolation
+            //- Return const access to the target to source cell addressing
+            inline const labelListList& tgtToSrcCellAddr() const;
 
-            //- Map field
-            template<class Type>
-            void mapField
+            //- Return const access to the source to target cell weights
+            inline const scalarListList& srcToTgtCellWght() const;
+
+            //- Return const access to the target to source cell weights
+            inline const scalarListList& tgtToSrcCellWght() const;
+
+            //- Return const access to the overlap volume
+            inline scalar V() const;
+
+            //- Conversion between mesh and patch interpolation methods
+            static AMIPatchToPatchInterpolation::interpolationMethod
+            interpolationMethodAMI
             (
-                Field<Type>&,
-                const Field<Type>&,
-                const labelList& adr
-            ) const;
-
-            //- Interpolate field using inverse-distance weights
-            template<class Type>
-            void interpolateField
-            (
-                Field<Type>&,
-                const GeometricField<Type, fvPatchField, volMesh>&,
-                const labelList& adr,
-                const scalarListList& weights
-            ) const;
-
-            //- Interpolate field using cell-point interpolation
-            template<class Type>
-            void interpolateField
-            (
-                Field<Type>&,
-                const GeometricField<Type, fvPatchField, volMesh>&,
-                const labelList& adr,
-                const vectorField& centres
-            ) const;
+                const interpolationMethod method
+            );
 
 
-            //- Interpolate internal volume field
-            template<class Type>
-            void interpolateInternalField
-            (
-                Field<Type>&,
-                const GeometricField<Type, fvPatchField, volMesh>&,
-                order=INTERPOLATE
-            ) const;
+        // Evaluation
 
-            template<class Type>
-            void interpolateInternalField
-            (
-                Field<Type>&,
-                const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
-                order=INTERPOLATE
-            ) const;
+            // Source-to-target field mapping
+
+                //- Map field from src to tgt mesh with defined operation
+                //  Values passed in via 'result' are used to initialise the
+                //  return value
+                template<class Type, class CombineOp>
+                void mapSrcToTgt
+                (
+                    const UList<Type>& srcFld,
+                    const CombineOp& cop,
+                    List<Type>& result
+                ) const;
+
+                //- Return the src field mapped to the tgt mesh with a defined
+                //  operation.  Initial values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<Field<Type> > mapSrcToTgt
+                (
+                    const Field<Type>& srcFld,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a tmp field to the tgt mesh
+                //  with a defined operation
+                template<class Type, class CombineOp>
+                tmp<Field<Type> > mapSrcToTgt
+                (
+                    const tmp<Field<Type> >& tsrcFld,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a field to the tgt mesh with a
+                //  default operation (plusEqOp)
+                template<class Type>
+                tmp<Field<Type> > mapSrcToTgt
+                (
+                    const Field<Type>& srcFld
+                ) const;
+
+                //- Convenience function to map a tmp field to the tgt mesh
+                //  with a default operation (plusEqOp)
+                template<class Type>
+                tmp<Field<Type> > mapSrcToTgt
+                (
+                    const tmp<Field<Type> >& tsrcFld
+                ) const;
 
 
-            //- Interpolate volume field
-            template<class Type>
-            void interpolate
-            (
-                GeometricField<Type, fvPatchField, volMesh>&,
-                const GeometricField<Type, fvPatchField, volMesh>&,
-                order=INTERPOLATE
-            ) const;
+            // Target-to-source field mapping
 
-            template<class Type>
-            void interpolate
-            (
-                GeometricField<Type, fvPatchField, volMesh>&,
-                const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
-                order=INTERPOLATE
-            ) const;
+                //- Map field from tgt to src mesh with defined operation
+                //  Values passed in via 'result' are used to initialise the
+                //  return value
+                template<class Type, class CombineOp>
+                void mapTgtToSrc
+                (
+                    const UList<Type>& tgtFld,
+                    const CombineOp& cop,
+                    List<Type>& result
+                ) const;
+
+                //- Return the tgt field mapped to the src mesh with a defined
+                //  operation.  Initial values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<Field<Type> > mapTgtToSrc
+                (
+                    const Field<Type>& tgtFld,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a tmp field to the src mesh
+                //  with a defined operation
+                template<class Type, class CombineOp>
+                tmp<Field<Type> > mapTgtToSrc
+                (
+                    const tmp<Field<Type> >& ttgtFld,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a field to the src mesh with a
+                //  default operation (plusEqOp)
+                template<class Type>
+                tmp<Field<Type> > mapTgtToSrc
+                (
+                    const Field<Type>& tgtFld
+                ) const;
+
+                //- Convenience function to map a tmp field to the src mesh
+                //  with a default operation (plusEqOp)
+                template<class Type>
+                tmp<Field<Type> > mapTgtToSrc
+                (
+                    const tmp<Field<Type> >& ttgtFld
+                ) const;
 
 
-            //- Interpolate volume field
-            template<class Type>
-            tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
-            (
-                const GeometricField<Type, fvPatchField, volMesh>&,
-                order=INTERPOLATE
-            ) const;
+            // Source-to-target volume field mapping
 
-            template<class Type>
-            tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
-            (
-                const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
-                order=INTERPOLATE
-            ) const;
+                //- Interpolate a field with a defined operation.  Values
+                //  passed in via 'result' are used to initialise the return
+                //  value
+                template<class Type, class CombineOp>
+                void mapSrcToTgt
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field,
+                    const CombineOp& cop,
+                    GeometricField<Type, fvPatchField, volMesh>& result
+                ) const;
+
+                //- Interpolate a field with a defined operation.  The initial
+                //  values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapSrcToTgt
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field,
+                    const CombineOp& cop
+                ) const;
+
+                //- Interpolate a tmp field with a defined operation.  The
+                //  initial values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapSrcToTgt
+                (
+                    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+                        tfield,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a field with a default
+                //  operation (plusEqOp)
+                template<class Type>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapSrcToTgt
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field
+                ) const;
+
+                //- Convenience function to map a tmp field with a default
+                //  operation (plusEqOp)
+                template<class Type>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapSrcToTgt
+                (
+                    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+                        tfield
+                ) const;
+
+
+            // Target-to-source volume field mapping
+
+                //- Interpolate a field with a defined operation.  Values
+                //  passed in via 'result' are used to initialise the return
+                //  value
+                template<class Type, class CombineOp>
+                void mapTgtToSrc
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field,
+                    const CombineOp& cop,
+                    GeometricField<Type, fvPatchField, volMesh>& result
+                ) const;
+
+                //- Interpolate a field with a defined operation.  The initial
+                //  values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapTgtToSrc
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field,
+                    const CombineOp& cop
+                ) const;
+
+                //- Interpolate a tmp field with a defined operation.  The
+                //  initial values of the result are set to zero
+                template<class Type, class CombineOp>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapTgtToSrc
+                (
+                    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+                        tfield,
+                    const CombineOp& cop
+                ) const;
+
+                //- Convenience function to map a field with a default
+                //  operation (plusEqOp)
+                template<class Type>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapTgtToSrc
+                (
+                    const GeometricField<Type, fvPatchField, volMesh>& field
+                ) const;
+
+                //- Convenience function to map a tmp field with a default
+                //  operation (plusEqOp)
+                template<class Type>
+                tmp<GeometricField<Type, fvPatchField, volMesh> > mapTgtToSrc
+                (
+                    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+                        tfield
+                ) const;
 };
 
 
@@ -304,372 +521,640 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+#include "meshToMeshI.hpp"
+#include "fvMesh.hpp"
+#include "volFields.hpp"
+#include "directFvPatchFieldMapper.hpp"
+#include "calculatedFvPatchField.hpp"
 
-template<class Type>
-void CML::meshToMesh::mapField
-(
-    Field<Type>& toF,
-    const Field<Type>& fromVf,
-    const labelList& adr
-) const
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace CML
 {
-    // Direct mapping of nearest-cell values
-
-    forAll(toF, celli)
+    //- Helper class for list
+    template<class Type>
+    class ListPlusEqOp
     {
-        if (adr[celli] != -1)
+        public:
+        void operator()(List<Type>& x, const List<Type> y) const
         {
-            toF[celli] = fromVf[adr[celli]];
+            if (y.size())
+            {
+                if (x.size())
+                {
+                    label sz = x.size();
+                    x.setSize(sz + y.size());
+                    forAll(y, i)
+                    {
+                        x[sz++] = y[i];
+                    }
+                }
+                else
+                {
+                    x = y;
+                }
+            }
         }
-    }
-
-    //toF.map(fromVf, adr);
+    };
 }
 
 
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
 template<class Type>
-void CML::meshToMesh::interpolateField
+void CML::meshToMesh::add
 (
-    Field<Type>& toF,
-    const GeometricField<Type, fvPatchField, volMesh>& fromVf,
-    const labelList& adr,
-    const scalarListList& weights
+    UList<Type>& fld,
+    const label offset
 ) const
 {
-    // Inverse distance weighted interpolation
-
-    // get reference to cellCells
-    const labelListList& cc = fromMesh_.cellCells();
-
-    forAll(toF, celli)
+    forAll(fld, i)
     {
-        if (adr[celli] != -1)
+        fld[i] += offset;
+    }
+}
+
+
+template<class Type, class CombineOp>
+void CML::meshToMesh::mapSrcToTgt
+(
+    const UList<Type>& srcField,
+    const CombineOp& cop,
+    List<Type>& result
+) const
+{
+    if (result.size() != tgtToSrcCellAddr_.size())
+    {
+        FatalErrorIn
+        (
+            "void CML::meshToMesh::mapSrcToTgt"
+            "("
+                "const UList<Type>&, "
+                "const CombineOp&, "
+                "List<Type>&"
+            ") const"
+        )   << "Supplied field size is not equal to target mesh size" << nl
+            << "    source mesh    = " << srcToTgtCellAddr_.size() << nl
+            << "    target mesh    = " << tgtToSrcCellAddr_.size() << nl
+            << "    supplied field = " << result.size()
+            << abort(FatalError);
+    }
+
+    multiplyWeightedOp<Type, CombineOp> cbop(cop);
+
+    if (singleMeshProc_ == -1)
+    {
+        const mapDistribute& map = srcMapPtr_();
+
+        List<Type> work(srcField);
+        map.distribute(work);
+
+        forAll(result, cellI)
         {
-            const labelList& neighbours = cc[adr[celli]];
-            const scalarList& w = weights[celli];
+            const labelList& srcAddress = tgtToSrcCellAddr_[cellI];
+            const scalarList& srcWeight = tgtToSrcCellWght_[cellI];
 
-            toF[celli] = fromVf[adr[celli]]*w[0];
-
-            for (label ni = 1; ni < w.size(); ni++)
+            if (srcAddress.size())
             {
-                toF[celli] += fromVf[neighbours[ni - 1]]*w[ni];
+//                result[cellI] = pTraits<Type>::zero;
+                result[cellI] *= (1.0 - sum(srcWeight));
+                forAll(srcAddress, i)
+                {
+                    label srcI = srcAddress[i];
+                    scalar w = srcWeight[i];
+                    cbop(result[cellI], cellI, work[srcI], w);
+                }
+            }
+        }
+    }
+    else
+    {
+        forAll(result, cellI)
+        {
+            const labelList& srcAddress = tgtToSrcCellAddr_[cellI];
+            const scalarList& srcWeight = tgtToSrcCellWght_[cellI];
+
+            if (srcAddress.size())
+            {
+//                result[cellI] = pTraits<Type>::zero;
+                result[cellI] *= (1.0 - sum(srcWeight));
+                forAll(srcAddress, i)
+                {
+                    label srcI = srcAddress[i];
+                    scalar w = srcWeight[i];
+                    cbop(result[cellI], cellI, srcField[srcI], w);
+                }
             }
         }
     }
 }
 
 
-template<class Type>
-void CML::meshToMesh::interpolateField
+template<class Type, class CombineOp>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapSrcToTgt
 (
-    Field<Type>& toF,
-    const GeometricField<Type, fvPatchField, volMesh>& fromVf,
-    const labelList& adr,
-    const vectorField& centres
+    const Field<Type>& srcField,
+    const CombineOp& cop
 ) const
 {
-    // Cell-Point interpolation
-    interpolationCellPoint<Type> interpolator(fromVf);
-
-    forAll(toF, celli)
-    {
-        if (adr[celli] != -1)
-        {
-            toF[celli] = interpolator.interpolate
-            (
-                centres[celli],
-                adr[celli]
-            );
-        }
-    }
-}
-
-
-template<class Type>
-void CML::meshToMesh::interpolateInternalField
-(
-    Field<Type>& toF,
-    const GeometricField<Type, fvPatchField, volMesh>& fromVf,
-    meshToMesh::order ord
-) const
-{
-    if (fromVf.mesh() != fromMesh_)
-    {
-        FatalErrorIn
-        (
-            "meshToMesh::interpolateInternalField(Field<Type>& toF, "
-            "const GeometricField<Type, fvPatchField, volMesh>& fromVf, "
-            "meshToMesh::order ord) const"
-        )   << "the argument field does not correspond to the right mesh. "
-            << "Field size: " << fromVf.size()
-            << " mesh size: " << fromMesh_.nCells()
-            << exit(FatalError);
-    }
-
-    if (toF.size() != toMesh_.nCells())
-    {
-        FatalErrorIn
-        (
-            "meshToMesh::interpolateInternalField(Field<Type>& toF, "
-            "const GeometricField<Type, fvPatchField, volMesh>& fromVf, "
-            "meshToMesh::order ord) const"
-        )   << "the argument field does not correspond to the right mesh. "
-            << "Field size: " << toF.size()
-            << " mesh size: " << toMesh_.nCells()
-            << exit(FatalError);
-    }
-
-    switch(ord)
-    {
-        case MAP:
-            mapField(toF, fromVf, cellAddressing_);
-        break;
-
-        case INTERPOLATE:
-            interpolateField
-            (
-                toF,
-                fromVf,
-                cellAddressing_,
-                inverseDistanceWeights()
-            );
-        break;
-
-        case CELL_POINT_INTERPOLATE:
-            interpolateField
-            (
-                toF,
-                fromVf,
-                cellAddressing_,
-                toMesh_.cellCentres()
-            );
-        break;
-
-        default:
-            FatalErrorIn
-            (
-                "meshToMesh::interpolateInternalField(Field<Type>& toF, "
-                "const GeometricField<Type, fvPatchField, volMesh>& fromVf, "
-                "meshToMesh::order ord) const"
-            )   << "unknown interpolation scheme " << ord
-                << exit(FatalError);
-    }
-}
-
-
-template<class Type>
-void CML::meshToMesh::interpolateInternalField
-(
-    Field<Type>& toF,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfromVf,
-    meshToMesh::order ord
-) const
-{
-    interpolateInternalField(toF, tfromVf(), ord);
-    tfromVf.clear();
-}
-
-
-template<class Type>
-void CML::meshToMesh::interpolate
-(
-    GeometricField<Type, fvPatchField, volMesh>& toVf,
-    const GeometricField<Type, fvPatchField, volMesh>& fromVf,
-    meshToMesh::order ord
-) const
-{
-    interpolateInternalField(toVf, fromVf, ord);
-
-    forAll(toMesh_.boundaryMesh(), patchi)
-    {
-        const fvPatch& toPatch = toMesh_.boundary()[patchi];
-
-        if (cuttingPatches_.found(toPatch.name()))
-        {
-            switch(ord)
-            {
-                case MAP:
-                    mapField
-                    (
-                        toVf.boundaryField()[patchi],
-                        fromVf,
-                        boundaryAddressing_[patchi]
-                    );
-                break;
-
-                case INTERPOLATE:
-                    interpolateField
-                    (
-                        toVf.boundaryField()[patchi],
-                        fromVf,
-                        boundaryAddressing_[patchi],
-                        toPatch.Cf()
-                    );
-                break;
-
-                case CELL_POINT_INTERPOLATE:
-                    interpolateField
-                    (
-                        toVf.boundaryField()[patchi],
-                        fromVf,
-                        boundaryAddressing_[patchi],
-                        toPatch.Cf()
-                    );
-                break;
-
-                default:
-                    FatalErrorIn
-                    (
-                        "meshToMesh::interpolate("
-                        "GeometricField<Type, fvPatchField, volMesh>& toVf, "
-                        "const GeometricField<Type, fvPatchField, volMesh>& "
-                        "fromVf, meshToMesh::order ord) const"
-                    )   << "unknown interpolation scheme " << ord
-                        << exit(FatalError);
-            }
-
-            if (isA<mixedFvPatchField<Type> >(toVf.boundaryField()[patchi]))
-            {
-                refCast<mixedFvPatchField<Type> >
-                (
-                    toVf.boundaryField()[patchi]
-                ).refValue() = toVf.boundaryField()[patchi];
-            }
-        }
-        else if
-        (
-            patchMap_.found(toPatch.name())
-         && fromMeshPatches_.found(patchMap_.find(toPatch.name())())
-        )
-        {
-            /*
-            toVf.boundaryField()[patchi].map
-            (
-                fromVf.boundaryField()
-                [
-                    fromMeshPatches_.find(patchMap_.find(toPatch.name())())()
-                ],
-                boundaryAddressing_[patchi]
-            );
-            */
-
-            mapField
-            (
-                toVf.boundaryField()[patchi],
-                fromVf.boundaryField()
-                [
-                    fromMeshPatches_.find(patchMap_.find(toPatch.name())())()
-                ],
-                boundaryAddressing_[patchi]
-            );
-        }
-    }
-}
-
-
-template<class Type>
-void CML::meshToMesh::interpolate
-(
-    GeometricField<Type, fvPatchField, volMesh>& toVf,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfromVf,
-    meshToMesh::order ord
-) const
-{
-    interpolate(toVf, tfromVf(), ord);
-    tfromVf.clear();
-}
-
-
-template<class Type>
-CML::tmp< CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
-CML::meshToMesh::interpolate
-(
-    const GeometricField<Type, fvPatchField, volMesh>& fromVf,
-    meshToMesh::order ord
-) const
-{
-    // Create and map the internal-field values
-    Field<Type> internalField(toMesh_.nCells());
-    interpolateInternalField(internalField, fromVf, ord);
-
-    // check whether both meshes have got the same number
-    // of boundary patches
-    if (fromMesh_.boundary().size() != toMesh_.boundary().size())
-    {
-        FatalErrorIn
-        (
-            "meshToMesh::interpolate"
-            "(const GeometricField<Type, fvPatchField, volMesh>& fromVf,"
-            "meshToMesh::order ord) const"
-        )   << "Incompatible meshes: different number of boundaries, "
-               "only internal field may be interpolated"
-            << exit(FatalError);
-    }
-
-    // Create and map the patch field values
-    PtrList<fvPatchField<Type> > patchFields
+    tmp<Field<Type> > tresult
     (
-        boundaryAddressing_.size()
+        new Field<Type>
+        (
+            tgtToSrcCellAddr_.size(),
+            pTraits<Type>::zero
+        )
     );
 
-    forAll(boundaryAddressing_, patchI)
+    mapSrcToTgt(srcField, cop, tresult());
+
+    return tresult;
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapSrcToTgt
+(
+    const tmp<Field<Type> >& tsrcField,
+    const CombineOp& cop
+) const
+{
+    return mapSrcToTgt(tsrcField(), cop);
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapSrcToTgt
+(
+    const Field<Type>& srcField
+) const
+{
+    return mapSrcToTgt(srcField, plusEqOp<Type>());
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapSrcToTgt
+(
+    const tmp<Field<Type> >& tsrcField
+) const
+{
+    return mapSrcToTgt(tsrcField());
+}
+
+
+template<class Type, class CombineOp>
+void CML::meshToMesh::mapTgtToSrc
+(
+    const UList<Type>& tgtField,
+    const CombineOp& cop,
+    List<Type>& result
+) const
+{
+    if (result.size() != srcToTgtCellAddr_.size())
     {
-        patchFields.set
+        FatalErrorIn
         (
-            patchI,
-            fvPatchField<Type>::New
-            (
-                fromVf.boundaryField()[patchI],
-                toMesh_.boundary()[patchI],
-                DimensionedField<Type, volMesh>::null(),
-                patchFieldInterpolator
-                (
-                    boundaryAddressing_[patchI]
-                )
-            )
+            "void CML::meshToMesh::mapTgtToSrc"
+            "("
+                "const UList<Type>&, "
+                "const CombineOp&, "
+                "List<Type>&"
+            ") const"
+        )   << "Supplied field size is not equal to source mesh size" << nl
+            << "    source mesh    = " << srcToTgtCellAddr_.size() << nl
+            << "    target mesh    = " << tgtToSrcCellAddr_.size() << nl
+            << "    supplied field = " << result.size()
+            << abort(FatalError);
+    }
+
+    multiplyWeightedOp<Type, CombineOp> cbop(cop);
+
+    if (singleMeshProc_ == -1)
+    {
+        const mapDistribute& map = tgtMapPtr_();
+
+        List<Type> work(tgtField);
+        map.distribute(work);
+
+        forAll(result, cellI)
+        {
+            const labelList& tgtAddress = srcToTgtCellAddr_[cellI];
+            const scalarList& tgtWeight = srcToTgtCellWght_[cellI];
+
+            if (tgtAddress.size())
+            {
+                result[cellI] *= (1.0 - sum(tgtWeight));
+                forAll(tgtAddress, i)
+                {
+                    label tgtI = tgtAddress[i];
+                    scalar w = tgtWeight[i];
+                    cbop(result[cellI], cellI, work[tgtI], w);
+                }
+            }
+        }
+    }
+    else
+    {
+        forAll(result, cellI)
+        {
+            const labelList& tgtAddress = srcToTgtCellAddr_[cellI];
+            const scalarList& tgtWeight = srcToTgtCellWght_[cellI];
+
+            if (tgtAddress.size())
+            {
+                result[cellI] *= (1.0 - sum(tgtWeight));
+                forAll(tgtAddress, i)
+                {
+                    label tgtI = tgtAddress[i];
+                    scalar w = tgtWeight[i];
+                    cbop(result[cellI], cellI, tgtField[tgtI], w);
+                }
+            }
+        }
+    }
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapTgtToSrc
+(
+    const Field<Type>& tgtField,
+    const CombineOp& cop
+) const
+{
+    tmp<Field<Type> > tresult
+    (
+        new Field<Type>
+        (
+            srcToTgtCellAddr_.size(),
+            pTraits<Type>::zero
+        )
+    );
+
+    mapTgtToSrc(tgtField, cop, tresult());
+
+    return tresult;
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapTgtToSrc
+(
+    const tmp<Field<Type> >& ttgtField,
+    const CombineOp& cop
+) const
+{
+    return mapTgtToSrc(ttgtField(), cop);
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapTgtToSrc
+(
+    const Field<Type>& tgtField
+) const
+{
+    return mapTgtToSrc(tgtField, plusEqOp<Type>());
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::meshToMesh::mapTgtToSrc
+(
+    const tmp<Field<Type> >& ttgtField
+) const
+{
+    return mapTgtToSrc(ttgtField(), plusEqOp<Type>());
+}
+
+
+template<class Type, class CombineOp>
+void CML::meshToMesh::mapSrcToTgt
+(
+    const GeometricField<Type, fvPatchField, volMesh>& field,
+    const CombineOp& cop,
+    GeometricField<Type, fvPatchField, volMesh>& result
+) const
+{
+    mapSrcToTgt(field, cop, result.internalField());
+
+    const PtrList<AMIPatchToPatchInterpolation>& AMIList = patchAMIs();
+
+    forAll(AMIList, i)
+    {
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        const Field<Type>& srcField = field.boundaryField()[srcPatchI];
+        Field<Type>& tgtField = result.boundaryField()[tgtPatchI];
+
+        tgtField = pTraits<Type>::zero;
+
+        AMIList[i].interpolateToTarget
+        (
+            srcField,
+            multiplyWeightedOp<Type, CombineOp>(cop),
+            tgtField,
+            UList<Type>::null()
         );
     }
 
+    forAll(cuttingPatches_, i)
+    {
+        label patchI = cuttingPatches_[i];
+        fvPatchField<Type>& pf = result.boundaryField()[patchI];
+        pf == pf.patchInternalField();
+    }
+}
 
-    // Create the complete field from the pieces
-    tmp<GeometricField<Type, fvPatchField, volMesh> > ttoF
+
+template<class Type, class CombineOp>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapSrcToTgt
+(
+    const GeometricField<Type, fvPatchField, volMesh>& field,
+    const CombineOp& cop
+) const
+{
+    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+
+    const fvMesh& tgtMesh = static_cast<const fvMesh&>(tgtRegion_);
+
+    const fvBoundaryMesh& tgtBm = tgtMesh.boundary();
+    const typename fieldType::GeometricBoundaryField& srcBfld =
+        field.boundaryField();
+
+    PtrList<fvPatchField<Type> > tgtPatchFields(tgtBm.size());
+
+    // constuct tgt boundary patch types as copy of 'field' boundary types
+    // note: this will provide place holders for fields with additional
+    // entries, but these values will need to be reset
+    forAll(tgtPatchID_, i)
+    {
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        if (!tgtPatchFields.set(tgtPatchI))
+        {
+            tgtPatchFields.set
+            (
+                tgtPatchI,
+                fvPatchField<Type>::New
+                (
+                    srcBfld[srcPatchI],
+                    tgtMesh.boundary()[tgtPatchI],
+                    DimensionedField<Type, volMesh>::null(),
+                    directFvPatchFieldMapper
+                    (
+                        labelList(tgtMesh.boundary()[tgtPatchI].size(), -1)
+                    )
+                )
+            );
+        }
+    }
+
+    // Any unset tgtPatchFields become calculated
+    forAll(tgtPatchFields, tgtPatchI)
+    {
+        if (!tgtPatchFields.set(tgtPatchI))
+        {
+            // Note: use factory New method instead of direct generation of
+            //       calculated so we keep constraints
+            tgtPatchFields.set
+            (
+                tgtPatchI,
+                fvPatchField<Type>::New
+                (
+                    calculatedFvPatchField<Type>::typeName,
+                    tgtMesh.boundary()[tgtPatchI],
+                    DimensionedField<Type, volMesh>::null()
+                )
+            );
+        }
+    }
+
+    tmp<fieldType> tresult
     (
-        new GeometricField<Type, fvPatchField, volMesh>
+        new fieldType
         (
             IOobject
             (
-                "interpolated(" + fromVf.name() + ')',
-                toMesh_.time().timeName(),
-                toMesh_,
+                type() + ":interpolate(" + field.name() + ")",
+                tgtMesh.time().timeName(),
+                tgtMesh,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            toMesh_,
-            fromVf.dimensions(),
-            internalField,
-            patchFields
+            tgtMesh,
+            field.dimensions(),
+            Field<Type>(tgtMesh.nCells(), pTraits<Type>::zero),
+            tgtPatchFields
         )
     );
 
-    return ttoF;
+    mapSrcToTgt(field, cop, tresult());
+
+    return tresult;
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapSrcToTgt
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfield,
+    const CombineOp& cop
+) const
+{
+    return mapSrcToTgt(tfield(), cop);
 }
 
 
 template<class Type>
-CML::tmp< CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
-CML::meshToMesh::interpolate
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapSrcToTgt
 (
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfromVf,
-    meshToMesh::order ord
+    const GeometricField<Type, fvPatchField, volMesh>& field
 ) const
 {
-    tmp<GeometricField<Type, fvPatchField, volMesh> > tint =
-        interpolate(tfromVf(), ord);
-    tfromVf.clear();
+    return mapSrcToTgt(field, plusEqOp<Type>());
+}
 
-    return tint;
+
+template<class Type>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapSrcToTgt
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfield
+) const
+{
+    return mapSrcToTgt(tfield(), plusEqOp<Type>());
+}
+
+
+template<class Type, class CombineOp>
+void CML::meshToMesh::mapTgtToSrc
+(
+    const GeometricField<Type, fvPatchField, volMesh>& field,
+    const CombineOp& cop,
+    GeometricField<Type, fvPatchField, volMesh>& result
+) const
+{
+    mapTgtToSrc(field, cop, result.internalField());
+
+    const PtrList<AMIPatchToPatchInterpolation>& AMIList = patchAMIs();
+
+    forAll(AMIList, i)
+    {
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        Field<Type>& srcField = result.boundaryField()[srcPatchI];
+        const Field<Type>& tgtField = field.boundaryField()[tgtPatchI];
+
+        srcField = pTraits<Type>::zero;
+
+        AMIList[i].interpolateToSource
+        (
+            tgtField,
+            multiplyWeightedOp<Type, CombineOp>(cop),
+            srcField
+        );
+    }
+
+    forAll(cuttingPatches_, i)
+    {
+        label patchI = cuttingPatches_[i];
+        fvPatchField<Type>& pf = result.boundaryField()[patchI];
+        pf == pf.patchInternalField();
+    }
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapTgtToSrc
+(
+    const GeometricField<Type, fvPatchField, volMesh>& field,
+    const CombineOp& cop
+) const
+{
+    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+
+    const fvMesh& srcMesh = static_cast<const fvMesh&>(srcRegion_);
+
+    const fvBoundaryMesh& srcBm = srcMesh.boundary();
+    const typename fieldType::GeometricBoundaryField& tgtBfld =
+        field.boundaryField();
+
+    PtrList<fvPatchField<Type> > srcPatchFields(srcBm.size());
+
+    // constuct src boundary patch types as copy of 'field' boundary types
+    // note: this will provide place holders for fields with additional
+    // entries, but these values will need to be reset
+    forAll(srcPatchID_, i)
+    {
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        if (!srcPatchFields.set(tgtPatchI))
+        {
+            srcPatchFields.set
+            (
+                srcPatchI,
+                fvPatchField<Type>::New
+                (
+                    tgtBfld[srcPatchI],
+                    srcMesh.boundary()[tgtPatchI],
+                    DimensionedField<Type, volMesh>::null(),
+                    directFvPatchFieldMapper
+                    (
+                        labelList(srcMesh.boundary()[srcPatchI].size(), -1)
+                    )
+                )
+            );
+        }
+    }
+
+    // Any unset srcPatchFields become calculated
+    forAll(srcPatchFields, srcPatchI)
+    {
+        if (!srcPatchFields.set(srcPatchI))
+        {
+            // Note: use factory New method instead of direct generation of
+            //       calculated so we keep constraints
+            srcPatchFields.set
+            (
+                srcPatchI,
+                fvPatchField<Type>::New
+                (
+                    calculatedFvPatchField<Type>::typeName,
+                    srcMesh.boundary()[srcPatchI],
+                    DimensionedField<Type, volMesh>::null()
+                )
+            );
+        }
+    }
+
+    tmp<fieldType> tresult
+    (
+        new fieldType
+        (
+            IOobject
+            (
+                type() + ":interpolate(" + field.name() + ")",
+                srcMesh.time().timeName(),
+                srcMesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            srcMesh,
+            field.dimensions(),
+            Field<Type>(srcMesh.nCells(), pTraits<Type>::zero),
+            srcPatchFields
+        )
+    );
+
+    mapTgtToSrc(field, cop, tresult());
+
+    return tresult;
+}
+
+
+template<class Type, class CombineOp>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapTgtToSrc
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfield,
+    const CombineOp& cop
+) const
+{
+    return mapTgtToSrc(tfield(), cop);
+}
+
+
+template<class Type>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapTgtToSrc
+(
+    const GeometricField<Type, fvPatchField, volMesh>& field
+) const
+{
+    return mapTgtToSrc(field, plusEqOp<Type>());
+}
+
+
+template<class Type>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
+CML::meshToMesh::mapTgtToSrc
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tfield
+) const
+{
+    return mapTgtToSrc(tfield(), plusEqOp<Type>());
 }
 
 

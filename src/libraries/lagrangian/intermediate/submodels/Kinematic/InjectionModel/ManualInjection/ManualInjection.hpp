@@ -282,8 +282,9 @@ CML::ManualInjection<CloudType>::~ManualInjection()
 template<class CloudType>
 CML::scalar CML::ManualInjection<CloudType>::timeEnd() const
 {
-    // Not used
-    return this->SOI_;
+    // Injection is instantaneous - but allow for a finite interval to
+    // avoid numerical issues when interval is zero
+    return ROOTVSMALL;
 }
 
 

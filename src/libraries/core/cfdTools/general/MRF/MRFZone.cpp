@@ -332,7 +332,6 @@ void CML::MRFZone::addCoriolis
     }
 
     const labelList& cells = mesh_.cellZones()[cellZoneID_];
-    const scalarField& V = mesh_.V();
     vectorField& ddtUc = ddtU.internalField();
     const vectorField& Uc = U.internalField();
 
@@ -341,7 +340,7 @@ void CML::MRFZone::addCoriolis
     forAll(cells, i)
     {
         label celli = cells[i];
-        ddtUc[celli] += V[celli]*(Omega ^ Uc[celli]);
+        ddtUc[celli] += (Omega ^ Uc[celli]);
     }
 }
 

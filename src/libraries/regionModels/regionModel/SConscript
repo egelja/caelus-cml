@@ -54,4 +54,4 @@ regModelsEnv.Install(install_dir, libregionModels)
 
 if (regModelsEnv['WHICH_OS'] == "darwin"):
 
-  regModelsEnv.Append(SHLINKFLAGS ='-install_name @' + regModelsEnv['LIB_PLATFORM_INSTALL'] + '/libregionModels.dylib')
+  regModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libregionModels.dylib')

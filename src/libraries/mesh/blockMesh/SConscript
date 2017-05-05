@@ -44,6 +44,7 @@ src_files = Split("""
   curvedEdges/lineEdge.cpp
   curvedEdges/polyLineEdge.cpp
   curvedEdges/lineDivide.cpp
+  curvedEdges/BSplineEdge.cpp
   curvedEdges/splineEdge.cpp
   blockDescriptor/blockDescriptor.cpp
   blockDescriptor/blockDescriptorEdges.cpp
@@ -71,4 +72,4 @@ blockMeshEnv.Install(install_dir, libblockMesh)
 
 if (blockMeshEnv['WHICH_OS'] == "darwin"):
 
-  blockMeshEnv.Append(SHLINKFLAGS ='-install_name @' + blockMeshEnv['LIB_PLATFORM_INSTALL'] + '/libblockMesh.dylib')
+  blockMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libblockMesh.dylib')

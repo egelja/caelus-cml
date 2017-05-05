@@ -20,9 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "fvOptionList.hpp"
-#include "addToRunTimeSelectionTable.hpp"
-#include "fvMesh.hpp"
-#include "Time.hpp"
+#include "surfaceFields.hpp"
 
 namespace CML
 {
@@ -30,6 +28,39 @@ namespace fv
 {
     defineTypeNameAndDebug(optionList, 0);
 }
+}
+
+
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
+const CML::dictionary& CML::fv::optionList::optionsDict
+(
+    const dictionary& dict
+) const
+{
+    if (dict.found("options"))
+    {
+        return dict.subDict("options");
+    }
+    else
+    {
+        return dict;
+    }
+}
+
+
+bool CML::fv::optionList::readOptions(const dictionary& dict)
+{
+    checkTimeIndex_ = mesh_.time().timeIndex() + 2;
+
+    bool allOk = true;
+    forAll(*this, i)
+    {
+        option& bs = this->operator[](i);
+        bool ok = bs.read(dict.subDict(bs.name()));
+        allOk = (allOk && ok);
+    }
+    return allOk;
 }
 
 
@@ -46,13 +77,15 @@ void CML::fv::optionList::checkApplied() const
 }
 
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
 CML::fv::optionList::optionList(const fvMesh& mesh, const dictionary& dict)
 :
     PtrList<option>(),
     mesh_(mesh),
     checkTimeIndex_(mesh_.time().startTimeIndex() + 2)
 {
-    reset(dict);
+    reset(optionsDict(dict));
 }
 
 
@@ -95,16 +128,16 @@ void CML::fv::optionList::reset(const dictionary& dict)
 }
 
 
-void CML::fv::optionList::relativeFlux(surfaceScalarField& phi) const
+void CML::fv::optionList::makeRelative(surfaceScalarField& phi) const
 {
     forAll(*this, i)
     {
-        this->operator[](i).relativeFlux(phi);
+        this->operator[](i).makeRelative(phi);
     }
 }
 
 
-void CML::fv::optionList::relativeFlux
+void CML::fv::optionList::makeRelative
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
@@ -112,21 +145,38 @@ void CML::fv::optionList::relativeFlux
 {
     forAll(*this, i)
     {
-        this->operator[](i).relativeFlux(rho, phi);
+        this->operator[](i).makeRelative(rho, phi);
     }
 }
 
 
-void CML::fv::optionList::absoluteFlux(surfaceScalarField& phi) const
+CML::tmp<CML::FieldField<CML::fvsPatchField, CML::scalar> >
+CML::fv::optionList::relative
+(
+    const tmp<FieldField<fvsPatchField, scalar> >& phi
+) const
+{
+    tmp<FieldField<fvsPatchField, scalar> > rphi(phi.ptr());
+
+    forAll(*this, i)
+    {
+        operator[](i).makeRelative(rphi());
+    }
+
+    return rphi;
+}
+
+
+void CML::fv::optionList::makeAbsolute(surfaceScalarField& phi) const
 {
     forAll(*this, i)
     {
-        this->operator[](i).absoluteFlux(phi);
+        this->operator[](i).makeAbsolute(phi);
     }
 }
 
 
-void CML::fv::optionList::absoluteFlux
+void CML::fv::optionList::makeAbsolute
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
@@ -134,23 +184,14 @@ void CML::fv::optionList::absoluteFlux
 {
     forAll(*this, i)
     {
-        this->operator[](i).absoluteFlux(rho, phi);
+        this->operator[](i).makeAbsolute(rho, phi);
     }
 }
 
 
 bool CML::fv::optionList::read(const dictionary& dict)
 {
-    checkTimeIndex_ = mesh_.time().timeIndex() + 2;
-
-    bool allOk = true;
-    forAll(*this, i)
-    {
-        option& bs = this->operator[](i);
-        bool ok = bs.read(dict.subDict(bs.name()));
-        allOk = (allOk && ok);
-    }
-    return allOk;
+    return readOptions(optionsDict(dict));
 }
 
 

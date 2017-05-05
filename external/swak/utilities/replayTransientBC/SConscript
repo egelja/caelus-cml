@@ -1,0 +1,63 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+replayTransBCEnv = globalEnv.Clone()
+
+# Path to source
+src = replayTransBCEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+replayTransBCEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [
+'../../libraries/swakParsers/lnInclude',
+src + '/sampling/lnInclude'
+]
+
+replayTransBCEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+
+replayTransBCEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if replayTransBCEnv['WHICH_OS'] == "windows":
+  replayTransBCEnv.Prepend(LINKFLAGS = '')
+  lib_link = ['libswakParsers']
+else:
+  lib_link = ['swakParsers']
+    
+replayTransBCEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""  
+  replayTransientBC.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binreplayTransBC = replayTransBCEnv.Program(target = 
+'replayTransientBC', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = replayTransBCEnv['BIN_PLATFORM_INSTALL']
+replayTransBCEnv.Alias('install', install_dir)
+replayTransBCEnv.Install(install_dir, binreplayTransBC)

@@ -85,6 +85,14 @@ public:
             const lduInterfaceField& fineInterfaceField
         );
 
+        //- Construct from GAMG interface and fine level interface field
+        cyclicGAMGInterfaceField
+        (
+            const GAMGInterface& GAMGCp,
+            const bool doTransform,
+            const int rank
+        );
+
 
     //- Destructor
     virtual ~cyclicGAMGInterfaceField();
@@ -99,20 +107,6 @@ public:
             {
                 return cyclicInterface_.size();
             }
-
-
-        // Interface matrix update
-
-            //- Update result field based on interface functionality
-            virtual void updateInterfaceMatrix
-            (
-                const scalarField& psiInternal,
-                scalarField& result,
-                const lduMatrix&,
-                const scalarField& coeffs,
-                const direction cmpt,
-                const Pstream::commsTypes commsType
-            ) const;
 
 
         //- Cyclic interface functions
@@ -140,6 +134,20 @@ public:
             {
                 return rank_;
             }
+
+
+        // Interface matrix update
+
+            //- Update result field based on interface functionality
+            virtual void updateInterfaceMatrix
+            (
+                const scalarField& psiInternal,
+                scalarField& result,
+                const lduMatrix&,
+                const scalarField& coeffs,
+                const direction cmpt,
+                const Pstream::commsTypes commsType
+            ) const;
 };
 
 

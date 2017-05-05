@@ -271,7 +271,7 @@ void CML::layerAdditionRemoval::removeCellLayer
         // of the cell to be removed
         label masterSideCell = own[mf[faceI]];
 
-        if (masterSideCell == mc[faceI])
+        if (mesh.isInternalFace(mf[faceI]) && masterSideCell == mc[faceI])
         {
             // Owner cell of the face is being removed.
             // Grab the neighbour instead
@@ -280,7 +280,7 @@ void CML::layerAdditionRemoval::removeCellLayer
 
         label slaveSideCell = own[ftc[faceI]];
 
-        if (slaveSideCell == mc[faceI])
+        if (mesh.isInternalFace(ftc[faceI]) && slaveSideCell == mc[faceI])
         {
             // Owner cell of the face is being removed.
             // Grab the neighbour instead

@@ -45,8 +45,8 @@ void faceZoneSet::updateSet()
 {
     labelList order;
     sortedOrder(addressing_, order);
-    inplaceReorder(order, addressing_);
-    inplaceReorder(order, flipMap_);
+    addressing_ = UIndirectList<label>(addressing_, order)();
+    flipMap_ = UIndirectList<bool>(flipMap_, order)();
 
     faceSet::clearStorage();
     faceSet::resize(2*addressing_.size());

@@ -114,4 +114,4 @@ lagInterEnv.Install(install_dir, liblagrangianIntermediate)
 
 if (lagInterEnv['WHICH_OS'] == "darwin"):
 
-  lagInterEnv.Append(SHLINKFLAGS ='-install_name @' + lagInterEnv['LIB_PLATFORM_INSTALL'] + '/liblagrangianIntermediate.dylib')
+  lagInterEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangianIntermediate.dylib')

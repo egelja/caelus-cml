@@ -721,7 +721,7 @@ void reorderPatches
     fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
 
     // Shuffle into place
-    polyPatches.reorder(oldToNew);
+    polyPatches.reorder(oldToNew, true);
     fvPatches.reorder(oldToNew);
 
     reorderPatchFields<volScalarField>(mesh, oldToNew);
@@ -1113,7 +1113,7 @@ void calcEdgeMinMaxZone
         mesh,
         extrudeMeshEdges,
         minZoneID,
-        minOp<label>(),
+        minEqOp<label>(),
         labelMax        // null value
     );
     syncTools::syncEdgeList
@@ -1121,7 +1121,7 @@ void calcEdgeMinMaxZone
         mesh,
         extrudeMeshEdges,
         maxZoneID,
-        maxOp<label>(),
+        maxEqOp<label>(),
         labelMin        // null value
     );
 }
@@ -1322,6 +1322,7 @@ void addCouplingPatches
                 << '\t' << newPatches[interRegionBottomPatch[zoneI]]->type()
                 << nl;
         }
+
     }
     Pout<< "Added " << newPatches.size()-nOldPatches
         << " inter-region patches." << nl
@@ -1372,7 +1373,7 @@ void addCoupledPatches
         mesh,
         extrudeMeshEdges,
         minProcID,
-        minOp<label>(),
+        minEqOp<label>(),
         labelMax        // null value
     );
     syncTools::syncEdgeList
@@ -1380,7 +1381,7 @@ void addCoupledPatches
         mesh,
         extrudeMeshEdges,
         maxProcID,
-        maxOp<label>(),
+        maxEqOp<label>(),
         labelMin        // null value
     );
 
@@ -2034,7 +2035,7 @@ int main(int argc, char *argv[])
                 {
                     extrudeMeshShadowFaces[nShadowFaces] = fz[j];
                     zoneShadowFlipMap[nShadowFaces] = fz.flipMap()[j];
-                    zoneShadowID[nShadowFaces] = zoneShadowIDs[i];
+                    zoneShadowID[nShadowFaces] = i;
                     nShadowFaces++;
                 }
             }
@@ -2600,7 +2601,6 @@ int main(int argc, char *argv[])
     }
 
 
-
     // For debugging: dump hedgehog plot of normals
     if (false)
     {
@@ -2649,7 +2649,6 @@ int main(int argc, char *argv[])
     }
 
 
-
     // Create a new mesh
     // ~~~~~~~~~~~~~~~~~
 
@@ -2659,7 +2658,6 @@ int main(int argc, char *argv[])
         pointLocalRegions,
         localRegionPoints
     );
-
 
     autoPtr<mapPolyMesh> shellMap;
     fvMesh regionMesh
@@ -2679,14 +2677,12 @@ int main(int argc, char *argv[])
         xferCopy(labelList()),
         false
     );
-
     // Add the new patches
     forAll(regionPatches, patchI)
     {
-        regionPatches[patchI] = regionPatches[patchI]->clone
-        (
-            regionMesh.boundaryMesh()
-        ).ptr();
+        polyPatch* ppPtr = regionPatches[patchI];
+        regionPatches[patchI] = ppPtr->clone(regionMesh.boundaryMesh()).ptr();
+        delete ppPtr;
     }
     regionMesh.clearOut();
     regionMesh.removeFvBoundary();
@@ -2981,7 +2977,6 @@ int main(int argc, char *argv[])
                     );
                 }
             }
-
         }
         else
         {

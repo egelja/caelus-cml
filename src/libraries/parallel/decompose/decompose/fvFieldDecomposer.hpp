@@ -274,83 +274,25 @@ CML::fvFieldDecomposer::decomposeField
     const bool allowUnknownPatchFields
 ) const
 {
-    // Create and map the internal field values
-    Field<Type> internalField(field.internalField(), cellAddressing_);
-
-    // Create and map the patch field values
+    // 1. Create the complete field with dummy patch fields
     PtrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
 
     forAll(boundaryAddressing_, patchi)
     {
-        if (patchFieldDecomposerPtrs_[patchi])
-        {
-            patchFields.set
+        patchFields.set
+        (
+            patchi,
+            fvPatchField<Type>::New
             (
-                patchi,
-                fvPatchField<Type>::New
-                (
-                    field.boundaryField()[boundaryAddressing_[patchi]],
-                    procMesh_.boundary()[patchi],
-                    DimensionedField<Type, volMesh>::null(),
-                    *patchFieldDecomposerPtrs_[patchi]
-                )
-            );
-        }
-        else if (isA<processorCyclicFvPatch>(procMesh_.boundary()[patchi]))
-        {
-            patchFields.set
-            (
-                patchi,
-                new processorCyclicFvPatchField<Type>
-                (
-                    procMesh_.boundary()[patchi],
-                    DimensionedField<Type, volMesh>::null(),
-                    Field<Type>
-                    (
-                        field.internalField(),
-                        *processorVolPatchFieldDecomposerPtrs_[patchi]
-                    )
-                )
-            );
-        }
-        else if (isA<processorFvPatch>(procMesh_.boundary()[patchi]))
-        {
-            patchFields.set
-            (
-                patchi,
-                new processorFvPatchField<Type>
-                (
-                    procMesh_.boundary()[patchi],
-                    DimensionedField<Type, volMesh>::null(),
-                    Field<Type>
-                    (
-                        field.internalField(),
-                        *processorVolPatchFieldDecomposerPtrs_[patchi]
-                    )
-                )
-            );
-        }
-        else if (allowUnknownPatchFields)
-        {
-            patchFields.set
-            (
-                patchi,
-                new emptyFvPatchField<Type>
-                (
-                    procMesh_.boundary()[patchi],
-                    DimensionedField<Type, volMesh>::null()
-                )
-            );
-        }
-        else
-        {
-            FatalErrorIn("fvFieldDecomposer::decomposeField()")
-                << "Unknown type." << abort(FatalError);
-        }
+                calculatedFvPatchField<Type>::typeName,
+                procMesh_.boundary()[patchi],
+                DimensionedField<Type, volMesh>::null()
+            )
+        );
     }
 
     // Create the field for the processor
-    return tmp<GeometricField<Type, fvPatchField, volMesh> >
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tresF
     (
         new GeometricField<Type, fvPatchField, volMesh>
         (
@@ -364,10 +306,90 @@ CML::fvFieldDecomposer::decomposeField
             ),
             procMesh_,
             field.dimensions(),
-            internalField,
+            Field<Type>(field.internalField(), cellAddressing_),
             patchFields
         )
     );
+    GeometricField<Type, fvPatchField, volMesh>& resF = tresF();
+
+
+    // 2. Change the fvPatchFields to the correct type using a mapper
+    //  constructor (with reference to the now correct internal field)
+
+    typename GeometricField<Type, fvPatchField, volMesh>::
+        GeometricBoundaryField& bf = resF.boundaryField();
+
+    forAll(bf, patchi)
+    {
+        if (patchFieldDecomposerPtrs_[patchi])
+        {
+            bf.set
+            (
+                patchi,
+                fvPatchField<Type>::New
+                (
+                    field.boundaryField()[boundaryAddressing_[patchi]],
+                    procMesh_.boundary()[patchi],
+                    resF.dimensionedInternalField(),
+                    *patchFieldDecomposerPtrs_[patchi]
+                )
+            );
+        }
+        else if (isA<processorCyclicFvPatch>(procMesh_.boundary()[patchi]))
+        {
+            bf.set
+            (
+                patchi,
+                new processorCyclicFvPatchField<Type>
+                (
+                    procMesh_.boundary()[patchi],
+                    resF.dimensionedInternalField(),
+                    Field<Type>
+                    (
+                        field.internalField(),
+                        *processorVolPatchFieldDecomposerPtrs_[patchi]
+                    )
+                )
+            );
+        }
+        else if (isA<processorFvPatch>(procMesh_.boundary()[patchi]))
+        {
+            bf.set
+            (
+                patchi,
+                new processorFvPatchField<Type>
+                (
+                    procMesh_.boundary()[patchi],
+                    resF.dimensionedInternalField(),
+                    Field<Type>
+                    (
+                        field.internalField(),
+                        *processorVolPatchFieldDecomposerPtrs_[patchi]
+                    )
+                )
+            );
+        }
+        else if (allowUnknownPatchFields)
+        {
+            bf.set
+            (
+                patchi,
+                new emptyFvPatchField<Type>
+                (
+                    procMesh_.boundary()[patchi],
+                    resF.dimensionedInternalField()
+                )
+            );
+        }
+        else
+        {
+            FatalErrorIn("fvFieldDecomposer::decomposeField()")
+                << "Unknown type." << abort(FatalError);
+        }
+    }
+
+    // Create the field for the processor
+    return tresF;
 }
 
 
@@ -422,34 +444,76 @@ CML::fvFieldDecomposer::decomposeField
         }
     }
 
-    // Create and map the patch field values
+
+    // 1. Create the complete field with dummy patch fields
     PtrList<fvsPatchField<Type> > patchFields(boundaryAddressing_.size());
+
+    forAll(boundaryAddressing_, patchi)
+    {
+        patchFields.set
+        (
+            patchi,
+            fvsPatchField<Type>::New
+            (
+                calculatedFvsPatchField<Type>::typeName,
+                procMesh_.boundary()[patchi],
+                DimensionedField<Type, surfaceMesh>::null()
+            )
+        );
+    }
+
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tresF
+    (
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
+        (
+            IOobject
+            (
+                field.name(),
+                procMesh_.time().timeName(),
+                procMesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            procMesh_,
+            field.dimensions(),
+            Field<Type>(field.internalField(), mapAddr),
+            patchFields
+        )
+    );
+    GeometricField<Type, fvsPatchField, surfaceMesh>& resF = tresF();
+
+
+    // 2. Change the fvsPatchFields to the correct type using a mapper
+    //  constructor (with reference to the now correct internal field)
+
+    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
+        GeometricBoundaryField& bf = resF.boundaryField();
 
     forAll(boundaryAddressing_, patchi)
     {
         if (patchFieldDecomposerPtrs_[patchi])
         {
-            patchFields.set
+            bf.set
             (
                 patchi,
                 fvsPatchField<Type>::New
                 (
                     field.boundaryField()[boundaryAddressing_[patchi]],
                     procMesh_.boundary()[patchi],
-                    DimensionedField<Type, surfaceMesh>::null(),
+                    resF.dimensionedInternalField(),
                     *patchFieldDecomposerPtrs_[patchi]
                 )
             );
         }
         else if (isA<processorCyclicFvPatch>(procMesh_.boundary()[patchi]))
         {
-            patchFields.set
+            bf.set
             (
                 patchi,
                 new processorCyclicFvsPatchField<Type>
                 (
                     procMesh_.boundary()[patchi],
-                    DimensionedField<Type, surfaceMesh>::null(),
+                    resF.dimensionedInternalField(),
                     Field<Type>
                     (
                         allFaceField,
@@ -460,13 +524,13 @@ CML::fvFieldDecomposer::decomposeField
         }
         else if (isA<processorFvPatch>(procMesh_.boundary()[patchi]))
         {
-            patchFields.set
+            bf.set
             (
                 patchi,
                 new processorFvsPatchField<Type>
                 (
                     procMesh_.boundary()[patchi],
-                    DimensionedField<Type, surfaceMesh>::null(),
+                    resF.dimensionedInternalField(),
                     Field<Type>
                     (
                         allFaceField,
@@ -483,24 +547,7 @@ CML::fvFieldDecomposer::decomposeField
     }
 
     // Create the field for the processor
-    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
-    (
-        new GeometricField<Type, fvsPatchField, surfaceMesh>
-        (
-            IOobject
-            (
-                field.name(),
-                procMesh_.time().timeName(),
-                procMesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            procMesh_,
-            field.dimensions(),
-            internalField,
-            patchFields
-        )
-    );
+    return tresF;
 }
 
 

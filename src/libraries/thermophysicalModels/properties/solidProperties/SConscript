@@ -60,4 +60,4 @@ thermoSolPropEnv.Install(install_dir, libsolidProperties)
 
 if (thermoSolPropEnv['WHICH_OS'] == "darwin"):
 
-  thermoSolPropEnv.Append(SHLINKFLAGS ='-install_name @' + thermoSolPropEnv['LIB_PLATFORM_INSTALL'] + '/libsolidProperties.dylib')
+  thermoSolPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidProperties.dylib')

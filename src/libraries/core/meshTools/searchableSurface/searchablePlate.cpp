@@ -66,8 +66,8 @@ CML::direction CML::searchablePlate::calcNormal(const point& span)
     if (normalDir == 3)
     {
         FatalErrorIn("searchablePlate::calcNormal()")
-            << "Span should have one and only zero entry. Now:" << span
-            << exit(FatalError);
+            << "Span should have two positive and one zero entry. Now:"
+            << span << exit(FatalError);
     }
 
     return normalDir;
@@ -181,8 +181,8 @@ CML::pointIndexHit CML::searchablePlate::findLine
     if (info.hit())
     {
         treeBoundBox bb(origin_, origin_+span_);
-        bb.min()[normalDir_] -= 1E-6;
-        bb.max()[normalDir_] += 1E-6;
+        bb.min()[normalDir_] -= 1e-6;
+        bb.max()[normalDir_] += 1e-6;
 
         if (!bb.contains(info.hitPoint()))
         {
@@ -267,6 +267,71 @@ const CML::wordList& CML::searchablePlate::regions() const
         regions_[0] = "region0";
     }
     return regions_;
+}
+
+
+CML::tmp<CML::pointField> CML::searchablePlate::coordinates() const
+{
+    return tmp<pointField>(new pointField(1, origin_ + 0.5*span_));
+}
+
+
+void CML::searchablePlate::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(1);
+    centres[0] = origin_ + 0.5*span_;
+
+    radiusSqr.setSize(1);
+    radiusSqr[0] = CML::magSqr(0.5*span_);
+
+    // Add a bit to make sure all points are tested inside
+    radiusSqr += CML::sqr(SMALL);
+}
+
+
+CML::tmp<CML::pointField> CML::searchablePlate::points() const
+{
+    tmp<pointField> tPts(new pointField(4));
+    pointField& pts = tPts();
+
+    pts[0] = origin_;
+    pts[2] = origin_ + span_;
+
+    if (span_.x() < span_.y() && span_.x() < span_.z())
+    {
+        pts[1] = origin_ + point(0, span_.y(), 0);
+        pts[3] = origin_ + point(0, 0, span_.z());
+    }
+    else if (span_.y() < span_.z())
+    {
+        pts[1] = origin_ + point(span_.x(), 0, 0);
+        pts[3] = origin_ + point(0, 0, span_.z());
+    }
+    else
+    {
+        pts[1] = origin_ + point(span_.x(), 0, 0);
+        pts[3] = origin_ + point(0, span_.y(), 0);
+    }
+
+    return tPts;
+}
+
+
+bool CML::searchablePlate::overlaps(const boundBox& bb) const
+{
+    return
+    (
+        (origin_.x() + span_.x()) >= bb.min().x()
+     && origin_.x() <= bb.max().x()
+     && (origin_.y() + span_.y()) >= bb.min().y()
+     && origin_.y() <= bb.max().y()
+     && (origin_.z() + span_.z()) >= bb.min().z()
+     && origin_.z() <= bb.max().z()
+    );
 }
 
 

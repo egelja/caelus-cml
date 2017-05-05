@@ -62,4 +62,4 @@ SGLThermoEnv.Install(install_dir, libSLGThermo)
 
 if (SGLThermoEnv['WHICH_OS'] == "darwin"):
 
-  SGLThermoEnv.Append(SHLINKFLAGS ='-install_name @' + SGLThermoEnv['LIB_PLATFORM_INSTALL'] + '/libSLGThermo.dylib')
+  SGLThermoEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libSLGThermo.dylib')

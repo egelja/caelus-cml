@@ -139,12 +139,12 @@
 #define COMM_INT                    MPI_INTEGER4
 #define INTSTRING                   "%d"
 #else /* INTSIZE32 */
-#ifdef INTSIZE64
+#ifdef CAELUS_LABEL64
 #define INT                         int64_t
 #define UINT                        u_int64_t
 #define COMM_INT                    MPI_LONG_LONG
-#define INTSTRING                   "%lld"
-#else /* INTSIZE64 */
+#define INTSTRING                   "%ld"
+#else /* CAELUS_LABEL64 */
 #ifdef LONG                                       /* Better not use it */
 #define INT                         long          /* Long integer type */
 #define UINT                        unsigned long
@@ -156,7 +156,7 @@
 #define COMM_INT                    MPI_INT       /* Generic MPI integer type */
 #define INTSTRING                   "%d"
 #endif /* LONG      */
-#endif /* INTSIZE64 */
+#endif /* CAELUS_LABEL64 */
 #endif /* INTSIZE32 */
 #endif /* INT       */
 

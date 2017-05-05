@@ -157,6 +157,13 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         ) = 0;
 
+        virtual tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
+        (
+            const volScalarField& alpha,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>&
+        ) = 0;
+
         virtual tmp<fvMatrix<Type> > fvmDdt
         (
             const GeometricField<Type, fvPatchField, volMesh>&
@@ -174,6 +181,12 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         ) = 0;
 
+        virtual tmp<fvMatrix<Type> > fvmDdt
+        (
+            const volScalarField& alpha,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& vf
+        ) = 0;
 
         typedef GeometricField
         <
@@ -195,11 +208,24 @@ public:
             const fluxFieldType& phi
         );
 
+        virtual tmp<fluxFieldType> fvcDdtUfCorr
+        (
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
+        ) = 0;
+
         virtual tmp<fluxFieldType> fvcDdtPhiCorr
         (
             const volScalarField& rA,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
+        ) = 0;
+
+        virtual tmp<fluxFieldType> fvcDdtUfCorr
+        (
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
         ) = 0;
 
         tmp<surfaceScalarField> fvcDdtPhiCoeff
@@ -216,7 +242,6 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
         ) = 0;
-
 
         virtual tmp<surfaceScalarField> meshPhi
         (
@@ -254,6 +279,17 @@ makeFvDdtTypeScheme(SS, symmTensor)                                            \
 makeFvDdtTypeScheme(SS, tensor)                                                \
                                                                                \
 template<>                                                                     \
+tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
+(                                                                              \
+    const volScalarField& U,                                                   \
+    const surfaceScalarField& Uf                                               \
+)                                                                              \
+{                                                                              \
+    notImplemented(#SS"<scalar>::fvcDdtUfCorr");                               \
+    return surfaceScalarField::null();                                         \
+}                                                                              \
+                                                                               \
+template<>                                                                     \
 tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 (                                                                              \
     const volScalarField& rA,                                                  \
@@ -262,6 +298,18 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 )                                                                              \
 {                                                                              \
     notImplemented(#SS"<scalar>::fvcDdtPhiCorr");                              \
+    return surfaceScalarField::null();                                         \
+}                                                                              \
+                                                                               \
+template<>                                                                     \
+tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
+(                                                                              \
+    const volScalarField& rho,                                                 \
+    const volScalarField& U,                                                   \
+    const surfaceScalarField& Uf                                               \
+)                                                                              \
+{                                                                              \
+    notImplemented(#SS"<scalar>::fvcDdtUfCorr");                               \
     return surfaceScalarField::null();                                         \
 }                                                                              \
                                                                                \
@@ -352,6 +400,45 @@ ddtScheme<Type>::~ddtScheme()
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > ddtScheme<Type>::fvcDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    notImplemented("fvmDdt(alpha, rho, psi");
+
+    return tmp<GeometricField<Type, fvPatchField, volMesh> >
+    (
+        GeometricField<Type, fvPatchField, volMesh>::null()
+    );
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> > ddtScheme<Type>::fvmDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    notImplemented("fvmDdt(alpha, rho, psi");
+
+    return tmp<fvMatrix<Type> >
+    (
+        new fvMatrix<Type>
+        (
+            vf,
+            alpha.dimensions()*rho.dimensions()
+            *vf.dimensions()*dimVol/dimTime
+        )
+    );
+}
+
 
 template<class Type>
 tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff

@@ -167,7 +167,7 @@ CML::polyMesh::polyMesh(const IOobject& io)
         IOobject
         (
             "owner",
-            time().findInstance(meshDir(), "faces"),
+            faces_.instance(),
             meshSubDir,
             *this,
             IOobject::READ_IF_PRESENT,
@@ -179,7 +179,7 @@ CML::polyMesh::polyMesh(const IOobject& io)
         IOobject
         (
             "neighbour",
-            time().findInstance(meshDir(), "faces"),
+            faces_.instance(),
             meshSubDir,
             *this,
             IOobject::READ_IF_PRESENT,
@@ -261,7 +261,7 @@ CML::polyMesh::polyMesh(const IOobject& io)
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
-    changing_(false),
+    topoChanging_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -406,7 +406,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::NO_WRITE
         ),
         *this,
@@ -420,7 +420,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::NO_WRITE
         ),
         *this,
@@ -434,7 +434,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::NO_WRITE
         ),
         *this,
@@ -442,7 +442,7 @@ CML::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
-    changing_(false),
+    topoChanging_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -600,7 +600,7 @@ CML::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
-    changing_(false),
+    topoChanging_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -667,8 +667,8 @@ void CML::polyMesh::resetPrimitives
     const bool validBoundary
 )
 {
-    // Clear addressing. Keep geometric props for mapping.
-    clearAddressing();
+    // Clear addressing. Keep geometric props and updateable props for mapping.
+    clearAddressing(true);
 
     // Take over new primitive data.
     // Optimized to avoid overwriting data at all
@@ -699,11 +699,11 @@ void CML::polyMesh::resetPrimitives
     {
         boundary_[patchI] = polyPatch
         (
-            boundary_[patchI].name(),
-            patchSizes[patchI],
-            patchStarts[patchI],
+            boundary_[patchI],
+            boundary_,
             patchI,
-            boundary_
+            patchSizes[patchI],
+            patchStarts[patchI]
         );
     }
 
@@ -889,7 +889,7 @@ CML::polyMesh::cellTree() const
 
         Random rndGen(261782);
 
-        overallBb = overallBb.extend(rndGen, 1E-4);
+        overallBb = overallBb.extend(rndGen, 1e-4);
         overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
         overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
 
@@ -1038,6 +1038,18 @@ const CML::pointField& CML::polyMesh::points() const
     }
 
     return points_;
+}
+
+
+bool CML::polyMesh::upToDatePoints(const regIOobject& io) const
+{
+    return io.upToDate(points_);
+}
+
+
+void CML::polyMesh::setUpToDatePoints(regIOobject& io) const
+{
+    io.eventNo() = points_.eventNo();
 }
 
 
@@ -1363,6 +1375,7 @@ bool CML::polyMesh::pointInCell
         {
             const point& cc = cellCentres()[cellI];
             const cell& cFaces = cells()[cellI];
+
             forAll(cFaces, cFaceI)
             {
                 label faceI = cFaces[cFaceI];

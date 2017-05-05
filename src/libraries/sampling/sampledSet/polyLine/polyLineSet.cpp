@@ -39,6 +39,7 @@ namespace CML
 
 bool CML::polyLineSet::trackToBoundary
 (
+    passiveParticleCloud& particleCloud,
     passiveParticle& singleParticle,
     label& sampleI,
     DynamicList<point>& samplingPts,
@@ -47,7 +48,6 @@ bool CML::polyLineSet::trackToBoundary
     DynamicList<scalar>& samplingCurveDist
 ) const
 {
-    passiveParticleCloud particleCloud(mesh());
     particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
 
     // Alias
@@ -153,8 +153,9 @@ void CML::polyLineSet::calcSamples
         oldPoint = sampleCoords_[sampleI];
     }
 
-    // Force calculation of minimum-tet decomposition.
-    (void) mesh().tetBasePtIs();
+    // Force calculation of cloud addressing on all processors
+    const bool oldMoving = const_cast<polyMesh&>(mesh()).moving(false);
+    passiveParticleCloud particleCloud(mesh());
 
     // current segment number
     label segmentI = 0;
@@ -263,6 +264,7 @@ void CML::polyLineSet::calcSamples
 
         bool bReached = trackToBoundary
         (
+            particleCloud,
             singleParticle,
             sampleI,
             samplingPts,
@@ -302,6 +304,8 @@ void CML::polyLineSet::calcSamples
 
         startSegmentI = samplingPts.size();
     }
+
+    const_cast<polyMesh&>(mesh()).moving(oldMoving);
 }
 
 
@@ -346,7 +350,7 @@ CML::polyLineSet::polyLineSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const word& axis,
     const List<point>& sampleCoords
 )
@@ -367,7 +371,7 @@ CML::polyLineSet::polyLineSet
 (
     const word& name,
     const polyMesh& mesh,
-    meshSearch& searchEngine,
+    const meshSearch& searchEngine,
     const dictionary& dict
 )
 :

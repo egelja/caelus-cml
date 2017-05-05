@@ -25,7 +25,7 @@ License
 #include "EdgeMap.hpp"
 #include "triSurfaceFields.hpp"
 #include "Time.hpp"
-#include "PackedBoolList.hpp"
+#include "PatchTools.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -141,10 +141,12 @@ bool CML::triSurfaceMesh::addFaceToEdge
 
 bool CML::triSurfaceMesh::isSurfaceClosed() const
 {
+    const pointField& pts = triSurface::points();
+
     // Construct pointFaces. Let's hope surface has compact point
     // numbering ...
     labelListList pointFaces;
-    invertManyToMany(points().size(), *this, pointFaces);
+    invertManyToMany(pts.size(), *this, pointFaces);
 
     // Loop over all faces surrounding point. Count edges emanating from point.
     // Every edge should be used by two faces exactly.
@@ -214,99 +216,6 @@ bool CML::triSurfaceMesh::isSurfaceClosed() const
 }
 
 
-// Gets all intersections after initial one. Adds smallVec and starts tracking
-// from there.
-void CML::triSurfaceMesh::getNextIntersections
-(
-    const indexedOctree<treeDataTriSurface>& octree,
-    const point& start,
-    const point& end,
-    const vector& smallVec,
-    DynamicList<pointIndexHit, 1, 1>& hits
-)
-{
-    const vector dirVec(end-start);
-    const scalar magSqrDirVec(magSqr(dirVec));
-
-    // Initial perturbation amount
-    vector perturbVec(smallVec);
-
-    while (true)
-    {
-        // Start tracking from last hit.
-        point pt = hits.last().hitPoint() + perturbVec;
-
-        if (((pt-start)&dirVec) > magSqrDirVec)
-        {
-            return;
-        }
-
-        // See if any intersection between pt and end
-        pointIndexHit inter = octree.findLine(pt, end);
-
-        if (!inter.hit())
-        {
-            return;
-        }
-
-        // Check if already found this intersection
-        bool duplicateHit = false;
-        forAllReverse(hits, i)
-        {
-            if (hits[i].index() == inter.index())
-            {
-                duplicateHit = true;
-                break;
-            }
-        }
-
-
-        if (duplicateHit)
-        {
-            // Hit same triangle again. Increase perturbVec and try again.
-            perturbVec *= 2;
-        }
-        else
-        {
-            // Proper hit
-            hits.append(inter);
-            // Restore perturbVec
-            perturbVec = smallVec;
-        }
-    }
-}
-
-
-void CML::triSurfaceMesh::calcBounds(boundBox& bb, label& nPoints) const
-{
-    // Unfortunately nPoints constructs meshPoints() so do compact version
-    // ourselves
-
-    const triSurface& s = static_cast<const triSurface&>(*this);
-
-    PackedBoolList pointIsUsed(points().size());
-
-    nPoints = 0;
-    bb = boundBox::invertedBox;
-
-    forAll(s, faceI)
-    {
-        const triSurface::FaceType& f = s[faceI];
-
-        forAll(f, fp)
-        {
-            label pointI = f[fp];
-            if (pointIsUsed.set(pointI, 1u))
-            {
-                bb.min() = ::CML::min(bb.min(), points()[pointI]);
-                bb.max() = ::CML::max(bb.max(), points()[pointI]);
-                nPoints++;
-            }
-        }
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::triSurfaceMesh::triSurfaceMesh(const IOobject& io, const triSurface& s)
@@ -326,12 +235,13 @@ CML::triSurfaceMesh::triSurfaceMesh(const IOobject& io, const triSurface& s)
         )
     ),
     triSurface(s),
-    tolerance_(indexedOctree<treeDataTriSurface>::perturbTol()),
+    triSurfaceRegionSearch(s),
     minQuality_(-1),
-    maxTreeDepth_(10),
     surfaceClosed_(-1)
 {
-    bounds() = boundBox(points());
+    const pointField& pts = triSurface::points();
+
+    bounds() = boundBox(pts);
 }
 
 
@@ -373,12 +283,13 @@ CML::triSurfaceMesh::triSurfaceMesh(const IOobject& io)
             searchableSurface::objectPath()
         )
     ),
-    tolerance_(indexedOctree<treeDataTriSurface>::perturbTol()),
+    triSurfaceRegionSearch(static_cast<const triSurface&>(*this)),
     minQuality_(-1),
-    maxTreeDepth_(10),
     surfaceClosed_(-1)
 {
-    bounds() = boundBox(points());
+    const pointField& pts = triSurface::points();
+
+    bounds() = boundBox(pts);
 }
 
 
@@ -423,9 +334,8 @@ CML::triSurfaceMesh::triSurfaceMesh
             searchableSurface::objectPath()
         )
     ),
-    tolerance_(indexedOctree<treeDataTriSurface>::perturbTol()),
+    triSurfaceRegionSearch(static_cast<const triSurface&>(*this), dict),
     minQuality_(-1),
-    maxTreeDepth_(10),
     surfaceClosed_(-1)
 {
     scalar scaleFactor = 0;
@@ -439,14 +349,9 @@ CML::triSurfaceMesh::triSurfaceMesh
         triSurface::scalePoints(scaleFactor);
     }
 
-    bounds() = boundBox(points());
+    const pointField& pts = triSurface::points();
 
-    // Have optional non-standard search tolerance for gappy surfaces.
-    if (dict.readIfPresent("tolerance", tolerance_) && tolerance_ > 0)
-    {
-        Info<< searchableSurface::name() << " : using intersection tolerance "
-            << tolerance_ << endl;
-    }
+    bounds() = boundBox(pts);
 
     // Have optional minimum quality for normal calculation
     if (dict.readIfPresent("minQuality", minQuality_) && minQuality_ > 0)
@@ -454,13 +359,6 @@ CML::triSurfaceMesh::triSurfaceMesh
         Info<< searchableSurface::name()
             << " : ignoring triangles with quality < "
             << minQuality_ << " for normals calculation." << endl;
-    }
-
-    // Have optional non-standard tree-depth to limit storage.
-    if (dict.readIfPresent("maxTreeDepth", maxTreeDepth_) && maxTreeDepth_ > 0)
-    {
-        Info<< searchableSurface::name() << " : using maximum tree depth "
-            << maxTreeDepth_ << endl;
     }
 }
 
@@ -475,7 +373,7 @@ CML::triSurfaceMesh::~triSurfaceMesh()
 
 void CML::triSurfaceMesh::clearOut()
 {
-    tree_.clear();
+    triSurfaceRegionSearch::clearOut();
     edgeTree_.clear();
     triSurface::clearOut();
 }
@@ -483,14 +381,53 @@ void CML::triSurfaceMesh::clearOut()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-CML::pointField CML::triSurfaceMesh::coordinates() const
+CML::tmp<CML::pointField> CML::triSurfaceMesh::coordinates() const
 {
+    tmp<pointField> tPts(new pointField(8));
+    pointField& pt = tPts();
+
     // Use copy to calculate face centres so they don't get stored
-    return PrimitivePatch<triSurface::FaceType, SubList, const pointField&>
+    pt = PrimitivePatch<triSurface::FaceType, SubList, const pointField&>
     (
         SubList<triSurface::FaceType>(*this, triSurface::size()),
         triSurface::points()
     ).faceCentres();
+
+    return tPts;
+}
+
+
+void CML::triSurfaceMesh::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres = coordinates();
+    radiusSqr.setSize(size());
+    radiusSqr = 0.0;
+
+    const pointField& pts = triSurface::points();
+
+    forAll(*this, faceI)
+    {
+        const labelledTri& f = triSurface::operator[](faceI);
+        const point& fc = centres[faceI];
+        forAll(f, fp)
+        {
+            const point& pt = pts[f[fp]];
+            radiusSqr[faceI] = max(radiusSqr[faceI], CML::magSqr(fc-pt));
+        }
+    }
+
+    // Add a bit to make sure all points are tested inside
+    radiusSqr += CML::sqr(SMALL);
+}
+
+
+CML::tmp<CML::pointField> CML::triSurfaceMesh::points() const
+{
+    return triSurface::points();
 }
 
 
@@ -506,61 +443,9 @@ bool CML::triSurfaceMesh::overlaps(const boundBox& bb) const
 
 void CML::triSurfaceMesh::movePoints(const pointField& newPoints)
 {
-    tree_.clear();
+    triSurfaceRegionSearch::clearOut();
     edgeTree_.clear();
     triSurface::movePoints(newPoints);
-}
-
-
-const CML::indexedOctree<CML::treeDataTriSurface>&
-CML::triSurfaceMesh::tree() const
-{
-    if (tree_.empty())
-    {
-        // Calculate bb without constructing local point numbering.
-        treeBoundBox bb;
-        label nPoints;
-        calcBounds(bb, nPoints);
-
-        if (nPoints != points().size())
-        {
-            WarningIn("triSurfaceMesh::tree() const")
-                << "Surface " << searchableSurface::name()
-                << " does not have compact point numbering."
-                << " Of " << points().size() << " only " << nPoints
-                << " are used. This might give problems in some routines."
-                << endl;
-        }
-
-
-        // Random number generator. Bit dodgy since not exactly random ;-)
-        Random rndGen(65431);
-
-        // Slightly extended bb. Slightly off-centred just so on symmetric
-        // geometry there are less face/edge aligned items.
-        bb = bb.extend(rndGen, 1E-4);
-        bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-
-        scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-        indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
-
-        tree_.reset
-        (
-            new indexedOctree<treeDataTriSurface>
-            (
-                treeDataTriSurface(*this, tolerance_),
-                bb,
-                maxTreeDepth_,  // maxLevel
-                10,             // leafsize
-                3.0             // duplicity
-            )
-        );
-
-        indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
-    }
-
-    return tree_();
 }
 
 
@@ -580,22 +465,31 @@ CML::triSurfaceMesh::edgeTree() const
           + nInternalEdges()
         );
 
-        treeBoundBox bb;
-        label nPoints;
-        calcBounds(bb, nPoints);
+        treeBoundBox bb(vector::zero, vector::zero);
 
-        // Random number generator. Bit dodgy since not exactly random ;-)
-        Random rndGen(65431);
+        if (bEdges.size())
+        {
+            label nPoints;
+            PatchTools::calcBounds
+            (
+                static_cast<const triSurface&>(*this),
+                bb,
+                nPoints
+            );
 
-        // Slightly extended bb. Slightly off-centred just so on symmetric
-        // geometry there are less face/edge aligned items.
+            // Random number generator. Bit dodgy since not exactly random ;-)
+            Random rndGen(65431);
 
-        bb = bb.extend(rndGen, 1E-4);
-        bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            // Slightly extended bb. Slightly off-centred just so on symmetric
+            // geometry there are less face/edge aligned items.
 
-        scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-        indexedOctree<treeDataEdge>::perturbTol() = tolerance_;
+            bb = bb.extend(rndGen, 1e-4);
+            bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        }
+
+        scalar oldTol = indexedOctree<treeDataEdge>::perturbTol();
+        indexedOctree<treeDataEdge>::perturbTol() = tolerance();
 
         edgeTree_.reset
         (
@@ -609,7 +503,7 @@ CML::triSurfaceMesh::edgeTree() const
                     bEdges          // selected edges
                 ),
                 bb,                 // bb
-                maxTreeDepth_,      // maxLevel
+                maxTreeDepth(),      // maxLevel
                 10,                 // leafsize
                 3.0                 // duplicity
             )
@@ -661,23 +555,25 @@ void CML::triSurfaceMesh::findNearest
     List<pointIndexHit>& info
 ) const
 {
-    const indexedOctree<treeDataTriSurface>& octree = tree();
+    triSurfaceSearch::findNearest(samples, nearestDistSqr, info);
+}
 
-    info.setSize(samples.size());
 
-    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
-
-    forAll(samples, i)
-    {
-        static_cast<pointIndexHit&>(info[i]) = octree.findNearest
-        (
-            samples[i],
-            nearestDistSqr[i]
-        );
-    }
-
-    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
+void CML::triSurfaceMesh::findNearest
+(
+    const pointField& samples,
+    const scalarField& nearestDistSqr,
+    const labelList& regionIndices,
+    List<pointIndexHit>& info
+) const
+{
+    triSurfaceRegionSearch::findNearest
+    (
+        samples,
+        nearestDistSqr,
+        regionIndices,
+        info
+    );
 }
 
 
@@ -688,23 +584,7 @@ void CML::triSurfaceMesh::findLine
     List<pointIndexHit>& info
 ) const
 {
-    const indexedOctree<treeDataTriSurface>& octree = tree();
-
-    info.setSize(start.size());
-
-    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
-
-    forAll(start, i)
-    {
-        static_cast<pointIndexHit&>(info[i]) = octree.findLine
-        (
-            start[i],
-            end[i]
-        );
-    }
-
-    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
+    triSurfaceSearch::findLine(start, end, info);
 }
 
 
@@ -715,23 +595,7 @@ void CML::triSurfaceMesh::findLineAny
     List<pointIndexHit>& info
 ) const
 {
-    const indexedOctree<treeDataTriSurface>& octree = tree();
-
-    info.setSize(start.size());
-
-    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
-
-    forAll(start, i)
-    {
-        static_cast<pointIndexHit&>(info[i]) = octree.findLineAny
-        (
-            start[i],
-            end[i]
-        );
-    }
-
-    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
+    triSurfaceSearch::findLineAny(start, end, info);
 }
 
 
@@ -742,57 +606,7 @@ void CML::triSurfaceMesh::findLineAll
     List<List<pointIndexHit> >& info
 ) const
 {
-    const indexedOctree<treeDataTriSurface>& octree = tree();
-
-    info.setSize(start.size());
-
-    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
-
-    // Work array
-    DynamicList<pointIndexHit, 1, 1> hits;
-
-    // Tolerances:
-    // To find all intersections we add a small vector to the last intersection
-    // This is chosen such that
-    // - it is significant (SMALL is smallest representative relative tolerance;
-    //   we need something bigger since we're doing calculations)
-    // - if the start-end vector is zero we still progress
-    const vectorField dirVec(end-start);
-    const vectorField smallVec
-    (
-        indexedOctree<treeDataTriSurface>::perturbTol()*dirVec
-      + vector(ROOTVSMALL,ROOTVSMALL,ROOTVSMALL)
-    );
-
-    forAll(start, pointI)
-    {
-        // See if any intersection between pt and end
-        pointIndexHit inter = octree.findLine(start[pointI], end[pointI]);
-
-        if (inter.hit())
-        {
-            hits.clear();
-            hits.append(inter);
-
-            getNextIntersections
-            (
-                octree,
-                start[pointI],
-                end[pointI],
-                smallVec[pointI],
-                hits
-            );
-
-            info[pointI].transfer(hits);
-        }
-        else
-        {
-            info[pointI].clear();
-        }
-    }
-
-    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
+    triSurfaceSearch::findLineAll(start, end, info);
 }
 
 
@@ -824,6 +638,7 @@ void CML::triSurfaceMesh::getNormal
 ) const
 {
     const triSurface& s = static_cast<const triSurface&>(*this);
+    const pointField& pts = s.points();
 
     normal.setSize(info.size());
 
@@ -839,40 +654,25 @@ void CML::triSurfaceMesh::getNormal
             if (info[i].hit())
             {
                 label faceI = info[i].index();
-                normal[i] = s[faceI].normal(points());
+                normal[i] = s[faceI].normal(pts);
 
-                scalar qual = s[faceI].tri(points()).quality();
+                scalar qual = s[faceI].tri(pts).quality();
 
                 if (qual < minQuality_)
                 {
-                    //{
-                    //    Pout<< "** for triangle:" << s[faceI].tri(points())
-                    //        << " quality:" << qual
-                    //        << " old normal:"
-                    //        << normal[i]/(mag(normal[i])+VSMALL)
-                    //        << endl;
-                    //}
-
                     // Search neighbouring triangles
                     const labelList& fFaces = faceFaces[faceI];
 
                     forAll(fFaces, j)
                     {
                         label nbrI = fFaces[j];
-                        scalar nbrQual = s[nbrI].tri(points()).quality();
+                        scalar nbrQual = s[nbrI].tri(pts).quality();
                         if (nbrQual > qual)
                         {
                             qual = nbrQual;
-                            normal[i] = s[nbrI].normal(points());
+                            normal[i] = s[nbrI].normal(pts);
                         }
                     }
-
-                    //{
-                    //    Pout<< "   replacement quality:" << qual
-                    //        << " replacement normal:"
-                    //        << normal[i]/(mag(normal[i])+VSMALL)
-                    //        << endl;
-                    //}
                 }
 
                 normal[i] /= mag(normal[i]) + VSMALL;
@@ -895,7 +695,7 @@ void CML::triSurfaceMesh::getNormal
                 //normal[i] = faceNormals()[faceI];
 
                 //- Uncached
-                normal[i] = s[faceI].normal(points());
+                normal[i] = s[faceI].normal(pts);
                 normal[i] /= mag(normal[i]) + VSMALL;
             }
             else
@@ -969,15 +769,25 @@ void CML::triSurfaceMesh::getVolumeType
     volType.setSize(points.size());
 
     scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance_;
+    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance();
 
     forAll(points, pointI)
     {
         const point& pt = points[pointI];
 
-        // - use cached volume type per each tree node
-        // - cheat conversion since same values
-        volType[pointI] = static_cast<volumeType>(tree().getVolumeType(pt));
+        if (!tree().bb().contains(pt))
+        {
+            // Have to calculate directly as outside the octree
+            volType[pointI] = tree().shapes().getVolumeType(tree(), pt);
+        }
+        else
+        {
+            // - use cached volume type per each tree node
+            volType[pointI] = tree().getVolumeType(pt);
+        }
+
+//        Info<< "octree : " << pt << " = "
+//            << volumeType::names[volType[pointI]] << endl;
     }
 
     indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;

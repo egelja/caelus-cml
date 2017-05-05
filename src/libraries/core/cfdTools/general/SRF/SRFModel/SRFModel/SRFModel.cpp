@@ -77,7 +77,7 @@ bool CML::SRF::SRFModel::read()
     if (regIOobject::read())
     {
         // Re-read axis
-        SRFModelCoeffs_.lookup("axis") >> axis_;
+        lookup("axis") >> axis_;
         axis_ /= mag(axis_);
 
         // Re-read sub-model coeffs

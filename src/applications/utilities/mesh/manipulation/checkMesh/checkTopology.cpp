@@ -286,6 +286,37 @@ CML::label CML::checkTopology
                 rs
             );
             ctr.write();
+
+
+            // write cellSet for each region
+            PtrList<cellSet> cellRegions(rs.nRegions());
+            for (label i = 0; i < rs.nRegions(); i++)
+            {
+                cellRegions.set
+                (
+                    i,
+                    new cellSet
+                    (
+                        mesh,
+                        "region" + CML::name(i),
+                        mesh.nCells()/100
+                    )
+                );
+            }
+
+            forAll(rs, i)
+            {
+                cellRegions[rs[i]].insert(i);
+            }
+
+            for (label i = 0; i < rs.nRegions(); i++)
+            {
+                Info<< "  <<Writing region " << i << " with "
+                    << returnReduce(cellRegions[i].size(), sumOp<scalar>())
+                    << " cells to cellSet " << cellRegions[i].name() << endl;
+
+                cellRegions[i].write();
+            }
         }
     }
 

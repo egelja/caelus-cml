@@ -215,6 +215,13 @@ public:
                 const label  minIter
             );
 
+            bool checkConvergence
+            (
+                const scalar tolerance,
+                const label  iter,
+                const label  minIter
+            );
+
             //- Singularity test
             bool checkSingularity(const scalar residual);
 
@@ -264,6 +271,10 @@ public:
 
             //- Mainimum number of iterations in the solver
             label minIter_;
+
+            //- Threshold value for switching from relative to absolute
+            //  tolerance in the first linear solver iteration
+            label eps_;
 
             //- Final convergence tolerance
             scalar tolerance_;
@@ -766,6 +777,7 @@ public:
 
             void sumDiag();
             void negSumDiag();
+            void rowSum(scalarField& s) const;
 
             void sumMagOffDiag(scalarField& sumOff) const;
 

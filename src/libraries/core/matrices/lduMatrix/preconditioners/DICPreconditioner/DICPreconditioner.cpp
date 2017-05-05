@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,8 +23,6 @@ License
 #include "DICPreconditioner.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(DICPreconditioner, 0);
@@ -33,9 +32,6 @@ namespace CML
         addDICPreconditionerSymMatrixConstructorToTable_;
 }
 
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
 CML::DICPreconditioner::DICPreconditioner
 (
     const lduMatrix::solver& sol,
@@ -43,54 +39,13 @@ CML::DICPreconditioner::DICPreconditioner
 )
 :
     lduMatrix::preconditioner(sol),
-    rD_(sol.matrix().diag())
+    rD_(sol.matrix().diag()),
+    rDuUpper_(sol.matrix().upper().size()),
+    rDlUpper_(sol.matrix().upper().size())
 {
-    calcReciprocalD(rD_, sol.matrix());
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void CML::DICPreconditioner::calcReciprocalD
-(
-    scalarField& rD,
-    const lduMatrix& matrix
-)
-{
-    scalar* RESTRICT rDPtr = rD.begin();
-
-    const label* const RESTRICT uPtr = matrix.lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr = matrix.lduAddr().lowerAddr().begin();
-    const scalar* const RESTRICT upperPtr = matrix.upper().begin();
-
-    // Calculate the DIC diagonal
-    register const label nFaces = matrix.upper().size();
-    for (register label face=0; face<nFaces; face++)
-    {
-        rDPtr[uPtr[face]] -= upperPtr[face]*upperPtr[face]/rDPtr[lPtr[face]];
-    }
-
-
-    // Calculate the reciprocal of the preconditioned diagonal
-    register const label nCells = rD.size();
-
-    for (register label cell=0; cell<nCells; cell++)
-    {
-        rDPtr[cell] = 1.0/rDPtr[cell];
-    }
-}
-
-
-void CML::DICPreconditioner::precondition
-(
-    scalarField& wA,
-    const scalarField& rA,
-    const direction
-) const
-{
-    scalar* RESTRICT wAPtr = wA.begin();
-    const scalar* RESTRICT rAPtr = rA.begin();
-    const scalar* RESTRICT rDPtr = rD_.begin();
+    scalar* RESTRICT rDPtr = rD_.begin();
+    scalar* RESTRICT rDuUpperPtr = rDuUpper_.begin();
+    scalar* RESTRICT rDlUpperPtr = rDlUpper_.begin();
 
     const label* const RESTRICT uPtr =
         solver_.matrix().lduAddr().upperAddr().begin();
@@ -99,25 +54,63 @@ void CML::DICPreconditioner::precondition
     const scalar* const RESTRICT upperPtr =
         solver_.matrix().upper().begin();
 
-    register label nCells = wA.size();
+    register label nCells = rD_.size();
+    register label nFaces = solver_.matrix().upper().size();
+
+    for (register label face=0; face<nFaces; face++)
+    {
+        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/rDPtr[lPtr[face]];
+    }
+
+    // Generate reciprocal DIC
+    for (register label cell=0; cell<nCells; cell++)
+    {
+        rDPtr[cell] = 1.0/rDPtr[cell];
+    }
+
+    for (register label face=0; face<nFaces; face++)
+    {
+        rDuUpperPtr[face] = rDPtr[uPtr[face]]*upperPtr[face];
+        rDlUpperPtr[face] = rDPtr[lPtr[face]]*upperPtr[face];
+    }
+}
+
+void CML::DICPreconditioner::precondition
+(
+    scalarField& w,
+    const scalarField& r,
+    const direction
+) const
+{
+    scalar* RESTRICT wPtr = w.begin();
+    const scalar* RESTRICT rPtr = r.begin();
+    const scalar* RESTRICT rDPtr = rD_.begin();
+
+    const label* const RESTRICT uPtr =
+        solver_.matrix().lduAddr().upperAddr().begin();
+    const label* const RESTRICT lPtr =
+        solver_.matrix().lduAddr().lowerAddr().begin();
+
+    const scalar* const RESTRICT rDuUpperPtr = rDuUpper_.begin();
+    const scalar* const RESTRICT rDlUpperPtr = rDlUpper_.begin();
+
+    register label nCells = w.size();
     register label nFaces = solver_.matrix().upper().size();
     register label nFacesM1 = nFaces - 1;
 
     for (register label cell=0; cell<nCells; cell++)
     {
-        wAPtr[cell] = rDPtr[cell]*rAPtr[cell];
+        wPtr[cell] = rDPtr[cell]*rPtr[cell];
     }
 
     for (register label face=0; face<nFaces; face++)
     {
-        wAPtr[uPtr[face]] -= rDPtr[uPtr[face]]*upperPtr[face]*wAPtr[lPtr[face]];
+        wPtr[uPtr[face]] -= rDuUpperPtr[face]*wPtr[lPtr[face]];
     }
 
     for (register label face=nFacesM1; face>=0; face--)
     {
-        wAPtr[lPtr[face]] -= rDPtr[lPtr[face]]*upperPtr[face]*wAPtr[uPtr[face]];
+        wPtr[lPtr[face]] -= rDlUpperPtr[face]*wPtr[uPtr[face]];
     }
 }
 
-
-// ************************************************************************* //

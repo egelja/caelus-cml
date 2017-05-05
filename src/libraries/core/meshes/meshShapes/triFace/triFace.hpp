@@ -42,6 +42,7 @@ SourceFiles
 #include "intersection.hpp"
 #include "pointField.hpp"
 #include "triPointRef.hpp"
+#include "ListListOps.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -164,6 +165,16 @@ public:
             const scalar tol = 0.0
         ) const;
 
+        inline pointHit intersection
+        (
+            const point& p,
+            const vector& q,
+            const point& ctr,
+            const pointField& points,
+            const intersection::algorithm alg,
+            const scalar tol = 0.0
+        ) const;
+
         //- Return nearest point to face
         inline pointHit nearestPoint
         (
@@ -243,6 +254,30 @@ inline unsigned Hash<triFace>::operator()(const triFace& t) const
 
 template<>
 inline bool contiguous<triFace>()  {return true;}
+
+
+//- Hash specialization to offset faces in ListListOps::combineOffset
+template<>
+class offsetOp<triFace>
+{
+
+public:
+
+    inline triFace operator()
+    (
+        const triFace& x,
+        const label offset
+    ) const
+    {
+        triFace result(x);
+
+        forAll(x, xI)
+        {
+            result[xI] = x[xI] + offset;
+        }
+        return result;
+    }
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -498,6 +533,20 @@ inline CML::pointHit CML::triFace::intersection
 ) const
 {
     return this->tri(points).intersection(p, q, alg, tol);
+}
+
+
+inline CML::pointHit CML::triFace::intersection
+(
+    const point& p,
+    const vector& q,
+    const point& ctr,
+    const pointField& points,
+    const intersection::algorithm alg,
+    const scalar tol
+) const
+{
+    return intersection(p, q, points, alg, tol);
 }
 
 

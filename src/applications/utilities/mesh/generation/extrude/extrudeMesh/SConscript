@@ -21,7 +21,7 @@ extrudeMeshEnv.Prepend(CPPPATH = lib_inc)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-lib_link = ['libsurfMesh','libdynamicMesh','libextrudeModel']
+lib_link = ['surfMesh','dynamicMesh','extrudeModel']
   
 extrudeMeshEnv.Append(LIBS = lib_link)
 

@@ -60,8 +60,6 @@ class processorCyclicPolyPatch
         //- Index of originating patch
         mutable label referPatchID_;
 
-    // Private member functions
-
 
 protected:
 
@@ -120,7 +118,9 @@ public:
             const polyBoundaryMesh& bm,
             const int myProcNo,
             const int neighbProcNo,
-            const word& referPatchName
+            const word& referPatchName,
+            const transformType transform = UNKNOWN,
+            const word& patchType = typeName
         );
 
         //- Construct from dictionary
@@ -129,7 +129,8 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyBoundaryMesh&
+            const polyBoundaryMesh&,
+            const word& patchType
         );
 
         //- Construct as copy, resetting the boundary mesh
@@ -141,6 +142,17 @@ public:
 
         //- Construct as given the original patch and resetting the
         //  face list and boundary mesh information
+        processorCyclicPolyPatch
+        (
+            const processorCyclicPolyPatch& pp,
+            const polyBoundaryMesh& bm,
+            const label index,
+            const label newSize,
+            const label newStart
+        );
+
+        //- Construct as given the original patch and resetting the
+        //  face list, boundary mesh information and referPatch
         processorCyclicPolyPatch
         (
             const processorCyclicPolyPatch& pp,
@@ -166,6 +178,29 @@ public:
         virtual autoPtr<polyPatch> clone(const polyBoundaryMesh& bm) const
         {
             return autoPtr<polyPatch>(new processorCyclicPolyPatch(*this, bm));
+        }
+
+        //- Construct and return a clone, resetting the face list
+        //  and boundary mesh
+        virtual autoPtr<polyPatch> clone
+        (
+            const polyBoundaryMesh& bm,
+            const label index,
+            const label newSize,
+            const label newStart
+        ) const
+        {
+            return autoPtr<polyPatch>
+            (
+                new processorCyclicPolyPatch
+                (
+                    *this,
+                    bm,
+                    index,
+                    newSize,
+                    newStart
+                )
+            );
         }
 
         //- Construct and return a clone, resetting the face list
@@ -218,8 +253,7 @@ public:
 
 
     // Destructor
-
-        virtual ~processorCyclicPolyPatch();
+    virtual ~processorCyclicPolyPatch();
 
 
     // Member functions
@@ -268,6 +302,20 @@ public:
         virtual bool owner() const
         {
             return referPatch().owner();
+        }
+
+        //- Type of transform
+        virtual transformType transform() const
+        {
+            return referPatch().transform();
+        }
+
+        //- Type of transform
+        //  This is currently only for use when collapsing generated
+        //  meshes that can have zero area faces.
+        virtual transformType& transform()
+        {
+            return const_cast<coupledPolyPatch&>(referPatch()).transform();
         }
 
         //- Transform a patch-based position from other side to this side

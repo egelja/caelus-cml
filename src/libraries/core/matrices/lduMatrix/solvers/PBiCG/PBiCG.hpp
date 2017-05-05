@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,6 +28,16 @@ Description
 SourceFiles
     PBiCG.cpp
 
+References:
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef PBiCG_H
@@ -34,14 +45,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class PBiCG Declaration
-\*---------------------------------------------------------------------------*/
 
 class PBiCG
 :
@@ -86,19 +91,14 @@ public:
         //- Solve the matrix with this solver
         virtual lduMatrix::solverPerformance solve
         (
-            scalarField& psi,
-            const scalarField& source,
+            scalarField& x,
+            const scalarField& b,
             const direction cmpt=0
         ) const;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

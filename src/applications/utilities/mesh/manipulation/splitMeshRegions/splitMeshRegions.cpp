@@ -324,7 +324,7 @@ label addPatch(fvMesh& mesh, const polyPatch& patch)
     oldToNew[sz] = insertPatchI;
 
     // Shuffle into place
-    polyPatches.reorder(oldToNew);
+    polyPatches.reorder(oldToNew,true);
     fvPatches.reorder(oldToNew);
 
     reorderPatchFields<volScalarField>(mesh, oldToNew);
@@ -355,7 +355,7 @@ void reorderPatches
     fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
 
     // Shuffle into place
-    polyPatches.reorder(oldToNew);
+    polyPatches.reorder(oldToNew,true);
     fvPatches.reorder(oldToNew);
 
     reorderPatchFields<volScalarField>(mesh, oldToNew);
@@ -772,10 +772,16 @@ void getInterfaceSizes
             }
             interfaceSizes[nInterfaces] = infoIter();
 
-            Map<label> zoneAndInterface;
-            zoneAndInterface.insert(zoneID, nInterfaces);
-            regionsToInterface.insert(e, zoneAndInterface);
-
+            if (regionsToInterface.found(e))
+            {
+                regionsToInterface[e].insert(zoneID, nInterfaces);
+            }
+            else
+            {
+                Map<label> zoneAndInterface;
+                zoneAndInterface.insert(zoneID, nInterfaces);
+                regionsToInterface.insert(e, zoneAndInterface);
+            }
             nInterfaces++;
         }
     }

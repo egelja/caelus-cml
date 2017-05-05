@@ -106,4 +106,4 @@ surfMeshEnv.Install(install_dir, libsurfMesh)
 
 if (surfMeshEnv['WHICH_OS'] == "darwin"):
 
-  surfMeshEnv.Append(SHLINKFLAGS ='-install_name @' + surfMeshEnv['LIB_PLATFORM_INSTALL'] + '/libsurfMesh.dylib')
+  surfMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsurfMesh.dylib')

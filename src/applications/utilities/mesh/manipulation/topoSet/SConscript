@@ -31,10 +31,7 @@ topoSetEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if topoSetEnv['WHICH_OS'] == "windows":
-  lib_link = []
-else:
-  lib_link = []
+lib_link = []
   
 topoSetEnv.Append(LIBS = lib_link)
 

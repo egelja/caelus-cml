@@ -23,10 +23,12 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvMesh.hpp"
+#include "surfaceFieldsFwd.hpp"
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "demandDrivenData.hpp"
 #include "coupledFvPatch.hpp"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -41,6 +43,7 @@ void CML::surfaceInterpolation::clearOut()
     deleteDemandDrivenData(deltaCoeffs_);
     deleteDemandDrivenData(nonOrthDeltaCoeffs_);
     deleteDemandDrivenData(nonOrthCorrectionVectors_);
+	deleteDemandDrivenData(fvNonOrthCorrectionVectors_);
 }
 
 
@@ -52,7 +55,8 @@ CML::surfaceInterpolation::surfaceInterpolation(const fvMesh& fvm)
     weights_(NULL),
     deltaCoeffs_(NULL),
     nonOrthDeltaCoeffs_(NULL),
-    nonOrthCorrectionVectors_(NULL)
+    nonOrthCorrectionVectors_(NULL),
+	fvNonOrthCorrectionVectors_(NULL)
 {}
 
 
@@ -114,13 +118,27 @@ CML::surfaceInterpolation::nonOrthCorrectionVectors() const
 }
 
 
-// Do what is neccessary if the mesh has moved
+const CML::FieldField<CML::fvsPatchField, CML::vector>&
+CML::surfaceInterpolation::fvNonOrthCorrectionVectors() const
+{
+    // These get made at the same time as the nonOrthCorrection
+    // vectors, so make them if those don't exist
+    if (!nonOrthCorrectionVectors_)
+    {
+        makeNonOrthCorrectionVectors();
+    }
+
+    return (*fvNonOrthCorrectionVectors_);
+}
+
+// Do what is necessary if the mesh has moved
 bool CML::surfaceInterpolation::movePoints()
 {
     deleteDemandDrivenData(weights_);
     deleteDemandDrivenData(deltaCoeffs_);
     deleteDemandDrivenData(nonOrthDeltaCoeffs_);
     deleteDemandDrivenData(nonOrthCorrectionVectors_);
+	deleteDemandDrivenData(fvNonOrthCorrectionVectors_);
 
     return true;
 }
@@ -290,7 +308,7 @@ void CML::surfaceInterpolation::makeNonOrthDeltaCoeffs() const
 
     forAll(nonOrthDeltaCoeffs.boundaryField(), patchi)
     {
-        vectorField delta = mesh_.boundary()[patchi].delta();
+        vectorField delta(mesh_.boundary()[patchi].delta());
 
         nonOrthDeltaCoeffs.boundaryField()[patchi] =
             1.0/max(mesh_.boundary()[patchi].nf() & delta, 0.05*mag(delta));
@@ -320,6 +338,12 @@ void CML::surfaceInterpolation::makeNonOrthCorrectionVectors() const
     );
     surfaceVectorField& corrVecs = *nonOrthCorrectionVectors_;
 
+	// Create FieldField with size of nonOrthCorrectionVectors boundaryField
+	fvNonOrthCorrectionVectors_ = new FieldField<fvsPatchField, vector>(corrVecs.boundaryField().size());
+	
+	// Values for fixedValue boundary conditions
+	FieldField<fvsPatchField, vector>& fvCorrVecs = *fvNonOrthCorrectionVectors_; 
+
     // Set local references to mesh data
     const volVectorField& C = mesh_.C();
     const labelUList& owner = mesh_.owner();
@@ -336,17 +360,46 @@ void CML::surfaceInterpolation::makeNonOrthCorrectionVectors() const
         corrVecs[facei] = unitArea - delta*NonOrthDeltaCoeffs[facei];
     }
 
-    // Boundary correction vectors set to zero for boundary patches
+    // Boundary correction vectors set to zero for fixedGradient boundary patches
     // and calculated consistently with internal corrections for
     // coupled patches
-
+	
     forAll(corrVecs.boundaryField(), patchi)
     {
+	    // Clone the nonOrthoCorrectionVectors boundaryField values
+	    fvCorrVecs.set(patchi, corrVecs.boundaryField()[patchi].clone(corrVecs.dimensionedInternalField()));
+		
         fvsPatchVectorField& patchCorrVecs = corrVecs.boundaryField()[patchi];
 
         if (!patchCorrVecs.coupled())
         {
-            patchCorrVecs = vector::zero;
+		    // Set the correction to zero. This is okay for fixedGradient conditions
+			patchCorrVecs = vector::zero;
+			
+			// Initialise correction to zero
+			fvCorrVecs[patchi] = vector::zero;
+			
+		    const fvsPatchScalarField& patchNonOrthDeltaCoeffs
+                = NonOrthDeltaCoeffs.boundaryField()[patchi];
+
+            const fvPatch& p = patchCorrVecs.patch();
+			
+		    // For non-coupled boundaries the patch delta is already corrected for
+ 			// non-orthogonality. We therefore need to calculate the uncorrected delta.
+			const vectorField Cf(mesh_.boundary()[patchi].Cf());
+			const vectorField Cn(mesh_.boundary()[patchi].Cn());
+
+            forAll(p, patchFacei)
+            {
+			    vector delta = Cf[patchFacei] - Cn[patchFacei];
+				
+                vector unitArea =
+                    Sf.boundaryField()[patchi][patchFacei]
+                   /magSf.boundaryField()[patchi][patchFacei];
+ 
+                fvCorrVecs[patchi][patchFacei] =
+                    unitArea - delta*patchNonOrthDeltaCoeffs[patchFacei];
+            }
         }
         else
         {
@@ -354,7 +407,7 @@ void CML::surfaceInterpolation::makeNonOrthCorrectionVectors() const
                 = NonOrthDeltaCoeffs.boundaryField()[patchi];
 
             const fvPatch& p = patchCorrVecs.patch();
-
+			
             const vectorField patchDeltas(mesh_.boundary()[patchi].delta());
 
             forAll(p, patchFacei)
@@ -364,13 +417,16 @@ void CML::surfaceInterpolation::makeNonOrthCorrectionVectors() const
                    /magSf.boundaryField()[patchi][patchFacei];
 
                 const vector& delta = patchDeltas[patchFacei];
-
+ 
                 patchCorrVecs[patchFacei] =
                     unitArea - delta*patchNonOrthDeltaCoeffs[patchFacei];
+				
             }
+			// Set the boundary values for coupled patches for safety
+			fvCorrVecs[patchi] =  patchCorrVecs;
         }
     }
-
+	
     if (debug)
     {
         Pout<< "surfaceInterpolation::makeNonOrthCorrectionVectors() : "

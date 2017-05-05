@@ -867,11 +867,11 @@ CML::labelList CML::boundaryMesh::getNearest
     {
         scalar sign = mesh().faceNormals()[bFaceI] & splitNormal_;
 
-        if (sign > -1E-5)
+        if (sign > -1e-5)
         {
             rightFaces.append(bFaceI);
         }
-        if (sign < 1E-5)
+        if (sign < 1e-5)
         {
             leftFaces.append(bFaceI);
         }
@@ -905,7 +905,7 @@ CML::labelList CML::boundaryMesh::getNearest
 
     // Extend domain slightly (also makes it 3D if was 2D)
     // Note asymmetry to avoid having faces align with octree cubes.
-    scalar tol = 1E-6 * overallBb.avgDim();
+    scalar tol = 1e-6 * overallBb.avgDim();
 
     point& bbMin = overallBb.min();
     bbMin.x() -= tol;
@@ -917,16 +917,22 @@ CML::labelList CML::boundaryMesh::getNearest
     bbMax.y() += 2*tol;
     bbMax.z() += 2*tol;
 
+    const scalar planarTol =
+        indexedOctree<treeDataPrimitivePatch<uindirectPrimitivePatch> >::
+        perturbTol();
+
+
     // Create the octrees
     indexedOctree
     <
-        treeDataPrimitivePatch<face, UIndirectList, const pointField&>
+        treeDataPrimitivePatch<uindirectPrimitivePatch>
     > leftTree
     (
-        treeDataPrimitivePatch<face, UIndirectList, const pointField&>
+        treeDataPrimitivePatch<uindirectPrimitivePatch>
         (
             false,          // cacheBb
-            leftPatch
+            leftPatch,
+            planarTol
         ),
         overallBb,
         10, // maxLevel
@@ -935,13 +941,14 @@ CML::labelList CML::boundaryMesh::getNearest
     );
     indexedOctree
     <
-        treeDataPrimitivePatch<face, UIndirectList, const pointField&>
+        treeDataPrimitivePatch<uindirectPrimitivePatch>
     > rightTree
     (
-        treeDataPrimitivePatch<face, UIndirectList, const pointField&>
+        treeDataPrimitivePatch<uindirectPrimitivePatch>
         (
             false,          // cacheBb
-            rightPatch
+            rightPatch,
+            planarTol
         ),
         overallBb,
         10, // maxLevel

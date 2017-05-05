@@ -122,7 +122,7 @@ bool CML::porosityModelList::writeData(Ostream& os) const
 void CML::porosityModelList::addResistance
 (
     fvVectorMatrix& UEqn
-) const
+)
 {
     forAll(*this, i)
     {
@@ -136,7 +136,7 @@ void CML::porosityModelList::addResistance
     fvVectorMatrix& UEqn,
     const volScalarField& rho,
     const volScalarField& mu
-) const
+)
 {
     forAll(*this, i)
     {
@@ -150,7 +150,7 @@ void CML::porosityModelList::addResistance
     const fvVectorMatrix& UEqn,
     volTensorField& AU,
     bool correctAUprocBC         
-) const
+)
 {
     forAll(*this, i)
     {

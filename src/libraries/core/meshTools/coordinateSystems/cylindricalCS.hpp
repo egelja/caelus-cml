@@ -32,7 +32,6 @@ SourceFiles
 #define cylindricalCS_H
 
 #include "coordinateSystem.hpp"
-#include "typeInfo.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,6 +55,7 @@ class cylindricalCS
 protected:
 
     // Protected Member Functions
+
 
         //- Convert from local coordinate system to the global Cartesian system
         //  with optional translation for the origin
@@ -83,9 +83,6 @@ protected:
 
 
 public:
-
-    //- Runtime type information
-    TypeName("cylindrical");
 
 
     // Constructors
@@ -127,8 +124,15 @@ public:
             const bool inDegrees=true
         );
 
-        //- Construct from dictionary
-        cylindricalCS(const word& name, const dictionary&);
+        //- Construct from dictionary and name
+        cylindricalCS(const word&, const dictionary&);
+
+        //- Construct from dictionary and objectRegistry
+        cylindricalCS(const objectRegistry&, const dictionary&);
+
+
+    //- Destructor
+    virtual ~cylindricalCS();
 
 
     // Member Functions

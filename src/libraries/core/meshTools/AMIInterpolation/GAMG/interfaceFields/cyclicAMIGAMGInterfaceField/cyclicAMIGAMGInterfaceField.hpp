@@ -85,6 +85,14 @@ public:
             const lduInterfaceField& fineInterfaceField
         );
 
+        //- Construct from GAMG interface and fine level interface field
+        cyclicAMIGAMGInterfaceField
+        (
+            const GAMGInterface& GAMGCp,
+            const bool doTransform,
+            const int rank
+        );
+
 
     //- Destructor
     virtual ~cyclicAMIGAMGInterfaceField();

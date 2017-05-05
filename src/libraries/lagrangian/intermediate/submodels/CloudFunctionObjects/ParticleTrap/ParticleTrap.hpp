@@ -120,7 +120,8 @@ public:
             (
                 typename CloudType::parcelType& p,
                 const label cellI,
-                const scalar dt
+                const scalar dt,
+                const point& position0
             );
 };
 
@@ -208,7 +209,8 @@ void CML::ParticleTrap<CloudType>::postMove
 (
     parcelType& p,
     const label cellI,
-    const scalar
+    const scalar,
+    const point&
 )
 {
     if (alphaPtr_->internalField()[cellI] < threshold_)

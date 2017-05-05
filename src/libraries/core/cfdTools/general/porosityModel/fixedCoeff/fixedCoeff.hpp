@@ -39,7 +39,6 @@ SourceFiles
 #define fixedCoeff_H
 
 #include "porosityModel.hpp"
-#include "coordinateSystem.hpp"
 #include "dimensionedTensor.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -61,14 +60,17 @@ private:
 
     // Private data
 
-        //- Local co-ordinate system
-        coordinateSystem coordSys_;
+        //- alpha coefficient XYZ components (user-supplied) [1/s]
+        dimensionedVector alphaXYZ_;
 
-        //- Model alpha coefficient [1/s]
-        dimensionedTensor alpha_;
+        //- beta coefficient XYZ components (user-supplied) [1/m]
+        dimensionedVector betaXYZ_;
 
-        //- Model beta coefficient [1/m]
-        dimensionedTensor beta_;
+        //- Model alpha coefficient - converted from alphaXYZ [1/s]
+        List<tensorField> alpha_;
+
+        //- Model beta coefficient - converted from betaXYZ [1/m]
+        List<tensorField> beta_;
 
 
     // Private Member Functions
@@ -119,6 +121,9 @@ public:
 
     // Member Functions
 
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
+
         //- Calculate the porosity force
         virtual void calcForce
         (
@@ -143,7 +148,7 @@ public:
         virtual void correct
         (
             const fvVectorMatrix& UEqn,
-            volTensorField& AU            
+            volTensorField& AU
         ) const;
 
 

@@ -39,7 +39,7 @@ tmp<volScalarField> SpalartAllmarasDDES::fd(const volScalarField& S) const
 
 tmp<volScalarField> SpalartAllmarasDDES::S(const volTensorField& gradU) const
 {
-    const volScalarField contraction = (gradU && gradU);
+    const volScalarField contraction(gradU && gradU);
     return sqrt(contraction);
 }
 

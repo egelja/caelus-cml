@@ -32,9 +32,8 @@ wallGradUEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if wallGradUEnv['WHICH_OS'] == "windows":
   wallGradUEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
 
 wallGradUEnv.Append(LIBS = lib_link)
 

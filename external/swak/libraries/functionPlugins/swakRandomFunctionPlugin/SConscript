@@ -1,0 +1,64 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+swakRandEnv = globalEnv.Clone()
+
+# Path to Caelus source
+src = swakRandEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+swakRandEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['.','lnInclude', 
+'../../swakParsers/lnInclude',
+src + '/sampling/lnInclude'
+]
+	
+swakRandEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+  
+swakRandEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['swakParsers']
+swakRandEnv.Append(LIBS = lib_link)
+  
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files_swakRand = Split("""
+  randomExponentialPluginFunction.cpp
+  """)
+
+src_files = src_files_swakRand
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libswakRands = swakRandEnv.SharedLibrary(target = 'libswakRandomFunctionPlugin',
+ source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = swakRandEnv['LIB_PLATFORM_INSTALL']
+swakRandEnv.Alias('install', install_dir)
+swakRandEnv.Install(install_dir, libswakRands)
+
+if (swakRandEnv['WHICH_OS'] == "darwin"):
+
+  swakRandEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakRandomFunctionPlugin.dylib')

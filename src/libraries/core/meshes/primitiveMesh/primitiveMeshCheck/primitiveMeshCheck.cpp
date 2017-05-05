@@ -190,7 +190,7 @@ bool CML::primitiveMesh::checkClosedCells
             (
                 maxOpenness,
                 mag(sumClosed[cellI][cmpt])
-               /(sumMagClosed[cellI][cmpt] + VSMALL)
+               /(sumMagClosed[cellI][cmpt] + ROOTVSMALL)
             );
         }
 
@@ -219,7 +219,7 @@ bool CML::primitiveMesh::checkClosedCells
             }
         }
 
-        scalar aspectRatio = maxCmpt/(minCmpt + VSMALL);
+        scalar aspectRatio = maxCmpt/(minCmpt + ROOTVSMALL);
         if (nDims == 3)
         {
             aspectRatio = max
@@ -448,7 +448,7 @@ bool CML::primitiveMesh::checkFaceOrthogonality
         vector d = centres[nei[faceI]] - centres[own[faceI]];
         const vector& s = areas[faceI];
 
-        scalar dDotS = (d & s)/(mag(d)*mag(s) + VSMALL);
+        scalar dDotS = (d & s)/(mag(d)*mag(s) + ROOTVSMALL);
 
         if (dDotS < severeNonorthogonalityThreshold)
         {
@@ -639,6 +639,7 @@ bool CML::primitiveMesh::checkFaceSkewness
     const vectorField& faceCtrs = faceCentres();
     const vectorField& fAreas = faceAreas();
 
+    scalar sumSkew = 0;
     scalar maxSkew = 0;
     label nWarnSkew = 0;
 
@@ -649,13 +650,13 @@ bool CML::primitiveMesh::checkFaceSkewness
 
         // Skewness vector
         vector sv =
-            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + SMALL))*d;
-        vector svHat = sv/(mag(sv) + VSMALL);
+            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + ROOTVSMALL))*d;
+        vector svHat = sv/(mag(sv) + ROOTVSMALL);
 
         // Normalisation distance calculated as the approximate distance
         // from the face centre to the edge of the face in the direction of
         // the skewness
-        scalar fd = 0.2*mag(d) + VSMALL;
+        scalar fd = 0.2*mag(d) + ROOTVSMALL;
         const face& f = fcs[faceI];
         forAll(f, pi)
         {
@@ -681,6 +682,8 @@ bool CML::primitiveMesh::checkFaceSkewness
         {
             maxSkew = skewness;
         }
+
+        sumSkew += skewness;
     }
 
 
@@ -692,14 +695,14 @@ bool CML::primitiveMesh::checkFaceSkewness
         vector Cpf = faceCtrs[faceI] - cellCtrs[own[faceI]];
 
         vector normal = fAreas[faceI];
-        normal /= mag(normal) + VSMALL;
+        normal /= mag(normal) + ROOTVSMALL;
         vector d = normal*(normal & Cpf);
 
 
         // Skewness vector
         vector sv =
-            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + VSMALL))*d;
-        vector svHat = sv/(mag(sv) + VSMALL);
+            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + ROOTVSMALL))*d;
+        vector svHat = sv/(mag(sv) + ROOTVSMALL);
 
         // Normalisation distance calculated as the approximate distance
         // from the face centre to the edge of the face in the direction of
@@ -730,9 +733,11 @@ bool CML::primitiveMesh::checkFaceSkewness
         {
             maxSkew = skewness;
         }
+
+        sumSkew += skewness;
     }
 
-
+    reduce(sumSkew, sumOp<scalar>());
     reduce(maxSkew, maxOp<scalar>());
     reduce(nWarnSkew, sumOp<label>());
 
@@ -740,9 +745,19 @@ bool CML::primitiveMesh::checkFaceSkewness
     {
         if (debug || report)
         {
-            Info<< " ***Max skewness = " << maxSkew
-                << ", " << nWarnSkew << " highly skew faces detected"
-                   " which may impair the quality of the results"
+            label nfaceSize = nFaces();
+            reduce(nfaceSize, sumOp<label>());
+            
+            if (nfaceSize > 0 )
+            {
+                Info<< "    Mesh skewness Max: " 
+                    << maxSkew 
+                    << " average: " << sumSkew/nfaceSize
+                    << " OK." << endl;
+            }
+            
+            Info<< "   * "<< nWarnSkew <<" highly skew faces detected"
+                   " which may impair the quality of the results."
                 << endl;
         }
 
@@ -752,7 +767,16 @@ bool CML::primitiveMesh::checkFaceSkewness
     {
         if (debug || report)
         {
-            Info<< "    Max skewness = " << maxSkew << " OK." << endl;
+            label nfaceSize = nFaces();
+            reduce(nfaceSize, sumOp<label>());
+            
+            if (nfaceSize > 0 )
+            {
+                Info<< "    Mesh skewness Max: " 
+                    << maxSkew 
+                    << " average: " << sumSkew/nfaceSize
+                    << " OK." << endl;
+            }
         }
 
         return false;
@@ -882,7 +906,7 @@ bool CML::primitiveMesh::checkFaceAngles
         // Get edge from f[0] to f[size-1];
         vector ePrev(p[f.first()] - p[f.last()]);
         scalar magEPrev = mag(ePrev);
-        ePrev /= magEPrev + VSMALL;
+        ePrev /= magEPrev + ROOTVSMALL;
 
         forAll(f, fp0)
         {
@@ -892,7 +916,7 @@ bool CML::primitiveMesh::checkFaceAngles
             // Normalized vector between two consecutive points
             vector e10(p[f[fp1]] - p[f[fp0]]);
             scalar magE10 = mag(e10);
-            e10 /= magE10 + VSMALL;
+            e10 /= magE10 + ROOTVSMALL;
 
             if (magEPrev > SMALL && magE10 > SMALL)
             {
@@ -1008,7 +1032,7 @@ bool CML::primitiveMesh::checkFaceFlatness
     {
         const face& f = fcs[faceI];
 
-        if (f.size() > 3 && magAreas[faceI] > VSMALL)
+        if (f.size() > 3 && magAreas[faceI] > ROOTVSMALL)
         {
             const point& fc = fctrs[faceI];
 
@@ -1027,7 +1051,7 @@ bool CML::primitiveMesh::checkFaceFlatness
                 sumA += mag(n);
             }
 
-            scalar flatness = magAreas[faceI] / (sumA+VSMALL);
+            scalar flatness = magAreas[faceI] / (sumA + ROOTVSMALL);
 
             sumFlatness += flatness;
             nSummed++;

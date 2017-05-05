@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,10 +22,21 @@ Class
     CML::GaussSeidelSmoother
 
 Description
-    A lduMatrix::smoother for Gauss-Seidel
+    Forward Gauss-Seidel smoother. Implements the follwoing equation:
+    xNew = inv(L)*(b-U*xOld)
 
 SourceFiles
     GaussSeidelSmoother.cpp
+
+References
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
 
 \*---------------------------------------------------------------------------*/
 
@@ -33,14 +45,8 @@ SourceFiles
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class GaussSeidelSmoother Declaration
-\*---------------------------------------------------------------------------*/
 
 class GaussSeidelSmoother
 :
@@ -72,9 +78,9 @@ public:
         static void smooth
         (
             const word& fieldName,
-            scalarField& psi,
+            scalarField& x,
             const lduMatrix& matrix,
-            const scalarField& source,
+            const scalarField& b,
             const FieldField<Field, scalar>& interfaceBouCoeffs,
             const lduInterfaceFieldPtrsList& interfaces,
             const direction cmpt,
@@ -85,20 +91,16 @@ public:
         //- Smooth the solution for a given number of sweeps
         virtual void smooth
         (
-            scalarField& psi,
-            const scalarField& Source,
+            scalarField& x,
+            const scalarField& B,
             const direction cmpt,
             const label nSweeps
         ) const;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-// ************************************************************************* //
+

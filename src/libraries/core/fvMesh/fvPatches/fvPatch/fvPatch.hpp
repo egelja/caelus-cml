@@ -162,7 +162,7 @@ public:
             }
 
             //- Return true if this patch is coupled
-            bool coupled() const
+            virtual bool coupled() const
             {
                 return polyPatch_.coupled();
             }
@@ -236,6 +236,10 @@ public:
             template<class Type>
             tmp<Field<Type> > patchInternalField(const UList<Type>&) const;
 
+            //- Return given internal field next to patch as patch field
+            template<class Type>
+            void patchInternalField(const UList<Type>&, Field<Type>&) const;
+
             //- Return the corresponding patchField of the named field
             template<class GeometricField, class Type>
             const typename GeometricField::PatchFieldType& patchField
@@ -282,6 +286,24 @@ CML::tmp<CML::Field<Type> > CML::fvPatch::patchInternalField
     }
 
     return tpif;
+}
+
+
+template<class Type>
+void CML::fvPatch::patchInternalField
+(
+    const UList<Type>& f,
+    Field<Type>& pif
+) const
+{
+    pif.setSize(size());
+
+    const labelUList& faceCells = this->faceCells();
+
+    forAll(pif, facei)
+    {
+        pif[facei] = f[faceCells[facei]];
+    }
 }
 
 

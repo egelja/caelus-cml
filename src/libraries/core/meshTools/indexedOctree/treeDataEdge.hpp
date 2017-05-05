@@ -33,6 +33,7 @@ SourceFiles
 
 #include "treeBoundBoxList.hpp"
 #include "linePointRef.hpp"
+#include "volumeType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -82,6 +83,56 @@ class treeDataEdge
 
 public:
 
+
+    class findNearestOp
+    {
+        const indexedOctree<treeDataEdge>& tree_;
+
+    public:
+
+        findNearestOp(const indexedOctree<treeDataEdge>& tree);
+
+        void operator()
+        (
+            const labelUList& indices,
+            const point& sample,
+
+            scalar& nearestDistSqr,
+            label& minIndex,
+            point& nearestPoint
+        ) const;
+
+        void operator()
+        (
+            const labelUList& indices,
+            const linePointRef& ln,
+
+            treeBoundBox& tightest,
+            label& minIndex,
+            point& linePoint,
+            point& nearestPoint
+        ) const;
+    };
+
+
+    class findIntersectOp
+    {
+    public:
+
+        findIntersectOp(const indexedOctree<treeDataEdge>& tree);
+
+        //- Calculate intersection of triangle with ray. Sets result
+        //  accordingly
+        bool operator()
+        (
+            const label index,
+            const point& start,
+            const point& end,
+            point& intersectionPoint
+        ) const;
+    };
+
+
     // Declare name of the class and its debug switch
     ClassName("treeDataEdge");
 
@@ -112,6 +163,16 @@ public:
 
         // Access
 
+            const edgeList& edges() const
+            {
+                return edges_;
+            }
+
+            const pointField& points() const
+            {
+                return points_;
+            }
+
             const labelList& edgeLabels() const
             {
                 return edgeLabels_;
@@ -131,7 +192,7 @@ public:
 
             //- Get type (inside,outside,mixed,unknown) of point w.r.t. surface.
             //  Only makes sense for closed surfaces.
-            label getVolumeType
+            volumeType getVolumeType
             (
                 const indexedOctree<treeDataEdge>&,
                 const point&
@@ -144,49 +205,13 @@ public:
                 const treeBoundBox& sampleBb
             ) const;
 
-            //- Calculates nearest (to sample) point in shape.
-            //  Returns actual point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const point& sample,
-
-                scalar& nearestDistSqr,
-                label& nearestIndex,
-                point& nearestPoint
-            ) const;
-
-            //- Calculates nearest (to line) point in shape.
-            //  Returns point and distance (squared)
-            void findNearest
-            (
-                const labelUList& indices,
-                const linePointRef& ln,
-
-                treeBoundBox& tightest,
-                label& minIndex,
-                point& linePoint,
-                point& nearestPoint
-            ) const;
-
-            //- Calculate intersection of shape with ray. Sets result
-            //  accordingly
-            bool intersects
+            //- Does (bb of) shape at index overlap bb
+            bool overlaps
             (
                 const label index,
-                const point& start,
-                const point& end,
-                point& result
-            ) const
-            {
-                notImplemented
-                (
-                    "treeDataEdge::intersects(const label, const point&,"
-                    "const point&, point&)"
-                );
-                return false;
-            }
-
+                const point& centre,
+                const scalar radiusSqr
+            ) const;
 };
 
 

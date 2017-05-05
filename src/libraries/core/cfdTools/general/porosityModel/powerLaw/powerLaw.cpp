@@ -62,6 +62,12 @@ CML::porosityModels::powerLaw::~powerLaw()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void CML::porosityModels::powerLaw::calcTranformModelData()
+{
+    // nothing to be transformed
+}
+
+
 void CML::porosityModels::powerLaw::calcForce
 (
     const volVectorField& U,

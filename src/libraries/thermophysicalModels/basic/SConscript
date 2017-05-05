@@ -75,4 +75,4 @@ thermoBasicEnv.Install(install_dir, libbasicThermophysicalModels)
 
 if (thermoBasicEnv['WHICH_OS'] == "darwin"):
 
-  thermoBasicEnv.Append(SHLINKFLAGS ='-install_name @' + thermoBasicEnv['LIB_PLATFORM_INSTALL'] + '/libbasicThermophysicalModels.dylib')
+  thermoBasicEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libbasicThermophysicalModels.dylib')

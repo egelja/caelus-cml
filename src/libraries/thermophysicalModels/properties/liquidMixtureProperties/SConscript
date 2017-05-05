@@ -60,4 +60,4 @@ thermoLiqMixPropEnv.Install(install_dir, libliquidMixtureProperties)
 
 if (thermoLiqMixPropEnv['WHICH_OS'] == "darwin"):
 
-  thermoLiqMixPropEnv.Append(SHLINKFLAGS ='-install_name @' + thermoLiqMixPropEnv['LIB_PLATFORM_INSTALL'] + '/libliquidMixtureProperties.dylib')
+  thermoLiqMixPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libliquidMixtureProperties.dylib')

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,21 +29,25 @@ Description
 SourceFiles
     DICPreconditioner.cpp
 
+References
+
+    [1] Templates for the Solution of Linear Systems: Building Blocks
+        for Iterative Methods, R. Barrett, M. Barry, T.F. Chan, J. Demmel,
+        J. Donato, J. Dongarra, V. Eijkhout, R. Pozo, C. Romine, and
+        Van der Vorst, SIAM, 1994, Philadephia, PA, 2nd edition
+
+    [2] Iterative Methods for Sparse Linear Systems, Y. Saad, SIAM, 2003,
+        Philadephia, PA, 2nd edition
+
 \*---------------------------------------------------------------------------*/
 
-#ifndef DICPreconditioner_H
-#define DICPreconditioner_H
+#ifndef DICPreconditioner_HPP
+#define DICPreconditioner_HPP
 
 #include "lduMatrix.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class DICPreconditioner Declaration
-\*---------------------------------------------------------------------------*/
 
 class DICPreconditioner
 :
@@ -52,13 +57,23 @@ class DICPreconditioner
 
         //- The reciprocal preconditioned diagonal
         scalarField rD_;
+        //- Cached arrays
+        scalarField rDuUpper_;
+        scalarField rDlUpper_;
 
+
+    // Private Member Functions
+
+        //- Disallow default bitwise copy construct
+        DICPreconditioner(const DICPreconditioner&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const DICPreconditioner&);
 
 public:
 
     //- Runtime type information
     TypeName("DIC");
-
 
     // Constructors
 
@@ -69,7 +84,6 @@ public:
             const dictionary& solverControlsUnused
         );
 
-
     //- Destructor
     virtual ~DICPreconditioner()
     {}
@@ -77,25 +91,16 @@ public:
 
     // Member Functions
 
-        //- Calculate the reciprocal of the preconditioned diagonal
-        static void calcReciprocalD(scalarField& rD, const lduMatrix& matrix);
-
-        //- Return wA the preconditioned form of residual rA
+        //- Return w the preconditioned form of residual r
         virtual void precondition
         (
-            scalarField& wA,
-            const scalarField& rA,
+            scalarField& w,
+            const scalarField& r,
             const direction cmpt=0
         ) const;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

@@ -32,9 +32,8 @@ caelusFormatConvertEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusFormatConvertEnv['WHICH_OS'] == "windows":
   caelusFormatConvertEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','lagrangian']
+
+lib_link = ['genericPatchFields','lagrangian']
      
 
 caelusFormatConvertEnv.Append(LIBS = lib_link)

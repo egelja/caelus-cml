@@ -84,7 +84,7 @@ inline CML::scalar CML::powerSeriesReactionRate::operator()
 
     forAll(coeffs_, n)
     {
-        expArg += coeffs_[n]/pow(T, n);
+        expArg += coeffs_[n]/pow(T, n + 1);
     }
 
     lta *= exp(expArg);

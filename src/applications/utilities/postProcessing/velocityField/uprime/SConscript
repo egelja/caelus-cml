@@ -31,9 +31,8 @@ uprimeEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if uprimeEnv['WHICH_OS'] == "windows":
   uprimeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 uprimeEnv.Append(LIBS = lib_link)
 

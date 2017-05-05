@@ -58,7 +58,18 @@ CML::autoPtr<CML::polyPatch> CML::polyPatch::New
             << exit(FatalError);
     }
 
-    return autoPtr<polyPatch>(cstrIter()(name, size, start, index, bm));
+    return autoPtr<polyPatch>
+    (
+        cstrIter()
+        (
+            name,
+            size,
+            start,
+            index,
+            bm,
+            patchType
+        )
+    );
 }
 
 
@@ -79,6 +90,26 @@ CML::autoPtr<CML::polyPatch> CML::polyPatch::New
 
     word patchType(dict.lookup("type"));
     dict.readIfPresent("geometricType", patchType);
+
+    return polyPatch::New(patchType, name, dict, index, bm);
+}
+
+
+CML::autoPtr<CML::polyPatch> CML::polyPatch::New
+(
+    const word& patchType,
+    const word& name,
+    const dictionary& dict,
+    const label index,
+    const polyBoundaryMesh& bm
+)
+{
+    if (debug)
+    {
+        Info<< "polyPatch::New(const word&, const word&, const dictionary&, "
+               "const label, const polyBoundaryMesh&) : constructing polyPatch"
+            << endl;
+    }
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(patchType);
@@ -105,7 +136,7 @@ CML::autoPtr<CML::polyPatch> CML::polyPatch::New
         }
     }
 
-    return autoPtr<polyPatch>(cstrIter()(name, dict, index, bm));
+    return autoPtr<polyPatch>(cstrIter()(name, dict, index, bm, patchType));
 }
 
 

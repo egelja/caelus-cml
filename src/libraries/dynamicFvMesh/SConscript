@@ -72,4 +72,4 @@ dynamicFvMeshEnv.Install(install_dir, libdynamicFvMesh)
 
 if (dynamicFvMeshEnv['WHICH_OS'] == "darwin"):
 
-  dynamicFvMeshEnv.Append(SHLINKFLAGS ='-install_name @' + dynamicFvMeshEnv['LIB_PLATFORM_INSTALL'] + '/libdynamicFvMesh.dylib')
+  dynamicFvMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdynamicFvMesh.dylib')

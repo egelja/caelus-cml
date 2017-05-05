@@ -75,6 +75,10 @@ void writeWeights(const polyMesh& mesh)
 
             if (cpp.owner())
             {
+                Info<< "Calculating AMI weights between owner patch: "
+                    << cpp.name() << " and neighbour patch: "
+                    << cpp.neighbPatch().name() << endl;
+
                 const AMIPatchToPatchInterpolation& ami =
                     cpp.AMI();
                 writeWeights
@@ -99,22 +103,26 @@ void writeWeights(const polyMesh& mesh)
 }
 
 
-// Main program:
 
 int main(int argc, char *argv[])
 {
-#   include "addRegionOption.hpp"
+    #include "addRegionOption.hpp"
     argList::addBoolOption
     (
         "checkAMI",
         "check AMI weights"
     );
 
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
-#   include "createNamedDynamicFvMesh.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
+    #include "createNamedDynamicFvMesh.hpp"
 
     const bool checkAMI  = args.optionFound("checkAMI");
+
+    if (checkAMI)
+    {
+        Info<< "Writing VTK files with weights of AMI patches." << nl << endl;
+    }
 
     while (runTime.loop())
     {

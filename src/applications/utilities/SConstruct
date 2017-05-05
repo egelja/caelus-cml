@@ -9,15 +9,17 @@ import re
 # Define colours for pretty output (non-Windows only)
 #===============================================================================
 colors = {}
-colors['cyan']   = '\033[96m'
-colors['purple'] = '\033[95m'
-colors['blue']   = '\033[94m'
-colors['green']  = '\033[92m'
-colors['yellow'] = '\033[93m'
-colors['red']    = '\033[91m'
+colors['cyan']   = '\033[1;36m'
+colors['purple'] = '\033[1;35m'
+colors['blue']   = '\033[1;34m'
+colors['green']  = '\033[1;32m'
+colors['yellow'] = '\033[1;33m'
+colors['red']    = '\033[0;31m'
 colors['end']    = '\033[0m'
+colors['white']  = '\033[1;37m'
+colors['bluebg']  = '\033[44;37m'
 
-#If the output is not a terminal, remove the colors
+#If the output is not a terminal, remove the colours
 if not sys.stdout.isatty():
  for key, value in colors.iteritems():
     colors[key] = ''
@@ -43,14 +45,17 @@ link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
 java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
  (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
+install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
+ (colors['green'], colors['purple'], colors['yellow'], colors['end'])
+ 
 #===============================================================================
-# Pass operating system envrionment
+# Pass operating system environment
 #===============================================================================
 
 # Just grab the type of operating system
 which_os = os.environ['WHICH_OS']
     
-# Default Global Environment is dependent on the tpye of operating system
+# Default Global Environment is dependent on the type of operating system
 if which_os == 'windows' :
   globalEnv = Environment(tools = ['mingw'], ENV = os.environ)
   globalEnv.Append(OSTYPE = 'windows')
@@ -65,14 +70,15 @@ sl = globalEnv['ENV']['SLASH']
 #===============================================================================
 # Common environment variables
 #===============================================================================
-# The OS enviornment is placed inside the ENV dictionary, we don't want to index 
-# into this everytime so we now create local copies of the variables
+# The OS environment is placed inside the ENV dictionary, we don't want to index 
+# into this every time so we now create local copies of the variables
 globalEnv.Append(SLASH = globalEnv['ENV']['SLASH'])
 globalEnv.Append(WHICH_OS = globalEnv['ENV']['WHICH_OS'])
 globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
 globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
 globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
 globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(INT_TYPE = globalEnv['ENV']['INT_TYPE'])
 globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
 globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
 globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
@@ -85,19 +91,18 @@ globalEnv.Append(LIB_PLATFORM_INSTALL = globalEnv['ENV']['LIB_PLATFORM_INSTALL']
 globalEnv.Append(PROJECT_INC = globalEnv['LIB_SRC'] + '/core/lnInclude')
 globalEnv.Append(MPI_LIB = globalEnv['ENV']['MPI_LIB'])
 globalEnv.Append(MPI_INC = globalEnv['ENV']['MPI_INC'])
+globalEnv.Append(MPI_LIB_NAME = globalEnv['ENV']['MPI_LIB_NAME'])
 globalEnv.Append(SCOTCH_PATH = globalEnv['ENV']['SCOTCH_PATH'])
 globalEnv.Append(METIS_PATH = globalEnv['ENV']['METIS_PATH'])
+globalEnv.Append(ZLIB_PATH = globalEnv['ENV']['ZLIB_PATH'])
 globalEnv.Append(FLEXXX_PATH = globalEnv['ENV']['FLEXXX_PATH'])
 
-#Temporary direcory location in Windows
+#Temporary directory location in Windows
 if which_os == "windows":
   globalEnv['ENV']['TMP']=os.environ['TMP']
 
-# Override default Lexer flags as they don't work with the caelus lex files
+# Override default Lexer flags as they don't work with the Caelus lex files
 globalEnv.Replace(LEXCOM = '$LEX $LEXFLAGS -o$TARGET -f $SOURCES')
-
-#for item in sorted(globalEnv.Dictionary().items()):
-#    print "construction variable = '%s', value = '%s'" % item
 
 #===============================================================================
 # Add colourful output
@@ -112,6 +117,7 @@ if (globalEnv['COLOUR_BUILD'] =='on'):
   globalEnv.Append(LINKCOMSTR = link_program_message)
   globalEnv.Append(JARCOMSTR = java_library_message)
   globalEnv.Append(JAVACCOMSTR = compile_source_message)
+  globalEnv.Append(INSTALLSTR = install_library_message)
 
 # Output system architecture        
 if platform.machine().endswith('64'):
@@ -135,6 +141,9 @@ print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
 # build precision
 print ">> Build precision : " + globalEnv['PRECISION_OPTION'] 
 
+# integer type
+print ">> Integer type : " + globalEnv['INT_TYPE'] + 'bit'
+
 #===============================================================================
 # Common compiler flags
 #===============================================================================
@@ -144,7 +153,7 @@ if which_os == "windows" :
 
   # Warning compiler flags
   CCWARN = Split(
-    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+    '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor')
 
   if  globalEnv['BUILD_TYPE'] == 'Debug':
   # Debug
@@ -176,19 +185,20 @@ elif which_os == "darwin" :
   globalEnv.Replace(CXX = globalEnv['COMPILER'])
   
   #empty compiler flag for now
-  GFLAGS = '-m64' + ' -fsignaling-nans -ftrapping-math' + ' -D' + which_os \
+  GFLAGS = '-m64' + '  -std=c++11' + ' -D' + which_os \
             + ' -DWM_'+globalEnv['PRECISION_OPTION']
 
   # Warning compiler flags
   CCWARN = Split(
-    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+     '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor' \
+     + ' -Wold-style-cast -Wno-overloaded-virtual -Wno-unused-comparison -Wno-deprecated-register')
 
   if  globalEnv['BUILD_TYPE'] == 'Debug':
   # Debug
-    # Optimisation compiler flags
-    CCOPT  = Split('-O0 -fdefault-inline')  
+    # Optimisation compiler flags  
+    CCOPT  = Split('-O0') 
     #Debug compiler flags
-    CCDBUG = Split('-ggdb2 -DFULLDEBUG')
+    CCDBUG = Split('-g -DFULLDEBUG')
 
   elif  globalEnv['BUILD_TYPE'] == 'Prof':
   # Profiling
@@ -200,7 +210,8 @@ elif which_os == "darwin" :
   else:
   # Optimised     
     # Optimisation compiler flags
-    CCOPT  = Split('-O2')  
+    CCOPT  = Split('-O3')
+
     #Debug compiler flags
     CCDBUG = Split('')
 
@@ -211,11 +222,15 @@ elif which_os == "darwin" :
 else :
   # General compiler flags
   GFLAGS = '-m64' + ' -D' + which_os + globalEnv['COMPILER_ARCH'] + ' -DWM_' \
-            + globalEnv['PRECISION_OPTION']
+           + globalEnv['PRECISION_OPTION']
+
+  # Flag to turn label into 64bit int during compilation
+  if  globalEnv['INT_TYPE'] == '64':
+    GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
 
   # Warning compiler flags
   CCWARN = Split(
-    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+    '-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor')
 
   if  globalEnv['BUILD_TYPE'] == 'Debug':
   # Debug
@@ -242,7 +257,7 @@ else :
   ptFLAGS = Split('-ftemplate-depth-100')
 #end of linux compiler flags
 
-# Setup full compiler flags
+# Set up full compiler flags
 globalEnv.Append(CXXFLAGS = GFLAGS)
 globalEnv.Append(CXXFLAGS = CCWARN)
 globalEnv.Append(CXXFLAGS = CCOPT)
@@ -284,13 +299,13 @@ else :
 # Common link library(ies)
 #===============================================================================
 if which_os == "windows" :
-  lib_link = ['libcore']
+  lib_link = ['core']
   
 elif which_os == "darwin" :
-  lib_link = ['pthread','mpi','core']
+  lib_link = ['pthread', 'core']
 
 else :
-  lib_link = ['dl','mpi','core']
+  lib_link = ['core']
 
 globalEnv.Append(LIBS = lib_link)
 
@@ -322,6 +337,7 @@ subdirs = [
 'mesh/manipulation/autoPatch',
 'mesh/manipulation/checkMesh',
 'mesh/manipulation/createBaffles',
+'mesh/manipulation/createBaffles_old',
 'mesh/manipulation/createPatch',
 'mesh/manipulation/deformedGeom',
 'mesh/manipulation/flattenMesh',
@@ -393,7 +409,8 @@ subdirs = [
 'postProcessing/wall/yPlusRAS',
 'preProcessing/changeDictionary',
 'preProcessing/mapFields',
-'preProcessing/setFields'
+'preProcessing/setFields',
+'mesh/manipulation/createBaffles_old'
 ]
 
 #===============================================================================

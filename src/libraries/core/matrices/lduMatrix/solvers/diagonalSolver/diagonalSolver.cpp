@@ -21,12 +21,7 @@ License
 
 #include "diagonalSolver.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 defineTypeNameAndDebug(CML::diagonalSolver, 0);
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::diagonalSolver::diagonalSolver
 (
@@ -49,17 +44,14 @@ CML::diagonalSolver::diagonalSolver
     )
 {}
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 CML::lduMatrix::solverPerformance CML::diagonalSolver::solve
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt
 ) const
 {
-    psi = source/matrix_.diag();
+    x = b/matrix_.diag();
 
     return lduMatrix::solverPerformance
     (
@@ -74,4 +66,3 @@ CML::lduMatrix::solverPerformance CML::diagonalSolver::solve
 }
 
 
-// ************************************************************************* //

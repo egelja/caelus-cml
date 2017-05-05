@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +22,16 @@ Class
     CML::SuperBeeLimiter
 
 Description
-    Class with limiter function which returns the limiter for the
-    SuperBee differencing scheme based on r obtained from the LimiterFunc
-    class.
+    Symmetric superBee limiter function
 
     Used in conjunction with the template class LimitedScheme.
 
 SourceFiles
     SuperBee.cpp
+
+Refefences
+    [1] "Characteristic-based schemes for the Euler equations", 
+         P.L. Roe, Ann. Rev. Fluid Mech. 18, pp 337–365, 1986
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,14 +40,8 @@ SourceFiles
 
 #include "vector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                       Class SuperBeeLimiter Declaration
-\*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
 class SuperBeeLimiter
@@ -77,13 +74,7 @@ public:
     }
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}
 
 #endif
 
-// ************************************************************************* //

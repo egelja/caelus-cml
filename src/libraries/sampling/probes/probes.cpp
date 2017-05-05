@@ -24,16 +24,25 @@ License
 #include "dictionary.hpp"
 #include "Time.hpp"
 #include "IOmanip.hpp"
+#include "mapPolyMesh.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::probes, 0);
+namespace CML
+{
+defineTypeNameAndDebug(probes, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 void CML::probes::findElements(const fvMesh& mesh)
 {
+    if (debug)
+    {
+        Info<< "probes: resetting sample locations" << endl;
+    }
+
     elementList_.clear();
     elementList_.setSize(size());
 
@@ -85,7 +94,7 @@ void CML::probes::findElements(const fvMesh& mesh)
     {
         const vector& location = operator[](probeI);
         label cellI = elementList_[probeI];
-        label faceI =  faceList_[probeI];
+        label faceI = faceList_[probeI];
 
         // Check at least one processor with cell.
         reduce(cellI, maxOp<label>());
@@ -167,8 +176,8 @@ CML::label CML::probes::prepare()
 
         if (debug)
         {
-            Info<< "Probing fields:" << currentFields << nl
-                << "Probing locations:" << *this << nl
+            Info<< "Probing fields: " << currentFields << nl
+                << "Probing locations: " << *this << nl
                 << endl;
         }
 
@@ -180,7 +189,7 @@ CML::label CML::probes::prepare()
         {
             probeSubDir = probeSubDir/mesh_.name();
         }
-        probeSubDir = probeSubDir/mesh_.time().timeName();
+        probeSubDir = "postProcessing"/probeSubDir/mesh_.time().timeName();
 
         if (Pstream::parRun())
         {
@@ -260,7 +269,10 @@ CML::probes::probes
     pointField(0),
     name_(name),
     mesh_(refCast<const fvMesh>(obr)),
-    loadFromFiles_(loadFromFiles)
+    loadFromFiles_(loadFromFiles),
+    fieldSelection_(),
+    fixedLocations_(true),
+    interpolationScheme_("cell")
 {
     read(dict);
 }
@@ -281,6 +293,12 @@ void CML::probes::execute()
 
 
 void CML::probes::end()
+{
+    // Do nothing - only valid on write
+}
+
+
+void CML::probes::timeSet()
 {
     // Do nothing - only valid on write
 }
@@ -310,9 +328,112 @@ void CML::probes::read(const dictionary& dict)
     dict.lookup("probeLocations") >> *this;
     dict.lookup("fields") >> fieldSelection_;
 
-    // redetermined all cell locations
+    dict.readIfPresent("fixedLocations", fixedLocations_);
+    if (dict.readIfPresent("interpolationScheme", interpolationScheme_))
+    {
+        if (!fixedLocations_ && interpolationScheme_ != "cell")
+        {
+            WarningIn("void CML::probes::read(const dictionary&)")
+                << "Only cell interpolation can be applied when "
+                << "not using fixedLocations.  InterpolationScheme "
+                << "entry will be ignored";
+        }
+    }
+
+    // Initialise cells to sample from supplied locations
     findElements(mesh_);
+
     prepare();
+}
+
+
+void CML::probes::updateMesh(const mapPolyMesh& mpm)
+{
+    if (debug)
+    {
+        Info<< "probes: updateMesh" << endl;
+    }
+
+    if (fixedLocations_)
+    {
+        findElements(mesh_);
+    }
+    else
+    {
+        if (debug)
+        {
+            Info<< "probes: remapping sample locations" << endl;
+        }
+
+        // 1. Update cells
+        {
+            DynamicList<label> elems(elementList_.size());
+
+            const labelList& reverseMap = mpm.reverseCellMap();
+            forAll(elementList_, i)
+            {
+                label cellI = elementList_[i];
+                label newCellI = reverseMap[cellI];
+                if (newCellI == -1)
+                {
+                    // cell removed
+                }
+                else if (newCellI < -1)
+                {
+                    // cell merged
+                    elems.append(-newCellI - 2);
+                }
+                else
+                {
+                    // valid new cell
+                    elems.append(newCellI);
+                }
+            }
+
+            elementList_.transfer(elems);
+        }
+
+        // 2. Update faces
+        {
+            DynamicList<label> elems(faceList_.size());
+
+            const labelList& reverseMap = mpm.reverseFaceMap();
+            forAll(faceList_, i)
+            {
+                label faceI = faceList_[i];
+                label newFaceI = reverseMap[faceI];
+                if (newFaceI == -1)
+                {
+                    // face removed
+                }
+                else if (newFaceI < -1)
+                {
+                    // face merged
+                    elems.append(-newFaceI - 2);
+                }
+                else
+                {
+                    // valid new face
+                    elems.append(newFaceI);
+                }
+            }
+
+            faceList_.transfer(elems);
+        }
+    }
+}
+
+void CML::probes::movePoints(const pointField&)
+{
+    if (debug)
+    {
+        Info<< "probes: movePoints" << endl;
+    }
+
+    if (fixedLocations_)
+    {
+        findElements(mesh_);
+    }
 }
 
 

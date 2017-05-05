@@ -44,10 +44,10 @@ link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
 
 java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
  (colors['red'], colors['purple'], colors['yellow'], colors['end'])
- 
+
 install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
  (colors['green'], colors['purple'], colors['yellow'], colors['end'])
-
+ 
 #===============================================================================
 # Pass operating system envrionment
 #===============================================================================
@@ -55,7 +55,7 @@ install_library_message = '%sInstalling Library %s==> %s$TARGET%s' % \
 # Just grab the type of operating system
 which_os = os.environ['WHICH_OS']
     
-# Default Global Environment is dependent on the tpye of operating system
+# Default Global Environment is dependent on the type of operating system
 if which_os == 'windows' :
   globalEnv = Environment(tools = ['mingw'], ENV = os.environ)
   globalEnv.Append(OSTYPE = 'windows')
@@ -70,14 +70,15 @@ sl = globalEnv['ENV']['SLASH']
 #===============================================================================
 # Common environment variables
 #===============================================================================
-# The OS enviornment is placed inside the ENV dictionary, we don't want to index 
-# into this everytime so we now create local copies of the variables
+# The OS environment is placed inside the ENV dictionary, we don't want to index 
+# into this every time so we now create local copies of the variables
 globalEnv.Append(SLASH = globalEnv['ENV']['SLASH'])
 globalEnv.Append(WHICH_OS = globalEnv['ENV']['WHICH_OS'])
 globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
 globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
 globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
 globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(INT_TYPE = globalEnv['ENV']['INT_TYPE'])
 globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
 globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
 globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
@@ -86,6 +87,7 @@ globalEnv.Append(EXTERNAL_DIR = globalEnv['ENV']['EXTERNAL_DIR'])
 globalEnv.Append(BUILD_OPTION = globalEnv['ENV']['BUILD_OPTION'])
 globalEnv.Append(MPI_LIB = globalEnv['ENV']['MPI_LIB'])
 globalEnv.Append(MPI_INC = globalEnv['ENV']['MPI_INC'])
+globalEnv.Append(ZLIB_PATH = globalEnv['ENV']['ZLIB_PATH'])
 globalEnv.Append(SCOTCH_PATH = globalEnv['ENV']['SCOTCH_PATH'])
 globalEnv.Append(METIS_PATH = globalEnv['ENV']['METIS_PATH'])
 globalEnv.Append(LIB_SRC = globalEnv['METIS_PATH'] + '/libmetis')
@@ -95,7 +97,7 @@ globalEnv.Append(PROJECT_INC = globalEnv['METIS_PATH']  + '/include')
 
 #===============================================================================
 # Add colourful output
-if (globalEnv['COLOUR_BUILD'] == "on"):
+if (globalEnv['COLOUR_BUILD'] =='on'):
   globalEnv.Append(CXXCOMSTR = compile_source_message)
   globalEnv.Append(CCCOMSTR = compile_source_message)
   globalEnv.Append(SHCCCOMSTR = compile_shared_source_message)
@@ -121,11 +123,17 @@ if platform_arch != globalEnv['COMPILER_ARCH']+'bit' :
   print '! You have request a ', globalEnv['COMPILER_ARCH']+'bit','build on a',\
         platform_arch, 'system, this may not be possible'
 
+# build type
+print ">> Build type : " + globalEnv['BUILD_TYPE']
+
 # build architecture
 print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
 
 # build precision
 print ">> Build precision : " + globalEnv['PRECISION_OPTION'] 
+
+# integer type
+print ">> Integer type : " + globalEnv['INT_TYPE'] + 'bit'
 
 #===============================================================================
 # Common compiler flags
@@ -142,12 +150,14 @@ if which_os == "windows" :
 elif which_os == "darwin" :
   # Set the C++ compiler
   globalEnv.Replace(CXX = globalEnv['COMPILER'])
+  if globalEnv['COMPILER'] == 'clang++':
+    globalEnv.Replace(CC = 'clang')
   
   #empty compiler flag for now
-  GFLAGS = '-O3 -fPIC -std=c99 -fno-strict-aliasing '\
-  + ' -Wall -pedantic -Wno-unused-but-set-variable -Wno-unused-variable '\
-  + ' -Wno-unknown-pragmas -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
-  + ' -DLINUX -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
+  GFLAGS = '-O3 -fPIC -std=c99 '\
+  + ' -Wall -Wno-unused-variable -Wno-sometimes-uninitialized -pedantic '\
+  + ' -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
+  + ' -DDARWIN -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
 #end of macosx compiler flags
 
 else :
@@ -156,6 +166,11 @@ else :
   + ' -Wall -pedantic -Wno-unused-but-set-variable -Wno-unused-variable '\
   + ' -Wno-unknown-pragmas -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE '\
   + ' -DLINUX -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS' 
+
+  # Flag to turn label into 64bit int during compilation
+  if  globalEnv['INT_TYPE'] == '64':
+    GFLAGS = GFLAGS + ' -DCAELUS_LABEL64'
+
 #end of linux compiler flags
 
 # Setup full compiler flags
@@ -165,10 +180,12 @@ globalEnv.Append(CCFLAGS = GFLAGS)
 # Common include path(s)
 #===============================================================================
 if which_os == "windows" :
-  globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC']])
+  globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC'],
+  globalEnv['METIS_PATH'] + '/libmetis', globalEnv['METIS_PATH'] + '/GKlib'])
 
 elif which_os == "darwin" :
-  globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC']])
+  globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC'],
+  globalEnv['METIS_PATH'] + '/libmetis', globalEnv['METIS_PATH'] + '/GKlib'])
 
 else :
   globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC'],

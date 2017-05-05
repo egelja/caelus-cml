@@ -41,12 +41,8 @@ SourceFiles
 
 #include "convectionScheme.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace fv
 {
@@ -56,18 +52,13 @@ class stabilisedConvectionScheme
 :
     public fv::convectionScheme<Type>
 {
-    // Private data
+    tmp<fv::convectionScheme<Type> > scheme_;
 
-        tmp<fv::convectionScheme<Type> > scheme_;
+    //- Disallow default bitwise copy construct
+    stabilisedConvectionScheme(const stabilisedConvectionScheme&);
 
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        stabilisedConvectionScheme(const stabilisedConvectionScheme&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const stabilisedConvectionScheme&);
+    //- Disallow default bitwise assignment
+    void operator=(const stabilisedConvectionScheme&);
 
 
 public:
@@ -76,49 +67,43 @@ public:
     TypeName("stabilised");
 
 
-    // Constructors
+    //- Construct from flux and Istream
+    stabilisedConvectionScheme
+    (
+        const fvMesh& mesh,
+        const surfaceScalarField& faceFlux,
+        Istream& is
+    ):
+    convectionScheme<Type>(mesh, faceFlux),
+    scheme_
+    (
+        fv::convectionScheme<Type>::New(mesh, faceFlux, is)
+    )
+    {}
 
-        //- Construct from flux and Istream
-        stabilisedConvectionScheme
-        (
-            const fvMesh& mesh,
-            const surfaceScalarField& faceFlux,
-            Istream& is
-        )
-        :
-            convectionScheme<Type>(mesh, faceFlux),
-            scheme_
-            (
-                fv::convectionScheme<Type>::New(mesh, faceFlux, is)
-            )
-        {}
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
+    (
+        const surfaceScalarField&,
+        const GeometricField<Type, fvPatchField, volMesh>&
+    ) const;
 
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
+    (
+        const surfaceScalarField&,
+        const GeometricField<Type, fvPatchField, volMesh>&
+    ) const;
 
-    // Member Functions
+    tmp<fvMatrix<Type> > fvmDiv
+    (
+        const surfaceScalarField&,
+        const GeometricField<Type, fvPatchField, volMesh>&
+    ) const;
 
-        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
-        (
-            const surfaceScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const;
-
-        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
-        (
-            const surfaceScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const;
-
-        tmp<fvMatrix<Type> > fvmDiv
-        (
-            const surfaceScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const;
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDiv
-        (
-            const surfaceScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const;
+    tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDiv
+    (
+        const surfaceScalarField&,
+        const GeometricField<Type, fvPatchField, volMesh>&
+    ) const;
 };
 
 

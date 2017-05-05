@@ -318,7 +318,7 @@ CML::LimitedScheme<Type, Limiter, LimitFunc>::limiter
             );
 
             // Build the d-vectors
-            vectorField pd = CDweights.boundaryField()[patchi].patch().delta();
+            vectorField pd(CDweights.boundaryField()[patchi].patch().delta());
 
             forAll(pLim, face)
             {

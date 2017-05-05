@@ -44,18 +44,12 @@ PeEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if PeEnv['WHICH_OS'] == "windows":
   PeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad' )
-  lib_link = ['libcore','libincompressibleTurbulenceModel',
-  'libincompressibleRASModels','libincompressibleLESModels',
-  'libcompressibleTurbulenceModel',
-  'libcompressibleRASModels','libcompressibleLESModels','libspecie',
-  'libincompressibleTransportModels','libbasicThermophysicalModels',
-  'libgenericPatchFields']
-else:
-  lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
-  'incompressibleLESModels','compressibleTurbulenceModel',
-  'compressibleRASModels','compressibleLESModels','specie',
-  'basicThermophysicalModels','incompressibleTransportModels',
-  'genericPatchFields']
+
+lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
+'incompressibleLESModels','compressibleTurbulenceModel',
+'compressibleRASModels','compressibleLESModels','specie',
+'basicThermophysicalModels','incompressibleTransportModels',
+'genericPatchFields']
 
 PeEnv.Append(LIBS = lib_link)
 

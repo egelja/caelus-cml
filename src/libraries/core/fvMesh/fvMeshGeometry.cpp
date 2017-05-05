@@ -129,6 +129,8 @@ void fvMesh::makeC() const
             << abort(FatalError);
     }
 
+    // Construct as slices. Only preserve processor (not e.g. cyclic)
+
     CPtr_ = new slicedVolVectorField
     (
         IOobject
@@ -144,33 +146,10 @@ void fvMesh::makeC() const
         *this,
         dimLength,
         cellCentres(),
-        faceCentres()
+        faceCentres(),
+        true,               //preserveCouples
+        true                //preserveProcOnly
     );
-
-
-    // Need to correct for cyclics transformation since absolute quantity.
-    // Ok on processor patches since hold opposite cell centre (no
-    // transformation)
-    slicedVolVectorField& C = *CPtr_;
-
-    forAll(C.boundaryField(), patchi)
-    {
-        if
-        (
-            isA<cyclicFvPatchVectorField>(C.boundaryField()[patchi])
-         || isA<cyclicAMIFvPatchVectorField>(C.boundaryField()[patchi])
-        )
-        {
-            // Note: cyclic is not slice but proper field
-            C.boundaryField()[patchi] == static_cast<const vectorField&>
-            (
-                static_cast<const List<vector>&>
-                (
-                    boundary_[patchi].patchSlice(faceCentres())
-                )
-            );
-        }
-    }
 }
 
 
@@ -217,6 +196,13 @@ const volScalarField::DimensionedInternalField& fvMesh::V() const
 {
     if (!VPtr_)
     {
+        if (debug)
+        {
+            Info<< "fvMesh::V() const: "
+                << "constructing from primitiveMesh::cellVolumes()"
+                << endl;
+        }
+
         VPtr_ = new slicedVolScalarField::DimensionedInternalField
         (
             IOobject
@@ -225,7 +211,8 @@ const volScalarField::DimensionedInternalField& fvMesh::V() const
                 time().timeName(),
                 *this,
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             *this,
             dimVolume,
@@ -267,6 +254,13 @@ const volScalarField::DimensionedInternalField& fvMesh::V00() const
 {
     if (!V00Ptr_)
     {
+        if (debug)
+        {
+            Info<< "fvMesh::V00() const: "
+                << "constructing from V0"
+                << endl;
+        }
+
         V00Ptr_ = new DimensionedField<scalar, volMesh>
         (
             IOobject
@@ -275,7 +269,8 @@ const volScalarField::DimensionedInternalField& fvMesh::V00() const
                 time().timeName(),
                 *this,
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             V0()
         );
@@ -441,8 +436,8 @@ const surfaceScalarField& fvMesh::phi() const
     if (!phiPtr_)
     {
         FatalErrorIn("fvMesh::phi()")
-            << "mesh flux field does not exists, is the mesh actually moving?"
-            << exit(FatalError);
+            << "mesh flux field does not exist, is the mesh actually moving?"
+            << abort(FatalError);
     }
 
     // Set zero current time
@@ -461,8 +456,8 @@ surfaceScalarField& fvMesh::setPhi()
     if (!phiPtr_)
     {
         FatalErrorIn("fvMesh::setPhi()")
-            << "mesh flux field does not exists, is the mesh actually moving?"
-            << exit(FatalError);
+            << "mesh flux field does not exist, is the mesh actually moving?"
+            << abort(FatalError);
     }
 
     return *phiPtr_;

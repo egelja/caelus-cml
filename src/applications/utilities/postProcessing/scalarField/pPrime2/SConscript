@@ -32,9 +32,8 @@ pPrime2Env.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if pPrime2Env['WHICH_OS'] == "windows":
   pPrime2Env.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
 
 pPrime2Env.Append(LIBS = lib_link)
 

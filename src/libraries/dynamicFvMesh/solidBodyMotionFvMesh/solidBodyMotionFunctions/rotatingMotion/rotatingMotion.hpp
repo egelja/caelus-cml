@@ -35,6 +35,7 @@ SourceFiles
 #include "solidBodyMotionFunction.hpp"
 #include "primitiveFields.hpp"
 #include "point.hpp"
+#include "DataEntry.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,11 +54,14 @@ class rotatingMotion
 {
     // Private data
 
-        //- Centre of gravity
-        point CofG_;
+        //- Origin of the axis
+        const vector origin_;
 
-        //- Rotational velocity (deg/s)
-        vector radialVelocity_;
+        //- Axis vector
+        const vector axis_;
+
+        //- Angular velocty (rad/sec)
+        autoPtr<DataEntry<scalar> > omega_;
 
 
     // Private Member Functions

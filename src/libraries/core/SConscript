@@ -50,10 +50,7 @@ CoreEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-if CoreEnv['WHICH_OS'] == "windows" :
-  lib_link = ['z', CoreEnv['MPI_LIB_NAME']]
-else :
-  lib_link = ['z', CoreEnv['MPI_LIB_NAME']]
+lib_link = ['z', CoreEnv['MPI_LIB_NAME']]
   
 CoreEnv.Append(LIBS = lib_link)
 
@@ -170,6 +167,7 @@ src_files_core = Split("""
   primitives/functions/Polynomial/polynomialFunction.cpp
   primitives/strings/string/string.cpp
   primitives/strings/string/stringIO.cpp
+  primitives/strings/string/stringIOList.cpp
   primitives/strings/word/word.cpp
   primitives/strings/word/wordIO.cpp
   primitives/strings/fileName/fileName.cpp
@@ -279,9 +277,10 @@ src_files_core = Split("""
   matrices/lduMatrix/solvers/smoothSolver/smoothSolver.cpp
   matrices/lduMatrix/solvers/PCG/PCG.cpp
   matrices/lduMatrix/solvers/PBiCG/PBiCG.cpp
-  matrices/lduMatrix/solvers/ICCG/ICCG.cpp
-  matrices/lduMatrix/solvers/BICCG/BICCG.cpp
+  matrices/lduMatrix/solvers/GAMG/coarseLevelSolvers/coarsePCG/coarsePCG.cpp
+  matrices/lduMatrix/solvers/GAMG/coarseLevelSolvers/coarsePBiCG/coarsePBiCG.cpp
   matrices/lduMatrix/smoothers/GaussSeidel/GaussSeidelSmoother.cpp
+  matrices/lduMatrix/smoothers/symGaussSeidel/symGaussSeidelSmoother.cpp
   matrices/lduMatrix/smoothers/DIC/DICSmoother.cpp
   matrices/lduMatrix/smoothers/DICGaussSeidel/DICGaussSeidelSmoother.cpp
   matrices/lduMatrix/smoothers/DILU/DILUSmoother.cpp
@@ -492,6 +491,7 @@ src_files_core = Split("""
   interpolations/interpolationTable/tableReaders/csv/csvTableReaders.cpp
   algorithms/indexedOctree/indexedOctreeName.cpp
   algorithms/indexedOctree/treeDataCell.cpp
+  algorithms/indexedOctree/volumeType.cpp
   graph/curve/curve.cpp
   graph/graph.cpp
   graph/writers/rawGraph/rawGraph.cpp
@@ -499,8 +499,18 @@ src_files_core = Split("""
   graph/writers/xmgrGraph/xmgrGraph.cpp
   graph/writers/jplotGraph/jplotGraph.cpp
   meshes/data/data.cpp
+  fileFormats/vtk/vtkUnstructuredReader.cpp
+  fileFormats/coordSet/coordSet.cpp
   fileFormats/nas/NASCore.cpp
   fileFormats/starcd/STARCDCore.cpp
+  fileFormats/sampledSetWriters/writers.cpp
+  fileFormats/sampledSetWriters/ensight/ensightSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/gnuplot/gnuplotSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/jplot/jplotSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/raw/rawSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/vtk/vtkSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/xmgrace/xmgraceSetWriterRunTime.cpp
+  fileFormats/sampledSetWriters/csv/csvSetWriterRunTime.cpp
   meshTools/triSurface/faceTriangulation/faceTriangulation.cpp
   meshTools/triSurface/meshTriangulation/meshTriangulation.cpp
   meshTools/triSurface/triSurface/triSurface.cpp
@@ -539,12 +549,13 @@ src_files_core = Split("""
   meshTools/coordinateSystems/coordinateSystemNew.cpp
   meshTools/coordinateSystems/coordinateSystems.cpp
   meshTools/coordinateSystems/cylindricalCS.cpp
-  meshTools/coordinateSystems/sphericalCS.cpp
-  meshTools/coordinateSystems/parabolicCylindricalCS.cpp
-  meshTools/coordinateSystems/toroidalCS.cpp
+  meshTools/coordinateSystems/cartesianCS.cpp
+  meshTools/coordinateSystems/coordinateRotation/axesRotation.cpp
   meshTools/coordinateSystems/coordinateRotation/coordinateRotation.cpp
+  meshTools/coordinateSystems/coordinateRotation/coordinateRotationNew.cpp
   meshTools/coordinateSystems/coordinateRotation/EulerCoordinateRotation.cpp
   meshTools/coordinateSystems/coordinateRotation/STARCDCoordinateRotation.cpp
+  meshTools/coordinateSystems/coordinateRotation/localAxesRotation.cpp
   meshTools/edgeFaceCirculator/edgeFaceCirculator.cpp
   meshTools/polyMeshZipUpCells/polyMeshZipUpCells.cpp
   meshTools/primitiveMeshGeometry/primitiveMeshGeometry.cpp
@@ -622,6 +633,7 @@ src_files_core = Split("""
   meshTools/sets/faceZoneSources/faceZoneToFaceZone/faceZoneToFaceZone.cpp
   meshTools/sets/faceZoneSources/setsToFaceZone/setsToFaceZone.cpp
   meshTools/sets/faceZoneSources/setToFaceZone/setToFaceZone.cpp
+  meshTools/sets/faceZoneSources/searchableSurfaceToFaceZone/searchableSurfaceToFaceZone.cpp
   meshTools/sets/cellZoneSources/setToCellZone/setToCellZone.cpp
   meshTools/sets/pointZoneSources/setToPointZone/setToPointZone.cpp
   meshTools/momentOfInertia/momentOfInertia.cpp
@@ -635,6 +647,7 @@ src_files_core = Split("""
   meshTools/triSurface/booleanOps/intersectedSurface/intersectedSurface.cpp
   meshTools/triSurface/booleanOps/intersectedSurface/edgeSurface.cpp
   meshTools/triSurface/triSurfaceSearch/triSurfaceSearch.cpp
+  meshTools/triSurface/triSurfaceSearch/triSurfaceRegionSearch.cpp
   meshTools/triSurface/triangleFuncs/triangleFuncs.cpp
   meshTools/triSurface/surfaceFeatures/surfaceFeatures.cpp
   meshTools/triSurface/triSurfaceTools/triSurfaceTools.cpp
@@ -642,14 +655,22 @@ src_files_core = Split("""
   meshTools/triSurface/triSurfaceTools/pointToPointPlanarInterpolation.cpp
   meshTools/twoDPointCorrector/twoDPointCorrector.cpp
   meshTools/AMIInterpolation/AMIInterpolation/AMIInterpolationName.cpp
+  meshTools/AMIInterpolation/AMIInterpolation/AMIPatchToPatchInterpolation.cpp
   meshTools/AMIInterpolation/faceAreaIntersect/faceAreaIntersect.cpp
   meshTools/AMIInterpolation/GAMG/interfaces/cyclicAMIGAMGInterface/cyclicAMIGAMGInterface.cpp
   meshTools/AMIInterpolation/GAMG/interfaceFields/cyclicAMIGAMGInterfaceField/cyclicAMIGAMGInterfaceField.cpp
-  meshTools/AMIInterpolation/patches/cyclic/cyclicAMILduInterfaceField/cyclicAMILduInterface.cpp
-  meshTools/AMIInterpolation/patches/cyclic/cyclicAMILduInterfaceField/cyclicAMILduInterfaceField.cpp
-  meshTools/AMIInterpolation/patches/cyclic/cyclicAMIPolyPatch/cyclicAMIPolyPatch.cpp
-  meshTools/AMIInterpolation/patches/cyclic/cyclicAMIPointPatch/cyclicAMIPointPatch.cpp
-  meshTools/AMIInterpolation/patches/cyclic/cyclicAMIPointPatchField/cyclicAMIPointPatchFields.cpp
+  meshTools/AMIInterpolation//GAMG/interfaces/cyclicACMIGAMGInterface/cyclicACMIGAMGInterface.cpp
+  meshTools/AMIInterpolation//GAMG/interfaceFields/cyclicACMIGAMGInterfaceField/cyclicACMIGAMGInterfaceField.cpp
+  meshTools/AMIInterpolation/patches/cyclicAMI/cyclicAMILduInterfaceField/cyclicAMILduInterface.cpp
+  meshTools/AMIInterpolation/patches/cyclicAMI/cyclicAMILduInterfaceField/cyclicAMILduInterfaceField.cpp
+  meshTools/AMIInterpolation/patches/cyclicAMI/cyclicAMIPolyPatch/cyclicAMIPolyPatch.cpp
+  meshTools/AMIInterpolation/patches/cyclicAMI/cyclicAMIPointPatch/cyclicAMIPointPatch.cpp
+  meshTools/AMIInterpolation/patches/cyclicAMI/cyclicAMIPointPatchField/cyclicAMIPointPatchFields.cpp
+  meshTools/AMIInterpolation/patches/cyclicACMI/cyclicACMILduInterfaceField/cyclicACMILduInterface.cpp
+  meshTools/AMIInterpolation/patches/cyclicACMI/cyclicACMILduInterfaceField/cyclicACMILduInterfaceField.cpp
+  meshTools/AMIInterpolation/patches/cyclicACMI/cyclicACMIPolyPatch/cyclicACMIPolyPatch.cpp
+  meshTools/AMIInterpolation/patches/cyclicACMI/cyclicACMIPointPatch/cyclicACMIPointPatch.cpp
+  meshTools/AMIInterpolation/patches/cyclicACMI/cyclicACMIPointPatchField/cyclicACMIPointPatchFields.cpp
   meshTools/mappedPatches/mappedPolyPatch/mappedPatchBase.cpp
   meshTools/mappedPatches/mappedPolyPatch/mappedPolyPatch.cpp
   meshTools/mappedPatches/mappedPolyPatch/mappedWallPolyPatch.cpp
@@ -668,6 +689,7 @@ src_files_core = Split("""
   fvMesh/fvPatches/basic/generic/genericFvPatch.cpp
   fvMesh/fvPatches/constraint/cyclic/cyclicFvPatch.cpp
   fvMesh/fvPatches/constraint/cyclicAMI/cyclicAMIFvPatch.cpp
+  fvMesh/fvPatches/constraint/cyclicACMI/cyclicACMIFvPatch.cpp
   fvMesh/fvPatches/constraint/cyclicSlip/cyclicSlipFvPatch.cpp
   fvMesh/fvPatches/constraint/empty/emptyFvPatch.cpp
   fvMesh/fvPatches/constraint/nonuniformTransformCyclic/nonuniformTransformCyclicFvPatch.cpp
@@ -727,6 +749,7 @@ src_files_core = Split("""
   fields/fvPatchFields/basic/zeroGradient/zeroGradientFvPatchFields.cpp
   fields/fvPatchFields/constraint/cyclic/cyclicFvPatchFields.cpp
   fields/fvPatchFields/constraint/cyclicAMI/cyclicAMIFvPatchFields.cpp
+  fields/fvPatchFields/constraint/cyclicACMI/cyclicACMIFvPatchFields.cpp
   fields/fvPatchFields/constraint/cyclicSlip/cyclicSlipFvPatchFields.cpp
   fields/fvPatchFields/constraint/empty/emptyFvPatchFields.cpp
   fields/fvPatchFields/constraint/jumpCyclic/jumpCyclicFvPatchFields.cpp
@@ -778,6 +801,7 @@ src_files_core = Split("""
   fields/fvsPatchFields/basic/sliced/slicedFvsPatchFields.cpp
   fields/fvsPatchFields/constraint/cyclic/cyclicFvsPatchFields.cpp
   fields/fvsPatchFields/constraint/cyclicAMI/cyclicAMIFvsPatchFields.cpp
+  fields/fvsPatchFields/constraint/cyclicACMI/cyclicACMIFvsPatchFields.cpp
   fields/fvsPatchFields/constraint/cyclicSlip/cyclicSlipFvsPatchFields.cpp
   fields/fvsPatchFields/constraint/empty/emptyFvsPatchFields.cpp
   fields/fvsPatchFields/constraint/nonuniformTransformCyclic/nonuniformTransformCyclicFvsPatchFields.cpp
@@ -822,11 +846,40 @@ src_files_core = Split("""
   interpolation/surfaceInterpolation/limitedSchemes/Minmod/Minmod.cpp
   interpolation/surfaceInterpolation/limitedSchemes/vanLeer/vanLeer.cpp
   interpolation/surfaceInterpolation/limitedSchemes/vanAlbada/vanAlbada.cpp
+  interpolation/surfaceInterpolation/limitedSchemes/koren/koren.cpp
   interpolation/surfaceInterpolation/limitedSchemes/OSPRE/OSPRE.cpp
   interpolation/surfaceInterpolation/limitedSchemes/limitedLinear/limitedLinear.cpp
   interpolation/surfaceInterpolation/limitedSchemes/SuperBee/SuperBee.cpp
   interpolation/surfaceInterpolation/limitedSchemes/MUSCL/MUSCL.cpp
   interpolation/surfaceInterpolation/limitedSchemes/Phi/Phi.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmodV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindDL/linearUpwindDL.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindDL/linearUpwindDLV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMG/linearUpwindMG.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMG/linearUpwindMGV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanLeer/linearUpwindVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanLeer/linearUpwindVanLeerV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindUMIST/linearUpwindUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindUMIST/linearUpwindUMISTV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanAlbada/linearUpwindVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindVanAlbada/linearUpwindVanAlbadaV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindBJ/linearUpwindBJ.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindBJ/linearUpwindBJV.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMC/linearUpwindMC.cpp
+  interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMC/linearUpwindMCV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMinmod/dcLinearUpwindMinmod.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMinmod/dcLinearUpwindMinmodV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanLeer/dcLinearUpwindVanLeer.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanLeer/dcLinearUpwindVanLeerV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindUMIST/dcLinearUpwindUMIST.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindUMIST/dcLinearUpwindUMISTV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanAlbada/dcLinearUpwindVanAlbada.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindVanAlbada/dcLinearUpwindVanAlbadaV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJ.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJV.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMC.cpp
+  interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMCV.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSurfaceInterpolationScheme/multivariateSurfaceInterpolationSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSelectionScheme/multivariateSelectionSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateIndependentScheme/multivariateIndependentSchemes.cpp
@@ -851,6 +904,7 @@ src_files_core = Split("""
   finiteVolume/divSchemes/gaussDivScheme/gaussDivSchemes.cpp
   finiteVolume/gradSchemes/gradScheme/gradSchemes.cpp
   finiteVolume/gradSchemes/gaussGrad/gaussGrads.cpp
+  finiteVolume/gradSchemes/corrGaussGrad/corrGaussGrads.cpp
   finiteVolume/gradSchemes/leastSquaresGrad/leastSquaresVectors.cpp
   finiteVolume/gradSchemes/leastSquaresGrad/leastSquaresGrads.cpp
   finiteVolume/gradSchemes/extendedLeastSquaresGrad/extendedLeastSquaresVectors.cpp
@@ -861,6 +915,7 @@ src_files_core = Split("""
   finiteVolume/gradSchemes/limitedGradSchemes/cellMDLimitedGrad/cellMDLimitedGrads.cpp
   finiteVolume/snGradSchemes/snGradScheme/snGradSchemes.cpp
   finiteVolume/snGradSchemes/correctedSnGrad/correctedSnGrads.cpp
+  finiteVolume/snGradSchemes/secondOrderCorrectedSnGrad/secondOrderCorrectedSnGrads.cpp
   finiteVolume/snGradSchemes/limitedSnGrad/limitedSnGrads.cpp
   finiteVolume/snGradSchemes/uncorrectedSnGrad/uncorrectedSnGrads.cpp
   finiteVolume/snGradSchemes/orthogonalSnGrad/orthogonalSnGrads.cpp
@@ -868,6 +923,7 @@ src_files_core = Split("""
   finiteVolume/convectionSchemes/gaussConvectionScheme/gaussConvectionSchemes.cpp
   finiteVolume/convectionSchemes/multivariateGaussConvectionScheme/multivariateGaussConvectionSchemes.cpp
   finiteVolume/convectionSchemes/stabilisedConvectionScheme/stabilisedConvectionSchemes.cpp
+  finiteVolume/convectionSchemes/deferredCorrectionScheme/deferredCorrectionScheme.cpp
   finiteVolume/laplacianSchemes/laplacianScheme/laplacianSchemes.cpp
   finiteVolume/laplacianSchemes/gaussLaplacianScheme/gaussLaplacianSchemes.cpp
   finiteVolume/fvc/fvcMeshPhi.cpp
@@ -877,9 +933,8 @@ src_files_core = Split("""
   cfdTools/general/bound/bound.cpp
   cfdTools/general/solutionControl/solutionControl/solutionControl.cpp
   cfdTools/general/solutionControl/simpleControl/simpleControl.cpp
+  cfdTools/general/solutionControl/simplecControl/simplecControl.cpp
   cfdTools/general/solutionControl/pimpleControl/pimpleControl.cpp
-  cfdTools/general/porousMedia/porousZone.cpp
-  cfdTools/general/porousMedia/porousZones.cpp
   cfdTools/general/MRF/MRFZone.cpp
   cfdTools/general/MRF/MRFZoneList.cpp
   cfdTools/general/MRF/IOMRFZoneList.cpp
@@ -888,16 +943,6 @@ src_files_core = Split("""
   cfdTools/general/SRF/SRFModel/rpm/rpm.cpp
   cfdTools/general/SRF/derivedFvPatchFields/SRFVelocityFvPatchVectorField/SRFVelocityFvPatchVectorField.cpp
   cfdTools/general/SRF/derivedFvPatchFields/SRFFreestreamVelocityFvPatchVectorField/SRFFreestreamVelocityFvPatchVectorField.cpp
-  cfdTools/general/fieldSources/basicSource/basicSource/basicSource.cpp
-  cfdTools/general/fieldSources/basicSource/basicSource/basicSourceIO.cpp
-  cfdTools/general/fieldSources/basicSource/basicSource/basicSourceList.cpp
-  cfdTools/general/fieldSources/basicSource/basicSource/IObasicSourceList.cpp
-  cfdTools/general/fieldSources/basicSource/pressureGradientExplicitSource/pressureGradientExplicitSource.cpp
-  cfdTools/general/fieldSources/basicSource/pressureGradientExplicitSource/pressureGradientExplicitSourceIO.cpp
-  cfdTools/general/fieldSources/basicSource/explicitSource/explicitSource.cpp
-  cfdTools/general/fieldSources/basicSource/explicitSetValue/explicitSetValue.cpp
-  cfdTools/general/fieldSources/basicSource/actuationDiskSource/actuationDiskSource.cpp
-  cfdTools/general/fieldSources/basicSource/radialActuationDiskSource/radialActuationDiskSource.cpp
   cfdTools/general/porosityModel/porosityModel/porosityModel.cpp
   cfdTools/general/porosityModel/porosityModel/porosityModelNew.cpp
   cfdTools/general/porosityModel/porosityModel/porosityModelList.cpp
@@ -924,4 +969,4 @@ CoreEnv.Install(install_dir, libcore)
 
 if (CoreEnv['WHICH_OS'] == "darwin"):
 
-  CoreEnv.Append(SHLINKFLAGS ='-install_name @' + CoreEnv['LIB_PLATFORM_INSTALL'] + '/libcore.dylib')
+  CoreEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcore.dylib')

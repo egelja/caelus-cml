@@ -32,9 +32,8 @@ caelusCalcEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusCalcEnv['WHICH_OS'] == "windows":
   caelusCalcEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libCAELUSCalcFunctions']
-else:
-  lib_link = ['genericPatchFields','CAELUSCalcFunctions']
+
+lib_link = ['genericPatchFields','CAELUSCalcFunctions']
      
 caelusCalcEnv.Append(LIBS = lib_link)
 

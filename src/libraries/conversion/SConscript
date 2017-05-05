@@ -71,4 +71,4 @@ convEnv.Install(install_dir, libconversion)
 
 if (convEnv['WHICH_OS'] == "darwin"):
 
-  convEnv.Append(SHLINKFLAGS ='-install_name @' + convEnv['LIB_PLATFORM_INSTALL'] + '/libconversion.dylib')
+  convEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libconversion.dylib')

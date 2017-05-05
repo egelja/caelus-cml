@@ -59,10 +59,7 @@ void CML::polyMesh::clearGeom()
 
     primitiveMesh::clearGeom();
 
-    forAll(boundary_, patchI)
-    {
-        boundary_[patchI].clearGeom();
-    }
+    boundary_.clearGeom();
 
     // Reset valid directions (could change with rotation)
     geometricD_ = Vector<label>::zero;
@@ -91,12 +88,12 @@ void CML::polyMesh::clearAdditionalGeom()
 }
 
 
-void CML::polyMesh::clearAddressing()
+void CML::polyMesh::clearAddressing(const bool isMeshUpdate)
 {
     if (debug)
     {
         Info<< "void polyMesh::clearAddressing() : "
-            << "clearing topology"
+            << "clearing topology  isMeshUpdate:" << isMeshUpdate
             << endl;
     }
 
@@ -117,6 +114,7 @@ void CML::polyMesh::clearAddressing()
 
     // Remove the stored tet base points
     tetBasePtIsPtr_.clear();
+
     // Remove the cell tree
     cellTreePtr_.clear();
 }

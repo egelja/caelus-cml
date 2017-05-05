@@ -6,7 +6,7 @@
     UEqn.clear();
 
     phi = fvc::interpolate(U, "interpolate(HbyA)") & mesh.Sf();
-    fvOptions.relativeFlux(phi);
+    fvOptions.makeRelative(phi);
     adjustPhi(phi, U, p);
 
     // Non-orthogonal pressure corrector loop

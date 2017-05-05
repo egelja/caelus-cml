@@ -106,4 +106,4 @@ surfFilmEnv.Install(install_dir, libsurfaceFilmModels)
 
 if (surfFilmEnv['WHICH_OS'] == "darwin"):
 
-  surfFilmEnv.Append(SHLINKFLAGS ='-install_name @' + surfFilmEnv['LIB_PLATFORM_INSTALL'] + '/libsurfaceFilmModels.dylib')
+  surfFilmEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsurfaceFilmModels.dylib')

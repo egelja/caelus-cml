@@ -1,0 +1,67 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+simplecSolEnv = globalEnv.Clone()
+
+# Path to source
+src = simplecSolEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+simplecSolEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [simplecSolEnv['LIB_SRC'] +  '/turbulenceModels',
+src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/incompressible/RAS/RASModel', 
+src + '/turbulenceModels/incompressible/RAS/lnInclude',
+src + '/transportModels',
+src + '/transportModels/incompressible/singlePhaseTransportModel',
+src + '/transportModels/incompressible/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude'
+]
+simplecSolEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+simplecSolEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if simplecSolEnv['WHICH_OS'] == "windows":
+  simplecSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
+
+lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
+'incompressibleTransportModels', 'fvOptions', 'sampling']
+  
+simplecSolEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  simplec.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binsimplecSol = simplecSolEnv.Program(target = 'simplec',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = simplecSolEnv['BIN_PLATFORM_INSTALL']
+simplecSolEnv.Alias('install', install_dir)
+simplecSolEnv.Install(install_dir, binsimplecSol)

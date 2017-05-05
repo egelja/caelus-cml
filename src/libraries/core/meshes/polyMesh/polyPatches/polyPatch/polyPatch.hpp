@@ -113,6 +113,9 @@ protected:
         //- Update of the patch topology
         virtual void updateMesh(PstreamBuffers&);
 
+        //- Clear geometry
+        virtual void clearGeom();
+
 
 public:
 
@@ -135,9 +138,10 @@ public:
                 const label size,
                 const label start,
                 const label index,
-                const polyBoundaryMesh& bm
+                const polyBoundaryMesh& bm,
+                const word& patchType
             ),
-            (name, size, start, index, bm)
+            (name, size, start, index, bm, patchType)
         );
 
         declareRunTimeSelectionTable
@@ -149,9 +153,10 @@ public:
                 const word& name,
                 const dictionary& dict,
                 const label index,
-                const polyBoundaryMesh& bm
+                const polyBoundaryMesh& bm,
+                const word& patchType
             ),
-            (name, dict, index, bm)
+            (name, dict, index, bm, patchType)
         );
 
 
@@ -164,7 +169,8 @@ public:
             const label size,
             const label start,
             const label index,
-            const polyBoundaryMesh& bm
+            const polyBoundaryMesh& bm,
+            const word& patchType
         );
 
         //- Construct from dictionary
@@ -173,7 +179,8 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyBoundaryMesh& bm
+            const polyBoundaryMesh& bm,
+            const word& patchType
         );
 
         //- Construct as copy, resetting the boundary mesh
@@ -266,6 +273,17 @@ public:
             const polyBoundaryMesh& bm
         );
 
+        //- Return a pointer to a new patch created on freestore from
+        //  dictionary
+        static autoPtr<polyPatch> New
+        (
+            const word& patchType,
+            const word& name,
+            const dictionary& dict,
+            const label index,
+            const polyBoundaryMesh& bm
+        );
+
 
     //- Destructor
     virtual ~polyPatch();
@@ -322,7 +340,7 @@ public:
             //- Return face normals
             const vectorField::subField faceAreas() const;
 
-            //- Return face neighbour cell centres
+            //- Return face cell centres
             tmp<vectorField> faceCellCentres() const;
 
 
@@ -335,7 +353,7 @@ public:
             const labelList& meshEdges() const;
 
             //- Clear addressing
-            void clearAddressing();
+            virtual void clearAddressing();
 
 
         // Other patch operations

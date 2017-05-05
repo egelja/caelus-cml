@@ -100,4 +100,4 @@ reactThermoEnv.Install(install_dir, libreactionThermophysicalModels)
 
 if (reactThermoEnv['WHICH_OS'] == "darwin"):
 
-  reactThermoEnv.Append(SHLINKFLAGS ='-install_name @' + reactThermoEnv['LIB_PLATFORM_INSTALL'] + '/libreactionThermophysicalModels.dylib')
+  reactThermoEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libreactionThermophysicalModels.dylib')

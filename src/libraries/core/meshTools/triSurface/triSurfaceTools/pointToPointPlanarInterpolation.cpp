@@ -215,7 +215,8 @@ CML::pointToPointPlanarInterpolation::pointToPointPlanarInterpolation
 )
 :
     perturb_(perturb),
-    referenceCS_(calcCoordinateSystem(sourcePoints))
+    referenceCS_(calcCoordinateSystem(sourcePoints)),
+    nPoints_(sourcePoints.size())
 
 {
     calcWeights(sourcePoints, destPoints);
@@ -231,7 +232,8 @@ CML::pointToPointPlanarInterpolation::pointToPointPlanarInterpolation
 )
 :
     perturb_(perturb),
-    referenceCS_(referenceCS)
+    referenceCS_(referenceCS),
+    nPoints_(sourcePoints.size())
 {
     calcWeights(sourcePoints, destPoints);
 }

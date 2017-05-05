@@ -57,4 +57,4 @@ lagSolPartEnv.Install(install_dir, libsolidParticle)
 
 if (lagSolPartEnv['WHICH_OS'] == "darwin"):
 
-  lagSolPartEnv.Append(SHLINKFLAGS ='-install_name @' + lagSolPartEnv['LIB_PLATFORM_INSTALL'] + '/libsolidParticle.dylib')
+  lagSolPartEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidParticle.dylib')

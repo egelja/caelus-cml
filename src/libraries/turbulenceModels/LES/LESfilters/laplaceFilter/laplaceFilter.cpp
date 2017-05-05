@@ -53,7 +53,7 @@ CML::laplaceFilter::laplaceFilter(const fvMesh& mesh, scalar widthCoeff)
         calculatedFvPatchScalarField::typeName
     )
 {
-    coeff_.internalField() = pow(mesh.V(), 2.0/3.0)/widthCoeff_;
+    coeff_.dimensionedInternalField() = pow(mesh.V(), 2.0/3.0)/widthCoeff_;
 }
 
 
@@ -74,7 +74,7 @@ CML::laplaceFilter::laplaceFilter(const fvMesh& mesh, const dictionary& bd)
         calculatedFvPatchScalarField::typeName
     )
 {
-    coeff_.internalField() = pow(mesh.V(), 2.0/3.0)/widthCoeff_;
+    coeff_.dimensionedInternalField() = pow(mesh.V(), 2.0/3.0)/widthCoeff_;
 }
 
 

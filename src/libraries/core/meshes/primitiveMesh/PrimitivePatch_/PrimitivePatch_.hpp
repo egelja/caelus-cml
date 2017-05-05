@@ -1469,6 +1469,7 @@ clearTopology()
     deleteDemandDrivenData(pointEdgesPtr_);
     deleteDemandDrivenData(pointFacesPtr_);
     deleteDemandDrivenData(edgeLoopsPtr_);
+    deleteDemandDrivenData(localPointOrderPtr_);
 }
 
 

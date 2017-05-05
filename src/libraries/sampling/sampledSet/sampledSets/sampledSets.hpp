@@ -24,6 +24,8 @@ Description
     Set of sets to sample.
     Call sampledSets.write() to sample&write files.
 
+SourceFiles
+    sampledSets.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -99,7 +101,7 @@ class sampledSets
 
 
         //- Class used for sampling volFields
-        template <class Type>
+        template<class Type>
         class volFieldSampler
         :
             public List<Field<Type> >
@@ -282,6 +284,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Sample and write
         virtual void write();
 
@@ -306,12 +311,14 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 #include "volFields.hpp"
 #include "ListListOps.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::sampledSets::volFieldSampler<Type>::volFieldSampler
 (
     const word& interpolationScheme,
@@ -358,7 +365,7 @@ CML::sampledSets::volFieldSampler<Type>::volFieldSampler
 }
 
 
-template <class Type>
+template<class Type>
 CML::sampledSets::volFieldSampler<Type>::volFieldSampler
 (
     const GeometricField<Type, fvPatchField, volMesh>& field,
@@ -391,7 +398,7 @@ CML::sampledSets::volFieldSampler<Type>::volFieldSampler
 }
 
 
-template <class Type>
+template<class Type>
 CML::sampledSets::volFieldSampler<Type>::volFieldSampler
 (
     const List<Field<Type> >& values,

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 4.10
+# Caelus 5.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -14,12 +14,17 @@ import shutil
 
 # Code name and version
 code = 'Caelus'
-version = 4.10
+version = 5.04
 
 # Starting up the meshing and solving
 print "**********************************"
 print "Starting %s %.2f simulation" % (code, version)
 print "**********************************"
+
+if sys.platform == 'win32':
+   pltfrm = True
+else:
+   pltfrm = False
 
 # Copying the 0 directory
 if os.path.exists('0'):
@@ -28,70 +33,54 @@ if os.path.exists('0'):
 shutil.copytree('0.org', '0')
 
 # Cleaning up the case
-os.system('CaelusCleanCase.py')
-os.system('CaelusClearPolyMesh.py')
+os.system('caelus-cleanCase.py')
+os.system('caelus-clearPolyMesh.py')
 
 # Executing BlockMesh utility
 print "Executing blockMesh"
-logfile = open('blockMesh.log', 'w')
-run = subprocess.Popen(['blockMesh'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'blockMesh'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing topoSet utility
 print "Executing topoSet"
-logfile = open('topoSet.log', 'w')
-run = subprocess.Popen(['topoSet'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'topoSet'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing createBaffles
 print "Executing createBaffles"
-logfile = open('createBaffles.log', 'w')
-run = subprocess.Popen(["createBaffles", "baffleFaces", "(baffle1Wall_0 baffle1Wall_1)", "-overwrite"], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', "createBaffles_old", "baffleFaces", "(baffle1Wall_0 baffle1Wall_1)", "-overwrite"], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing extrudeToRegionMesh
 print "Executing extrudeToRegionMesh"
-logfile = open('extrudeToRegionMesh.log', 'w')
-run = subprocess.Popen(['extrudeToRegionMesh', '-overwrite'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'extrudeToRegionMesh', '-overwrite'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing changeDictionary to setup the BCs
 print "Executing changeDictionary to setup the BCs"
-logfile = open('changeDictionary_BC.log', 'w')
-run = subprocess.Popen(['changeDictionary', '-dict', 'system/changeDictionaryDict.baffle'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'changeDictionary', '-dict', 'system/changeDictionaryDict.baffle'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing changeDictionary to set BCs for the baffle region
 print "Executing changeDictionary to set BCs for the baffle region"
-logfile = open('changeDictionary_baffle.log', 'w')
-run = subprocess.Popen(['changeDictionary', '-dict', 'system/changeDictionaryDict.baffleRegion', '-literalRE'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'changeDictionary', '-dict', 'system/changeDictionaryDict.baffleRegion', '-literalRE'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing changeDictionary to set proper values at the region
 print "Executing changeDictionary to set proper values at the region"
-logfile = open('changeDictionary_region.log', 'w')
-run = subprocess.Popen(['changeDictionary', '-region', 'baffleRegion', '-literalRE'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'changeDictionary', '-region', 'baffleRegion', '-literalRE'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 
 # Executing buoyantSimpleSolver
 print "Executing buoyantSimpleSolver"
-logfile = open('buoyantSimpleSolver.log', 'w')
-run = subprocess.Popen(['buoyantSimpleSolver'], stderr=logfile, stdout=logfile)
+run = subprocess.Popen(['caelus.py', '-l', 'buoyantSimpleSolver'], shell=pltfrm)
 run.wait()
-logfile.close()
 run = None
 

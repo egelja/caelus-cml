@@ -26,6 +26,8 @@ Description
 Note
     Does not actually cut until update() called.
 
+SourceFiles
+    sampledPlane.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -54,20 +56,23 @@ class sampledPlane
         //- If restricted to zones, name of this zone or a regular expression
         keyType zoneKey_;
 
+        //- Triangulated faces or keep faces as is
+        const bool triangulate_;
+
         //- Track if the surface needs an update
         mutable bool needsUpdate_;
 
     // Private Member Functions
 
         //- sample field on faces
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> > sampleField
         (
             const GeometricField<Type, fvPatchField, volMesh>& vField
         ) const;
 
 
-        template <class Type>
+        template<class Type>
         tmp<Field<Type> >
         interpolateField(const interpolation<Type>&) const;
 
@@ -86,7 +91,8 @@ public:
             const word& name,
             const polyMesh& mesh,
             const plane& planeDesc,
-            const keyType& zoneKey = word::null
+            const keyType& zoneKey = word::null,
+            const bool triangulate = true
         );
 
         //- Construct from dictionary
@@ -207,9 +213,12 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledPlane::sampleField
 (
@@ -220,7 +229,7 @@ CML::sampledPlane::sampleField
 }
 
 
-template <class Type>
+template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::sampledPlane::interpolateField
 (

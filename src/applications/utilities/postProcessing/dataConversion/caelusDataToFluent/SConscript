@@ -31,9 +31,8 @@ caelusDataToFluentEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusDataToFluentEnv['WHICH_OS'] == "windows":
   caelusDataToFluentEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields']
-else:
-  lib_link = ['genericPatchFields']
+
+lib_link = ['genericPatchFields']
      
 
 caelusDataToFluentEnv.Append(LIBS = lib_link)

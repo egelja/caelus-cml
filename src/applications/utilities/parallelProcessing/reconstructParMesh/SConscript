@@ -19,7 +19,7 @@ reconstructParMeshEnv.Prepend(CPPPATH = lib_inc)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-lib_link = ['libdynamicMesh']  
+lib_link = ['dynamicMesh']  
 reconstructParMeshEnv.Append(LIBS = lib_link)
 
 #===============================================================================

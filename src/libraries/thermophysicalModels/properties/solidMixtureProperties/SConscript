@@ -57,4 +57,4 @@ thermoSolMixPropEnv.Install(install_dir, libsolidMixtureProperties)
 
 if (thermoSolMixPropEnv['WHICH_OS'] == "darwin"):
 
-  thermoSolMixPropEnv.Append(SHLINKFLAGS ='-install_name @' + thermoSolMixPropEnv['LIB_PLATFORM_INSTALL'] + '/libsolidMixtureProperties.dylib')
+  thermoSolMixPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidMixtureProperties.dylib')

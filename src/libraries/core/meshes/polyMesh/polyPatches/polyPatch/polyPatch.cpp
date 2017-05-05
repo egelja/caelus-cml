@@ -57,8 +57,14 @@ void CML::polyPatch::movePoints(PstreamBuffers&, const pointField& p)
 
 void CML::polyPatch::updateMesh(PstreamBuffers&)
 {
+    primitivePatch::clearGeom();
     clearAddressing();
-    primitivePatch::clearOut();
+}
+
+
+void CML::polyPatch::clearGeom()
+{
+    primitivePatch::clearGeom();
 }
 
 
@@ -70,7 +76,8 @@ CML::polyPatch::polyPatch
     const label size,
     const label start,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
     patchIdentifier(name, index),
@@ -91,7 +98,8 @@ CML::polyPatch::polyPatch
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyBoundaryMesh& bm
+    const polyBoundaryMesh& bm,
+    const word& patchType
 )
 :
     patchIdentifier(name, dict, index),
@@ -316,6 +324,8 @@ const CML::labelList& CML::polyPatch::meshEdges() const
 
 void CML::polyPatch::clearAddressing()
 {
+    primitivePatch::clearTopology();
+    primitivePatch::clearPatchMeshAddr();
     deleteDemandDrivenData(faceCellsPtr_);
     deleteDemandDrivenData(mePtr_);
 }

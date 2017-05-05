@@ -49,3 +49,4 @@ postCalc = postCalcEnv.Object(target = 'postCalc', source = src_files)
 install_dir = postCalcEnv['LIB_PLATFORM_INSTALL']
 postCalcEnv.Alias('install', install_dir)
 postCalcEnv.Install(install_dir, postCalc)
+

@@ -120,10 +120,25 @@ public:
 
         //- Get representative set of element coordinates
         //  Usually the element centres (should be of length size()).
-        virtual pointField coordinates() const
+        virtual tmp<pointField> coordinates() const
         {
-            //notImplemented("searchablePlane::coordinates()")
-            return pointField(1, refPoint());
+            tmp<pointField> tCtrs(new pointField(1, refPoint()));
+            return tCtrs;
+        }
+
+        //- Get bounding spheres (centre and radius squared), one per element.
+        //  Any point on element is guaranteed to be inside.
+        //  Note: radius limited to sqr(GREAT)
+        virtual void boundingSpheres
+        (
+            pointField& centres,
+            scalarField& radiusSqr
+        ) const;
+
+        //- Get the points that define the surface.
+        virtual tmp<pointField> points() const
+        {
+            return coordinates();
         }
 
         //- Does any part of the surface overlap the supplied bound box?

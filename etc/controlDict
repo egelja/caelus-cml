@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 4.10
+Caelus 5.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -958,5 +958,13 @@ DimensionedConstants
     }
 }
 
+//- Tell ParallelRunner how to run parallel jobs
+// You can use %(NPROCS)d, %(APPLICATION)s, %(ARGS)s
+// and %(PAROPTS)s as placeholders for the number
+// of  processors, the application to run, its arguments
+// and additional options you want to pass to parallel
+// runner (such as "-hostfile machines")
+parRunTemplate "mpiexec -n %(NPROCS)d %(PAROPTS)s  %(APPLICATION)s  %(ARGS)s -parallel";
+parRunWinTemplate "mpiexec -localonly %(NPROCS)d %(PAROPTS)s  %(APPLICATION)s  %(ARGS)s -parallel";
 
 // ************************************************************************* //

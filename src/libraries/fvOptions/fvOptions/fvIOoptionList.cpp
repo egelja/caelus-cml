@@ -31,7 +31,7 @@ CML::IOobject CML::fv::IOoptionList::createIOobject
     IOobject io
     (
         "fvOptions",
-        mesh.time().system(),
+        mesh.time().constant(),
         mesh,
         IOobject::MUST_READ,
         IOobject::NO_WRITE
@@ -39,7 +39,8 @@ CML::IOobject CML::fv::IOoptionList::createIOobject
 
     if (io.headerOk())
     {
-        Info<< "Creating finite volume options from " << io.name() << nl
+        Info<< "Creating finite volume options from "
+            << io.instance()/io.name() << nl
             << endl;
 
         io.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
@@ -47,10 +48,25 @@ CML::IOobject CML::fv::IOoptionList::createIOobject
     }
     else
     {
-        Info<< "No finite volume options present" << nl << endl;
+        // Check if the fvOptions file is in system
+        io.instance() = mesh.time().system();
 
-        io.readOpt() = IOobject::NO_READ;
-        return io;
+        if (io.headerOk())
+        {
+            Info<< "Creating finite volume options from "
+                << io.instance()/io.name() << nl
+                << endl;
+
+            io.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
+            return io;
+        }
+        else
+        {
+            Info<< "No finite volume options present" << nl << endl;
+
+            io.readOpt() = IOobject::NO_READ;
+            return io;
+        }
     }
 }
 

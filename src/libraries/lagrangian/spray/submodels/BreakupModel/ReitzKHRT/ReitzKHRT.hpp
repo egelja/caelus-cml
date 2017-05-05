@@ -260,8 +260,6 @@ bool CML::ReitzKHRT<CloudType>::update
     if ((tc > 0) || (lambdaRT < d) )
     {
         tc += dt;
-        scalar multiplier = d/lambdaRT;
-        d = cbrt(d3/multiplier);
     }
 
     // characteristic RT breakup time

@@ -85,4 +85,4 @@ funcObjForceEnv.Install(install_dir, libforces)
 
 if (funcObjForceEnv['WHICH_OS'] == "darwin"):
 
-  funcObjForceEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjForceEnv['LIB_PLATFORM_INSTALL'] + '/libforces.dylib')
+  funcObjForceEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libforces.dylib')

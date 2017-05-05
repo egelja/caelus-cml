@@ -36,6 +36,7 @@ SourceFiles
 #include "dictionary.hpp"
 #include "fvMatricesFwd.hpp"
 #include "runTimeSelectionTables.hpp"
+#include "coordinateSystem.hpp"
 #include "dimensionedVector.hpp"
 #include "keyType.hpp"
 
@@ -85,11 +86,18 @@ protected:
         //- Name(s) of cell-zone
         keyType zoneName_;
 
-        //- Cell zone Ids
-        labelList cellZoneIds_;
+        //- Cell zone IDs
+        labelList cellZoneIDs_;
+
+        //- Local co-ordinate system
+        coordinateSystem coordSys_;
 
 
     // Protected Member Functions
+
+
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData() = 0;
 
         //- Adjust negative resistance values to be multiplier of max value
         void adjustNegativeResistance(dimensionedVector& resist);
@@ -117,6 +125,9 @@ protected:
             const fvVectorMatrix& UEqn,
             volTensorField& AU
         ) const = 0;
+
+        //- Return label index
+        label fieldIndex(const label index) const;
 
 
 public:
@@ -210,16 +221,19 @@ public:
         //- Return const access to the cell zone IDs
         inline const labelList& cellZoneIDs() const;
 
+        //- Transform the model data wrt mesh changes
+        virtual void transformModelData();
+
         //- Return the force over the cell zone(s)
         virtual tmp<vectorField> force
         (
             const volVectorField& U,
             const volScalarField& rho,
             const volScalarField& mu
-        ) const;
+        );
 
         //- Add resistance
-        virtual void addResistance(fvVectorMatrix& UEqn) const;
+        virtual void addResistance(fvVectorMatrix& UEqn);
 
         //- Add resistance
         virtual void addResistance
@@ -227,7 +241,7 @@ public:
             fvVectorMatrix& UEqn,
             const volScalarField& rho,
             const volScalarField& mu
-        ) const;
+        );
 
         //- Add resistance
         virtual void addResistance
@@ -235,22 +249,13 @@ public:
             const fvVectorMatrix& UEqn,
             volTensorField& AU,
             bool correctAUprocBC
-        ) const;
-
-
-    // Topology change
-
-        //- Move points
-        virtual bool movePoints();
-
-        //- Update on meshUpdate
-        virtual void updateMesh(const mapPolyMesh& mpm);
+        );
 
 
     // I-O
 
         //- Write
-        virtual bool writeData(Ostream& os) const = 0;
+        virtual bool writeData(Ostream& os) const;
 
         //- Read porosity dictionary
         virtual bool read(const dictionary& dict);
@@ -276,7 +281,7 @@ inline bool CML::porosityModel::active() const
 
 inline const CML::labelList& CML::porosityModel::cellZoneIDs() const
 {
-    return cellZoneIds_;
+    return cellZoneIDs_;
 }
 
 

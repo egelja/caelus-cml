@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +22,14 @@ Class
     CML::GAMGPreconditioner
 
 Description
-    Geometric agglomerated algebraic multigrid preconditioner.
+    Geometric agglomerated algebraic multigrid preconditioner. 
+    Preconditioner is based on a simple AMG agglomeration procedure that
+    agglomerates neighbour coefficients based on their strangth. Each
+    resulting coarse coefficient (equation) is comprised of coefficients
+    from the fine level. Therefore, each fine equation has its represeantion
+    on the coarse leve, i.e. no coefficients are excluded. The preconditioner
+    performs n V-cycles and the preconditioning is performed at the end of 
+    each V-cycle. 
 
 See Also
     GAMGSolver for more details.
@@ -36,14 +44,8 @@ SourceFiles
 
 #include "GAMGSolver.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class GAMGPreconditioner Declaration
-\*---------------------------------------------------------------------------*/
 
 class GAMGPreconditioner
 :
@@ -64,39 +66,25 @@ public:
     //- Runtime type information
     TypeName("GAMG");
 
+    //- Construct from matrix components and preconditioner solver controls
+    GAMGPreconditioner
+    (
+        const lduMatrix::solver&,
+        const dictionary& solverControls
+    );
 
-    // Constructors
-
-        //- Construct from matrix components and preconditioner solver controls
-        GAMGPreconditioner
-        (
-            const lduMatrix::solver&,
-            const dictionary& solverControls
-        );
-
-
-    //- Destructor
     virtual ~GAMGPreconditioner();
 
-
-    // Member Functions
-
-        //- Return wA the preconditioned form of residual rA
-        virtual void precondition
-        (
-            scalarField& wA,
-            const scalarField& rA,
-            const direction cmpt=0
-        ) const;
+    //- Return w the preconditioned form of residual r
+    virtual void precondition
+    (
+        scalarField& w,
+        const scalarField& r,
+        const direction cmpt=0
+    ) const;
 };
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
-// ************************************************************************* //

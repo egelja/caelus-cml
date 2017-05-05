@@ -18,7 +18,7 @@ extrudeModelEnv.Prepend(CPPPATH = lib_inc)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['libdynamicMesh']
+lib_link = ['dynamicMesh']
   
 extrudeModelEnv.Append(LIBS = lib_link)
 
@@ -47,3 +47,7 @@ libextrudeModel = extrudeModelEnv.SharedLibrary(target =
 install_dir = extrudeModelEnv['LIB_PLATFORM_INSTALL']
 extrudeModelEnv.Alias('install', install_dir)
 extrudeModelEnv.Install(install_dir, libextrudeModel)
+
+if (extrudeModelEnv['WHICH_OS'] == "darwin"):
+
+  extrudeModelEnv.Append(SHLINKFLAGS ='-install_name ' + extrudeModelEnv['LIB_PLATFORM_INSTALL'] + '/libextrudeModel.dylib')

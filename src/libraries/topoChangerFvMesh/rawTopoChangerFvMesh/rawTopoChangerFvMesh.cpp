@@ -61,6 +61,12 @@ bool CML::rawTopoChangerFvMesh::update()
     // Do mesh changes (use inflation - put new points in topoChangeMap)
     Info<< "rawTopoChangerFvMesh : Checking for topology changes..."
         << endl;
+
+    // Mesh not moved/changed yet
+    moving(false);
+    topoChanging(false);
+
+    // Do any topology changes. Sets topoChanging (through polyTopoChange)
     autoPtr<mapPolyMesh> topoChangeMap = topoChanger_.changeMesh(true);
 
     bool hasChanged = topoChangeMap.valid();
@@ -165,8 +171,6 @@ bool CML::rawTopoChangerFvMesh::update()
         //Pout<< "rawTopoChangerFvMesh :"
         //    << " no topology changes..." << endl;
     }
-
-    changing(hasChanged);
 
     return hasChanged;
 }

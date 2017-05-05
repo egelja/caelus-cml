@@ -336,7 +336,7 @@ CML::displacementInterpolationFvMotionSolver::curPoints() const
     tmp<pointField> tcurPoints(new pointField(points0()));
     pointField& curPoints = tcurPoints();
 
-    // Interpolate the diplacement of the face zones.
+    // Interpolate the displacement of the face zones.
     vectorField zoneDisp(displacements_.size(), vector::zero);
     forAll(zoneDisp, zoneI)
     {

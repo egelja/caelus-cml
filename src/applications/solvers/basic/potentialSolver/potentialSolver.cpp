@@ -27,9 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#include "fvIOoptionList.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -45,16 +43,18 @@ int main(int argc, char *argv[])
     #include "createMesh.hpp"
     #include "readControls.hpp"
     #include "createFields.hpp"
-
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    #include "createFvOptions.hpp"
 
     Info<< nl << "Calculating potential flow" << endl;
 
     // Since solver contains no time loop it would never execute
-    // function objects so do it ourselves.
+    // function objects so do it ourselves
     runTime.functionObjects().start();
 
+    fvOptions.makeRelative(phi);
+
     adjustPhi(phi, U, p);
+
 
     for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {
@@ -83,6 +83,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    fvOptions.makeAbsolute(phi);
+
     Info<< "continuity error = "
         << mag(fvc::div(phi))().weightedAverage(mesh.V()).value()
         << endl;
@@ -106,19 +108,10 @@ int main(int argc, char *argv[])
 
     runTime.functionObjects().end();
 
-#ifdef _WIN32
-    Info<< "ExecutionTime = " << static_cast<double>(runTime.elapsedCpuTime()) << " s"
-        << "  ClockTime = " << static_cast<double>(runTime.elapsedClockTime()) << " s"
-#else
-    Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-        << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-#endif
-        << nl << endl;
+    #include "reportTimeStats.hpp"
 
     Info<< "End\n" << endl;
 
     return 0;
 }
 
-
-// ************************************************************************* //

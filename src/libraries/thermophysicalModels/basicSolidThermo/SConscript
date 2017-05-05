@@ -42,7 +42,6 @@ src_files = Split("""
   basicSolidThermo/basicSolidThermo.cpp
   basicSolidThermo/basicSolidThermoNew.cpp
   constSolidThermo/constSolidThermo.cpp
-  directionalKSolidThermo/directionalKSolidThermo.cpp
   interpolatedSolidThermo/interpolatedSolidThermo.cpp
   interpolatedSolidThermo/interpolateSolid/interpolateSolid.cpp
   isotropicKSolidThermo/isotropicKSolidThermo.cpp
@@ -65,4 +64,4 @@ basicSolThermoEnv.Install(install_dir, libbasicSolidThermo)
 
 if (basicSolThermoEnv['WHICH_OS'] == "darwin"):
 
-  basicSolThermoEnv.Append(SHLINKFLAGS ='-install_name @' + basicSolThermoEnv['LIB_PLATFORM_INSTALL'] + '/libbasicSolidThermo.dylib')
+  basicSolThermoEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libbasicSolidThermo.dylib')

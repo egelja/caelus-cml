@@ -62,6 +62,17 @@ void CML::porosityModel::adjustNegativeResistance(dimensionedVector& resist)
 }
 
 
+CML::label CML::porosityModel::fieldIndex(const label i) const
+{
+    label index = 0;
+    if (!coordSys_.R().uniform())
+    {
+        index = i;
+    }
+    return index;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::porosityModel::porosityModel
@@ -90,7 +101,8 @@ CML::porosityModel::porosityModel
     coeffs_(dict.subDict(modelType + "Coeffs")),
     active_(true),
     zoneName_(cellZoneName),
-    cellZoneIds_()
+    cellZoneIDs_(),
+    coordSys_(coordinateSystem::New(mesh, coeffs_))
 {
     if (zoneName_ == word::null)
     {
@@ -98,11 +110,11 @@ CML::porosityModel::porosityModel
         dict_.lookup("cellZone") >> zoneName_;
     }
 
-    cellZoneIds_ = mesh_.cellZones().findIndices(zoneName_);
+    cellZoneIDs_ = mesh_.cellZones().findIndices(zoneName_);
 
     Info<< "    creating porous zone: " << zoneName_ << endl;
 
-    bool foundZone = !cellZoneIds_.empty();
+    bool foundZone = !cellZoneIDs_.empty();
     reduce(foundZone, orOp<bool>());
 
     if (!foundZone && Pstream::master())
@@ -131,16 +143,30 @@ CML::porosityModel::~porosityModel()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-CML::tmp<CML::vectorField> CML::porosityModel::force
+void CML::porosityModel::transformModelData()
+{
+    if (!mesh_.upToDatePoints(*this))
+    {
+        calcTranformModelData();
+
+        // set model up-to-date wrt points
+        mesh_.setUpToDatePoints(*this);
+    }
+}
+
+
+CML::tmp<CML::vectorField> CML::porosityModel::porosityModel::force
 (
     const volVectorField& U,
     const volScalarField& rho,
     const volScalarField& mu
-) const
+)
 {
+    transformModelData();
+
     tmp<vectorField> tforce(new vectorField(U.size(), vector::zero));
 
-    if (!cellZoneIds_.empty())
+    if (!cellZoneIDs_.empty())
     {
         this->calcForce(U, rho, mu, tforce());
     }
@@ -149,16 +175,14 @@ CML::tmp<CML::vectorField> CML::porosityModel::force
 }
 
 
-void CML::porosityModel::addResistance
-(
-    fvVectorMatrix& UEqn
-) const
+void CML::porosityModel::addResistance(fvVectorMatrix& UEqn)
 {
-    if (cellZoneIds_.empty())
+    if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn);
 }
 
@@ -168,13 +192,14 @@ void CML::porosityModel::addResistance
     fvVectorMatrix& UEqn,
     const volScalarField& rho,
     const volScalarField& mu
-) const
+)
 {
-    if (cellZoneIds_.empty())
+    if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn, rho, mu);
 }
 
@@ -183,14 +208,15 @@ void CML::porosityModel::addResistance
 (
     const fvVectorMatrix& UEqn,
     volTensorField& AU,
-    bool correctAUprocBC         
-) const
+    bool correctAUprocBC
+)
 {
-    if (cellZoneIds_.empty())
+    if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn, AU);
 
     if (correctAUprocBC)
@@ -200,19 +226,6 @@ void CML::porosityModel::addResistance
         // for the pressure equation.
         AU.correctBoundaryConditions();
     }
-}
-
-
-bool CML::porosityModel::movePoints()
-{
-    // no updates necessary; all member data independent of mesh
-    return true;
-}
-
-
-void CML::porosityModel::updateMesh(const mapPolyMesh& mpm)
-{
-    // no updates necessary; all member data independent of mesh
 }
 
 
@@ -227,7 +240,7 @@ bool CML::porosityModel::read(const dictionary& dict)
     active_ = readBool(dict.lookup("active"));
     coeffs_ = dict.subDict(type() + "Coeffs");
     dict.lookup("cellZone") >> zoneName_;
-    cellZoneIds_ = mesh_.cellZones().findIndices(zoneName_);
+    cellZoneIDs_ = mesh_.cellZones().findIndices(zoneName_);
 
     return true;
 }

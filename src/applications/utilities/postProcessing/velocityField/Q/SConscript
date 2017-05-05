@@ -31,9 +31,8 @@ QEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if QEnv['WHICH_OS'] == "windows":
   QEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
     
 QEnv.Append(LIBS = lib_link)
 

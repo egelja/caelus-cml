@@ -211,12 +211,24 @@ gaussLaplacianScheme<Type, GType>::fvmLaplacianUncorrected
 
     forAll(vf.boundaryField(), patchI)
     {
-        const fvPatchField<Type>& psf = vf.boundaryField()[patchI];
-        const fvsPatchScalarField& patchGamma =
-            gammaMagSf.boundaryField()[patchI];
+        const fvPatchField<Type>& pvf = vf.boundaryField()[patchI];
+        const fvsPatchScalarField& pGamma = gammaMagSf.boundaryField()[patchI];
+        const fvsPatchScalarField& pDeltaCoeffs =
+            deltaCoeffs.boundaryField()[patchI];
 
-        fvm.internalCoeffs()[patchI] = patchGamma*psf.gradientInternalCoeffs();
-        fvm.boundaryCoeffs()[patchI] = -patchGamma*psf.gradientBoundaryCoeffs();
+        if (pvf.coupled())
+        {
+            fvm.internalCoeffs()[patchI] =
+                pGamma*pvf.gradientInternalCoeffs(pDeltaCoeffs);
+            fvm.boundaryCoeffs()[patchI] =
+               -pGamma*pvf.gradientBoundaryCoeffs(pDeltaCoeffs);
+        }
+        else
+        {
+            fvm.internalCoeffs()[patchI] = pGamma*pvf.gradientInternalCoeffs();
+            fvm.boundaryCoeffs()[patchI] = -pGamma*pvf.gradientBoundaryCoeffs();
+        }
+
     }
 
     return tfvm;

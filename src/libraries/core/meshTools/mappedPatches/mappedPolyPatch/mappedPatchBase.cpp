@@ -76,64 +76,98 @@ const CML::NamedEnum<CML::mappedPatchBase::offsetMode, 3>
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+CML::tmp<CML::pointField> CML::mappedPatchBase::facePoints
+(
+    const polyPatch& pp
+) const
+{
+    const polyMesh& mesh = pp.boundaryMesh().mesh();
+
+    // Force construction of min-tet decomp
+    (void)mesh.tetBasePtIs();
+
+    // Initialise to face-centre
+    tmp<pointField> tfacePoints(new pointField(patch_.size()));
+    pointField& facePoints = tfacePoints();
+
+    forAll(pp, faceI)
+    {
+        facePoints[faceI] = facePoint
+        (
+            mesh,
+            pp.start()+faceI,
+            polyMesh::FACEDIAGTETS
+        ).rawPoint();
+    }
+
+    return tfacePoints;
+}
+
 void CML::mappedPatchBase::collectSamples
 (
+    const pointField& facePoints,
     pointField& samples,
     labelList& patchFaceProcs,
     labelList& patchFaces,
     pointField& patchFc
 ) const
 {
-
     // Collect all sample points and the faces they come from.
-    List<pointField> globalFc(Pstream::nProcs());
-    List<pointField> globalSamples(Pstream::nProcs());
-    labelListList globalFaces(Pstream::nProcs());
+    {
+        List<pointField> globalFc(Pstream::nProcs());
+        globalFc[Pstream::myProcNo()] = facePoints;
+        Pstream::gatherList(globalFc);
+        Pstream::scatterList(globalFc);
+        // Rework into straight list
+        patchFc = ListListOps::combine<pointField>
+        (
+            globalFc,
+            accessOp<pointField>()
+        );
+    }
 
-    globalFc[Pstream::myProcNo()] = patch_.faceCentres();
-    globalSamples[Pstream::myProcNo()] = samplePoints();
-    globalFaces[Pstream::myProcNo()] = identity(patch_.size());
+    {
+        List<pointField> globalSamples(Pstream::nProcs());
+        globalSamples[Pstream::myProcNo()] = samplePoints(facePoints);
+        Pstream::gatherList(globalSamples);
+        Pstream::scatterList(globalSamples);
+        // Rework into straight list
+        samples = ListListOps::combine<pointField>
+        (
+            globalSamples,
+            accessOp<pointField>()
+        );
+    }
 
-    // Distribute to all processors
-    Pstream::gatherList(globalSamples);
-    Pstream::scatterList(globalSamples);
-    Pstream::gatherList(globalFaces);
-    Pstream::scatterList(globalFaces);
-    Pstream::gatherList(globalFc);
-    Pstream::scatterList(globalFc);
+    {
+        labelListList globalFaces(Pstream::nProcs());
+        globalFaces[Pstream::myProcNo()] = identity(patch_.size());
+        // Distribute to all processors
+        Pstream::gatherList(globalFaces);
+        Pstream::scatterList(globalFaces);
 
-    // Rework into straight list
-    samples = ListListOps::combine<pointField>
-    (
-        globalSamples,
-        accessOp<pointField>()
-    );
-    patchFaces = ListListOps::combine<labelList>
-    (
-        globalFaces,
-        accessOp<labelList>()
-    );
-    patchFc = ListListOps::combine<pointField>
-    (
-        globalFc,
-        accessOp<pointField>()
-    );
-
-    patchFaceProcs.setSize(patchFaces.size());
-    labelList nPerProc
-    (
-        ListListOps::subSizes
+        patchFaces = ListListOps::combine<labelList>
         (
             globalFaces,
             accessOp<labelList>()
-        )
-    );
-    label sampleI = 0;
-    forAll(nPerProc, procI)
+        );
+    }
+
     {
-        for (label i = 0; i < nPerProc[procI]; i++)
+        labelList nPerProc(Pstream::nProcs());
+        nPerProc[Pstream::myProcNo()] = patch_.size();
+        Pstream::gatherList(nPerProc);
+        Pstream::scatterList(nPerProc);
+
+        patchFaceProcs.setSize(patchFaces.size());
+
+        label sampleI = 0;
+        forAll(nPerProc, procI)
         {
-            patchFaceProcs[sampleI++] = procI;
+            for (label i = 0; i < nPerProc[procI]; i++)
+            {
+                patchFaceProcs[sampleI++] = procI;
+            }
         }
     }
 }
@@ -392,9 +426,13 @@ void CML::mappedPatchBase::calcMapping() const
             << "Mapping already calculated" << exit(FatalError);
     }
 
-    // Do a sanity check
-    // Am I sampling my own patch? This only makes sense for a non-zero
-    // offset.
+    // Get points on face (since cannot use face-centres - might be off
+    // face-diagonal decomposed tets.
+    tmp<pointField> patchPoints(facePoints(patch_));
+
+
+    // Do a sanity check - am I sampling my own patch?
+    // This only makes sense for a non-zero offset.
     bool sampleMyself =
     (
         mode_ == NEARESTPATCHFACE
@@ -436,7 +474,14 @@ void CML::mappedPatchBase::calcMapping() const
     labelList patchFaceProcs;
     labelList patchFaces;
     pointField patchFc;
-    collectSamples(samples, patchFaceProcs, patchFaces, patchFc);
+    collectSamples
+    (
+        patchPoints,
+        samples,
+        patchFaceProcs,
+        patchFaces,
+        patchFc
+    );
 
     // Find processor and cell/face samples are in and actual location.
     labelList sampleProcs;
@@ -649,6 +694,9 @@ void CML::mappedPatchBase::calcAMI() const
             samplePolyPatch(), // nbrPatch0,
             surfPtr(),
             faceAreaIntersect::tmMesh,
+            true,
+            AMIPatchToPatchInterpolation::imFaceAreaWeight,
+            -1,
             AMIReverse_
         )
     );
@@ -951,7 +999,12 @@ CML::mappedPatchBase::mappedPatchBase
     samplePatch_(mpb.samplePatch_),
     offsetMode_(mpb.offsetMode_),
     offset_(mpb.offset_),
-    offsets_(mpb.offsets_, mapAddressing),
+    offsets_
+    (
+        offsetMode_ == NONUNIFORM
+      ? vectorField(mpb.offsets_, mapAddressing)
+      : vectorField(0)
+    ),
     distance_(mpb.distance_),
     sameRegion_(mpb.sameRegion_),
     mapPtr_(NULL),
@@ -1008,9 +1061,12 @@ const CML::polyPatch& CML::mappedPatchBase::samplePolyPatch() const
 }
 
 
-CML::tmp<CML::pointField> CML::mappedPatchBase::samplePoints() const
+CML::tmp<CML::pointField> CML::mappedPatchBase::samplePoints
+(
+    const pointField& fc
+) const
 {
-    tmp<pointField> tfld(new pointField(patch_.faceCentres()));
+    tmp<pointField> tfld(new pointField(fc));
     pointField& fld = tfld();
 
     switch (offsetMode_)
@@ -1037,6 +1093,92 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::samplePoints() const
     }
 
     return tfld;
+}
+
+
+CML::tmp<CML::pointField> CML::mappedPatchBase::samplePoints() const
+{
+    return samplePoints(facePoints(patch_));
+}
+
+CML::pointIndexHit CML::mappedPatchBase::facePoint
+(
+    const polyMesh& mesh,
+    const label faceI,
+    const polyMesh::cellRepresentation decompMode
+)
+{
+    const point& fc = mesh.faceCentres()[faceI];
+
+    switch (decompMode)
+    {
+        case polyMesh::FACEPLANES:
+        case polyMesh::FACECENTRETETS:
+        {
+            // For both decompositions the face centre is guaranteed to be
+            // on the face
+            return pointIndexHit(true, fc, faceI);
+        }
+        break;
+
+        case polyMesh::FACEDIAGTETS:
+        {
+            // Find the intersection of a ray from face centre to cell
+            // centre
+            // Find intersection of (face-centre-decomposition) centre to
+            // cell-centre with face-diagonal-decomposition triangles.
+
+            const pointField& p = mesh.points();
+            const face& f = mesh.faces()[faceI];
+
+            if (f.size() <= 3)
+            {
+                // Return centre of triangle.
+                return pointIndexHit(true, fc, 0);
+            }
+
+            label cellI = mesh.faceOwner()[faceI];
+            const point& cc = mesh.cellCentres()[cellI];
+            vector d = fc-cc;
+
+            const label fp0 = mesh.tetBasePtIs()[faceI];
+            const point& basePoint = p[f[fp0]];
+
+            label fp = f.fcIndex(fp0);
+            for (label i = 2; i < f.size(); i++)
+            {
+                const point& thisPoint = p[f[fp]];
+                label nextFp = f.fcIndex(fp);
+                const point& nextPoint = p[f[nextFp]];
+
+                const triPointRef tri(basePoint, thisPoint, nextPoint);
+                pointHit hitInfo = tri.intersection
+                (
+                    cc,
+                    d,
+                    intersection::HALF_RAY
+                );
+
+                if (hitInfo.hit() && hitInfo.distance() > 0)
+                {
+                    return pointIndexHit(true, hitInfo.hitPoint(), i-2);
+                }
+
+                fp = nextFp;
+            }
+
+            // Fall-back
+            return pointIndexHit(false, fc, -1);
+        }
+        break;
+
+        default:
+        {
+            FatalErrorIn("mappedPatchBase::facePoint()")
+                << "problem" << abort(FatalError);
+            return pointIndexHit();
+        }
+    }
 }
 
 

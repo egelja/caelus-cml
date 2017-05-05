@@ -33,9 +33,8 @@ polyDualMeshEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if polyDualMeshEnv['WHICH_OS'] == "windows":
   polyDualMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','libdynamicMesh']
-else:
-  lib_link = ['genericPatchFields','dynamicMesh']
+
+lib_link = ['genericPatchFields','dynamicMesh']
   
 polyDualMeshEnv.Append(LIBS = lib_link)
 

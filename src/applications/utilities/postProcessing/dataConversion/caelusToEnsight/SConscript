@@ -17,7 +17,8 @@ caelusDataToEnsightEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this executable
 #===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude']
+lib_inc = [src + '/lagrangian/basic/lnInclude',
+  src + '/sampling/lnInclude']
 caelusDataToEnsightEnv.Prepend(CPPPATH = lib_inc)
 
 #===============================================================================
@@ -31,9 +32,8 @@ caelusDataToEnsightEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if caelusDataToEnsightEnv['WHICH_OS'] == "windows":
   caelusDataToEnsightEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libgenericPatchFields','liblagrangian']
-else:
-  lib_link = ['genericPatchFields','lagrangian']
+
+lib_link = ['genericPatchFields','lagrangian','sampling']
      
 
 caelusDataToEnsightEnv.Append(LIBS = lib_link)

@@ -1,4 +1,5 @@
 #Copyright (C) 2014 Applied CCM
+import os
 import subprocess
 Import('globalEnv')
 
@@ -6,17 +7,15 @@ Import('globalEnv')
 # libraries
 scotchErrExitEnv = globalEnv.Clone()
 
-# Path to source
-src = scotchErrExitEnv['LIB_SRC']
-
-scotchErrExitEnv.Append(CCFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
+scotchErrExitEnv.Append(CCFLAGS = ' -DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
                                   '-DSCOTCH_PATCHLEVEL=12')
 
 #===============================================================================
 # Additions to include directories for this library
 #===============================================================================
-lib_inc = [src + '/libscotch']
-scotchErrExitEnv.Prepend(CPPPATH = lib_inc)
+# Path to source
+src = scotchErrExitEnv['LIB_SRC']
+scotchErrExitEnv.Prepend(CPPPATH = [os.path.join(src, 'libscotch')])
 
 #===============================================================================
 # Sources for this library
@@ -40,4 +39,4 @@ scotchErrExitEnv.Install(install_dir, libscotchErrExit)
 
 if (scotchErrExitEnv['WHICH_OS'] == "darwin"):
 
-  scotchErrExitEnv.Append(SHLINKFLAGS ='-install_name @' + scotchErrExitEnv['LIB_PLATFORM_INSTALL'] + '/libscotchErrExit.dylib')
+  scotchErrExitEnv.Append(SHLINKFLAGS ='-install_name @loader_path/../../../external/scotch-5.1.12/lib/libscotchErrExit.dylib')

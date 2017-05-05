@@ -199,8 +199,8 @@ void CML::layerAdditionRemoval::addCellLayer
         // Flip the face as necessary
         if
         (
-            mc[faceI] == nei[mf[faceI]]
-         || !mesh.isInternalFace(mf[faceI])
+           !mesh.isInternalFace(mf[faceI])
+         || mc[faceI] == nei[mf[faceI]]
         )
         {
             flipFaceFlux = true;

@@ -31,9 +31,8 @@ CoEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if CoEnv['WHICH_OS'] == "windows":
   CoEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-  lib_link = ['libcore','libgenericPatchFields']
-else:
-  lib_link = ['core','genericPatchFields']
+
+lib_link = ['core','genericPatchFields']
 CoEnv.Append(LIBS = lib_link)
 
 #===============================================================================

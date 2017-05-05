@@ -46,12 +46,12 @@ src_files = Split("""
   probes/probesFunctionObject/probesFunctionObject.cpp
   sampledSet/circle/circleSet.cpp
   sampledSet/cloud/cloudSet.cpp
-  sampledSet/coordSet/coordSet.cpp
   sampledSet/patchCloud/patchCloudSet.cpp
   sampledSet/polyLine/polyLineSet.cpp
   sampledSet/face/faceOnlySet.cpp
   sampledSet/midPoint/midPointSet.cpp
   sampledSet/midPointAndFace/midPointAndFaceSet.cpp
+  sampledSet/patchSeed/patchSeedSet.cpp
   sampledSet/sampledSet/sampledSet.cpp
   sampledSet/sampledSets/sampledSets.cpp
   sampledSet/sampledSets/sampledSetsGrouping.cpp
@@ -59,13 +59,6 @@ src_files = Split("""
   sampledSet/triSurfaceMeshPointSet/triSurfaceMeshPointSet.cpp
   sampledSet/uniform/uniformSet.cpp
   sampledSet/array/arraySet.cpp
-  sampledSet/writers/writers.cpp
-  sampledSet/writers/gnuplot/gnuplotSetWriterRunTime.cpp
-  sampledSet/writers/jplot/jplotSetWriterRunTime.cpp
-  sampledSet/writers/raw/rawSetWriterRunTime.cpp
-  sampledSet/writers/vtk/vtkSetWriterRunTime.cpp
-  sampledSet/writers/xmgrace/xmgraceSetWriterRunTime.cpp
-  sampledSet/writers/csv/csvSetWriterRunTime.cpp
   cuttingPlane/cuttingPlane.cpp
   sampledSurface/sampledPatch/sampledPatch.cpp
   sampledSurface/sampledPatchInternalField/sampledPatchInternalField.cpp
@@ -86,7 +79,9 @@ src_files = Split("""
   sampledSurface/writers/surfaceWriter.cpp
   sampledSurface/writers/dx/dxSurfaceWriter.cpp
   sampledSurface/writers/ensight/ensightSurfaceWriter.cpp
+  sampledSurface/writers/ensight/ensightPTraits.cpp
   sampledSurface/writers/caelusFile/caelusFileSurfaceWriter.cpp
+  sampledSurface/writers/nastran/nastranSurfaceWriter.cpp
   sampledSurface/writers/proxy/proxySurfaceWriter.cpp
   sampledSurface/writers/raw/rawSurfaceWriter.cpp
   sampledSurface/writers/starcd/starcdSurfaceWriter.cpp
@@ -95,10 +90,12 @@ src_files = Split("""
   graphField/writeCellGraph.cpp
   graphField/makeGraph.cpp
   meshToMeshInterpolation/meshToMesh/meshToMesh.cpp
-  meshToMeshInterpolation/meshToMesh/calculateMeshToMeshAddressing.cpp
-  meshToMeshInterpolation/meshToMesh/calculateMeshToMeshWeights.cpp
-  meshToMeshInterpolation/meshToMeshNew/meshToMeshNew.cpp
-  meshToMeshInterpolation/meshToMeshNew//meshToMeshNewParallelOps.cpp
+  meshToMeshInterpolation/meshToMesh/meshToMeshParallelOps.cpp
+  meshToMeshInterpolation/meshToMesh/calcMethod/meshToMeshMethod/meshToMeshMethod.cpp
+  meshToMeshInterpolation/meshToMesh/calcMethod/meshToMeshMethod/meshToMeshMethodNew.cpp
+  meshToMeshInterpolation/meshToMesh/calcMethod/cellVolumeWeight/cellVolumeWeightMethod.cpp
+  meshToMeshInterpolation/meshToMesh/calcMethod/direct/directMethod.cpp
+  meshToMeshInterpolation/meshToMesh/calcMethod/mapNearest/mapNearestMethod.cpp
   """) 
 
 #===============================================================================
@@ -115,4 +112,4 @@ sampEnv.Install(install_dir, libsampling)
 
 if (sampEnv['WHICH_OS'] == "darwin"):
 
-  sampEnv.Append(SHLINKFLAGS ='-install_name @' + sampEnv['LIB_PLATFORM_INSTALL'] + '/libsampling.dylib')
+  sampEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsampling.dylib')

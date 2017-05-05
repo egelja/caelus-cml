@@ -61,12 +61,6 @@ void CML::fieldAverage::initialize()
     resetFields(prime2MeanScalarFields_);
     resetFields(prime2MeanSymmTensorFields_);
 
-    totalIter_.clear();
-    totalIter_.setSize(faItems_.size(), 1);
-
-    totalTime_.clear();
-    totalTime_.setSize(faItems_.size(), obr_.time().deltaTValue());
-
 
     // Add mean fields to the field lists
     forAll(faItems_, fieldI)
@@ -143,11 +137,25 @@ void CML::fieldAverage::initialize()
             }
         }
     }
+
+    // ensure first averaging works unconditionally
+    prevTimeIndex_ = -1;
+
+    Info<< endl;
+
+    initialised_ = true;
 }
 
 
 void CML::fieldAverage::calcAverages()
 {
+    if (!initialised_)
+    {
+        initialize();
+    }
+
+    Info<< type() << " " << name_ << " output:" << nl;
+
     const label currentTimeIndex =
         static_cast<const fvMesh&>(obr_).time().timeIndex();
 
@@ -160,8 +168,8 @@ void CML::fieldAverage::calcAverages()
         prevTimeIndex_ = currentTimeIndex;
     }
 
+    Info<< "    Calculating averages" << nl;
 
-    Info<< "Calculating averages" << nl << endl;
     forAll(faItems_, fieldI)
     {
         totalIter_[fieldI]++;
@@ -241,17 +249,23 @@ void CML::fieldAverage::writeAveragingProperties() const
 
 void CML::fieldAverage::readAveragingProperties()
 {
+    totalIter_.clear();
+    totalIter_.setSize(faItems_.size(), 1);
+
+    totalTime_.clear();
+    totalTime_.setSize(faItems_.size(), obr_.time().deltaTValue());
+
     if (cleanRestart_)
     {
-        Info<< "fieldAverage: starting averaging at time "
-            << obr_.time().timeName() << nl << endl;
+        Info<< "    Starting averaging at time " << obr_.time().timeName()
+            << nl;
     }
     else
     {
         IOobject propsDictHeader
         (
             "fieldAveragingProperties",
-            obr_.time().timeName(),
+            obr_.time().timeName(obr_.time().startTime().value()),
             "uniform",
             obr_,
             IOobject::MUST_READ_IF_MODIFIED,
@@ -261,14 +275,14 @@ void CML::fieldAverage::readAveragingProperties()
 
         if (!propsDictHeader.headerOk())
         {
-            Info<< "fieldAverage: starting averaging at time "
-                << obr_.time().timeName() << nl << endl;
+            Info<< "    Starting averaging at time " << obr_.time().timeName()
+                << nl;
             return;
         }
 
         IOdictionary propsDict(propsDictHeader);
 
-        Info<< "fieldAverage: restarting averaging for fields:" << endl;
+        Info<< "    Restarting averaging for fields:" << nl;
         forAll(faItems_, fieldI)
         {
             const word& fieldName = faItems_[fieldI].fieldName();
@@ -278,12 +292,11 @@ void CML::fieldAverage::readAveragingProperties()
 
                 totalIter_[fieldI] = readLabel(fieldDict.lookup("totalIter"));
                 totalTime_[fieldI] = readScalar(fieldDict.lookup("totalTime"));
-                Info<< "    " << fieldName
+                Info<< "        " << fieldName
                     << " iters = " << totalIter_[fieldI]
-                    << " time = " << totalTime_[fieldI] << endl;
+                    << " time = " << totalTime_[fieldI] << nl;
             }
         }
-        Info<< endl;
     }
 }
 
@@ -304,6 +317,7 @@ CML::fieldAverage::fieldAverage
     prevTimeIndex_(-1),
     cleanRestart_(false),
     resetOnOutput_(false),
+    initialised_(false),
     faItems_(),
     meanScalarFields_(),
     meanVectorFields_(),
@@ -325,15 +339,15 @@ CML::fieldAverage::fieldAverage
         active_ = false;
         WarningIn
         (
-            "fieldAverage::fieldAverage\n"
-            "(\n"
-                "const word&,\n"
-                "const objectRegistry&,\n"
-                "const dictionary&,\n"
-                "const bool\n"
+            "fieldAverage::fieldAverage"
+            "("
+                "const word&, "
+                "const objectRegistry&, "
+                "const dictionary&, "
+                "const bool "
             ")"
-        )   << "No fvMesh available, deactivating."
-            << nl << endl;
+        )   << "No fvMesh available, deactivating " << name_ << nl
+            << endl;
     }
 }
 
@@ -350,15 +364,17 @@ void CML::fieldAverage::read(const dictionary& dict)
 {
     if (active_)
     {
+        initialised_ = false;
+
+        Info<< type() << " " << name_ << ":" << nl;
+
         dict.readIfPresent("cleanRestart", cleanRestart_);
         dict.readIfPresent("resetOnOutput", resetOnOutput_);
         dict.lookup("fields") >> faItems_;
 
-        initialize();
         readAveragingProperties();
 
-        // ensure first averaging works unconditionally
-        prevTimeIndex_ = -1;
+        Info<< endl;
     }
 }
 
@@ -368,6 +384,8 @@ void CML::fieldAverage::execute()
     if (active_)
     {
         calcAverages();
+
+        Info<< endl;
     }
 }
 
@@ -386,14 +404,16 @@ void CML::fieldAverage::write()
 
         if (resetOnOutput_)
         {
-            Info<< "fieldAverage: restarting averaging at time "
-                << obr_.time().timeName() << nl << endl;
+            Info<< "    Restarting averaging at time " << obr_.time().timeName()
+                << nl << endl;
 
             initialize();
 
             // ensure first averaging works unconditionally
             prevTimeIndex_ = -1;
         }
+
+        Info<< endl;
     }
 }
 

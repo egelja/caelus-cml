@@ -29,6 +29,15 @@ void CML::processorMeshes::read()
 {
     forAll(databases_, procI)
     {
+        meshes_.set(procI, NULL);
+        pointProcAddressing_.set(procI, NULL);
+        faceProcAddressing_.set(procI, NULL);
+        cellProcAddressing_.set(procI, NULL);
+        boundaryProcAddressing_.set(procI, NULL);
+    }
+
+    forAll(databases_, procI)
+    {
         meshes_.set
         (
             procI,

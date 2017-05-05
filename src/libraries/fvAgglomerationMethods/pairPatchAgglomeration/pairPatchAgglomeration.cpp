@@ -39,8 +39,8 @@ bool CML::pairPatchAgglomeration::continueAgglomerating
 )
 {
     // Check the need for further agglomeration on all processors
-    bool contAgg = nCoarseFaces >= nFacesInCoarsestLevel_;
-    reduce(contAgg, andOp<bool>());
+    label localnCoarseFaces = nCoarseFaces;
+    bool contAgg = localnCoarseFaces >= nFacesInCoarsestLevel_;
     return contAgg;
 }
 
@@ -259,6 +259,11 @@ bool CML::pairPatchAgglomeration::agglomeratePatch
         )   << "min(fineToCoarse) == -1" << exit(FatalError);
     }
 
+    if (fineToCoarse.size() == 0)
+    {
+        return true;
+    }
+
     if (fineToCoarse.size() != patch.size())
     {
         FatalErrorIn
@@ -277,6 +282,7 @@ bool CML::pairPatchAgglomeration::agglomeratePatch
 
     const label nCoarseI =  max(fineToCoarse)+1;
     List<face> patchFaces(nCoarseI);
+
 
     // Patch faces per agglomeration
     labelListList coarseToFine(invertOneToMany(nCoarseI, fineToCoarse));
@@ -331,6 +337,7 @@ bool CML::pairPatchAgglomeration::agglomeratePatch
             patch.points()
         )
     );
+
     return true;
 }
 
@@ -339,59 +346,78 @@ void CML::pairPatchAgglomeration:: agglomerate()
 {
     label nPairLevels = 0;
     label nCreatedLevels = 1; //0 level is the base patch
+    label nCoarseFaces = 0;
+    label nCoarseFacesOld = 0;
 
     while (nCreatedLevels < maxLevels_)
     {
-        label nCoarseCells = -1;
-
         const bPatch& patch = patchLevels_[nCreatedLevels - 1];
         tmp<labelField> finalAgglomPtr(new labelField(patch.size()));
 
         bool agglomOK = false;
-        while (!agglomOK && patch.size())
+        while (!agglomOK)
         {
             finalAgglomPtr = agglomerateOneLevel
             (
-                nCoarseCells,
+                nCoarseFaces,
                 patch
             );
 
-            agglomOK = agglomeratePatch
-            (
-                patch,
-                finalAgglomPtr,
-                nCreatedLevels
-            );
+
+
+            if (nCoarseFaces > 0)
+            {
+                agglomOK = agglomeratePatch
+                (
+                    patch,
+                    finalAgglomPtr,
+                    nCreatedLevels
+                );
+
+
+
+                restrictAddressing_.set(nCreatedLevels, finalAgglomPtr);
+                mapBaseToTopAgglom(nCreatedLevels);
+                setEdgeWeights(nCreatedLevels);
+
+                if (nPairLevels % mergeLevels_)
+                {
+                    combineLevels(nCreatedLevels);
+                }
+                else
+                {
+                    nCreatedLevels++;
+                }
+
+                nPairLevels++;
+            }
+            else
+            {
+                agglomOK = true;
+
+            }
+            reduce(nCoarseFaces, sumOp<label>());
         }
 
-        nFaces_[nCreatedLevels] = nCoarseCells;
-        restrictAddressing_.set(nCreatedLevels, finalAgglomPtr);
-        mapBaseToTopAgglom(nCreatedLevels);
+        nFaces_[nCreatedLevels] = nCoarseFaces;
 
-        if (!continueAgglomerating(nCoarseCells))
+        if
+        (
+            !continueAgglomerating(nCoarseFaces)
+          || (nCoarseFacesOld ==  nCoarseFaces)
+        )
         {
             break;
         }
 
-        setEdgeWeights(nCreatedLevels);
-
-        if (nPairLevels % mergeLevels_)
-        {
-            combineLevels(nCreatedLevels);
-        }
-        else
-        {
-            nCreatedLevels++;
-        }
-
-        nPairLevels++;
+        nCoarseFacesOld = nCoarseFaces;
     }
 }
 
 
 CML::tmp<CML::labelField> CML::pairPatchAgglomeration::agglomerateOneLevel
 (
-    label& nCoarseCells,
+    label& nCoarseFaces,
     const bPatch& patch
 )
 {
@@ -402,7 +428,7 @@ CML::tmp<CML::labelField> CML::pairPatchAgglomeration::agglomerateOneLevel
 
     const labelListList& faceFaces = patch.faceFaces();
 
-    nCoarseCells = 0;
+    nCoarseFaces = 0;
 
     forAll(faceFaces, facei)
     {
@@ -436,9 +462,9 @@ CML::tmp<CML::labelField> CML::pairPatchAgglomeration::agglomerateOneLevel
             if (matchFaceNo >= 0)
             {
                 // Make a new group
-                coarseCellMap[matchFaceNo] = nCoarseCells;
-                coarseCellMap[matchFaceNeibNo] = nCoarseCells;
-                nCoarseCells++;
+                coarseCellMap[matchFaceNo] = nCoarseFaces;
+                coarseCellMap[matchFaceNeibNo] = nCoarseFaces;
+                nCoarseFaces++;
             }
             else
             {
@@ -471,8 +497,8 @@ CML::tmp<CML::labelField> CML::pairPatchAgglomeration::agglomerateOneLevel
                 else
                 {
                     // if not create single-cell "clusters" for each
-                    coarseCellMap[facei] = nCoarseCells;
-                    nCoarseCells ++;
+                    coarseCellMap[facei] = nCoarseFaces;
+                    nCoarseFaces ++;
                 }
             }
         }

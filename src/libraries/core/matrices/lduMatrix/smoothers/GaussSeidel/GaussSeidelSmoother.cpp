@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,8 +23,6 @@ License
 #include "GaussSeidelSmoother.hpp"
 #include "restrict.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(GaussSeidelSmoother, 0);
@@ -34,9 +33,6 @@ namespace CML
     lduMatrix::smoother::addasymMatrixConstructorToTable<GaussSeidelSmoother>
         addGaussSeidelSmootherAsymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::GaussSeidelSmoother::GaussSeidelSmoother
 (
@@ -57,24 +53,21 @@ CML::GaussSeidelSmoother::GaussSeidelSmoother
     )
 {}
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 void CML::GaussSeidelSmoother::smooth
 (
     const word& fieldName_,
-    scalarField& psi,
+    scalarField& x,
     const lduMatrix& matrix_,
-    const scalarField& source,
+    const scalarField& b,
     const FieldField<Field, scalar>& interfaceBouCoeffs_,
     const lduInterfaceFieldPtrsList& interfaces_,
     const direction cmpt,
     const label nSweeps
 )
 {
-    register scalar* RESTRICT psiPtr = psi.begin();
+    register scalar* RESTRICT xPtr = x.begin();
 
-    register const label nCells = psi.size();
+    register const label nCells = x.size();
 
     scalarField bPrime(nCells);
     register scalar* RESTRICT bPrimePtr = bPrime.begin();
@@ -99,7 +92,7 @@ void CML::GaussSeidelSmoother::smooth
     // internal coefficients are all located at the l.h.s. of
     // the matrix whereas the "implicit" coefficients on the
     // coupled boundaries are all created as if the
-    // coefficient contribution is of a source-kind (i.e. they
+    // coefficient contribution is of a b-kind (i.e. they
     // have a sign as if they are on the r.h.s. of the matrix.
     // To compensate for this, it is necessary to turn the
     // sign of the contribution.
@@ -116,13 +109,13 @@ void CML::GaussSeidelSmoother::smooth
 
     for (label sweep=0; sweep<nSweeps; sweep++)
     {
-        bPrime = source;
+        bPrime = b;
 
         matrix_.initMatrixInterfaces
         (
             mBouCoeffs,
             interfaces_,
-            psi,
+            x,
             bPrime,
             cmpt
         );
@@ -131,12 +124,12 @@ void CML::GaussSeidelSmoother::smooth
         (
             mBouCoeffs,
             interfaces_,
-            psi,
+            x,
             bPrime,
             cmpt
         );
 
-        register scalar curPsi;
+        register scalar curX;
         register label fStart;
         register label fEnd = ownStartPtr[0];
 
@@ -147,33 +140,32 @@ void CML::GaussSeidelSmoother::smooth
             fEnd = ownStartPtr[cellI + 1];
 
             // Get the accumulated neighbour side
-            curPsi = bPrimePtr[cellI];
+            curX = bPrimePtr[cellI];
 
             // Accumulate the owner product side
             for (register label curFace=fStart; curFace<fEnd; curFace++)
             {
-                curPsi -= upperPtr[curFace]*psiPtr[uPtr[curFace]];
+                curX -= upperPtr[curFace]*xPtr[uPtr[curFace]];
             }
 
-            // Finish current psi
-            curPsi /= diagPtr[cellI];
+            // Finish current x
+            curX /= diagPtr[cellI];
 
-            // Distribute the neighbour side using current psi
+            // Distribute the neighbour side using current x
             for (register label curFace=fStart; curFace<fEnd; curFace++)
             {
-                bPrimePtr[uPtr[curFace]] -= lowerPtr[curFace]*curPsi;
+                bPrimePtr[uPtr[curFace]] -= lowerPtr[curFace]*curX;
             }
 
-            psiPtr[cellI] = curPsi;
+            xPtr[cellI] = curX;
         }
     }
 }
 
-
 void CML::GaussSeidelSmoother::smooth
 (
-    scalarField& psi,
-    const scalarField& source,
+    scalarField& x,
+    const scalarField& b,
     const direction cmpt,
     const label nSweeps
 ) const
@@ -181,9 +173,9 @@ void CML::GaussSeidelSmoother::smooth
     smooth
     (
         fieldName_,
-        psi,
+        x,
         matrix_,
-        source,
+        b,
         interfaceBouCoeffs_,
         interfaces_,
         cmpt,
@@ -192,4 +184,3 @@ void CML::GaussSeidelSmoother::smooth
 }
 
 
-// ************************************************************************* //

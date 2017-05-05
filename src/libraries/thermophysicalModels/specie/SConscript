@@ -57,4 +57,4 @@ thermoSpecieEnv.Install(install_dir, libspecie)
 
 if (thermoSpecieEnv['WHICH_OS'] == "darwin"):
 
-  thermoSpecieEnv.Append(SHLINKFLAGS ='-install_name @' + thermoSpecieEnv['LIB_PLATFORM_INSTALL'] + '/libspecie.dylib')
+  thermoSpecieEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libspecie.dylib')

@@ -683,25 +683,36 @@ void CML::SprayParcel<ParcelType>::calc
     const label cellI
 )
 {
-    bool coupled = td.cloud().solution().coupled();
+    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    const CompositionModel<reactingCloudType>& composition =
+        td.cloud().composition();
 
     // check if parcel belongs to liquid core
     if (liquidCore() > 0.5)
     {
-        // liquid core parcels should not interact with the gas
-        if (td.cloud().solution().coupled())
-        {
-            td.cloud().solution().coupled() = false;
-        }
+        // liquid core parcels should not experience coupled forces
+        td.cloud().forces().setCalcCoupled(false);
     }
 
-    // store the parcel properties
-    const scalarField& Y(this->Y());
-    scalarField X(td.cloud().composition().liquids().X(Y));
+    // get old mixture composition
+    const scalarField& Y0(this->Y());
+    scalarField X0(composition.liquids().X(Y0));
 
-    scalar T0 = this->T();
-    this->Cp() = td.cloud().composition().liquids().Cp(this->pc_, T0, X);
-    scalar rho0 = td.cloud().composition().liquids().rho(this->pc_, T0, X);
+    // check if we have critical or boiling conditions
+    scalar TMax = composition.liquids().Tc(X0);
+    const scalar T0 = this->T();
+    const scalar pc0 = this->pc_;
+    if (composition.liquids().pv(pc0, T0, X0) >= pc0*0.999)
+    {
+        // set TMax to boiling temperature
+        TMax = composition.liquids().pvInvert(pc0, X0);
+    }
+
+    // set the maximum temperature limit
+    td.cloud().constProps().TMax() = TMax;
+
+    this->Cp() = composition.liquids().Cp(pc0, T0, X0);
+    scalar rho0 = composition.liquids().rho(pc0, T0, X0);
     this->rho() = rho0;
 
     ParcelType::calc(td, dt, cellI);
@@ -712,11 +723,11 @@ void CML::SprayParcel<ParcelType>::calc
         // and/or composition
         scalar T1 = this->T();
         const scalarField& Y1(this->Y());
-        scalarField X1(td.cloud().composition().liquids().X(Y1));
+        scalarField X1(composition.liquids().X(Y1));
 
-        this->Cp() = td.cloud().composition().liquids().Cp(this->pc_, T1, X1);
+        this->Cp() = composition.liquids().Cp(this->pc_, T1, X1);
 
-        scalar rho1 = td.cloud().composition().liquids().rho(this->pc_, T1, X1);
+        scalar rho1 = composition.liquids().rho(this->pc_, T1, X1);
         this->rho() = rho1;
         scalar d1 = this->d()*cbrt(rho0/rho1);
         this->d() = d1;
@@ -736,8 +747,8 @@ void CML::SprayParcel<ParcelType>::calc
         }
     }
 
-    // restore coupled
-    td.cloud().solution().coupled() = coupled;
+    // restore coupled forces
+    td.cloud().forces().setCalcCoupled(true);
 }
 
 
@@ -864,7 +875,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
     const scalar mass = p.mass();
     const forceSuSp Fcp = forces.calcCoupled(p, dt, mass, Re, muAv);
     const forceSuSp Fncp = forces.calcNonCoupled(p, dt, mass, Re, muAv);
-    scalar tMom = mass/(Fcp.Sp() + Fncp.Sp());
+    this->tMom() = mass/(Fcp.Sp() + Fncp.Sp());
 
     const vector g = td.cloud().g().value();
 
@@ -892,7 +903,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
             muAv,
             Urel,
             Urmag,
-            tMom,
+            this->tMom(),
             dChild,
             massChild
         )
@@ -905,7 +916,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
         SprayParcel<ParcelType>* child = new SprayParcel<ParcelType>(*this);
         child->mass0() = massChild;
         child->d() = dChild;
-        child->nParticle() = massChild/rho*this->volume(dChild);
+        child->nParticle() = massChild/(this->rho()*this->volume(dChild));
 
         const forceSuSp Fcp =
             forces.calcCoupled(*child, dt, massChild, Re, muAv);
@@ -938,15 +949,12 @@ CML::scalar CML::SprayParcel<ParcelType>::chi
 {
     // modifications to take account of the flash boiling on primary break-up
 
-    static label nIter = 200;
-
     typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
         td.cloud().composition();
 
     scalar chi = 0.0;
     scalar T0 = this->T();
-    scalar Tc0 = this->Tc();
     scalar p0 = this->pc();
     scalar pAmb = td.cloud().pAmbient();
 
@@ -959,24 +967,10 @@ CML::scalar CML::SprayParcel<ParcelType>::chi
             // liquid is boiling - calc boiling temperature
 
             const liquidProperties& liq = composition.liquids().properties()[i];
-            scalar TBoil = T0;
-
-            for (label k=0; k<nIter; k++)
-            {
-                scalar pBoil = liq.pv(p0, TBoil);
-
-                if (pBoil > p0)
-                {
-                    TBoil = TBoil - (T0 - Tc0)/nIter;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            scalar TBoil = liq.pvInvert(p0);
 
             scalar hl = liq.hl(pAmb, TBoil);
-            scalar iTp = liq.h(pAmb, T0) - liq.rho(pAmb, T0);
+            scalar iTp = liq.h(pAmb, T0) - pAmb/liq.rho(pAmb, T0);
             scalar iTb = liq.h(pAmb, TBoil) - pAmb/liq.rho(pAmb, TBoil);
 
             chi += X[i]*(iTp - iTb)/hl;

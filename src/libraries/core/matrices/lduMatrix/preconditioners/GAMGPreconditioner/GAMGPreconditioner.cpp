@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,8 +22,6 @@ License
 
 #include "GAMGPreconditioner.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 namespace CML
 {
     defineTypeNameAndDebug(GAMGPreconditioner, 0);
@@ -33,9 +32,6 @@ namespace CML
     lduMatrix::preconditioner::addasymMatrixConstructorToTable
     <GAMGPreconditioner> addGAMGPreconditionerAsymMatrixConstructorToTable_;
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::GAMGPreconditioner::GAMGPreconditioner
 (
@@ -58,14 +54,8 @@ CML::GAMGPreconditioner::GAMGPreconditioner
     readControls();
 }
 
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
 CML::GAMGPreconditioner::~GAMGPreconditioner()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::GAMGPreconditioner::readControls()
 {
@@ -73,18 +63,17 @@ void CML::GAMGPreconditioner::readControls()
     nVcycles_ = controlDict_.lookupOrDefault<label>("nVcycles", 2);
 }
 
-
 void CML::GAMGPreconditioner::precondition
 (
-    scalarField& wA,
-    const scalarField& rA,
+    scalarField& w,
+    const scalarField& r,
     const direction cmpt
 ) const
 {
-    wA = 0.0;
-    scalarField AwA(wA.size());
-    scalarField finestCorrection(wA.size());
-    scalarField finestResidual(rA);
+    w = 0.0;
+    scalarField Aw(w.size());
+    scalarField finestCorrection(w.size());
+    scalarField finestResidual(r);
 
     // Create coarse grid correction fields
     PtrList<scalarField> coarseCorrFields;
@@ -98,14 +87,17 @@ void CML::GAMGPreconditioner::precondition
     // Initialise the above data structures
     initVcycle(coarseCorrFields, coarseSources, smoothers);
 
+    // Perform n V-cycles and precondition the residual at
+    // the end of each cycle
     for (label cycle=0; cycle<nVcycles_; cycle++)
     {
+        // Smooth the error
         Vcycle
         (
             smoothers,
-            wA,
-            rA,
-            AwA,
+            w,
+            r,
+            Aw,
             finestCorrection,
             finestResidual,
             coarseCorrFields,
@@ -113,15 +105,14 @@ void CML::GAMGPreconditioner::precondition
             cmpt
         );
 
+        // Precondition the residual
         if (cycle < nVcycles_-1)
         {
             // Calculate finest level residual field
-            matrix_.Amul(AwA, wA, interfaceBouCoeffs_, interfaces_, cmpt);
-            finestResidual = rA;
-            finestResidual -= AwA;
+            matrix_.Amul(Aw, w, interfaceBouCoeffs_, interfaces_, cmpt);
+            finestResidual = r;
+            finestResidual -= Aw;
         }
     }
 }
 
-
-// ************************************************************************* //

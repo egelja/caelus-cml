@@ -37,6 +37,7 @@ SourceFiles
 #include "volFieldsFwd.hpp"
 #include "surfaceFieldsFwd.hpp"
 #include "className.hpp"
+#include "FieldField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,6 +68,9 @@ class surfaceInterpolation
 
             //- Non-orthogonality correction vectors
             mutable surfaceVectorField* nonOrthCorrectionVectors_;
+			
+			//- Boundary values of correction vectors for non-orthogonality with fixedValue condition
+			mutable FieldField<fvsPatchField, vector>* fvNonOrthCorrectionVectors_;
 
 
     // Private Member Functions
@@ -124,6 +128,10 @@ public:
 
         //- Return reference to non-orthogonality correction vectors
         const surfaceVectorField& nonOrthCorrectionVectors() const;
+		
+		//- Return reference to non-orthogonality correction vectors at boundaries
+        //	for fixed value conditions
+        const FieldField<fvsPatchField, vector>& fvNonOrthCorrectionVectors() const;
 
         //- Do what is neccessary if the mesh has moved
         bool movePoints();

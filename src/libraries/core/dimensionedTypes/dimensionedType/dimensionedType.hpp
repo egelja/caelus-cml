@@ -617,7 +617,38 @@ dimensioned<scalar> mag(const dimensioned<Type>& dt)
 }
 
 
-template <class Type>
+template<class Type>
+dimensioned<Type> cmptMultiply
+(
+    const dimensioned<Type>& dt1,
+    const dimensioned<Type>& dt2
+)
+{
+    return dimensioned<Type>
+    (
+        "cmptMultiply(" + dt1.name() + ',' + dt2.name() + ')',
+        cmptMultiply(dt1.dimensions(), dt2.dimensions()),
+        cmptMultiply(dt1.value(), dt2.value())
+    );
+}
+
+template<class Type>
+dimensioned<Type> cmptDivide
+(
+    const dimensioned<Type>& dt1,
+    const dimensioned<Type>& dt2
+)
+{
+    return dimensioned<Type>
+    (
+        "cmptDivide(" + dt1.name() + ',' + dt2.name() + ')',
+        cmptDivide(dt1.dimensions(), dt2.dimensions()),
+        cmptDivide(dt1.value(), dt2.value())
+    );
+}
+
+
+template<class Type>
 dimensioned<Type> max
 (
     const dimensioned<Type>& dt1,

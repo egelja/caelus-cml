@@ -31,10 +31,7 @@ autoPatchEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this executable
 #===============================================================================
-if autoPatchEnv['WHICH_OS'] == "windows":
-  lib_link = ['libdynamicMesh']
-else:
-  lib_link = ['dynamicMesh']
+lib_link = ['dynamicMesh']
   
 autoPatchEnv.Append(LIBS = lib_link)
 

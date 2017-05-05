@@ -147,7 +147,7 @@ quote                      \"
 dash                       "-"
 dotColonDash               [.:-]
 
-schemeSpecialInitial       [!$%&*/\\:<=>?~_^#.@']
+schemeSpecialInitial       [!$%&*/\\:<=>?~_^#.@',;]
 schemeSpecialSubsequent    [.+-]
 schemeSymbol               (({some_space}|{alpha}|{quote}|{schemeSpecialInitial})({alpha}|{quote}|{digit}|{schemeSpecialInitial}|{schemeSpecialSubsequent})*)
 
@@ -1115,7 +1115,8 @@ int main(int argc, char *argv[])
                 0,
                 0,
                 patchi,
-                mesh.boundaryMesh()
+                mesh.boundaryMesh(),
+                polyPatch::typeName
             );
         }
     }
@@ -1418,7 +1419,7 @@ int main(int argc, char *argv[])
     mesh.setInstance(runTime.constant());
 
     // Set the precision of the points data to 10
-    IOstream::defaultPrecision(10);
+    IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
 
     Info<< nl << "Writing mesh to " << mesh.objectPath() << endl;
     mesh.write();

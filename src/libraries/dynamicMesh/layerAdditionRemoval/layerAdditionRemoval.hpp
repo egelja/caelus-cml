@@ -61,6 +61,10 @@ class layerAdditionRemoval
         //- Max thickness of extrusion layer.  Triggers layer addition
         mutable scalar maxLayerThickness_;
 
+        //- Switch to calculate thickness as volume/area
+        //  If false, thickness calculated from edges
+        const bool thicknessFromVolume_;
+
         //- Layer thickness from previous step
         //  Used to decide whether to add or remove layers
         mutable scalar oldLayerThickness_;
@@ -74,7 +78,7 @@ class layerAdditionRemoval
         //- Layer removal trigger time index
         mutable label triggerRemoval_;
 
-        //- Layer addition trigger  time index
+        //- Layer addition trigger time index
         mutable label triggerAddition_;
 
 
@@ -116,6 +120,7 @@ class layerAdditionRemoval
             //- Clear addressing
             void clearAddressing() const;
 
+
         // Helpers
 
             //- Optionally read old thickness
@@ -145,10 +150,11 @@ public:
         (
             const word& name,
             const label index,
-            const polyTopoChanger& mme,
+            const polyTopoChanger& ptc,
             const word& zoneName,
             const scalar minThickness,
-            const scalar maxThickness
+            const scalar maxThickness,
+            const Switch thicknessFromVolume = true
         );
 
         //- Construct from dictionary
@@ -157,7 +163,7 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyTopoChanger& mme
+            const polyTopoChanger& ptc
         );
 
 

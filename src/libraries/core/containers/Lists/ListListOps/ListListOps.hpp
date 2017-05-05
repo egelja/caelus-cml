@@ -86,11 +86,9 @@ Description
 
 namespace CML
 {
-//
-//template <class T> class accessOp;
-//template <class T> class offsetOp;
-// Dummy access operator for combine()
-template <class T>
+
+// Dummy access operator for ListListOps::combine()
+template<class T>
 class accessOp
 {
 public:
@@ -102,8 +100,8 @@ public:
 };
 
 
-// Offset operator for combineOffset()
-template <class T>
+// Offset operator for ListListOps::combineOffset()
+template<class T>
 class offsetOp
 {
 public:
@@ -122,15 +120,15 @@ namespace ListListOps
 {
 
     //- Combines sublists into one big list
-    template <class AccessType, class T, class AccessOp>
+    template<class AccessType, class T, class AccessOp>
     AccessType combine(const List<T>&, AccessOp aop = accessOp<T>());
 
     //- Gets sizes of sublists
-    template <class T, class AccessOp>
+    template<class T, class AccessOp>
     labelList subSizes(const List<T>&, AccessOp aop = accessOp<T>());
 
     //- Like combine but also offsets sublists based on passed sizes
-    template <class AccessType, class T, class AccessOp, class OffsetOp>
+    template<class AccessType, class T, class AccessOp, class OffsetOp>
     AccessType combineOffset
     (
         const List<T>&,
@@ -150,7 +148,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template <class AccessType, class T, class AccessOp>
+template<class AccessType, class T, class AccessOp>
 AccessType ListListOps::combine(const List<T>& lst, AccessOp aop)
 {
     label sum = 0;
@@ -177,7 +175,7 @@ AccessType ListListOps::combine(const List<T>& lst, AccessOp aop)
 }
 
 
-template <class T, class AccessOp>
+template<class T, class AccessOp>
 labelList ListListOps::subSizes(const List<T>& lst, AccessOp aop)
 {
     labelList sizes(lst.size());
@@ -190,7 +188,7 @@ labelList ListListOps::subSizes(const List<T>& lst, AccessOp aop)
 }
 
 
-template <class AccessType, class T, class AccessOp, class OffsetOp>
+template<class AccessType, class T, class AccessOp, class OffsetOp>
 AccessType ListListOps::combineOffset
 (
     const List<T>& lst,
@@ -225,6 +223,7 @@ AccessType ListListOps::combineOffset
     }
     return result;
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -108,7 +108,7 @@ public:
             const scalar rho,
             const scalar mu,
             const scalar sigma,
-            const scalar volHlowRate,
+            const scalar volFlowRate,
             const scalar rhoAv,
             const scalar Urel,
             const vector& pos,
@@ -147,7 +147,7 @@ CML::BlobsSheetAtomization<CloudType>::BlobsSheetAtomization
 :
     AtomizationModel<CloudType>(am),
     B_(am.B_),
-    angle_(am.B_)
+    angle_(am.angle_)
 {}
 
 

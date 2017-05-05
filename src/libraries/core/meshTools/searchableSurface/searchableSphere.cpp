@@ -43,10 +43,10 @@ CML::pointIndexHit CML::searchableSphere::findNearest
 {
     pointIndexHit info(false, sample, -1);
 
-    const vector n(sample-centre_);
+    const vector n(sample - centre_);
     scalar magN = mag(n);
 
-    if (nearestDistSqr > sqr(magN-radius_))
+    if (nearestDistSqr >= sqr(magN - radius_))
     {
         if (magN < ROOTVSMALL)
         {
@@ -163,6 +163,12 @@ CML::searchableSphere::~searchableSphere()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+bool CML::searchableSphere::overlaps(const boundBox& bb) const
+{
+    return bb.overlaps(centre_, sqr(radius_));
+}
+
+
 const CML::wordList& CML::searchableSphere::regions() const
 {
     if (regions_.empty())
@@ -173,6 +179,23 @@ const CML::wordList& CML::searchableSphere::regions() const
     return regions_;
 }
 
+
+
+void CML::searchableSphere::boundingSpheres
+(
+    pointField& centres,
+    scalarField& radiusSqr
+) const
+{
+    centres.setSize(1);
+    centres[0] = centre_;
+
+    radiusSqr.setSize(1);
+    radiusSqr[0] = CML::sqr(radius_);
+
+    // Add a bit to make sure all points are tested inside
+    radiusSqr += CML::sqr(SMALL);
+}
 
 
 void CML::searchableSphere::findNearest
@@ -324,7 +347,7 @@ void CML::searchableSphere::getVolumeType
 ) const
 {
     volType.setSize(points.size());
-    volType = INSIDE;
+    volType = volumeType::INSIDE;
 
     forAll(points, pointI)
     {
@@ -332,11 +355,11 @@ void CML::searchableSphere::getVolumeType
 
         if (magSqr(pt - centre_) <= sqr(radius_))
         {
-            volType[pointI] = INSIDE;
+            volType[pointI] = volumeType::INSIDE;
         }
         else
         {
-            volType[pointI] = OUTSIDE;
+            volType[pointI] = volumeType::OUTSIDE;
         }
     }
 }

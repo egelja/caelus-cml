@@ -22,10 +22,8 @@ License
 #include "solution.hpp"
 #include "Time.hpp"
 
-// These are for old syntax compatibility:
-#include "BICCG.hpp"
-#include "ICCG.hpp"
 #include "IStringStream.hpp"
+#include "Pstream.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -169,47 +167,33 @@ CML::label CML::solution::upgradeSolverDict
             word name(is);
             dictionary subdict;
 
-            if (name == "BICCG")
-            {
-                // special treatment for very old syntax
-                subdict = BICCG::solverDict(is);
-            }
-            else if (name == "ICCG")
-            {
-                // special treatment for very old syntax
-                subdict = ICCG::solverDict(is);
-            }
-            else
-            {
-                subdict.add("solver", name);
-                subdict <<= dictionary(is);
+            subdict.add("solver", name);
+            subdict <<= dictionary(is);
 
-                // preconditioner and smoother entries can be
-                // 1) primitiveEntry w/o settings,
-                // 2) or a dictionaryEntry.
-                // transform primitiveEntry with settings -> dictionaryEntry
-                forAll(subDictNames, dictI)
+            // preconditioner and smoother entries can be
+            // 1) primitiveEntry w/o settings,
+            // 2) or a dictionaryEntry.
+            // transform primitiveEntry with settings -> dictionaryEntry
+            forAll(subDictNames, dictI)
+            {
+                const word& dictName = subDictNames[dictI];
+                entry* ePtr = subdict.lookupEntryPtr(dictName,false,false);
+
+                if (ePtr && !ePtr->isDict())
                 {
-                    const word& dictName = subDictNames[dictI];
-                    entry* ePtr = subdict.lookupEntryPtr(dictName,false,false);
+                    Istream& is = ePtr->stream();
+                    is >> name;
 
-                    if (ePtr && !ePtr->isDict())
+                    if (!is.eof())
                     {
-                        Istream& is = ePtr->stream();
-                        is >> name;
+                        dictionary newDict;
+                        newDict.add(dictName, name);
+                        newDict <<= dictionary(is);
 
-                        if (!is.eof())
-                        {
-                            dictionary newDict;
-                            newDict.add(dictName, name);
-                            newDict <<= dictionary(is);
-
-                            subdict.set(dictName, newDict);
-                        }
+                        subdict.set(dictName, newDict);
                     }
                 }
             }
-
 
             // write out information to help people adjust to the new syntax
             if (verbose && Pstream::master())

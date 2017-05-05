@@ -38,12 +38,9 @@ createTurbulenceFieldsEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 if createTurbulenceFieldsEnv['WHICH_OS'] == "windows":
   createTurbulenceFieldsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
-  lib_link = ['libincompressibleTurbulenceModel',
-  'libincompressibleRASModels','libincompressibleTransportModels',
-  'libgenericPatchFields']
-else:
-  lib_link = ['incompressibleRASModels','incompressibleTurbulenceModel',
-  'incompressibleTransportModels','genericPatchFields']
+
+lib_link = ['incompressibleRASModels','incompressibleTurbulenceModel',
+'incompressibleTransportModels','genericPatchFields']
       
 createTurbulenceFieldsEnv.Append(LIBS = lib_link)
 

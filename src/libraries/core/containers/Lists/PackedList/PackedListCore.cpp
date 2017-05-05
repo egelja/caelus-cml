@@ -23,7 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::PackedListCore, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(PackedListCore, 0);
+}
 
 
 // ************************************************************************* //

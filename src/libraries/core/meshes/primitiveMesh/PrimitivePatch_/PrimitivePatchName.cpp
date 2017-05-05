@@ -23,6 +23,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::PrimitivePatchName, 0);
+
+namespace CML
+{
+defineTypeNameAndDebug(PrimitivePatchName, 0);
+}
+
 
 // ************************************************************************* //

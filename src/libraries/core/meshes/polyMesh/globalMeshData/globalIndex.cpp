@@ -52,6 +52,12 @@ CML::globalIndex::globalIndex(const label localSize, const int tag)
 }
 
 
+CML::globalIndex::globalIndex(const labelList& offsets)
+:
+    offsets_(offsets)
+{}
+
+
 CML::globalIndex::globalIndex(Istream& is)
 {
     is >> offsets_;

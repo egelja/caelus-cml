@@ -29,8 +29,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::mergePolyMesh, 1);
-
+namespace CML
+{
+    defineTypeNameAndDebug(mergePolyMesh, 1);
+}
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

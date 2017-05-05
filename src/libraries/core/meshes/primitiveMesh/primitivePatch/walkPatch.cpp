@@ -24,7 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::walkPatch, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(walkPatch, 0);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

@@ -25,7 +25,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::IOdictionary, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(IOdictionary, 0);
+}
+
 
 bool CML::IOdictionary::writeDictionaries
 (

@@ -1,68 +1,50 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-cpbnsLTSEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = cpbnsLTSEnv['LIB_SRC']
+target = "cpbnsLTS"
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-cpbnsLTSEnv.Append(CCFLAGS = '')
+sources = Split("""
+cpbnsLTS.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [cpbnsLTSEnv['LIB_SRC'] +  '/turbulenceModels',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude', 
-src + '/turbulenceModels/compressible/RAS/RASModel', 
-src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/thermophysicalModels',
-src + '/thermophysicalModels/basic/psiThermo/basicPsiThermo',
-src + '/thermophysicalModels/basic/basicThermo',
-src + '/transportModels/basic/lnInclude',
-src + '/fvOptions/lnInclude',
-src + '/sampling/lnInclude'
+caelus_inc = [
+'turbulenceModels/',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/compressible/singlePhaseTransportModel',
+'transportModels/compressible/lnInclude',
+'thermophysicalModels',
+'thermophysicalModels/basic/basicThermo',
+'thermophysicalModels/basic/psiThermo/basicPsiThermo',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
 ]
-cpbnsLTSEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-cpbnsLTSEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'compressibleTurbulenceModel',
+'compressibleRASModels',
+'compressibleLESModels',
+'compressibleVLESModels',
+'basicThermophysicalModels',
+'turbulenceDerivedFvPatchFields',
+'fvOptions',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if cpbnsLTSEnv['WHICH_OS'] == "windows":
-  cpbnsLTSEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad -u compressibleLESModelsLoad -u compressibleVLESModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u compressibleRASModelsLoad -u compressibleLESModelsLoad -u compressibleVLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
-'basicThermophysicalModels', 'fvOptions', 'sampling', 'compressibleLESModels', 'compressibleVLESModels']
-  
-cpbnsLTSEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  cpbnsLTS.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincpbnsLTS = cpbnsLTSEnv.Program(target = 'cpbnsLTS',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = cpbnsLTSEnv['BIN_PLATFORM_INSTALL']
-cpbnsLTSEnv.Alias('install', install_dir)
-cpbnsLTSEnv.Install(install_dir, bincpbnsLTS)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

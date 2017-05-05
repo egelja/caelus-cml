@@ -90,7 +90,7 @@ void CML::solution::read(const dictionary& dict)
 
         if (debug)
         {
-            Info<< "relaxation factors:" << nl
+            Info<< "Relaxation factors:" << nl
                 << "fields: " << fieldRelaxDict_ << nl
                 << "equations: " << eqnRelaxDict_ << endl;
         }

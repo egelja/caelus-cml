@@ -32,8 +32,8 @@ SourceFiles
 #define decompositionMethod_H
 
 #include "polyMesh.hpp"
-#include "pointField.hpp"
 #include "CompactListList.hpp"
+#include "decompositionConstraint.hpp"
 
 namespace CML
 {
@@ -52,15 +52,8 @@ protected:
         const dictionary& decompositionDict_;
         label nProcessors_;
 
-
-        //- Helper: determine (global) cellCells from mesh agglomeration.
-        static void calcCellCells
-        (
-            const polyMesh& mesh,
-            const labelList& agglom,
-            const label nCoarse,
-            CompactListList<label>& cellCells
-        );
+        //- Optional constraints
+        PtrList<decompositionConstraint> constraints_;
 
 private:
 
@@ -103,14 +96,7 @@ public:
     // Constructors
 
         //- Construct given the decomposition dictionary
-        decompositionMethod(const dictionary& decompositionDict)
-        :
-            decompositionDict_(decompositionDict),
-            nProcessors_
-            (
-                readLabel(decompositionDict.lookup("numberOfSubdomains"))
-            )
-        {}
+        decompositionMethod(const dictionary& decompositionDict);
 
 
     //- Destructor
@@ -218,6 +204,100 @@ public:
             (
                 const labelListList& globalCellCells,
                 const pointField& cc
+            );
+
+
+        // Other
+
+            //- Helper: determine (local or global) cellCells from mesh
+            //  agglomeration. Agglomeration is local to the processor.
+            //  local  : connections are in local indices. Coupled across
+            //           cyclics but not processor patches.
+            //  global : connections are in global indices. Coupled across
+            //            cyclics and processor patches.
+            static void calcCellCells
+            (
+                const polyMesh& mesh,
+                const labelList& agglom,
+                const label nLocalCoarse,
+                const bool global,
+                CompactListList<label>& cellCells
+            );
+
+            //- Helper: determine (local or global) cellCells and face weights
+            //  from mesh agglomeration.
+            //  Uses mag of faceArea as weights
+            static void calcCellCells
+            (
+                const polyMesh& mesh,
+                const labelList& agglom,
+                const label nLocalCoarse,
+                const bool parallel,
+                CompactListList<label>& cellCells,
+                CompactListList<scalar>& cellCellWeights
+            );
+
+            //- Helper: extract constraints:
+            //  blockedface: existing faces where owner and neighbour on same
+            //               proc
+            //  explicitConnections: sets of boundary faces  ,,     ,,
+            //  specifiedProcessorFaces: groups of faces with all cells on
+            //  same processor.
+            void setConstraints
+            (
+                const polyMesh& mesh,
+                boolList& blockedFace,
+                PtrList<labelList>& specifiedProcessorFaces,
+                labelList& specifiedProcessor,
+                List<labelPair>& explicitConnections
+            );
+
+            //- Helper: apply constraints to a decomposition. This gives
+            //  constraints opportunity to modify decomposition in case
+            //  the native decomposition method has not obeyed all constraints
+            void applyConstraints
+            (
+                const polyMesh& mesh,
+                const boolList& blockedFace,
+                const PtrList<labelList>& specifiedProcessorFaces,
+                const labelList& specifiedProcessor,
+                const List<labelPair>& explicitConnections,
+                labelList& finalDecomp
+            );
+
+            // Decompose a mesh with constraints:
+            // - blockedFace : whether owner and neighbour should be on same
+            //   processor
+            // - specifiedProcessorFaces, specifiedProcessor : sets of faces
+            //   that should go to same processor (as specified in
+            //   specifiedProcessor, can be -1)
+            // - explicitConnections : connections between baffle faces
+            //   (blockedFace should be false on these). Owner and
+            //   neighbour on same processor.
+            // Set all to zero size to have unconstrained decomposition.
+            virtual labelList decompose
+            (
+                const polyMesh& mesh,
+                const scalarField& cellWeights,
+                const boolList& blockedFace,
+                const PtrList<labelList>& specifiedProcessorFaces,
+                const labelList& specifiedProcessor,
+                const List<labelPair>& explicitConnections
+            );
+
+
+            //- Decompose a mesh. Apply all constraints from decomposeParDict
+            //  ('preserveFaceZones' etc). Calls either
+            //  - no constraints, empty weights:
+            //      decompose(mesh, cellCentres())
+            //  - no constraints, set weights:
+            //      decompose(mesh, cellCentres(), cellWeights)
+            //  - valid constraints:
+            //      decompose(mesh, cellToRegion, regionPoints, regionWeights)
+            labelList decompose
+            (
+                const polyMesh& mesh,
+                const scalarField& cWeights
             );
 
 };

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -59,6 +59,18 @@ inline CML::wordRe::wordRe(const word& str)
     word(str),
     re_()
 {}
+
+
+inline CML::wordRe::wordRe(const keyType& str)
+:
+    word(str, false),
+    re_()
+{
+    if (str.isPattern())
+    {
+        compile();
+    }
+}
 
 
 inline CML::wordRe::wordRe(const keyType& str, const compOption opt)
@@ -220,7 +232,7 @@ inline void CML::wordRe::set(const char* str, const compOption opt)
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-inline const CML::wordRe& CML::wordRe::operator=(const wordRe& str)
+inline void CML::wordRe::operator=(const wordRe& str)
 {
     string::operator=(str);
 
@@ -232,50 +244,44 @@ inline const CML::wordRe& CML::wordRe::operator=(const wordRe& str)
     {
         re_.clear();
     }
-    return *this;
 }
 
 
-inline const CML::wordRe& CML::wordRe::operator=(const word& str)
+inline void CML::wordRe::operator=(const word& str)
 {
     word::operator=(str);
     re_.clear();
-    return *this;
 }
 
 
-inline const CML::wordRe& CML::wordRe::operator=(const keyType& str)
+inline void CML::wordRe::operator=(const keyType& str)
 {
     string::operator=(str);
     if (str.isPattern())
     {
         compile();
     }
-    return *this;
 }
 
 
-inline const CML::wordRe& CML::wordRe::operator=(const string& str)
+inline void CML::wordRe::operator=(const string& str)
 {
     string::operator=(str);
     compile(DETECT);  // auto-detect regex
-    return *this;
 }
 
 
-inline const CML::wordRe& CML::wordRe::operator=(const std::string& str)
+inline void CML::wordRe::operator=(const std::string& str)
 {
     string::operator=(str);
     compile(DETECT);  // auto-detect regex
-    return *this;
 }
 
 
-inline const CML::wordRe& CML::wordRe::operator=(const char* str)
+inline void CML::wordRe::operator=(const char* str)
 {
     string::operator=(str);
     compile(DETECT);  // auto-detect regex
-    return *this;
 }
 
 

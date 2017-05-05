@@ -108,9 +108,10 @@ globalEnv.Append(PROJECT_VER = _Caelus.PROJECT_VER)
 globalEnv.Append(CAELUS_PROJECT_DIR = _Caelus.CAELUS_PROJECT_DIR)
 globalEnv.Append(EXTERNAL_DIR = _Caelus.EXTERNAL_DIR)
 globalEnv.Append(BUILD_OPTION = _Caelus.BUILD_OPTION)
-globalEnv.Append(MPI_LIB = _Caelus.MPI_LIB)
-globalEnv.Append(MPI_INC = _Caelus.MPI_INC)
+globalEnv.Append(MPI_LIB_PATH = _Caelus.MPI_LIB_PATH)
+globalEnv.Append(MPI_INC_PATH = _Caelus.MPI_INC_PATH)
 globalEnv.Append(MPI_LIB_NAME = _Caelus.MPI_LIB_NAME)
+globalEnv.Append(OMP = _Caelus.OMP)
 globalEnv.Append(SCOTCH_VERSION = _Caelus.SCOTCH_VERSION)
 globalEnv.Append(SCOTCH_PATH = _Caelus.SCOTCH_PATH)
 globalEnv.Append(METIS_PATH = _Caelus.METIS_PATH)
@@ -172,7 +173,7 @@ print ">> Build architecture : " + _Caelus.COMPILER_ARCH + 'bit'
 print ">> Build precision : " + _Caelus.PRECISION_OPTION
 
 # Integer type
-print ">> Interger type : " + _Caelus.INT_TYPE + 'bit'
+print ">> Integer type : " + _Caelus.INT_TYPE + 'bit'
 
 #===============================================================================
 # Common compiler parameters and flags

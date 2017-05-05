@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,68 +22,51 @@ License
 #include "tensor.hpp"
 #include "mathematicalConstants.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
+using namespace CML::constant::mathematical;
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-    template<>
-    const char* const tensor::typeName = "tensor";
 
-    template<>
-    const char* tensor::componentNames[] =
-    {
-        "xx", "xy", "xz",
-        "yx", "yy", "yz",
-        "zx", "zy", "zz"
-    };
+template<>
+const char* const CML::tensor::vsType::typeName = "tensor";
 
-    template<>
-    const tensor tensor::zero
-    (
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0
-    );
+template<>
+const char* const CML::tensor::vsType::componentNames[] =
+{
+    "xx", "xy", "xz",
+    "yx", "yy", "yz",
+    "zx", "zy", "zz"
+};
 
-    template<>
-    const tensor tensor::one
-    (
-        1, 1, 1,
-        1, 1, 1,
-        1, 1, 1
-    );
+template<>
+const CML::tensor CML::tensor::vsType::zero(tensor::uniform(0));
 
-    template<>
-    const tensor tensor::max
-    (
-        VGREAT, VGREAT, VGREAT,
-        VGREAT, VGREAT, VGREAT,
-        VGREAT, VGREAT, VGREAT
-    );
+template<>
+const CML::tensor CML::tensor::vsType::one(tensor::uniform(1));
 
-    template<>
-    const tensor tensor::min
-    (
-        -VGREAT, -VGREAT, -VGREAT,
-        -VGREAT, -VGREAT, -VGREAT,
-        -VGREAT, -VGREAT, -VGREAT
-    );
+template<>
+const CML::tensor CML::tensor::vsType::max(tensor::uniform(VGREAT));
 
-    template<>
-    const tensor tensor::I
-    (
-        1, 0, 0,
-        0, 1, 0,
-        0, 0, 1
-    );
+template<>
+const CML::tensor CML::tensor::vsType::min(tensor::uniform(-VGREAT));
 
+template<>
+const CML::tensor CML::tensor::vsType::rootMax(tensor::uniform(ROOTVGREAT));
+
+template<>
+const CML::tensor CML::tensor::vsType::rootMin(tensor::uniform(-ROOTVGREAT));
+
+template<>
+const CML::tensor CML::tensor::I
+(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-vector eigenValues(const tensor& t, bool sort)
+CML::vector CML::eigenValues(const tensor& t, bool sort)
 {
     // The eigenvalues
     scalar i, ii, iii;
@@ -136,7 +119,7 @@ vector eigenValues(const tensor& t, bool sort)
         }
 
         // Two identical roots and one distinct root
-        else if (mag(PPP/QQ - 1) < SMALL)
+        else if (mag(QQ) > SMALL && mag(PPP/QQ - 1) < SMALL)
         {
             scalar sqrtP = sqrt(P);
             scalar signQ = sign(Q);
@@ -197,10 +180,16 @@ vector eigenValues(const tensor& t, bool sort)
             Swap(i, ii);
         }
     }
+
     return vector(i, ii, iii);
 }
 
-vector eigenVector(const tensor& t, const scalar lambda)
+
+CML::vector CML::eigenVector
+(
+    const tensor& t,
+    const scalar lambda
+)
 {
     // Constantly rotating direction ensures different eigenvectors are
     // generated when called sequentially with a multiple eigenvalue
@@ -309,7 +298,7 @@ vector eigenVector(const tensor& t, const scalar lambda)
 }
 
 
-tensor eigenVectors(const tensor& t, bool sort)
+CML::tensor CML::eigenVectors(const tensor& t, bool sort)
 {
     vector evals(eigenValues(t, sort));
 
@@ -324,22 +313,22 @@ tensor eigenVectors(const tensor& t, bool sort)
 }
 
 
-vector eigenValues(const symmTensor& t, bool sort)
+CML::vector CML::eigenValues(const symmTensor& t, bool sort)
 {
     return eigenValues(tensor(t), sort);
 }
 
 
-vector eigenVector(const symmTensor& t, const scalar lambda)
+CML::vector CML::eigenVector(const symmTensor& t, const scalar lambda)
 {
     return eigenVector(tensor(t), lambda);
 }
 
 
-tensor eigenVectors(const symmTensor& t, bool sort)
+CML::tensor CML::eigenVectors(const symmTensor& t, bool sort)
 {
     return eigenVectors(tensor(t), sort);
 }
-}
+
 
 // ************************************************************************* //

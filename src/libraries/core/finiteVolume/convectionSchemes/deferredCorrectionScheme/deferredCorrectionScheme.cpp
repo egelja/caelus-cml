@@ -22,12 +22,6 @@ License
 #include "deferredCorrectionScheme.hpp"
 #include "fvMesh.hpp"
 
-namespace CML
-{
-namespace fv
-{
-    makeFvConvectionScheme(deferredCorrectionScheme)
-}
-}
+makeFvConvectionScheme(deferredCorrectionScheme)
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,22 +20,25 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "SphericalTensor_.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
+#include "SymmTensor_.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline DiagTensor<Cmpt>::DiagTensor()
+inline CML::DiagTensor<Cmpt>::DiagTensor()
+{}
+
+
+template<class Cmpt>
+inline CML::DiagTensor<Cmpt>::DiagTensor(const CML::zero)
+:
+    VectorSpace<DiagTensor<Cmpt>, Cmpt, 3>(Zero)
 {}
 
 
 template<class Cmpt>
 template<class Cmpt2>
-inline DiagTensor<Cmpt>::DiagTensor
+inline CML::DiagTensor<Cmpt>::DiagTensor
 (
     const VectorSpace<DiagTensor<Cmpt2>, Cmpt2, 3>& vs
 )
@@ -45,7 +48,7 @@ inline DiagTensor<Cmpt>::DiagTensor
 
 
 template<class Cmpt>
-inline DiagTensor<Cmpt>::DiagTensor
+inline CML::DiagTensor<Cmpt>::DiagTensor
 (
     const Cmpt& vxx,
     const Cmpt& vyy,
@@ -59,7 +62,7 @@ inline DiagTensor<Cmpt>::DiagTensor
 
 
 template<class Cmpt>
-inline DiagTensor<Cmpt>::DiagTensor(Istream& is)
+inline CML::DiagTensor<Cmpt>::DiagTensor(Istream& is)
 :
     VectorSpace<DiagTensor<Cmpt>, Cmpt, 3>(is)
 {}
@@ -68,42 +71,47 @@ inline DiagTensor<Cmpt>::DiagTensor(Istream& is)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Cmpt&  DiagTensor<Cmpt>::xx() const
+inline const Cmpt& CML::DiagTensor<Cmpt>::xx() const
 {
     return this->v_[XX];
 }
 
 template<class Cmpt>
-inline const Cmpt&  DiagTensor<Cmpt>::yy() const
+inline const Cmpt& CML::DiagTensor<Cmpt>::yy() const
 {
     return this->v_[YY];
 }
 
 template<class Cmpt>
-inline const Cmpt&  DiagTensor<Cmpt>::zz() const
+inline const Cmpt& CML::DiagTensor<Cmpt>::zz() const
 {
     return this->v_[ZZ];
 }
 
 
 template<class Cmpt>
-inline Cmpt& DiagTensor<Cmpt>::xx()
+inline Cmpt& CML::DiagTensor<Cmpt>::xx()
 {
     return this->v_[XX];
 }
 
 template<class Cmpt>
-inline Cmpt& DiagTensor<Cmpt>::yy()
+inline Cmpt& CML::DiagTensor<Cmpt>::yy()
 {
     return this->v_[YY];
 }
 
 template<class Cmpt>
-inline Cmpt& DiagTensor<Cmpt>::zz()
+inline Cmpt& CML::DiagTensor<Cmpt>::zz()
 {
     return this->v_[ZZ];
 }
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 

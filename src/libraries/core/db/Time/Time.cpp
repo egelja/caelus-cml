@@ -27,10 +27,11 @@ License
 
 // * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::Time, 0);
 
 namespace CML
 {
+    defineTypeNameAndDebug(Time, 0);
+
     template<>
     const char* CML::NamedEnum
     <
@@ -146,7 +147,7 @@ void CML::Time::setControls()
     else
     {
         // Search directory for valid time directories
-        instantList timeDirs = findTimes(path());
+        instantList timeDirs = findTimes(path(), constant());
 
         if (startFrom == "firstTime")
         {
@@ -381,7 +382,9 @@ CML::Time::Time
 :
     TimePaths
     (
+        args.parRunControl().parRun(),
         args.rootPath(),
+        args.globalCaseName(),
         args.caseName(),
         systemName,
         constantName
@@ -688,19 +691,36 @@ CML::word CML::Time::timeName() const
 // Search the construction path for times
 CML::instantList CML::Time::times() const
 {
-    return findTimes(path());
+    return findTimes(path(), constant());
 }
 
 
-CML::word CML::Time::findInstancePath(const instant& t) const
+CML::word CML::Time::findInstancePath
+(
+    const fileName& directory,
+    const instant& t
+) const
 {
-    instantList timeDirs = findTimes(path());
+    // Read directory entries into a list
+    fileNameList dirEntries(readDir(directory, fileName::DIRECTORY));
 
-    forAllReverse(timeDirs, timeI)
+    forAll(dirEntries, i)
     {
-        if (timeDirs[timeI] == t)
+        scalar timeValue;
+        if (readScalar(dirEntries[i].c_str(), timeValue) && t.equal(timeValue))
         {
-            return timeDirs[timeI].name();
+            return dirEntries[i];
+        }
+    }
+
+    if (t.equal(0.0))
+    {
+        const word& constantName = constant();
+
+        // Looking for 0 or constant. 0 already checked above.
+        if (isDir(directory/constantName))
+        {
+            return constantName;
         }
     }
 
@@ -708,9 +728,15 @@ CML::word CML::Time::findInstancePath(const instant& t) const
 }
 
 
+CML::word CML::Time::findInstancePath(const instant& t) const
+{
+    return findInstancePath(path(), t);
+}
+
+
 CML::instant CML::Time::findClosestTime(const scalar t) const
 {
-    instantList timeDirs = findTimes(path());
+    instantList timeDirs = findTimes(path(), constant());
 
     // there is only one time (likely "constant") so return it
     if (timeDirs.size() == 1)
@@ -749,15 +775,16 @@ CML::instant CML::Time::findClosestTime(const scalar t) const
 //
 // CML::instant CML::Time::findClosestTime(const scalar t) const
 // {
-//     instantList timeDirs = findTimes(path());
-//     label timeIndex = min(findClosestTimeIndex(timeDirs, t), 0);
+//     instantList timeDirs = findTimes(path(), constant());
+//     label timeIndex = min(findClosestTimeIndex(timeDirs, t), 0, constant());
 //     return timeDirs[timeIndex];
 // }
 
 CML::label CML::Time::findClosestTimeIndex
 (
     const instantList& timeDirs,
-    const scalar t
+    const scalar t,
+    const word& constantName
 )
 {
     label nearestIndex = -1;
@@ -765,7 +792,7 @@ CML::label CML::Time::findClosestTimeIndex
 
     forAll(timeDirs, timeI)
     {
-        if (timeDirs[timeI].name() == "constant") continue;
+        if (timeDirs[timeI].name() == constantName) continue;
 
         scalar diff = mag(timeDirs[timeI].value() - t);
         if (diff < deltaT)

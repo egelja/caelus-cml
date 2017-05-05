@@ -32,7 +32,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::extendedFeatureEdgeMesh, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(extendedFeatureEdgeMesh, 0);
+}
+
 
 CML::scalar CML::extendedFeatureEdgeMesh::cosNormalAngleTol_ =
     CML::cos(degToRad(0.1));

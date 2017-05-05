@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,31 +22,33 @@ License
 #include "Vector_.hpp"
 #include "Tensor_.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline SymmTensor<Cmpt>::SymmTensor()
+inline CML::SymmTensor<Cmpt>::SymmTensor()
+{}
+
+
+template<class Cmpt>
+inline CML::SymmTensor<Cmpt>::SymmTensor(const CML::zero)
+:
+    SymmTensor::vsType(Zero)
 {}
 
 
 template<class Cmpt>
 template<class Cmpt2>
-inline SymmTensor<Cmpt>::SymmTensor
+inline CML::SymmTensor<Cmpt>::SymmTensor
 (
     const VectorSpace<SymmTensor<Cmpt2>, Cmpt2, 6>& vs
 )
 :
-    VectorSpace<SymmTensor<Cmpt>, Cmpt, 6>(vs)
+    SymmTensor::vsType(vs)
 {}
 
 
 template<class Cmpt>
-inline SymmTensor<Cmpt>::SymmTensor(const SphericalTensor<Cmpt>& st)
+inline CML::SymmTensor<Cmpt>::SymmTensor(const SphericalTensor<Cmpt>& st)
 {
     this->v_[XX] = st.ii(); this->v_[XY] = 0;       this->v_[XZ] = 0;
                             this->v_[YY] = st.ii(); this->v_[YZ] = 0;
@@ -55,7 +57,7 @@ inline SymmTensor<Cmpt>::SymmTensor(const SphericalTensor<Cmpt>& st)
 
 
 template<class Cmpt>
-inline SymmTensor<Cmpt>::SymmTensor
+inline CML::SymmTensor<Cmpt>::SymmTensor
 (
     const Cmpt txx, const Cmpt txy, const Cmpt txz,
                     const Cmpt tyy, const Cmpt tyz,
@@ -69,99 +71,99 @@ inline SymmTensor<Cmpt>::SymmTensor
 
 
 template<class Cmpt>
-inline SymmTensor<Cmpt>::SymmTensor(Istream& is)
+inline CML::SymmTensor<Cmpt>::SymmTensor(Istream& is)
 :
-    VectorSpace<SymmTensor<Cmpt>, Cmpt, 6>(is)
+    SymmTensor::vsType(is)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::xx() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::xx() const
 {
     return this->v_[XX];
 }
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::xy() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::xy() const
 {
     return this->v_[XY];
 }
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::xz() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::xz() const
 {
     return this->v_[XZ];
 }
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::yy() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::yy() const
 {
     return this->v_[YY];
 }
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::yz() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::yz() const
 {
     return this->v_[YZ];
 }
 
 template<class Cmpt>
-inline const Cmpt&  SymmTensor<Cmpt>::zz() const
+inline const Cmpt& CML::SymmTensor<Cmpt>::zz() const
 {
     return this->v_[ZZ];
 }
 
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::xx()
+inline Cmpt& CML::SymmTensor<Cmpt>::xx()
 {
     return this->v_[XX];
 }
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::xy()
+inline Cmpt& CML::SymmTensor<Cmpt>::xy()
 {
     return this->v_[XY];
 }
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::xz()
+inline Cmpt& CML::SymmTensor<Cmpt>::xz()
 {
     return this->v_[XZ];
 }
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::yy()
+inline Cmpt& CML::SymmTensor<Cmpt>::yy()
 {
     return this->v_[YY];
 }
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::yz()
+inline Cmpt& CML::SymmTensor<Cmpt>::yz()
 {
     return this->v_[YZ];
 }
 
 template<class Cmpt>
-inline Cmpt& SymmTensor<Cmpt>::zz()
+inline Cmpt& CML::SymmTensor<Cmpt>::zz()
 {
     return this->v_[ZZ];
 }
 
 
 template<class Cmpt>
-inline const SymmTensor<Cmpt>& SymmTensor<Cmpt>::T() const
+inline const CML::SymmTensor<Cmpt>& CML::SymmTensor<Cmpt>::T() const
 {
     return *this;
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline void SymmTensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
+inline void CML::SymmTensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
 {
     this->v_[XX] = st.ii(); this->v_[XY] = 0;       this->v_[XZ] = 0;
                             this->v_[YY] = st.ii(); this->v_[YZ] = 0;
@@ -169,6 +171,10 @@ inline void SymmTensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
 }
 
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
@@ -240,6 +246,25 @@ operator&(const Vector<Cmpt>& v, const SymmTensor<Cmpt>& st)
         v.x()*st.xx() + v.y()*st.xy() + v.z()*st.xz(),
         v.x()*st.xy() + v.y()*st.yy() + v.z()*st.yz(),
         v.x()*st.xz() + v.y()*st.yz() + v.z()*st.zz()
+    );
+}
+
+
+//- Inner-sqr of a symmetric tensor
+template<class Cmpt>
+inline SymmTensor<Cmpt>
+innerSqr(const SymmTensor<Cmpt>& st)
+{
+    return SymmTensor<Cmpt>
+    (
+        st.xx()*st.xx() + st.xy()*st.xy() + st.xz()*st.xz(),
+        st.xx()*st.xy() + st.xy()*st.yy() + st.xz()*st.yz(),
+        st.xx()*st.xz() + st.xy()*st.yz() + st.xz()*st.zz(),
+
+        st.xy()*st.xy() + st.yy()*st.yy() + st.yz()*st.yz(),
+        st.xy()*st.xz() + st.yy()*st.yz() + st.yz()*st.zz(),
+
+        st.xz()*st.xz() + st.yz()*st.yz() + st.zz()*st.zz()
     );
 }
 
@@ -375,13 +400,8 @@ inline Cmpt invariantII(const SymmTensor<Cmpt>& st)
 {
     return
     (
-        0.5*sqr(tr(st))
-      - 0.5*
-        (
-           st.xx()*st.xx() + st.xy()*st.xy() + st.xz()*st.xz()
-         + st.xy()*st.xy() + st.yy()*st.yy() + st.yz()*st.yz()
-         + st.xz()*st.xz() + st.yz()*st.yz() + st.zz()*st.zz()
-        )
+        st.xx()*st.yy() + st.yy()*st.zz() + st.xx()*st.zz()
+      - sqr(st.xy()) - sqr(st.yz()) - sqr(st.xz())
     );
 }
 

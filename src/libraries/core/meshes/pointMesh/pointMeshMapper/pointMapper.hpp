@@ -125,6 +125,13 @@ public:
             return direct_;
         }
 
+        //- Are there unmapped values? I.e. do all size() elements get
+        //  get value
+        virtual bool hasUnmapped() const
+        {
+            return insertedObjects();
+        }
+
         //- Return direct addressing
         virtual const labelUList& directAddressing() const;
 

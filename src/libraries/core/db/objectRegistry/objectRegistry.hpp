@@ -153,12 +153,21 @@ public:
             template<class Type>
             wordList names(const wordReList& name) const;
 
-            //- Lookup and return a const sub-objectRegistry
-            const objectRegistry& subRegistry(const word& name) const;
+            //- Lookup and return a const sub-objectRegistry. Optionally create
+            //  it if it does not exist.
+            const objectRegistry& subRegistry
+            (
+                const word& name,
+                const bool forceCreate = false
+            ) const;
 
             //- Lookup and return all objects of the given Type
             template<class Type>
-            HashTable<const Type*> lookupClass() const;
+            HashTable<const Type*> lookupClass(const bool strict = false) const;
+
+            //- Lookup and return all objects of the given Type
+            template<class Type>
+            HashTable<Type*> lookupClass(const bool strict = false);
 
             //- Is the named Type found?
             template<class Type>
@@ -237,7 +246,7 @@ CML::objectRegistry::names() const
     wordList objectNames(size());
 
     label count=0;
-    for (const_iterator iter = begin(); iter != end(); ++iter)
+    forAllConstIter(HashTable<regIOobject*>, *this, iter)
     {
         if (isA<Type>(*iter()))
         {
@@ -288,19 +297,53 @@ CML::objectRegistry::names(const wordReList& patterns) const
 
 
 template<class Type>
-CML::HashTable<const Type*>
-CML::objectRegistry::lookupClass() const
+CML::HashTable<const Type*> CML::objectRegistry::lookupClass
+(
+    const bool strict
+) const
 {
     HashTable<const Type*> objectsOfClass(size());
 
-    for (const_iterator iter = begin(); iter != end(); ++iter)
+    forAllConstIter(HashTable<regIOobject*>, *this, iter)
     {
-        if (isA<Type>(*iter()))
+        if
+        (
+            (strict && isType<Type>(*iter()))
+         || (!strict && isA<Type>(*iter()))
+        )
         {
             objectsOfClass.insert
             (
                 iter()->name(),
                 dynamic_cast<const Type*>(iter())
+            );
+        }
+    }
+
+    return objectsOfClass;
+}
+
+
+template<class Type>
+CML::HashTable<Type*> CML::objectRegistry::lookupClass
+(
+    const bool strict
+)
+{
+    HashTable<Type*> objectsOfClass(size());
+
+    forAllIter(HashTable<regIOobject*>, *this, iter)
+    {
+        if
+        (
+            (strict && isType<Type>(*iter()))
+         || (!strict && isA<Type>(*iter()))
+        )
+        {
+            objectsOfClass.insert
+            (
+                iter()->name(),
+                dynamic_cast<Type*>(iter())
             );
         }
     }

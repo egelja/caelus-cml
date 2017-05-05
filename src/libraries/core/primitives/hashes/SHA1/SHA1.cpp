@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -137,29 +137,12 @@ void CML::SHA1::processBytes(const void *data, size_t len)
     }
 
     // Process available complete blocks
-//    if (len >= 64)
-//    {
-//#if !_STRING_ARCH_unaligned
-//# define alignof(type) offsetof (struct { char c; type x; }, x)
-//# define UNALIGNED_P(p) (((size_t) p) % alignof (uint32_t) != 0)
-//        if (UNALIGNED_P (data))
-//        {
-//            while (len > 64)
-            while (len >= 64)
-            {
-                processBlock(memcpy(buffer_, data, 64), 64);
-                data = reinterpret_cast<const unsigned char*>(data) + 64;
-                len -= 64;
-            }
-//        }
-//        else
-//#endif
-//        {
-//            processBlock(data, len & ~63);
-//            data = reinterpret_cast<const unsigned char*>(data) + (len & ~63);
-//            len &= 63;
-//        }
-//    }
+    while (len >= 64)
+    {
+        processBlock(memcpy(buffer_, data, 64), 64);
+        data = reinterpret_cast<const unsigned char*>(data) + 64;
+        len -= 64;
+    }
 
     // Move remaining bytes in internal buffer.
     if (len > 0)
@@ -220,19 +203,18 @@ CML::SHA1::processBlock(const void *data, size_t len)
     }
 
     // rotate left uint32_t by n bits
-#define rol_uint32(x, nbits)  (((x) << (nbits)) | ((x) >> (32 - (nbits))))
+    #define rol_uint32(x, nbits)  (((x) << (nbits)) | ((x) >> (32 - (nbits))))
 
-#define M(I) ( tm = x[I & 0x0F] ^ x[(I-14) & 0x0F]                            \
-               ^ x[(I-8) & 0x0F] ^ x[(I-3) & 0x0F]                            \
+    #define M(I) ( tm = x[I & 0x0F] ^ x[(I-14) & 0x0F]                         \
+               ^ x[(I-8) & 0x0F] ^ x[(I-3) & 0x0F]                             \
                , (x[I & 0x0F] = rol_uint32(tm, 1)) )
 
-
-#define R(A,B,C,D,E,F,K,M)                                                    \
-    do                                                                        \
-    {                                                                         \
-        E += rol_uint32(A, 5) + F(B, C, D) + K + M;                           \
-        B = rol_uint32(B, 30);                                                \
-    } while (0)
+    #define R(A,B,C,D,E,F,K,M)                                                 \
+        do                                                                     \
+        {                                                                      \
+            E += rol_uint32(A, 5) + F(B, C, D) + K + M;                        \
+            B = rol_uint32(B, 30);                                             \
+        } while (0)
 
     while (words < endp)
     {
@@ -353,18 +335,7 @@ void CML::SHA1::calcDigest(SHA1Digest& dig) const
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
-
-
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
 
 void CML::SHA1::clear()
 {
@@ -440,20 +411,6 @@ CML::SHA1Digest CML::SHA1::digest() const
 
     return dig;
 }
-
-
-// * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * * //
-
-// void CML::SHA1::operator=(const SHA1& rhs)
-// {
-//     // Check for assignment to self
-//     if (this == &rhs)
-//     {
-//         FatalErrorIn("CML::SHA1::operator=(const CML::SHA1&)")
-//             << "Attempted assignment to self"
-//             << abort(FatalError);
-//     }
-// }
 
 
 // ************************************************************************* //

@@ -37,7 +37,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::globalMeshData, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(globalMeshData, 0);
+}
+
 
 // Geometric matching tolerance. Factor of mesh bounding box.
 const CML::scalar CML::globalMeshData::matchTol_ = 1E-8;

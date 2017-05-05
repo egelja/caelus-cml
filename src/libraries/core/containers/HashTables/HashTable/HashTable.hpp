@@ -950,7 +950,7 @@ inline CML::HashTable<T, Key, Hash>::const_iterator::const_iterator()
 template<class T, class Key, class Hash>
 inline CML::HashTable<T, Key, Hash>::const_iterator::const_iterator
 (
-    const typename HashTable<T, Key, Hash>::iterator& iter
+    const HashTable<T, Key, Hash>::iterator& iter
 )
 :
     iteratorBase(iter)

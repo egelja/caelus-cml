@@ -28,7 +28,9 @@ License
 
 #define makeCombustionTypesThermo(CombModel, Comb, Thermo)                    \
                                                                               \
-    typedef CombModel<Comb, Thermo> CombModel##Comb##Thermo;                  \
+    typedef CML::combustionModels::CombModel                                  \
+        <CML::combustionModels::Comb, CML::Thermo>                            \
+        CombModel##Comb##Thermo;                                              \
                                                                               \
                                                                               \
     defineTemplateTypeNameAndDebugWithName                                    \
@@ -38,17 +40,24 @@ License
         0                                                                     \
     );                                                                        \
                                                                               \
-                                                                              \
-    addToRunTimeSelectionTable                                                \
-    (                                                                         \
-        Comb,                                                                 \
-        CombModel##Comb##Thermo,                                              \
-        dictionary                                                            \
-    );
+    namespace CML                                                             \
+    {                                                                         \
+        namespace combustionModels                                            \
+        {                                                                     \
+            typedef CombModel<Comb, Thermo> CombModel##Comb##Thermo;          \
+            addToRunTimeSelectionTable                                        \
+            (                                                                 \
+                Comb,                                                         \
+                CombModel##Comb##Thermo,                                      \
+                dictionary                                                    \
+            );                                                                \
+        }                                                                     \
+    }                                                                         \
 
 #define makeCombustionTypes(CombModel, CombThermoType)                        \
                                                                               \
-    typedef CombModel<CombThermoType>                                         \
+    typedef CML::combustionModels::CombModel                                  \
+        <CML::combustionModels::CombThermoType>                               \
         CombModel##CombThermoType;                                            \
                                                                               \
     defineTemplateTypeNameAndDebugWithName                                    \
@@ -58,12 +67,19 @@ License
         0                                                                     \
     );                                                                        \
                                                                               \
-    addToRunTimeSelectionTable                                                \
-    (                                                                         \
-        CombThermoType,                                                       \
-        CombModel##CombThermoType,                                            \
-        dictionary                                                            \
-    );
+    namespace CML                                                             \
+    {                                                                         \
+        namespace combustionModels                                            \
+        {                                                                     \
+            typedef CombModel<CombThermoType> CombModel##CombThermoType;      \
+            addToRunTimeSelectionTable                                        \
+            (                                                                 \
+                CombThermoType,                                               \
+                CombModel##CombThermoType,                                    \
+                dictionary                                                    \
+            );                                                                \
+        }                                                                     \
+    }                                                                         \
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

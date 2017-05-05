@@ -302,7 +302,7 @@ void CML::ParticleErosion<CloudType>::preEvolve()
 template<class CloudType>
 void CML::ParticleErosion<CloudType>::postEvolve()
 {
-    // Do nothing
+    CloudFunctionObject<CloudType>::postEvolve();
 }
 
 

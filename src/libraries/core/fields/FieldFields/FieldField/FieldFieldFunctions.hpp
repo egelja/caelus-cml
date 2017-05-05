@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,14 +43,14 @@ template<template<class> class Field, class Type>
 void T(FieldField<Field, Type>& f1, const FieldField<Field, Type>& f2);
 
 
-template<template<class> class Field, class Type, int r>
+template<template<class> class Field, class Type, direction r>
 void pow
 (
     FieldField<Field, typename powProduct<Type, r>::type>& f,
     const FieldField<Field, Type>& vf
 );
 
-template<template<class> class Field, class Type, int r>
+template<template<class> class Field, class Type, direction r>
 tmp<FieldField<Field, typename powProduct<Type, r>::type> >
 pow
 (
@@ -58,7 +58,7 @@ pow
         = pTraits<typename powProduct<Type, r>::type>::zero
 );
 
-template<template<class> class Field, class Type, int r>
+template<template<class> class Field, class Type, direction r>
 tmp<FieldField<Field, typename powProduct<Type, r>::type> >
 pow
 (
@@ -344,7 +344,13 @@ operator op                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Type, class Form, class Cmpt, int nCmpt>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Type,                                                                \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt                                                            \
+>                                                                              \
 void opFunc                                                                    \
 (                                                                              \
     FieldField<Field, typename product<Type, Form>::type>& f,                  \
@@ -353,7 +359,13 @@ void opFunc                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Type, class Form, class Cmpt, int nCmpt>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Type,                                                                \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt                                                            \
+>                                                                              \
 tmp<FieldField<Field, typename product<Type, Form>::type> >                    \
 operator op                                                                    \
 (                                                                              \
@@ -362,7 +374,13 @@ operator op                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Type, class Form, class Cmpt, int nCmpt>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Type,                                                                \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt                                                            \
+>                                                                              \
 tmp<FieldField<Field, typename product<Type, Form>::type> >                    \
 operator op                                                                    \
 (                                                                              \
@@ -371,7 +389,13 @@ operator op                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Form, class Cmpt, int nCmpt, class Type>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt,                                                           \
+    class Type                                                                 \
+>                                                                              \
 void opFunc                                                                    \
 (                                                                              \
     FieldField<Field, typename product<Form, Type>::type>& f,                  \
@@ -380,7 +404,13 @@ void opFunc                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Form, class Cmpt, int nCmpt, class Type>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt,                                                            \
+    class Type                                                                 \
+>                                                                              \
 tmp<FieldField<Field, typename product<Form, Type>::type> >                    \
 operator op                                                                    \
 (                                                                              \
@@ -389,7 +419,13 @@ operator op                                                                    \
 );                                                                             \
                                                                                \
 template                                                                       \
-<template<class> class Field, class Form, class Cmpt, int nCmpt, class Type>   \
+<                                                                              \
+    template<class> class Field,                                               \
+    class Form,                                                                \
+    class Cmpt,                                                                \
+    direction nCmpt,                                                           \
+    class Type                                                                 \
+>                                                                              \
 tmp<FieldField<Field, typename product<Form, Type>::type> >                    \
 operator op                                                                    \
 (                                                                              \

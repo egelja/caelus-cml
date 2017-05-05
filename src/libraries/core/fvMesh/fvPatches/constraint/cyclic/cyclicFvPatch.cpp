@@ -88,6 +88,12 @@ CML::tmp<CML::vectorField> CML::cyclicFvPatch::delta() const
 }
 
 
+CML::tmp<CML::vectorField> CML::cyclicFvPatch::deltaFull() const
+{
+    return cyclicFvPatch::delta();
+}
+
+
 CML::tmp<CML::labelField> CML::cyclicFvPatch::interfaceInternalField
 (
     const labelUList& internalData

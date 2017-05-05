@@ -31,8 +31,8 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(sampledSets, 0);
-bool sampledSets::verbose_ = false;
+    defineTypeNameAndDebug(sampledSets, 0);
+    bool sampledSets::verbose_ = false;
 }
 
 

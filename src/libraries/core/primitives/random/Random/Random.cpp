@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,6 @@ namespace CML
 #    error "INT_MAX    != 2147483647"
 #    error "The random number generator may not work!"
 #endif
-
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -185,7 +184,7 @@ scalar Random::GaussNormal()
             rsq = v1*v1 + v2*v2;
         } while (rsq >= 1.0 || rsq == 0.0);
 
-        fac = sqrt(-2.0 * log(rsq)/rsq);
+        fac = sqrt(-2.0*log(rsq)/rsq);
         gset = v1*fac;
         iset = 1;
 

@@ -32,7 +32,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(thresholdCellFaces, 0);
+    defineTypeNameAndDebug(thresholdCellFaces, 0);
 }
 
 

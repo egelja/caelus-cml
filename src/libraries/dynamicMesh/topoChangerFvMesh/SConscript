@@ -1,0 +1,29 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'topoChangerFvMesh'
+
+sources = Split("""
+topoChangerFvMesh/topoChangerFvMesh.cpp
+rawTopoChangerFvMesh/rawTopoChangerFvMesh.cpp
+movingConeTopoFvMesh/movingConeTopoFvMesh.cpp
+""")
+
+caelus_inc = [
+'dynamicMesh/dynamicFvMesh/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'dynamicFvMesh',
+'dynamicMesh'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

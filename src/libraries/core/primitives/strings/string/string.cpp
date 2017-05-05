@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,7 +32,6 @@ const CML::string CML::string::null;
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Count and return the number of a given character in the string
 CML::string::size_type CML::string::count(const char c) const
 {
     register size_type cCount = 0;
@@ -49,7 +48,6 @@ CML::string::size_type CML::string::count(const char c) const
 }
 
 
-// Replace first occurence of sub-string oldStr with newStr
 CML::string& CML::string::replace
 (
     const string& oldStr,
@@ -68,7 +66,6 @@ CML::string& CML::string::replace
 }
 
 
-// Replace all occurences of sub-string oldStr with newStr
 CML::string& CML::string::replaceAll
 (
     const string& oldStr,
@@ -98,7 +95,6 @@ CML::string& CML::string::expand(const bool allowEmpty)
 }
 
 
-// Remove repeated characters returning true if string changed
 bool CML::string::removeRepeated(const char character)
 {
     bool changed = false;
@@ -137,7 +133,6 @@ bool CML::string::removeRepeated(const char character)
 }
 
 
-// Return string with repeated characters removed
 CML::string CML::string::removeRepeated(const char character) const
 {
     string str(*this);
@@ -146,7 +141,6 @@ CML::string CML::string::removeRepeated(const char character) const
 }
 
 
-// Remove trailing character returning true if string changed
 bool CML::string::removeTrailing(const char character)
 {
     bool changed = false;
@@ -162,7 +156,6 @@ bool CML::string::removeTrailing(const char character)
 }
 
 
-// Return string with trailing character removed
 CML::string CML::string::removeTrailing(const char character) const
 {
     string str(*this);

@@ -1,0 +1,64 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'rigidBodyDynamics'
+
+sources = Split("""
+bodies/rigidBody/rigidBody.cpp
+bodies/masslessBody/masslessBody.cpp
+bodies/jointBody/jointBody.cpp
+bodies/compositeBody/compositeBody.cpp
+bodies/subBody/subBody.cpp
+bodies/sphere/sphere.cpp
+bodies/cuboid/cuboid.cpp
+joints/joint/joint.cpp
+joints/null/nullJoint.cpp
+joints/composite/compositeJoint.cpp
+joints/floating/floatingJoint.cpp
+joints/Rx/Rx.cpp
+joints/Ry/Ry.cpp
+joints/Rz/Rz.cpp
+joints/Ra/Ra.cpp
+joints/Rs/Rs.cpp
+joints/Rzyx/Rzyx.cpp
+joints/Rxyz/Rxyz.cpp
+joints/Ryxz/Ryxz.cpp
+joints/Px/Px.cpp
+joints/Py/Py.cpp
+joints/Pz/Pz.cpp
+joints/Pa/Pa.cpp
+joints/Pxyz/Pxyz.cpp
+restraints/restraint/rigidBodyRestraint.cpp
+restraints/restraint/rigidBodyRestraintNew.cpp
+restraints/linearSpring/linearSpring.cpp
+restraints/linearDamper/linearDamper.cpp
+restraints/linearAxialAngularSpring/linearAxialAngularSpring.cpp
+restraints/sphericalAngularDamper/sphericalAngularDamper.cpp
+restraints/externalForceMoment/externalForceMoment.cpp
+rigidBodyModel/rigidBodyModel.cpp
+rigidBodyModel/forwardDynamics.cpp
+rigidBodyModelState/rigidBodyModelState.cpp
+rigidBodyModelState/rigidBodyModelStateIO.cpp
+rigidBodyMotion/rigidBodyMotion.cpp
+rigidBodyMotion/rigidBodyMotionIO.cpp
+rigidBodySolvers/rigidBodySolver/rigidBodySolver.cpp
+rigidBodySolvers/rigidBodySolver/newRigidBodySolver.cpp
+rigidBodySolvers/symplectic/symplectic.cpp
+rigidBodySolvers/Newmark/Newmark.cpp
+rigidBodySolvers/CrankNicolson/CrankNicolson.cpp
+ """)
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

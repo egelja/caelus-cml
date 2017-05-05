@@ -30,7 +30,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::surfMesh, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(surfMesh, 0);
+}
+
 
 CML::word CML::surfMesh::meshSubDir = "surfMesh";
 

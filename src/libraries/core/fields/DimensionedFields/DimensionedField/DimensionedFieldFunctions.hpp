@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,7 +31,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * //
 
-template<class Type, class GeoMesh, int r>
+template<class Type, class GeoMesh, CML::direction r>
 tmp<DimensionedField<typename powProduct<Type, r>::type, GeoMesh> >
 pow
 (
@@ -39,7 +39,7 @@ pow
     typename powProduct<Type, r>::type
 );
 
-template<class Type, class GeoMesh, int r>
+template<class Type, class GeoMesh, direction r>
 tmp<DimensionedField<typename powProduct<Type, r>::type, GeoMesh> >
 pow
 (
@@ -187,7 +187,7 @@ operator op                                                                   \
     const dimensioned<Form>& dvs                                              \
 );                                                                            \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -203,7 +203,7 @@ operator op                                                                   \
     const dimensioned<Form>& dvs                                              \
 );                                                                            \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -219,7 +219,7 @@ operator op                                                                   \
     const DimensionedField<Type, GeoMesh>& df1                                \
 );                                                                            \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -235,7 +235,7 @@ operator op                                                                   \
     const tmp<DimensionedField<Type, GeoMesh> >& tdf1                         \
 );                                                                            \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \

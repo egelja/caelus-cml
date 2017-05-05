@@ -1,72 +1,37 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-edgeMeshEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = edgeMeshEnv['LIB_SRC']
+target = 'edgeMesh'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-edgeMeshEnv.Append(CXXFLAGS = '')
+sources = Split("""
+edgeMesh.cpp
+edgeMeshIO.cpp
+edgeMeshNew.cpp
+edgeFormats/edgeFormatsCore.cpp
+edgeFormats/emesh/EMESHedgeFormat.cpp
+edgeFormats/emesh/EMESHedgeFormatRunTime.cpp
+edgeFormats/nas/NASedgeFormat.cpp
+edgeFormats/nas/NASedgeFormatRunTime.cpp
+edgeFormats/obj/OBJedgeFormat.cpp
+edgeFormats/obj/OBJedgeFormatRunTime.cpp
+edgeFormats/starcd/STARCDedgeFormat.cpp
+edgeFormats/starcd/STARCDedgeFormatRunTime.cpp
+edgeFormats/vtk/VTKedgeFormat.cpp
+edgeFormats/vtk/VTKedgeFormatRunTime.cpp
+extendedFeatureEdgeMesh/extendedFeatureEdgeMesh.cpp
+featureEdgeMesh/featureEdgeMesh.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-edgeMeshEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-edgeMeshEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-edgeMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  edgeMesh.cpp
-  edgeMeshIO.cpp
-  edgeMeshNew.cpp
-  edgeFormats/edgeFormatsCore.cpp
-  edgeFormats/emesh/EMESHedgeFormat.cpp
-  edgeFormats/emesh/EMESHedgeFormatRunTime.cpp
-  edgeFormats/nas/NASedgeFormat.cpp
-  edgeFormats/nas/NASedgeFormatRunTime.cpp
-  edgeFormats/obj/OBJedgeFormat.cpp
-  edgeFormats/obj/OBJedgeFormatRunTime.cpp
-  edgeFormats/starcd/STARCDedgeFormat.cpp
-  edgeFormats/starcd/STARCDedgeFormatRunTime.cpp
-  edgeFormats/vtk/VTKedgeFormat.cpp
-  edgeFormats/vtk/VTKedgeFormatRunTime.cpp
-  extendedFeatureEdgeMesh/extendedFeatureEdgeMesh.cpp
-  featureEdgeMesh/featureEdgeMesh.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libedgeMesh = edgeMeshEnv.SharedLibrary(target = 'edgeMesh', 
-  source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = edgeMeshEnv['LIB_PLATFORM_INSTALL']
-edgeMeshEnv.Alias('install', install_dir)
-edgeMeshEnv.Install(install_dir, libedgeMesh)
-
-if (edgeMeshEnv['WHICH_OS'] == "darwin"):
-
-  edgeMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libedgeMesh.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

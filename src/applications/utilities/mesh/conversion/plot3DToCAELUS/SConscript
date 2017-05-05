@@ -1,0 +1,24 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'plot3DToCAELUS'
+
+sources = Split("""
+hexBlock.cpp
+plot3DToCAELUS.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

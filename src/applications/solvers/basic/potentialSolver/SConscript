@@ -1,45 +1,27 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-potentialSolEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = potentialSolEnv['LIB_SRC']
+target = "potentialSolver"
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/fvOptions/lnInclude',
-  src + '/sampling/lnInclude']
-potentialSolEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+potentialSolver.cpp
+""")
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = ['fvOptions','sampling']
-     
+caelus_inc = [
+'fvOptions/lnInclude',
+'sampling/lnInclude'
+]
 
-potentialSolEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core',
+'fvOptions',
+'sampling'
+]
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  potentialSolver.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpotentialSol = potentialSolEnv.Program(target = 'potentialSolver',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = potentialSolEnv['BIN_PLATFORM_INSTALL']
-potentialSolEnv.Alias('install', install_dir)
-potentialSolEnv.Install(install_dir, binpotentialSol)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -550,7 +550,6 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     // Allocate transfer buffers
     PstreamBuffers pBufs(Pstream::nonBlocking);
 
-
     // While there are particles to transfer
     while (true)
     {
@@ -574,7 +573,8 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             {
                 // If we are running in parallel and the particle is on a
                 // boundary face
-                if (Pstream::parRun() && p.face() >= pMesh().nInternalFaces())
+                if (Pstream::parRun() && td.switchProcessor && p.face() >= pMesh().nInternalFaces())
+
                 {
                     label patchI = pbm.whichPatch(p.face());
 
@@ -633,7 +633,6 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             }
         }
 
-
         // Start sending. Sets number of bytes transferred
         labelListList allNTrans(Pstream::nProcs());
 
@@ -652,6 +651,7 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
                 }
             }
         }
+        reduce(transfered, orOp<bool>());
 
         if (!transfered)
         {

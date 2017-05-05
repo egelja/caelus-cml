@@ -1,3 +1,5 @@
+    #include "createRDeltaT.hpp"    
+
     Info<< "Reading thermophysical properties\n" << endl;
 
     autoPtr<basicPsiThermo> thermo

@@ -1,57 +1,35 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-particleTracksEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = particleTracksEnv['LIB_SRC']
+target = 'particleTracks'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-particleTracksEnv.Append(CCFLAGS = '')
+sources = Split("""
+particleTracks.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude']
-particleTracksEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'lagrangian/basic/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-particleTracksEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if particleTracksEnv['WHICH_OS'] == "windows":
-  particleTracksEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','lagrangian']
-     
-particleTracksEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  particleTracks.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binparticleTracks = particleTracksEnv.Program(target = 'particleTracks', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = particleTracksEnv['BIN_PLATFORM_INSTALL']
-particleTracksEnv.Alias('install', install_dir)
-particleTracksEnv.Install(install_dir, binparticleTracks)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -41,13 +41,15 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::fileMonitor, 0);
+
 
 const CML::NamedEnum<CML::fileMonitor::fileState, 3>
     CML::fileMonitor::fileStateNames_;
 
 namespace CML
 {
+    defineTypeNameAndDebug(fileMonitor, 0);
+
     template<>
     const char* CML::NamedEnum
     <

@@ -121,9 +121,9 @@ CML::noSlipWallFvPatchVectorField::gradientBoundaryCoeffs() const
     {
         coeffs[f][0] = t[f][0]+n[f][0]*n[f][1]*iF[f][1]
                      + n[f][2]*n[f][0]*iF[f][2];
-        coeffs[f][0] = t[f][1]+n[f][1]*n[f][0]*iF[f][0]
+        coeffs[f][1] = t[f][1]+n[f][1]*n[f][0]*iF[f][0]
                      + n[f][2]*n[f][1]*iF[f][2];
-        coeffs[f][0] = t[f][2]+n[f][2]*n[f][0]*iF[f][0]
+        coeffs[f][2] = t[f][2]+n[f][2]*n[f][0]*iF[f][0]
                      + n[f][1]*n[f][2]*iF[f][1];
     }
   

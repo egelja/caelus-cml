@@ -1,68 +1,47 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-buoyBoussinesqSimpleSolverEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = buoyBoussinesqSimpleSolverEnv['LIB_SRC']
+target = "buoyantBoussinesqSimpleSolver"
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-buoyBoussinesqSimpleSolverEnv.Append(CCFLAGS = '')
+sources = Split("""
+buoyantBoussinesqSimpleSolver.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = ['../buoyantBoussinesqSimpleSolver',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
-src + '/turbulenceModels/incompressible/RAS/lnInclude', 
-src + '/transportModels',
-src + '/transportModels/incompressible/singlePhaseTransportModel',
-src + '/transportModels/incompressible/lnInclude',
-src + '/fvOptions/lnInclude',
-  src + '/sampling/lnInclude'
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
 ]
-buoyBoussinesqSimpleSolverEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-buoyBoussinesqSimpleSolverEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'fvOptions',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if buoyBoussinesqSimpleSolverEnv['WHICH_OS'] == "windows":
-  buoyBoussinesqSimpleSolverEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u turbulenceDerivedFvPatchFieldsLoad -u incompressibleRASModelsLoad'
+}
 
-lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
-'incompressibleTransportModels','fvOptions','sampling']
-
-buoyBoussinesqSimpleSolverEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  buoyantBoussinesqSimpleSolver.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binbuoyBoussinesqSimpleSolver = buoyBoussinesqSimpleSolverEnv.Program(target =
-'buoyantBoussinesqSimpleSolver', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = buoyBoussinesqSimpleSolverEnv['BIN_PLATFORM_INSTALL']
-buoyBoussinesqSimpleSolverEnv.Alias('install', install_dir)
-buoyBoussinesqSimpleSolverEnv.Install(install_dir, binbuoyBoussinesqSimpleSolver)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

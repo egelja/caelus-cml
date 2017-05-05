@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -127,34 +127,30 @@ inline bool CML::word::valid(char c)
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-inline const CML::word& CML::word::operator=(const word& q)
+inline void CML::word::operator=(const word& q)
 {
     string::operator=(q);
-    return *this;
 }
 
 
-inline const CML::word& CML::word::operator=(const string& q)
+inline void CML::word::operator=(const string& q)
 {
     string::operator=(q);
     stripInvalid();
-    return *this;
 }
 
 
-inline const CML::word& CML::word::operator=(const std::string& q)
+inline void CML::word::operator=(const std::string& q)
 {
     string::operator=(q);
     stripInvalid();
-    return *this;
 }
 
 
-inline const CML::word& CML::word::operator=(const char* q)
+inline void CML::word::operator=(const char* q)
 {
     string::operator=(q);
     stripInvalid();
-    return *this;
 }
 
 

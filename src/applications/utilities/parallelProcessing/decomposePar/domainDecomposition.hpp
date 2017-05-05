@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -155,8 +155,13 @@ public:
 
     // Constructors
 
-        //- Construct from IOobject
-        domainDecomposition(const IOobject& io);
+        //- Construct from IOobjects (for mesh and optional non-standard
+        //  decomposeParDict location)
+        domainDecomposition
+        (
+            const IOobject& io,
+            const fileName& decompDictFile = ""
+        );
 
 
     //- Destructor
@@ -181,7 +186,7 @@ public:
         void decomposeMesh();
 
         //- Write decomposition
-        bool writeDecomposition();
+        bool writeDecomposition(const bool decomposeSets);
 
         //- Cell-processor decomposition labels
         const labelList& cellToProc() const
@@ -295,10 +300,6 @@ void CML::domainDecomposition::processInterCyclics
         }
     }
 }
-
-
-
-
 
 #endif
 

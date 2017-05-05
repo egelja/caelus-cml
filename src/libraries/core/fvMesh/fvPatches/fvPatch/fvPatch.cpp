@@ -142,6 +142,12 @@ CML::tmp<CML::vectorField> CML::fvPatch::delta() const
 }
 
 
+CML::tmp<CML::vectorField> CML::fvPatch::deltaFull() const
+{
+    return Cf() - Cn();
+}
+
+
 void CML::fvPatch::makeWeights(scalarField& w) const
 {
     w = 1.0;

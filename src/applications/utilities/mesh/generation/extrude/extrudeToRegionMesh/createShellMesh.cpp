@@ -36,20 +36,21 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::createShellMesh, 0);
 
 namespace CML
 {
-template<>
-class minEqOp<labelPair>
-{
-public:
-    void operator()(labelPair& x, const labelPair& y) const
+    defineTypeNameAndDebug(createShellMesh, 0);
+
+    template<>
+    class minEqOp<labelPair>
     {
-        x[0] = min(x[0], y[0]);
-        x[1] = min(x[1], y[1]);
-    }
-};
+        public:
+        void operator()(labelPair& x, const labelPair& y) const
+        {
+            x[0] = min(x[0], y[0]);
+            x[1] = min(x[1], y[1]);
+        }
+    };
 }
 
 

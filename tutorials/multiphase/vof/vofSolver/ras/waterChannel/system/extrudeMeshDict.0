@@ -1,0 +1,34 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+constructFrom mesh;
+sourceCase "$CAELUS_CASE";
+sourcePatches (outlet);
+
+flipNormals false;
+
+extrudeModel        linearDirection;
+
+nLayers             60;
+expansionRatio      1.0;
+
+linearDirectionCoeffs
+{
+    axisPt          (0 0 0);
+    direction       (1 0.2 0.02);
+    thickness       60;
+}
+
+mergeFaces false;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

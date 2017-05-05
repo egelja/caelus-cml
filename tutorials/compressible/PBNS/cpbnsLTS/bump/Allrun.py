@@ -1,6 +1,8 @@
 #!/usr/bin/python
-# Caelus 6.10
 # ---------------------------------------------------------------------------
+# Caelus 7.04
+# Web:   www.caelus-cml.com
+# 
 
 # Importing the required modules for Python
 import subprocess

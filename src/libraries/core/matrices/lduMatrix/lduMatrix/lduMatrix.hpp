@@ -778,6 +778,7 @@ public:
             void sumDiag();
             void negSumDiag();
             void rowSum(scalarField& s) const;
+            void spai0(scalarField& s) const;
 
             void sumMagOffDiag(scalarField& sumOff) const;
 

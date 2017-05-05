@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,22 +52,14 @@ class Vector2D
 
 public:
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef Vector2D<label> labelType;
+
+
     // Member constants
 
-        enum
-        {
-            rank = 1 // Rank of Vector2D is 1
-        };
-
-
-    // Static data members
-
-        static const char* const typeName;
-        static const char* componentNames[];
-        static const Vector2D zero;
-        static const Vector2D one;
-        static const Vector2D max;
-        static const Vector2D min;
+        //- Rank of Vector2D is 1
+        static const direction rank = 1;
 
 
     //- Component labeling enumeration
@@ -78,6 +70,9 @@ public:
 
         //- Construct null
         inline Vector2D();
+
+        //- Construct initialized to zero
+        inline Vector2D(const CML::zero);
 
         //- Construct given VectorSpace
         inline Vector2D(const VectorSpace<Vector2D<Cmpt>, Cmpt, 2>&);
@@ -102,7 +97,7 @@ public:
 
         // Operators
 
-            //- perp dot product (dot product with perpendicular vector)
+            //- Perp dot product (dot product with perpendicular vector)
             inline scalar perp(const Vector2D<Cmpt>& b) const;
 };
 

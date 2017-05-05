@@ -26,7 +26,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(readFields, 0);
+    defineTypeNameAndDebug(readFields, 0);
 }
 
 

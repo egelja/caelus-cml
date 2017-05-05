@@ -32,7 +32,11 @@ Description
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::surfaceInterpolation, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(surfaceInterpolation, 0);
+}
 
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //

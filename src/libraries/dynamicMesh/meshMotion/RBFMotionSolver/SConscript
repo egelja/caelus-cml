@@ -1,0 +1,28 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'RBFMotionSolver'
+
+sources = Split("""
+RBFMotionSolver.cpp
+""")
+
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'dynamicMesh/meshMotion/solidBodyMotion/solidBodyMotionFunctions/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'dynamicMesh',
+'solidBodyMotionFunctions'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)
+

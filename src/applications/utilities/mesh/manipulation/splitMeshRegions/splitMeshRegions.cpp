@@ -104,20 +104,16 @@ using namespace CML;
 template<class GeoField>
 void addPatchFields(fvMesh& mesh, const word& patchFieldType)
 {
-    HashTable<const GeoField*> flds
+    HashTable<GeoField*> flds
     (
         mesh.objectRegistry::lookupClass<GeoField>()
     );
 
-    forAllConstIter(typename HashTable<const GeoField*>, flds, iter)
+    forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        const GeoField& fld = *iter();
+        GeoField& fld = *iter();
 
-        typename GeoField::GeometricBoundaryField& bfld =
-            const_cast<typename GeoField::GeometricBoundaryField&>
-            (
-                fld.boundaryField()
-            );
+        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
 
         label sz = bfld.size();
         bfld.setSize(sz+1);
@@ -139,19 +135,18 @@ void addPatchFields(fvMesh& mesh, const word& patchFieldType)
 template<class GeoField>
 void trimPatchFields(fvMesh& mesh, const label nPatches)
 {
-    HashTable<const GeoField*> flds
+    HashTable<GeoField*> flds
     (
         mesh.objectRegistry::lookupClass<GeoField>()
     );
 
-    forAllConstIter(typename HashTable<const GeoField*>, flds, iter)
+    forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        const GeoField& fld = *iter();
+        GeoField& fld = *iter();
 
-        const_cast<typename GeoField::GeometricBoundaryField&>
-        (
-            fld.boundaryField()
-        ).setSize(nPatches);
+        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
+
+        bfld.setSize(nPatches);
     }
 }
 
@@ -160,20 +155,16 @@ void trimPatchFields(fvMesh& mesh, const label nPatches)
 template<class GeoField>
 void reorderPatchFields(fvMesh& mesh, const labelList& oldToNew)
 {
-    HashTable<const GeoField*> flds
+    HashTable<GeoField*> flds
     (
         mesh.objectRegistry::lookupClass<GeoField>()
     );
 
-    forAllConstIter(typename HashTable<const GeoField*>, flds, iter)
+    forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        const GeoField& fld = *iter();
+        GeoField& fld = *iter();
 
-        typename GeoField::GeometricBoundaryField& bfld =
-            const_cast<typename GeoField::GeometricBoundaryField&>
-            (
-                fld.boundaryField()
-            );
+        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
 
         bfld.reorder(oldToNew);
     }
@@ -478,6 +469,7 @@ void subsetSurfaceFields
 (
     const fvMesh& mesh,
     const fvMesh& subMesh,
+    const labelList& cellMap,
     const labelList& faceMap,
     const labelHashSet& addedPatches
 )
@@ -501,6 +493,7 @@ void subsetSurfaceFields
                 fld,
                 subMesh,
                 patchMap,
+                cellMap,
                 faceMap
             )
         );
@@ -1106,6 +1099,7 @@ void createAndWriteRegion
     (
         mesh,
         newMesh(),
+        map().cellMap(),
         map().faceMap(),
         addedPatches
     );
@@ -1113,6 +1107,7 @@ void createAndWriteRegion
     (
         mesh,
         newMesh(),
+        map().cellMap(),
         map().faceMap(),
         addedPatches
     );
@@ -1120,6 +1115,7 @@ void createAndWriteRegion
     (
         mesh,
         newMesh(),
+        map().cellMap(),
         map().faceMap(),
         addedPatches
     );
@@ -1127,6 +1123,7 @@ void createAndWriteRegion
     (
         mesh,
         newMesh(),
+        map().cellMap(),
         map().faceMap(),
         addedPatches
     );
@@ -1134,6 +1131,7 @@ void createAndWriteRegion
     (
         mesh,
         newMesh(),
+        map().cellMap(),
         map().faceMap(),
         addedPatches
     );

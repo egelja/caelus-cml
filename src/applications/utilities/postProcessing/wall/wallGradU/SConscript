@@ -1,58 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-wallGradUEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = wallGradUEnv['LIB_SRC']
+target = 'wallGradU'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-wallGradUEnv.Append(CCFLAGS = '')
+sources = Split("""
+wallGradU.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
+caelus_inc = [
+]
 
-wallGradUEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-wallGradUEnv.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if wallGradUEnv['WHICH_OS'] == "windows":
-  wallGradUEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['genericPatchFields']
-
-wallGradUEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
- wallGradU.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binwallGradU=wallGradUEnv.Program(target = 'wallGradU', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir =wallGradUEnv['BIN_PLATFORM_INSTALL']
-wallGradUEnv.Alias('install', install_dir)
-wallGradUEnv.Install(install_dir, binwallGradU)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

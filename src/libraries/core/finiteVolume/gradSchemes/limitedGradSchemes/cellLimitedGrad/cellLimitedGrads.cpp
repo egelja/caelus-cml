@@ -29,13 +29,7 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvGradScheme(cellLimitedGrad)
-}
-}
+makeFvGradScheme(cellLimitedGrad)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -1,61 +1,28 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjFVToolsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjFVToolsEnv['SLASH']
+target = 'FVFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjFVToolsEnv.Append(CCFLAGS = '')
+sources = Split("""
+calcFvcDiv/calcFvcDiv.cpp
+calcFvcDiv/calcFvcDivFunctionObject.cpp
+calcFvcGrad/calcFvcGrad.cpp
+calcFvcGrad/calcFvcGradFunctionObject.cpp
+calcMag/calcMag.cpp
+calcMag/calcMagFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-funcObjFVToolsEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+]
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjFVToolsEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-funcObjFVToolsEnv.Append(LIBS = lib_link)
- 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  calcFvcDiv/calcFvcDiv.cpp
-  calcFvcDiv/calcFvcDivFunctionObject.cpp
-  calcFvcGrad/calcFvcGrad.cpp
-  calcFvcGrad/calcFvcGradFunctionObject.cpp
-  calcMag/calcMag.cpp
-  calcMag/calcMagFunctionObject.cpp
-  """) 
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libFVFuncObj = funcObjFVToolsEnv.SharedLibrary(target = 'FVFunctionObjects', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjFVToolsEnv['LIB_PLATFORM_INSTALL']
-funcObjFVToolsEnv.Alias('install', install_dir)
-funcObjFVToolsEnv.Install(install_dir, libFVFuncObj)
-
-if (funcObjFVToolsEnv['WHICH_OS'] == "darwin"):
-
-  funcObjFVToolsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libFVFunctionObjects.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

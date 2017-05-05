@@ -23,7 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::pairGAMGAgglomeration, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(pairGAMGAgglomeration, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

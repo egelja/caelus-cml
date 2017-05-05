@@ -1,11 +1,9 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 6.04</fullName>
-    <version>6.04</version>
+    <fullName>Caelus 7.04</fullName>
+    <version>7.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
-    <licenseFile>../doc/gpl-3.0.txt</licenseFile>
-    <htmlLicenseFile>../doc/gpl-3.0-standalone.html</htmlLicenseFile>
     <wrapLicenseFileText>0</wrapLicenseFileText>
     <leftImage>images/caelus_logo_black.png</leftImage>
     <logoImage>images/ACCM_logo.png</logoImage>
@@ -37,11 +35,17 @@
                         <distributionFile>
                             <origin>../README.md</origin>
                         </distributionFile>
-                        <distributionFile>
-                            <origin>../BuildCaelus.py</origin>
-                        </distributionFile>
                         <distributionDirectory>
                             <origin>../lib</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>../scons_notes.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../SConstruct</origin>
+                        </distributionFile>
+                        <distributionDirectory>
+                            <origin>../site_scons</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
@@ -77,6 +81,15 @@
                         <distributionDirectory>
                             <origin>../tutorials/compressible</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/combustion</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>../tutorials/CleanTutorials.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../tutorials/RunTutorials.py</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -86,24 +99,19 @@
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <allowWildcards>1</allowWildcards>
                             <origin>../external/metis-5.1.0</origin>
-                            <onPackingFilterList>
-                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
-                            </onPackingFilterList>
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/scons-local-2.3.4</origin>
                         </distributionDirectory>
                         <distributionDirectory>
-                            <allowWildcards>1</allowWildcards>
                             <origin>../external/scotch-6.0.4</origin>
-                            <onPackingFilterList>
-                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
-                            </onPackingFilterList>
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/swak</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/cfmesh</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
@@ -134,37 +142,16 @@
                     <platforms>linux-x64</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <origin>../platforms/linux64SystemDPOpt</origin>
+                            <origin>../platforms/linux64g++DPOpt</origin>
                         </distributionDirectory>
                     </distributionFileList>
-                </folder>
-                <folder>
-                    <description>metislib</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/metis-5.1.0/lib</destination>
-                    <name>metislib</name>
-                    <platforms>linux-x64</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <origin>../external/metis-5.1.0/lib/libmetis.so</origin>
-                        </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>scotchlib</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-6.0.4/lib</destination>
-                    <name>scotchlib</name>
-                    <platforms>linux-x64</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <origin>../external/scotch-6.0.4/lib/libscotch.so</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>../external/scotch-6.0.4/lib/libscotcherr.so</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>../external/scotch-6.0.4/lib/libscotcherrexit.so</origin>
-                        </distributionFile>
-                    </distributionFileList>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>linux-x64</value>
+                        </compareText>
+                    </shouldPackRuleList>
                 </folder>
             </folderList>
             <shouldPackRuleList>
@@ -229,55 +216,32 @@ COMPILER_ARCH = '64'
 BUILD_TYPE = 'Opt'
 INT_TYPE = '32'
 FLEXXX = 'flex'
+OMP='True'
 
 # Linux setup
+COMPILER = 'g++'
 PROJECT_DIR = "${installdir}"
 
 #MPI_BIN = '${mpibinpath}'
-#MPI_INC = '${mpiincpath}'
-#MPI_LIB = '${mpilibpath}'
+#MPI_INC_PATH = '${mpiincpath}'
+#MPI_LIB_PATH = '${mpilibpath}'
 #MPI_LIB_NAME = '${mpilibname}'
 #SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-6.0.4'
 #METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
-COLOUR_BUILD = '${colourbuildlin}'</text>
-            <ruleList>
-                <isFalse>
-                    <value>${mpi}</value>
-                </isFalse>
-                <platformTest>
-                    <type>linux</type>
-                </platformTest>
-            </ruleList>
+</text>
         </writeFile>
         <writeFile>
-            <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/conf.py</path>
-            <progressText>Writing Caelus Configuration file</progressText>
-            <text>PROJECT_NAME = '${project.shortName}'
-PROJECT_VER = '${project.version}'
-PRECISION_OPTION = 'DP'
+            <path>${installdir}/${product_shortName}-${product_version}/build_config.py</path>
+            <progressText>Writing Caelus Build Configuration file</progressText>
+            <text>PRECISION_OPTION = 'DP'
 COMPILER_ARCH = '64'
 BUILD_TYPE = 'Opt'
 INT_TYPE = '32'
 FLEXXX = 'flex'
 
-# Linux setup
-PROJECT_DIR = "${installdir}"
-
-MPI_BIN = "${mpibinpath}"
-MPI_INC = "${mpiincpath}"
-MPI_LIB = "${mpilibpath}"
-MPI_LIB_NAME = "${mpilibname}"
-#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-6.0.4'
-#METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
-COLOUR_BUILD = '${colourbuildlin}'</text>
-            <ruleList>
-                <isTrue>
-                    <value>${mpi}</value>
-                </isTrue>
-                <platformTest>
-                    <type>linux</type>
-                </platformTest>
-            </ruleList>
+OMP = 'False'
+CXX = 'clang++'
+</text>
         </writeFile>
         <writeFile>
             <path>${installdir}/${product_shortName}-${product_version}/lib/python2.6/Caelus/dummy.py</path>
@@ -295,6 +259,11 @@ from Caelus.write_env import *
             <name>PYTHONPATH</name>
             <scope>user</scope>
             <value>${installdir}/${product_shortName}-${product_version}/lib/python2.6:$PYTHONPATH</value>
+        </addEnvironmentVariable>
+        <addEnvironmentVariable>
+            <name>SCONSFLAGS</name>
+            <scope>user</scope>
+            <value>--site-dir=${installdir}/${product_shortName}-${product_version}/site_scons</value>
         </addEnvironmentVariable>
         <addDirectoryToPath>
             <insertAt>end</insertAt>
@@ -358,9 +327,27 @@ from Caelus.write_env import *
                 </deleteEnvironmentVariable>
             </elseActionList>
         </if>
+        <deleteEnvironmentVariable>
+            <name>SCONSFLAGS</name>
+            <scope>user</scope>
+        </deleteEnvironmentVariable>
+    </preUninstallationActionList>
+    <postUninstallationActionList>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/src</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/.build</path>
+        </deleteFile>
         <deleteFile>
             <path>${installdir}/${product_shortName}-${product_version}/etc</path>
         </deleteFile>
+        <removeDirectoryFromPath>
+            <path>${installdir}/${product_shortName}-${product_version}/external/scons-local-2.3.4</path>
+        </removeDirectoryFromPath>
+        <removeDirectoryFromPath>
+            <path>${installdir}/${product_shortName}-${product_version}/bin</path>
+        </removeDirectoryFromPath>
         <deleteFile>
             <path>${installdir}/${product_shortName}-${product_version}/external/</path>
         </deleteFile>
@@ -371,19 +358,17 @@ from Caelus.write_env import *
             <path>${installdir}/${product_shortName}-${product_version}/platforms</path>
         </deleteFile>
         <deleteFile>
-            <path>${installdir}/${product_shortName}-${product_version}/src</path>
+            <path>${installdir}/${product_shortName}-${product_version}/build</path>
         </deleteFile>
         <deleteFile>
-            <path>${installdir}/${product_shortName}-${product_version}/.build</path>
+            <path>${installdir}/${product_shortName}-${product_version}/build_config.py</path>
         </deleteFile>
-    </preUninstallationActionList>
-    <postUninstallationActionList>
-        <removeDirectoryFromPath>
-            <path>${installdir}/${product_shortName}-${product_version}/external/scons-local-2.3.4</path>
-        </removeDirectoryFromPath>
-        <removeDirectoryFromPath>
-            <path>${installdir}/${product_shortName}-${product_version}/bin</path>
-        </removeDirectoryFromPath>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/site_scons</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir}/${product_shortName}-${product_version}/.sconsign.dblite</path>
+        </deleteFile>
     </postUninstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
     <compressionAlgorithm>lzma-ultra</compressionAlgorithm>
@@ -406,6 +391,38 @@ from Caelus.write_env import *
             <progressText>Register on Caelus website</progressText>
             <url>http://www.caelus-cml.com/registration</url>
         </launchBrowser>
+        <!-- the actual checkbutton that is shown to the user -->
+        <setInstallerVariable>
+            <name>show_license_file</name>
+            <progressText>Show license file</progressText>
+            <value>1</value>
+        </setInstallerVariable>
+
+        <!-- ... 
+ read the License file, setting show to 0 prevents it from being shown as an option -->
+        <readFile>
+            <name>license_contents</name>
+            <path>${installdir}/${product_shortName}-${product_version}/doc/gpl-3.0.txt</path>
+            <show>0</show>
+            <ruleList>
+                <isTrue>
+                    <value>${show_license_file}</value>
+                </isTrue>
+            </ruleList>
+        </readFile>
+
+        <!-- add option to show the License file -->
+        <showText>
+            <progressText>Show license file</progressText>
+            <show>0</show>
+            <text>${license_contents}</text>
+            <title>License</title>
+            <ruleList>
+                <isTrue>
+                    <value>${show_license_file}</value>
+                </isTrue>
+            </ruleList>
+        </showText>
     </finalPageActionList>
     <parameterList>
         <directoryParameter>
@@ -559,15 +576,6 @@ from Caelus.write_env import *
                 </parameterGroup>
             </parameterList>
         </booleanParameterGroup>
-        <booleanParameter>
-            <name>colourbuildlin</name>
-            <description></description>
-            <explanation>Choose if you want compiling to use colourful output</explanation>
-            <value>False</value>
-            <default>False</default>
-            <cliOptionName>colourbuild</cliOptionName>
-            <cliOptionText>Controls whether building will show colours</cliOptionText>
-        </booleanParameter>
     </parameterList>
     <platformOptionsList>
         <platformOptions>
@@ -576,10 +584,13 @@ from Caelus.write_env import *
         <platformOptions>
             <platform>linux-x64</platform>
         </platformOptions>
+        <platformOptions>
+            <platform>osx</platform>
+        </platformOptions>
     </platformOptionsList>
     <slideShowImageList>
         <slideShowImage>
-            <path>images/CAELUS_logo__version_slide.png</path>
+            <path>images/CAELUS_logo_slide.png</path>
         </slideShowImage>
         <slideShowImage>
             <path>images/ACCM_logo_slide.png</path>
@@ -604,6 +615,9 @@ from Caelus.write_env import *
         </slideShowImage>
         <slideShowImage>
             <path>images/cyclone.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/supersonic-nozzle.png</path>
         </slideShowImage>
     </slideShowImageList>
 </project>

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,7 +53,9 @@ CML::cachedRandom::cachedRandom(const label seed, const label count)
 :
     seed_(1),
     samples_(0),
-    sampleI_(-1)
+    sampleI_(-1),
+    hasGaussSample_(false),
+    gaussSample_(0)
 {
     if (seed > 1)
     {
@@ -80,8 +82,15 @@ CML::cachedRandom::cachedRandom(const cachedRandom& cr, const bool reset)
 :
     seed_(cr.seed_),
     samples_(cr.samples_),
-    sampleI_(cr.sampleI_)
+    sampleI_(cr.sampleI_),
+    hasGaussSample_(cr.hasGaussSample_),
+    gaussSample_(cr.gaussSample_)
 {
+    if (reset)
+    {
+        hasGaussSample_ = false;
+        gaussSample_ = 0;
+    }
     if (sampleI_ == -1)
     {
         WarningIn
@@ -109,13 +118,6 @@ CML::cachedRandom::~cachedRandom()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<>
-CML::label CML::cachedRandom::sample01()
-{
-    return round(scalar01());
-}
-
-
-template<>
 CML::scalar CML::cachedRandom::sample01()
 {
     return scalar01();
@@ -123,9 +125,44 @@ CML::scalar CML::cachedRandom::sample01()
 
 
 template<>
-CML::label CML::cachedRandom::position(const label& start, const label& end)
+CML::label CML::cachedRandom::sample01()
 {
-    return start + round(scalar01()*(end - start));
+    return round(scalar01());
+}
+
+
+template<>
+CML::scalar CML::cachedRandom::GaussNormal()
+{
+    if (hasGaussSample_)
+    {
+        hasGaussSample_ = false;
+        return gaussSample_;
+    }
+    else
+    {
+        scalar rsq, v1, v2;
+        do
+        {
+            v1 = 2*scalar01() - 1;
+            v2 = 2*scalar01() - 1;
+            rsq = sqr(v1) + sqr(v2);
+        } while (rsq >= 1 || rsq == 0);
+
+        scalar fac = sqrt(-2*log(rsq)/rsq);
+
+        gaussSample_ = v1*fac;
+        hasGaussSample_ = true;
+
+        return v2*fac;
+    }
+}
+
+
+template<>
+CML::label CML::cachedRandom::GaussNormal()
+{
+    return round(GaussNormal<scalar>());
 }
 
 
@@ -141,18 +178,9 @@ CML::scalar CML::cachedRandom::position
 
 
 template<>
-CML::label CML::cachedRandom::globalSample01()
+CML::label CML::cachedRandom::position(const label& start, const label& end)
 {
-    scalar value = -GREAT;
-
-    if (Pstream::master())
-    {
-        value = scalar01();
-    }
-
-    reduce(value, maxOp<scalar>());
-
-    return round(value);
+    return start + round(scalar01()*(end - start));
 }
 
 
@@ -173,22 +201,50 @@ CML::scalar CML::cachedRandom::globalSample01()
 
 
 template<>
-CML::label CML::cachedRandom::globalPosition
-(
-    const label& start,
-    const label& end
-)
+CML::label CML::cachedRandom::globalSample01()
 {
-    label value = labelMin;
+    scalar value = -GREAT;
 
     if (Pstream::master())
     {
-        value = round(scalar01()*(end - start));
+        value = scalar01();
     }
 
-    reduce(value, maxOp<label>());
+    reduce(value, maxOp<scalar>());
 
-    return start + value;
+    return round(value);
+}
+
+
+template<>
+CML::scalar CML::cachedRandom::globalGaussNormal()
+{
+    scalar value = -GREAT;
+
+    if (Pstream::master())
+    {
+        value = GaussNormal<scalar>();
+    }
+
+    reduce(value, maxOp<scalar>());
+
+    return value;
+}
+
+
+template<>
+CML::label CML::cachedRandom::globalGaussNormal()
+{
+    scalar value = -GREAT;
+
+    if (Pstream::master())
+    {
+        value = GaussNormal<scalar>();
+    }
+
+    reduce(value, maxOp<scalar>());
+
+    return round(value);
 }
 
 
@@ -212,11 +268,23 @@ CML::scalar CML::cachedRandom::globalPosition
 }
 
 
-void CML::cachedRandom::operator=(const cachedRandom& cr)
+template<>
+CML::label CML::cachedRandom::globalPosition
+(
+    const label& start,
+    const label& end
+)
 {
-    seed_ = cr.seed_;
-    samples_ = cr.samples_;
-    sampleI_ = cr.sampleI_;
+    label value = labelMin;
+
+    if (Pstream::master())
+    {
+        value = round(scalar01()*(end - start));
+    }
+
+    reduce(value, maxOp<label>());
+
+    return start + value;
 }
 
 

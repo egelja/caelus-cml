@@ -23,12 +23,6 @@ License
 #include "stabilisedConvectionScheme.hpp"
 #include "fvMesh.hpp"
 
-namespace CML
-{
-namespace fv
-{
-    makeFvConvectionScheme(stabilisedConvectionScheme)
-}
-}
+makeFvConvectionScheme(stabilisedConvectionScheme)
 
 

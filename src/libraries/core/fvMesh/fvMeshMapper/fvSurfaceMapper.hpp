@@ -129,6 +129,12 @@ public:
             return faceMap_.direct();
         }
 
+        //- Has unmapped elements
+        virtual bool hasUnmapped() const
+        {
+            return insertedObjects();
+        }
+
         //- Return direct addressing
         virtual const labelUList& directAddressing() const;
 

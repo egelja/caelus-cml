@@ -1,56 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-splitMeshEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = splitMeshEnv['LIB_SRC']
+target = 'splitMesh'
 
-splitMeshEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-splitMeshEnv.Append(CCFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
-splitMeshEnv.Prepend(CPPPATH = lib_inc)
-
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-splitMeshEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = ['dynamicMesh']
-  
-splitMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  regionSide.cpp
+sources = Split("""
+regionSide.cpp
   splitMesh.cpp
-  """)
+""")
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-binsplitMesh = splitMeshEnv.Program(target = 
-'splitMesh', source = src_files)
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = splitMeshEnv['BIN_PLATFORM_INSTALL']
-splitMeshEnv.Alias('install', install_dir)
-splitMeshEnv.Install(install_dir, binsplitMesh)
+caelus_libs = [
+'core',
+'dynamicMesh'
+]
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

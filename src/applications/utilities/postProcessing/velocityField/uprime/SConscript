@@ -1,60 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-uprimeEnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = uprimeEnv['LIB_SRC']
+target = 'uprime'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-uprimeEnv.Append(CCFLAGS = '')
+sources = Split("""
+uprime.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/postProcessing/postCalc']        
-uprimeEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'postProcessing/postCalc'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-uprimeEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if uprimeEnv['WHICH_OS'] == "windows":
-  uprimeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+post_calc = [os.path.join(env['LIB_PLATFORM_INSTALL'],'postCalc.o')]
+sources += post_calc
 
-lib_link = ['core','genericPatchFields']
-    
-uprimeEnv.Append(LIBS = lib_link)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_postCalc = [uprimeEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
-src_files_exec = Split("""  
-  uprime.cpp
-  """)
-
-src_files = src_files_postCalc + src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binuprime = uprimeEnv.Program(target = 'uprime',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = uprimeEnv['BIN_PLATFORM_INSTALL']
-uprimeEnv.Alias('install', install_dir)
-uprimeEnv.Install(install_dir, binuprime)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

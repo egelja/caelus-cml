@@ -23,6 +23,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::polyBoundaryMeshEntries, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(polyBoundaryMeshEntries, 0);
+}
+
 
 // ************************************************************************* //

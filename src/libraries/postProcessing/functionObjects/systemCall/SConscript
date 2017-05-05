@@ -1,57 +1,23 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjSysEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjSysEnv['SLASH']
+target = 'systemCall'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjSysEnv.Append(CCFLAGS = '')
+sources = Split("""
+systemCall.cpp
+systemCallFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-funcObjSysEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjSysEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core'] 
-funcObjSysEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  systemCall.cpp
-  systemCallFunctionObject.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsystemCall = funcObjSysEnv.SharedLibrary(target = 'systemCall', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjSysEnv['LIB_PLATFORM_INSTALL']
-funcObjSysEnv.Alias('install', install_dir)
-funcObjSysEnv.Install(install_dir, libsystemCall)
-
-if (funcObjSysEnv['WHICH_OS'] == "darwin"):
-
-  funcObjSysEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsystemCall.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

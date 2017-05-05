@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 6.10
+Caelus 7.04
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 FoamFile
@@ -24,7 +24,7 @@ solvers
         }
         U
         {
-                solver                  PBiCG;
+                solver                  PBiCGStab;
                 preconditioner          USGS;
                 tolerance               1e-7;
                 relTol                  0.01;
@@ -32,7 +32,7 @@ solvers
 
         "(k|omega|nuTilda)"
         {
-                solver                  PBiCG;
+                solver                  PBiCGStab;
                 preconditioner          USGS;
                 tolerance               1e-08;
                 relTol                  0;

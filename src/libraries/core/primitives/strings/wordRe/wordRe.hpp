@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -92,10 +92,10 @@ public:
         //  Note that 'REGEXP' is implicit if 'NOCASE' is specified alone.
         enum compOption
         {
-            LITERAL = 0, /*!< treat as a string literal */
-            DETECT  = 1, /*!< treat as regular expression */
-            REGEXP  = 2, /*!< detect if the string contains meta-characters */
-            NOCASE  = 4, /*!< ignore case in regular expression */
+            LITERAL = 0, //!< treat as a string literal
+            DETECT  = 1, //!< treat as regular expression
+            REGEXP  = 2, //!< detect if the string contains meta-characters
+            NOCASE  = 4, //!< ignore case in regular expression
             DETECT_NOCASE = DETECT | NOCASE,
             REGEXP_NOCASE = REGEXP | NOCASE
         };
@@ -117,22 +117,25 @@ public:
         inline wordRe(const wordRe&);
 
         //- Construct from keyType
-        inline wordRe(const keyType&, const compOption=LITERAL);
+        inline explicit wordRe(const keyType&);
+
+        //- Construct from keyType
+        inline wordRe(const keyType&, const compOption);
 
         //- Construct as copy of word
-        inline wordRe(const word&);
+        inline explicit wordRe(const word&);
 
         //- Construct as copy of character array
         //  Optionally specify how it should be treated.
-        inline wordRe(const char*, const compOption = LITERAL);
+        inline explicit wordRe(const char*, const compOption = LITERAL);
 
         //- Construct as copy of string.
         //  Optionally specify how it should be treated.
-        inline wordRe(const string&, const compOption = LITERAL);
+        inline explicit wordRe(const string&, const compOption = LITERAL);
 
         //- Construct as copy of std::string
         //  Optionally specify how it should be treated.
-        inline wordRe(const std::string&, const compOption = LITERAL);
+        inline explicit wordRe(const std::string&, const compOption = LITERAL);
 
         //- Construct from Istream
         //  Words are treated as literals, strings with an auto-test
@@ -201,26 +204,26 @@ public:
 
             //- Assign copy
             //  Always case sensitive
-            inline const wordRe& operator=(const wordRe&);
+            inline void operator=(const wordRe&);
 
             //- Copy word, never a regular expression
-            inline const wordRe& operator=(const word&);
+            inline void operator=(const word&);
 
             //- Copy keyType, auto-test for regular expression
             //  Always case sensitive
-            inline const wordRe& operator=(const keyType&);
+            inline void operator=(const keyType&);
 
             //- Copy string, auto-test for regular expression
             //  Always case sensitive
-            inline const wordRe& operator=(const string&);
+            inline void operator=(const string&);
 
             //- Copy string, auto-test for regular expression
             //  Always case sensitive
-            inline const wordRe& operator=(const std::string&);
+            inline void operator=(const std::string&);
 
             //- Copy string, auto-test for regular expression
             //  Always case sensitive
-            inline const wordRe& operator=(const char*);
+            inline void operator=(const char*);
 
 
     // IOstream operators

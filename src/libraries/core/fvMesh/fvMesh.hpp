@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -115,6 +116,12 @@ class fvMesh
         //- Cell centres
         mutable slicedVolVectorField* CPtr_;
 
+        //- Cell centres geometric
+        mutable slicedVolVectorField* CgPtr_;
+
+        //- Defect correction vector
+        mutable volVectorField* defectCorrVecsPtr_;
+
         //- Face centres
         mutable slicedSurfaceVectorField* CfPtr_;
 
@@ -146,6 +153,8 @@ class fvMesh
             void makeMagSf() const;
 
             void makeC() const;
+            void makeCg() const;
+            void makeDefectCorrVecs() const;
             void makeCf() const;
 
 
@@ -171,7 +180,7 @@ public:
     // Constructors
 
         //- Construct from IOobject
-        explicit fvMesh(const IOobject& io);
+        explicit fvMesh(const IOobject& io, const bool defectCorr = false, const scalar areaSwitch = 1e-8);
 
         //- Construct from cellShapes with boundary.
         fvMesh
@@ -184,7 +193,9 @@ public:
             const PtrList<dictionary>& boundaryDicts,
             const word& defaultBoundaryPatchName,
             const word& defaultBoundaryPatchType,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
         //- Construct from components without boundary.
@@ -196,7 +207,9 @@ public:
             const Xfer<faceList>& faces,
             const Xfer<labelList>& allOwner,
             const Xfer<labelList>& allNeighbour,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
         //- Construct without boundary from cells rather than owner/neighbour.
@@ -207,7 +220,9 @@ public:
             const Xfer<pointField>& points,
             const Xfer<faceList>& faces,
             const Xfer<cellList>& cells,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
 
@@ -304,6 +319,12 @@ public:
 
             //- Return cell centres as volVectorField
             const volVectorField& C() const;
+
+            //- Return cell centres geometric as volVectorField
+            const volVectorField& Cg() const;
+
+            //- Return defect correction vector as volVectorField
+            const volVectorField& defectCorrVecs() const;
 
             //- Return face centres as surfaceVectorField
             const surfaceVectorField& Cf() const;

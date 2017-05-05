@@ -48,53 +48,46 @@ References
 namespace CML
 {
 
-class PCG
-:
-    public lduMatrix::solver
+class PCG : public lduMatrix::solver
 {
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        PCG(const PCG&);
+    //- Disallow default bitwise copy construct
+    PCG(const PCG&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const PCG&);
-
+    //- Disallow default bitwise assignment
+    void operator=(const PCG&);
 
 public:
 
     //- Runtime type information
     TypeName("PCG");
 
-
     // Constructors
 
-        //- Construct from matrix components and solver controls
-        PCG
-        (
-            const word& fieldName,
-            const lduMatrix& matrix,
-            const FieldField<Field, scalar>& interfaceBouCoeffs,
-            const FieldField<Field, scalar>& interfaceIntCoeffs,
-            const lduInterfaceFieldPtrsList& interfaces,
-            const dictionary& solverControls
-        );
-
+    //- Construct from matrix components and solver controls
+    PCG
+    (
+        word const& fieldName,
+        lduMatrix const& matrix,
+        FieldField<Field, scalar> const& interfaceBouCoeffs,
+        FieldField<Field, scalar> const& interfaceIntCoeffs,
+        lduInterfaceFieldPtrsList const& interfaces,
+        dictionary const& solverControls
+    );
 
     //- Destructor
-    virtual ~PCG()
-    {}
-
+    virtual ~PCG() {}
 
     // Member Functions
 
-        //- Solve the matrix with this solver
-        virtual lduMatrix::solverPerformance solve
-        (
-            scalarField& x,
-            const scalarField& b,
-            const direction cmpt=0
-        ) const;
+    //- Solve the matrix with this solver
+    virtual lduMatrix::solverPerformance solve
+    (
+        scalarField& x,
+        scalarField const& b,
+        direction const cmpt=0
+    ) const;
 };
 
 

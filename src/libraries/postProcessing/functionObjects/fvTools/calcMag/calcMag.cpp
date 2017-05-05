@@ -28,7 +28,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(calcMag, 0);
+    defineTypeNameAndDebug(calcMag, 0);
 }
 
 

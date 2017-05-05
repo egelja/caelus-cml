@@ -1,58 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-wdotEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = wdotEnv['LIB_SRC']
+target = 'wdot'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-wdotEnv.Append(CCFLAGS = '')
+sources = Split("""
+wdot.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
-wdotEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-wdotEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if wdotEnv['WHICH_OS'] == "windows":
-  wdotEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields']
-     
-
-wdotEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  wdot.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binwdot = wdotEnv.Program(target = 'wdot', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = wdotEnv['BIN_PLATFORM_INSTALL']
-wdotEnv.Alias('install', install_dir)
-wdotEnv.Install(install_dir, binwdot)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

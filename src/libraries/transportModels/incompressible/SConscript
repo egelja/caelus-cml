@@ -1,63 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-inTranModelEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-inTranModelEnv.Append(CCFLAGS = '')
+target = 'incompressibleTransportModels'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude','..'] 
-inTranModelEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-inTranModelEnv.Prepend(LIBPATH = lib_link_path)
+sources = Split("""
+viscosityModels/viscosityModel/viscosityModel.cpp
+viscosityModels/viscosityModel/viscosityModelNew.cpp
+viscosityModels/Newtonian/Newtonian.cpp
+viscosityModels/powerLaw/powerLaw.cpp
+viscosityModels/CrossPowerLaw/CrossPowerLaw.cpp
+viscosityModels/BirdCarreau/BirdCarreau.cpp
+viscosityModels/HerschelBulkley/HerschelBulkley.cpp
+transportModel/transportModel.cpp
+singlePhaseTransportModel/singlePhaseTransportModel.cpp
+incompressibleTwoPhaseMixture/twoPhaseMixture.cpp
+""")
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-inTranModelEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  viscosityModels/viscosityModel/viscosityModel.cpp
-  viscosityModels/viscosityModel/viscosityModelNew.cpp
-  viscosityModels/Newtonian/Newtonian.cpp
-  viscosityModels/powerLaw/powerLaw.cpp
-  viscosityModels/CrossPowerLaw/CrossPowerLaw.cpp
-  viscosityModels/BirdCarreau/BirdCarreau.cpp
-  viscosityModels/HerschelBulkley/HerschelBulkley.cpp
-  transportModel/transportModel.cpp
-  singlePhaseTransportModel/singlePhaseTransportModel.cpp
-  incompressibleTwoPhaseMixture/twoPhaseMixture.cpp
-  """)
+caelus_inc = [
+'transportModels'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libincompressibleTransportModels = inTranModelEnv.SharedLibrary(target = 
-'incompressibleTransportModels', source = src_files)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = inTranModelEnv['LIB_PLATFORM_INSTALL']
-inTranModelEnv.Alias('install', install_dir)
-inTranModelEnv.Install(install_dir, libincompressibleTransportModels)
-
-if (inTranModelEnv['WHICH_OS'] == "darwin"):
-
-  inTranModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleTransportModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

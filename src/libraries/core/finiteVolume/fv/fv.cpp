@@ -23,6 +23,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::fv, 0);
+namespace CML
+{
+    defineTypeNameAndDebug(fv, 0);
+}
+
 
 // ************************************************************************* //

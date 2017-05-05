@@ -1,67 +1,34 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-turbCompVLESEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = turbCompVLESEnv['LIB_SRC']
+target = 'compressibleVLESModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-turbCompVLESEnv.Append(CCFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', 
-src + '/turbulenceModels',
-src + '/thermophysicalModels/basic/lnInclude',   
-src + '/thermophysicalModels/basicSolidThermo/lnInclude'
-]
-turbCompVLESEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-turbCompVLESEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','specie','compressibleTurbulenceModel',
-'basicThermophysicalModels'] 
-turbCompVLESEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  VLESModel/VLESModel.cpp
-  laminar/laminar.cpp
-  realizableKE/realizableKE.cpp
-  kOmegaSST/kOmegaSST.cpp
-  coherentStructureModel/coherentStructureModel.cpp
-  SpalartAllmaras/SpalartAllmaras.cpp
+sources = Split("""
+VLESModel/VLESModel.cpp
+laminar/laminar.cpp
+realizableKE/realizableKE.cpp
+kOmegaSST/kOmegaSST.cpp
+kOmegaSSTCSModel/kOmegaSSTCSModel.cpp
+SpalartAllmaras/SpalartAllmaras.cpp
 """)
- 
-#===============================================================================
-# Build this library
-#===============================================================================
-libcompressibleVLESModels = turbCompVLESEnv.SharedLibrary(target = 
-'compressibleVLESModels', source = src_files)
 
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = turbCompVLESEnv['LIB_PLATFORM_INSTALL']
-turbCompVLESEnv.Alias('install', install_dir)
-turbCompVLESEnv.Install(install_dir, libcompressibleVLESModels)
+caelus_inc = [
+'turbulenceModels',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/basicSolidThermo/lnInclude'
+]
 
-if (turbCompVLESEnv['WHICH_OS'] == "darwin"):
+caelus_libs = [
+'core',
+'specie',
+'basicThermophysicalModels',
+'compressibleTurbulenceModel'
+]
 
-  turbCompVLESEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcompressibleVLESModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

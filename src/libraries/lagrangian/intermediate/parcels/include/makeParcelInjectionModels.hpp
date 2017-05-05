@@ -35,6 +35,7 @@ License
 #include "NoInjection.hpp"
 #include "PatchInjection.hpp"
 #include "PatchFlowRateInjection.hpp"
+#include "TranCellZoneInjection.hpp"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,7 +53,8 @@ License
     makeInjectionModelType(ManualInjection, CloudType);                       \
     makeInjectionModelType(NoInjection, CloudType);                           \
     makeInjectionModelType(PatchInjection, CloudType);                        \
-    makeInjectionModelType(PatchFlowRateInjection, CloudType);
+    makeInjectionModelType(PatchFlowRateInjection, CloudType);                \
+    makeInjectionModelType(TranCellZoneInjection, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

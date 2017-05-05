@@ -28,9 +28,9 @@ CML::label CML::particle::particleCount_ = 0;
 
 const CML::scalar CML::particle::trackingCorrectionTol = 1e-5;
 
-const CML::scalar CML::particle::lambdaDistanceToleranceCoeff = 1e3*SMALL;
+const CML::scalar CML::particle::lambdaDistanceToleranceCoeff = 1e-12; //1e3*SMALL;
 
-const CML::scalar CML::particle::minStepFractionTol = 1e5*SMALL;
+const CML::scalar CML::particle::minStepFractionTol = 1e-10; //1e5*SMALL;
 
 namespace CML
 {

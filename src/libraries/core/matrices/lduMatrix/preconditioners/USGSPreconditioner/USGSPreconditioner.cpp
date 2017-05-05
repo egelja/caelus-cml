@@ -48,7 +48,7 @@ void CML::USGSPreconditioner::approximateInverse
     lduMatrix const& matrix
 )
 {
-    scalarField const D = rD;
+    scalarField const D(matrix.diag());
     scalar* RESTRICT rDPtr = rD.begin();
     scalar const* RESTRICT DPtr = D.begin();
 
@@ -62,7 +62,8 @@ void CML::USGSPreconditioner::approximateInverse
 
     for (register label face=0; face<nFaces; face++)
     {
-        rDPtr[uPtr[face]] -= upperPtr[face]*lowerPtr[face]/DPtr[lPtr[face]];;
+        rDPtr[uPtr[face]] -=
+            upperPtr[face]*lowerPtr[face]/(DPtr[lPtr[face]]+SMALL);
     }
  
     // Calculate the reciprocal of the preconditioned diagonal
@@ -70,7 +71,7 @@ void CML::USGSPreconditioner::approximateInverse
 
     for (register label cell=0; cell<nCells; cell++)
     {
-        rDPtr[cell] = 1.0/rDPtr[cell];
+        rDPtr[cell] = scalar(1.0)/rDPtr[cell];
     }
 }
 

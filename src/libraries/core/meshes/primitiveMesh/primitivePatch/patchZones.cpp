@@ -24,7 +24,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::patchZones, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(patchZones, 0);
+}
 
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //

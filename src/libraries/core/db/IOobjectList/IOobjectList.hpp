@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -34,6 +34,7 @@ SourceFiles
 
 #include "HashPtrTable.hpp"
 #include "IOobject.hpp"
+#include "wordReList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,7 +67,10 @@ public:
         (
             const objectRegistry& db,
             const fileName& instance,
-            const fileName& local = ""
+            const fileName& local = "",
+            IOobject::readOption r = IOobject::MUST_READ,
+            IOobject::writeOption w = IOobject::NO_WRITE,
+            bool registerObject = true
         );
 
         //- Construct as copy
@@ -87,6 +91,12 @@ public:
 
         //- Lookup a given name and return IOobject ptr if found else NULL
         IOobject* lookup(const word& name) const;
+
+        //- Return the list for all IOobects whose name matches name
+        IOobjectList lookup(const wordRe& name) const;
+
+        //- Return the list for all IOobects whose name matches name
+        IOobjectList lookup(const wordReList& patterns) const;
 
         //- Return the list for all IOobjects of a given class
         IOobjectList lookupClass(const word& className) const;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef trimModel_H
-#define trimModel_H
+#ifndef trimModel_HPP
+#define trimModel_HPP
 
 #include "rotorDiskSource.hpp"
 #include "dictionary.hpp"

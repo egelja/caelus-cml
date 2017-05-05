@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 #   include "setRootCase.hpp"
 #   include "createTime.hpp"
 #   include "createMesh.hpp"
+#   include "createTimeControls.hpp"
 #   include "createFields.hpp"
 #   include "createNumericFlux.hpp"
 

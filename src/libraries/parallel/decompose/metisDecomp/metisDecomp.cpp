@@ -301,6 +301,7 @@ CML::labelList CML::metisDecomp::decompose
         mesh,
         identity(mesh.nCells()),
         mesh.nCells(),
+        true,
         cellCells
     );
 
@@ -336,7 +337,7 @@ CML::labelList CML::metisDecomp::decompose
     //   xadj(celli) : start of information in adjncy for celli
 
     CompactListList<label> cellCells;
-    calcCellCells(mesh, agglom, agglomPoints.size(), cellCells);
+    calcCellCells(mesh, agglom, agglomPoints.size(), true, cellCells);
 
     // Decompose using default weights
     labelList finalDecomp;

@@ -1,71 +1,42 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjForceEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjForceEnv['SLASH']
+target = 'forces'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjForceEnv.Append(CCFLAGS = '')
+sources = Split("""
+forces/forces.cpp
+forces/forcesFunctionObject.cpp
+forceCoeffs/forceCoeffs.cpp
+forceCoeffs/forceCoeffsFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-funcObjForceEnv['LIB_SRC'] + '/sampling/lnInclude',
-funcObjForceEnv['LIB_SRC'] + '/thermophysicalModels/basic/lnInclude',
-funcObjForceEnv['LIB_SRC'] + '/turbulenceModels/LES/LESdeltas/lnInclude',
-funcObjForceEnv['LIB_SRC'] + '/transportModels',
-funcObjForceEnv['LIB_SRC'] + '/turbulenceModels'
+caelus_inc = [
+'sampling/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'turbulenceModels'
 ]
-funcObjForceEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjForceEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core', 'specie',
-'incompressibleTransportModels','incompressibleRASModels',
-'incompressibleLESModels','incompressibleVLESModels',
-'basicThermophysicalModels','compressibleRASModels',
-'compressibleLESModels','compressibleVLESModels',
-'incompressibleTurbulenceModel','compressibleTurbulenceModel'
+caelus_libs = [
+'core',
+'specie',
+'incompressibleTransportModels',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'basicThermophysicalModels',
+'compressibleRASModels',
+'compressibleLESModels',
+'compressibleVLESModels',
+'incompressibleTurbulenceModel',
+'compressibleTurbulenceModel'
 ]
-funcObjForceEnv.Append(LIBS = lib_link)
- 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  forces/forces.cpp
-  forces/forcesFunctionObject.cpp
-  forceCoeffs/forceCoeffs.cpp
-  forceCoeffs/forceCoeffsFunctionObject.cpp
-  """) 
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libforces = funcObjForceEnv.SharedLibrary(target = 'forces', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjForceEnv['LIB_PLATFORM_INSTALL']
-funcObjForceEnv.Alias('install', install_dir)
-funcObjForceEnv.Install(install_dir, libforces)
-
-if (funcObjForceEnv['WHICH_OS'] == "darwin"):
-
-  funcObjForceEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libforces.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

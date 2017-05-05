@@ -1,0 +1,52 @@
+/*---------------------------------------------------------------------------*\
+ Caelus darrin                                 
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 337.5;
+
+boundaryField
+{
+    body
+    {
+        type            omegaWallFunction;
+        value           uniform 337.5;
+    }
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 337.5;
+    }
+    inlet-walls
+    {
+        type            omegaWallFunction;
+        value           uniform 337.5;
+    }
+    overflow
+    {
+        type            zeroGradient;
+    }
+    underflow
+    {
+        type            zeroGradient;
+    }
+    vortexfinder
+    {
+        type            omegaWallFunction;
+        value           uniform 337.5;
+    }
+}
+
+
+// ************************************************************************* //

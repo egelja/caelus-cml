@@ -23,12 +23,6 @@ License
 #include "corrGaussGrad.hpp"
 
 
-namespace CML
-{
-namespace fv
-{
-    makeFvGradScheme(CorrGaussGrad)
-}
-}
+makeFvGradScheme(CorrGaussGrad)
 
 

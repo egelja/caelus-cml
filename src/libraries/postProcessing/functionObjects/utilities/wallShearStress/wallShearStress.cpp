@@ -30,7 +30,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(wallShearStress, 0);
+    defineTypeNameAndDebug(wallShearStress, 0);
 }
 
 

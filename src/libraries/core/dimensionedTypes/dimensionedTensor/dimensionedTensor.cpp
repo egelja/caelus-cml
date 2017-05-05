@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -92,7 +92,7 @@ dimensionedTensor cof(const dimensionedTensor& dt)
     return dimensionedTensor
     (
         "cof("+dt.name()+')',
-        dt.dimensions(),
+        pow(dt.dimensions(), tensor::dim - 1),
         cof(dt.value())
     );
 }
@@ -103,7 +103,7 @@ dimensionedTensor inv(const dimensionedTensor& dt)
     return dimensionedTensor
     (
         "inv("+dt.name()+')',
-        dimless/dt.dimensions(),
+        inv(dt.dimensions()),
         inv(dt.value())
     );
 }

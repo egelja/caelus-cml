@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,28 +19,38 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline Vector<Cmpt>::Vector()
+inline CML::Vector<Cmpt>::Vector()
+{}
+
+
+template<class Cmpt>
+inline CML::Vector<Cmpt>::Vector(const CML::zero)
+:
+    Vector::vsType(Zero)
 {}
 
 
 template<class Cmpt>
 template<class Cmpt2>
-inline Vector<Cmpt>::Vector(const VectorSpace<Vector<Cmpt2>, Cmpt2, 3>& vs)
+inline CML::Vector<Cmpt>::Vector
+(
+    const VectorSpace<Vector<Cmpt2>, Cmpt2, 3>& vs
+)
 :
-    VectorSpace<Vector<Cmpt>, Cmpt, 3>(vs)
+    Vector::vsType(vs)
 {}
 
 
 template<class Cmpt>
-inline Vector<Cmpt>::Vector(const Cmpt& vx, const Cmpt& vy, const Cmpt& vz)
+inline CML::Vector<Cmpt>::Vector
+(
+    const Cmpt& vx,
+    const Cmpt& vy,
+    const Cmpt& vz
+)
 {
     this->v_[X] = vx;
     this->v_[Y] = vy;
@@ -49,47 +59,47 @@ inline Vector<Cmpt>::Vector(const Cmpt& vx, const Cmpt& vy, const Cmpt& vz)
 
 
 template<class Cmpt>
-inline Vector<Cmpt>::Vector(Istream& is)
+inline CML::Vector<Cmpt>::Vector(Istream& is)
 :
-    VectorSpace<Vector<Cmpt>, Cmpt, 3>(is)
+    Vector::vsType(is)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Cmpt&  Vector<Cmpt>::x() const
+inline const Cmpt& CML::Vector<Cmpt>::x() const
 {
     return this->v_[X];
 }
 
 template<class Cmpt>
-inline const Cmpt&  Vector<Cmpt>::y() const
+inline const Cmpt& CML::Vector<Cmpt>::y() const
 {
     return this->v_[Y];
 }
 
 template<class Cmpt>
-inline const Cmpt&  Vector<Cmpt>::z() const
+inline const Cmpt& CML::Vector<Cmpt>::z() const
 {
     return this->v_[Z];
 }
 
 
 template<class Cmpt>
-inline Cmpt& Vector<Cmpt>::x()
+inline Cmpt& CML::Vector<Cmpt>::x()
 {
     return this->v_[X];
 }
 
 template<class Cmpt>
-inline Cmpt& Vector<Cmpt>::y()
+inline Cmpt& CML::Vector<Cmpt>::y()
 {
     return this->v_[Y];
 }
 
 template<class Cmpt>
-inline Cmpt& Vector<Cmpt>::z()
+inline Cmpt& CML::Vector<Cmpt>::z()
 {
     return this->v_[Z];
 }
@@ -98,7 +108,7 @@ inline Cmpt& Vector<Cmpt>::z()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Vector<Cmpt>& Vector<Cmpt>::centre
+inline const CML::Vector<Cmpt>& CML::Vector<Cmpt>::centre
 (
     const CML::List<Vector<Cmpt> >&
 )const
@@ -108,6 +118,23 @@ inline const Vector<Cmpt>& Vector<Cmpt>::centre
 
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Dummy innerProduct for scalar to allow the construction of vtables for
+//  virtual member functions involving the inner-products of fields
+//  for which a "NotImplemented" specialization for scalar is provided.
+template<class Cmpt>
+class innerProduct<Vector<Cmpt>, scalar>
+{
+public:
+
+    typedef scalar type;
+};
+
 
 template<class Cmpt>
 inline typename innerProduct<Vector<Cmpt>, Vector<Cmpt> >::type

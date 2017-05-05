@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,18 +21,13 @@ License
 
 #include "symmTensor.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const symmTensor::typeName = "symmTensor";
+const char* const CML::symmTensor::vsType::typeName = "symmTensor";
 
 template<>
-const char* symmTensor::componentNames[] =
+const char* const CML::symmTensor::vsType::componentNames[] =
 {
     "xx", "xy", "xz",
           "yy", "yz",
@@ -40,48 +35,48 @@ const char* symmTensor::componentNames[] =
 };
 
 template<>
-const symmTensor symmTensor::zero
+const CML::symmTensor CML::symmTensor::vsType::vsType::zero
 (
-    0, 0, 0,
-       0, 0,
-          0
+    symmTensor::uniform(0)
 );
 
 template<>
-const symmTensor symmTensor::one
+const CML::symmTensor CML::symmTensor::vsType::one
 (
-    1, 1, 1,
-       1, 1,
-          1
+    symmTensor::uniform(1)
 );
 
 template<>
-const symmTensor symmTensor::max
+const CML::symmTensor CML::symmTensor::vsType::max
 (
-    VGREAT, VGREAT, VGREAT,
-            VGREAT, VGREAT,
-                    VGREAT
+    symmTensor::uniform(VGREAT)
 );
 
 template<>
-const symmTensor symmTensor::min
+const CML::symmTensor CML::symmTensor::vsType::min
 (
-    -VGREAT, -VGREAT, -VGREAT,
-             -VGREAT, -VGREAT,
-                      -VGREAT
+    symmTensor::uniform(-VGREAT)
 );
 
 template<>
-const symmTensor symmTensor::I
+const CML::symmTensor CML::symmTensor::vsType::rootMax
+(
+    symmTensor::uniform(ROOTVGREAT)
+);
+
+template<>
+const CML::symmTensor CML::symmTensor::vsType::rootMin
+(
+    symmTensor::uniform(-ROOTVGREAT)
+);
+
+template<>
+const CML::symmTensor CML::symmTensor::I
 (
     1, 0, 0,
        1, 0,
           1
 );
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
 
 // ************************************************************************* //

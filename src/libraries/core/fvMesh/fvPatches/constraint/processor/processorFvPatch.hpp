@@ -138,6 +138,9 @@ public:
         //- Return delta (P to N) vectors across coupled patch
         virtual tmp<vectorField> delta() const;
 
+        //- Return delta (P to N) vectors across coupled patch
+        virtual tmp<vectorField> deltaFull() const;
+
 
         // Interface transfer functions
 

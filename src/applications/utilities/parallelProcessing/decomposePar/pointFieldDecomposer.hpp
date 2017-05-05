@@ -59,6 +59,9 @@ public:
 
                 labelList directAddressing_;
 
+                //- Does map contain any unmapped values
+                bool hasUnmapped_;
+
         public:
 
             // Constructors
@@ -82,6 +85,11 @@ public:
                 bool direct() const
                 {
                     return true;
+                }
+
+                bool hasUnmapped() const
+                {
+                    return hasUnmapped_;
                 }
 
                 const labelUList& directAddressing() const
@@ -218,7 +226,8 @@ CML::pointFieldDecomposer::decomposeField
                 procMesh_().time().timeName(),
                 procMesh_(),
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             procMesh_,
             field.dimensions(),
@@ -242,9 +251,7 @@ void CML::pointFieldDecomposer::decomposeFields
 }
 
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
 // ************************************************************************* //

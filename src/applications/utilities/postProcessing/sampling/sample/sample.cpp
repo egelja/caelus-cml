@@ -87,43 +87,94 @@ Notes
 using namespace CML;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Main program:
 
 int main(int argc, char *argv[])
 {
     timeSelector::addOptions();
     #include "addRegionOption.hpp"
-    argList::addOption
-    (
-        "dict",
-        "word",
-        "name of dictionary to provide sample information"
-    );
-
+    #include "addDictOption.hpp"
     #include "setRootCase.hpp"
     #include "createTime.hpp"
     instantList timeDirs = timeSelector::select0(runTime, args);
     #include "createNamedMesh.hpp"
 
-    word sampleDict(args.optionLookupOrDefault<word>("dict", "sampleDict"));
+    const word dictName("sampleDict");
 
-    IOsampledSets sSets
-    (
-        sampledSets::typeName,
-        mesh,
-        sampleDict,
-        IOobject::MUST_READ_IF_MODIFIED,
-        true
-    );
+    autoPtr<IOsampledSets> sSetsPtr;
+    autoPtr<IOsampledSurfaces> sSurfsPtr;
 
-    IOsampledSurfaces sSurfs
-    (
-        sampledSurfaces::typeName,
-        mesh,
-        sampleDict,
-        IOobject::MUST_READ_IF_MODIFIED,
-        true
-    );
+    if (args.optionFound("dict"))
+    {
+        // Construct from fileName
+
+        fileName dictPath = args["dict"];
+        if (isDir(dictPath))
+        {
+            dictPath = dictPath / dictName;
+        }
+
+        sSetsPtr.reset
+        (
+            new IOsampledSets
+            (
+                sampledSets::typeName,
+                mesh,
+                dictPath,
+                IOobject::MUST_READ_IF_MODIFIED,
+                true
+            )
+        );
+
+        // Note: both IOsampledSets and IOsampledSurfaces read the
+        //       same dictionary. Unregister one to make sure no duplicates
+        //       trying to register
+        sSetsPtr().checkOut();
+
+        sSurfsPtr.reset
+        (
+            new IOsampledSurfaces
+            (
+                sampledSurfaces::typeName,
+                mesh,
+                dictPath,
+                IOobject::MUST_READ_IF_MODIFIED,
+                true
+            )
+        );
+    }
+    else
+    {
+        // Construct from name in system() directory
+
+        sSetsPtr.reset
+        (
+            new IOsampledSets
+            (
+                sampledSets::typeName,
+                mesh,
+                dictName,
+                IOobject::MUST_READ_IF_MODIFIED,
+                true
+            )
+        );
+
+        sSetsPtr().checkOut();
+
+        sSurfsPtr.reset
+        (
+            new IOsampledSurfaces
+            (
+                sampledSurfaces::typeName,
+                mesh,
+                dictName,
+                IOobject::MUST_READ_IF_MODIFIED,
+                true
+            )
+        );
+    }
+
+    IOsampledSets& sSets = sSetsPtr();
+    IOsampledSurfaces& sSurfs = sSurfsPtr();
 
     forAll(timeDirs, timeI)
     {

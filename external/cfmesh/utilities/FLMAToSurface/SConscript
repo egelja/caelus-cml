@@ -1,0 +1,23 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'FLMAToSurface'
+
+sources = Split("""
+FLMAToSurface.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'meshLibrary'
+]
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

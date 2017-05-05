@@ -663,6 +663,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::tgtMap() const
 #include "AMIMethod.hpp"
 #include "meshTools.hpp"
 #include "mapDistribute.hpp"
+#include "flipOp.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -1646,27 +1647,33 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
         // send data back to originating procs. Note that contributions
         // from different processors get added (ListAppendEqOp)
 
-        mapDistribute::distribute
+        mapDistributeBase::distribute
         (
             Pstream::nonBlocking,
             List<labelPair>(),
             tgtPatch.size(),
             map.constructMap(),
+            false,                      // has flip
             map.subMap(),
+            false,                      // has flip
             tgtAddress_,
             ListAppendEqOp<label>(),
+            flipOp(),                   // flip operation
             labelList()
         );
 
-        mapDistribute::distribute
+        mapDistributeBase::distribute
         (
             Pstream::nonBlocking,
             List<labelPair>(),
             tgtPatch.size(),
             map.constructMap(),
+            false,
             map.subMap(),
+            false,
             tgtWeights_,
             ListAppendEqOp<scalar>(),
+            flipOp(),
             scalarList()
         );
 

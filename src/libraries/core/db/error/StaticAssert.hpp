@@ -65,17 +65,18 @@ class StaticAssertionTest {};
 #define StaticAssertMacro1(X,Y) StaticAssertMacro2(X,Y)
 #define StaticAssertMacro2(X,Y) X##Y
 
-// external use:
-// ~~~~~~~~~~~~~
-/**
- * \def StaticAssert(Test)
- * Assert that some test is true at compile-time
-*/
-#define StaticAssert(Test)                                                   \
-    typedef ::CML::StaticAssertionTest                                      \
-    <                                                                        \
-        sizeof( ::CML::StaticAssertionFailed< ((Test) ? true : false) > )   \
-    > StaticAssertMacro(StaticAssertionTest, __LINE__)
+#ifdef __GNUC__
+    #define StaticAssertUnusedTypedef __attribute__((unused))
+#else
+    #define StaticAssertUnusedTypedef
+#endif
+
+//- Assert that some test is true at compile-time
+#define StaticAssert(Test)                                                     \
+    typedef ::CML::StaticAssertionTest                                        \
+    <                                                                          \
+        sizeof( ::CML::StaticAssertionFailed<((Test) ? true : false)>)        \
+    > StaticAssertMacro(StaticAssertionTest, __LINE__) StaticAssertUnusedTypedef
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

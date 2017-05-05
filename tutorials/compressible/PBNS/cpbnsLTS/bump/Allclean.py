@@ -1,6 +1,8 @@
 #!/usr/bin/python
-# Caelus 6.10
 # ---------------------------------------------------------------------------
+# Caelus 7.04
+# Web:   www.caelus-cml.com
+# 
 
 # Importing the required modules for Python
 import subprocess
@@ -11,9 +13,7 @@ import shutil
 import Caelus
 
 # Starting up the meshing and solving
-print "**********************************"
-print "Cleaning bump tutorial            "
-print "**********************************"
+print "Cleaning tutorial: bump"
 
 # Cleaning up the case
 os.system('caelus-cleanCase.py')

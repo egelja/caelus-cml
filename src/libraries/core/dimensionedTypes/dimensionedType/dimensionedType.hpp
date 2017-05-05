@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 
 -------------------------------------------------------------------------------
 License
@@ -183,7 +183,7 @@ public:
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
-template<class Type, int r>
+template<class Type, CML::direction r>
 dimensioned<typename powProduct<Type, r>::type>
 pow
 (
@@ -261,7 +261,7 @@ template<class Type1, class Type2>                                            \
 dimensioned<typename product<Type1, Type2>::type>                             \
 operator op(const dimensioned<Type1>&, const dimensioned<Type2>&);            \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, CML::direction nCmpt>            \
 dimensioned<typename product<Type, Form>::type>                               \
 operator op                                                                   \
 (                                                                             \
@@ -269,7 +269,7 @@ operator op                                                                   \
     const VectorSpace<Form,Cmpt,nCmpt>&                                       \
 );                                                                            \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, CML::direction nCmpt>            \
 dimensioned<typename product<Form, Type>::type>                               \
 operator op                                                                   \
 (                                                                             \
@@ -570,7 +570,7 @@ void dimensioned<Type>::operator/=
 
 // * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
 
-template<class Type, int r>
+template<class Type, CML::direction r>
 dimensioned<typename powProduct<Type, r>::type>
 pow(const dimensioned<Type>& dt, typename powProduct<Type, r>::type)
 {
@@ -859,7 +859,7 @@ operator op(const dimensioned<Type1>& dt1, const dimensioned<Type2>& dt2)     \
     );                                                                        \
 }                                                                             \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, CML::direction nCmpt>            \
 dimensioned<typename product<Type, Form>::type>                               \
 operator op                                                                   \
 (                                                                             \
@@ -875,7 +875,7 @@ operator op                                                                   \
     );                                                                        \
 }                                                                             \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, CML::direction nCmpt>            \
 dimensioned<typename product<Form, Type>::type>                               \
 operator op                                                                   \
 (                                                                             \

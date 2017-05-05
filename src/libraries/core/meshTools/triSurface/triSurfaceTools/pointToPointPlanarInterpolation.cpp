@@ -31,7 +31,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::pointToPointPlanarInterpolation, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(pointToPointPlanarInterpolation, 0);
+}
+
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

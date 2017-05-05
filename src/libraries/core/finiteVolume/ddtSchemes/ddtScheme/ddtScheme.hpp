@@ -263,12 +263,16 @@ public:
 // Add the patch constructor functions to the hash tables
 
 #define makeFvDdtTypeScheme(SS, Type)                                          \
+    defineNamedTemplateTypeNameAndDebug(CML::fv::SS<CML::Type>, 0);            \
                                                                                \
-defineNamedTemplateTypeNameAndDebug(SS<Type>, 0);                              \
-                                                                               \
-ddtScheme<Type>::addIstreamConstructorToTable<SS<Type> >                       \
-    add##SS##Type##IstreamConstructorToTable_;
-
+    namespace CML                                                              \
+    {                                                                          \
+        namespace fv                                                           \
+        {                                                                      \
+            ddtScheme<Type>::addIstreamConstructorToTable<SS<Type> >           \
+                add##SS##Type##IstreamConstructorToTable_;                     \
+        }                                                                      \
+    }
 
 #define makeFvDdtScheme(SS)                                                    \
                                                                                \
@@ -278,6 +282,11 @@ makeFvDdtTypeScheme(SS, sphericalTensor)                                       \
 makeFvDdtTypeScheme(SS, symmTensor)                                            \
 makeFvDdtTypeScheme(SS, tensor)                                                \
                                                                                \
+namespace CML                                                                  \
+{                                                                              \
+namespace fv                                                                   \
+{                                                                              \
+                                                                               \
 template<>                                                                     \
 tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
 (                                                                              \
@@ -324,6 +333,9 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 {                                                                              \
     notImplemented(#SS"<scalar>::fvcDdtPhiCorr");                              \
     return surfaceScalarField::null();                                         \
+}                                                                              \
+                                                                               \
+}                                                                              \
 }
 
 

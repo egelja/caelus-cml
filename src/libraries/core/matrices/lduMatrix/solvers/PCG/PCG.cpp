@@ -33,14 +33,13 @@ namespace CML
 
 CML::PCG::PCG
 (
-    const word& fieldName,
-    const lduMatrix& matrix,
-    const FieldField<Field, scalar>& interfaceBouCoeffs,
-    const FieldField<Field, scalar>& interfaceIntCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const dictionary& solverControls
-)
-:
+    word const& fieldName,
+    lduMatrix const& matrix,
+    FieldField<Field, scalar> const& interfaceBouCoeffs,
+    FieldField<Field, scalar> const& interfaceIntCoeffs,
+    lduInterfaceFieldPtrsList const& interfaces,
+    dictionary const& solverControls
+) :
     lduMatrix::solver
     (
         fieldName,
@@ -55,8 +54,8 @@ CML::PCG::PCG
 CML::lduMatrix::solverPerformance CML::PCG::solve
 (
     scalarField& x,
-    const scalarField& b,
-    const direction cmpt
+    scalarField const& b,
+    direction const cmpt
 ) const
 {
     // Setup class containing solver performance data

@@ -1,74 +1,57 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-execFlowFOEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = execFlowFOEnv['LIB_SRC']
+target = 'execFlowFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-execFlowFOEnv.Append(CCFLAGS = '')
+sources = Split("""
+execFlowFunctionObjects.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',  
-src + '/turbulenceModels/incompressible/RAS/lnInclude',  
-src + '/turbulenceModels/incompressible/LES/lnInclude',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',  
-src + '/turbulenceModels/compressible/RAS/lnInclude', 
-src + '/turbulenceModels/compressible/LES/lnInclude',     
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/fvOptions/lnInclude',
-src + '/sampling/lnInclude'
-]    
-execFlowFOEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'transportModels',
+'transportModels/incompressible/lnInclude',
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',  
+'turbulenceModels/incompressible/RAS/lnInclude',  
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',  
+'turbulenceModels/compressible/RAS/lnInclude', 
+'turbulenceModels/compressible/LES/lnInclude',     
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-execFlowFOEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'incompressibleTransportModels',
+'incompressibleTurbulenceModel',
+'compressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'basicThermophysicalModels',
+'specie',
+'compressibleRASModels',
+'compressibleLESModels',
+'genericPatchFields',
+'fvOptions',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if execFlowFOEnv['WHICH_OS'] == "windows":
-  execFlowFOEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['core','incompressibleTransportModels',
-'incompressibleTurbulenceModel','compressibleTurbulenceModel',
-'incompressibleRASModels','incompressibleLESModels',
-'basicThermophysicalModels','specie','compressibleRASModels',
-'compressibleLESModels','genericPatchFields','fvOptions','sampling']
-execFlowFOEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_exec = Split("""
-  execFlowFunctionObjects.cpp
-  """)
-
-src_files = src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binexecFlowFO = execFlowFOEnv.Program(target = 'execFlowFunctionObjects',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = execFlowFOEnv['BIN_PLATFORM_INSTALL']
-execFlowFOEnv.Alias('install', install_dir)
-execFlowFOEnv.Install(install_dir, binexecFlowFO)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

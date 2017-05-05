@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ const char* CML::Switch::names[CML::Switch::INVALID+1] =
     "no",    "yes",
     "n",     "y",
     "f",     "t",
-    "none",  "true",  // is there a reasonable counterpart to "none"?
+    "none",  "true",  // Is there a reasonable counterpart to "none"?
     "invalid"
 };
 

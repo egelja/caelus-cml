@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -21,10 +22,13 @@ License
 
 #include "rotorDiskSource.hpp"
 #include "addToRunTimeSelectionTable.hpp"
+#include "mathematicalConstants.hpp"
 #include "trimModel.hpp"
+#include "unitConversion.hpp"
 #include "fvMatrices.hpp"
 #include "geometricOneField.hpp"
 #include "syncTools.hpp"
+#include "DataEntry.hpp"
 
 using namespace CML::constant;
 
@@ -184,7 +188,6 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
         }
     }
 
-
     // Add boundary contributions
     forAll(pbm, patchI)
     {
@@ -258,7 +261,7 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
 
 void CML::fv::rotorDiskSource::createCoordinateSystem()
 {
-    // Construct the local rotor co-prdinate system
+    // Construct the local rotor co-ordinate system
     vector origin(vector::zero);
     vector axis(vector::zero);
     vector refDir(vector::zero);
@@ -300,7 +303,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             reduce(dx1, maxMagSqrOp<vector>());
             magR = mag(dx1);
 
-            // determine second radial vector and cross to determine axis
+            // Determine second radial vector and cross to determine axis
             forAll(cells_, i)
             {
                 const label cellI = cells_[i];
@@ -330,17 +333,6 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
 
             coeffs_.lookup("refDirection") >> refDir;
 
-            localAxesRotation_.reset
-            (
-                new localAxesRotation
-                (
-                    mesh_,
-                    axis,
-                    origin,
-                    cells_
-                )
-            );
-
             // Set the face areas and apply correction to calculated axis
             // e.g. if cellZone is more than a single layer in thickness
             setFaceArea(axis, true);
@@ -352,17 +344,6 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             coeffs_.lookup("origin") >> origin;
             coeffs_.lookup("axis") >> axis;
             coeffs_.lookup("refDirection") >> refDir;
-
-            localAxesRotation_.reset
-            (
-                new localAxesRotation
-                (
-                    mesh_,
-                    axis,
-                    origin,
-                    cells_
-                )
-            );
 
             setFaceArea(axis, false);
 
@@ -379,6 +360,50 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
 
     coordSys_ = cylindricalCS("rotorCoordSys", origin, axis, refDir, false);
 
+    // Define global xyz vectors
+    const vector xGlobal = vector (1, 0, 0);
+    const vector yGlobal = vector (0, 1, 0);
+    const vector zGlobal = vector (0, 0, 1);
+
+    // Alternative way of calculating pitch and bank angles
+    bankAng_  = atan2(coordSys_.R().e3().y(), coordSys_.R().e3().z());
+    pitchAng_ = atan2(coordSys_.R().e3().x(), coordSys_.R().e3().z());
+
+    // Tensor for transforming from Cartesian into Pitch/Bank Plane
+    scalar cp = cos(pitchAng_);
+    scalar sp = sin(pitchAng_);
+    scalar cb = cos(bankAng_);
+    scalar sb = sin(bankAng_);
+
+    // Default tensor for transforming from Cartesian into Pitch/Bank Plane
+    PB_ = tensor(cp, sp*sb, sp*cb, 0, cb, -sb, -sp, cp*sb, cp*cb);
+
+
+    // Tensor for transforming from Cartesian into Pitch/Bank Plane
+    // If the rotor axis is close to +-Z-Direction, 
+    // such as the main rotor, then use the following
+    if ( ((axis & zGlobal) > 0.8) || ((axis & zGlobal) < -0.8) )
+    {
+        PB_ = tensor(cp, sp*sb, sp*cb, 0, cb, -sb, -sp, cp*sb, cp*cb);
+    }
+
+    // If the rotor axis is close to +-Y-Direction, 
+    // such as the tail rotor, then use the following
+    if ( ((axis & yGlobal) > 0.8) || ((axis & yGlobal) < -0.8) )
+    {
+        PB_ = tensor(cp, -sp*cb, -sp*-sb, sp, cp*cb, cp*-sb, 0, sb, cb);
+    }
+
+    // If the rotor axis is close to +-X-Direction, 
+    // such as an aircraft propeller, then use the following
+    if ( ((axis & xGlobal) > 0.8) || ((axis & xGlobal) < -0.8) )
+    {
+        PB_ = tensor(cp*cb, -sp, cp*sb, sp*cb, cp, sp*sb, -sb, 0, cb);
+    }
+
+    // Tensor for transforming from Pitch/Bank Plane into Cartesian 
+    invPB_ = PB_.T();
+
     const scalar sumArea = gSum(area_);
     const scalar diameter = CML::sqrt(4.0*sumArea/mathematical::pi);
     Info<< "    Rotor gometry:" << nl
@@ -387,7 +412,9 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
         << "    - origin        = " << coordSys_.origin() << nl
         << "    - r-axis        = " << coordSys_.R().e1() << nl
         << "    - psi-axis      = " << coordSys_.R().e2() << nl
-        << "    - z-axis        = " << coordSys_.R().e3() << endl;
+        << "    - z-axis        = " << coordSys_.R().e3() << nl
+        << "    - disk pitch angle  = " << radToDeg(pitchAng_) << nl
+        << "    - disk bank angle   = " << radToDeg(bankAng_) << endl;
 }
 
 
@@ -410,9 +437,18 @@ void CML::fv::rotorDiskSource::constructGeometry()
             // Swept angle relative to rDir axis [radians] in range 0 -> 2*pi
             scalar psi = x_[i].y();
 
+            if (rotorDebug_)
+            {
+                psiList_[i] = radToDeg(psi);
+            }
+
             // Blade flap angle [radians]
             scalar beta =
-                flap_.beta0 - flap_.beta1c*cos(psi) - flap_.beta2s*sin(psi);
+                flap_.beta0 - flap_.beta1c*cos(psi) - flap_.beta1s*sin(psi);
+
+            // Blade flapping angular velocity [rad/s]
+            scalar betaDOT =
+                this->omega()*( flap_.beta1c*sin(psi)-flap_.beta1s*cos(psi) );
 
             // Determine rotation tensor to convert from planar system into the
             // rotor cone system
@@ -420,8 +456,13 @@ void CML::fv::rotorDiskSource::constructGeometry()
             scalar s = sin(beta);
             R_[i] = tensor(c, 0, -s, 0, 1, 0, s, 0, c);
             invR_[i] = R_[i].T();
+
+            // Blade flapping linear velocity (rBetaDOT)
+            rBetaDOT_[i] = x_[i].x() * betaDOT;
         }
     }
+    // Reduce rMax_ for parallel running
+    reduce(rMax_, maxOp<scalar>());
 }
 
 
@@ -475,8 +516,11 @@ CML::fv::rotorDiskSource::rotorDiskSource
 )
 :
     option(name, modelType, dict, mesh),
+    rhoName_("none"),
     rhoRef_(1.0),
-    omega_(0.0),
+    rotorDebug_(false),
+    rotorURF_(1.0),
+    rpm_(DataEntry<scalar>::New("rpm", coeffs_)),
     nBlades_(0),
     inletFlow_(ifLocal),
     inletVelocity_(vector::zero),
@@ -485,15 +529,19 @@ CML::fv::rotorDiskSource::rotorDiskSource
     x_(cells_.size(), vector::zero),
     R_(cells_.size(), I),
     invR_(cells_.size(), I),
+    rBetaDOT_(cells_.size(), 0.0),
     area_(cells_.size(), 0.0),
     coordSys_(false),
-    localAxesRotation_(),
     rMax_(0.0),
+    psiList_(cells_.size(),0.0),
     trim_(trimModel::New(*this, coeffs_)),
     blade_(coeffs_.subDict("blade")),
     profiles_(coeffs_.subDict("profiles"))
 {
     read(dict);
+    Info<< "    - creating rotor disk zone: "
+        << this->name() << endl;
+
 }
 
 
@@ -511,11 +559,26 @@ void CML::fv::rotorDiskSource::addSup
     const label fieldI
 )
 {
+    // Read the reference density for incompressible flow
+    coeffs_.lookup("rhoRef") >> rhoRef_;
+
     volVectorField force
     (
         IOobject
         (
             name_ + ":rotorForce",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedVector("zero", eqn.dimensions()/dimVolume, vector::zero)
+    );
+
+    static volVectorField oldF
+    (
+        IOobject
+        (
+            name_ + ":oldForce",
             mesh_.time().timeName(),
             mesh_
         ),
@@ -528,12 +591,15 @@ void CML::fv::rotorDiskSource::addSup
         )
     );
 
-    // Read the reference density for incompressible flow
-    coeffs_.lookup("rhoRef") >> rhoRef_;
-
-    const vectorField Uin(inflowVelocity(eqn.psi()));
+    const volVectorField& U = eqn.psi();
+    const vectorField Uin(inflowVelocity(U));
     trim_->correct(Uin, force);
+
     calculate(geometricOneField(), Uin, trim_->thetag(), force);
+
+    // Under relax momentum source 
+    force = oldF + rotorURF_ * (force - oldF);
+    oldF = force;
 
     // Add source to rhs of eqn
     eqn -= force;
@@ -552,11 +618,29 @@ void CML::fv::rotorDiskSource::addSup
     const label fieldI
 )
 {
+
     volVectorField force
     (
         IOobject
         (
             name_ + ":rotorForce",
+            mesh_.time().timeName(),
+            mesh_
+	),
+	mesh_,
+	dimensionedVector
+	(
+	    "zero",
+	    eqn.dimensions()/dimVolume,
+            vector::zero
+	)
+    );
+
+    static volVectorField oldF
+    (
+        IOobject
+        (
+            name_ + ":oldForce",
             mesh_.time().timeName(),
             mesh_
         ),
@@ -569,9 +653,14 @@ void CML::fv::rotorDiskSource::addSup
         )
     );
 
-    const vectorField Uin(inflowVelocity(eqn.psi()));
+    const volVectorField& U = eqn.psi();
+    const vectorField Uin(inflowVelocity(U));
     trim_->correct(rho, Uin, force);
     calculate(rho, Uin, trim_->thetag(), force);
+
+    // Under relax momentum source 
+    force = oldF + rotorURF_ * (force - oldF);
+    oldF = force;
 
     // Add source to rhs of eqn
     eqn -= force;
@@ -597,23 +686,25 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
         coeffs_.lookup("fieldNames") >> fieldNames_;
         applied_.setSize(fieldNames_.size(), false);
 
+        // Read if rotorDebug is active
+        coeffs_.lookup("rotorDebugMode") >> rotorDebug_;
+
         // Read co-ordinate system/geometry invariant properties
-        scalar rpm(readScalar(coeffs_.lookup("rpm")));
-        omega_ = rpm/60.0*mathematical::twoPi;
 
         coeffs_.lookup("nBlades") >> nBlades_;
 
         inletFlow_ = inletFlowTypeNames_.read(coeffs_.lookup("inletFlowType"));
 
         coeffs_.lookup("tipEffect") >> tipEffect_;
+        coeffs_.lookup("rotorURF") >> rotorURF_;
 
         const dictionary& flapCoeffs(coeffs_.subDict("flapCoeffs"));
         flapCoeffs.lookup("beta0") >> flap_.beta0;
         flapCoeffs.lookup("beta1c") >> flap_.beta1c;
-        flapCoeffs.lookup("beta2s") >> flap_.beta2s;
+        flapCoeffs.lookup("beta1s") >> flap_.beta1s;
         flap_.beta0 = degToRad(flap_.beta0);
         flap_.beta1c = degToRad(flap_.beta1c);
-        flap_.beta2s = degToRad(flap_.beta2s);
+        flap_.beta1s = degToRad(flap_.beta1s);
 
 
         // Create co-ordinate system
@@ -623,6 +714,10 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
         checkData();
 
         constructGeometry();
+
+        // Reading rhoName_ and rhoRef_
+        coeffs_.lookup("rhoName") >> rhoName_;
+        coeffs_.lookup("rhoRef") >> rhoRef_;
 
         trim_->read(coeffs_);
 

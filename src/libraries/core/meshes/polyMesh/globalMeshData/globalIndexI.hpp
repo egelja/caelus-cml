@@ -21,6 +21,18 @@ License
 
 #include "ListOps.hpp"
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+CML::globalIndex::globalIndex()
+{}
+
+
+CML::globalIndex::globalIndex(const Xfer<labelList>& offsets)
+:
+    offsets_(offsets)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 inline CML::label CML::globalIndex::offset(const label procI) const

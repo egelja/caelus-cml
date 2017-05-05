@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -244,6 +244,269 @@ CML::string CML::stringOps::expand
 }
 
 
+CML::string CML::stringOps::getVariable
+(
+    const word& name,
+    const dictionary& dict,
+    const bool allowEnvVars,
+    const bool allowEmpty
+)
+{
+    string value;
+
+    const entry* ePtr = dict.lookupScopedEntryPtr
+    (
+        name,
+        true,
+        false
+    );
+    if (ePtr)
+    {
+        OStringStream buf;
+        // Force floating point numbers to be printed with at least
+        // some decimal digits.
+        buf << fixed;
+        buf.precision(IOstream::defaultPrecision());
+
+        // fail for non-primitiveEntry
+        dynamicCast<const primitiveEntry>
+        (
+            *ePtr
+        ).write(buf, true);
+
+        value = buf.str();
+    }
+    else if (allowEnvVars)
+    {
+        value = getEnv(name);
+
+        if (value.empty())
+        {
+            FatalIOErrorIn
+            (
+                "stringOps::getVariable\n"
+                "(\n"
+                "    const word&, \n"
+                "    const dictionary&,\n"
+                "    const bool,\n"
+                "    const bool\n"
+                ")\n",
+                dict
+            )   << "Cannot find dictionary or environment variable "
+                << name << exit(FatalIOError);
+        }
+    }
+    else
+    {
+        FatalIOErrorIn
+        (
+            " stringOps::getVariable\n"
+            "(\n"
+            "    const word&,\n"
+            "    const dictionary&,\n"
+            "    const bool,\n"
+            "    const bool\n"
+            ")\n",
+            dict
+        )   << "Cannot find dictionary variable "
+            << name << exit(FatalIOError);
+    }
+
+    return value;
+}
+
+
+CML::string CML::stringOps::expand
+(
+    const string& s,
+    string::size_type& index,
+    const dictionary& dict,
+    const bool allowEnvVars,
+    const bool allowEmpty
+)
+{
+    string newString;
+
+    while (index < s.size())
+    {
+        if (s[index] == '$' && s[index+1] == '{')
+        {
+            // Recurse to parse variable name
+            index += 2;
+            string val = expand(s, index, dict, allowEnvVars, allowEmpty);
+            newString.append(val);
+        }
+        else if (s[index] == '}')
+        {
+            return getVariable(newString, dict, allowEnvVars, allowEmpty);
+        }
+        else
+        {
+            newString.append(string(s[index]));
+        }
+        index++;
+    }
+    return newString;
+}
+
+
+CML::string& CML::stringOps::inplaceExpand
+(
+    string& s,
+    const dictionary& dict,
+    const bool allowEnvVars,
+    const bool allowEmpty,
+    const char sigil
+)
+{
+    string::size_type begVar = 0;
+
+    // Expand $VAR or ${VAR}
+    // Repeat until nothing more is found
+    while
+    (
+        (begVar = s.find(sigil, begVar)) != string::npos
+     && begVar < s.size()-1
+    )
+    {
+        if (begVar == 0 || s[begVar-1] != '\\')
+        {
+            if (s[begVar+1] == '{')
+            {
+                // Recursive variable expansion mode
+                label stringStart = begVar;
+                begVar += 2;
+                string varValue
+                (
+                    expand
+                    (
+                        s,
+                        begVar,
+                        dict,
+                        allowEnvVars,
+                        allowEmpty
+                    )
+                );
+
+                s.std::string::replace
+                (
+                    stringStart,
+                    begVar - stringStart + 1,
+                    varValue
+                );
+
+                begVar = stringStart+varValue.size();
+            }
+            else
+            {
+                string::iterator iter = s.begin() + begVar + 1;
+
+                // more generous in accepting keywords than for env variables
+                string::size_type endVar = begVar;
+                while
+                (
+                    iter != s.end()
+                 &&
+                    (
+                        isalnum(*iter)
+                     || *iter == '.'
+                     || *iter == ':'
+                     || *iter == '_'
+                    )
+                )
+                {
+                    ++iter;
+                    ++endVar;
+                }
+
+                const word varName
+                (
+                    s.substr
+                    (
+                        begVar + 1,
+                        endVar - begVar
+                    ),
+                    false
+                );
+
+                string varValue
+                (
+                    getVariable
+                    (
+                        varName,
+                        dict,
+                        allowEnvVars,
+                        allowEmpty
+                    )
+                );
+
+                s.std::string::replace
+                (
+                    begVar,
+                    varName.size()+1,
+                    varValue
+                );
+                begVar += varValue.size();
+            }
+        }
+        else
+        {
+            ++begVar;
+        }
+    }
+
+    if (!s.empty())
+    {
+        if (s[0] == '~')
+        {
+            // Expand initial ~
+            //   ~/        => home directory
+            //   ~CAELUS => site/user CAELUS configuration directory
+            //   ~user     => home directory for specified user
+
+            string user;
+            fileName file;
+
+            if ((begVar = s.find('/')) != string::npos)
+            {
+                user = s.substr(1, begVar - 1);
+                file = s.substr(begVar + 1);
+            }
+            else
+            {
+                user = s.substr(1);
+            }
+
+            // NB: be a bit lazy and expand ~unknownUser as an
+            // empty string rather than leaving it untouched.
+            // otherwise add extra test
+            if (user == "CAELUS")
+            {
+                s = findEtcFile(file);
+            }
+            else
+            {
+                s = home(user)/file;
+            }
+        }
+        else if (s[0] == '.')
+        {
+            // Expand a lone '.' and an initial './' into cwd
+            if (s.size() == 1)
+            {
+                s = cwd();
+            }
+            else if (s[1] == '/')
+            {
+                s.std::string::replace(0, 1, cwd());
+            }
+        }
+    }
+
+    return s;
+}
+
+
 CML::string& CML::stringOps::inplaceExpand
 (
     string& s,
@@ -318,7 +581,12 @@ CML::string& CML::stringOps::inplaceExpand
 
 
                 // lookup in the dictionary
-                const entry* ePtr = dict.lookupEntryPtr(varName, true, true);
+                const entry* ePtr = dict.lookupScopedEntryPtr
+                (
+                    varName,
+                    true,
+                    false   // wildcards disabled. See primitiveEntry
+                );
 
                 // if defined - copy its entries
                 if (ePtr)

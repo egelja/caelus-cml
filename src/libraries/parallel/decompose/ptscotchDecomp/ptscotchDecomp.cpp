@@ -115,6 +115,13 @@ License
 #include "globalIndex.hpp"
 #include "SubField.hpp"
 
+#ifdef windows
+//Symbol to force loading at runtime
+extern "C"
+void ptscotchDecompLoad()
+{}
+#endif
+
 extern "C"
 {
 #include <stdio.h>
@@ -752,7 +759,7 @@ CML::labelList CML::ptscotchDecomp::decompose
 
 
     CompactListList<label> cellCells;
-    calcCellCells(mesh, identity(mesh.nCells()), mesh.nCells(), cellCells);
+    calcCellCells(mesh, identity(mesh.nCells()), mesh.nCells(), true, cellCells);
 
     // Decompose using default weights
     List<label> finalDecomp;
@@ -798,7 +805,7 @@ CML::labelList CML::ptscotchDecomp::decompose
     //   adjncy      : contains neighbours (= edges in graph)
     //   xadj(celli) : start of information in adjncy for celli
     CompactListList<label> cellCells;
-    calcCellCells(mesh, agglom, agglomPoints.size(), cellCells);
+    calcCellCells(mesh, agglom, agglomPoints.size(), true, cellCells);
 
     // Decompose using weights
     List<label> finalDecomp;

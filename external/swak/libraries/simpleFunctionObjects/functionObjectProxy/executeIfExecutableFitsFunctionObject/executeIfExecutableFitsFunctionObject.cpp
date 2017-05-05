@@ -38,6 +38,7 @@ Contributors/Copyright:
 #include <unistd.h>
 #endif
 #ifdef windows
+#undef DebugInfo
 #include <shlwapi.h>
 #endif
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //

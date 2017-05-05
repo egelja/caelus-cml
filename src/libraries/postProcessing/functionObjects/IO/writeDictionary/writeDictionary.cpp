@@ -28,7 +28,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(writeDictionary, 0);
+    defineTypeNameAndDebug(writeDictionary, 0);
 }
 
 

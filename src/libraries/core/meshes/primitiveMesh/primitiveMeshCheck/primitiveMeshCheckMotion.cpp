@@ -56,10 +56,12 @@ bool CML::primitiveMesh::checkMeshMotion
     makeFaceCentresAndAreas(newPoints, fCtrs, fAreas);
 
     // Check cell volumes and calculate new cell centres
+    vectorField cellCtrsGeometric(nCells());
     vectorField cellCtrs(nCells());
     scalarField cellVols(nCells());
 
-    makeCellCentresAndVols(fCtrs, fAreas, cellCtrs, cellVols);
+    makeCellCentresAndVolsGeometric(fCtrs, fAreas, cellCtrsGeometric, cellVols);
+    makeCellCentres(fCtrs, fAreas, cellCtrs);
 
     scalar minVolume = GREAT;
     label nNegVols = 0;
@@ -135,7 +137,7 @@ bool CML::primitiveMesh::checkMeshMotion
 
         // Create the owner pyramid - it will have negative volume
         scalar pyrVol =
-            pyramidPointFaceRef(f[faceI], cellCtrs[own[faceI]]).mag(newPoints);
+            pyramidPointFaceRef(f[faceI], cellCtrsGeometric[own[faceI]]).mag(newPoints);
 
         if (pyrVol > SMALL)
         {
@@ -159,7 +161,7 @@ bool CML::primitiveMesh::checkMeshMotion
                 pyramidPointFaceRef
                 (
                     f[faceI],
-                    cellCtrs[nei[faceI]]
+                    cellCtrsGeometric[nei[faceI]]
                 ).mag(newPoints);
 
             if (pyrVol < -SMALL)

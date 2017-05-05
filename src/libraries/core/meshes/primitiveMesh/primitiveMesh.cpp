@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,12 +25,16 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::primitiveMesh, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(primitiveMesh, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::primitiveMesh::primitiveMesh()
+CML::primitiveMesh::primitiveMesh(const bool defectCorr, const scalar areaSwitch)
 :
     nInternalPoints_(0),    // note: points are considered ordered on empty mesh
     nPoints_(0),
@@ -60,9 +65,12 @@ CML::primitiveMesh::primitiveMesh()
     labels_(0),
 
     cellCentresPtr_(NULL),
+    cellCentresGeometricPtr_(NULL),
     faceCentresPtr_(NULL),
     cellVolumesPtr_(NULL),
-    faceAreasPtr_(NULL)
+    faceAreasPtr_(NULL),
+    defectCorr_(defectCorr),
+    areaSwitch_(areaSwitch)
 {}
 
 
@@ -73,7 +81,9 @@ CML::primitiveMesh::primitiveMesh
     const label nPoints,
     const label nInternalFaces,
     const label nFaces,
-    const label nCells
+    const label nCells,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     nInternalPoints_(-1),
@@ -102,9 +112,12 @@ CML::primitiveMesh::primitiveMesh
     labels_(0),
 
     cellCentresPtr_(NULL),
+    cellCentresGeometricPtr_(NULL),
     faceCentresPtr_(NULL),
     cellVolumesPtr_(NULL),
-    faceAreasPtr_(NULL)
+    faceAreasPtr_(NULL),
+    defectCorr_(defectCorr),
+    areaSwitch_(areaSwitch)
 {}
 
 

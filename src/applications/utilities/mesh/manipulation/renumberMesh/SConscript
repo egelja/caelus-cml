@@ -1,60 +1,37 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-renumberMeshEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = renumberMeshEnv['LIB_SRC']
+target = 'renumberMesh'
 
-renumberMeshEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-renumberMeshEnv.Append(CCFLAGS = '')
+sources = Split("""
+renumberMesh.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude',
-src + '/parallel/decompose/decompositionMethods/lnInclude'
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'parallel/decompose/decompositionMethods/lnInclude'
 ]
-renumberMeshEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-renumberMeshEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'dynamicMesh',
+'genericPatchFields',
+'decompositionMethods'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if renumberMeshEnv['WHICH_OS'] == "windows":
-  renumberMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['dynamicMesh','genericPatchFields','decompositionMethods']
-  
-renumberMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  renumberMesh.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binrenumberMesh = renumberMeshEnv.Program(target = 
-'renumberMesh', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = renumberMeshEnv['BIN_PLATFORM_INSTALL']
-renumberMeshEnv.Alias('install', install_dir)
-renumberMeshEnv.Install(install_dir, binrenumberMesh)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -54,22 +54,14 @@ class DiagTensor
 
 public:
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef DiagTensor<label> labelType;
+
+
     // Member constants
 
-        enum
-        {
-            rank = 2 // Rank of DiagTensor is 2
-        };
-
-
-    // Static data members
-
-        static const char* const typeName;
-        static const char* componentNames[];
-        static const DiagTensor zero;
-        static const DiagTensor one;
-        static const DiagTensor max;
-        static const DiagTensor min;
+        //- Rank of DiagTensor is 2
+        static const direction rank = 2;
 
 
     //- Component labeling enumeration
@@ -80,6 +72,9 @@ public:
 
         //- Construct null
         inline DiagTensor();
+
+        //- Construct initialized to zero
+        inline DiagTensor(const CML::zero);
 
         //- Construct given VectorSpace
         template<class Cmpt2>

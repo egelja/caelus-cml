@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -150,6 +151,93 @@ void fvMesh::makeC() const
         true,               //preserveCouples
         true                //preserveProcOnly
     );
+}
+
+
+void fvMesh::makeCg() const
+{
+    if (debug)
+    {
+        Info<< "void fvMesh::makeCg() : "
+            << "assembling cell centres"
+            << endl;
+    }
+
+    // It is an error to attempt to recalculate
+    // if the pointer is already set
+    if (CgPtr_)
+    {
+        FatalErrorIn("fvMesh::makeCg()")
+            << "Geometric cell centres already exist"
+            << abort(FatalError);
+    }
+
+    // Construct as slices. Only preserve processor (not e.g. cyclic)
+
+    CgPtr_ = new slicedVolVectorField
+    (
+        IOobject
+        (
+            "Cg",
+            pointsInstance(),
+            meshSubDir,
+            *this,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        *this,
+        dimLength,
+        cellCentresGeometric(),
+        faceCentres(),
+        true,               //preserveCouples
+        true                //preserveProcOnly
+    );
+}
+
+
+void fvMesh::makeDefectCorrVecs() const
+{
+    if (debug)
+    {
+        Info<< "void fvMesh::makeDefectCorrVecs() : "
+            << "assembling defect correction vectors"
+            << endl;
+    }
+
+    defectCorrVecsPtr_ = new volVectorField
+    (
+        IOobject
+        (
+            "defectCorrectionVectors",
+            pointsInstance(),
+            *this,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        *this,
+        dimLength
+    );
+    volVectorField& DefectCorrVecs = *defectCorrVecsPtr_;
+
+    // Set local references to mesh data
+    const vectorField& Cg = cellCentresGeometric();
+    const vectorField& C = cellCentres();
+
+    forAll(C, celli)
+    {
+        DefectCorrVecs[celli] = Cg[celli] - C[celli];
+    }
+
+
+    forAll(DefectCorrVecs.boundaryField(), patchI)
+    {
+        fvPatchVectorField& patchDefectCorrVecs =
+            DefectCorrVecs.boundaryField()[patchI];
+
+        patchDefectCorrVecs = vector::zero;
+    }
 }
 
 
@@ -370,6 +458,28 @@ const volVectorField& fvMesh::C() const
     }
 
     return *CPtr_;
+}
+
+
+const volVectorField& fvMesh::Cg() const
+{
+    if (!CgPtr_)
+    {
+        makeCg();
+    }
+
+    return *CgPtr_;
+}
+
+
+const volVectorField& fvMesh::defectCorrVecs() const
+{
+    if (!defectCorrVecsPtr_)
+    {
+        makeDefectCorrVecs();
+    }
+
+    return *defectCorrVecsPtr_;
 }
 
 

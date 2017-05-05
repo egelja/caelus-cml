@@ -1,57 +1,23 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjJobEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjJobEnv['SLASH']
+target = 'jobControl'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjJobEnv.Append(CCFLAGS = '')
+sources = Split("""
+abortCalculation/abortCalculation.cpp
+abortCalculation/abortCalculationFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-funcObjJobEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjJobEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core'] 
-funcObjJobEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  abortCalculation/abortCalculation.cpp
-  abortCalculation/abortCalculationFunctionObject.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libjobControl = funcObjJobEnv.SharedLibrary(target = 'jobControl', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjJobEnv['LIB_PLATFORM_INSTALL']
-funcObjJobEnv.Alias('install', install_dir)
-funcObjJobEnv.Install(install_dir, libjobControl)
-
-if (funcObjJobEnv['WHICH_OS'] == "darwin"):
-
-  funcObjJobEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libjobControl.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

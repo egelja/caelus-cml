@@ -1,70 +1,43 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakFvOptEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakFvOptEnv['LIB_SRC']
+target = 'swakFvOptions'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakFvOptEnv.Append(CXXFLAGS = '')
+sources = Split("""
+executeFunctionObjectsFvOption.cpp
+reportAvailableFvOptionsFvOption.cpp
+reportMatrixFvOption.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/OSspecific/POSIX/lnInclude',
-src + '/finiteVolume/lnInclude',
-src + '/sampling/lnInclude',
-src + '/meshTools/lnInclude',
-src + '/fvOptions/lnInclude'
+caelus_inc = [
+'OSspecific/POSIX/lnInclude',
+'finiteVolume/lnInclude',
+'sampling/lnInclude',
+'meshTools/lnInclude',
+'fvOptions/lnInclude'
 ]
-	
-swakFvOptEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakFvOptEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'sampling',
+'fvOptions'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','sampling','finiteVolume','meshTools','fvOptions']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakFvOptions'),
+                  os.path.join(env['SWAK_PATH'],'swakFvOptions/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakFvOptEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakFvOpt = Split("""
-  executeFunctionObjectsFvOption.cpp
-  reportAvailableFvOptionsFvOption.cpp
-  reportMatrixFvOption.cpp
-  """)
-
-src_files = src_files_swakFvOpt
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakFvOpts = swakFvOptEnv.SharedLibrary(target = 'libswakFvOptions', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakFvOptEnv['LIB_PLATFORM_INSTALL']
-swakFvOptEnv.Alias('install', install_dir)
-swakFvOptEnv.Install(install_dir, libswakFvOpts)
-
-if (swakFvOptEnv['WHICH_OS'] == "darwin"):
-
-  swakFvOptEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakFvOptions.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

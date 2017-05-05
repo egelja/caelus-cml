@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 
     pimpleControl pimple(mesh);
 
+    #include "createTimeControls.hpp"
     #include "createFields.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"

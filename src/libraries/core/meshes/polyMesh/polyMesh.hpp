@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014-16 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -245,7 +245,7 @@ public:
     // Constructors
 
         //- Construct from IOobject
-        explicit polyMesh(const IOobject& io);
+        explicit polyMesh(const IOobject& io, const bool defectCorr = false, const scalar areaSwitch = 1e-8);
 
         //- Construct from IOobject or from components.
         //  Boundary is added using addPatches() member function
@@ -256,7 +256,9 @@ public:
             const Xfer<faceList>& faces,
             const Xfer<labelList>& owner,
             const Xfer<labelList>& neighbour,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
         //- Construct without boundary with cells rather than owner/neighbour.
@@ -267,7 +269,9 @@ public:
             const Xfer<pointField>& points,
             const Xfer<faceList>& faces,
             const Xfer<cellList>& cells,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
         //- Construct from cell shapes
@@ -282,7 +286,9 @@ public:
             const word& defaultBoundaryPatchName,
             const word& defaultBoundaryPatchType,
             const wordList& boundaryPatchPhysicalTypes,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
         //- Construct from cell shapes with patch information in dictionary
@@ -297,7 +303,9 @@ public:
             const PtrList<dictionary>& boundaryDicts,
             const word& defaultBoundaryPatchName,
             const word& defaultBoundaryPatchType,
-            const bool syncPar = true
+            const bool syncPar = true,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
 

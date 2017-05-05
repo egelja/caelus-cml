@@ -1,58 +1,35 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-patchIntegrateEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = patchIntegrateEnv['LIB_SRC']
+target = 'patchIntegrate'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-patchIntegrateEnv.Append(CCFLAGS = '')
+sources = Split("""
+patchIntegrate.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude']
+caelus_inc = [
+'lagrangian/basic/lnInclude'
+]
 
-patchIntegrateEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-patchIntegrateEnv.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if patchIntegrateEnv['WHICH_OS'] == "windows":
-  patchIntegrateEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['genericPatchFields','lagrangian']
-     
-patchIntegrateEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  patchIntegrate.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpatchIntegrate = patchIntegrateEnv.Program(target = 'patchIntegrate', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = patchIntegrateEnv['BIN_PLATFORM_INSTALL']
-patchIntegrateEnv.Alias('install', install_dir)
-patchIntegrateEnv.Install(install_dir, binpatchIntegrate)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

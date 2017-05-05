@@ -28,18 +28,12 @@ License
 
 // Read all fields of type. Returns names of fields read. Guarantees all
 // processors to read fields in same order.
-template<class GeoField, class Mesh>
-CML::wordList CML::ReadFields
+CML::wordList CML::fieldNames
 (
-    const Mesh& mesh,
-    const IOobjectList& objects,
-    PtrList<GeoField>& fields,
+    const IOobjectList& fieldObjects,
     const bool syncPar
 )
 {
-    // Search list of objects for wanted type
-    IOobjectList fieldObjects(objects.lookupClass(GeoField::typeName));
-
     wordList masterNames(fieldObjects.names());
 
     if (syncPar && Pstream::parRun())
@@ -60,9 +54,7 @@ CML::wordList CML::ReadFields
             {
                 FatalErrorIn
                 (
-                    "ReadFields<class GeoField, class Mesh>"
-                    "(const Mesh&, const IOobjectList&, PtrList<GeoField>&"
-                    ", const bool)"
+                    "fieldNames(const IOobjectList&, const bool syncPar)"
                 )   << "Fields not synchronised across processors." << endl
                     << "Master has fields " << masterNames
                     << "  processor " << Pstream::myProcNo()
@@ -78,9 +70,7 @@ CML::wordList CML::ReadFields
         {
             FatalErrorIn
             (
-                "ReadFields<class GeoField, class Mesh>"
-                "(const Mesh&, const IOobjectList&, PtrList<GeoField>&"
-                ", const bool)"
+                "fieldNames(const IOobjectList&, const bol syncPar)"
             )   << "Fields not synchronised across processors." << endl
                 << "Master has fields " << masterNames
                 << "  processor " << Pstream::myProcNo()
@@ -88,37 +78,6 @@ CML::wordList CML::ReadFields
         }
     }
 
-
-    fields.setSize(masterNames.size());
-
-    // Make sure to read in masterNames order.
-
-    forAll(masterNames, i)
-    {
-        Info<< "Reading " << GeoField::typeName << ' ' << masterNames[i]
-            << endl;
-
-        const IOobject& io = *fieldObjects[masterNames[i]];
-
-        fields.set
-        (
-            i,
-            new GeoField
-            (
-                IOobject
-                (
-                    io.name(),
-                    io.instance(),
-                    io.local(),
-                    io.db(),
-                    IOobject::MUST_READ,
-                    IOobject::AUTO_WRITE,
-                    io.registerObject()
-                ),
-                mesh
-            )
-        );
-    }
     return masterNames;
 }
 

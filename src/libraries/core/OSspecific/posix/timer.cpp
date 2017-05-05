@@ -26,13 +26,17 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::timer, 0);
+namespace CML
+{
+    defineTypeNameAndDebug(timer, 0);
 
-jmp_buf CML::timer::envAlarm;
+    jmp_buf timer::envAlarm;
 
-struct sigaction CML::timer::oldAction_;
+    struct sigaction timer::oldAction_;
 
-unsigned int CML::timer::oldTimeOut_ = 0;
+    unsigned int timer::oldTimeOut_ = 0;
+}
+
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
 

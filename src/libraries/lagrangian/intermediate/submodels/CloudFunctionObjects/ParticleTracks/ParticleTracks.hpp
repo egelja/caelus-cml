@@ -307,7 +307,7 @@ void CML::ParticleTracks<CloudType>::preEvolve()
 template<class CloudType>
 void CML::ParticleTracks<CloudType>::postEvolve()
 {
-    // Do nothing
+    CloudFunctionObject<CloudType>::postEvolve();
 }
 
 

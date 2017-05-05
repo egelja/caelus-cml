@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,8 +38,14 @@ inline CML::septernion::septernion(const vector& t)
 
 inline CML::septernion::septernion(const quaternion& r)
 :
-    t_(vector::zero),
+    t_(Zero),
     r_(r)
+{}
+
+inline CML::septernion::septernion(const spatialTransform& st)
+:
+    t_(st.r()),
+    r_(st.E())
 {}
 
 
@@ -69,15 +75,15 @@ inline CML::quaternion& CML::septernion::r()
 }
 
 
-inline CML::vector CML::septernion::transform(const vector& v) const
+inline CML::vector CML::septernion::transformPoint(const vector& v) const
 {
-    return t() + r().transform(v);
+    return r().transform(v - t());
 }
 
 
-inline CML::vector CML::septernion::invTransform(const vector& v) const
+inline CML::vector CML::septernion::invTransformPoint(const vector& v) const
 {
-    return r().invTransform(v - t());
+    return t() + r().invTransform(v);
 }
 
 
@@ -91,7 +97,7 @@ inline void CML::septernion::operator=(const septernion& tr)
 
 inline void CML::septernion::operator*=(const septernion& tr)
 {
-    t_ += r().transform(tr.t());
+    t_ = tr.t() + tr.r().invTransform(t_);
     r_ *= tr.r();
 }
 
@@ -99,6 +105,7 @@ inline void CML::septernion::operator*=(const septernion& tr)
 inline void CML::septernion::operator=(const vector& t)
 {
     t_ = t;
+    r_ = quaternion::I;
 }
 
 inline void CML::septernion::operator+=(const vector& t)
@@ -114,16 +121,19 @@ inline void CML::septernion::operator-=(const vector& t)
 
 inline void CML::septernion::operator=(const quaternion& r)
 {
+    t_ = Zero;
     r_ = r;
 }
 
 inline void CML::septernion::operator*=(const quaternion& r)
 {
+    t_ = r.invTransform(t_);
     r_ *= r;
 }
 
 inline void CML::septernion::operator/=(const quaternion& r)
 {
+    t_ = r.transform(t_);
     r_ /= r;
 }
 
@@ -145,7 +155,7 @@ inline void CML::septernion::operator/=(const scalar s)
 
 inline CML::septernion CML::inv(const septernion& tr)
 {
-    return septernion(-tr.r().invTransform(tr.t()), conjugate(tr.r()));
+    return septernion(-tr.r().transform(tr.t()), conjugate(tr.r()));
 }
 
 
@@ -209,7 +219,7 @@ inline CML::septernion CML::operator*
     const quaternion& r
 )
 {
-    return septernion(tr.t(), tr.r()*r);
+    return septernion(r.invTransform(tr.t()), tr.r()*r);
 }
 
 
@@ -219,7 +229,7 @@ inline CML::septernion CML::operator/
     const quaternion& r
 )
 {
-    return septernion(tr.t(), tr.r()/r);
+    return septernion(r.transform(tr.t()), tr.r()/r);
 }
 
 
@@ -231,7 +241,7 @@ inline CML::septernion CML::operator*
 {
     return septernion
     (
-        tr1.t() + tr1.r().transform(tr2.t()),
+        tr2.r().invTransform(tr1.t()) + tr2.t(),
         tr1.r().transform(tr2.r())
     );
 }

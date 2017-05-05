@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -122,13 +122,13 @@ public:
 
     // Member operators
 
-        inline const complex& operator=(const complex&);
+        inline void operator=(const complex&);
         inline void operator+=(const complex&);
         inline void operator-=(const complex&);
         inline void operator*=(const complex&);
         inline void operator/=(const complex&);
 
-        inline const complex& operator=(const scalar);
+        inline void operator=(const scalar);
         inline void operator+=(const scalar);
         inline void operator-=(const scalar);
         inline void operator*=(const scalar);

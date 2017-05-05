@@ -1,0 +1,31 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'rigidBodyMeshMotionSolver'
+
+sources = Split("""
+rigidBodyMeshMotionSolver.cpp
+ """)
+
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'dynamicMesh/meshMotion/rigidBodyDynamics/lnInclude',
+'dynamicMesh/meshMotion/fvMotionSolver/lnInclude',
+'postProcessing/functionObjects/forces/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'dynamicMesh',
+'fvMotionSolvers',
+'rigidBodyDynamics',
+'forces'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

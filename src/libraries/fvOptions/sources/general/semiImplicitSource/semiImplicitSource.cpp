@@ -24,17 +24,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvOption(SemiImplicitSource, scalar);
-    makeFvOption(SemiImplicitSource, vector);
-    makeFvOption(SemiImplicitSource, sphericalTensor);
-    makeFvOption(SemiImplicitSource, symmTensor);
-    makeFvOption(SemiImplicitSource, tensor);
-}
-}
+makeFvOption(SemiImplicitSource, scalar);
+makeFvOption(SemiImplicitSource, vector);
+makeFvOption(SemiImplicitSource, sphericalTensor);
+makeFvOption(SemiImplicitSource, symmTensor);
+makeFvOption(SemiImplicitSource, tensor);
 
 
 // ************************************************************************* //

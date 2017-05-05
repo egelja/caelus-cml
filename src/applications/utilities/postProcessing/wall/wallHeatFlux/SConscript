@@ -1,66 +1,45 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-wallHeatFluxEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = wallHeatFluxEnv['LIB_SRC']
+target = 'wallHeatFlux'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-wallHeatFluxEnv.Append(CCFLAGS = '')
+sources = Split("""
+wallHeatFlux.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/turbulenceModels',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/turbulenceModels/compressible/RAS/RASModel',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude'
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'turbulenceModels/compressible/RAS/RASModel',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/basic/lnInclude'
 ]
-wallHeatFluxEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-wallHeatFluxEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'compressibleRASModels',
+'reactionThermophysicalModels',
+'specie',
+'basicThermophysicalModels',
+'compressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if wallHeatFluxEnv['WHICH_OS'] == "windows":
-  wallHeatFluxEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u compressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u compressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','compressibleRASModels',
-'reactionThermophysicalModels','specie','basicThermophysicalModels',
-'compressibleTurbulenceModel']
-
-wallHeatFluxEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
- wallHeatFlux.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binwallHeatFlux=wallHeatFluxEnv.Program(target = 'wallHeatFlux', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir =wallHeatFluxEnv['BIN_PLATFORM_INSTALL']
-wallHeatFluxEnv.Alias('install', install_dir)
-wallHeatFluxEnv.Install(install_dir, binwallHeatFlux)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

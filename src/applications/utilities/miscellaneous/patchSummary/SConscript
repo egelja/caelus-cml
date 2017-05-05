@@ -1,58 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-patchSummaryEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = patchSummaryEnv['LIB_SRC']
+target = 'patchSummary'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-patchSummaryEnv.Append(CCFLAGS = '')
+sources = Split("""
+patchSummary.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
-patchSummaryEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-patchSummaryEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if patchSummaryEnv['WHICH_OS'] == "windows":
-  patchSummaryEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields']
-     
-
-patchSummaryEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  patchSummary.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpatchSummary = patchSummaryEnv.Program(target = 'patchSummary', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = patchSummaryEnv['BIN_PLATFORM_INSTALL']
-patchSummaryEnv.Alias('install', install_dir)
-patchSummaryEnv.Install(install_dir, binpatchSummary)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -55,8 +55,8 @@ public:
 
     // Constructors
 
-        //- Null constructor
-        Dictionary();
+        //- Construct given initial table size
+        Dictionary(const label size = 128);
 
         //- Copy construct
         Dictionary(const Dictionary&);
@@ -77,7 +77,9 @@ public:
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class T>
-CML::Dictionary<T>::Dictionary()
+CML::Dictionary<T>::Dictionary(const label size)
+:
+    DictionaryBase<IDLList<T>, T>(size)
 {}
 
 
@@ -94,7 +96,7 @@ template<class T>
 bool CML::Dictionary<T>::erase(const word& keyword)
 {
     T* tPtr = this->remove(keyword);
-    
+
     if (tPtr)
     {
         delete tPtr;

@@ -24,10 +24,15 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::cloud, 0);
 
-const CML::word CML::cloud::prefix("lagrangian");
-CML::word CML::cloud::defaultName("defaultCloud");
+namespace CML
+{
+    defineTypeNameAndDebug(cloud, 0);
+
+    const word cloud::prefix("lagrangian");
+    word cloud::defaultName("defaultCloud");
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 

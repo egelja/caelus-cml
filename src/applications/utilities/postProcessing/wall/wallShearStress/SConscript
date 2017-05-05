@@ -1,69 +1,49 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-wallShearStressEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = wallShearStressEnv['LIB_SRC']
+target = 'wallShearStress'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-wallShearStressEnv.Append(CCFLAGS = '')
+sources = Split("""
+wallShearStress.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [
-src + '/turbulenceModels',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude'
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',
+'transportModels',
+'transportModels/incompressible/lnInclude',
+'thermophysicalModels/basic/lnInclude'
 ]
-wallShearStressEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-wallShearStressEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'compressibleRASModels',
+'reactionThermophysicalModels',
+'specie',
+'basicThermophysicalModels',
+'compressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleTransportModels',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if wallShearStressEnv['WHICH_OS'] == "windows":
-  wallShearStressEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','compressibleRASModels',
-'reactionThermophysicalModels','specie','basicThermophysicalModels',
-'compressibleTurbulenceModel','incompressibleRASModels',
-'incompressibleTransportModels','incompressibleTurbulenceModel']
-
-wallShearStressEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
- wallShearStress.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binwallShearStress=wallShearStressEnv.Program(target = 'wallShearStress', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir =wallShearStressEnv['BIN_PLATFORM_INSTALL']
-wallShearStressEnv.Alias('install', install_dir)
-wallShearStressEnv.Install(install_dir, binwallShearStress)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

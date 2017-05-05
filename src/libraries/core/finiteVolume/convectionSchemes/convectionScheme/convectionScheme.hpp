@@ -210,12 +210,16 @@ public:
 // Add the patch constructor functions to the hash tables
 
 #define makeFvConvectionTypeScheme(SS, Type)                                   \
+    defineNamedTemplateTypeNameAndDebug(CML::fv::SS<CML::Type>, 0);            \
                                                                                \
-defineNamedTemplateTypeNameAndDebug(SS<Type>, 0);                              \
-                                                                               \
-convectionScheme<Type>::addIstreamConstructorToTable<SS<Type> >                \
-    add##SS##Type##IstreamConstructorToTable_;
-
+    namespace CML                                                              \
+    {                                                                          \
+        namespace fv                                                           \
+        {                                                                      \
+            convectionScheme<Type>::addIstreamConstructorToTable<SS<Type> >    \
+                add##SS##Type##IstreamConstructorToTable_;                     \
+        }                                                                      \
+    }
 
 #define makeFvConvectionScheme(SS)                                             \
                                                                                \
@@ -227,11 +231,17 @@ makeFvConvectionTypeScheme(SS, tensor)
 
 
 #define makeMultivariateFvConvectionTypeScheme(SS, Type)                       \
+    defineNamedTemplateTypeNameAndDebug(CML::fv::SS<CML::Type>, 0);            \
                                                                                \
-defineNamedTemplateTypeNameAndDebug(SS<Type>, 0);                              \
-                                                                               \
-convectionScheme<Type>::addMultivariateConstructorToTable<SS<Type> >           \
-    add##SS##Type##MultivariateConstructorToTable_;
+    namespace CML                                                              \
+    {                                                                          \
+        namespace fv                                                           \
+        {                                                                      \
+            convectionScheme<Type>::                                           \
+                addMultivariateConstructorToTable<SS<Type> >                   \
+                add##SS##Type##MultivariateConstructorToTable_;                \
+        }                                                                      \
+    }
 
 
 #define makeMultivariateFvConvectionScheme(SS)                                 \

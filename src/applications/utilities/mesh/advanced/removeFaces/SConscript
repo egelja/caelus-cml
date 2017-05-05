@@ -1,58 +1,35 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-removeFacesEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = removeFacesEnv['LIB_SRC']
+target = 'removeFaces'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-removeFacesEnv.Append(CCFLAGS = '')
+sources = Split("""
+removeFaces.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
-removeFacesEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-removeFacesEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'dynamicMesh',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if removeFacesEnv['WHICH_OS'] == "windows":
-  removeFacesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['dynamicMesh','genericPatchFields']
-     
-
-removeFacesEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  removeFaces.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binremoveFaces = removeFacesEnv.Program(target = 'removeFaces', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = removeFacesEnv['BIN_PLATFORM_INSTALL']
-removeFacesEnv.Alias('install', install_dir)
-removeFacesEnv.Install(install_dir, binremoveFaces)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

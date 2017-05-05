@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ---------------------------------------------------------------------------
-# Caelus 6.10
+# Caelus 7.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -12,9 +12,7 @@ import glob
 import shutil
 
 # Starting up the meshing and solving
-print "**********************************"
-print "Cleaning pitzDaily tutorial       "
-print "**********************************"
+print "Cleaning tutorial: pitzDaily"
 
 # Cleaning up the case
 os.system('caelus-cleanCase.py')

@@ -1,62 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-enstrophyEnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = enstrophyEnv['LIB_SRC']
+target = 'enstrophy'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-enstrophyEnv.Append(CCFLAGS = '')
+sources = Split("""
+enstrophy.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/postProcessing/postCalc'  
-]        
+caelus_inc = [
+'postProcessing/postCalc'
+]
 
-enstrophyEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-enstrophyEnv.Prepend(LIBPATH = lib_link_path)
+post_calc = [os.path.join(env['LIB_PLATFORM_INSTALL'],'postCalc.o')]
+sources += post_calc
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if enstrophyEnv['WHICH_OS'] == "windows":
-  enstrophyEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['core','genericPatchFields']
-    
-enstrophyEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_postCalc = [enstrophyEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
-src_files_exec = Split("""  
-  enstrophy.cpp
-  """)
-
-src_files = src_files_postCalc + src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binenstrophy = enstrophyEnv.Program(target = 'enstrophy',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = enstrophyEnv['BIN_PLATFORM_INSTALL']
-enstrophyEnv.Alias('install', install_dir)
-enstrophyEnv.Install(install_dir, binenstrophy)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -52,10 +52,11 @@ d={
 'CAELUS_PROJECT_DIR':os.environ['CAELUS_PROJECT_DIR'],
 'BUILD_OPTION':os.environ['BUILD_OPTION'],
 'EXTERNAL_DIR':os.environ['EXTERNAL_DIR'],
-'MPI_INC':os.environ['MPI_INC'],
-'MPI_LIB':os.environ['MPI_LIB'],
+'MPI_INC_PATH':os.environ['MPI_INC_PATH'],
+'MPI_LIB_PATH':os.environ['MPI_LIB_PATH'],
 'MPI_LIB_NAME':os.environ['MPI_LIB_NAME'],
 'OPAL_PREFIX':os.environ['OPAL_PREFIX'],
+'OMP':os.environ['OMP'],
 'SCOTCH_VERSION':os.environ['SCOTCH_VERSION'],
 'SCOTCH_PATH':os.environ['SCOTCH_PATH'],
 'METIS_PATH':os.environ['METIS_PATH'],
@@ -75,7 +76,8 @@ d={
 'CAELUS_USER_DIR':os.environ['CAELUS_USER_DIR'],
 'CAELUS_RUN':os.environ['CAELUS_RUN'],
 'CAELUS_USER_APPBIN':os.environ['CAELUS_USER_APPBIN'],
-'CAELUS_USER_LIBBIN':os.environ['CAELUS_USER_LIBBIN']
+'CAELUS_USER_LIBBIN':os.environ['CAELUS_USER_LIBBIN'],
+'SCONSFLAGS':os.environ['SCONSFLAGS']
 }
 
 if WHICH_OS == 'windows':

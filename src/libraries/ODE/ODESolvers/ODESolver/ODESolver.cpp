@@ -23,9 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::ODESolver, 0);
+
 namespace CML
 {
+    defineTypeNameAndDebug(ODESolver, 0);
+
     defineRunTimeSelectionTable(ODESolver, ODE);
 }
 

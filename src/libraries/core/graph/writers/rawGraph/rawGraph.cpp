@@ -24,11 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::rawGraph, 0);
-const CML::word CML::rawGraph::ext_("xy");
 
 namespace CML
 {
+    defineTypeNameAndDebug(rawGraph, 0);
+    const word rawGraph::ext_("xy");
+
     typedef graph::writer graphWriter;
     addToRunTimeSelectionTable(graphWriter, rawGraph, word);
 }

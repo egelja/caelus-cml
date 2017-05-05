@@ -177,6 +177,12 @@ CML::tmp<CML::vectorField> CML::cyclicACMIFvPatch::delta() const
 }
 
 
+CML::tmp<CML::vectorField> CML::cyclicACMIFvPatch::deltaFull() const
+{
+    return cyclicACMIFvPatch::delta();
+}
+
+
 CML::tmp<CML::labelField> CML::cyclicACMIFvPatch::interfaceInternalField
 (
     const labelUList& internalData

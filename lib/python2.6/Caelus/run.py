@@ -90,13 +90,29 @@ class NotDecomposedError(Exception):
       case : The case that isn't decomposed
 
       """
+      self.case = case
       Exception.__init__(self, case)
 
    def __str__(self):
       """Return string representation of the error."""
-      return ('ERROR: Cannot run case %s in parallel, '+
-            'because it is not decomposed.'%self.args)
+      return ('ERROR: Cannot run case %s in parallel, because it is not decomposed.'%self.case)
 
+class DecompositionMismatchError(Exception):
+   """Thrown if case should be run in parallel but number of proessor directoreis is in mismatch."""
+   def __init__(self, case):
+      """Initialize the exception object.
+
+      Parameters
+      ----------
+      case : The case that isn't decomposed
+
+      """
+      self.case = case
+      Exception.__init__(self, case)
+
+   def __str__(self):
+      """Return string representation of the error."""
+      return ('ERROR: Cannot run case %s in parallel, because it is decomposed with less partitions than requested processors.'%self.case)
 
 class Runner:
    """A class to run Caelus applications."""
@@ -256,43 +272,130 @@ class Runner:
 class ParallelRunner(Runner):
    """Class to run Caelus cases in parallel."""
 
+   def getNumberOfProcessors(self,dictionary):
+      """Finds the number of processors defined in the given dictionary"""
+      import re
+      try:
+         with open(dictionary, 'r') as fp:
+            for line in fp:
+               match = re.search('numberOfSubdomains ([^;]+)', line)
+               if match:
+                  nproc = match.group(1)
+                  return nproc
+      except IOError:
+         print "WARNING: Dictionary " + dictionary + " does not exist."
+         return 0
+
    # override the _create_command function
    def _create_command(self, appname, case, parallel, args):
       """Assembles the command line (as a list, suitable for subprocess)"""
       import re
       import glob
       import sys
-      # if parallel desired, check whether decomposed:
-      is_decomposed =_op.isdir(_op.join(case, 'processor0'))
-      cmd = None
-      if parallel and is_decomposed:
-         # count number of processors
-         nproc = len(glob.glob(_op.join(case,'processor*')))
-         # create command from the template in global controlDict
-         template = None
-         controlDict = _op.join(_Caelus.config_dir, 'controlDict')
-         for l in open(controlDict, 'rt'):
-            if _Caelus.WHICH_OS == 'windows':
-               m = re.match(r'\s*parRunWinTemplate\s+["\'](.*)["\']\s*;\s*$', l)
-            else:
-               m = re.match(r'\s*parRunTemplate\s+["\'](.*)["\']\s*;\s*$', l)
-            if m:
-               template = m.group(1)
-         if not template:
-            raise EntryNotFoundError('parRunTemplate', controlDict)
+ 
+      try:
+         # get number of processors from default dictionary if it exists
+         nprocUser = int(self.getNumberOfProcessors('system/decomposeParDict'))
 
-         cmd = (template%{
-               'NPROCS': nproc,
-               'PAROPTS': '',
-               'APPLICATION': ' '.join(
-                  Runner._create_command(self, appname, case, False, [])),
-               'ARGS': ' '.join(args),
-               }).split()
-      elif parallel and not is_decomposed:
-         raise NotDecomposedError(case)
-      if not cmd:
-         cmd = Runner._create_command(self, appname, case, False, args)
-      return cmd
+         # if user has specified an alternative decomposeParDict, use it
+         if '-decomposeParDict' in args:
+            idx = args.index('-decomposeParDict')
+            if idx > len(args) - 2:
+               sys.stderr.write('Error: The -decomposeParDict option requires an argument\n')
+               sys.exit(1)
+            decomposeParDict = args[idx+1]
+            nprocUser = int(self.getNumberOfProcessors(decomposeParDict))
+
+         # if parallel desired, check whether decomposed:
+         is_decomposed =_op.isdir(_op.join(case, 'processor0'))
+         cmd = None
+
+         if ( appname == 'redistributePar') :
+            if parallel and is_decomposed:
+               # count number of processors
+               nprocOnDisc = len(glob.glob(_op.join(case,'processor*')))
+
+               if (nprocUser <= nprocOnDisc) :
+                  nproc = nprocOnDisc
+                  print "Using number of processors from existing decomposition"
+               else:
+                  nproc = nprocUser
+                  print "Using number of processors from decomposePar dictionary"
+
+            elif parallel and not is_decomposed:
+               nproc = nprocUser
+               print "Using number of processors from decomposePar dictionary"
+
+            # create command from the template in global controlDict
+            template = None
+            controlDict = _op.join(_Caelus.config_dir, 'controlDict')
+            for l in open(controlDict, 'rt'):
+               if _Caelus.WHICH_OS == 'windows':
+                  m = re.match(r'\s*parRunWinTemplate\s+["\'](.*)["\']\s*;\s*$', l)
+               else:
+                  m = re.match(r'\s*parRunTemplate\s+["\'](.*)["\']\s*;\s*$', l)
+               if m:
+                  template = m.group(1)
+            if not template:
+               raise EntryNotFoundError('parRunTemplate', controlDict)
+
+            cmd = (template%{
+                  'NPROCS': nproc,
+                  'PAROPTS': '',
+                  'APPLICATION': ' '.join(Runner._create_command(self, appname, case, False, [])),
+                  'ARGS': ' '.join(args),
+                  }).split()
+            if not cmd:
+               cmd = Runner._create_command(self, appname, case, False, args)
+            return cmd
+         else :
+            if parallel and is_decomposed:
+               # count number of processors
+               nprocOnDisc = len(glob.glob(_op.join(case,'processor*')))
+
+               if (nprocUser <= nprocOnDisc) :
+                  nproc = nprocUser
+                  print "Using number of processors from decomposePar dictionary."
+
+                  if (nprocUser < nprocOnDisc) :
+                     print "WARNING: Number of partitions on disc is greater than number of processors requested, \n this can only work if you have used redistributedPar to reduce the number of partitions."
+               else:
+                  raise DecompositionMismatchError(case)
+
+               # create command from the template in global controlDict
+               template = None
+               controlDict = _op.join(_Caelus.config_dir, 'controlDict')
+               for l in open(controlDict, 'rt'):
+                  if _Caelus.WHICH_OS == 'windows':
+                     m = re.match(r'\s*parRunWinTemplate\s+["\'](.*)["\']\s*;\s*$', l)
+                  else:
+                     m = re.match(r'\s*parRunTemplate\s+["\'](.*)["\']\s*;\s*$', l)
+                  if m:
+                     template = m.group(1)
+               if not template:
+                  raise EntryNotFoundError('parRunTemplate', controlDict)
+
+               cmd = (template%{
+                     'NPROCS': nproc,
+                     'PAROPTS': '',
+                     'APPLICATION': ' '.join(Runner._create_command(self, appname, case, False, [])),
+                     'ARGS': ' '.join(args),
+                     }).split()
+            elif parallel and not is_decomposed:
+               raise NotDecomposedError(case)
+            if not cmd:
+               cmd = Runner._create_command(self, appname, case, False, args)
+            return cmd
+      except EntryNotFoundError as e:
+         print(str(e))
+         sys.exit(0)
+      except NotDecomposedError as e:
+         print(str(e))
+         sys.exit(0)
+      except DecompositionMismatchError as e:
+         print(str(e))
+         sys.exit(0)
+     
 
    def _check_parallel(self, parallel):
       """Do nothing."""

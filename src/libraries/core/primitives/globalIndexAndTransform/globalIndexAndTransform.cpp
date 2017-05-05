@@ -24,9 +24,13 @@ License
 
 // * * * * * * * * * * * * Private Static Data Members * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::globalIndexAndTransform, 0);
 
-const CML::label CML::globalIndexAndTransform::base_ = 32;
+namespace CML
+{
+    defineTypeNameAndDebug(globalIndexAndTransform, 0);
+
+    const label globalIndexAndTransform::base_ = 32;
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

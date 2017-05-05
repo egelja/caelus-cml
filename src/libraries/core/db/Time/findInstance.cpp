@@ -38,8 +38,9 @@ CML::word CML::Time::findInstance
     const word& stopInstance
 ) const
 {
-    // Note: if name is empty, just check the directory itself
-
+    // Note: - if name is empty, just check the directory itself
+    //       - check for an object with local file scope (so no looking up in
+    //         parent directory in case of parallel)
 
     const fileName tPath(path());
     const fileName dirPath(tPath/timeName()/dir);
@@ -128,15 +129,30 @@ CML::word CML::Time::findInstance
              || rOpt == IOobject::MUST_READ_IF_MODIFIED
             )
             {
-                FatalErrorIn
-                (
-                    "Time::findInstance"
-                    "(const fileName&, const word&"
-                    ", const IOobject::readOption, const word&)"
-                )   << "Cannot find file \"" << name << "\" in directory "
-                    << dir << " in times " << timeName()
-                    << " down to " << stopInstance
-                    << exit(FatalError);
+                if (name.empty())
+                {
+                    FatalErrorIn
+                    (
+                        "Time::findInstance"
+                        "(const fileName&, const word&"
+                        ", const IOobject::readOption, const word&)"
+                    )   << "Cannot find directory "
+                        << dir << " in times " << timeName()
+                        << " down to " << stopInstance
+                        << exit(FatalError);
+                }
+                else
+                {
+                    FatalErrorIn
+                    (
+                        "Time::findInstance"
+                        "(const fileName&, const word&"
+                        ", const IOobject::readOption, const word&)"
+                    )   << "Cannot find file \"" << name << "\" in directory "
+                        << dir << " in times " << timeName()
+                        << " down to " << stopInstance
+                        << exit(FatalError);
+                }
             }
 
             return ts[instanceI].name();

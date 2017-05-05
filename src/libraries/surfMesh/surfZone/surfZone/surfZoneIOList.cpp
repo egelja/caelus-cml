@@ -23,7 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::surfZoneIOList, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(surfZoneIOList, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

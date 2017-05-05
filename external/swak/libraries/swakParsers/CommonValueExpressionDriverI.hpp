@@ -1027,6 +1027,7 @@ namespace CML {
                         );
                         // this should fail
                         const T &f=this->mesh().lookupObject<T>(name);
+                        Info << "for " <<f.name() << endl;
                     }
                 }
                 Info << endl;

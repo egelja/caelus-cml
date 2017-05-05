@@ -521,7 +521,7 @@ void SpalartAllmarasVLES::correct()
     }
     else
     {
-        FatalErrorIn("realizableVLESKE")
+        FatalErrorIn("SpalartAllmarasVLES")
             << "Case is not 3D or 2D, LES is not applicable"
             << exit(FatalError);
     }

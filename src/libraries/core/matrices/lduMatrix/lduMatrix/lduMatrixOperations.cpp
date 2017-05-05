@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2016 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -98,6 +98,26 @@ void CML::lduMatrix::rowSum(scalarField& s) const
     }
 }
 
+
+void CML::lduMatrix::spai0(scalarField& s) const
+{
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
+
+    scalarField const& Diag = diag();
+    s = Diag*Diag;
+
+    const labelUList& l = lduAddr().lowerAddr();
+    const labelUList& u = lduAddr().upperAddr();
+
+    for (register label face = 0; face < l.size(); face++)
+    {
+        s[u[face]] += Upper[face]*Upper[face];
+        s[l[face]] += Lower[face]*Lower[face];
+    }
+
+    s /= Diag;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

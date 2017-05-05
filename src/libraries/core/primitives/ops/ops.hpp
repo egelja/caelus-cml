@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,28 +39,28 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define EqOp(opName, op)                                                    \
-                                                                            \
-template<class T1, class T2>                                                \
-class opName##Op2                                                           \
-{                                                                           \
-public:                                                                     \
-                                                                            \
-    void operator()(T1& x, const T2& y) const                               \
-    {                                                                       \
-        op;                                                                 \
-    }                                                                       \
-};                                                                          \
-                                                                            \
-template<class T>                                                           \
-class opName##Op                                                            \
-{                                                                           \
-public:                                                                     \
-                                                                            \
-    void operator()(T& x, const T& y) const                                 \
-    {                                                                       \
-        op;                                                                 \
-    }                                                                       \
+#define EqOp(opName, op)                                                       \
+                                                                               \
+template<class T1, class T2>                                                   \
+class opName##Op2                                                              \
+{                                                                              \
+public:                                                                        \
+                                                                               \
+    void operator()(T1& x, const T2& y) const                                  \
+    {                                                                          \
+        op;                                                                    \
+    }                                                                          \
+};                                                                             \
+                                                                               \
+template<class T>                                                              \
+class opName##Op                                                               \
+{                                                                              \
+public:                                                                        \
+                                                                               \
+    void operator()(T& x, const T& y) const                                    \
+    {                                                                          \
+        op;                                                                    \
+    }                                                                          \
 };
 
 EqOp(eq, x = y)
@@ -92,67 +92,67 @@ EqOp(nopEq, (void)x)
 #define WARNRETURN
 #endif
 
-#define Op(opName, op)                                                        \
-                                                                              \
-    template<class T, class T1, class T2>                                     \
-    class opName##Op3                                                         \
-    {                                                                         \
-    public:                                                                   \
-                                                                              \
-        T operator()(const T1& x, const T2& y) const WARNRETURN               \
-        {                                                                     \
-            return op;                                                        \
-        }                                                                     \
-    };                                                                        \
-                                                                              \
-    template<class T1, class T2>                                              \
-    class opName##Op2                                                         \
-    {                                                                         \
-    public:                                                                   \
-                                                                              \
-        T1 operator()(const T1& x, const T2& y) const WARNRETURN              \
-        {                                                                     \
-            return op;                                                        \
-        }                                                                     \
-    };                                                                        \
-                                                                              \
-    template<class T>                                                         \
-    class opName##Op                                                          \
-    {                                                                         \
-    public:                                                                   \
-                                                                              \
-        T operator()(const T& x, const T& y) const WARNRETURN                 \
-        {                                                                     \
-            return op;                                                        \
-        }                                                                     \
+#define Op(opName, op)                                                         \
+                                                                               \
+    template<class T, class T1, class T2>                                      \
+    class opName##Op3                                                          \
+    {                                                                          \
+    public:                                                                    \
+                                                                               \
+        T operator()(const T1& x, const T2& y) const WARNRETURN                \
+        {                                                                      \
+            return op;                                                         \
+        }                                                                      \
+    };                                                                         \
+                                                                               \
+    template<class T1, class T2>                                               \
+    class opName##Op2                                                          \
+    {                                                                          \
+    public:                                                                    \
+                                                                               \
+        T1 operator()(const T1& x, const T2& y) const WARNRETURN               \
+        {                                                                      \
+            return op;                                                         \
+        }                                                                      \
+    };                                                                         \
+                                                                               \
+    template<class T>                                                          \
+    class opName##Op                                                           \
+    {                                                                          \
+    public:                                                                    \
+                                                                               \
+        T operator()(const T& x, const T& y) const WARNRETURN                  \
+        {                                                                      \
+            return op;                                                         \
+        }                                                                      \
     };
 
 
-#define weightedOp(opName, op)                                                \
-                                                                              \
-    template<class Type, class CombineOp>                                     \
-    class opName##WeightedOp                                                  \
-    {                                                                         \
-        const CombineOp& cop_;                                                \
-                                                                              \
-        public:                                                               \
-                                                                              \
-            opName##WeightedOp(const CombineOp& cop)                          \
-            :                                                                 \
-                cop_(cop)                                                     \
-            {}                                                                \
-                                                                              \
-            void operator()                                                   \
-            (                                                                 \
-                Type& x,                                                      \
-                const label index,                                            \
-                const Type& y,                                                \
-                const scalar weight                                           \
-            ) const                                                           \
-            {                                                                 \
-                cop_(x, op);                                                  \
-            }                                                                 \
-    };                                                                        \
+#define weightedOp(opName, op)                                                 \
+                                                                               \
+    template<class Type, class CombineOp>                                      \
+    class opName##WeightedOp                                                   \
+    {                                                                          \
+        const CombineOp& cop_;                                                 \
+                                                                               \
+        public:                                                                \
+                                                                               \
+            opName##WeightedOp(const CombineOp& cop)                           \
+            :                                                                  \
+                cop_(cop)                                                      \
+            {}                                                                 \
+                                                                               \
+            void operator()                                                    \
+            (                                                                  \
+                Type& x,                                                       \
+                const label index,                                             \
+                const Type& y,                                                 \
+                const scalar weight                                            \
+            ) const                                                            \
+            {                                                                  \
+                cop_(x, op);                                                   \
+            }                                                                  \
+    };                                                                         \
 
 
 Op(sum, x + y)
@@ -162,6 +162,7 @@ Op(minus, x - y)
 Op(multiply, x * y)
 Op(divide, x / y)
 Op(cmptMultiply, cmptMultiply(x, y))
+Op(cmptPow, cmptPow(x, y))
 Op(cmptDivide, cmptDivide(x, y))
 Op(stabilise, stabilise(x, y))
 Op(max, max(x, y))

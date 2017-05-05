@@ -30,7 +30,11 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-CML::instantList CML::Time::findTimes(const fileName& directory)
+CML::instantList CML::Time::findTimes
+(
+    const fileName& directory,
+    const word& constantName
+)
 {
     if (debug)
     {
@@ -49,7 +53,7 @@ CML::instantList CML::Time::findTimes(const fileName& directory)
     bool haveConstant = false;
     forAll(dirEntries, i)
     {
-        if (dirEntries[i] == "constant")
+        if (dirEntries[i] == constantName)
         {
             Times[nTimes].value() = 0;
             Times[nTimes].name() = dirEntries[i];

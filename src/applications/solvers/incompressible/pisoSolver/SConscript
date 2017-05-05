@@ -1,61 +1,47 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-pisoSolEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = pisoSolEnv['LIB_SRC']
+target = "pisoSolver"
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-pisoSolEnv.Append(CCFLAGS = '')
+sources = Split("""
+pisoSolver.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [pisoSolEnv['LIB_SRC'] +  '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
-src + '/transportModels',
-src + '/transportModels/incompressible/singlePhaseTransportModel',
-src + '/transportModels/incompressible/lnInclude'
+caelus_inc = [
+'turbulenceModels/',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
 ]
-pisoSolEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-pisoSolEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'fvOptions',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if pisoSolEnv['WHICH_OS'] == "windows":
-  pisoSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad  -u incompressibleVLESModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels', 'incompressibleLESModels', 'incompressibleVLESModels', 'incompressibleTransportModels']
-  
-pisoSolEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  pisoSolver.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpisoSol = pisoSolEnv.Program(target = 'pisoSolver', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = pisoSolEnv['BIN_PLATFORM_INSTALL']
-pisoSolEnv.Alias('install', install_dir)
-pisoSolEnv.Install(install_dir, binpisoSol)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

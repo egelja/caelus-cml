@@ -140,6 +140,15 @@ public:
             const word& fieldDictEntry="value"
         );
 
+        //- Construct from dictionary
+        DimensionedField
+        (
+            const IOobject&,
+            const Mesh& mesh,
+            const dictionary& fieldDict,
+            const word& fieldDictEntry="value"
+        );
+
         //- Construct as copy
         DimensionedField
         (
@@ -934,6 +943,24 @@ CML::DimensionedField<Type, GeoMesh>::DimensionedField
 }
 
 
+template<class Type, class GeoMesh>
+CML::DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const IOobject& io,
+    const Mesh& mesh,
+    const dictionary& fieldDict,
+    const word& fieldDictEntry
+)
+:
+    regIOobject(io),
+    Field<Type>(0),
+    mesh_(mesh),
+    dimensions_(dimless)
+{
+    readField(fieldDict, fieldDictEntry);
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type, class GeoMesh>
@@ -1006,7 +1033,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * //
 
-template<class Type, class GeoMesh, int r>
+template<class Type, class GeoMesh, direction r>
 tmp<DimensionedField<typename powProduct<Type, r>::type, GeoMesh> >
 pow
 (
@@ -1037,7 +1064,7 @@ pow
 }
 
 
-template<class Type, class GeoMesh, int r>
+template<class Type, class GeoMesh, direction r>
 tmp<DimensionedField<typename powProduct<Type, r>::type, GeoMesh> >
 pow
 (
@@ -1361,7 +1388,7 @@ operator op                                                                   \
         )                                                                     \
     );                                                                        \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), df2.field());                   \
+    CML::opFunc(tRes().field(), df1.field(), df2.field());                    \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
@@ -1386,7 +1413,7 @@ operator op                                                                   \
             df1.dimensions() op df2.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), df2.field());                   \
+    CML::opFunc(tRes().field(), df1.field(), df2.field());                    \
                                                                               \
     reuseTmpDimensionedField<productType, Type2, GeoMesh>::clear(tdf2);       \
                                                                               \
@@ -1413,7 +1440,7 @@ operator op                                                                   \
             df1.dimensions() op df2.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), df2.field());                   \
+    CML::opFunc(tRes().field(), df1.field(), df2.field());                    \
                                                                               \
     reuseTmpDimensionedField<productType, Type1, GeoMesh>::clear(tdf1);       \
                                                                               \
@@ -1443,7 +1470,7 @@ operator op                                                                   \
             df1.dimensions() op df2.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), df2.field());                   \
+    CML::opFunc(tRes().field(), df1.field(), df2.field());                    \
                                                                               \
     reuseTmpTmpDimensionedField                                               \
         <productType, Type1, Type1, Type2, GeoMesh>::clear(tdf1, tdf2);       \
@@ -1476,12 +1503,12 @@ operator op                                                                   \
         )                                                                     \
     );                                                                        \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), dvs.value());                   \
+    CML::opFunc(tRes().field(), df1.field(), dvs.value());                    \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -1513,14 +1540,14 @@ operator op                                                                   \
             df1.dimensions() op dvs.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes().field(), df1.field(), dvs.value());                   \
+    CML::opFunc(tRes().field(), df1.field(), dvs.value());                    \
                                                                               \
     reuseTmpDimensionedField<productType, Type, GeoMesh>::clear(tdf1);        \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -1556,12 +1583,12 @@ operator op                                                                   \
         )                                                                     \
     );                                                                        \
                                                                               \
-    CML::opFunc(tRes().field(), dvs.value(), df1.field());                   \
+    CML::opFunc(tRes().field(), dvs.value(), df1.field());                    \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \
@@ -1592,14 +1619,14 @@ operator op                                                                   \
             dvs.dimensions() op df1.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes().field(), dvs.value(), df1.field());                   \
+    CML::opFunc(tRes().field(), dvs.value(), df1.field());                    \
                                                                               \
     reuseTmpDimensionedField<productType, Type, GeoMesh>::clear(tdf1);        \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type, class GeoMesh>        \
+template<class Form, class Cmpt, direction nCmpt, class Type, class GeoMesh>  \
 tmp<DimensionedField<typename product<Form, Type>::type, GeoMesh> >           \
 operator op                                                                   \
 (                                                                             \

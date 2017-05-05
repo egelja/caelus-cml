@@ -1,76 +1,49 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-pyroModelsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = pyroModelsEnv['LIB_SRC']
+target = 'pyrolysisModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-pyroModelsEnv.Append(CCFLAGS = '')
+sources = Split("""
+pyrolysisModel/pyrolysisModel.cpp
+pyrolysisModel/pyrolysisModelNew.cpp
+reactingOneDim/reactingOneDim.cpp
+noPyrolysis/noPyrolysis.cpp
+ pyrolysisModel/pyrolysisModelCollection.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/turbulenceModels',   
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/solid/lnInclude',
-src + '/thermophysicalModels/chemistryModel/lnInclude',
-src + '/thermophysicalModels/basicSolidThermo/lnInclude',
-src + '/thermophysicalModels/solidChemistryModel/lnInclude',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude', 
-src + '/turbulenceModels/compressible/LES/lnInclude', 
-src + '/turbulenceModels/compressible/RAS/lnInclude',  
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/regionModels/regionModel/lnInclude' 
+caelus_inc = [
+'turbulenceModels',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/solid/lnInclude',
+'thermophysicalModels/chemistryModel/lnInclude',
+'thermophysicalModels/basicSolidThermo/lnInclude',
+'thermophysicalModels/solidChemistryModel/lnInclude',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/LES/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'regionModels/regionModel/lnInclude'
 ]
-pyroModelsEnv.Prepend(CPPPATH = lib_inc)
-    
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-pyroModelsEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','chemistryModel','specie','solid',
-'basicThermophysicalModels','solidChemistryModel','compressibleTurbulenceModel',
-'compressibleRASModels','compressibleLESModels','LESdeltas','regionModels']
-pyroModelsEnv.Append(LIBS = lib_link)
-         
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  pyrolysisModel/pyrolysisModel.cpp
-  pyrolysisModel/pyrolysisModelNew.cpp
-  reactingOneDim/reactingOneDim.cpp
-  noPyrolysis/noPyrolysis.cpp
-  pyrolysisModel/pyrolysisModelCollection.cpp
-  """)
+caelus_libs = [
+'core',
+'chemistryModel',
+'specie',
+'solid',
+'basicThermophysicalModels',
+'solidChemistryModel',
+'compressibleTurbulenceModel',
+'compressibleRASModels',
+'compressibleLESModels',
+'LESdeltas',
+'regionModels'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libpyrolysisModels = pyroModelsEnv.SharedLibrary(target = 'pyrolysisModels', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = pyroModelsEnv['LIB_PLATFORM_INSTALL']
-pyroModelsEnv.Alias('install', install_dir)
-pyroModelsEnv.Install(install_dir, libpyrolysisModels)
-
-if (pyroModelsEnv['WHICH_OS'] == "darwin"):
-
-  pyroModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libpyrolysisModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

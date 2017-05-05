@@ -33,7 +33,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(isoSurface, 0);
+    defineTypeNameAndDebug(isoSurface, 0);
 }
 
 

@@ -385,6 +385,7 @@ DebugSwitches
     cylinderToCell      0;
     cylindrical         0;
     decompositionMethod 0;
+    decompositionConstraint 0;
     definedHollowConeInjector 0;
     definedInjector     0;
     definedPressureSwirlInjector 0;

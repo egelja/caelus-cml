@@ -67,13 +67,15 @@ class DictionaryBase
 :
     public IDLListType
 {
-    // Private data
+protected:
+
+    // Protected data
 
         //- HashTable of the entries held on the IDLListType for quick lookup
         HashTable<T*> hashedTs_;
 
 
-    // Private Member functions
+    // Protected Member functions
 
         // Add the IDLListType entries into the HashTable
         void addEntries();
@@ -83,8 +85,8 @@ public:
 
     // Constructors
 
-        //- Null constructor
-        DictionaryBase();
+        //- Construct given initial table size
+        DictionaryBase(const label size = 128);
 
         //- Copy construct
         DictionaryBase(const DictionaryBase&);
@@ -119,6 +121,9 @@ public:
             //- Return the table of contents
             wordList toc() const;
 
+            //- Return the table of contents as a sorted list
+            wordList sortedToc() const;
+
 
         // Editing
 
@@ -138,6 +143,7 @@ public:
             //- Transfer the contents of the argument into this DictionaryBase
             //  and annul the argument.
             void transfer(DictionaryBase<IDLListType, T>&);
+
 
     // Member operators
 
@@ -190,7 +196,9 @@ void CML::DictionaryBase<IDLListType, T>::addEntries()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class IDLListType, class T>
-CML::DictionaryBase<IDLListType, T>::DictionaryBase()
+CML::DictionaryBase<IDLListType, T>::DictionaryBase(const label size)
+:
+    hashedTs_(size)
 {}
 
 
@@ -332,6 +340,13 @@ CML::wordList CML::DictionaryBase<IDLListType, T>::toc() const
     }
 
     return keywords;
+}
+
+
+template<class IDLListType, class T>
+CML::wordList CML::DictionaryBase<IDLListType, T>::sortedToc() const
+{
+    return hashedTs_.sortedToc();
 }
 
 

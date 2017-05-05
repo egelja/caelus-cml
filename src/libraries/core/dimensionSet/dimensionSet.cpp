@@ -25,8 +25,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::dimensionSet, 1);
-const CML::scalar CML::dimensionSet::smallExponent = SMALL;
+
+namespace CML
+{
+    defineTypeNameAndDebug(dimensionSet, 1);
+    const scalar dimensionSet::smallExponent = SMALL;
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

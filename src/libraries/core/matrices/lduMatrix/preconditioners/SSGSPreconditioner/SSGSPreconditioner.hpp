@@ -57,7 +57,6 @@ namespace CML
 class SSGSPreconditioner : public lduMatrix::preconditioner
 {
     scalarField rD_;
-    scalarField D_;
     scalarField rDuUpper_;
     scalarField rDlUpper_;
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,9 +25,13 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::treeDataFace, 0);
 
-CML::scalar CML::treeDataFace::tolSqr = sqr(1E-6);
+namespace CML
+{
+    defineTypeNameAndDebug(treeDataFace, 0);
+
+    scalar treeDataFace::tolSqr = sqr(1E-6);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

@@ -194,54 +194,6 @@ private:
             const label exposedPatchI
         );
 
-        // For decomposeCombineRegions
-
-            //- Used in decomposeCombineRegions. Given global region per cell
-            //  determines master processor/cell for regions straddling
-            //  procboundaries.
-            void getCoupledRegionMaster
-            (
-                const globalIndex& globalCells,
-                const boolList& blockedFace,
-                const regionSplit& globalRegion,
-                Map<label>& regionToMaster
-            ) const;
-
-            //- Determine regions that are local to me or coupled ones that
-            //  are owned by me. Determine representative location.
-            void calcLocalRegions
-            (
-                const globalIndex& globalCells,
-                const labelList& globalRegion,
-                const Map<label>& coupledRegionToMaster,
-                const scalarField& cellWeights,
-
-                Map<label>& globalToLocalRegion,
-                pointField& localPoints,
-                scalarField& localWeights
-            ) const;
-
-            //- Convert region into global index.
-            static label getShiftedRegion
-            (
-                const globalIndex& indexer,
-                const Map<label>& globalToLocalRegion,
-                const Map<label>& coupledRegionToShifted,
-                const label globalRegion
-            );
-
-            //- helper: add element if not in list. Linear search.
-            static void addUnique(const label, labelList&);
-
-            //- Calculate region connectivity. Major communication.
-            void calcRegionRegions
-            (
-                const labelList& globalRegion,
-                const Map<label>& globalToLocalRegion,
-                const Map<label>& coupledRegionToMaster,
-                labelListList& regionRegions
-            ) const;
-
 
         // Refinement candidate selection
 
@@ -585,19 +537,6 @@ public:
             //- Count number of intersections (local)
             label countHits() const;
 
-            //- Helper function to get decomposition such that all connected
-            //  regions get moved onto one processor. Used to prevent baffles
-            //  straddling processor boundaries. explicitConnections is to
-            //  keep pairs of non-coupled boundary faces together
-            //  (e.g. to keep baffles together)
-            labelList decomposeCombineRegions
-            (
-                const scalarField& cellWeights,
-                const boolList& blockedFace,
-                const List<labelPair>& explicitConnections,
-                decompositionMethod&
-            ) const;
-
             //- Redecompose according to cell count
             //  keepZoneFaces : find all faceZones from zoned surfaces and keep
             //                  owner and neighbour together
@@ -763,6 +702,9 @@ public:
             //- Get patchIDs for patches added in addMeshedPatch.
             labelList meshedPatches() const;
 
+            //- Select coupled faces that are not collocated
+            void selectSeparatedCoupledFaces(boolList&) const;
+
             //- Split mesh. Keep part containing point.
             autoPtr<mapPolyMesh> splitMeshRegions(const point& keepPoint);
 
@@ -845,6 +787,20 @@ public:
 
             //- Debugging: check that all faces still obey start()>end()
             void checkData();
+
+            static void testSyncPointList
+            (
+                const string& msg,
+                const polyMesh& mesh,
+                const List<scalar>& fld
+            );
+
+            static void testSyncPointList
+            (
+                const string& msg,
+                const polyMesh& mesh,
+                const List<point>& fld
+            );
 
             //- Compare two lists over all boundary faces
             template<class T>
@@ -970,20 +926,15 @@ void meshRefinement::testSyncBoundaryFaceList
 template<class GeoField>
 void meshRefinement::addPatchFields(fvMesh& mesh, const word& patchFieldType)
 {
-    HashTable<const GeoField*> flds
+    HashTable<GeoField*> flds
     (
         mesh.objectRegistry::lookupClass<GeoField>()
     );
 
-    forAllConstIter(typename HashTable<const GeoField*>, flds, iter)
+    forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        const GeoField& fld = *iter();
-
-        typename GeoField::GeometricBoundaryField& bfld =
-            const_cast<typename GeoField::GeometricBoundaryField&>
-            (
-                fld.boundaryField()
-            );
+        GeoField& fld = *iter();
+        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
 
         label sz = bfld.size();
         bfld.setSize(sz+1);
@@ -1005,20 +956,15 @@ void meshRefinement::addPatchFields(fvMesh& mesh, const word& patchFieldType)
 template<class GeoField>
 void meshRefinement::reorderPatchFields(fvMesh& mesh, const labelList& oldToNew)
 {
-    HashTable<const GeoField*> flds
+    HashTable<GeoField*> flds
     (
         mesh.objectRegistry::lookupClass<GeoField>()
     );
 
-    forAllConstIter(typename HashTable<const GeoField*>, flds, iter)
+    forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        const GeoField& fld = *iter();
-
-        typename GeoField::GeometricBoundaryField& bfld =
-            const_cast<typename GeoField::GeometricBoundaryField&>
-            (
-                fld.boundaryField()
-            );
+        GeoField& fld = *iter();
+        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
 
         bfld.reorder(oldToNew);
     }

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -185,17 +185,15 @@ public:
         }
 
         //- Assignment from enumerated value
-        const Switch& operator=(const switchType sw)
+        void operator=(const switchType sw)
         {
             switch_ = sw;
-            return *this;
         }
 
         //- Assignment from bool
-        const Switch& operator=(const bool b)
+        void operator=(const bool b)
         {
             switch_ = (b ? Switch::TRUE : Switch::FALSE);
-            return *this;
         }
 
 

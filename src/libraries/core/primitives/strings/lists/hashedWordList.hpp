@@ -62,7 +62,7 @@ class hashedWordList
 
     // Private Member Functions
 
-        //- rebuild the hash of indices
+        //- Rebuild the hash of indices
         void rehash();
 
 public:

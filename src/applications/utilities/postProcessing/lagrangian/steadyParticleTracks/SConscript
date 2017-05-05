@@ -1,54 +1,25 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-steadyParticleTracksEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = steadyParticleTracksEnv['LIB_SRC']
+target = 'steadyParticleTracks'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-steadyParticleTracksEnv.Append(CCFLAGS = '')
+sources = Split("""
+steadyParticleTracks.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude']
-steadyParticleTracksEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'lagrangian/basic/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-steadyParticleTracksEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = ['lagrangian']
-     
-steadyParticleTracksEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  steadyParticleTracks.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binsteadyParticleTracks = steadyParticleTracksEnv.Program(target = 'steadyParticleTracks', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = steadyParticleTracksEnv['BIN_PLATFORM_INSTALL']
-steadyParticleTracksEnv.Alias('install', install_dir)
-steadyParticleTracksEnv.Install(install_dir, binsteadyParticleTracks)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

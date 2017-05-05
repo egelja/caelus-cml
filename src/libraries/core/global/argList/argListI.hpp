@@ -47,6 +47,12 @@ inline const CML::fileName& CML::argList::globalCaseName() const
 }
 
 
+inline const CML::ParRunControl& CML::argList::parRunControl() const
+{
+    return parRunControl_;
+}
+
+
 inline CML::fileName CML::argList::path() const
 {
     return rootPath()/caseName();
@@ -54,6 +60,12 @@ inline CML::fileName CML::argList::path() const
 
 
 inline const CML::stringList& CML::argList::args() const
+{
+    return args_;
+}
+
+
+inline CML::stringList& CML::argList::args()
 {
     return args_;
 }
@@ -72,6 +84,12 @@ inline CML::label CML::argList::size() const
 
 
 inline const CML::HashTable<CML::string>& CML::argList::options() const
+{
+    return options_;
+}
+
+
+inline CML::HashTable<CML::string>& CML::argList::options()
 {
     return options_;
 }

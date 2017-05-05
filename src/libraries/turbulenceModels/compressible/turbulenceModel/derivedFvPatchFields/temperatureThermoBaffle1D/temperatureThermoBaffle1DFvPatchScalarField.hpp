@@ -131,9 +131,19 @@ class temperatureThermoBaffle1DFvPatchScalarField
         //- Superficial heat source [W/m2]
         scalarField Qs_;
 
-        //- Solid thermo
-        autoPtr<solidThermoData> solid_;
+        //- Solid dictionary
+        dictionary  solidDict_;
 
+        //- Solid thermo
+//        autoPtr<solidThermoData> solid_;
+
+        //- Solid thermo
+        mutable autoPtr<solidThermoData> solid_;
+
+    // Private members
+
+        //- Return const solidThermoData autoMap
+        const solidThermoData& solid() const;
 
 public:
 
@@ -244,6 +254,7 @@ temperatureThermoBaffle1DFvPatchScalarField
     baffleActivated_(true),
     thickness_(p.size()),
     Qs_(p.size()),
+    solidDict_(),
     solid_(NULL)
 {}
 
@@ -263,6 +274,7 @@ temperatureThermoBaffle1DFvPatchScalarField
     baffleActivated_(ptf.baffleActivated_),
     thickness_(ptf.thickness_),
     Qs_(ptf.Qs_),
+    solidDict_(ptf.solidDict_),
     solid_(ptf.solid_)
 {}
 
@@ -281,6 +293,7 @@ temperatureThermoBaffle1DFvPatchScalarField
     baffleActivated_(readBool(dict.lookup("baffleActivated"))),
     thickness_(scalarField("thickness", dict, p.size())),
     Qs_(scalarField("Qs", dict, p.size())),
+    solidDict_(dict),
     solid_(new solidThermoData(dict))
 {
     if (!isA<mappedPatchBase>(this->patch().patch()))
@@ -334,6 +347,7 @@ temperatureThermoBaffle1DFvPatchScalarField
     baffleActivated_(ptf.baffleActivated_),
     thickness_(ptf.thickness_),
     Qs_(ptf.Qs_),
+    solidDict_(ptf.solidDict_),
     solid_(ptf.solid_)
 {}
 
@@ -351,11 +365,27 @@ temperatureThermoBaffle1DFvPatchScalarField
     baffleActivated_(ptf.baffleActivated_),
     thickness_(ptf.thickness_),
     Qs_(ptf.Qs_),
+    solidDict_(ptf.solidDict_),
     solid_(ptf.solid_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class solidType>
+const typename temperatureThermoBaffle1DFvPatchScalarField<solidType>::solidThermoData& temperatureThermoBaffle1DFvPatchScalarField<solidType>::solid() const
+{
+    if (!solid_.empty())
+    {
+        return solid_();
+    }
+    else
+    {
+        solid_.reset(new solidThermoData(solidDict_));
+        return solid_();
+    }
+}
+
 
 template<class solidType>
 void temperatureThermoBaffle1DFvPatchScalarField<solidType>::autoMap
@@ -493,7 +523,6 @@ void temperatureThermoBaffle1DFvPatchScalarField<solidType>::updateCoeffs()
             (Ti() - nbrTi)/(1.0/KDeltaw + 1.0/nbrh + 1.0/myh)
         );
 
-
         forAll(qDot, i)
         {
             if (Qs_[i] == 0)
@@ -570,7 +599,7 @@ write(Ostream& os) const
     os.writeKeyword("baffleActivated")
         << baffleActivated_ << token::END_STATEMENT << nl;
     Qs_.writeEntry("Qs", os);
-    solid_().write(os);
+    solid().write(os);
 }
 
 

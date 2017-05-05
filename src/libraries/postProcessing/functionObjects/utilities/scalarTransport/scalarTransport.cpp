@@ -37,7 +37,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(scalarTransport, 0);
+    defineTypeNameAndDebug(scalarTransport, 0);
 }
 
 

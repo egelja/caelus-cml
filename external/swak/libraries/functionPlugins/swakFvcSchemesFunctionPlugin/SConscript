@@ -1,72 +1,43 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakFvSchEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakFvSchEnv['LIB_SRC']
+target = 'swakFvcSchemesFunctionPlugin'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakFvSchEnv.Append(CXXFLAGS = '')
+sources = Split("""
+fvcInterpolationFunctionPlugin.cpp
+fvcGradFunctionPlugin.cpp
+fvcSnGradFunctionPlugin.cpp
+fvcDivFunctionPlugin.cpp
+fvcConvectionDivFunctionPlugin.cpp
+fvcLaplacianFunctionPlugin.cpp
+fvcCoeffLaplacianFunctionPlugin.cpp
+fvcSurfCoeffLaplacianFunctionPlugin.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../../swakParsers/lnInclude',
-src + '/sampling/lnInclude'
+caelus_inc = [
+'sampling/lnInclude'
 ]
-	
-swakFvSchEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakFvSchEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers']
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakFvSchemesFunctionPlugin'),
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakFvSchemesFunctionPlugin/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakFvSchEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakFvSch = Split("""
-  fvcInterpolationFunctionPlugin.cpp
-  fvcGradFunctionPlugin.cpp
-  fvcSnGradFunctionPlugin.cpp
-  fvcDivFunctionPlugin.cpp
-  fvcConvectionDivFunctionPlugin.cpp
-  fvcLaplacianFunctionPlugin.cpp
-  fvcCoeffLaplacianFunctionPlugin.cpp
-  fvcSurfCoeffLaplacianFunctionPlugin.cpp
-  """)
-
-src_files = src_files_swakFvSch
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakFvSchs = swakFvSchEnv.SharedLibrary(target = 'libswakFvcSchemesFunctionPlugin',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakFvSchEnv['LIB_PLATFORM_INSTALL']
-swakFvSchEnv.Alias('install', install_dir)
-swakFvSchEnv.Install(install_dir, libswakFvSchs)
-
-if (swakFvSchEnv['WHICH_OS'] == "darwin"):
-
-  swakFvSchEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakFvcSchemesFunctionPlugin.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

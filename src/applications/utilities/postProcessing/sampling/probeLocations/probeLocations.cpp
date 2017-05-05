@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     (
         probes::typeName,
         mesh,
-        "probesDict",
+        word("probesDict"), // force the use of the system directory
         IOobject::MUST_READ,
         true
     );

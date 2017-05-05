@@ -28,7 +28,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(calcFvcGrad, 0);
+    defineTypeNameAndDebug(calcFvcGrad, 0);
 }
 
 

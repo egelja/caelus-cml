@@ -1,64 +1,29 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-randProcEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = randProcEnv['LIB_SRC']
+target = 'randomProcesses'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-randProcEnv.Append(CCFLAGS = '')
+sources = Split("""
+Kmesh/Kmesh.cpp
+fft/fft.cpp
+fft/fftRenumber.cpp
+fft/calcEk.cpp
+fft/kShellIntegration.cpp
+processes/UOprocess/UOprocess.cpp
+turbulence/turbGen.cpp
+noise/noiseFFT.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/sampling/lnInclude']
-randProcEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-randProcEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core', 'sampling'] 
-randProcEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  Kmesh/Kmesh.cpp
-  fft/fft.cpp
-  fft/fftRenumber.cpp
-  fft/calcEk.cpp
-  fft/kShellIntegration.cpp
-  processes/UOprocess/UOprocess.cpp
-  turbulence/turbGen.cpp
-  noise/noiseFFT.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-librandomProcesses = randProcEnv.SharedLibrary(target = 'randomProcesses', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = randProcEnv['LIB_PLATFORM_INSTALL']
-randProcEnv.Alias('install', install_dir)
-randProcEnv.Install(install_dir, librandomProcesses)
-
-if (randProcEnv['WHICH_OS'] == "darwin"):
-
-  randProcEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/librandomProcesses.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

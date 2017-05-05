@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -111,6 +111,9 @@ public:
         //- Construct given size and initial value
         Field(const label, const Type&);
 
+        //- Construct given size and initialed to zero
+        Field(const label, const zero);
+
         //- Construct as copy of a UList\<Type\>
         explicit Field(const UList<Type>&);
 
@@ -151,14 +154,54 @@ public:
         Field
         (
             const UList<Type>& mapF,
-            const FieldMapper& map
+            const FieldMapper& map,
+            const bool applyFlip = true
+        );
+
+        //- Construct by mapping from the given field
+        Field
+        (
+            const UList<Type>& mapF,
+            const FieldMapper& map,
+            const Type& defaultValue,
+            const bool applyFlip = true
+        );
+
+        //- Construct by mapping from the given field
+        Field
+        (
+            const UList<Type>& mapF,
+            const FieldMapper& map,
+            const UList<Type>& defaultValues,
+            const bool applyFlip = true
         );
 
         //- Construct by mapping from the given tmp field
         Field
         (
             const tmp<Field<Type> >& tmapF,
-            const FieldMapper& map
+            const FieldMapper& map,
+            const bool applyFlip = true
+        );
+
+        //- Construct by mapping from the given tmp field. Supplied uniform
+        //  value for unmapped items
+        Field
+        (
+            const tmp<Field<Type> >& tmapF,
+            const FieldMapper& map,
+            const Type& defaultValue,
+            const bool applyFlip = true
+        );
+
+        //- Construct by mapping from the given tmp field. Supplied values
+        //  for unmapped items
+        Field
+        (
+            const tmp<Field<Type> >& tmapF,
+            const FieldMapper& map,
+            const UList<Type>& defaultValues,
+            const bool applyFlip = true
         );
 
         //- Construct as copy
@@ -234,20 +277,23 @@ public:
         void map
         (
             const UList<Type>& mapF,
-            const FieldMapper& map
+            const FieldMapper& map,
+            const bool applyFlip = true
         );
 
         //- Map from the given tmp field
         void map
         (
             const tmp<Field<Type> >& tmapF,
-            const FieldMapper& map
+            const FieldMapper& map,
+            const bool applyFlip = true
         );
 
         //- Map from self
         void autoMap
         (
-            const FieldMapper& map
+            const FieldMapper& map,
+            const bool applyFlip = true
         );
 
         //- 1 to 1 reverse-map from the given field
@@ -295,6 +341,9 @@ public:
         //- Replace a component field of the field
         void replace(const direction, const cmptType&);
 
+        template<class VSForm>
+        VSForm block(const label start) const;
+
         //- Return the field transpose (only defined for second rank tensors)
         tmp<Field<Type> > T() const;
 
@@ -309,8 +358,9 @@ public:
         void operator=(const SubField<Type>&);
         void operator=(const tmp<Field<Type> >&);
         void operator=(const Type&);
+        void operator=(const zero);
 
-        template<class Form, class Cmpt, int nCmpt>
+        template<class Form, class Cmpt, direction nCmpt>
         void operator=(const VectorSpace<Form,Cmpt,nCmpt>&);
 
         void operator+=(const UList<Type>&);
@@ -354,6 +404,8 @@ public:
 #include "FieldM.hpp"
 #include "dictionary.hpp"
 #include "contiguous.hpp"
+#include "mapDistributeBase.hpp"
+#include "flipOp.hpp"
 
 // * * * * * * * * * * * * * * * Static Members  * * * * * * * * * * * * * * //
 
@@ -381,6 +433,13 @@ template<class Type>
 CML::Field<Type>::Field(const label size, const Type& t)
 :
     List<Type>(size, t)
+{}
+
+
+template<class Type>
+CML::Field<Type>::Field(const label size, const zero)
+:
+    List<Type>(size, Zero)
 {}
 
 
@@ -442,12 +501,43 @@ template<class Type>
 CML::Field<Type>::Field
 (
     const UList<Type>& mapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size())
 {
-    map(mapF, mapper);
+    map(mapF, mapper, applyFlip);
+}
+
+
+template<class Type>
+CML::Field<Type>::Field
+(
+    const UList<Type>& mapF,
+    const FieldMapper& mapper,
+    const Type& defaultValue,
+    const bool applyFlip
+)
+:
+    List<Type>(mapper.size(), defaultValue)
+{
+    map(mapF, mapper, applyFlip);
+}
+
+
+template<class Type>
+CML::Field<Type>::Field
+(
+    const UList<Type>& mapF,
+    const FieldMapper& mapper,
+    const UList<Type>& defaultValues,
+    const bool applyFlip
+)
+:
+    List<Type>(defaultValues)
+{
+    map(mapF, mapper, applyFlip);
 }
 
 
@@ -455,12 +545,43 @@ template<class Type>
 CML::Field<Type>::Field
 (
     const tmp<Field<Type> >& tmapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size())
 {
-    map(tmapF, mapper);
+    map(tmapF, mapper, applyFlip);
+}
+
+
+template<class Type>
+CML::Field<Type>::Field
+(
+    const tmp<Field<Type> >& tmapF,
+    const FieldMapper& mapper,
+    const Type& defaultValue,
+    const bool applyFlip
+)
+:
+    List<Type>(mapper.size(), defaultValue)
+{
+    map(tmapF, mapper, applyFlip);
+}
+
+
+template<class Type>
+CML::Field<Type>::Field
+(
+    const tmp<Field<Type> >& tmapF,
+    const FieldMapper& mapper,
+    const UList<Type>& defaultValues,
+    const bool applyFlip
+)
+:
+    List<Type>(defaultValues)
+{
+    map(tmapF, mapper, applyFlip);
 }
 
 
@@ -723,21 +844,57 @@ template<class Type>
 void CML::Field<Type>::map
 (
     const UList<Type>& mapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    if
-    (
-        mapper.direct()
-     && notNull(mapper.directAddressing())
-     && mapper.directAddressing().size()
-    )
+    if (mapper.distributed())
     {
-        map(mapF, mapper.directAddressing());
+        // Fetch remote parts of mapF
+        const mapDistributeBase& distMap = mapper.distributeMap();
+        Field<Type> newMapF(mapF);
+
+        if (applyFlip)
+        {
+            distMap.distribute(newMapF);
+        }
+        else
+        {
+            distMap.distribute(newMapF, noOp());
+        }
+
+        if (mapper.direct() && notNull(mapper.directAddressing()))
+        {
+            map(newMapF, mapper.directAddressing());
+        }
+        else if (!mapper.direct())
+        {
+            map(newMapF, mapper.addressing(), mapper.weights());
+        }
+        else if (mapper.direct() && isNull(mapper.directAddressing()))
+        {
+            // Special case, no local mapper. Assume ordering already correct
+            // from distribution. Note: this behaviour is different compared
+            // to local mapper.
+            this->transfer(newMapF);
+            this->setSize(mapper.size());
+        }
     }
-    else if (!mapper.direct() && mapper.addressing().size())
+    else
     {
-        map(mapF, mapper.addressing(), mapper.weights());
+        if
+        (
+            mapper.direct()
+         && notNull(mapper.directAddressing())
+         && mapper.directAddressing().size()
+        )
+        {
+            map(mapF, mapper.directAddressing());
+        }
+        else if (!mapper.direct() && mapper.addressing().size())
+        {
+            map(mapF, mapper.addressing(), mapper.weights());
+        }
     }
 }
 
@@ -746,10 +903,11 @@ template<class Type>
 void CML::Field<Type>::map
 (
     const tmp<Field<Type> >& tmapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    map(tmapF(), mapper);
+    map(tmapF(), mapper, applyFlip);
     tmapF.clear();
 }
 
@@ -757,25 +915,57 @@ void CML::Field<Type>::map
 template<class Type>
 void CML::Field<Type>::autoMap
 (
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    if
-    (
-        (
-            mapper.direct()
-//         && &mapper.directAddressing()
-         && mapper.directAddressing().size()
-        )
-     || (!mapper.direct() && mapper.addressing().size())
-    )
+    if (mapper.distributed())
     {
+        // Fetch remote parts of *this
+        const mapDistributeBase& distMap = mapper.distributeMap();
         Field<Type> fCpy(*this);
-        map(fCpy, mapper);
+
+        if (applyFlip)
+        {
+            distMap.distribute(fCpy);
+        }
+        else
+        {
+            distMap.distribute(fCpy, noOp());
+        }
+
+        if ((mapper.direct() && notNull(mapper.directAddressing())) || !mapper.direct())
+        {
+            this->map(fCpy, mapper);
+        }
+        else if (mapper.direct() && isNull(mapper.directAddressing()))
+        {
+            // Special case, no local mapper. Assume ordering already correct
+            // from distribution. Note: this behaviour is different compared
+            // to local mapper.
+            this->transfer(fCpy);
+            this->setSize(mapper.size());
+        }
     }
     else
     {
-        this->setSize(mapper.size());
+        if
+        (
+            (
+                mapper.direct()
+             && notNull(mapper.directAddressing())
+             && mapper.directAddressing().size()
+            )
+         || (!mapper.direct() && mapper.addressing().size())
+        )
+        {
+            Field<Type> fCpy(*this);
+            map(fCpy, mapper);
+        }
+        else
+        {
+            this->setSize(mapper.size());
+        }
     }
 }
 
@@ -902,6 +1092,19 @@ void CML::Field<Type>::replace
 
 
 template<class Type>
+template<class VSForm>
+VSForm CML::Field<Type>::block(const label start) const
+{
+    VSForm vs;
+    for (direction i=0; i<VSForm::nComponents; i++)
+    {
+        vs[i] = this->operator[](start + i);
+    }
+    return vs;
+}
+
+
+template<class Type>
 CML::tmp<CML::Field<Type> > CML::Field<Type>::T() const
 {
     tmp<Field<Type> > transpose(new Field<Type>(this->size()));
@@ -1001,7 +1204,14 @@ void CML::Field<Type>::operator=(const Type& t)
 
 
 template<class Type>
-template<class Form, class Cmpt, int nCmpt>
+void CML::Field<Type>::operator=(const zero)
+{
+    List<Type>::operator=(Zero);
+}
+
+
+template<class Type>
+template<class Form, class Cmpt, CML::direction nCmpt>
 void CML::Field<Type>::operator=(const VectorSpace<Form,Cmpt,nCmpt>& vs)
 {
     TFOR_ALL_F_OP_S(Type, *this, =, (VectorSpace<Form,Cmpt,nCmpt>), vs)
@@ -1467,7 +1677,7 @@ void T(Field<Type>& res, const UList<Type>& f)
 }
 
 
-template<class Type, int r>
+template<class Type, direction r>
 void pow
 (
     Field<typename powProduct<Type, r>::type>& res,
@@ -1482,7 +1692,7 @@ void pow
     )
 }
 
-template<class Type, int r>
+template<class Type, direction r>
 tmp<Field<typename powProduct<Type, r>::type> >
 pow
 (
@@ -1499,7 +1709,7 @@ pow
     return tRes;
 }
 
-template<class Type, int r>
+template<class Type, direction r>
 tmp<Field<typename powProduct<Type, r>::type> >
 pow
 (
@@ -2029,7 +2239,7 @@ operator Op(const tmp<Field<Type1> >& tf1, const tmp<Field<Type2> >& tf2)     \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, direction nCmpt>                 \
 void OpFunc                                                                   \
 (                                                                             \
     Field<typename product<Type, Form>::type>& res,                           \
@@ -2042,7 +2252,7 @@ void OpFunc                                                                   \
         (productType, res, =,Type, f1, Op, Form, static_cast<const Form&>(vs))\
 }                                                                             \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, direction nCmpt>                 \
 tmp<Field<typename product<Type, Form>::type> >                               \
 operator Op(const UList<Type>& f1, const VectorSpace<Form,Cmpt,nCmpt>& vs)    \
 {                                                                             \
@@ -2052,7 +2262,7 @@ operator Op(const UList<Type>& f1, const VectorSpace<Form,Cmpt,nCmpt>& vs)    \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Type, class Form, class Cmpt, int nCmpt>                       \
+template<class Type, class Form, class Cmpt, direction nCmpt>                 \
 tmp<Field<typename product<Type, Form>::type> >                               \
 operator Op                                                                   \
 (                                                                             \
@@ -2067,7 +2277,7 @@ operator Op                                                                   \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type>                       \
+template<class Form, class Cmpt, direction nCmpt, class Type>                 \
 void OpFunc                                                                   \
 (                                                                             \
     Field<typename product<Form, Type>::type>& res,                           \
@@ -2080,7 +2290,7 @@ void OpFunc                                                                   \
         (productType, res, =,Form,static_cast<const Form&>(vs), Op, Type, f1) \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type>                       \
+template<class Form, class Cmpt, direction nCmpt, class Type>                 \
 tmp<Field<typename product<Form, Type>::type> >                               \
 operator Op(const VectorSpace<Form,Cmpt,nCmpt>& vs, const UList<Type>& f1)    \
 {                                                                             \
@@ -2090,7 +2300,7 @@ operator Op(const VectorSpace<Form,Cmpt,nCmpt>& vs, const UList<Type>& f1)    \
     return tRes;                                                              \
 }                                                                             \
                                                                               \
-template<class Form, class Cmpt, int nCmpt, class Type>                       \
+template<class Form, class Cmpt, direction nCmpt, class Type>                 \
 tmp<Field<typename product<Form, Type>::type> >                               \
 operator Op                                                                   \
 (                                                                             \

@@ -1,65 +1,42 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-createTurbulenceFieldsEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = createTurbulenceFieldsEnv['LIB_SRC']
+target = 'createTurbulenceFields'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-createTurbulenceFieldsEnv.Append(CCFLAGS = '')
+sources = Split("""
+createTurbulenceFields.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',  
-src + '/turbulenceModels/incompressible/RAS/RASModel',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',  
-]        
-createTurbulenceFieldsEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',  
+'turbulenceModels/incompressible/RAS/RASModel',
+'transportModels',
+'transportModels/incompressible/lnInclude',  
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-createTurbulenceFieldsEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'incompressibleRASModels',
+'incompressibleTurbulenceModel',
+'incompressibleTransportModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if createTurbulenceFieldsEnv['WHICH_OS'] == "windows":
-  createTurbulenceFieldsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['incompressibleRASModels','incompressibleTurbulenceModel',
-'incompressibleTransportModels','genericPatchFields']
-      
-createTurbulenceFieldsEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""  
-  createTurbulenceFields.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincreateTurbulenceFields = createTurbulenceFieldsEnv.Program(target =
-'createTurbulenceFields', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = createTurbulenceFieldsEnv['BIN_PLATFORM_INSTALL']
-createTurbulenceFieldsEnv.Alias('install', install_dir)
-createTurbulenceFieldsEnv.Install(install_dir, bincreateTurbulenceFields)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,6 +42,9 @@ SourceFiles
 namespace CML
 {
 
+template<class Cmpt>
+class SymmTensor2D;
+
 /*---------------------------------------------------------------------------*\
                            Class Tensor2D Declaration
 \*---------------------------------------------------------------------------*/
@@ -54,23 +57,18 @@ class Tensor2D
 
 public:
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef Tensor2D<label> labelType;
+
+
     // Member constants
 
-        enum
-        {
-            rank = 2 // Rank of Tensor2D is 2
-        };
+        //- Rank of Tensor2D is 2
+        static const direction rank = 2;
 
 
     // Static data members
 
-        static const char* const typeName;
-        static const char* componentNames[];
-
-        static const Tensor2D zero;
-        static const Tensor2D one;
-        static const Tensor2D max;
-        static const Tensor2D min;
         static const Tensor2D I;
 
 
@@ -83,8 +81,14 @@ public:
         //- Construct null
         inline Tensor2D();
 
+        //- Construct initialized to zero
+        inline Tensor2D(const CML::zero);
+
         //- Construct given VectorSpace
         inline Tensor2D(const VectorSpace<Tensor2D<Cmpt>, Cmpt, 4>&);
+
+        //- Construct given SymmTensor2D
+        inline Tensor2D(const SymmTensor2D<Cmpt>&);
 
         //- Construct given SphericalTensor2D
         inline Tensor2D(const SphericalTensor2D<Cmpt>&);
@@ -131,6 +135,9 @@ public:
 
 
     // Member Operators
+
+        //- Copy SymmTensor2D
+        inline void operator=(const SymmTensor2D<Cmpt>&);
 
         //- Copy SphericalTensor2D
         inline void operator=(const SphericalTensor2D<Cmpt>&);

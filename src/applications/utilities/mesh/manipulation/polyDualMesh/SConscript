@@ -1,60 +1,36 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-polyDualMeshEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = polyDualMeshEnv['LIB_SRC']
+target = 'polyDualMesh'
 
-polyDualMeshEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-polyDualMeshEnv.Append(CCFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
-
-polyDualMeshEnv.Prepend(CPPPATH = lib_inc)
-
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-polyDualMeshEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if polyDualMeshEnv['WHICH_OS'] == "windows":
-  polyDualMeshEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['genericPatchFields','dynamicMesh']
-  
-polyDualMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  meshDualiser.cpp
+sources = Split("""
+meshDualiser.cpp
   polyDualMeshApp.cpp
-  """)
+""")
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpolyDualMesh = polyDualMeshEnv.Program(target = 
-'polyDualMesh', source = src_files)
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = polyDualMeshEnv['BIN_PLATFORM_INSTALL']
-polyDualMeshEnv.Alias('install', install_dir)
-polyDualMeshEnv.Install(install_dir, binpolyDualMesh)
+caelus_libs = [
+'core',
+'dynamicMesh',
+'genericPatchFields'
+]
+
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

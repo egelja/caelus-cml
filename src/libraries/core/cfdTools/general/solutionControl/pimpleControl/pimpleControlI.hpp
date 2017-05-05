@@ -63,8 +63,14 @@ inline bool CML::pimpleControl::correct()
 
 inline bool CML::pimpleControl::storeInitialResiduals() const
 {
-    // start from second PIMPLE iteration
+    // Start from second PIMPLE iteration
     return (corr_ == 2) && (corrPISO_ == 0) && (corrNonOrtho_ == 0);
+}
+
+
+inline bool CML::pimpleControl::firstIter() const
+{
+    return corr_ == 1;
 }
 
 

@@ -97,16 +97,16 @@ void CML::domainDecomposition::decomposeMesh()
 
     // Distribute the cells according to the given processor label
 
-    // calculate the addressing information for the original mesh
+    // Calculate the addressing information for the original mesh
     Info<< "\nCalculating original mesh data" << endl;
 
-    // set references to the original mesh
+    // Set references to the original mesh
     const polyBoundaryMesh& patches = boundaryMesh();
     const faceList& fcs = faces();
     const labelList& owner = faceOwner();
     const labelList& neighbour = faceNeighbour();
 
-    // loop through the list of processor labels for the cell and add the
+    // Loop through the list of processor labels for the cell and add the
     // cell shape to the list of cells for the appropriate processor
 
     Info<< "\nDistributing cells to processors" << endl;
@@ -133,7 +133,7 @@ void CML::domainDecomposition::decomposeMesh()
         }
     }
 
-    // for all processors, set the size of start index and patch size
+    // For all processors, set the size of start index and patch size
     // lists to the number of patches in the mesh
     forAll(procPatchSize_, procI)
     {
@@ -165,10 +165,10 @@ void CML::domainDecomposition::decomposeMesh()
             {
                 const label curProc = cellToProc_[patchFaceCells[facei]];
 
-                // add the face without turning index
+                // Add the face without turning index
                 procFaceAddressing_[curProc].append(patchStart+facei+1);
 
-                // increment the number of faces for this patch
+                // Increment the number of faces for this patch
                 procPatchSize_[curProc][patchi]++;
             }
         }
@@ -199,9 +199,7 @@ void CML::domainDecomposition::decomposeMesh()
         }
     }
 
-
     // Done internal bits of the new mesh and the ordinary patches.
-
 
     // Per processor, from neighbour processor to the inter-processor patch
     // that communicates with that neighbour
@@ -242,7 +240,6 @@ void CML::domainDecomposition::decomposeMesh()
         subPatchIDs[procI].setSize(nInterfaces, labelList(1, label(-1)));
         subPatchStarts[procI].setSize(nInterfaces, labelList(1, label(0)));
     }
-
 
     // Special handling needed for the case that multiple processor cyclic
     // patches are created on each local processor domain, e.g. if a 3x3 case
@@ -311,7 +308,6 @@ void CML::domainDecomposition::decomposeMesh()
         greaterOp<label>()
     );
 
-
     // Sort inter-proc patch by neighbour
     labelList order;
     forAll(procNbrToInterPatch, procI)
@@ -323,8 +319,6 @@ void CML::domainDecomposition::decomposeMesh()
         procProcessorPatchStartIndex_[procI].setSize(nInterfaces);
         procProcessorPatchSubPatchIDs_[procI].setSize(nInterfaces);
         procProcessorPatchSubPatchStarts_[procI].setSize(nInterfaces);
-
-        //Info<< "Processor " << procI << endl;
 
         // Get sorted neighbour processors
         const Map<label>& curNbrToInterPatch = procNbrToInterPatch[procI];
@@ -361,17 +355,6 @@ void CML::domainDecomposition::decomposeMesh()
                 subPatchStarts[procI][interPatch]
             );
 
-            //Info<< "    nbr:" << nbrProc << endl;
-            //Info<< "    interpatch:" << interPatch << endl;
-            //Info<< "    size:" << procProcessorPatchSize_[procI][i] << endl;
-            //Info<< "    start:" << procProcessorPatchStartIndex_[procI][i]
-            //    << endl;
-            //Info<< "    subPatches:"
-            //    << procProcessorPatchSubPatchIDs_[procI][i]
-            //    << endl;
-            //Info<< "    subStarts:"
-            //    << procProcessorPatchSubPatchStarts_[procI][i] << endl;
-
             // And add all the face labels for interPatch
             DynamicList<label>& interPatchFaces =
                 curInterPatchFaces[interPatch];
@@ -385,51 +368,6 @@ void CML::domainDecomposition::decomposeMesh()
         curInterPatchFaces.clearStorage();
         procFaceAddressing_[procI].shrink();
     }
-
-
-////XXXXXXX
-//// Print a bit
-//    forAll(procPatchStartIndex_, procI)
-//    {
-//        Info<< "Processor:" << procI << endl;
-//
-//        Info<< "    total faces:" << procFaceAddressing_[procI].size()
-//            << endl;
-//
-//        const labelList& curProcPatchStartIndex = procPatchStartIndex_[procI];
-//
-//        forAll(curProcPatchStartIndex, patchI)
-//        {
-//            Info<< "    patch:" << patchI
-//                << "\tstart:" << curProcPatchStartIndex[patchI]
-//                << "\tsize:" << procPatchSize_[procI][patchI]
-//                << endl;
-//        }
-//    }
-//    Info<< endl;
-//
-//    forAll(procNeighbourProcessors_, procI)
-//    {
-//        Info<< "Processor " << procI << endl;
-//
-//        forAll(procNeighbourProcessors_[procI], i)
-//        {
-//            Info<< "    nbr:" << procNeighbourProcessors_[procI][i] << endl;
-//            Info<< "    size:" << procProcessorPatchSize_[procI][i] << endl;
-//            Info<< "    start:" << procProcessorPatchStartIndex_[procI][i]
-//                << endl;
-//        }
-//    }
-//    Info<< endl;
-//
-//    forAll(procFaceAddressing_, procI)
-//    {
-//        Info<< "Processor:" << procI << endl;
-//
-//        Info<< "    faces:" << procFaceAddressing_[procI] << endl;
-//    }
-
-
 
     Info<< "\nDistributing points to processors" << endl;
     // For every processor, loop through the list of faces for the processor.

@@ -875,11 +875,16 @@ CML::IOerror CML::FatalIOError("--> CAELUS FATAL IO ERROR: ");
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-const char* const CML::token::typeName = "token";
-CML::token CML::token::undefinedToken;
 
-defineTypeNameAndDebug(CML::token::compound, 0);
-defineRunTimeSelectionTable(CML::token::compound, Istream);
+namespace CML
+{
+    const char* const token::typeName = "token";
+    token token::undefinedToken;
+
+    typedef token::compound tokenCompound;
+    defineTypeNameAndDebug(tokenCompound, 0);
+    defineRunTimeSelectionTable(tokenCompound, Istream);
+}
 
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
@@ -970,6 +975,9 @@ CML::token::compound& CML::token::transferCompoundToken(const Istream& is)
 #include "dictionary.hpp"
 #include "IFstream.hpp"
 #include "OSspecific.hpp"
+#include "Ostream.hpp"
+#include "demandDrivenData.hpp"
+#include "simpleObjectRegistry.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -979,12 +987,18 @@ namespace debug
 {
 
 //! \cond ignoreDocumentation - local scope
+//- Skip documentation : local scope only
+
 dictionary* controlDictPtr_(NULL);
 dictionary* debugSwitchesPtr_(NULL);
 dictionary* infoSwitchesPtr_(NULL);
 dictionary* optimisationSwitchesPtr_(NULL);
 
-// to ensure controlDictPtr_ is deleted at the end of the run
+// Debug switch read and write callback tables.
+simpleObjectRegistry* debugObjectsPtr_(NULL);
+
+
+// To ensure controlDictPtr_ is deleted at the end of the run
 class deleteControlDictPtr
 {
 public:
@@ -994,11 +1008,12 @@ public:
 
     ~deleteControlDictPtr()
     {
-        if (controlDictPtr_)
-        {
-            delete controlDictPtr_;
-            controlDictPtr_ = 0;
-        }
+        deleteDemandDrivenData(debugObjectsPtr_);
+
+        debugSwitchesPtr_ = NULL;
+        infoSwitchesPtr_ = NULL;
+        optimisationSwitchesPtr_ = NULL;
+        deleteDemandDrivenData(controlDictPtr_);
     }
 };
 
@@ -1019,10 +1034,18 @@ CML::dictionary& CML::debug::controlDict()
         controlDictPtr_ = new dictionary();
         forAllReverse(controlDictFiles, cdfi)
         {
-            controlDictPtr_->merge
-            (
-                dictionary(IFstream(controlDictFiles[cdfi])())
-            );
+            IFstream ifs(controlDictFiles[cdfi]);
+
+            if (!ifs.good())
+            {
+                SafeFatalIOErrorIn
+                (
+                    "debug::controlDict()",
+                    ifs,
+                    "Cannot open controlDict"
+                );
+            }
+            controlDictPtr_->merge(dictionary(ifs));
         }
     }
 
@@ -1105,6 +1128,37 @@ int CML::debug::optimisationSwitch(const char* name, const int defaultValue)
 }
 
 
+void CML::debug::addDebugObject(const char* name, simpleRegIOobject* obj)
+{
+    simpleObjectRegistryEntry* ptr = debugObjects().lookupPtr(name);
+    if (ptr)
+    {
+        ptr->append(obj);
+    }
+    else
+    {
+        debugObjects().append
+        (
+            name,
+            new simpleObjectRegistryEntry
+            (
+                List<simpleRegIOobject*>(1, obj)
+            )
+        );
+    }
+}
+
+
+CML::simpleObjectRegistry& CML::debug::debugObjects()
+{
+    if (!debugObjectsPtr_)
+    {
+        debugObjectsPtr_ = new simpleObjectRegistry(1000);
+    }
+
+    return *debugObjectsPtr_;
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Read file modification checking switches
@@ -1116,15 +1170,10 @@ int CML::debug::optimisationSwitch(const char* name, const int defaultValue)
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::regIOobject, 0);
-
-int CML::regIOobject::fileModificationSkew
-(
-    CML::debug::optimisationSwitch("fileModificationSkew", 30)
-);
-
 namespace CML
 {
+    defineTypeNameAndDebug(regIOobject, 0);
+
     template<>
     const char* CML::NamedEnum
     <
@@ -1138,6 +1187,12 @@ namespace CML
         "inotifyMaster"
     };
 }
+
+
+int CML::regIOobject::fileModificationSkew
+(
+    CML::debug::optimisationSwitch("fileModificationSkew", 30)
+);
 
 
 const CML::NamedEnum<CML::regIOobject::fileCheckTypes, 4>
@@ -1463,10 +1518,11 @@ void CML::regIOobject::operator=(const IOobject& io)
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::UPstream, 0);
 
 namespace CML
 {
+    defineTypeNameAndDebug(UPstream, 0);
+
     template<>
     const char* CML::NamedEnum
     <
@@ -1495,6 +1551,24 @@ void CML::UPstream::setParRun()
     Perr.prefix() = '[' +  name(myProcNo()) + "] ";
 }
 
+
+void CML::UPstream::setParRun(const label nProcs)
+{
+    if (nProcs == 0)
+    {
+        parRun_ = false;
+
+        Pout.prefix() = "";
+        Perr.prefix() = "";
+    }
+    else
+    {
+        parRun_ = true;
+
+        Pout.prefix() = '[' +  name(myProcNo()) + "] ";
+        Perr.prefix() = '[' +  name(myProcNo()) + "] ";
+    }
+}
 
 void CML::UPstream::calcLinearComm(const label nProcs)
 {

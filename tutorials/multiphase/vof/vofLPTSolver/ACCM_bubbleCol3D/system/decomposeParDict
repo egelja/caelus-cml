@@ -1,0 +1,45 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    object          decomposeParDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+numberOfSubdomains 10;
+
+method          scotch;
+
+simpleCoeffs
+{
+    n               (2 2 2);
+    delta           0.001;
+}
+
+hierarchicalCoeffs
+{
+    n               (1 1 4);
+    delta           0.001;
+    order           xyz;
+}
+
+manualCoeffs
+{
+    dataFile        "cellDecomposition";
+}
+
+metisCoeffs
+{
+    processorWeights    ( 1 1 ); 
+}
+
+distributed     no; 
+
+// ************************************************************************* //

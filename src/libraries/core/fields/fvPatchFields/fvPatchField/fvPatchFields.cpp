@@ -28,18 +28,6 @@ namespace CML
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-#define makeFvPatchField(fvPatchTypeField)                                    \
-                                                                              \
-defineNamedTemplateTypeNameAndDebug(fvPatchTypeField, 0);                     \
-template<>                                                                    \
-int fvPatchTypeField::disallowGenericFvPatchField                             \
-(                                                                             \
-    debug::debugSwitch("disallowGenericFvPatchField", 0)                      \
-);                                                                            \
-defineTemplateRunTimeSelectionTable(fvPatchTypeField, patch);                 \
-defineTemplateRunTimeSelectionTable(fvPatchTypeField, patchMapper);           \
-defineTemplateRunTimeSelectionTable(fvPatchTypeField, dictionary);
-
 makeFvPatchField(fvPatchScalarField)
 makeFvPatchField(fvPatchVectorField)
 makeFvPatchField(fvPatchSphericalTensorField)

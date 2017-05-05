@@ -31,6 +31,8 @@ Description
 #ifndef one_HPP_
 #define one_HPP_
 
+#include "label.hpp"
+
 namespace CML
 {
 
@@ -38,31 +40,81 @@ class one
 {
 public:
 
-    //- Construct null
-    one() {}
+    typedef one value_type;
+
+    // Constructors
+
+        //- Construct null
+        one()
+        {}
+
+
+    // Member operators
+
+        //- Return 1 for label
+        inline operator label() const
+        {
+            return 1;
+        }
+
+        //- Return 1 for float
+        inline operator float() const
+        {
+            return 1;
+        }
+
+        //- Return 1 for double
+        inline operator double() const
+        {
+            return 1;
+        }
 };
 
+template<typename arg2>
+class innerProduct<one, arg2>
+{
+public:
+
+    typedef arg2 type;
+};
+
+inline const one& operator*(const one& o, const one&)
+{
+    return o;
+}
+
 template <typename Type>
-inline Type const& operator*(Type const& t, one const&)
+inline const Type& operator*(const Type& t, const one&)
 {
     return t;
 }
 
 template <typename Type>
-inline Type const& operator*(one const&, Type const& t)
+inline const Type& operator*(const one&, const Type& t)
 {
     return t;
 }
 
+template<typename Type>
+inline const Type& operator&(const one&, const Type& t)
+{
+    return t;
+}
+
+inline const one& operator/(const one& o, const one&)
+{
+    return o;
+}
+
 template <typename Type>
-inline Type operator/(one const&, Type const& t)
+inline Type operator/(const one&, const Type& t)
 {
     return scalar(1)/t;
 }
 
 
 template <typename Type>
-inline Type const& operator/(Type const& t, one const&)
+inline const Type& operator/(const Type& t, const one&)
 {
     return t;
 }

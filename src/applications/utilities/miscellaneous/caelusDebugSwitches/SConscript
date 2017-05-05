@@ -1,75 +1,87 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-caelusDebugSwitchesEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = caelusDebugSwitchesEnv['LIB_SRC']
+target = 'caelusDebugSwitches'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-caelusDebugSwitchesEnv.Append(CCFLAGS = '')
+sources = Split("""
+caelusDebugSwitches.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude'
+caelus_inc = [
 ]
-caelusDebugSwitchesEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-caelusDebugSwitchesEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if caelusDebugSwitchesEnv['WHICH_OS'] == "windows":
-  caelusDebugSwitchesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u compressibleLESModelsLoad -u compressibleRASModelsLoad -u distributionModelsLoad -u incompressibleLESModelsLoad -u incompressibleRASModelsLoad -u interfacePropertiesLoad -u lagrangianIntermediateLoad')
-
-lib_link = ['autoMesh','barotropicCompressibilityModel','basicSolidThermo',
-'basicThermophysicalModels','blockMesh','chemistryModel','coalCombustion',
-'compressibleLESModels','compressibleRASModels',
-'compressibleTurbulenceModel','conversion','decompositionMethods',
-'distributed','distributionModels','dynamicFvMesh','dynamicMesh',
-'edgeMesh','fieldFunctionObjects','CAELUSCalcFunctions','forces',
-'fvMotionSolvers','genericPatchFields','incompressibleLESModels',
-'incompressibleRASModels','incompressibleTransportModels',
-'incompressibleTurbulenceModel','interfaceProperties','IOFunctionObjects',
-'jobControl','lagrangian','lagrangianIntermediate',
-'laminarFlameSpeedModels','LESdeltas','LESfilters',
-'liquidMixtureProperties','liquidProperties'
-,'ODE','radiationModels','randomProcesses',
-'reactionThermophysicalModels','reconstruct','sampling','SLGThermo',
-'solidMixtureProperties','solidParticle','solidProperties','solid',
-'specie','surfaceFilmModels','surfMesh','systemCall',
-'thermophysicalFunctions','topoChangerFvMesh','twoPhaseInterfaceProperties',
-'utilityFunctionObjects'   
+caelus_libs = [
+'autoMesh',
+'barotropicCompressibilityModel',
+'basicSolidThermo',
+'basicThermophysicalModels',
+'blockMesh',
+'chemistryModel',
+'coalCombustion',
+'compressibleLESModels',
+'compressibleRASModels',
+'compressibleTurbulenceModel',
+'conversion',
+'core',
+'decompositionMethods',
+'distributed',
+'distributionModels',
+'dynamicFvMesh',
+'dynamicMesh',
+'edgeMesh',
+'fieldFunctionObjects',
+'CAELUSCalcFunctions',
+'forces',
+'fvMotionSolvers',
+'genericPatchFields',
+'incompressibleLESModels',
+'incompressibleRASModels',
+'incompressibleTransportModels',
+'incompressibleTurbulenceModel',
+'interfaceProperties',
+'IOFunctionObjects',
+'jobControl',
+'lagrangian',
+'lagrangianIntermediate',
+'laminarFlameSpeedModels',
+'LESdeltas',
+'LESfilters',
+'liquidMixtureProperties',
+'liquidProperties',
+'ODE',
+'radiationModels',
+'randomProcesses',
+'reactionThermophysicalModels',
+'reconstruct',
+'sampling',
+'SLGThermo',
+'solidMixtureProperties',
+'solidParticle',
+'solidProperties',
+'solid',
+'specie',
+'surfaceFilmModels',
+'surfMesh',
+'systemCall',
+'thermophysicalFunctions',
+'topoChangerFvMesh',
+'twoPhaseInterfaceProperties',
+'utilityFunctionObjects'
 ]
-caelusDebugSwitchesEnv.Append(LIBS = lib_link)
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  caelusDebugSwitches.cpp
-  """)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad -u interfacePropertiesLoad -u lagrangianIntermediateLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincaelusDebugSwitches = caelusDebugSwitchesEnv.Program(target = 'caelusDebugSwitches', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = caelusDebugSwitchesEnv['BIN_PLATFORM_INSTALL']
-caelusDebugSwitchesEnv.Alias('install', install_dir)
-caelusDebugSwitchesEnv.Install(install_dir, bincaelusDebugSwitches)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

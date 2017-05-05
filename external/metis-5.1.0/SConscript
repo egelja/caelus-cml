@@ -1,0 +1,137 @@
+# -*- mode: python -*-
+
+import os
+import utils
+from build import build_lib, build_app
+Import('env')
+
+metis_env = env.Clone()
+metis_env.Replace(LIB_SRC = Dir('.').abspath)
+
+cflags_map = dict(
+    windows=("-std=c99 -fno-strict-aliasing -Wall -pedantic "
+             "-Wpedantic-ms-format -Wno-unused-but-set-variable "
+             "-Wno-unused-variable -Wno-unknown-pragmas "
+             "-DUSE_GKREGEX -DNDEBUG -DNDEBUG2 -D__USE_MINGW_ANSI_STDIO=1 "
+             "-Dwindows "),
+
+    linux=("-O3 -fPIC -std=c99 -fno-strict-aliasing "
+           "-Wall -pedantic -Wno-unused-but-set-variable -Wno-unused-variable "
+           "-Wno-unknown-pragmas -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H "
+           "-DHAVE_GETLINE -DLINUX -D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS "),
+
+    darwin=("-O3 -fPIC -std=c99 -Wall -Wno-unused-variable "
+            "-Wno-sometimes-uninitialized -pedantic -DNDEBUG -DNDEBUG2 "
+            "-DHAVE_EXECINFO -DHAVE_GETLINE -DDARWIN "
+            "-D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS -D__thread= ")
+)
+
+# Fix C compiler flags
+metis_env.Replace(CCFLAGS=cflags_map[utils.ostype()])
+
+
+target = 'metis'
+
+sources = Split("""
+GKlib/util.c
+GKlib/gkregex.c
+GKlib/graph.c
+GKlib/error.c
+GKlib/omp.c
+GKlib/io.c
+GKlib/fkvkselect.c
+GKlib/blas.c
+GKlib/pqueue.c
+GKlib/evaluate.c
+GKlib/b64.c
+GKlib/random.c
+GKlib/seq.c
+GKlib/mcore.c
+GKlib/itemsets.c
+GKlib/timers.c
+GKlib/csr.c
+GKlib/sort.c
+GKlib/getopt.c
+GKlib/rw.c
+GKlib/tokenizer.c
+GKlib/fs.c
+GKlib/htable.c
+GKlib/memory.c
+GKlib/string.c
+GKlib/pdb.c
+libmetis/util.c
+libmetis/graph.c
+libmetis/fortran.c
+libmetis/debug.c
+libmetis/options.c
+libmetis/auxapi.c
+libmetis/contig.c
+libmetis/mesh.c
+libmetis/kmetis.c
+libmetis/refine.c
+libmetis/frename.c
+libmetis/compress.c
+libmetis/timing.c
+libmetis/fm.c
+libmetis/mincover.c
+libmetis/stat.c
+libmetis/mmd.c
+libmetis/sfm.c
+libmetis/minconn.c
+libmetis/srefine.c
+libmetis/checkgraph.c
+libmetis/wspace.c
+libmetis/parmetis.c
+libmetis/meshpart.c
+libmetis/balance.c
+libmetis/kwayfm.c
+libmetis/coarsen.c
+libmetis/gklib.c
+libmetis/mcutil.c
+libmetis/initpart.c
+libmetis/bucketsort.c
+libmetis/separator.c
+libmetis/kwayrefine.c
+libmetis/pmetis.c
+libmetis/ometis.c
+""")
+
+caelus_inc = [
+'include',
+'libmetis',
+'GKlib'
+]
+
+caelus_libs = [
+'m',
+]
+
+build_lib(metis_env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)
+
+# Graph check
+#target = 'graphchk'
+
+#sources = Split("""
+#programs/io.c
+#programs/graphchk.c
+#""")
+
+#caelus_libs = [
+#    'metis',
+#    'm'
+#]
+
+#append_args = dict(
+#    CCFLAGS='-DSVNINFO=\\"\\"'
+#)
+
+#build_app(metis_env,
+#          target=target,
+#          sources=sources,
+#          caelus_inc=caelus_inc,
+#          caelus_libs=caelus_libs,
+#          append_args=append_args)

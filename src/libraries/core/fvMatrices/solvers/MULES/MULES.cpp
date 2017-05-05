@@ -20,17 +20,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "MULES.hpp"
-#include "upwind.hpp"
-#include "uncorrectedSnGrad.hpp"
-#include "gaussConvectionScheme.hpp"
-#include "gaussLaplacianScheme.hpp"
-#include "uncorrectedSnGrad.hpp"
-#include "surfaceInterpolate.hpp"
-#include "fvcSurfaceIntegrate.hpp"
-#include "slicedSurfaceFields.hpp"
-#include "syncTools.hpp"
-
-#include "fvm.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,27 +33,6 @@ void CML::MULES::explicitSolve
 )
 {
     explicitSolve
-    (
-        geometricOneField(),
-        psi,
-        phi,
-        phiPsi,
-        zeroField(), zeroField(),
-        psiMax, psiMin
-    );
-}
-
-
-void CML::MULES::implicitSolve
-(
-    volScalarField& psi,
-    const surfaceScalarField& phi,
-    surfaceScalarField& phiPsi,
-    const scalar psiMax,
-    const scalar psiMin
-)
-{
-    implicitSolve
     (
         geometricOneField(),
         psi,

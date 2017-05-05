@@ -1,59 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-sampleEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = sampleEnv['LIB_SRC']
+target = 'sample'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-sampleEnv.Append(CCFLAGS = '')
+sources = Split("""
+sample.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/sampling/lnInclude', src + '/surfMesh/lnInclude',
-src + '/lagrangian/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'surfMesh/lnInclude',
+'lagrangian/basic/lnInclude'
 ]
-sampleEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-sampleEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'sampling',
+'surfMesh',
+'lagrangian']
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if sampleEnv['WHICH_OS'] == "windows":
-  sampleEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','sampling','surfMesh','lagrangian']
- 
-sampleEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  sample.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binsample = sampleEnv.Program(target = 'sample', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = sampleEnv['BIN_PLATFORM_INSTALL']
-sampleEnv.Alias('install', install_dir)
-sampleEnv.Install(install_dir, binsample)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -26,19 +26,10 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-
-    namespace fv {
-
-        makeSwakFvOption(SwakExplicitSource, scalar);
-        makeSwakFvOption(SwakExplicitSource, vector);
-        makeSwakFvOption(SwakExplicitSource, sphericalTensor);
-        makeSwakFvOption(SwakExplicitSource, symmTensor);
-        makeSwakFvOption(SwakExplicitSource, tensor);
-
-    }
-
-}
+makeSwakFvOption(SwakExplicitSource, scalar);
+makeSwakFvOption(SwakExplicitSource, vector);
+makeSwakFvOption(SwakExplicitSource, sphericalTensor);
+makeSwakFvOption(SwakExplicitSource, symmTensor);
+makeSwakFvOption(SwakExplicitSource, tensor);
 
 // ************************************************************************* //

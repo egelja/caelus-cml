@@ -317,7 +317,8 @@ public:
         GeometricField
         (
             const IOobject&,
-            const Mesh&
+            const Mesh&,
+            const bool readOldTime = true
         );
 
         //- Construct from dictionary
@@ -729,7 +730,7 @@ bool CML::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
         (
             "GeometricField<Type, PatchField, GeoMesh>::readIfPresent()"
         )   << "read option IOobject::MUST_READ or MUST_READ_IF_MODIFIED"
-            << "suggests that a read constructor for field " << this->name()
+            << " suggests that a read constructor for field " << this->name()
             << " would be more appropriate." << endl;
     }
     else if (this->readOpt() == IOobject::READ_IF_PRESENT && this->headerOk())
@@ -956,7 +957,8 @@ template<class Type, template<class> class PatchField, class GeoMesh>
 CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 (
     const IOobject& io,
-    const Mesh& mesh
+    const Mesh& mesh,
+    const bool readOldTime
 )
 :
     DimensionedField<Type, GeoMesh>(io, mesh, dimless, false),
@@ -981,7 +983,10 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
             << exit(FatalIOError);
     }
 
-    readOldTimeIfPresent();
+    if (readOldTime)
+    {
+        readOldTimeIfPresent();
+    }
 
     if (debug)
     {
@@ -2462,7 +2467,7 @@ void T
 }
 
 
-template<class Type, template<class> class PatchField, class GeoMesh, int r>
+template<class Type, template<class> class PatchField, class GeoMesh, direction r>
 void pow
 (
     GeometricField<typename powProduct<Type, r>::type, PatchField, GeoMesh>& gf,
@@ -2473,7 +2478,7 @@ void pow
     pow(gf.boundaryField(), gf1.boundaryField(), r);
 }
 
-template<class Type, template<class> class PatchField, class GeoMesh, int r>
+template<class Type, template<class> class PatchField, class GeoMesh, direction r>
 tmp<GeometricField<typename powProduct<Type, r>::type, PatchField, GeoMesh> >
 pow
 (
@@ -2506,7 +2511,7 @@ pow
 }
 
 
-template<class Type, template<class> class PatchField, class GeoMesh, int r>
+template<class Type, template<class> class PatchField, class GeoMesh, direction r>
 tmp<GeometricField<typename powProduct<Type, r>::type, PatchField, GeoMesh> >
 pow
 (
@@ -3160,7 +3165,7 @@ operator op                                                                   \
         )                                                                     \
     );                                                                        \
                                                                               \
-    CML::opFunc(tRes(), gf1, dvs);                                           \
+    CML::opFunc(tRes(), gf1, dvs);                                            \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
@@ -3169,7 +3174,7 @@ template                                                                      \
 <                                                                             \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt,                                                                \
+    direction nCmpt,                                                          \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
@@ -3205,7 +3210,7 @@ operator op                                                                   \
             gf1.dimensions() op dvs.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes(), gf1, dvs);                                           \
+    CML::opFunc(tRes(), gf1, dvs);                                            \
                                                                               \
     reuseTmpGeometricField<productType, Type, PatchField, GeoMesh>            \
     ::clear(tgf1);                                                            \
@@ -3217,7 +3222,7 @@ template                                                                      \
 <                                                                             \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt,                                                                \
+    direction nCmpt,                                                          \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
@@ -3273,7 +3278,7 @@ operator op                                                                   \
         )                                                                     \
     );                                                                        \
                                                                               \
-    CML::opFunc(tRes(), dvs, gf1);                                           \
+    CML::opFunc(tRes(), dvs, gf1);                                            \
                                                                               \
     return tRes;                                                              \
 }                                                                             \
@@ -3282,7 +3287,7 @@ template                                                                      \
 <                                                                             \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt,                                                                \
+    direction nCmpt,                                                          \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
@@ -3317,7 +3322,7 @@ operator op                                                                   \
             dvs.dimensions() op gf1.dimensions()                              \
         );                                                                    \
                                                                               \
-    CML::opFunc(tRes(), dvs, gf1);                                           \
+    CML::opFunc(tRes(), dvs, gf1);                                            \
                                                                               \
     reuseTmpGeometricField<productType, Type, PatchField, GeoMesh>            \
     ::clear(tgf1);                                                            \
@@ -3329,7 +3334,7 @@ template                                                                      \
 <                                                                             \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt,                                                                \
+    direction nCmpt,                                                          \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \

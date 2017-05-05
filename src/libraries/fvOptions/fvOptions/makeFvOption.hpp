@@ -31,12 +31,13 @@ License
                                                                               \
     defineTemplateTypeNameAndDebugWithName                                    \
     (                                                                         \
-        Option<Type>,                                                         \
+        CML::fv::Option<CML::Type>,                                           \
         #Type#Option,                                                         \
         0                                                                     \
     );                                                                        \
                                                                               \
-    option::adddictionaryConstructorToTable<Option<Type> >                    \
+    CML::fv::option::adddictionaryConstructorToTable                          \
+        <CML::fv::Option<CML::Type> >                                         \
         add##Option##Type##dictionary##ConstructorTooptionTable_
 
 

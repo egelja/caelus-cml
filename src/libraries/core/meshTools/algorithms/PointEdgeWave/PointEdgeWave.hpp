@@ -201,6 +201,9 @@ class PointEdgeWave
             //- Merge data from across cyclic boundaries
             void handleCyclicPatches();
 
+            //- Explicitly sync all collocated points
+            label handleCollocatedPoints();
+
 
         //- Disallow default bitwise copy construct
         PointEdgeWave(const PointEdgeWave&);
@@ -368,6 +371,30 @@ CML::scalar CML::PointEdgeWave<Type, TrackingData>::propagationTol_ = 0.01;
 template <class Type, class TrackingData>
 int CML::PointEdgeWave<Type, TrackingData>::dummyTrackData_ = 12345;
 
+namespace CML
+{
+    //- Reduction class. If x and y are not equal assign value.
+    template<class Type, class TrackingData>
+    class combineEqOp
+    {
+        TrackingData& td_;
+
+        public:
+            combineEqOp(TrackingData& td)
+            :
+                td_(td)
+            {}
+
+        void operator()(Type& x, const Type& y) const
+        {
+            if (!x.valid(td_) && y.valid(td_))
+            {
+                x = y;
+            }
+        }
+    };
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -440,6 +467,7 @@ void CML::PointEdgeWave<Type, TrackingData>::transform
             "PointEdgeWave<Type, TrackingData>::transform"
             "(const tensorField&, List<Type>&)"
         )   << "Non-uniform transformation on patch " << patch.name()
+            << " of type " << patch.type()
             << " not supported for point fields"
             << abort(FatalError);
 
@@ -715,46 +743,10 @@ void CML::PointEdgeWave<Type, TrackingData>::handleProcPatches()
         }
     }
 
-
-
-    //
-    // 3. Handle all shared points
-    //    (Note:irrespective if changed or not for now)
-    //
-
-    const globalMeshData& pd = mesh_.globalData();
-
-    List<Type> sharedData(pd.nGlobalPoints());
-
-    forAll(pd.sharedPointLabels(), i)
-    {
-        label meshPointI = pd.sharedPointLabels()[i];
-
-        // Fill my entries in the shared points
-        sharedData[pd.sharedPointAddr()[i]] = allPointInfo_[meshPointI];
-    }
-
-    // Combine on master. Reduce operator has to handle a list and call
-    // Type.updatePoint for all elements
-    combineReduce(sharedData, listUpdateOp<Type>(propagationTol_, td_));
-
-    forAll(pd.sharedPointLabels(), i)
-    {
-        label meshPointI = pd.sharedPointLabels()[i];
-
-        // Retrieve my entries from the shared points.
-        const Type& nbrInfo = sharedData[pd.sharedPointAddr()[i]];
-
-        if (!allPointInfo_[meshPointI].equal(nbrInfo, td_))
-        {
-            updatePoint
-            (
-                meshPointI,
-                nbrInfo,
-                allPointInfo_[meshPointI]
-            );
-        }
-    }
+    // Collocated points should be handled by face based transfer
+    // (since that is how connectivity is worked out)
+    // They are also explicitly equalised in handleCollocatedPoints to
+    // guarantee identical values.
 }
 
 
@@ -847,6 +839,98 @@ void CML::PointEdgeWave<Type, TrackingData>::handleCyclicPatches()
 }
 
 
+// Guarantee collocated points have same information.
+// Return number of points changed.
+template<class Type, class TrackingData>
+CML::label CML::PointEdgeWave<Type, TrackingData>::handleCollocatedPoints()
+{
+    // Transfer onto coupled patch
+    const globalMeshData& gmd = mesh_.globalData();
+    const indirectPrimitivePatch& cpp = gmd.coupledPatch();
+    const labelList& meshPoints = cpp.meshPoints();
+
+    const mapDistribute& slavesMap = gmd.globalPointSlavesMap();
+    const labelListList& slaves = gmd.globalPointSlaves();
+
+    List<Type> elems(slavesMap.constructSize());
+    forAll(meshPoints, pointi)
+    {
+        elems[pointi] = allPointInfo_[meshPoints[pointi]];
+    }
+
+    // Pull slave data onto master (which might or might not have any
+    // initialised points). No need to update transformed slots.
+    slavesMap.distribute(elems, false);
+
+    // Combine master data with slave data
+    combineEqOp<Type, TrackingData> cop(td_);
+
+    forAll(slaves, pointi)
+    {
+        Type& elem = elems[pointi];
+
+        const labelList& slavePoints = slaves[pointi];
+
+        // Combine master with untransformed slave data
+        forAll(slavePoints, j)
+        {
+            cop(elem, elems[slavePoints[j]]);
+        }
+
+        // Copy result back to slave slots
+        forAll(slavePoints, j)
+        {
+            elems[slavePoints[j]] = elem;
+        }
+    }
+
+    // Push slave-slot data back to slaves
+    slavesMap.reverseDistribute(elems.size(), elems, false);
+
+    // Extract back onto mesh
+    forAll(meshPoints, pointi)
+    {
+        if (elems[pointi].valid(td_))
+        {
+            label meshPointi = meshPoints[pointi];
+
+            Type& elem = allPointInfo_[meshPointi];
+
+            bool wasValid = elem.valid(td_);
+
+            // Like updatePoint but bypass Type::updatePoint with its tolerance
+            // checking
+            //if (!elem.valid(td_) || !elem.equal(elems[pointi], td_))
+            if (!elem.equal(elems[pointi], td_))
+            {
+                nEvals_++;
+                elem = elems[pointi];
+
+                // See if element now valid
+                if (!wasValid && elem.valid(td_))
+                {
+                    --nUnvisitedPoints_;
+                }
+
+                // Update database of changed points
+                if (!changedPoint_[meshPointi])
+                {
+                    changedPoint_[meshPointi] = true;
+                    changedPoints_[nChangedPoints_++] = meshPointi;
+                }
+            }
+        }
+    }
+
+    // Sum nChangedPoints over all procs
+    label totNChanged = nChangedPoints_;
+
+    reduce(totNChanged, sumOp<label>());
+
+    return totNChanged;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Iterate, propagating changedPointsInfo across mesh, until no change (or
@@ -913,7 +997,8 @@ CML::PointEdgeWave<Type, TrackingData>::PointEdgeWave
 
     if (debug)
     {
-        Pout<< "Seed points               : " << nChangedPoints_ << endl;
+        Info<< typeName << ": Seed points               : "
+            << returnReduce(nChangedPoints_, sumOp<label>()) << endl;
     }
 
     // Iterate until nothing changes
@@ -1016,6 +1101,9 @@ void CML::PointEdgeWave<Type, TrackingData>::setPointInfo
             changedPoints_[nChangedPoints_++] = pointI;
         }
     }
+
+    // Sync
+    handleCollocatedPoints();
 }
 
 
@@ -1187,44 +1275,63 @@ CML::label CML::PointEdgeWave<Type, TrackingData>::iterate
 
     while (iter < maxIter)
     {
-        if (debug)
+        while (iter < maxIter)
         {
-            Pout<< "Iteration " << iter << endl;
+            if (debug)
+            {
+                Info<< typeName << ": Iteration " << iter << endl;
+            }
+
+            label nEdges = pointToEdge();
+
+            if (debug)
+            {
+                Info<< typeName << ": Total changed edges       : "
+                    << nEdges << endl;
+            }
+
+            if (nEdges == 0)
+            {
+                break;
+            }
+
+            label nPoints = edgeToPoint();
+
+            if (debug)
+            {
+                Info<< typeName << ": Total changed points      : "
+                    << nPoints << nl
+                    << typeName << ": Total evaluations         : "
+                    << returnReduce(nEvals_, sumOp<label>()) << nl
+                    << typeName << ": Remaining unvisited points: "
+                    << returnReduce(nUnvisitedPoints_, sumOp<label>()) << nl
+                    << typeName << ": Remaining unvisited edges : "
+                    << returnReduce(nUnvisitedEdges_, sumOp<label>()) << nl
+                    << endl;
+            }
+
+            if (nPoints == 0)
+            {
+                break;
+            }
+
+            iter++;
         }
 
-        label nEdges = pointToEdge();
 
+        // Enforce collocated points are exactly equal. This might still mean
+        // non-collocated points are not equal though. WIP.
+        label nPoints = handleCollocatedPoints();
         if (debug)
         {
-            Pout<< "Total changed edges       : " << nEdges << endl;
-        }
-
-        if (nEdges == 0)
-        {
-            break;
-        }
-
-        label nPoints = edgeToPoint();
-
-        if (debug)
-        {
-            Pout<< "Total changed points      : " << nPoints << endl;
-
-            Pout<< "Total evaluations         : " << nEvals_ << endl;
-
-            Pout<< "Remaining unvisited points: " << nUnvisitedPoints_ << endl;
-
-            Pout<< "Remaining unvisited edges : " << nUnvisitedEdges_ << endl;
-
-            Pout<< endl;
+            Info<< typeName << ": Collocated point sync     : "
+                << nPoints << nl << endl;
         }
 
         if (nPoints == 0)
         {
             break;
         }
-
-        iter++;
     }
 
     return iter;

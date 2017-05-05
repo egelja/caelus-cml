@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ---------------------------------------------------------------------------
-# Caelus 6.10
+# Caelus 7.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -47,4 +47,5 @@ run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], she
 run.wait()
 run = None
 
-
+# Create stub file for paraview
+open('volvoTestCase.foam', 'a').close()

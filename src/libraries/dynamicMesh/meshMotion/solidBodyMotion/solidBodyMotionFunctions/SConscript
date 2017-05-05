@@ -1,0 +1,32 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'solidBodyMotionFunctions'
+
+sources = Split("""
+solidBodyMotionFunction/solidBodyMotionFunction.cpp
+solidBodyMotionFunction/solidBodyMotionFunctionNew.cpp
+SDA/SDA.cpp
+tabulated6DoFMotion/tabulated6DoFMotion.cpp
+linearMotion/linearMotion.cpp
+rotatingMotion/rotatingMotion.cpp
+axisRotationMotion/axisRotationMotion.cpp
+multiMotion/multiMotion.cpp
+oscillatingLinearMotion/oscillatingLinearMotion.cpp
+oscillatingRotatingMotion/oscillatingRotatingMotion.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

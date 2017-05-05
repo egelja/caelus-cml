@@ -123,6 +123,13 @@ public:
 #               endif
             }
 
+            void clear()
+            {
+                return dynamic_cast<std::ostringstream&>
+                (
+                    stdStream()
+                ).str(std::string());
+            }
 
         // Print
 

@@ -1,0 +1,56 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'fvMotionSolvers'
+
+sources = Split("""
+fvMotionSolvers/fvMotionSolverCore/fvMotionSolverCore.cpp
+fvMotionSolvers/displacement/SBRStress/displacementSBRStressFvMotionSolver.cpp
+fvMotionSolvers/displacement/laplacian/displacementLaplacianFvMotionSolver.cpp
+fvMotionSolvers/displacement/interpolation/displacementInterpolationMotionSolver.cpp
+fvMotionSolvers/displacement/layeredSolver/displacementLayeredMotionMotionSolver.cpp
+fvMotionSolvers/displacement/layeredSolver/pointEdgeStructuredWalk.cpp
+fvMotionSolvers/componentDisplacement/componentLaplacian/displacementComponentLaplacianFvMotionSolver.cpp
+fvMotionSolvers/velocity/laplacian/velocityLaplacianFvMotionSolver.cpp
+fvMotionSolvers/componentVelocity/componentLaplacian/velocityComponentLaplacianFvMotionSolver.cpp
+motionDiffusivity/motionDiffusivity/motionDiffusivity.cpp
+motionDiffusivity/uniform/uniformDiffusivity.cpp
+motionDiffusivity/inverseDistance/inverseDistanceDiffusivity.cpp
+motionDiffusivity/inverseFaceDistance/inverseFaceDistanceDiffusivity.cpp
+motionDiffusivity/inversePointDistance/inversePointDistanceDiffusivity.cpp
+motionDiffusivity/inverseVolume/inverseVolumeDiffusivity.cpp
+motionDiffusivity/directional/directionalDiffusivity.cpp
+motionDiffusivity/motionDirectional/motionDirectionalDiffusivity.cpp
+motionDiffusivity/file/fileDiffusivity.cpp
+motionDiffusivity/manipulators/quadratic/quadraticDiffusivity.cpp
+motionDiffusivity/manipulators/exponential/exponentialDiffusivity.cpp
+fvPatchFields/derived/cellMotion/cellMotionFvPatchFields.cpp
+fvPatchFields/derived/surfaceSlipDisplacement/surfaceSlipDisplacementFvPatchFields.cpp
+pointPatchFields/derived/oscillatingVelocity/oscillatingVelocityPointPatchVectorField.cpp
+pointPatchFields/derived/angularOscillatingVelocity/angularOscillatingVelocityPointPatchVectorField.cpp
+pointPatchFields/derived/oscillatingDisplacement/oscillatingDisplacementPointPatchVectorField.cpp
+pointPatchFields/derived/angularOscillatingDisplacement/angularOscillatingDisplacementPointPatchVectorField.cpp
+pointPatchFields/derived/surfaceSlipDisplacement/surfaceSlipDisplacementPointPatchVectorField.cpp
+pointPatchFields/derived/surfaceDisplacement/surfaceDisplacementPointPatchVectorField.cpp
+pointPatchFields/derived/waveDisplacement/waveDisplacementPointPatchVectorField.cpp
+pointPatchFields/derived/timeVaryingMappedFixedValue/timeVaryingMappedFixedValuePointPatchFields.cpp
+""")
+
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'dynamicMesh',
+'rigidBodyDynamics',
+'forces'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

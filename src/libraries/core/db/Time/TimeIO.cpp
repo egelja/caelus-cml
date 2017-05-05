@@ -21,11 +21,64 @@ License
 
 #include "Time.hpp"
 #include "Pstream.hpp"
+#include "simpleObjectRegistry.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::Time::readDict()
 {
+    word application;
+    if (controlDict_.readIfPresent("application", application))
+    {
+        // Do not override if already set so external application can override
+        setEnv("FOAM_APPLICATION", application, false);
+    }
+
+
+    // Check for local switches and settings
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Debug switches
+    if (controlDict_.found("DebugSwitches"))
+    {
+        Info<< "Overriding DebugSwitches according to " << controlDict_.name()
+            << endl;
+
+        simpleObjectRegistry& objects = debug::debugObjects();
+        const dictionary& localSettings = controlDict_.subDict("DebugSwitches");
+        forAllConstIter(dictionary, localSettings, iter)
+        {
+            const word& name = iter().keyword();
+
+            simpleObjectRegistryEntry* objPtr = objects.lookupPtr(name);
+
+            if (objPtr)
+            {
+                Info<< "    " << iter() << endl;
+
+                const List<simpleRegIOobject*>& objects = *objPtr;
+
+                if (iter().isDict())
+                {
+                    forAll(objects, i)
+                    {
+                        OStringStream os(IOstream::ASCII);
+                        os  << iter().dict();
+                        IStringStream is(os.str());
+                        objects[i]->readData(is);
+                    }
+                }
+                else
+                {
+                    forAll(objects, i)
+                    {
+                        objects[i]->readData(iter().stream());
+                    }
+                }
+            }
+        }
+    }
+
     if (!deltaTchanged_)
     {
         deltaT_ = readScalar(controlDict_.lookup("deltaT"));
@@ -288,8 +341,8 @@ void CML::Time::readModifiedObjects()
 
         if (controlDict_.readIfModified())
         {
-           readDict();
-           functionObjects_.read();
+            readDict();
+            functionObjects_.read();
         }
 
         bool registryModified = objectRegistry::modified();

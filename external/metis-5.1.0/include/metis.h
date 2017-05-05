@@ -47,10 +47,11 @@
    32 : single precission floating point (float)
    64 : double precission floating point (double)
 --------------------------------------------------------------------------*/
-
-#define REALTYPEWIDTH 64 // Assumes Caelus is in DP. 
-// Otherwise the scalar definition in Caelus will clash with this setting
-
+#if defined(WM_SP)
+   #define REALTYPEWIDTH 32 // single precision Caelus
+#else
+   #define REALTYPEWIDTH 64 // otherwise assumes Caelus double precision
+#endif
 
 /****************************************************************************
 * In principle, nothing needs to be changed beyond this point, unless the

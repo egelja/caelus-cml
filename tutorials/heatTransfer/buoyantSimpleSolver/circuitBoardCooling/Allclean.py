@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ---------------------------------------------------------------------------
-# Caelus 6.10
+# Caelus 7.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -13,9 +13,7 @@ import shutil
 import Caelus
 
 # Starting up the meshing and solving
-print "*************************************"
-print "Cleaning circuitBoardCooling tutorial"
-print "*************************************"
+print "Cleaning tutorial: circuitBoardCooling"
 
 # Remove the 0 directory
 if os.path.exists('0'):

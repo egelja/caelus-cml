@@ -194,7 +194,7 @@ bool ping(const string&, const label timeOut=10);
 //- Execute the specified command
 int system(const std::string& command);
 
-//- open a shared library. Return handle to library. Print error message
+//- Open a shared library. Return handle to library. Print error message
 //  if library cannot be loaded (check = true)
 void* dlOpen(const fileName& lib, const bool check = true);
 

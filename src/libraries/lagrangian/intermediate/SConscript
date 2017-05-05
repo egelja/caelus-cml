@@ -1,119 +1,100 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-lagInterEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = lagInterEnv['LIB_SRC']
+target = 'lagrangianIntermediate'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-lagInterEnv.Append(CCFLAGS = '')
+sources = Split("""
+clouds/baseClasses/kinematicCloud/kinematicCloud.cpp
+clouds/baseClasses/thermoCloud/thermoCloud.cpp
+clouds/baseClasses/reactingCloud/reactingCloud.cpp
+clouds/baseClasses/reactingMultiphaseCloud/reactingMultiphaseCloud.cpp
+parcels/derived/basicKinematicParcel/defineBasicKinematicParcel.cpp
+parcels/derived/basicKinematicParcel/makeBasicKinematicParcelSubmodels.cpp
+parcels/derived/basicKinematicCollidingParcel/defineBasicKinematicCollidingParcel.cpp
+parcels/derived/basicKinematicCollidingParcel/makeBasicKinematicCollidingParcelSubmodels.cpp
+parcels/derived/basicThermoParcel/defineBasicThermoParcel.cpp
+parcels/derived/basicThermoParcel/makeBasicThermoParcelSubmodels.cpp
+parcels/derived/basicReactingParcel/defineBasicReactingParcel.cpp
+parcels/derived/basicReactingParcel/makeBasicReactingParcelSubmodels.cpp
+parcels/derived/basicReactingMultiphaseParcel/defineBasicReactingMultiphaseParcel.cpp
+parcels/derived/basicReactingMultiphaseParcel/makeBasicReactingMultiphaseParcelSubmodels.cpp
+submodels/addOns/radiation/absorptionEmission/cloudAbsorptionEmission/cloudAbsorptionEmission.cpp
+submodels/addOns/radiation/scatter/cloudScatter/cloudScatter.cpp
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.cpp
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionDataList.cpp
+submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionData.cpp
+submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionDataIO.cpp
+submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionDataIOList.cpp
+submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionData.cpp
+submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionDataIO.cpp
+submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionDataIOList.cpp
+submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionData.cpp
+submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionDataIO.cpp
+submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionDataIOList.cpp
+submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionData.cpp
+submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionDataIO.cpp
+submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionDataIOList.cpp
+IntegrationScheme/makeIntegrationSchemes.cpp
+phaseProperties/phaseProperties/phaseProperties.cpp
+phaseProperties/phaseProperties/phasePropertiesIO.cpp
+phaseProperties/phasePropertiesList/phasePropertiesList.cpp
+clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/sampling/lnInclude',
-src + '/dynamicFvMesh/lnInclude',
-src + '/lagrangian/basic/lnInclude',
-src + '/lagrangian/distributionModels/lnInclude',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/LES/lnInclude',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/transportModels',
-src + '/regionModels/regionModel/lnInclude',
-src + '/regionModels/surfaceFilmModels/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/SLGThermo/lnInclude',
-src + '/thermophysicalModels/radiationModels/lnInclude',
-src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'dynamicFvMesh/lnInclude',
+'lagrangian/basic/lnInclude',
+'lagrangian/distributionModels/lnInclude',
+'turbulenceModels',
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/radiationModels/lnInclude',
+'thermophysicalModels/properties/liquidProperties/lnInclude',
+'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude',
+'thermophysicalModels/properties/solidMixtureProperties/lnInclude'
 ]
-lagInterEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-lagInterEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','lagrangian','distributionModels','specie',
-'basicThermophysicalModels','liquidProperties','liquidMixtureProperties',
-'solidProperties','solidMixtureProperties','reactionThermophysicalModels',
-'SLGThermo','radiationModels','incompressibleTurbulenceModel',
-'incompressibleRASModels','incompressibleLESModels','compressibleTurbulenceModel',
-'compressibleRASModels','compressibleLESModels','LESdeltas',
-'incompressibleTransportModels','regionModels','surfaceFilmModels','dynamicFvMesh','sampling'
+caelus_libs = [
+'core',
+'lagrangian',
+'distributionModels',
+'specie',
+'basicThermophysicalModels',
+'liquidProperties',
+'liquidMixtureProperties',
+'solidProperties',
+'solidMixtureProperties',
+'reactionThermophysicalModels',
+'SLGThermo',
+'radiationModels',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'compressibleTurbulenceModel',
+'compressibleRASModels',
+'compressibleLESModels',
+'LESdeltas',
+'incompressibleTransportModels',
+'regionModels',
+'surfaceFilmModels',
+'dynamicFvMesh',
+'sampling'
 ]
-lagInterEnv.Append(LIBS = lib_link)
-            
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  clouds/baseClasses/kinematicCloud/kinematicCloud.cpp
-  clouds/baseClasses/thermoCloud/thermoCloud.cpp
-  clouds/baseClasses/reactingCloud/reactingCloud.cpp
-  clouds/baseClasses/reactingMultiphaseCloud/reactingMultiphaseCloud.cpp
-  parcels/derived/basicKinematicParcel/defineBasicKinematicParcel.cpp
-  parcels/derived/basicKinematicParcel/makeBasicKinematicParcelSubmodels.cpp
-  parcels/derived/basicKinematicCollidingParcel/defineBasicKinematicCollidingParcel.cpp
-  parcels/derived/basicKinematicCollidingParcel/makeBasicKinematicCollidingParcelSubmodels.cpp
-  parcels/derived/basicThermoParcel/defineBasicThermoParcel.cpp
-  parcels/derived/basicThermoParcel/makeBasicThermoParcelSubmodels.cpp
-  parcels/derived/basicReactingParcel/defineBasicReactingParcel.cpp
-  parcels/derived/basicReactingParcel/makeBasicReactingParcelSubmodels.cpp
-  parcels/derived/basicReactingMultiphaseParcel/defineBasicReactingMultiphaseParcel.cpp
-  parcels/derived/basicReactingMultiphaseParcel/makeBasicReactingMultiphaseParcelSubmodels.cpp
-  submodels/addOns/radiation/absorptionEmission/cloudAbsorptionEmission/cloudAbsorptionEmission.cpp
-  submodels/addOns/radiation/scatter/cloudScatter/cloudScatter.cpp
-  submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.cpp
-  submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionDataList.cpp
-  submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionData.cpp
-  submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionDataIO.cpp
-  submodels/Kinematic/InjectionModel/KinematicLookupTableInjection/kinematicParcelInjectionDataIOList.cpp
-  submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionData.cpp
-  submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionDataIO.cpp
-  submodels/Thermodynamic/InjectionModel/ThermoLookupTableInjection/thermoParcelInjectionDataIOList.cpp
-  submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionData.cpp
-  submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionDataIO.cpp
-  submodels/Reacting/InjectionModel/ReactingLookupTableInjection/reactingParcelInjectionDataIOList.cpp
-  submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionData.cpp
-  submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionDataIO.cpp
-  submodels/ReactingMultiphase/InjectionModel/ReactingMultiphaseLookupTableInjection/reactingMultiphaseParcelInjectionDataIOList.cpp
-  IntegrationScheme/makeIntegrationSchemes.cpp
-  phaseProperties/phaseProperties/phaseProperties.cpp
-  phaseProperties/phaseProperties/phasePropertiesIO.cpp
-  phaseProperties/phasePropertiesList/phasePropertiesList.cpp
-  clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.cpp
-  """)
 
-#===============================================================================
-# Build this library
-#===============================================================================
-liblagrangianIntermediate = lagInterEnv.SharedLibrary(target = 
-'lagrangianIntermediate', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = lagInterEnv['LIB_PLATFORM_INSTALL']
-lagInterEnv.Alias('install', install_dir)
-lagInterEnv.Install(install_dir, liblagrangianIntermediate)
-
-if (lagInterEnv['WHICH_OS'] == "darwin"):
-
-  lagInterEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangianIntermediate.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

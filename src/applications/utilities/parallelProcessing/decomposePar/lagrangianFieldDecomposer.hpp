@@ -97,7 +97,6 @@ public:
             const label cloudI,
             const IOobjectList& lagrangianObjects,
             PtrList<PtrList<IOField<Type> > >& lagrangianFields
-//            PtrList<IOField<Type> >& lagrangianFields
         );
 
         template<class Type>
@@ -109,7 +108,6 @@ public:
             <
                 PtrList<CompactIOField<Field<Type>, Type> >
             >& lagrangianFields
-//            PtrList<CompactIOField<Field<Type>, Type > >& lagrangianFields
         );
 
 
@@ -267,7 +265,8 @@ CML::lagrangianFieldDecomposer::decomposeField
                 cloud::prefix/cloudName,
                 procMesh_,
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             procField
         )
@@ -298,7 +297,8 @@ CML::lagrangianFieldDecomposer::decomposeFieldField
                 cloud::prefix/cloudName,
                 procMesh_,
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             procField
         )

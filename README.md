@@ -2,7 +2,7 @@
 
 ## License
 
-Caelus is a fork or OpenFOAM and is currently compatible with OpenFOAM.
+Caelus was forked from OpenFOAM and contains modified OpenFOAM source code. It is currently compatible with OpenFOAM.
 
 It is released under the GPL: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See the GNU General Public License for more details.
 
@@ -13,9 +13,9 @@ You should have received a copy of the GNU General Public License along with Cae
 - Chris Sideroff: c.sideroff@appliedccm.ca
 - Darrin Stephens: d.stephens@appliedccm.com.au
 
-## COPYRIGHT Applied CCM 2014-2016
+## COPYRIGHT Applied CCM 2014-2017
 
-Current version: Caelus 6.10
+Current version: Caelus 7.04
 
 ## Solvers
 ### basic:
@@ -38,16 +38,20 @@ Current version: Caelus 6.10
 - **`buoyantSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force
 ### multiphase:
 - **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids
+- **`vofDyMSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids with dynamic mesh solver
 - **`vofLPTSolver`**: Volume of Fluid (VOF) phase-fraction based solver with Lagrangian particle tracking
+- **`pimpleParcelSolver`**: PIMPLE-based incompressible transient solver with Lagrangian particle tracking
+
 ### combustion:
 - **`reactingSolver`**: A fractional step based transient solver for compressible combustion flows with the Arrhenius rate chemistry ODE solver. Time stepping algorithm is based on PIMPLE algorithm
 ## Turbulence Models
 ### Reynolds Avergaged Navier-Stokes:
 - Spalart-Allmaras with curvature correction
 - Realizable k-epsilon
+- k-epsilon
 - k-omega SST with curvature correction (Menter et al 2003)
 - Scale Adapted Simulation (SAS) based on k-omega SST (Menter er al 2003)
-### Tranistion:
+### Transition:
 - gamma-Re-Theta; calibrated for commercial CFD (Malan et al 2009)
 #### Wall Functions:
 - nutU high Reynolds number velocity based
@@ -56,7 +60,7 @@ Current version: Caelus 6.10
 - Spalart-Allmaras with curvature correction
 - k-omega SST with curvature correction
 - Realizable k-epsilon
-- coherent structure  with curvature correction
+- coherent structure with curvature correction
 ### Detached Eddy Simulation:
 - Spalart-Allmaras Delayed DES
 - Spalart-Allmaras Improved Delayed DES
@@ -104,12 +108,12 @@ Type `caelus.py --help` for the complete list of options.
     * mpiexec -validate (should return success)
     * smpd -status (should return ‘smpd running on {hostname}’)
 ### Linux
-- For Ubuntu 12.04/14.04 the following prerequisites are required (install using apt-get):
+- For Ubuntu 14.04/16.04 the following prerequisites are required (install using apt-get):
     * build-essential
     * flex
     * bison
     * zlib1g-dev
-- For RHEL 6.5/7 the following prerequisites are required (install using yum):
+- For RHEL 6.8/7 the following prerequisites are required (install using yum):
     * groupinstall “Development Tools”
 - To install Caelus, change installer permissions to executable (chmod +x) and execute the .run package.
 - There are two ways to setup the Caelus environment:
@@ -157,20 +161,10 @@ Then source the appropriate script:
  $> call etc\caelus-environment.cmd
 ```
 
-Finally, use the provided Python script to build Caelus:
+Finally, use SCons to build Caelus:
 
 ```Bash
- $> ./BuildCaelus.py
+ $> scons.py install
 ```
 
-Provide the -h to get a full list of build options:
-
-```Bash
- BuildCaelus.py [options]
-  options:
-   -c          | --clean-only        skip building
-   -b          | --build-only        skip cleaning
-   -p <nprocs> | --parallel <nprocs> build with > 0 processors
-               | --no-swak           don't build swak library and utilities
-   -h          | --help              print the usage
-```
+Provide the -h to get a full list of build options or refer to the scons_notes.md for further details about the build system.

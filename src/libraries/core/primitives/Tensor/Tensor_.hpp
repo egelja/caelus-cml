@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,11 +29,16 @@ Description
 SourceFiles
     TensorI.hpp
 
+See also
+    CML::MatrixSpace
+    CML::Vector
+
 \*---------------------------------------------------------------------------*/
 
-#ifndef Tensor__H
-#define Tensor__H
+#ifndef Tensor__HPP
+#define Tensor__HPP
 
+#include "MatrixSpace_.hpp"
 #include "Vector_.hpp"
 #include "SphericalTensor_.hpp"
 
@@ -53,7 +57,7 @@ class SymmTensor;
 template<class Cmpt>
 class Tensor
 :
-    public VectorSpace<Tensor<Cmpt>, Cmpt, 9>
+    public MatrixSpace<Tensor<Cmpt>, Cmpt, 3, 3>
 {
 
 public:
@@ -64,21 +68,12 @@ public:
 
     // Member constants
 
-        enum
-        {
-            rank = 2 // Rank of Tensor is 2
-        };
+        //- Rank of Tensor is 2
+        static const direction rank = 2;
 
 
     // Static data members
 
-        static const char* const typeName;
-        static const char* componentNames[];
-
-        static const Tensor zero;
-        static const Tensor one;
-        static const Tensor max;
-        static const Tensor min;
         static const Tensor I;
 
 
@@ -90,6 +85,13 @@ public:
 
         //- Construct null
         inline Tensor();
+
+        //- Construct initialized to zero
+        inline Tensor(const CML::zero);
+
+        //- Construct given MatrixSpace of the same rank
+        template<class Cmpt2>
+        inline Tensor(const MatrixSpace<Tensor<Cmpt2>, Cmpt2, 3, 3>&);
 
         //- Construct given VectorSpace of the same rank
         template<class Cmpt2>
@@ -120,13 +122,25 @@ public:
             const Cmpt tzx, const Cmpt tzy, const Cmpt tzz
         );
 
+        //- Construct from a block of another matrix space
+        template
+        <
+            template<class, direction, direction> class Block2,
+            direction BRowStart,
+            direction BColStart
+        >
+        Tensor
+        (
+            const Block2<Tensor<Cmpt>, BRowStart, BColStart>& block
+        );
+
         //- Construct from Istream
-        Tensor(Istream&);
+        inline Tensor(Istream&);
 
 
     // Member Functions
 
-        // Access
+        // Component access
 
             inline const Cmpt& xx() const;
             inline const Cmpt& xy() const;
@@ -148,18 +162,31 @@ public:
             inline Cmpt& zy();
             inline Cmpt& zz();
 
-            // Access vector components.
+        // Row-vector access.
 
             inline Vector<Cmpt> x() const;
             inline Vector<Cmpt> y() const;
             inline Vector<Cmpt> z() const;
             inline Vector<Cmpt> vectorComponent(const direction) const;
 
-        //- Transpose
+        //- Return transpose
         inline Tensor<Cmpt> T() const;
+
+        //- Return inverse
+        inline Tensor<Cmpt> inv() const;
 
 
     // Member Operators
+
+        //- Inner-product with a Tensor
+        inline void operator&=(const Tensor<Cmpt>&);
+
+        //- Inherit MatrixSpace assignment operators
+        using Tensor::msType::operator=;
+
+        //- Assign to an equivalent vector space
+        template<class Cmpt2>
+        inline void operator=(const VectorSpace<Tensor<Cmpt2>, Cmpt2, 9>&);
 
         //- Assign to a SphericalTensor
         inline void operator=(const SphericalTensor<Cmpt>&);
@@ -174,6 +201,15 @@ public:
 
 template<class Cmpt>
 class typeOfRank<Cmpt, 2>
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+
+template<class Cmpt>
+class typeOfTranspose<Cmpt, Tensor<Cmpt> >
 {
 public:
 

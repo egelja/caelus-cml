@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fixedTrim_H
-#define fixedTrim_H
+#ifndef fixedTrim_HPP
+#define fixedTrim_HPP
 
 #include "trimModel.hpp"
 

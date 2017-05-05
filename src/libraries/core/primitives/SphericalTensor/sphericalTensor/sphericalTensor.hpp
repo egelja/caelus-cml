@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,6 +32,7 @@ SourceFiles
 #define sphericalTensor_H
 
 #include "SphericalTensor_.hpp"
+#include "Identity.hpp"
 #include "contiguous.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -43,12 +44,8 @@ namespace CML
 
 typedef SphericalTensor<scalar> sphericalTensor;
 
-// Identity tensor
-static const sphericalTensor I(1);
-
 static const sphericalTensor oneThirdI(1.0/3.0);
 static const sphericalTensor twoThirdsI(2.0/3.0);
-
 
 //- Specify data associated with sphericalTensor type are contiguous
 template<>

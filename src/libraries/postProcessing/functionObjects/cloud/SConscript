@@ -1,60 +1,29 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjCloudEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjCloudEnv['SLASH']
+target = 'cloudFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjCloudEnv.Append(CCFLAGS = '')
+sources = Split("""
+cloudInfo/cloudInfo.cpp
+cloudInfo/cloudInfoFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-funcObjCloudEnv['LIB_SRC'] + '/lagrangian/lnInclude',
-funcObjCloudEnv['LIB_SRC'] + '/lagrangian/intermediate/lnInclude'
+caelus_inc = [
+'lagrangian/lnInclude',
+'lagrangian/intermediate/lnInclude'
 ]
-funcObjCloudEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjCloudEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'lagrangian',
+'lagrangianIntermediate'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core', 'lagrangian', 'lagrangianIntermediate']
-funcObjCloudEnv.Append(LIBS = lib_link)
- 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  cloudInfo/cloudInfo.cpp
-  cloudInfo/cloudInfoFunctionObject.cpp
-  """) 
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libcloudFuncObj = funcObjCloudEnv.SharedLibrary(target = 'cloudFunctionObjects', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjCloudEnv['LIB_PLATFORM_INSTALL']
-funcObjCloudEnv.Alias('install', install_dir)
-funcObjCloudEnv.Install(install_dir, libcloudFuncObj)
-
-if (funcObjCloudEnv['WHICH_OS'] == "darwin"):
-
-  funcObjCloudEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcloudFunctionObjects.dylib')

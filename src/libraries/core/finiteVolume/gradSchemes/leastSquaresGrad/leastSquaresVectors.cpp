@@ -25,7 +25,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::leastSquaresVectors, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(leastSquaresVectors, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
@@ -128,7 +132,7 @@ void CML::leastSquaresVectors::makeLeastSquaresVectors() const
         const labelUList& faceCells = p.patch().faceCells();
 
         // Build the d-vectors
-        vectorField pd(p.delta());
+        vectorField pd(p.deltaFull());
 
         if (pw.coupled())
         {
@@ -181,7 +185,7 @@ void CML::leastSquaresVectors::makeLeastSquaresVectors() const
         const labelUList& faceCells = p.faceCells();
 
         // Build the d-vectors
-        vectorField pd(p.delta());
+        vectorField pd(p.deltaFull());
 
         if (pw.coupled())
         {

@@ -89,6 +89,12 @@ public:
                     return true;
                 }
 
+                //- Are there unmapped values
+                bool hasUnmapped() const
+                {
+                    return false;
+                }
+
                 const labelUList& directAddressing() const
                 {
                     return directAddressing_;
@@ -129,6 +135,12 @@ public:
                     return true;
                 }
 
+                //- Are there unmapped values
+                bool hasUnmapped() const
+                {
+                    return false;
+                }
+
                 const labelUList& directAddressing() const
                 {
                     return directAddressing_;
@@ -162,6 +174,12 @@ public:
                 }
 
                 bool direct() const
+                {
+                    return false;
+                }
+
+                //- Are there unmapped values
+                bool hasUnmapped() const
                 {
                     return false;
                 }

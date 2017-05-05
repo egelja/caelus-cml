@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,37 +24,52 @@ Description
 
 #include "complexVector.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const complexVector::typeName = "complexVector";
+const char* const CML::complexVector::vsType::typeName = "complexVector";
 
 template<>
-const char* complexVector::componentNames[] = {"x", "y", "z"};
+const char* const CML::complexVector::vsType::componentNames[] =
+{
+    "x", "y", "z"
+};
 
 template<>
-const complexVector complexVector::zero
+const CML::complexVector CML::complexVector::vsType::zero
 (
-    complex(0, 0),
-    complex(0, 0),
-    complex(0, 0)
+    complexVector::uniform(complex(0, 0))
 );
 
 template<>
-const complexVector complexVector::one
+const CML::complexVector CML::complexVector::vsType::one
 (
-    complex(1, 1),
-    complex(1, 1),
-    complex(1, 1)
+    complexVector::uniform(complex(1, 1))
 );
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<>
+const CML::complexVector CML::complexVector::vsType::max
+(
+    complexVector::uniform(complex(VGREAT, VGREAT))
+);
 
-} // End namespace CML
+template<>
+const CML::complexVector CML::complexVector::vsType::min
+(
+    complexVector::uniform(complex(-VGREAT, -VGREAT))
+);
+
+template<>
+const CML::complexVector CML::complexVector::vsType::rootMax
+(
+    complexVector::uniform(complex(ROOTVGREAT, ROOTVGREAT))
+);
+
+template<>
+const CML::complexVector CML::complexVector::vsType::rootMin
+(
+    complexVector::uniform(complex(-ROOTVGREAT, -ROOTVGREAT))
+);
+
 
 // ************************************************************************* //

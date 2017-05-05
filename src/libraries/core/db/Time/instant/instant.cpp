@@ -50,15 +50,19 @@ CML::instant::instant(const word& tname)
 {}
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::instant::equal(const scalar b) const
+{
+    return (value_ < b + SMALL  && value_ > b - SMALL);
+}
+
+
 // * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 bool CML::operator==(const instant& a, const instant& b)
 {
-    return
-    (
-        a.value_ < b.value_ + SMALL
-     && a.value_ > b.value_ - SMALL
-    );
+    return a.equal(b.value_);
 }
 
 

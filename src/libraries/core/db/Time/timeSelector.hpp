@@ -139,8 +139,7 @@ public:
         );
 
         //- Return the set of times selected based on the argList options
-        //  also set the runTime to the first instance or the
-        //  \c constant/ directory if no instances are specified or available
+        //  also set the runTime to the first instance
         static instantList select0
         (
             Time& runTime,

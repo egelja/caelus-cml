@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,6 +38,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+//- Rotational transformation tensor from vector n1 to n2
 inline tensor rotationTensor
 (
     const vector& n1,
@@ -69,6 +70,71 @@ inline tensor rotationTensor
         // Return null transformation tensor
         return I;
     }
+}
+
+
+//- Rotational transformation tensor about the x-axis by omega radians
+inline tensor Rx(const scalar& omega)
+{
+    const scalar s = sin(omega);
+    const scalar c = cos(omega);
+    return tensor
+    (
+        1,  0,  0,
+        0,  c,  s,
+        0, -s,  c
+    );
+}
+
+
+//- Rotational transformation tensor about the y-axis by omega radians
+inline tensor Ry(const scalar& omega)
+{
+    const scalar s = sin(omega);
+    const scalar c = cos(omega);
+    return tensor
+    (
+        c,  0, -s,
+        0,  1,  0,
+        s,  0,  c
+    );
+}
+
+
+//- Rotational transformation tensor about the z-axis by omega radians
+inline tensor Rz(const scalar& omega)
+{
+    const scalar s = sin(omega);
+    const scalar c = cos(omega);
+    return tensor
+    (
+        c,  s,  0,
+       -s,  c,  0,
+        0,  0,  1
+    );
+}
+
+
+//- Rotational transformation tensor about axis a by omega radians
+inline tensor Ra(const vector& a, const scalar omega)
+{
+    const scalar s = sin(omega);
+    const scalar c = cos(omega);
+
+    return tensor
+    (
+        sqr(a.x())*(1 - c)  + c,
+        a.y()*a.x()*(1 - c) + a.z()*s,
+        a.x()*a.z()*(1 - c) - a.y()*s,
+
+        a.x()*a.y()*(1 - c) - a.z()*s,
+        sqr(a.y())*(1 - c)  + c,
+        a.y()*a.z()*(1 - c) + a.x()*s,
+
+        a.x()*a.z()*(1 - c) + a.y()*s,
+        a.y()*a.z()*(1 - c) - a.x()*s,
+        sqr(a.z())*(1 - c)  + c
+    );
 }
 
 

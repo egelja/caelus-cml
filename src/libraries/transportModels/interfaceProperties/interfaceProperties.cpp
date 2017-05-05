@@ -54,10 +54,9 @@ void CML::interfaceProperties::correctContactAngle
     surfaceVectorField::GeometricBoundaryField& gradAlphaf
 ) const
 {
-    const fvMesh& mesh = alpha1_.mesh();
     const volScalarField::GeometricBoundaryField& abf = alpha1_.boundaryField();
 
-    const fvBoundaryMesh& boundary = mesh.boundary();
+    const fvBoundaryMesh& boundary = mesh_.boundary();
 
     forAll(boundary, patchi)
     {
@@ -111,18 +110,13 @@ void CML::interfaceProperties::correctContactAngle
 
 void CML::interfaceProperties::calculateK()
 {
-    const fvMesh& mesh = alpha1_.mesh();
-    const surfaceVectorField& Sf = mesh.Sf();
+    const surfaceVectorField& Sf = mesh_.Sf();
 
     // Cell gradient of alpha
-    const volVectorField gradAlpha(fvc::grad(alpha1_));
+    const volVectorField gradAlpha(fvc::grad(alpha1_, "nHat"));
 
     // Interpolated face-gradient of alpha
     surfaceVectorField gradAlphaf(fvc::interpolate(gradAlpha));
-
-    //gradAlphaf -=
-    //    (mesh.Sf()/mesh.magSf())
-    //   *(fvc::snGrad(alpha1_) - (mesh.Sf() & gradAlphaf)/mesh.magSf());
 
     // Face unit interface normal
     surfaceVectorField nHatfv(gradAlphaf/(mag(gradAlphaf) + deltaN_));
@@ -133,18 +127,6 @@ void CML::interfaceProperties::calculateK()
 
     // Simple expression for curvature
     K_ = -fvc::div(nHatf_);
-
-    // Complex expression for curvature.
-    // Correction is formally zero but numerically non-zero.
-    /*
-    volVectorField nHat(gradAlpha/(mag(gradAlpha) + deltaN_));
-    forAll(nHat.boundaryField(), patchi)
-    {
-        nHat.boundaryField()[patchi] = nHatfv.boundaryField()[patchi];
-    }
-
-    K_ = -fvc::div(nHatf_) + (nHat & fvc::grad(nHatfv) & nHat);
-    */
 }
 
 
@@ -152,55 +134,78 @@ void CML::interfaceProperties::calculateK()
 
 CML::interfaceProperties::interfaceProperties
 (
-    const volScalarField& alpha1,
     const volVectorField& U,
+    const surfaceScalarField& phi,
+    const volScalarField& alpha1,
     const IOdictionary& dict
 )
 :
+    mesh_(alpha1.mesh()),
+    phi_(phi),
+    U_(U),
+    alpha1_(alpha1),
     transportPropertiesDict_(dict),
-    cAlpha_
-    (
-        readScalar
-        (
-            alpha1.mesh().solutionDict().subDict("PIMPLE").lookup("cAlpha")
-        )
-    ),
+    dynCompPtr_(dynCompressionModel::New(mesh_, U, phi, alpha1)),
     sigma_(dict.lookup("sigma")),
-
     deltaN_
     (
         "deltaN",
-        1e-8/pow(average(alpha1.mesh().V()), 1.0/3.0)
+        1e-8/pow(average(mesh_.V()), 1.0/3.0)
     ),
-
-    alpha1_(alpha1),
-    U_(U),
-
     nHatf_
     (
         IOobject
         (
             "nHatf",
-            alpha1_.time().timeName(),
-            alpha1_.mesh()
+            mesh_.time().timeName(),
+            mesh_
         ),
-        alpha1_.mesh(),
+        mesh_,
         dimensionedScalar("nHatf", dimArea, 0.0)
     ),
-
     K_
     (
         IOobject
         (
             "interfaceProperties:K",
-            alpha1_.time().timeName(),
-            alpha1_.mesh()
+            mesh_.time().timeName(),
+            mesh_
         ),
-        alpha1_.mesh(),
+        mesh_,
         dimensionedScalar("K", dimless/dimLength, 0.0)
     )
 {
     calculateK();
+}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+CML::tmp<CML::surfaceScalarField>
+CML::interfaceProperties::surfaceTensionForce() const
+{
+    return fvc::interpolate(sigmaK())*fvc::snGrad(alpha1_);
+}
+
+
+CML::tmp<CML::volScalarField>
+CML::interfaceProperties::nearInterface() const
+{
+    return pos(alpha1_ - 0.01)*pos(0.99 - alpha1_);
+}
+
+CML::tmp<CML::surfaceScalarField>
+CML::interfaceProperties::phir()
+{
+    return nHatf_*dynCompPtr_->phic();
+}
+
+
+bool CML::interfaceProperties::read()
+{
+    transportPropertiesDict_.lookup("sigma") >> sigma_;
+
+    return true;
 }
 
 

@@ -1,56 +1,57 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-pimpleDyMSolEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = pimpleDyMSolEnv['LIB_SRC']
+target = "pimpleDyMSolver"
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = ['../', src + '/turbulenceModels/incompressible/turbulenceModel',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
-src + '/transportModels',
-src + '/transportModels/incompressible/singlePhaseTransportModel',
-src + '/transportModels/incompressible/lnInclude',
-src + '/fvOptions/lnInclude',
-src + '/sampling/lnInclude',
-src + '/dynamicFvMesh/lnInclude',
-src + '/dynamicMesh/lnInclude'
+sources = Split("""
+pimpleDyMSolver.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels/',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude',
+'dynamicMesh/dynamicFvMesh/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
-pimpleDyMSolEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if pimpleDyMSolEnv['WHICH_OS'] == "windows":
-  pimpleDyMSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad')
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'fvOptions',
+'sampling',
+'dynamicFvMesh',
+'dynamicMesh',
+'topoChangerFvMesh'
+]
 
-lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-'libincompressibleLESModels','libincompressibleTransportModels', 'fvOptions', 'sampling',
-'dynamicFvMesh','topoChangerFvMesh','dynamicMesh']
-pimpleDyMSolEnv.Append(LIBS = lib_link)
+append_args = dict(
+    CPPPATH = ['..']
+)
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  pimpleDyMSolver.cpp
-  """)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpimpleDyMSol = pimpleDyMSolEnv.Program(target = 'pimpleDyMSolver',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = pimpleDyMSolEnv['BIN_PLATFORM_INSTALL']
-pimpleDyMSolEnv.Alias('install', install_dir)
-pimpleDyMSolEnv.Install(install_dir, binpimpleDyMSol)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args,
+          append_args=append_args)

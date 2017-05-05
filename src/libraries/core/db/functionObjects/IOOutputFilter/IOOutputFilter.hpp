@@ -83,7 +83,19 @@ public:
         (
             const word& outputFilterName,
             const objectRegistry&,
-            const fileName& dictName = OutputFilter::typeName() + "Dict",
+            const word& dictName = OutputFilter::typeName() + "Dict",
+            const IOobject::readOption rOpt = IOobject::MUST_READ_IF_MODIFIED,
+            const bool loadFromFile = false
+        );
+
+        //- Construct for given objectRegistry and dictionary
+        //  Dictionary read from full path.
+        //  Allow the possibility to load fields from files
+        IOOutputFilter
+        (
+            const word& outputFilterName,
+            const objectRegistry&,
+            const fileName& dictName,
             const IOobject::readOption rOpt = IOobject::MUST_READ_IF_MODIFIED,
             const bool loadFromFile = false
         );
@@ -151,7 +163,7 @@ CML::IOOutputFilter<OutputFilter>::IOOutputFilter
 (
     const word& outputFilterName,
     const objectRegistry& obr,
-    const fileName& dictName,
+    const word& dictName,
     const IOobject::readOption rOpt,
     const bool readFromFiles
 )
@@ -162,6 +174,30 @@ CML::IOOutputFilter<OutputFilter>::IOOutputFilter
         (
             dictName,
             obr.time().system(),
+            obr,
+            rOpt,
+            IOobject::NO_WRITE
+        )
+    ),
+    OutputFilter(outputFilterName, obr, *this, readFromFiles)
+{}
+
+
+template<class OutputFilter>
+CML::IOOutputFilter<OutputFilter>::IOOutputFilter
+(
+    const word& outputFilterName,
+    const objectRegistry& obr,
+    const fileName& dictName,
+    const IOobject::readOption rOpt,
+    const bool readFromFiles
+)
+:
+    IOdictionary
+    (
+        IOobject
+        (
+            dictName,
             obr,
             rOpt,
             IOobject::NO_WRITE

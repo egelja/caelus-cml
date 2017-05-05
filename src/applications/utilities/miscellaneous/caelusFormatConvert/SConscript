@@ -1,59 +1,35 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-caelusFormatConvertEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-sl = caelusFormatConvertEnv['SLASH']
+target = 'caelusFormatConvert'
 
-caelusFormatConvertEnv.Append(CXXFLAGS = '-Dutil_EXPORTS')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-caelusFormatConvertEnv.Append(CCFLAGS = '')
+sources = Split("""
+caelusFormatConvert.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [caelusFormatConvertEnv['LIB_SRC'] + sl + 'lagrangian' + sl +'lnInclude'
+caelus_inc = [
+'lagrangian/lnInclude'
 ]
-caelusFormatConvertEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-caelusFormatConvertEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if caelusFormatConvertEnv['WHICH_OS'] == "windows":
-  caelusFormatConvertEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','lagrangian']
-     
-
-caelusFormatConvertEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  caelusFormatConvert.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincaelusFormatConvert = caelusFormatConvertEnv.Program(target =
-'caelusFormatConvert', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = caelusFormatConvertEnv['BIN_PLATFORM_INSTALL']
-caelusFormatConvertEnv.Alias('install', install_dir)
-caelusFormatConvertEnv.Install(install_dir, bincaelusFormatConvert)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

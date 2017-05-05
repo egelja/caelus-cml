@@ -117,6 +117,11 @@ public:
                     return true;
                 }
 
+                bool hasUnmapped() const
+                {
+                    return false;
+                }
+
                 const labelUList& directAddressing() const
                 {
                     return labelUList::null();

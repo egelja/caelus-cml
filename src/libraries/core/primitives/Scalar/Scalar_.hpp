@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,23 +39,33 @@ public:
     //- Component type
     typedef Scalar cmptType;
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef label labelType;
+
+
     // Member constants
 
-        enum
-        {
-            dim = 3,         //!< Dimensionality of space
-            rank = 0,        //!< Rank of Scalar is 0
-            nComponents = 1  //!< Number of components in Scalar is 1
-        };
+        //- Dimensionality of space
+        static const direction dim = 3;
+
+        //- Rank of Scalar is 0
+        static const direction rank = 0;
+
+        //- Number of components in Scalar is 1
+        static const direction nComponents = 1;
+
 
     // Static data members
 
         static const char* const typeName;
-        static const char* componentNames[];
+        static const char* const componentNames[];
         static const Scalar zero;
         static const Scalar one;
         static const Scalar max;
         static const Scalar min;
+        static const Scalar rootMax;
+        static const Scalar rootMin;
+
 
     // Constructors
 
@@ -115,6 +125,22 @@ inline Scalar pos(const Scalar s)
 inline Scalar neg(const Scalar s)
 {
     return (s < 0)? 1: 0;
+}
+
+
+//- Return the positive part of s
+inline Scalar posPart(const Scalar s)
+{
+    return (s > 0)? s: 0;
+}
+
+
+//- Return the negative part of s.
+//  Note: this function returns the actual negative part of s as a
+//  negative number and does not change the sign
+inline Scalar negPart(const Scalar s)
+{
+    return (s < 0)? s: 0;
 }
 
 
@@ -215,6 +241,12 @@ inline Scalar dot(const Scalar s1, const Scalar s2)
 inline Scalar cmptMultiply(const Scalar s1, const Scalar s2)
 {
     return s1*s2;
+}
+
+
+inline Scalar cmptPow(const Scalar s1, const Scalar s2)
+{
+    return pow(s1, s2);
 }
 
 

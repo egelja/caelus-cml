@@ -24,7 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::HashTableCore, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(HashTableCore, 0);
+}
+
 
 const CML::label CML::HashTableCore::maxTableSize
 (

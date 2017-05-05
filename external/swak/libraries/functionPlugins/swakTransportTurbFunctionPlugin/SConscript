@@ -1,74 +1,50 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakTransTurbEnv = globalEnv.Clone()
+import os
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakTransTurbEnv['LIB_SRC']
+target = 'swakTransportTurbFunctionPlugin'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakTransTurbEnv.Append(CXXFLAGS = '')
+sources = Split("""
+swakTransportModelsPluginFunction.cpp
+swakIncompressibleTurbulencePluginFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/turbulenceModels/',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/LES/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'turbulenceModels/',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',
+'transportModels',
+'transportModels/incompressible/lnInclude'
 ]
-	
-swakTransTurbEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakTransTurbEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'incompressibleTurbulenceModel',
+'incompressibleLESModels',
+'incompressibleRASModels',
+'incompressibleTransportModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','incompressibleTurbulenceModel',
-'incompressibleLESModels','incompressibleRASModels','incompressibleTransportModels']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakTransportTurbFunctionPlugin'),
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakTransportTurbFunctionPlugin/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakTransTurbEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakTransTurb = Split("""
-  swakTransportModelsPluginFunction.cpp
-  swakIncompressibleTurbulencePluginFunction.cpp
-  """)
-
-src_files = src_files_swakTransTurb
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakTransTurbs = swakTransTurbEnv.SharedLibrary(target = 'libswakTransportTurbFunctionPlugin',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakTransTurbEnv['LIB_PLATFORM_INSTALL']
-swakTransTurbEnv.Alias('install', install_dir)
-swakTransTurbEnv.Install(install_dir, libswakTransTurbs)
-
-if (swakTransTurbEnv['WHICH_OS'] == "darwin"):
-
-  swakTransTurbEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakTransportTurbFunctionPlugin.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

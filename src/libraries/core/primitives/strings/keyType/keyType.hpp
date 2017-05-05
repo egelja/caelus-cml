@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,6 +45,14 @@ namespace CML
 // Forward declaration of classes
 class Istream;
 class Ostream;
+
+
+// Forward declaration of friend functions and operators
+
+class keyType;
+
+Istream& operator>>(Istream&, keyType&);
+Ostream& operator<<(Ostream&, const keyType&);
 
 
 /*---------------------------------------------------------------------------*\
@@ -113,16 +121,16 @@ public:
         // Assignment
 
             //- Assignment operator
-            inline const keyType& operator=(const keyType&);
+            inline void operator=(const keyType&);
 
             //- Assign as word, not as non regular expression
-            inline const keyType& operator=(const word&);
+            inline void operator=(const word&);
 
             //- Assign as regular expression
-            inline const keyType& operator=(const string&);
+            inline void operator=(const string&);
 
             //- Assign as word, not as non regular expression
-            inline const keyType& operator=(const char*);
+            inline void operator=(const char*);
 
 
     // IOstream operators

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014-16 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -160,8 +160,11 @@ class primitiveMesh
 
         // Geometric data
 
-            //- Cell centres
+            //- Cell centres - area weighted
             mutable vectorField* cellCentresPtr_;
+
+            //- Cell centres - geometric
+            mutable vectorField* cellCentresGeometricPtr_;
 
             //- Face centres
             mutable vectorField* faceCentresPtr_;
@@ -171,6 +174,12 @@ class primitiveMesh
 
             //- Face areas
             mutable vectorField* faceAreasPtr_;
+
+            //- Defect correction
+            bool defectCorr_;
+
+            //- Area for switching centroid method to simple nodal averaging
+            const scalar areaSwitch_;
 
 
     // Private Member Functions
@@ -256,14 +265,23 @@ protected:
                 vectorField& fAreas
             ) const;
 
-            //- Calculate cell centres and volumes
-            void calcCellCentresAndVols() const;
-            void makeCellCentresAndVols
+            //- Calculate geometric cell centres and volumes
+            void calcCellCentresAndVolsGeometric() const;
+            void makeCellCentresAndVolsGeometric
             (
                 const vectorField& fCtrs,
                 const vectorField& fAreas,
                 vectorField& cellCtrs,
                 scalarField& cellVols
+            ) const;
+
+            //- Calculate cell centres and volumes
+            void calcCellCentres() const;
+            void makeCellCentres
+            (
+                const vectorField& fCtrs,
+                const vectorField& fAreas,
+                vectorField& cellCtrs
             ) const;
 
             //- Calculate edge vectors
@@ -290,13 +308,8 @@ protected:
             ) const;
 
 
-
-
-
-
-
         //- Construct null
-        primitiveMesh();
+        primitiveMesh(const bool defectCorr = false, const scalar areaSwitch = 1e-8);
 
 
 public:
@@ -344,7 +357,9 @@ public:
             const label nPoints,
             const label nInternalFaces,
             const label nFaces,
-            const label nCells
+            const label nCells,
+            const bool defectCorr = false,
+            const scalar areaSwitch = 1e-8
         );
 
 
@@ -482,6 +497,7 @@ public:
             // Geometric data (raw!)
 
                 const vectorField& cellCentres() const;
+                const vectorField& cellCentresGeometric() const;
                 const vectorField& faceCentres() const;
                 const scalarField& cellVolumes() const;
                 const vectorField& faceAreas() const;

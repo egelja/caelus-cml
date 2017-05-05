@@ -1,0 +1,138 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    location    "constant";
+    object      kinematicCloudProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         true;
+    transient       yes;
+    cellValueSourceCorrection off; // must be off for steady state
+
+    sourceTerms
+    {
+        // Scheme and under-relaxation factor
+        schemes
+        {  
+            U       semiImplicit 0.5; // Number is the source under-relaxation factor
+        }
+    }
+
+    interpolationSchemes
+    {
+        rho         cell;
+        U           cellPoint;
+        mu          cell;
+        curlUcDt    cell;
+        DUcDt		  cell;
+    }
+
+    integrationSchemes
+    {
+        U           Euler;
+    }
+}
+
+constantProperties
+{
+	 //- Parcel type id - used for post-processing to flag the type of parcels issued by this cloud
+    parcelTypeId    1;
+
+	 //- Minimum density [kg/m3]
+    rhoMin          1e-16;
+
+	 //- Minimum parcel mass [kg]
+    minParcelMass 1.0e-15;
+
+	 //- Particle density [kg/m3] (constant)
+    rho0            2000;
+
+	 //- Young's modulus [N/m2]
+    youngsModulus   1e9;
+
+    //- Poisson's ratio
+    poissonsRatio   0.35;
+}
+
+subModels
+{
+    // Particle force models
+    particleForces
+    {
+        gravity;
+        sphereDrag;
+    }
+
+    // Injection 
+    injectionModels
+    {
+        model1
+        {
+            type            patchInjection;
+            patchName 		 inlet;           // Name of patch
+            SOI             2.5;             // Start Of Injection
+            flowRateProfile constant 2.8e-4; // Flow rate profile relative to SOI
+       		massTotal       100;             // Total mass injected over injection duration
+            parcelBasisType mass;            // How are the number of particles calculated
+            duration 		 100;             // Duration of injection. NOTE: set to 1 for steady state
+            U0              (-5 0 0);        // Initial parcel velocity
+            parcelsPerSecond 100000;
+
+        	   sizeDistribution
+        	   {
+            	 type         uniform;
+
+   	          // min and max range divided unofrmly among parcels
+                uniformDistribution
+	             {
+	                 minValue 0.1e-06;
+	                 maxValue 500e-06;
+	             }
+	         }
+        }
+    }
+
+    // Dispersion model
+    dispersionModel none;
+
+    // Wall interaction model
+    patchInteractionModel standardWallInteraction;
+
+    // Surface film
+    surfaceFilmModel none;
+
+    standardWallInteractionCoeffs
+    {
+        type           rebound; // stick, escape
+           e           1;       // optional - elasticity coeff
+          mu           0;       // optional - restitution coeff
+    }
+}
+
+cloudFunctions
+{
+    particleErosion
+    {
+        type     particleErosion;
+        patches  (body vortexfinder);
+
+        // See - Finnie, I. (1960) "Erosion of surfaces by solid particles", Wear, pp 87-103.
+        p        2.7e9; // plastic flow stress (~ 3 times the ultimate strength [Pa])
+        psi      2; // Ratio of depth of contact to depth of cut
+        K        2; // Ratio of vertical to horizontal force components on particle.
+                    // Also gives angle of maximum wear. alpha_max = 0.5 tan^-1(K/3)
+    }
+}
+
+
+// ************************************************************************* //

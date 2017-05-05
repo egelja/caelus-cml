@@ -35,7 +35,7 @@ SourceFiles
 #define memInfo_H
 
 #include "OSspecific.hpp"
-#include "POSIX.hpp"
+#include "posix.hpp"
 #include "IFstream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

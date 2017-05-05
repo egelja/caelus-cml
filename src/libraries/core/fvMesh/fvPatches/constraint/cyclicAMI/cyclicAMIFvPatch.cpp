@@ -142,6 +142,13 @@ CML::tmp<CML::vectorField> CML::cyclicAMIFvPatch::delta() const
 }
 
 
+CML::tmp<CML::vectorField> CML::cyclicAMIFvPatch::deltaFull() const
+{
+    return cyclicAMIFvPatch::delta();
+}
+
+
+
 CML::tmp<CML::labelField> CML::cyclicAMIFvPatch::interfaceInternalField
 (
     const labelUList& internalData

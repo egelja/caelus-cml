@@ -1,68 +1,37 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-solidChemEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = solidChemEnv['LIB_SRC']
+target = 'solidChemistryModel'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-solidChemEnv.Append(CCFLAGS = '')
+sources = Split("""
+solidChemistryModel/solidChemistryModel.cpp
+solidChemistryModel/solidChemistryModelNew.cpp
+solidChemistryModel/solidChemistryModels.cpp
+solidChemistrySolver/makeSolidChemistrySolvers.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/solid/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/chemistryModel/lnInclude',
-src + '/thermophysicalModels/basicSolidThermo/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/ODE/lnInclude'        
+caelus_inc = [
+'thermophysicalModels/solid/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/chemistryModel/lnInclude',
+'thermophysicalModels/basicSolidThermo/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'ODE/lnInclude'
 ]
-solidChemEnv.Prepend(CPPPATH = lib_inc)
-         
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-solidChemEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','specie','basicSolidThermo','chemistryModel','ODE'] 
-solidChemEnv.Append(LIBS = lib_link)
-           
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  solidChemistryModel/solidChemistryModel.cpp
-  solidChemistryModel/solidChemistryModelNew.cpp
-  solidChemistryModel/solidChemistryModels.cpp
-  solidChemistrySolver/makeSolidChemistrySolvers.cpp
-  """) 
+caelus_libs = [
+'core',
+'specie',
+'basicSolidThermo',
+'chemistryModel',
+'ODE'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libsolidChemistryModel = solidChemEnv.SharedLibrary(target = 
-'solidChemistryModel', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = solidChemEnv['LIB_PLATFORM_INSTALL']
-solidChemEnv.Alias('install', install_dir)
-solidChemEnv.Install(install_dir, libsolidChemistryModel)
-
-if (solidChemEnv['WHICH_OS'] == "darwin"):
-
-  solidChemEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidChemistryModel.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

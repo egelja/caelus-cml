@@ -27,7 +27,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(cloudInfo, 0);
+    defineTypeNameAndDebug(cloudInfo, 0);
 }
 
 

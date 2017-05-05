@@ -1,57 +1,34 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-streamFunctionEnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = streamFunctionEnv['LIB_SRC']
+target = 'streamFunction'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-streamFunctionEnv.Append(CCFLAGS = '')
+sources = Split("""
+streamFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []        
+caelus_inc = [
+]
 
-streamFunctionEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-streamFunctionEnv.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if streamFunctionEnv['WHICH_OS'] == "windows":
-  streamFunctionEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['core','genericPatchFields']
-    
-streamFunctionEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files= Split("""  
-  streamFunction.cpp
-  """)
-#===============================================================================
-# Build this executable
-#===============================================================================
-binstreamFunction = streamFunctionEnv.Program(target = 'streamFunction',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = streamFunctionEnv['BIN_PLATFORM_INSTALL']
-streamFunctionEnv.Alias('install', install_dir)
-streamFunctionEnv.Install(install_dir, binstreamFunction)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

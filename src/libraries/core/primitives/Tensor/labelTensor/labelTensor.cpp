@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,35 +24,52 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-namespace CML
+template<>
+const char* const CML::labelTensor::vsType::typeName = "labelTensor";
+
+template<>
+const char* const CML::labelTensor::vsType::componentNames[] =
 {
-    template<>
-    const char* const CML::labelTensor::typeName = "labelTensor";
+    "xx", "xy", "xz",
+    "yx", "yy", "yz",
+    "zx", "zy", "zz"
+};
 
-    template<>
-    const char* CML::labelTensor::componentNames[] =
-    {
-        "xx", "xy", "xz",
-        "yx", "yy", "yz",
-        "zx", "zy", "zz"
-    };
+template<>
+const CML::labelTensor CML::labelTensor::vsType::zero
+(
+    labelTensor::uniform(0)
+);
 
-    template<>
-    const CML::labelTensor CML::labelTensor::zero
-    (
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0
-    );
+template<>
+const CML::labelTensor CML::labelTensor::vsType::one
+(
+    labelTensor::uniform(1)
+);
 
-    template<>
-    const CML::labelTensor CML::labelTensor::one
-    (
-        1, 1, 1,
-        1, 1, 1,
-        1, 1, 1
-    );
-}
+template<>
+const CML::labelTensor CML::labelTensor::vsType::max
+(
+    labelTensor::uniform(labelMax)
+);
+
+template<>
+const CML::labelTensor CML::labelTensor::vsType::min
+(
+    labelTensor::uniform(-labelMax)
+);
+
+template<>
+const CML::labelTensor CML::labelTensor::vsType::rootMax
+(
+    labelTensor::uniform(sqrt(scalar(labelMax)))
+);
+
+template<>
+const CML::labelTensor CML::labelTensor::vsType::rootMin
+(
+    labelTensor::uniform(-sqrt(scalar(labelMax)))
+);
 
 
 // ************************************************************************* //

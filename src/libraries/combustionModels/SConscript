@@ -1,84 +1,51 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-comModelsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = comModelsEnv['LIB_SRC']
+target = 'combustionModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-comModelsEnv.Append(CCFLAGS = '')
+sources = Split("""
+combustionModel/combustionModel.cpp
+psiCombustionModel/psiCombustionModel.cpp
+psiCombustionModel/psiCombustionModelNew.cpp
+rhoCombustionModel/rhoCombustionModel.cpp
+rhoCombustionModel/rhoCombustionModelNew.cpp
+infinitelyFastChemistry/infinitelyFastChemistrys.cpp
+psiChemistryCombustionModel/psiChemistryCombustionModel.cpp
+psiChemistryCombustionModel/psiChemistryCombustionModelNew.cpp
+rhoChemistryCombustionModel/rhoChemistryCombustionModel.cpp
+rhoChemistryCombustionModel/rhoChemistryCombustionModelNew.cpp
+PaSR/PaSRs.cpp
+FSD/reactionRateFlameAreaModels/consumptionSpeed/consumptionSpeed.cpp
+FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameArea.cpp
+FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameAreaNew.cpp
+FSD/reactionRateFlameAreaModels/relaxation/relaxation.cpp
+FSD/FSDs.cpp
+noCombustion/noCombustions.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/turbulenceModels',   
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/chemistryModel/lnInclude',
-src + '/turbulenceModels/compressible/turbulenceModel', 
-src + '/turbulenceModels/compressible/LES/lnInclude',  
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/turbulenceModels/LES/LESfilters/lnInclude' 
+caelus_inc = [
+'turbulenceModels',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/chemistryModel/lnInclude',
+'turbulenceModels/compressible/turbulenceModel',
+'turbulenceModels/compressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'turbulenceModels/LES/LESfilters/lnInclude'
 ]
-comModelsEnv.Prepend(CPPPATH = lib_inc)
-    
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-comModelsEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','chemistryModel','compressibleLESModels',
-'reactionThermophysicalModels'] 
-comModelsEnv.Append(LIBS = lib_link)
-       
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  combustionModel/combustionModel.cpp
-  psiCombustionModel/psiCombustionModel.cpp
-  psiCombustionModel/psiCombustionModelNew.cpp
-  rhoCombustionModel/rhoCombustionModel.cpp
-  rhoCombustionModel/rhoCombustionModelNew.cpp
-  infinitelyFastChemistry/infinitelyFastChemistrys.cpp
-  psiChemistryCombustionModel/psiChemistryCombustionModel.cpp
-  psiChemistryCombustionModel/psiChemistryCombustionModelNew.cpp
-  rhoChemistryCombustionModel/rhoChemistryCombustionModel.cpp
-  rhoChemistryCombustionModel/rhoChemistryCombustionModelNew.cpp
-  PaSR/PaSRs.cpp
-  FSD/reactionRateFlameAreaModels/consumptionSpeed/consumptionSpeed.cpp
-  FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameArea.cpp
-  FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameAreaNew.cpp
-  FSD/reactionRateFlameAreaModels/relaxation/relaxation.cpp
-  FSD/FSDs.cpp
-  noCombustion/noCombustions.cpp
-  """)
+caelus_libs = [
+'core',
+'chemistryModel',
+'compressibleLESModels',
+'reactionThermophysicalModels'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libcombustionModels = comModelsEnv.SharedLibrary(target = 'combustionModels',
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = comModelsEnv['LIB_PLATFORM_INSTALL']
-comModelsEnv.Alias('install', install_dir)
-comModelsEnv.Install(install_dir, libcombustionModels)
-
-if (comModelsEnv['WHICH_OS'] == "darwin"):
-
-  comModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcombustionModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

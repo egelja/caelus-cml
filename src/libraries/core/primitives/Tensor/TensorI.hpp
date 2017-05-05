@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,28 +21,44 @@ License
 
 #include "SymmTensor_.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor()
+inline CML::Tensor<Cmpt>::Tensor()
+{}
+
+
+template<class Cmpt>
+inline CML::Tensor<Cmpt>::Tensor(const CML::zero)
+:
+    Tensor::msType(Zero)
 {}
 
 
 template<class Cmpt>
 template<class Cmpt2>
-inline Tensor<Cmpt>::Tensor(const VectorSpace<Tensor<Cmpt2>, Cmpt2, 9>& vs)
+inline CML::Tensor<Cmpt>::Tensor
+(
+    const MatrixSpace<Tensor<Cmpt2>, Cmpt2, 3, 3>& vs
+)
 :
-    VectorSpace<Tensor<Cmpt>, Cmpt, 9>(vs)
+    Tensor::msType(vs)
 {}
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor(const SphericalTensor<Cmpt>& st)
+template<class Cmpt2>
+inline CML::Tensor<Cmpt>::Tensor
+(
+    const VectorSpace<Tensor<Cmpt2>, Cmpt2, 9>& vs
+)
+:
+    Tensor::msType(vs)
+{}
+
+
+template<class Cmpt>
+inline CML::Tensor<Cmpt>::Tensor(const SphericalTensor<Cmpt>& st)
 {
     this->v_[XX] = st.ii(); this->v_[XY] = 0; this->v_[XZ] = 0;
     this->v_[YX] = 0; this->v_[YY] = st.ii(); this->v_[YZ] = 0;
@@ -51,7 +67,7 @@ inline Tensor<Cmpt>::Tensor(const SphericalTensor<Cmpt>& st)
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor(const SymmTensor<Cmpt>& st)
+inline CML::Tensor<Cmpt>::Tensor(const SymmTensor<Cmpt>& st)
 {
     this->v_[XX] = st.xx(); this->v_[XY] = st.xy(); this->v_[XZ] = st.xz();
     this->v_[YX] = st.xy(); this->v_[YY] = st.yy(); this->v_[YZ] = st.yz();
@@ -60,7 +76,7 @@ inline Tensor<Cmpt>::Tensor(const SymmTensor<Cmpt>& st)
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor(const Vector<Vector<Cmpt> >& tr)
+inline CML::Tensor<Cmpt>::Tensor(const Vector<Vector<Cmpt> >& tr)
 {
     this->v_[XX] = tr.x().x();
     this->v_[XY] = tr.x().y();
@@ -77,7 +93,7 @@ inline Tensor<Cmpt>::Tensor(const Vector<Vector<Cmpt> >& tr)
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor
+inline CML::Tensor<Cmpt>::Tensor
 (
     const Vector<Cmpt>& x,
     const Vector<Cmpt>& y,
@@ -91,7 +107,7 @@ inline Tensor<Cmpt>::Tensor
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor
+inline CML::Tensor<Cmpt>::Tensor
 (
     const Cmpt txx, const Cmpt txy, const Cmpt txz,
     const Cmpt tyx, const Cmpt tyy, const Cmpt tyz,
@@ -105,181 +121,200 @@ inline Tensor<Cmpt>::Tensor
 
 
 template<class Cmpt>
-inline Tensor<Cmpt>::Tensor(Istream& is)
+template
+<
+    template<class, CML::direction, CML::direction> class Block2,
+    CML::direction BRowStart,
+    CML::direction BColStart
+>
+inline CML::Tensor<Cmpt>::Tensor
+(
+    const Block2<Tensor<Cmpt>, BRowStart, BColStart>& block
+)
 :
-    VectorSpace<Tensor<Cmpt>, Cmpt, 9>(is)
+    Tensor::msType(block)
+{}
+
+
+template<class Cmpt>
+inline CML::Tensor<Cmpt>::Tensor(Istream& is)
+:
+    Tensor::msType(is)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline Vector<Cmpt> Tensor<Cmpt>::x() const
+inline const Cmpt& CML::Tensor<Cmpt>::xx() const
+{
+    return this->v_[XX];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::xy() const
+{
+    return this->v_[XY];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::xz() const
+{
+    return this->v_[XZ];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::yx() const
+{
+    return this->v_[YX];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::yy() const
+{
+    return this->v_[YY];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::yz() const
+{
+    return this->v_[YZ];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::zx() const
+{
+    return this->v_[ZX];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::zy() const
+{
+    return this->v_[ZY];
+}
+
+
+template<class Cmpt>
+inline const Cmpt& CML::Tensor<Cmpt>::zz() const
+{
+    return this->v_[ZZ];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::xx()
+{
+    return this->v_[XX];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::xy()
+{
+    return this->v_[XY];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::xz()
+{
+    return this->v_[XZ];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::yx()
+{
+    return this->v_[YX];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::yy()
+{
+    return this->v_[YY];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::yz()
+{
+    return this->v_[YZ];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::zx()
+{
+    return this->v_[ZX];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::zy()
+{
+    return this->v_[ZY];
+}
+
+
+template<class Cmpt>
+inline Cmpt& CML::Tensor<Cmpt>::zz()
+{
+    return this->v_[ZZ];
+}
+
+
+template<class Cmpt>
+inline CML::Vector<Cmpt> CML::Tensor<Cmpt>::x() const
 {
     return Vector<Cmpt>(this->v_[XX], this->v_[XY], this->v_[XZ]);
 }
 
 
 template<class Cmpt>
-inline Vector<Cmpt> Tensor<Cmpt>::y() const
+inline CML::Vector<Cmpt> CML::Tensor<Cmpt>::y() const
 {
     return Vector<Cmpt>(this->v_[YX], this->v_[YY], this->v_[YZ]);
 }
 
 
 template<class Cmpt>
-inline Vector<Cmpt>  Tensor<Cmpt>::z() const
+inline CML::Vector<Cmpt> CML::Tensor<Cmpt>::z() const
 {
     return Vector<Cmpt>(this->v_[ZX], this->v_[ZY], this->v_[ZZ]);
 }
 
 
 template<class Cmpt>
-inline Vector<Cmpt>  Tensor<Cmpt>::vectorComponent(const direction cmpt) const
+inline CML::Vector<Cmpt> CML::Tensor<Cmpt>::vectorComponent
+(
+    const direction cmpt
+) const
 {
     switch (cmpt)
     {
         case 0:
             return x();
-        break;
+            break;
         case 1:
             return y();
-        break;
+            break;
         case 2:
             return z();
-        break;
+            break;
     }
 }
 
 
 template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::xx() const
-{
-    return this->v_[XX];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::xy() const
-{
-    return this->v_[XY];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::xz() const
-{
-    return this->v_[XZ];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::yx() const
-{
-    return this->v_[YX];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::yy() const
-{
-    return this->v_[YY];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::yz() const
-{
-    return this->v_[YZ];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::zx() const
-{
-    return this->v_[ZX];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::zy() const
-{
-    return this->v_[ZY];
-}
-
-
-template<class Cmpt>
-inline const Cmpt&  Tensor<Cmpt>::zz() const
-{
-    return this->v_[ZZ];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::xx()
-{
-    return this->v_[XX];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::xy()
-{
-    return this->v_[XY];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::xz()
-{
-    return this->v_[XZ];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::yx()
-{
-    return this->v_[YX];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::yy()
-{
-    return this->v_[YY];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::yz()
-{
-    return this->v_[YZ];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::zx()
-{
-    return this->v_[ZX];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::zy()
-{
-    return this->v_[ZY];
-}
-
-
-template<class Cmpt>
-inline Cmpt& Tensor<Cmpt>::zz()
-{
-    return this->v_[ZZ];
-}
-
-
-template<class Cmpt>
-inline Tensor<Cmpt> Tensor<Cmpt>::T() const
+inline CML::Tensor<Cmpt> CML::Tensor<Cmpt>::T() const
 {
     return Tensor<Cmpt>
     (
@@ -290,10 +325,44 @@ inline Tensor<Cmpt> Tensor<Cmpt>::T() const
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline void Tensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
+inline void CML::Tensor<Cmpt>::operator&=(const Tensor<Cmpt>& t)
+{
+    *this =
+    (
+        Tensor<Cmpt>
+        (
+            this->xx()*t.xx() + this->xy()*t.yx() + this->xz()*t.zx(),
+            this->xx()*t.xy() + this->xy()*t.yy() + this->xz()*t.zy(),
+            this->xx()*t.xz() + this->xy()*t.yz() + this->xz()*t.zz(),
+
+            this->yx()*t.xx() + this->yy()*t.yx() + this->yz()*t.zx(),
+            this->yx()*t.xy() + this->yy()*t.yy() + this->yz()*t.zy(),
+            this->yx()*t.xz() + this->yy()*t.yz() + this->yz()*t.zz(),
+
+            this->zx()*t.xx() + this->zy()*t.yx() + this->zz()*t.zx(),
+            this->zx()*t.xy() + this->zy()*t.yy() + this->zz()*t.zy(),
+            this->zx()*t.xz() + this->zy()*t.yz() + this->zz()*t.zz()
+        )
+    );
+}
+
+
+template<class Cmpt>
+template<class Cmpt2>
+inline void CML::Tensor<Cmpt>::operator=
+(
+    const VectorSpace<Tensor<Cmpt2>, Cmpt2, 9>& vs
+)
+{
+    VectorSpace<Tensor<Cmpt>, Cmpt, 9>::operator=(vs);
+}
+
+
+template<class Cmpt>
+inline void CML::Tensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
 {
     this->v_[XX] = st.ii(); this->v_[XY] = 0; this->v_[XZ] = 0;
     this->v_[YX] = 0; this->v_[YY] = st.ii(); this->v_[YZ] = 0;
@@ -302,7 +371,7 @@ inline void Tensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
 
 
 template<class Cmpt>
-inline void Tensor<Cmpt>::operator=(const SymmTensor<Cmpt>& st)
+inline void CML::Tensor<Cmpt>::operator=(const SymmTensor<Cmpt>& st)
 {
     this->v_[XX] = st.xx(); this->v_[XY] = st.xy(); this->v_[XZ] = st.xz();
     this->v_[YX] = st.xy(); this->v_[YY] = st.yy(); this->v_[YZ] = st.yz();
@@ -311,7 +380,7 @@ inline void Tensor<Cmpt>::operator=(const SymmTensor<Cmpt>& st)
 
 
 template<class Cmpt>
-inline void Tensor<Cmpt>::operator=(const Vector<Vector<Cmpt> >& tr)
+inline void CML::Tensor<Cmpt>::operator=(const Vector<Vector<Cmpt> >& tr)
 {
     this->v_[XX] = tr.x().x();
     this->v_[XY] = tr.x().y();
@@ -326,6 +395,11 @@ inline void Tensor<Cmpt>::operator=(const Vector<Vector<Cmpt> >& tr)
     this->v_[ZZ] = tr.z().z();
 }
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
@@ -567,6 +641,13 @@ inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t)
 }
 
 
+template<class Cmpt>
+inline Tensor<Cmpt> Tensor<Cmpt>::inv() const
+{
+    return CML::inv(*this);
+}
+
+
 //- Return the 1st invariant of a tensor
 template<class Cmpt>
 inline Cmpt invariantI(const Tensor<Cmpt>& t)
@@ -581,13 +662,8 @@ inline Cmpt invariantII(const Tensor<Cmpt>& t)
 {
     return
     (
-        0.5*sqr(tr(t))
-      - 0.5*
-        (
-           t.xx()*t.xx() + t.xy()*t.xy() + t.xz()*t.xz()
-         + t.yx()*t.yx() + t.yy()*t.yy() + t.yz()*t.yz()
-         + t.zx()*t.zx() + t.zy()*t.zy() + t.zz()*t.zz()
-        )
+        t.xx()*t.yy() + t.yy()*t.zz() + t.xx()*t.zz()
+      - t.xy()*t.yx() - t.yz()*t.zy() - t.xz()*t.zx()
     );
 }
 

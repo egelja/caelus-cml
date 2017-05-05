@@ -1,109 +1,72 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-surfMeshEnv = globalEnv.Clone()
+import utils
+from build import build_lib
+Import('env')
 
-# Path to source
-src = surfMeshEnv['LIB_SRC']
-
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-surfMeshEnv.Append(CXXFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-if surfMeshEnv['WHICH_OS'] == "windows" :
-  lib_inc = ['lnInclude',surfMeshEnv['FLEXXX_PATH'] + '/include',
-  surfMeshEnv['ZLIB_PATH'] + '/include'
-  ] 
+# Build STL ASCII reader
+ostype = utils.ostype()
+_stl_path = 'surfaceFormats/stl/'
+if ostype == "windows":
+    src_from_flex = [_stl_path+'windows/STLsurfaceFormatASCII.cpp']
 else:
-  lib_inc = ['lnInclude'] 
-surfMeshEnv.Prepend(CPPPATH = lib_inc)
+    src = _stl_path+'STLsurfaceFormatASCII.ll'
+    tgt = _stl_path+'posix/STLsurfaceFormatASCII.cpp'
+    flex_env = env.Clone()
+    flex_env.CXXFile(tgt, src, LEXFLAGS='-+')
+    src_from_flex = [tgt]
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-surfMeshEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core'] 
-surfMeshEnv.Append(LIBS = lib_link)
+target = 'surfMesh'
 
-#===============================================================================
-# flex ++
-#===============================================================================
-if surfMeshEnv['WHICH_OS'] == "windows" :
-   source_from_flex = 'surfaceFormats/stl/windows/STLsurfaceFormatASCII.cpp'
-else :
-  source_to_flex = 'surfaceFormats/stl/STLsurfaceFormatASCII.ll'
-  flex_target =    'surfaceFormats/stl/posix/STLsurfaceFormatASCII.cpp'
-  surfMeshEnv.CXXFile(target= flex_target, source = source_to_flex, LEXFLAGS = '-+' )
-  source_from_flex = [flex_target]
+sources = Split("""
+surfZone/surfZone/surfZone.cpp
+surfZone/surfZone/surfZoneIOList.cpp
+surfZone/surfZoneIdentifier/surfZoneIdentifier.cpp
+MeshedSurfaceAllocator/MeshedSurfaceIOAllocator.cpp
+MeshedSurface/MeshedSurfaceCore.cpp
+MeshedSurface/MeshedSurfaces.cpp
+UnsortedMeshedSurface/UnsortedMeshedSurfaces.cpp
+MeshedSurfaceProxy/MeshedSurfaceProxyCore.cpp
+surfaceRegistry/surfaceRegistry.cpp
+surfMesh/surfMesh.cpp
+surfMesh/surfMeshClear.cpp
+surfMesh/surfMeshIO.cpp
+surfFields/surfFields/surfFields.cpp
+surfFields/surfPointFields/surfPointFields.cpp
+surfaceFormats/surfaceFormatsCore.cpp
+surfaceFormats/ac3d/AC3DsurfaceFormatCore.cpp
+surfaceFormats/ac3d/AC3DsurfaceFormatRunTime.cpp
+surfaceFormats/ftr/FTRsurfaceFormatRunTime.cpp
+surfaceFormats/gts/GTSsurfaceFormatRunTime.cpp
+surfaceFormats/nas/NASsurfaceFormatRunTime.cpp
+surfaceFormats/obj/OBJsurfaceFormatRunTime.cpp
+surfaceFormats/off/OFFsurfaceFormatRunTime.cpp
+surfaceFormats/cas/CASsurfaceFormatCore.cpp
+surfaceFormats/cas/CASsurfaceFormatRunTime.cpp
+surfaceFormats/smesh/SMESHsurfaceFormatRunTime.cpp
+surfaceFormats/starcd/STARCDsurfaceFormatCore.cpp
+surfaceFormats/starcd/STARCDsurfaceFormatRunTime.cpp
+surfaceFormats/stl/STLsurfaceFormatCore.cpp
+surfaceFormats/stl/STLsurfaceFormatRunTime.cpp
+surfaceFormats/tri/TRIsurfaceFormatCore.cpp
+surfaceFormats/tri/TRIsurfaceFormatRunTime.cpp
+surfaceFormats/vtk/VTKsurfaceFormatCore.cpp
+surfaceFormats/vtk/VTKsurfaceFormatRunTime.cpp
+surfaceFormats/wrl/WRLsurfaceFormatCore.cpp
+surfaceFormats/wrl/WRLsurfaceFormatRunTime.cpp
+surfaceFormats/x3d/X3DsurfaceFormatCore.cpp
+surfaceFormats/x3d/X3DsurfaceFormatRunTime.cpp
+""") + src_from_flex
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  surfZone/surfZone/surfZone.cpp
-  surfZone/surfZone/surfZoneIOList.cpp
-  surfZone/surfZoneIdentifier/surfZoneIdentifier.cpp
-  MeshedSurfaceAllocator/MeshedSurfaceIOAllocator.cpp
-  MeshedSurface/MeshedSurfaceCore.cpp
-  MeshedSurface/MeshedSurfaces.cpp
-  UnsortedMeshedSurface/UnsortedMeshedSurfaces.cpp
-  MeshedSurfaceProxy/MeshedSurfaceProxyCore.cpp
-  surfaceRegistry/surfaceRegistry.cpp
-  surfMesh/surfMesh.cpp
-  surfMesh/surfMeshClear.cpp
-  surfMesh/surfMeshIO.cpp
-  surfFields/surfFields/surfFields.cpp
-  surfFields/surfPointFields/surfPointFields.cpp
-  surfaceFormats/surfaceFormatsCore.cpp
-  surfaceFormats/ac3d/AC3DsurfaceFormatCore.cpp
-  surfaceFormats/ac3d/AC3DsurfaceFormatRunTime.cpp
-  surfaceFormats/ftr/FTRsurfaceFormatRunTime.cpp
-  surfaceFormats/gts/GTSsurfaceFormatRunTime.cpp
-  surfaceFormats/nas/NASsurfaceFormatRunTime.cpp
-  surfaceFormats/obj/OBJsurfaceFormatRunTime.cpp
-  surfaceFormats/off/OFFsurfaceFormatRunTime.cpp
-  surfaceFormats/cas/CASsurfaceFormatCore.cpp
-  surfaceFormats/cas/CASsurfaceFormatRunTime.cpp
-  surfaceFormats/smesh/SMESHsurfaceFormatRunTime.cpp
-  surfaceFormats/starcd/STARCDsurfaceFormatCore.cpp
-  surfaceFormats/starcd/STARCDsurfaceFormatRunTime.cpp
-  surfaceFormats/stl/STLsurfaceFormatCore.cpp
-  surfaceFormats/stl/STLsurfaceFormatRunTime.cpp
-  surfaceFormats/tri/TRIsurfaceFormatCore.cpp
-  surfaceFormats/tri/TRIsurfaceFormatRunTime.cpp
-  surfaceFormats/vtk/VTKsurfaceFormatCore.cpp
-  surfaceFormats/vtk/VTKsurfaceFormatRunTime.cpp
-  surfaceFormats/wrl/WRLsurfaceFormatCore.cpp
-  surfaceFormats/wrl/WRLsurfaceFormatRunTime.cpp
-  surfaceFormats/x3d/X3DsurfaceFormatCore.cpp
-  surfaceFormats/x3d/X3DsurfaceFormatRunTime.cpp
-  """) + [source_from_flex]
+caelus_inc = []
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libsurfMesh = surfMeshEnv.SharedLibrary(target = 'surfMesh', 
-source = src_files)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = surfMeshEnv['LIB_PLATFORM_INSTALL']
-surfMeshEnv.Alias('install', install_dir)
-surfMeshEnv.Install(install_dir, libsurfMesh)
-
-if (surfMeshEnv['WHICH_OS'] == "darwin"):
-
-  surfMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsurfMesh.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

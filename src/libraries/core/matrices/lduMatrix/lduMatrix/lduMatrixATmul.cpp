@@ -37,18 +37,13 @@ void CML::lduMatrix::Amul
     const direction cmpt
 ) const
 {
+    // Reset multiplication result to zero
+    Apsi = scalar(0.0);
+
     scalar* RESTRICT ApsiPtr = Apsi.begin();
 
     const scalarField& psi = tpsi();
     const scalar* const RESTRICT psiPtr = psi.begin();
-
-    const scalar* const RESTRICT diagPtr = diag().begin();
-
-    const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
-
-    const scalar* const RESTRICT upperPtr = upper().begin();
-    const scalar* const RESTRICT lowerPtr = lower().begin();
 
     // Initialise the update of interfaced interfaces
     initMatrixInterfaces
@@ -60,19 +55,33 @@ void CML::lduMatrix::Amul
         cmpt
     );
 
-    register const label nCells = diag().size();
-    for (register label cell=0; cell<nCells; cell++)
+    // Protection for multiplication of incomplete matrices
+    if (hasDiag())
     {
-        ApsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
+        const scalar* const RESTRICT diagPtr = diag().begin();
+
+        register const label nCells = diag().size();
+        for (register label cell=0; cell<nCells; cell++)
+        {
+            ApsiPtr[cell] += diagPtr[cell]*psiPtr[cell];
+        }
     }
 
-
-    register const label nFaces = upper().size();
-
-    for (register label face=0; face<nFaces; face++)
+    if (hasUpper() || hasLower())
     {
-        ApsiPtr[uPtr[face]] += lowerPtr[face]*psiPtr[lPtr[face]];
-        ApsiPtr[lPtr[face]] += upperPtr[face]*psiPtr[uPtr[face]];
+        const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
+        const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
+
+        const scalar* const RESTRICT upperPtr = upper().begin();
+        const scalar* const RESTRICT lowerPtr = lower().begin();
+
+        register const label nFaces = upper().size();
+
+        for (register label face=0; face<nFaces; face++)
+        {
+            ApsiPtr[uPtr[face]] += lowerPtr[face]*psiPtr[lPtr[face]];
+            ApsiPtr[lPtr[face]] += upperPtr[face]*psiPtr[uPtr[face]];
+        }
     }
 
     // Update interface interfaces
@@ -98,18 +107,13 @@ void CML::lduMatrix::Tmul
     const direction cmpt
 ) const
 {
+    // Reset multiplication result to zero  //NEW
+    Tpsi = scalar(0.0);
+
     scalar* RESTRICT TpsiPtr = Tpsi.begin();
 
     const scalarField& psi = tpsi();
     const scalar* const RESTRICT psiPtr = psi.begin();
-
-    const scalar* const RESTRICT diagPtr = diag().begin();
-
-    const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
-
-    const scalar* const RESTRICT lowerPtr = lower().begin();
-    const scalar* const RESTRICT upperPtr = upper().begin();
 
     // Initialise the update of interfaced interfaces
     initMatrixInterfaces
@@ -121,17 +125,32 @@ void CML::lduMatrix::Tmul
         cmpt
     );
 
-    register const label nCells = diag().size();
-    for (register label cell=0; cell<nCells; cell++)
+    // Protection for multiplication of incomplete matrices
+    if (hasDiag())
     {
-        TpsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
+        const scalar* const RESTRICT diagPtr = diag().begin();
+
+        register const label nCells = diag().size();
+        for (register label cell=0; cell<nCells; cell++)
+        {
+            TpsiPtr[cell] += diagPtr[cell]*psiPtr[cell];
+        }
     }
 
-    register const label nFaces = upper().size();
-    for (register label face=0; face<nFaces; face++)
+    if (hasUpper() || hasLower())
     {
-        TpsiPtr[uPtr[face]] += upperPtr[face]*psiPtr[lPtr[face]];
-        TpsiPtr[lPtr[face]] += lowerPtr[face]*psiPtr[uPtr[face]];
+        const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
+        const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
+
+        const scalar* const RESTRICT lowerPtr = lower().begin();
+        const scalar* const RESTRICT upperPtr = upper().begin();
+
+        register const label nFaces = upper().size();
+        for (register label face=0; face<nFaces; face++)
+        {
+            TpsiPtr[uPtr[face]] += upperPtr[face]*psiPtr[lPtr[face]];
+            TpsiPtr[lPtr[face]] += lowerPtr[face]*psiPtr[uPtr[face]];
+        }
     }
 
     // Update interface interfaces
@@ -207,17 +226,14 @@ void CML::lduMatrix::residual
     const direction cmpt
 ) const
 {
+    // Reset multiplication result to zero
+    rA = scalar(0.0);
+
     scalar* RESTRICT rAPtr = rA.begin();
 
     const scalar* const RESTRICT psiPtr = psi.begin();
-    const scalar* const RESTRICT diagPtr = diag().begin();
+
     const scalar* const RESTRICT sourcePtr = source.begin();
-
-    const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
-    const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
-
-    const scalar* const RESTRICT upperPtr = upper().begin();
-    const scalar* const RESTRICT lowerPtr = lower().begin();
 
     // Parallel boundary initialisation.
     // Note: there is a change of sign in the coupled
@@ -250,19 +266,34 @@ void CML::lduMatrix::residual
         cmpt
     );
 
-    register const label nCells = diag().size();
-    for (register label cell=0; cell<nCells; cell++)
+    // Protection for multiplication of incomplete matrices
+    if (hasDiag())
     {
-        rAPtr[cell] = sourcePtr[cell] - diagPtr[cell]*psiPtr[cell];
+        const scalar* const RESTRICT diagPtr = diag().begin();
+
+        register const label nCells = diag().size();
+        for (register label cell=0; cell<nCells; cell++)
+        {
+            rAPtr[cell] += diagPtr[cell]*psiPtr[cell]; // Aditive part from initMatrixInterfaces
+            rAPtr[cell] = sourcePtr[cell] - rAPtr[cell];
+        }   
     }
 
-
-    register const label nFaces = upper().size();
-
-    for (register label face=0; face<nFaces; face++)
+    if (hasUpper() || hasLower())
     {
-        rAPtr[uPtr[face]] -= lowerPtr[face]*psiPtr[lPtr[face]];
-        rAPtr[lPtr[face]] -= upperPtr[face]*psiPtr[uPtr[face]];
+        const label* const RESTRICT uPtr = lduAddr().upperAddr().begin();
+        const label* const RESTRICT lPtr = lduAddr().lowerAddr().begin();
+
+        const scalar* const RESTRICT upperPtr = upper().begin();
+        const scalar* const RESTRICT lowerPtr = lower().begin();
+
+        register const label nFaces = upper().size();
+
+        for (register label face=0; face<nFaces; face++)
+        {
+            rAPtr[uPtr[face]] -= lowerPtr[face]*psiPtr[lPtr[face]];
+            rAPtr[lPtr[face]] -= upperPtr[face]*psiPtr[uPtr[face]];
+        }
     }
 
     // Update interface interfaces

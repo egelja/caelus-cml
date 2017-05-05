@@ -259,6 +259,15 @@ public:
 };
 
 
+//- Helper class for list to append unique elelements of y onto the end of x
+template<class T>
+class ListUniqueEqOp
+{
+public:
+    void operator()(List<T>& x, const List<T>& y) const;
+};
+
+
 //- Reverse a list. First element becomes last element etc.
 template<class ListType>
 ListType reverseList(const ListType& list);
@@ -991,6 +1000,29 @@ void CML::ListAppendEqOp<T>::operator()(List<T>& x, const List<T>& y) const
             forAll(y, i)
             {
                 x[sz++] = y[i];
+            }
+        }
+        else
+        {
+            x = y;
+        }
+    }
+}
+
+
+template<class T>
+void CML::ListUniqueEqOp<T>::operator()(List<T>& x, const List<T>& y) const
+{
+    if (y.size())
+    {
+        if (x.size())
+        {
+            forAll(y, i)
+            {
+                if (findIndex(x, y[i]) == -1)
+                {
+                    x.append(y[i]);
+                }
             }
         }
         else

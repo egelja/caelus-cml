@@ -175,11 +175,16 @@ public:
 // Add the patch constructor functions to the hash tables
 
 #define makeSnGradTypeScheme(SS, Type)                                         \
+    defineNamedTemplateTypeNameAndDebug(CML::fv::SS<CML::Type>, 0);            \
                                                                                \
-defineNamedTemplateTypeNameAndDebug(SS<Type>, 0);                              \
-                                                                               \
-snGradScheme<Type>::addMeshConstructorToTable<SS<Type> >                       \
-    add##SS##Type##MeshConstructorToTable_;
+    namespace CML                                                              \
+    {                                                                          \
+        namespace fv                                                           \
+        {                                                                      \
+            snGradScheme<Type>::addMeshConstructorToTable<SS<Type> >           \
+                add##SS##Type##MeshConstructorToTable_;                        \
+        }                                                                      \
+    }
 
 #define makeSnGradScheme(SS)                                                   \
                                                                                \

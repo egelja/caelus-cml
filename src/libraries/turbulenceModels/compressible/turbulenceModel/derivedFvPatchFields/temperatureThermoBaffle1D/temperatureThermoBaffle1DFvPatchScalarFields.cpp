@@ -25,41 +25,40 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace compressible
-{
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 defineTemplateTypeNameAndDebugWithName
 (
-    constSolid_temperatureThermoBaffle1DFvPatchScalarField,
+    CML::compressible::constSolid_temperatureThermoBaffle1DFvPatchScalarField,
     "compressible::temperatureThermoBaffle1D<constSolidThermoPhysics>",
     0
 );
 
-addToPatchFieldRunTimeSelection
-(
-    fvPatchScalarField,
-    constSolid_temperatureThermoBaffle1DFvPatchScalarField
-);
 
 defineTemplateTypeNameAndDebugWithName
 (
-    expoSolid_temperatureThermoBaffle1DFvPatchScalarField,
+    CML::compressible::expoSolid_temperatureThermoBaffle1DFvPatchScalarField,
     "compressible::temperatureThermoBaffle1D<expoSolidThermoPhysics>",
     0
 );
 
-addToPatchFieldRunTimeSelection
-(
-    fvPatchScalarField,
-    expoSolid_temperatureThermoBaffle1DFvPatchScalarField
-);
+namespace CML
+{
+namespace compressible
+{
+    addToPatchFieldRunTimeSelection
+    (
+        fvPatchScalarField,
+        constSolid_temperatureThermoBaffle1DFvPatchScalarField
+    );
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
+    addToPatchFieldRunTimeSelection
+    (
+        fvPatchScalarField,
+        expoSolid_temperatureThermoBaffle1DFvPatchScalarField
+    );
 } // End namespace compressible
 } // End namespace CML
 // ************************************************************************* //

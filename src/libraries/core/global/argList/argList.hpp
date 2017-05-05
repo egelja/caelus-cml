@@ -38,7 +38,7 @@ Description
 
     \par Default command-line options
     \param -case \<dir\> \n
-        select an case directory instead of the current working directory
+        select a case directory instead of the current working directory
     \param -parallel \n
         specify case as a parallel job
     \param -doc \n
@@ -112,6 +112,7 @@ class argList
         fileName rootPath_;
         fileName globalCase_;
         fileName case_;
+        string argListStr_;
 
         // Signal handlers
         sigFpe sigFpe_;
@@ -185,16 +186,36 @@ public:
         (
             int& argc,
             char**& argv,
-            bool checkArgs=true,
-            bool checkOpts=true
+            bool checkArgs = true,
+            bool checkOpts = true,
+            bool initialise = true
+        );
+
+        //- Construct copy with new options
+        argList
+        (
+            const argList& args,
+            const HashTable<string>& options,
+            bool checkArgs = true,
+            bool checkOpts = true,
+            bool initialise = true
         );
 
 
-        //- Destructor
-        virtual ~argList();
+    //- Destructor
+    virtual ~argList();
 
 
     // Member functions
+
+        //- Parse
+        void parse
+        (
+            bool checkArgs,
+            bool checkOpts,
+            bool initialise
+        );
+
 
         // Access
 
@@ -210,11 +231,17 @@ public:
             //- Return case name
             inline const fileName& globalCaseName() const;
 
+            //- Return parRunControl
+            inline const ParRunControl& parRunControl() const;
+
             //- Return the path to the caseName
             inline fileName path() const;
 
             //- Return arguments
             inline const stringList& args() const;
+
+            //- Return non-const access to arguments
+            inline stringList& args();
 
             //- Return the argument corresponding to index.
             inline const string& arg(const label index) const;
@@ -238,6 +265,9 @@ public:
 
             //- Return options
             inline const CML::HashTable<string>& options() const;
+
+            //- Return non-const access to options
+            inline CML::HashTable<string>& options();
 
             //- Return the argument string associated with the named option
             inline const string& option(const word& opt) const;
@@ -293,6 +323,7 @@ public:
             //- Return the argument string associated with the named option
             //  \sa option()
             inline const string& operator[](const word& opt) const;
+
 
         // Edit
 

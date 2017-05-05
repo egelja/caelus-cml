@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,7 +28,7 @@ const char* const CML::pTraits<bool>::typeName = "bool";
 const bool CML::pTraits<bool>::zero = false;
 const bool CML::pTraits<bool>::one = true;
 
-const char* CML::pTraits<bool>::componentNames[] = { "x" };
+const char* const CML::pTraits<bool>::componentNames[] = { "" };
 
 CML::pTraits<bool>::pTraits(const bool& p)
 :

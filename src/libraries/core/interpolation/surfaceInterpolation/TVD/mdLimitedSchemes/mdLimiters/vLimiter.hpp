@@ -64,22 +64,22 @@ public:
         if (deltaTwo > 0)
         {
             return max(min(((sqr(deltaOneMax)+epsilonSquare)*deltaTwo
-                             +2.0*sqr(deltaTwo)*deltaOneMax)
+                             +scalar(2.0)*sqr(deltaTwo)*deltaOneMax)
 			     /stabilise(deltaTwo*(sqr(deltaOneMax)
-                             +2.0*sqr(deltaTwo)+deltaOneMax*deltaTwo
-                             +epsilonSquare),VSMALL),1),0);
+                             +scalar(2.0)*sqr(deltaTwo)+deltaOneMax*deltaTwo
+                             +epsilonSquare),VSMALL),scalar(1)),scalar(0));
         }
         else if (deltaTwo < 0)
         {
             return max(min(((sqr(deltaOneMin)+epsilonSquare)*deltaTwo
-                             +2.0*sqr(deltaTwo)*deltaOneMin)
+                             +scalar(2.0)*sqr(deltaTwo)*deltaOneMin)
 			     /stabilise(deltaTwo*(sqr(deltaOneMin)
-                             +2.0*sqr(deltaTwo)+deltaOneMin*deltaTwo
-                             +epsilonSquare),VSMALL),1),0);
+                             +scalar(2.0)*sqr(deltaTwo)+deltaOneMin*deltaTwo
+                             +epsilonSquare),VSMALL),scalar(1)),scalar(0));
         }
         else
         {
-            return 1.0;
+            return scalar(1.0);
         }
     }
 	

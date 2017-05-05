@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,18 +21,13 @@ License
 
 #include "labelSymmTensor.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const labelSymmTensor::typeName = "labelSymmTensor";
+const char* const CML::labelSymmTensor::vsType::typeName = "labelSymmTensor";
 
 template<>
-const char* labelSymmTensor::componentNames[] =
+const char* const CML::labelSymmTensor::vsType::componentNames[] =
 {
     "xx", "xy", "xz",
           "yy", "yz",
@@ -40,24 +35,48 @@ const char* labelSymmTensor::componentNames[] =
 };
 
 template<>
-const labelSymmTensor labelSymmTensor::zero
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::vsType::zero
 (
-    0, 0, 0,
-       0, 0,
-          0
+    labelSymmTensor::uniform(0)
 );
 
 template<>
-const labelSymmTensor labelSymmTensor::one
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::one
 (
-    1, 1, 1,
-       1, 1,
+    labelSymmTensor::uniform(1)
+);
+
+template<>
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::max
+(
+    labelSymmTensor::uniform(labelMax)
+);
+
+template<>
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::min
+(
+    labelSymmTensor::uniform(-labelMax)
+);
+
+template<>
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::rootMax
+(
+    labelSymmTensor::uniform(sqrt(scalar(labelMax)))
+);
+
+template<>
+const CML::labelSymmTensor CML::labelSymmTensor::vsType::rootMin
+(
+    labelSymmTensor::uniform(-sqrt(scalar(labelMax)))
+);
+
+template<>
+const CML::labelSymmTensor CML::labelSymmTensor::I
+(
+    1, 0, 0,
+       1, 0,
           1
 );
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
 
 // ************************************************************************* //

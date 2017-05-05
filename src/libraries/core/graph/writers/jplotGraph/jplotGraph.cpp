@@ -24,11 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::jplotGraph, 0);
-const CML::word CML::jplotGraph::ext_("dat");
 
 namespace CML
 {
+    defineTypeNameAndDebug(jplotGraph, 0);
+    const word jplotGraph::ext_("dat");
+
     typedef graph::writer graphWriter;
     addToRunTimeSelectionTable(graphWriter, jplotGraph, word);
 }

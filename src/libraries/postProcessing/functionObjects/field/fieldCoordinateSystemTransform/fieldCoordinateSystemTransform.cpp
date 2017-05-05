@@ -26,7 +26,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(fieldCoordinateSystemTransform, 0);
+    defineTypeNameAndDebug(fieldCoordinateSystemTransform, 0);
 }
 
 

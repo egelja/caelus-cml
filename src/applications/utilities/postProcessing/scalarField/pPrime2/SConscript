@@ -1,58 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-pPrime2Env = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = pPrime2Env['LIB_SRC']
+target = 'pPrime2'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-pPrime2Env.Append(CCFLAGS = '')
+sources = Split("""
+pPrime2.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
+caelus_inc = [
+]
 
-pPrime2Env.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-pPrime2Env.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if pPrime2Env['WHICH_OS'] == "windows":
-  pPrime2Env.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['genericPatchFields']
-
-pPrime2Env.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  pPrime2.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpPrime2 = pPrime2Env.Program(target = 'pPrime2', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = pPrime2Env['BIN_PLATFORM_INSTALL']
-pPrime2Env.Alias('install', install_dir)
-pPrime2Env.Install(install_dir, binpPrime2)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

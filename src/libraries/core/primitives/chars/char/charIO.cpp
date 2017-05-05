@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,6 +31,14 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+char CML::readChar(Istream& is)
+{
+   char c;
+   is.read(c);
+   return c;
+}
+
+
 CML::Istream& CML::operator>>(Istream& is, char& c)
 {
     is.read(c);
@@ -44,14 +52,6 @@ CML::Ostream& CML::operator<<(Ostream& os, const char c)
     os.write(c);
     os.check("Ostream& operator<<(Ostream&, const char)");
     return os;
-}
-
-
-char CML::readChar(Istream& is)
-{
-   char c;
-   is.read(c);
-   return c;
 }
 
 

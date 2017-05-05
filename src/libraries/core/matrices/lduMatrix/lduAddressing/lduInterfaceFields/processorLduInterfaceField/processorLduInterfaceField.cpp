@@ -24,7 +24,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::processorLduInterfaceField, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(processorLduInterfaceField, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

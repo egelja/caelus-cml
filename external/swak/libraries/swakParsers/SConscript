@@ -1,127 +1,91 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-ParserEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = ParserEnv['LIB_SRC']
+target = 'swakParsers'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-ParserEnv.Append(CXXFLAGS = '')
+sources = Split("""
+helpers/printSwakVersion.cpp
+helpers/exprString.cpp
+helpers/switchableNotImplemented.cpp
+helpers/DebugOStream.cpp
+entryToExpression/entryToExpression.cpp
+entryToExpression/directEntryToExpression.cpp
+entryToExpression/stringEntryToExpression.cpp
+entryToExpression/boolEntryToExpression.cpp
+entryToExpression/vectorEntryToExpression.cpp
+entryToExpression/tensorEntryToExpression.cpp
+entryToExpression/symmTensorEntryToExpression.cpp
+entryToExpression/sphericalTensorEntryToExpression.cpp
+entryToExpression/dimensionedScalarEntryToExpression.cpp
+entryToExpression/dimensionedVectorEntryToExpression.cpp
+entryToExpression/dimensionedTensorEntryToExpression.cpp
+entryToExpression/dimensionedSymmTensorEntryToExpression.cpp
+entryToExpression/dimensionedSphericalTensorEntryToExpression.cpp
+repositories/RepositoryBase.cpp
+repositories/SurfacesRepository.cpp
+repositories/MeshesRepository.cpp
+repositories/SetsRepository.cpp
+repositories/GlobalVariablesRepository.cpp
+namedEnums/LogicalAccumulationNamedEnum.cpp
+namedEnums/NumericAccumulationNamedEnum.cpp
+ExpressionDriverWriter.cpp
+ExpressionResult/ExpressionResult.cpp
+ExpressionResult/StoredExpressionResult.cpp
+ExpressionResult/DelayedExpressionResult.cpp
+ExpressionResult/StackExpressionResult.cpp
+ExpressionResult/StoredStackExpressionResult.cpp
+setsAndSurfaces/swakRegistryProxySurface.cpp
+setsAndSurfaces/swakRegistryProxySet.cpp
+makeSwakDataEntry.cpp
+bison/FieldValueExpressionParser.cpp
+bison/PatchValueExpressionParser.cpp
+bison/SubsetValueExpressionParser.cpp
+CommonValueExpressionDriver.cpp
+flex/FieldValueExpressionLexer.cpp
+FieldValueExpressionDriver.cpp
+flex/PatchValueExpressionLexer.cpp
+PatchValueExpressionDriver.cpp
+flex/SubsetValueExpressionLexer.cpp
+SubsetValueExpressionDriver.cpp
+SetSubsetValueExpressionDriver.cpp
+CellSetValueExpressionDriver.cpp
+FaceSetValueExpressionDriver.cpp
+CellZoneValueExpressionDriver.cpp
+FaceZoneValueExpressionDriver.cpp
+SampledSurfaceValueExpressionDriver.cpp
+SampledSetValueExpressionDriver.cpp
+initSwakFunctionObject.cpp
+plugins/CommonPluginFunction.cpp
+plugins/FieldValuePluginFunction.cpp
+plugins/PatchValuePluginFunction.cpp
+plugins/CellSetValuePluginFunction.cpp
+plugins/CellZoneValuePluginFunction.cpp
+plugins/FaceSetValuePluginFunction.cpp
+plugins/FaceZoneValuePluginFunction.cpp
+plugins/SampledSetValuePluginFunction.cpp
+plugins/SampledSurfaceValuePluginFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', 
-src + '/sampling/lnInclude',
-src + '/surfMesh/lnInclude',
-src + '/lagrangian/basic/lnInclude',
-'bison',
-'flex'
+caelus_inc = [
+'swakParsers/lnInclude', 
+'swakParsers/bison',
+'swakParsers/flex',
+'sampling/lnInclude',
+'surfMesh/lnInclude',
+'lagrangian/basic/lnInclude',
 ]
-	
-ParserEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-ParserEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'sampling',
+'lagrangian',
+'surfMesh'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['sampling','lagrangian','surfMesh']
-  
-ParserEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_Parser = Split("""
-  helpers/printSwakVersion.cpp
-  helpers/exprString.cpp
-  helpers/switchableNotImplemented.cpp
-  helpers/DebugOStream.cpp
-  entryToExpression/entryToExpression.cpp
-  entryToExpression/directEntryToExpression.cpp
-  entryToExpression/stringEntryToExpression.cpp
-  entryToExpression/boolEntryToExpression.cpp
-  entryToExpression/vectorEntryToExpression.cpp
-  entryToExpression/tensorEntryToExpression.cpp
-  entryToExpression/symmTensorEntryToExpression.cpp
-  entryToExpression/sphericalTensorEntryToExpression.cpp
-  entryToExpression/dimensionedScalarEntryToExpression.cpp
-  entryToExpression/dimensionedVectorEntryToExpression.cpp
-  entryToExpression/dimensionedTensorEntryToExpression.cpp
-  entryToExpression/dimensionedSymmTensorEntryToExpression.cpp
-  entryToExpression/dimensionedSphericalTensorEntryToExpression.cpp
-  repositories/RepositoryBase.cpp
-  repositories/SurfacesRepository.cpp
-  repositories/MeshesRepository.cpp
-  repositories/SetsRepository.cpp
-  repositories/GlobalVariablesRepository.cpp
-  namedEnums/LogicalAccumulationNamedEnum.cpp
-  namedEnums/NumericAccumulationNamedEnum.cpp
-  ExpressionDriverWriter.cpp
-  ExpressionResult/ExpressionResult.cpp
-  ExpressionResult/StoredExpressionResult.cpp
-  ExpressionResult/DelayedExpressionResult.cpp
-  ExpressionResult/StackExpressionResult.cpp
-  ExpressionResult/StoredStackExpressionResult.cpp
-  setsAndSurfaces/swakRegistryProxySurface.cpp
-  setsAndSurfaces/swakRegistryProxySet.cpp
-  makeSwakDataEntry.cpp
-  bison/FieldValueExpressionParser.cpp
-  bison/PatchValueExpressionParser.cpp
-  bison/SubsetValueExpressionParser.cpp
-  CommonValueExpressionDriver.cpp
-  flex/FieldValueExpressionLexer.cpp
-  FieldValueExpressionDriver.cpp
-  flex/PatchValueExpressionLexer.cpp
-  PatchValueExpressionDriver.cpp
-  flex/SubsetValueExpressionLexer.cpp
-  SubsetValueExpressionDriver.cpp
-  SetSubsetValueExpressionDriver.cpp
-  CellSetValueExpressionDriver.cpp
-  FaceSetValueExpressionDriver.cpp
-  CellZoneValueExpressionDriver.cpp
-  FaceZoneValueExpressionDriver.cpp
-  SampledSurfaceValueExpressionDriver.cpp
-  SampledSetValueExpressionDriver.cpp
-  initSwakFunctionObject.cpp
-  plugins/CommonPluginFunction.cpp
-  plugins/FieldValuePluginFunction.cpp
-  plugins/PatchValuePluginFunction.cpp
-  plugins/CellSetValuePluginFunction.cpp
-  plugins/CellZoneValuePluginFunction.cpp
-  plugins/FaceSetValuePluginFunction.cpp
-  plugins/FaceZoneValuePluginFunction.cpp
-  plugins/SampledSetValuePluginFunction.cpp
-  plugins/SampledSurfaceValuePluginFunction.cpp
-  """)
-
-src_files = src_files_Parser
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakParsers = ParserEnv.SharedLibrary(target = 'libswakParsers',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = ParserEnv['LIB_PLATFORM_INSTALL']
-ParserEnv.Alias('install', install_dir)
-ParserEnv.Install(install_dir, libswakParsers)
-
-if (ParserEnv['WHICH_OS'] == "darwin"):
-
-  ParserEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakParsers.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

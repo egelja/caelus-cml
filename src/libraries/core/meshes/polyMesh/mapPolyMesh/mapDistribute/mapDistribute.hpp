@@ -115,6 +115,12 @@ Note:
         +------+ 0
 
 
+    When constructing from components optionally a 'flip' on
+    the maps can be specified. This will interpret the map
+    values as index+flip, similar to e.g. faceProcAddressing. The flip
+    will only be applied to fieldTypes (scalar, vector, .. triad)
+
+
 SourceFiles
     mapDistribute.cpp
     mapDistributeTemplates.cpp
@@ -124,12 +130,8 @@ SourceFiles
 #ifndef mapDistribute_H
 #define mapDistribute_H
 
+#include "mapDistributeBase.hpp"
 #include "transformList.hpp"
-#include "labelList.hpp"
-#include "labelPair.hpp"
-#include "Pstream.hpp"
-#include "boolList.hpp"
-#include "Map.hpp"
 #include "vectorTensorTransform.hpp"
 #include "coupledPolyPatch.hpp"
 
@@ -138,81 +140,27 @@ SourceFiles
 namespace CML
 {
 
-class mapPolyMesh;
-class globalIndex;
-class PstreamBuffers;
 class globalIndexAndTransform;
+//class vectorTensorTransform;
 
 /*---------------------------------------------------------------------------*\
                            Class mapDistribute Declaration
 \*---------------------------------------------------------------------------*/
 
 class mapDistribute
+:
+    public mapDistributeBase
 {
     // Private data
 
-        //- Size of reconstructed data
-        label constructSize_;
+        //- For every globalIndexAndTransform::transformPermutations
+        //  gives the elements that need to be transformed
+        labelListList transformElements_;
 
-        //- Maps from subsetted data back to original data
-        labelListList subMap_;
+        //- Destination in constructMap for transformed elements
+        labelList transformStart_;
 
-        //- Maps from subsetted data to new reconstructed data
-        labelListList constructMap_;
-
-        // Optional transformation
-
-            //- For every globalIndexAndTransform::transformPermutations
-            //  gives the elements that need to be transformed
-            labelListList transformElements_;
-
-            //- Destination in constructMap for transformed elements
-            labelList transformStart_;
-
-
-        //- Schedule
-        mutable autoPtr<List<labelPair> > schedulePtr_;
-
-
-   // Private Member Functions
-
-        static void checkReceivedSize
-        (
-            const label procI,
-            const label expectedSize,
-            const label receivedSize
-        );
-
-        void calcCompactAddressing
-        (
-            const globalIndex& globalNumbering,
-            const labelList& elements,
-            List<Map<label> >& compactMap
-        ) const;
-        void calcCompactAddressing
-        (
-            const globalIndex& globalNumbering,
-            const labelListList& elements,
-            List<Map<label> >& compactMap
-        ) const;
-
-        void exchangeAddressing
-        (
-            const int tag,
-            const globalIndex& globalNumbering,
-            labelList& elements,
-            List<Map<label> >& compactMap,
-            labelList& compactStart
-        );
-        void exchangeAddressing
-        (
-            const int tag,
-            const globalIndex& globalNumbering,
-            labelListList& elements,
-            List<Map<label> >& compactMap,
-            labelList& compactStart
-        );
-
+    // Private Member Functions
 
         //- Helper function: copy transformElements without transformation
         template<class T>
@@ -238,7 +186,6 @@ class mapDistribute
             const TransformOp& top
         ) const;
 
-
 public:
 
     // Public classes
@@ -248,27 +195,35 @@ public:
         {
         public:
 
-            template<class T>
+            template<class Type>
             void operator()
             (
                 const vectorTensorTransform& vt,
                 const bool forward,
-                List<T>& fld
+                List<Type>& fld
             ) const
             {
-                if (forward)
+                const tensor T(forward ? vt.R() : vt.R().T());
+                transformList(T, fld);
+            }
+
+            template<class Type>
+            void operator()
+            (
+                const vectorTensorTransform& vt,
+                const bool forward,
+                List<List<Type> >& flds
+            ) const
+            {
+                forAll(flds, i)
                 {
-                    transformList(vt.R(), fld);
-                }
-                else
-                {
-                    transformList(vt.R().T(), fld);
+                    operator()(vt, forward, flds[i]);
                 }
             }
 
             //- Transform patch-based field
-            template<class T>
-            void operator()(const coupledPolyPatch& cpp, UList<T>& fld) const
+            template<class Type>
+            void operator()(const coupledPolyPatch& cpp, UList<Type>& fld) const
             {
                 if (!cpp.parallel())
                 {
@@ -277,8 +232,8 @@ public:
             }
 
             //- Transform sparse field
-            template<class T, template<class> class Container>
-            void operator()(const coupledPolyPatch& cpp, Container<T>& map)
+            template<class Type, template<class> class Container>
+            void operator()(const coupledPolyPatch& cpp, Container<Type>& map)
             const
             {
                 if (!cpp.parallel())
@@ -310,6 +265,18 @@ public:
                     fld = vt.invTransformPosition(pfld);
                 }
             }
+            void operator()
+            (
+                const vectorTensorTransform& vt,
+                const bool forward,
+                List<List<point> >& flds
+            ) const
+            {
+                forAll(flds, i)
+                {
+                    operator()(vt, forward, flds[i]);
+                }
+            }
             //- Transform patch-based field
             void operator()(const coupledPolyPatch& cpp, pointField& fld) const
             {
@@ -335,7 +302,6 @@ public:
         };
 
 
-
     // Declare name of the class and its debug switch
     ClassName("mapDistribute");
 
@@ -350,7 +316,9 @@ public:
         (
             const label constructSize,
             const Xfer<labelListList>& subMap,
-            const Xfer<labelListList>& constructMap
+            const Xfer<labelListList>& constructMap,
+            const bool subHasFlip = false,
+            const bool constructHasFlip = false
         );
 
         //- Construct from components
@@ -360,11 +328,14 @@ public:
             const Xfer<labelListList>& subMap,
             const Xfer<labelListList>& constructMap,
             const Xfer<labelListList>& transformElements,
-            const Xfer<labelList>& transformStart
+            const Xfer<labelList>& transformStart,
+            const bool subHasFlip = false,
+            const bool constructHasFlip = false
         );
 
         //- Construct from reverse addressing: per data item the send
-        //  processor and the receive processor. All processors get same data.
+        //  processor and the receive processor. (note: data is not stored
+        //  sorted per processor so cannot use printLayout).
         mapDistribute
         (
             const labelList& sendProcs,
@@ -429,46 +400,13 @@ public:
         //- Construct copy
         mapDistribute(const mapDistribute&);
 
+        //- Construct from Istream
+        mapDistribute(Istream&);
+
 
     // Member Functions
 
         // Access
-
-            //- Constructed data size
-            label constructSize() const
-            {
-                return constructSize_;
-            }
-
-            //- Constructed data size
-            label& constructSize()
-            {
-                return constructSize_;
-            }
-
-            //- From subsetted data back to original data
-            const labelListList& subMap() const
-            {
-                return subMap_;
-            }
-
-            //- From subsetted data back to original data
-            labelListList& subMap()
-            {
-                return subMap_;
-            }
-
-            //- From subsetted data to new reconstructed data
-            const labelListList& constructMap() const
-            {
-                return constructMap_;
-            }
-
-            //- From subsetted data to new reconstructed data
-            labelListList& constructMap()
-            {
-                return constructMap_;
-            }
 
             //- For every globalIndexAndTransform::transformPermutations
             //  gives the elements that need to be transformed
@@ -486,17 +424,6 @@ public:
             //- Find transform from transformElements
             label whichTransform(const label index) const;
 
-            //- Calculate a schedule. See above.
-            static List<labelPair> schedule
-            (
-                const labelListList& subMap,
-                const labelListList& constructMap,
-                const int tag
-            );
-
-            //- Return a schedule. Demand driven. See above.
-            const List<labelPair>& schedule() const;
-
 
         // Other
 
@@ -506,50 +433,6 @@ public:
             //- Transfer contents to the Xfer container
             Xfer<mapDistribute> xfer();
 
-            //- Helper for construct from globalIndex. Renumbers element
-            //  (in globalIndex numbering) into compact indices.
-            static label renumber
-            (
-                const globalIndex&,
-                const List<Map<label> >& compactMap,
-                const label globalElement
-            );
-
-            //- Compact maps. Gets per field a bool whether it is used (locally)
-            //  and works out itself what this side and sender side can remove
-            //  from maps.
-            void compact(const boolList& elemIsUsed, const int tag);
-
-
-            //- Distribute data. Note:schedule only used for Pstream::scheduled
-            //  for now, all others just use send-to-all, receive-from-all.
-            template<class T>
-            static void distribute
-            (
-                const Pstream::commsTypes commsType,
-                const List<labelPair>& schedule,
-                const label constructSize,
-                const labelListList& subMap,
-                const labelListList& constructMap,
-                List<T>&,
-                const int tag = UPstream::msgType()
-            );
-
-            //- Distribute data. If multiple processors writing to same
-            //  position adds contributions using cop.
-            template<class T, class CombineOp>
-            static void distribute
-            (
-                const Pstream::commsTypes commsType,
-                const List<labelPair>& schedule,
-                const label constructSize,
-                const labelListList& subMap,
-                const labelListList& constructMap,
-                List<T>&,
-                const CombineOp& cop,
-                const T& nullValue,
-                const int tag = UPstream::msgType()
-            );
 
             //- Distribute data using default commsType.
             template<class T>
@@ -560,13 +443,22 @@ public:
                 const int tag = UPstream::msgType()
             ) const;
 
-            //- Same but with transforms
-            template<class T, class TransformOp>
+            //- Distribute data using default commsType.
+            template<class T, class negateOp>
             void distribute
             (
-                const globalIndexAndTransform&,
                 List<T>& fld,
-                const TransformOp& top,
+                const negateOp& negOp,
+                const bool dummyTransform = true,
+                const int tag = UPstream::msgType()
+            ) const;
+
+            //- Distribute data using default commsType.
+            template<class T>
+            void distribute
+            (
+                DynamicList<T>& fld,
+                const bool dummyTransform = true,
                 const int tag = UPstream::msgType()
             ) const;
 
@@ -577,17 +469,6 @@ public:
                 const label constructSize,
                 List<T>&,
                 const bool dummyTransform = true,
-                const int tag = UPstream::msgType()
-            ) const;
-
-            //- Same but with transforms
-            template<class T, class TransformOp>
-            void reverseDistribute
-            (
-                const globalIndexAndTransform&,
-                const label constructSize,
-                List<T>& fld,
-                const TransformOp& top,
                 const int tag = UPstream::msgType()
             ) const;
 
@@ -604,7 +485,28 @@ public:
                 const int tag = UPstream::msgType()
             ) const;
 
-            //- Same but with transforms
+            //- Distribute with transforms
+            template<class T, class TransformOp>
+            void distribute
+            (
+                const globalIndexAndTransform&,
+                List<T>& fld,
+                const TransformOp& top,
+                const int tag = UPstream::msgType()
+            ) const;
+
+            //- Reverse distribute with transforms
+            template<class T, class TransformOp>
+            void reverseDistribute
+            (
+                const globalIndexAndTransform&,
+                const label constructSize,
+                List<T>& fld,
+                const TransformOp& top,
+                const int tag = UPstream::msgType()
+            ) const;
+
+            //- Reverse distribute with transforms
             template<class T, class TransformOp>
             void reverseDistribute
             (
@@ -616,14 +518,8 @@ public:
                 const int tag = UPstream::msgType()
             ) const;
 
-            //- Do all sends using PstreamBuffers
-            template<class T>
-            void send(PstreamBuffers&, const List<T>&) const;
-            //- Do all receives using PstreamBuffers
-            template<class T>
-            void receive(PstreamBuffers&, List<T>&) const;
-
-            //- Debug: print layout
+            //- Debug: print layout. Can only be used on maps with sorted
+            //  storage (local data first, then non-local data)
             void printLayout(Ostream& os) const;
 
             //- Correct for topo change.
@@ -639,7 +535,6 @@ public:
 
         void operator=(const mapDistribute&);
 
-
     // IOstream operators
 
         //- Read dictionary from Istream
@@ -651,6 +546,7 @@ public:
 };
 
 
+// Template specialisation for primitives that do not need transform
 template<>
 void mapDistribute::transform::operator()
 (
@@ -741,767 +637,9 @@ void mapDistribute::transform::operator()
 #include "PstreamCombineReduceOps.hpp"
 #include "globalIndexAndTransform.hpp"
 #include "transformField.hpp"
+#include "flipOp.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-// Distribute list.
-template<class T>
-void CML::mapDistribute::distribute
-(
-    const Pstream::commsTypes commsType,
-    const List<labelPair>& schedule,
-    const label constructSize,
-    const labelListList& subMap,
-    const labelListList& constructMap,
-    List<T>& field,
-    const int tag
-)
-{
-    if (!Pstream::parRun())
-    {
-        // Do only me to me.
-
-        const labelList& mySubMap = subMap[Pstream::myProcNo()];
-
-        List<T> subField(mySubMap.size());
-        forAll(mySubMap, i)
-        {
-            subField[i] = field[mySubMap[i]];
-        }
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        field.setSize(constructSize);
-
-        forAll(map, i)
-        {
-            field[map[i]] = subField[i];
-        }
-        return;
-    }
-
-    if (commsType == Pstream::blocking)
-    {
-        // Since buffered sending can reuse the field to collect the
-        // received data.
-
-        // Send sub field to neighbour
-        for (label domain = 0; domain < Pstream::nProcs(); domain++)
-        {
-            const labelList& map = subMap[domain];
-
-            if (domain != Pstream::myProcNo() && map.size())
-            {
-                OPstream toNbr(Pstream::blocking, domain, 0, tag);
-                toNbr << UIndirectList<T>(field, map);
-            }
-        }
-
-        // Subset myself
-        const labelList& mySubMap = subMap[Pstream::myProcNo()];
-
-        List<T> subField(mySubMap.size());
-        forAll(mySubMap, i)
-        {
-            subField[i] = field[mySubMap[i]];
-        }
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        field.setSize(constructSize);
-
-        forAll(map, i)
-        {
-            field[map[i]] = subField[i];
-        }
-
-        // Receive sub field from neighbour
-        for (label domain = 0; domain < Pstream::nProcs(); domain++)
-        {
-            const labelList& map = constructMap[domain];
-
-            if (domain != Pstream::myProcNo() && map.size())
-            {
-                IPstream fromNbr(Pstream::blocking, domain, 0, tag);
-                List<T> subField(fromNbr);
-
-                checkReceivedSize(domain, map.size(), subField.size());
-
-                forAll(map, i)
-                {
-                    field[map[i]] = subField[i];
-                }
-            }
-        }
-    }
-    else if (commsType == Pstream::scheduled)
-    {
-        // Need to make sure I don't overwrite field with received data
-        // since the data might need to be sent to another processor. So
-        // allocate a new field for the results.
-        List<T> newField(constructSize);
-
-        // Subset myself
-        UIndirectList<T> subField(field, subMap[Pstream::myProcNo()]);
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        forAll(map, i)
-        {
-            newField[map[i]] = subField[i];
-        }
-
-        // Schedule will already have pruned 0-sized comms
-        forAll(schedule, i)
-        {
-            const labelPair& twoProcs = schedule[i];
-            // twoProcs is a swap pair of processors. The first one is the
-            // one that needs to send first and then receive.
-
-            label sendProc = twoProcs[0];
-            label recvProc = twoProcs[1];
-
-            if (Pstream::myProcNo() == sendProc)
-            {
-                // I am send first, receive next
-                {
-                    OPstream toNbr(Pstream::scheduled, recvProc, 0, tag);
-                    toNbr << UIndirectList<T>(field, subMap[recvProc]);
-                }
-                {
-                    IPstream fromNbr(Pstream::scheduled, recvProc, 0, tag);
-                    List<T> subField(fromNbr);
-
-                    const labelList& map = constructMap[recvProc];
-
-                    checkReceivedSize(recvProc, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        newField[map[i]] = subField[i];
-                    }
-                }
-            }
-            else
-            {
-                // I am receive first, send next
-                {
-                    IPstream fromNbr(Pstream::scheduled, sendProc, 0, tag);
-                    List<T> subField(fromNbr);
-
-                    const labelList& map = constructMap[sendProc];
-
-                    checkReceivedSize(sendProc, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        newField[map[i]] = subField[i];
-                    }
-                }
-                {
-                    OPstream toNbr(Pstream::scheduled, sendProc, 0, tag);
-                    toNbr << UIndirectList<T>(field, subMap[sendProc]);
-                }
-            }
-        }
-        field.transfer(newField);
-    }
-    else if (commsType == Pstream::nonBlocking)
-    {
-        label nOutstanding = Pstream::nRequests();
-
-        if (!contiguous<T>())
-        {
-            PstreamBuffers pBufs(Pstream::nonBlocking, tag);
-
-            // Stream data into buffer
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = subMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    // Put data into send buffer
-                    UOPstream toDomain(domain, pBufs);
-                    toDomain << UIndirectList<T>(field, map);
-                }
-            }
-
-            // Start receiving. Do not block.
-            pBufs.finishedSends(false);
-
-            {
-                // Set up 'send' to myself
-                const labelList& mySubMap = subMap[Pstream::myProcNo()];
-                List<T> mySubField(mySubMap.size());
-                forAll(mySubMap, i)
-                {
-                    mySubField[i] = field[mySubMap[i]];
-                }
-                // Combine bits. Note that can reuse field storage
-                field.setSize(constructSize);
-                // Receive sub field from myself
-                {
-                    const labelList& map = constructMap[Pstream::myProcNo()];
-
-                    forAll(map, i)
-                    {
-                        field[map[i]] = mySubField[i];
-                    }
-                }
-            }
-
-            // Block ourselves, waiting only for the current comms
-            Pstream::waitRequests(nOutstanding);
-
-            // Consume
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    UIPstream str(domain, pBufs);
-                    List<T> recvField(str);
-
-                    checkReceivedSize(domain, map.size(), recvField.size());
-
-                    forAll(map, i)
-                    {
-                        field[map[i]] = recvField[i];
-                    }
-                }
-            }
-        }
-        else
-        {
-            // Set up sends to neighbours
-
-            List<List<T > > sendFields(Pstream::nProcs());
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = subMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    List<T>& subField = sendFields[domain];
-                    subField.setSize(map.size());
-                    forAll(map, i)
-                    {
-                        subField[i] = field[map[i]];
-                    }
-
-                    OPstream::write
-                    (
-                        Pstream::nonBlocking,
-                        domain,
-                        reinterpret_cast<const char*>(subField.begin()),
-                        subField.byteSize(),
-                        tag
-                    );
-                }
-            }
-
-            // Set up receives from neighbours
-
-            List<List<T > > recvFields(Pstream::nProcs());
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    recvFields[domain].setSize(map.size());
-                    IPstream::read
-                    (
-                        Pstream::nonBlocking,
-                        domain,
-                        reinterpret_cast<char*>(recvFields[domain].begin()),
-                        recvFields[domain].byteSize(),
-                        tag
-                    );
-                }
-            }
-
-
-            // Set up 'send' to myself
-
-            {
-                const labelList& map = subMap[Pstream::myProcNo()];
-
-                List<T>& subField = sendFields[Pstream::myProcNo()];
-                subField.setSize(map.size());
-                forAll(map, i)
-                {
-                    subField[i] = field[map[i]];
-                }
-            }
-
-
-            // Combine bits. Note that can reuse field storage
-
-            field.setSize(constructSize);
-
-
-            // Receive sub field from myself (sendFields[Pstream::myProcNo()])
-            {
-                const labelList& map = constructMap[Pstream::myProcNo()];
-                const List<T>& subField = sendFields[Pstream::myProcNo()];
-
-                forAll(map, i)
-                {
-                    field[map[i]] = subField[i];
-                }
-            }
-
-
-            // Wait for all to finish
-
-            Pstream::waitRequests(nOutstanding);
-
-
-            // Collect neighbour fields
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    const List<T>& subField = recvFields[domain];
-
-                    checkReceivedSize(domain, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        field[map[i]] = subField[i];
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        FatalErrorIn("mapDistribute::distribute(..)")
-            << "Unknown communication schedule " << commsType
-            << abort(FatalError);
-    }
-}
-
-
-// Distribute list.
-template<class T, class CombineOp>
-void CML::mapDistribute::distribute
-(
-    const Pstream::commsTypes commsType,
-    const List<labelPair>& schedule,
-    const label constructSize,
-    const labelListList& subMap,
-    const labelListList& constructMap,
-    List<T>& field,
-    const CombineOp& cop,
-    const T& nullValue,
-    const int tag
-)
-{
-    if (!Pstream::parRun())
-    {
-        // Do only me to me.
-
-        const labelList& mySubMap = subMap[Pstream::myProcNo()];
-
-        List<T> subField(mySubMap.size());
-        forAll(mySubMap, i)
-        {
-            subField[i] = field[mySubMap[i]];
-        }
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        field.setSize(constructSize);
-        field = nullValue;
-
-        forAll(map, i)
-        {
-            cop(field[map[i]], subField[i]);
-        }
-        return;
-    }
-
-    if (commsType == Pstream::blocking)
-    {
-        // Since buffered sending can reuse the field to collect the
-        // received data.
-
-        // Send sub field to neighbour
-        for (label domain = 0; domain < Pstream::nProcs(); domain++)
-        {
-            const labelList& map = subMap[domain];
-
-            if (domain != Pstream::myProcNo() && map.size())
-            {
-                OPstream toNbr(Pstream::blocking, domain, 0, tag);
-                toNbr << UIndirectList<T>(field, map);
-            }
-        }
-
-        // Subset myself
-        const labelList& mySubMap = subMap[Pstream::myProcNo()];
-
-        List<T> subField(mySubMap.size());
-        forAll(mySubMap, i)
-        {
-            subField[i] = field[mySubMap[i]];
-        }
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        field.setSize(constructSize);
-        field = nullValue;
-
-        forAll(map, i)
-        {
-            cop(field[map[i]], subField[i]);
-        }
-
-        // Receive sub field from neighbour
-        for (label domain = 0; domain < Pstream::nProcs(); domain++)
-        {
-            const labelList& map = constructMap[domain];
-
-            if (domain != Pstream::myProcNo() && map.size())
-            {
-                IPstream fromNbr(Pstream::blocking, domain, 0, tag);
-                List<T> subField(fromNbr);
-
-                checkReceivedSize(domain, map.size(), subField.size());
-
-                forAll(map, i)
-                {
-                    cop(field[map[i]], subField[i]);
-                }
-            }
-        }
-    }
-    else if (commsType == Pstream::scheduled)
-    {
-        // Need to make sure I don't overwrite field with received data
-        // since the data might need to be sent to another processor. So
-        // allocate a new field for the results.
-        List<T> newField(constructSize, nullValue);
-
-        // Subset myself
-        UIndirectList<T> subField(field, subMap[Pstream::myProcNo()]);
-
-        // Receive sub field from myself (subField)
-        const labelList& map = constructMap[Pstream::myProcNo()];
-
-        forAll(map, i)
-        {
-            cop(newField[map[i]], subField[i]);
-        }
-
-        // Schedule will already have pruned 0-sized comms
-        forAll(schedule, i)
-        {
-            const labelPair& twoProcs = schedule[i];
-            // twoProcs is a swap pair of processors. The first one is the
-            // one that needs to send first and then receive.
-
-            label sendProc = twoProcs[0];
-            label recvProc = twoProcs[1];
-
-            if (Pstream::myProcNo() == sendProc)
-            {
-                // I am send first, receive next
-                {
-                    OPstream toNbr(Pstream::scheduled, recvProc, 0, tag);
-                    toNbr << UIndirectList<T>(field, subMap[recvProc]);
-                }
-                {
-                    IPstream fromNbr(Pstream::scheduled, recvProc, 0, tag);
-                    List<T> subField(fromNbr);
-                    const labelList& map = constructMap[recvProc];
-
-                    checkReceivedSize(recvProc, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        cop(newField[map[i]], subField[i]);
-                    }
-                }
-            }
-            else
-            {
-                // I am receive first, send next
-                {
-                    IPstream fromNbr(Pstream::scheduled, sendProc, 0, tag);
-                    List<T> subField(fromNbr);
-                    const labelList& map = constructMap[sendProc];
-
-                    checkReceivedSize(sendProc, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        cop(newField[map[i]], subField[i]);
-                    }
-                }
-                {
-                    OPstream toNbr(Pstream::scheduled, sendProc, 0, tag);
-                    toNbr << UIndirectList<T>(field, subMap[sendProc]);
-                }
-            }
-        }
-        field.transfer(newField);
-    }
-    else if (commsType == Pstream::nonBlocking)
-    {
-        label nOutstanding = Pstream::nRequests();
-
-        if (!contiguous<T>())
-        {
-            PstreamBuffers pBufs(Pstream::nonBlocking, tag);
-
-            // Stream data into buffer
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = subMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    // Put data into send buffer
-                    UOPstream toDomain(domain, pBufs);
-                    toDomain << UIndirectList<T>(field, map);
-                }
-            }
-
-            // Start receiving. Do not block.
-            pBufs.finishedSends(false);
-
-            {
-                // Set up 'send' to myself
-                List<T> mySubField(field, subMap[Pstream::myProcNo()]);
-                // Combine bits. Note that can reuse field storage
-                field.setSize(constructSize);
-                field = nullValue;
-                // Receive sub field from myself
-                {
-                    const labelList& map = constructMap[Pstream::myProcNo()];
-
-                    forAll(map, i)
-                    {
-                        cop(field[map[i]], mySubField[i]);
-                    }
-                }
-            }
-
-            // Block ourselves, waiting only for the current comms
-            Pstream::waitRequests(nOutstanding);
-
-            // Consume
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    UIPstream str(domain, pBufs);
-                    List<T> recvField(str);
-
-                    checkReceivedSize(domain, map.size(), recvField.size());
-
-                    forAll(map, i)
-                    {
-                        cop(field[map[i]], recvField[i]);
-                    }
-                }
-            }
-        }
-        else
-        {
-            // Set up sends to neighbours
-
-            List<List<T > > sendFields(Pstream::nProcs());
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = subMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    List<T>& subField = sendFields[domain];
-                    subField.setSize(map.size());
-                    forAll(map, i)
-                    {
-                        subField[i] = field[map[i]];
-                    }
-
-                    OPstream::write
-                    (
-                        Pstream::nonBlocking,
-                        domain,
-                        reinterpret_cast<const char*>(subField.begin()),
-                        subField.size()*sizeof(T),
-                        tag
-                    );
-                }
-            }
-
-            // Set up receives from neighbours
-
-            List<List<T > > recvFields(Pstream::nProcs());
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    recvFields[domain].setSize(map.size());
-                    UIPstream::read
-                    (
-                        Pstream::nonBlocking,
-                        domain,
-                        reinterpret_cast<char*>(recvFields[domain].begin()),
-                        recvFields[domain].size()*sizeof(T),
-                        tag
-                    );
-                }
-            }
-
-            // Set up 'send' to myself
-
-            {
-                const labelList& map = subMap[Pstream::myProcNo()];
-
-                List<T>& subField = sendFields[Pstream::myProcNo()];
-                subField.setSize(map.size());
-                forAll(map, i)
-                {
-                    subField[i] = field[map[i]];
-                }
-            }
-
-
-            // Combine bits. Note that can reuse field storage
-
-            field.setSize(constructSize);
-            field = nullValue;
-
-            // Receive sub field from myself (subField)
-            {
-                const labelList& map = constructMap[Pstream::myProcNo()];
-                const List<T>& subField = sendFields[Pstream::myProcNo()];
-
-                forAll(map, i)
-                {
-                    cop(field[map[i]], subField[i]);
-                }
-            }
-
-
-            // Wait for all to finish
-
-            Pstream::waitRequests(nOutstanding);
-
-
-            // Collect neighbour fields
-
-            for (label domain = 0; domain < Pstream::nProcs(); domain++)
-            {
-                const labelList& map = constructMap[domain];
-
-                if (domain != Pstream::myProcNo() && map.size())
-                {
-                    const List<T>& subField = recvFields[domain];
-
-                    checkReceivedSize(domain, map.size(), subField.size());
-
-                    forAll(map, i)
-                    {
-                        cop(field[map[i]], subField[i]);
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        FatalErrorIn("mapDistribute::distribute(..)")
-            << "Unknown communication schedule " << commsType
-            << abort(FatalError);
-    }
-}
-
-
-template<class T>
-void CML::mapDistribute::send(PstreamBuffers& pBufs, const List<T>& field)
-const
-{
-    // Stream data into buffer
-    for (label domain = 0; domain < Pstream::nProcs(); domain++)
-    {
-        const labelList& map = subMap_[domain];
-
-        if (map.size())
-        {
-            // Put data into send buffer
-            UOPstream toDomain(domain, pBufs);
-            toDomain << UIndirectList<T>(field, map);
-        }
-    }
-
-    // Start sending and receiving but do not block.
-    pBufs.finishedSends(false);
-}
-
-
-template<class T>
-void CML::mapDistribute::receive(PstreamBuffers& pBufs, List<T>& field) const
-{
-    // Consume
-    field.setSize(constructSize_);
-
-    for (label domain = 0; domain < Pstream::nProcs(); domain++)
-    {
-        const labelList& map = constructMap_[domain];
-
-        if (map.size())
-        {
-            UIPstream str(domain, pBufs);
-            List<T> recvField(str);
-
-            if (recvField.size() != map.size())
-            {
-                FatalErrorIn
-                (
-                    "template<class T>\n"
-                    "void mapDistribute::receive\n"
-                    "(\n"
-                    "    PstreamBuffers&,\n"
-                    "    List<T>&\n"
-                    ")\n"
-                )   << "Expected from processor " << domain
-                    << " " << map.size() << " but received "
-                    << recvField.size() << " elements."
-                    << abort(FatalError);
-            }
-
-            forAll(map, i)
-            {
-                field[map[i]] = recvField[i];
-            }
-        }
-    }
-}
-
 
 // In case of no transform: copy elements
 template<class T>
@@ -1601,6 +739,26 @@ void CML::mapDistribute::applyInverseTransforms
 
 
 //- Distribute data using default commsType.
+template<class T, class negateOp>
+void CML::mapDistribute::distribute
+(
+    List<T>& fld,
+    const negateOp& negOp,
+    const bool dummyTransform,
+    const int tag
+) const
+{
+    mapDistributeBase::distribute(fld, negOp, tag);
+
+    //- Fill in transformed slots with copies
+    if (dummyTransform)
+    {
+        applyDummyTransforms(fld);
+    }
+}
+
+
+//- Distribute data using default commsType.
 template<class T>
 void CML::mapDistribute::distribute
 (
@@ -1609,51 +767,26 @@ void CML::mapDistribute::distribute
     const int tag
 ) const
 {
-    if (Pstream::defaultCommsType == Pstream::nonBlocking)
-    {
-        distribute
-        (
-            Pstream::nonBlocking,
-            List<labelPair>(),
-            constructSize_,
-            subMap_,
-            constructMap_,
-            fld,
-            tag
-        );
-    }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
-    {
-        distribute
-        (
-            Pstream::scheduled,
-            schedule(),
-            constructSize_,
-            subMap_,
-            constructMap_,
-            fld,
-            tag
-        );
-    }
-    else
-    {
-        distribute
-        (
-            Pstream::blocking,
-            List<labelPair>(),
-            constructSize_,
-            subMap_,
-            constructMap_,
-            fld,
-            tag
-        );
-    }
+    distribute(fld, flipOp(), dummyTransform, tag);
+}
 
-    //- Fill in transformed slots with copies
-    if (dummyTransform)
-    {
-        applyDummyTransforms(fld);
-    }
+
+//- Distribute data using default commsType.
+template<class T>
+void CML::mapDistribute::distribute
+(
+    DynamicList<T>& fld,
+    const bool dummyTransform,
+    const int tag
+) const
+{
+    fld.shrink();
+
+    List<T>& fldList = static_cast<List<T>& >(fld);
+
+    distribute(fldList, dummyTransform, tag);
+
+    fld.setCapacity(fldList.size());
 }
 
 
@@ -1672,45 +805,7 @@ void CML::mapDistribute::reverseDistribute
         applyDummyInverseTransforms(fld);
     }
 
-    if (Pstream::defaultCommsType == Pstream::nonBlocking)
-    {
-        distribute
-        (
-            Pstream::nonBlocking,
-            List<labelPair>(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            tag
-        );
-    }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
-    {
-        distribute
-        (
-            Pstream::scheduled,
-            schedule(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            tag
-        );
-    }
-    else
-    {
-        distribute
-        (
-            Pstream::blocking,
-            List<labelPair>(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            tag
-        );
-    }
+    mapDistributeBase::reverseDistribute(constructSize, fld, tag);
 }
 
 
@@ -1732,51 +827,7 @@ void CML::mapDistribute::reverseDistribute
         applyDummyInverseTransforms(fld);
     }
 
-    if (Pstream::defaultCommsType == Pstream::nonBlocking)
-    {
-        distribute
-        (
-            Pstream::nonBlocking,
-            List<labelPair>(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            eqOp<T>(),
-            nullValue,
-            tag
-        );
-    }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
-    {
-        distribute
-        (
-            Pstream::scheduled,
-            schedule(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            eqOp<T>(),
-            nullValue,
-            tag
-        );
-    }
-    else
-    {
-        distribute
-        (
-            Pstream::blocking,
-            List<labelPair>(),
-            constructSize,
-            constructMap_,
-            subMap_,
-            fld,
-            eqOp<T>(),
-            nullValue,
-            tag
-        );
-    }
+    mapDistributeBase::reverseDistribute(constructSize, nullValue, fld, tag);
 }
 
 

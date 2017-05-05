@@ -1,0 +1,114 @@
+# -*- mode: python -*-
+
+import os
+import utils
+from build import process_lninclude
+Import('env')
+
+subdirs = Split("""
+    mesh/advanced/autoRefineMesh
+    mesh/advanced/collapseEdges
+    mesh/advanced/combinePatchFaces
+    mesh/advanced/modifyMesh
+    mesh/advanced/refineHexMesh
+    mesh/advanced/refinementLevel
+    mesh/advanced/refineWallLayer
+    mesh/advanced/removeFaces
+    mesh/advanced/selectCells
+    mesh/advanced/splitCells
+    mesh/generation/blockMesh 
+    mesh/generation/extrude/extrudeModel
+    mesh/generation/extrude/extrudeMesh
+    mesh/generation/extrude/extrudeToRegionMesh
+    mesh/conversion/caelusMeshToFluent
+    mesh/conversion/caelusToSurface
+    mesh/conversion/mshToCAELUS
+    mesh/conversion/gmshToCAELUS
+    mesh/conversion/writeMeshObj
+    mesh/conversion/fluent3DMeshToCAELUS
+    mesh/conversion/fluentMeshToCAELUS
+    mesh/conversion/plot3DToCAELUS
+    mesh/manipulation/attachMesh
+    mesh/manipulation/autoPatch
+    mesh/manipulation/checkMesh
+    mesh/manipulation/createBaffles
+    mesh/manipulation/createBaffles_old
+    mesh/manipulation/createPatch
+    mesh/manipulation/deformedGeom
+    mesh/manipulation/flattenMesh
+    mesh/manipulation/insideCells
+    mesh/manipulation/mergeMeshes
+    mesh/manipulation/mergeOrSplitBaffles
+    mesh/manipulation/mirrorMesh
+    mesh/manipulation/moveDynamicMesh
+    mesh/manipulation/moveMesh
+    mesh/manipulation/objToVTK
+    mesh/manipulation/polyDualMesh
+    mesh/manipulation/refineMesh
+    mesh/manipulation/renumberMesh
+    mesh/manipulation/rotateMesh
+    mesh/manipulation/setSet
+    mesh/manipulation/setsToZones
+    mesh/manipulation/singleCellMesh
+    mesh/manipulation/splitMesh
+    mesh/manipulation/splitMeshRegions
+    mesh/manipulation/stitchMesh
+    mesh/manipulation/subsetMesh
+    mesh/manipulation/topoSet
+    mesh/manipulation/transformPoints
+    mesh/manipulation/zipUpMesh
+    miscellaneous/caelusDebugSwitches
+    miscellaneous/caelusFormatConvert
+    miscellaneous/patchSummary
+    parallelProcessing/decomposePar
+    parallelProcessing/diagnosePar
+    parallelProcessing/reconstructPar
+    parallelProcessing/redistributePar
+    parallelProcessing/reconstructParMesh
+    postProcessing/dataConversion/caelusDataToFluent
+    postProcessing/dataConversion/caelusToEnsight
+    postProcessing/dataConversion/caelusToEnsightParts
+    postProcessing/dataConversion/caelusToTetDualMesh
+    postProcessing/dataConversion/caelusToVTK
+    postProcessing/caelusCalc
+    postProcessing/lagrangian/particleTracks
+    postProcessing/lagrangian/steadyParticleTracks
+    postProcessing/miscellaneous/execFlowFunctionObjects
+    postProcessing/miscellaneous/caelusListTimes
+    postProcessing/miscellaneous/postChannel
+    postProcessing/miscellaneous/ptot
+    postProcessing/miscellaneous/temporalInterpolate
+    postProcessing/miscellaneous/wdot
+    postProcessing/miscellaneous/writeCellCentres
+    postProcessing/patch/patchAverage
+    postProcessing/patch/patchIntegrate
+    postProcessing/sampling/probeLocations
+    postProcessing/sampling/sample
+    postProcessing/scalarField/pPrime2
+    postProcessing/stressField/stressComponents
+    postProcessing/turbulence/R
+    postProcessing/turbulence/createTurbulenceFields
+    postProcessing/velocityField/Co
+    postProcessing/velocityField/enstrophy
+    postProcessing/velocityField/flowType
+    postProcessing/velocityField/Lambda2
+    postProcessing/velocityField/Mach
+    postProcessing/velocityField/Pe
+    postProcessing/velocityField/Q
+    postProcessing/velocityField/streamFunction
+    postProcessing/velocityField/uprime
+    postProcessing/velocityField/vorticity
+    postProcessing/wall/wallGradU
+    postProcessing/wall/wallHeatFlux
+    postProcessing/wall/wallShearStress
+    postProcessing/wall/yPlusLES
+    postProcessing/wall/yPlusRAS
+    preProcessing/changeDictionary
+    preProcessing/mapFields
+    preProcessing/setFields
+""")
+
+for d in subdirs:
+    lninclude = list(process_lninclude(env, d))
+    SConscript(os.path.join(d,'SConscript'),
+               exports=['env','lninclude'])

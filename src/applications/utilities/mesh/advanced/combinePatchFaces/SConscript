@@ -1,55 +1,25 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-combinePatchFacesEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = combinePatchFacesEnv['LIB_SRC']
+target = 'combinePatchFaces'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-combinePatchFacesEnv.Append(CCFLAGS = '')
+sources = Split("""
+combinePatchFaces.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
-combinePatchFacesEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-combinePatchFacesEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'dynamicMesh'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = ['dynamicMesh']
-     
-
-combinePatchFacesEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  combinePatchFaces.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincombinePatchFaces = combinePatchFacesEnv.Program(target = 'combinePatchFaces', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = combinePatchFacesEnv['BIN_PLATFORM_INSTALL']
-combinePatchFacesEnv.Alias('install', install_dir)
-combinePatchFacesEnv.Install(install_dir, bincombinePatchFaces)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

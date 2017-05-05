@@ -44,14 +44,6 @@ CML::lagrangianFieldDecomposer::lagrangianFieldDecomposer
 {
     label pi = 0;
 
-    // faceProcAddressing not required currently
-    // labelList decodedProcFaceAddressing(faceProcAddressing.size());
-
-    // forAll(faceProcAddressing, i)
-    // {
-    //     decodedProcFaceAddressing[i] = mag(faceProcAddressing[i]) - 1;
-    // }
-
     forAll(cellProcAddressing, procCelli)
     {
         label celli = cellProcAddressing[procCelli];
@@ -64,33 +56,6 @@ CML::lagrangianFieldDecomposer::lagrangianFieldDecomposer
             {
                 const indexedParticle& ppi = *iter();
                 particleIndices_[pi++] = ppi.index();
-
-                // label mappedTetFace = findIndex
-                // (
-                //     decodedProcFaceAddressing,
-                //     ppi.tetFace()
-                // );
-
-                // if (mappedTetFace == -1)
-                // {
-                //     FatalErrorIn
-                //     (
-                //         "CML::lagrangianFieldDecomposer"
-                //         "::lagrangianFieldDecomposer"
-                //         "("
-                //             "const polyMesh& mesh, "
-                //             "const polyMesh& procMesh, "
-                //             "const labelList& faceProcAddressing, "
-                //             "const labelList& cellProcAddressing, "
-                //             "const word& cloudName, "
-                //             "const Cloud<indexedParticle>& "
-                //             "lagrangianPositions, "
-                //             "const List<SLList<indexedParticle*>*>& "
-                //             "cellParticles"
-                //         ")"
-                //     )   << "Face lookup failure." << nl
-                //         << abort(FatalError);
-                // }
 
                 positions_.append
                 (

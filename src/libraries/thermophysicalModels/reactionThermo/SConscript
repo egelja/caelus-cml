@@ -1,80 +1,46 @@
-#Copyright (C) 2016 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-reactThermoEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = reactThermoEnv['LIB_SRC']
+target = 'reactionThermophysicalModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-reactThermoEnv.Append(CCFLAGS = '')
+sources = Split("""
+chemistryReaders/chemistryReader/makeChemistryReaders.cpp
+mixtures/basicMultiComponentMixture/basicMultiComponentMixture.cpp
+combustionThermo/hCombustionThermo/hCombustionThermo.cpp
+combustionThermo/hCombustionThermo/hCombustionThermoNew.cpp
+combustionThermo/hCombustionThermo/hCombustionThermos.cpp
+combustionThermo/hsCombustionThermo/hsCombustionThermo.cpp
+combustionThermo/hsCombustionThermo/hsCombustionThermoNew.cpp
+combustionThermo/hsCombustionThermo/hsCombustionThermos.cpp
+combustionThermo/hhuCombustionThermo/hhuCombustionThermo.cpp
+combustionThermo/hhuCombustionThermo/hhuCombustionThermoNew.cpp
+combustionThermo/hhuCombustionThermo/hhuCombustionThermos.cpp
+reactionThermo/hReactionThermo/hReactionThermo.cpp
+reactionThermo/hReactionThermo/hReactionThermoNew.cpp
+reactionThermo/hReactionThermo/hReactionThermos.cpp
+reactionThermo/hsReactionThermo/hsReactionThermo.cpp
+reactionThermo/hsReactionThermo/hsReactionThermoNew.cpp
+reactionThermo/hsReactionThermo/hsReactionThermos.cpp
+derivedFvPatchFields/fixedUnburntEnthalpy/fixedUnburntEnthalpyFvPatchScalarField.cpp
+derivedFvPatchFields/gradientUnburntEnthalpy/gradientUnburntEnthalpyFvPatchScalarField.cpp
+derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude'
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude'
 ]
 
-reactThermoEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'specie',
+'basicThermophysicalModels'
+]
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-reactThermoEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','specie','basicThermophysicalModels']
-reactThermoEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  chemistryReaders/chemistryReader/makeChemistryReaders.cpp
-  mixtures/basicMultiComponentMixture/basicMultiComponentMixture.cpp
-  combustionThermo/hCombustionThermo/hCombustionThermo.cpp
-  combustionThermo/hCombustionThermo/hCombustionThermoNew.cpp
-  combustionThermo/hCombustionThermo/hCombustionThermos.cpp
-  combustionThermo/hsCombustionThermo/hsCombustionThermo.cpp
-  combustionThermo/hsCombustionThermo/hsCombustionThermoNew.cpp
-  combustionThermo/hsCombustionThermo/hsCombustionThermos.cpp
-  combustionThermo/hhuCombustionThermo/hhuCombustionThermo.cpp
-  combustionThermo/hhuCombustionThermo/hhuCombustionThermoNew.cpp
-  combustionThermo/hhuCombustionThermo/hhuCombustionThermos.cpp
-  reactionThermo/hReactionThermo/hReactionThermo.cpp
-  reactionThermo/hReactionThermo/hReactionThermoNew.cpp
-  reactionThermo/hReactionThermo/hReactionThermos.cpp
-  reactionThermo/hsReactionThermo/hsReactionThermo.cpp
-  reactionThermo/hsReactionThermo/hsReactionThermoNew.cpp
-  reactionThermo/hsReactionThermo/hsReactionThermos.cpp
-  derivedFvPatchFields/fixedUnburntEnthalpy/fixedUnburntEnthalpyFvPatchScalarField.cpp
-  derivedFvPatchFields/gradientUnburntEnthalpy/gradientUnburntEnthalpyFvPatchScalarField.cpp
-  derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libreactionThermophysicalModels = reactThermoEnv.SharedLibrary(target = 
-'reactionThermophysicalModels', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = reactThermoEnv['LIB_PLATFORM_INSTALL']
-reactThermoEnv.Alias('install', install_dir)
-reactThermoEnv.Install(install_dir, libreactionThermophysicalModels)
-
-if (reactThermoEnv['WHICH_OS'] == "darwin"):
-
-  reactThermoEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libreactionThermophysicalModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

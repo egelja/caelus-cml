@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,6 +39,7 @@ SourceFiles
 
 #include "vector.hpp"
 #include "quaternion.hpp"
+#include "spatialTransform.hpp"
 #include "word.hpp"
 #include "contiguous.hpp"
 
@@ -93,6 +94,9 @@ public:
         //- Construct a pure rotation septernion given a rotation quaternion
         inline explicit septernion(const quaternion& r);
 
+        //- Construct a general septernion from the given spatialTransform
+        inline explicit septernion(const spatialTransform& st);
+
         //- Construct from Istream
         septernion(Istream&);
 
@@ -113,11 +117,11 @@ public:
 
            // Transform
 
-               //- Transform the given vector
-               inline vector transform(const vector& v) const;
+               //- Transform the given coordinate point
+               inline vector transformPoint(const vector& v) const;
 
-               //- Inverse Transform the given vector
-               inline vector invTransform(const vector& v) const;
+               //- Inverse Transform the given coordinate point
+               inline vector invTransformPoint(const vector& v) const;
 
 
     // Member operators
@@ -149,10 +153,23 @@ public:
 //- Return the inverse of the given septernion
 inline septernion inv(const septernion& tr);
 
-
 //- Return a string representation of a septernion
 word name(const septernion&);
 
+//- Spherical linear interpolation of septernions. 0 for qa, 1 for qb
+septernion slerp
+(
+    const septernion& qa,
+    const septernion& qb,
+    const scalar t
+);
+
+//- Simple weighted average
+septernion average
+(
+    const UList<septernion>& ss,
+    const UList<scalar> w
+);
 
 //- Data associated with septernion type are contiguous
 template<>

@@ -27,12 +27,6 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeSnGradScheme(orthogonalSnGrad)
-}
-}
+makeSnGradScheme(orthogonalSnGrad)
 
 // ************************************************************************* //

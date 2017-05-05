@@ -27,7 +27,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::globalPoints, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(globalPoints, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

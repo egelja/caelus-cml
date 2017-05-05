@@ -25,7 +25,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::extendedLeastSquaresVectors, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(extendedLeastSquaresVectors, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //

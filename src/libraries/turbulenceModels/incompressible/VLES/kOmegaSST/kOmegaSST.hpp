@@ -154,7 +154,7 @@ protected:
 public:
 
     //- Runtime type information
-    TypeName("VLESKOmegaSST");
+    TypeName("kOmegaSSTVLES");
 
 
     // Constructors

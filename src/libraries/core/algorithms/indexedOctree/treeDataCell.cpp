@@ -25,7 +25,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::treeDataCell, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(treeDataCell, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

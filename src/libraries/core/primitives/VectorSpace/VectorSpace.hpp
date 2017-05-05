@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,6 +38,7 @@ SourceFiles
 #include "direction.hpp"
 #include "scalar.hpp"
 #include "word.hpp"
+#include "zero.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,20 +47,20 @@ namespace CML
 
 // Forward declaration of friend functions and operators
 
-template<class Form, class Cmpt, int nCmpt> class VectorSpace;
+template<class Form, class Cmpt, direction Ncmpts> class VectorSpace;
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 Istream& operator>>
 (
     Istream&,
-    VectorSpace<Form, Cmpt, nCmpt>&
+    VectorSpace<Form, Cmpt, Ncmpts>&
 );
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 Ostream& operator<<
 (
     Ostream&,
-    const VectorSpace<Form, Cmpt, nCmpt>&
+    const VectorSpace<Form, Cmpt, Ncmpts>&
 );
 
 
@@ -67,29 +68,80 @@ Ostream& operator<<
                            Class VectorSpace Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 class VectorSpace
 {
 
 public:
 
+    //- The components of this vector space
+    Cmpt v_[Ncmpts];
+
+    //- VectorSpace type
+    typedef VectorSpace<Form, Cmpt, Ncmpts> vsType;
+
     //- Component type
     typedef Cmpt cmptType;
 
 
-    // Member constants
+    // Static constants
 
-        enum
-        {
-            dim = 3,            //!< Dimensionality of space
-            nComponents = nCmpt //!< Number of components in this vector space
-        };
+        //- Dimensionality of space
+        static const direction dim = 3;
+
+        //- Number of components in this vector space
+        static const direction nComponents = Ncmpts;
+
+
+        // VectorSpace currently defaults to a column-vector
+        // This will be removed when column-vector is introduced
+        // as a specialization
+        static const direction mRows = Ncmpts;
+        static const direction nCols = 1;
 
 
     // Static data members
 
-        //- The components of this vector space
-        Cmpt v_[nCmpt];
+        static const char* const typeName;
+        static const char* const componentNames[];
+        static const Form zero;
+        static const Form one;
+        static const Form max;
+        static const Form min;
+        static const Form rootMax;
+        static const Form rootMin;
+
+
+    // Sub-Block Classes
+
+        //- Const sub-block type
+        template
+        <
+            class SubVector,
+            direction BStart
+        >
+        class ConstBlock
+        {
+            const vsType& vs_;
+
+        public:
+
+            //- Number of components in this vector space
+            static const direction nComponents = SubVector::nComponents;
+
+            //- Construct for a given vector
+            inline ConstBlock(const vsType& vs);
+
+            //- [i] const element access operator
+            inline const Cmpt& operator[](const direction i) const;
+
+            //- (i, 0) const element access operator
+            inline const Cmpt& operator()
+            (
+                const direction i,
+                const direction
+            ) const;
+        };
 
 
     // Constructors
@@ -97,21 +149,24 @@ public:
         //- Construct null
         inline VectorSpace();
 
+        //- Construct initialized to zero
+        inline VectorSpace(const CML::zero);
+
         //- Construct from Istream
         VectorSpace(Istream&);
 
         //- Construct as copy
-        inline VectorSpace(const VectorSpace<Form, Cmpt, nCmpt>&);
+        inline VectorSpace(const VectorSpace<Form, Cmpt, Ncmpts>&);
 
-        //- Construct as copy of another VectorSpace type of the same rank
+        //- Construct as copy of a VectorSpace with the same size
         template<class Form2, class Cmpt2>
-        inline VectorSpace(const VectorSpace<Form2, Cmpt2, nCmpt>&);
+        inline explicit VectorSpace(const VectorSpace<Form2, Cmpt2, Ncmpts>&);
 
 
     // Member Functions
 
-        //- Return the number of elements in the VectorSpace = nCmpt.
-        inline label size() const;
+        //- Return the number of elements in the VectorSpace = Ncmpts.
+        inline static direction size();
 
         inline const Cmpt& component(const direction) const;
         inline Cmpt& component(const direction);
@@ -119,32 +174,39 @@ public:
         inline void component(Cmpt&, const direction) const;
         inline void replace(const direction, const Cmpt&);
 
+        //- Return a VectorSpace with all elements = s
+        inline static Form uniform(const Cmpt& s);
+
+        template<class SubVector, direction BStart>
+        inline const ConstBlock<SubVector, BStart> block() const;
+
 
     // Member Operators
 
         inline const Cmpt& operator[](const direction) const;
         inline Cmpt& operator[](const direction);
 
-        inline void operator=(const VectorSpace<Form, Cmpt, nCmpt>&);
-        inline void operator+=(const VectorSpace<Form, Cmpt, nCmpt>&);
-        inline void operator-=(const VectorSpace<Form, Cmpt, nCmpt>&);
+        inline void operator=(const VectorSpace<Form, Cmpt, Ncmpts>&);
+        inline void operator+=(const VectorSpace<Form, Cmpt, Ncmpts>&);
+        inline void operator-=(const VectorSpace<Form, Cmpt, Ncmpts>&);
 
+        inline void operator=(const CML::zero);
         inline void operator*=(const scalar);
         inline void operator/=(const scalar);
 
 
     // IOstream Operators
 
-        friend Istream& operator>> <Form, Cmpt, nCmpt>
+        friend Istream& operator>> <Form, Cmpt, Ncmpts>
         (
             Istream&,
-            VectorSpace<Form, Cmpt, nCmpt>&
+            VectorSpace<Form, Cmpt, Ncmpts>&
         );
 
-        friend Ostream& operator<< <Form, Cmpt, nCmpt>
+        friend Ostream& operator<< <Form, Cmpt, Ncmpts>
         (
             Ostream&,
-            const VectorSpace<Form, Cmpt, nCmpt>&
+            const VectorSpace<Form, Cmpt, Ncmpts>&
         );
 };
 
@@ -152,8 +214,8 @@ public:
 // * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * * //
 
 //- Return a string representation of a VectorSpace
-template<class Form, class Cmpt, int nCmpt>
-word name(const VectorSpace<Form, Cmpt, nCmpt>&);
+template<class Form, class Cmpt, direction Ncmpts>
+word name(const VectorSpace<Form, Cmpt, Ncmpts>&);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -165,6 +227,7 @@ word name(const VectorSpace<Form, Cmpt, nCmpt>&);
 #include "products.hpp"
 #include "VectorSpaceM.hpp"
 #include "ops.hpp"
+#include "StaticAssert.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -173,224 +236,323 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
-inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace()
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace()
 {}
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace
-(
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
-)
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace(const CML::zero)
 {
-    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, eqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::eqOpS(*this, Zero, eqOp<Cmpt>());
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-template<class Form2, class Cmpt2>
-inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace
 (
-    const VectorSpace<Form2, Cmpt2, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
-    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, eqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::eqOp(*this, vs, eqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+template<class Form2, class Cmpt2>
+inline VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace
+(
+    const VectorSpace<Form2, Cmpt2, Ncmpts>& vs
+)
+{
+    VectorSpaceOps<Ncmpts,0>::eqOp(*this, vs, eqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+template<class SubVector, direction BStart>
+inline
+VectorSpace<Form, Cmpt, Ncmpts>::ConstBlock<SubVector, BStart>::ConstBlock
+(
+    const vsType& vs
+)
+:
+    vs_(vs)
+{
+    StaticAssert(vsType::nComponents >= BStart + nComponents);
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
-inline label VectorSpace<Form, Cmpt, nCmpt>::size() const
+template<class Form, class Cmpt, direction Ncmpts>
+inline direction VectorSpace<Form, Cmpt, Ncmpts>::size()
 {
-    return nCmpt;
+    return Ncmpts;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline const Cmpt& VectorSpace<Form, Cmpt, nCmpt>::component
+template<class Form, class Cmpt, direction Ncmpts>
+inline const Cmpt& VectorSpace<Form, Cmpt, Ncmpts>::component
 (
     const direction d
 ) const
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
         FatalErrorIn
         (
-            "VectorSpace<Form, Cmpt, nCmpt>::component(direction) const"
+            "VectorSpace<Form, Cmpt, Ncmpts>::component(direction) const"
         )   << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     return v_[d];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline Cmpt& VectorSpace<Form, Cmpt, nCmpt>::component
+template<class Form, class Cmpt, direction Ncmpts>
+inline Cmpt& VectorSpace<Form, Cmpt, Ncmpts>::component
 (
     const direction d
 )
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
-        FatalErrorIn("VectorSpace<Form, Cmpt, nCmpt>::component(direction)")
+        FatalErrorIn("VectorSpace<Form, Cmpt, Ncmpts>::component(direction)")
             << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     return v_[d];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::component
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::component
 (
     Cmpt& c,
     const direction d
 ) const
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
         FatalErrorIn
         (
-            "VectorSpace<Form, Cmpt, nCmpt>::component(Cmpt&, direction) const"
+            "VectorSpace<Form, Cmpt, Ncmpts>::component(Cmpt&, direction) const"
         )   << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     c = v_[d];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::replace
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::replace
 (
     const direction d,
     const Cmpt& c
 )
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
         FatalErrorIn
         (
-            "VectorSpace<Form, Cmpt, nCmpt>::"
+            "VectorSpace<Form, Cmpt, Ncmpts>::"
             "replace(direction, const Cmpt&) const"
         )   << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     v_[d] = c;
 }
 
 
+template<class Form, class Cmpt, direction Ncmpts>
+inline Form VectorSpace<Form, Cmpt, Ncmpts>::uniform(const Cmpt& s)
+{
+    Form v;
+    VectorSpaceOps<Ncmpts,0>::eqOpS(v, s, eqOp<Cmpt>());
+    return v;
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+template<class SubVector, direction BStart>
+inline const typename VectorSpace<Form, Cmpt, Ncmpts>::template
+    ConstBlock<SubVector, BStart>
+VectorSpace<Form, Cmpt, Ncmpts>::block() const
+{
+    return *this;
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
-inline const Cmpt& VectorSpace<Form, Cmpt, nCmpt>::operator[]
+template<class Form, class Cmpt, direction Ncmpts>
+inline const Cmpt& VectorSpace<Form, Cmpt, Ncmpts>::operator[]
 (
     const direction d
 ) const
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
         FatalErrorIn
         (
-            "VectorSpace<Form, Cmpt, nCmpt>::operator[](direction d) const"
+            "VectorSpace<Form, Cmpt, Ncmpts>::operator[](direction d) const"
         )   << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     return v_[d];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline Cmpt& VectorSpace<Form, Cmpt, nCmpt>::operator[]
+template<class Form, class Cmpt, direction Ncmpts>
+inline Cmpt& VectorSpace<Form, Cmpt, Ncmpts>::operator[]
 (
     const direction d
 )
 {
-#   ifdef FULLDEBUG
-    if (d >= nCmpt)
+    #ifdef FULLDEBUG
+    if (d >= Ncmpts)
     {
-        FatalErrorIn("VectorSpace<Form, Cmpt, nCmpt>::operator[](direction d)")
+        FatalErrorIn("VectorSpace<Form, Cmpt, Ncmpts>::operator[](direction d)")
             << "index out of range"
             << abort(FatalError);
     }
-#   endif
+    #endif
 
     return v_[d];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::operator=
+template<class Form, class Cmpt, direction Ncmpts>
+template<class SubVector, direction BStart>
+inline const Cmpt&
+VectorSpace<Form, Cmpt, Ncmpts>::
+ConstBlock<SubVector, BStart>::operator[]
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
-)
+    const direction i
+) const
 {
-    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, eqOp<Cmpt>());
+    #ifdef FULLDEBUG
+    if (i >= Ncmpts)
+    {
+        FatalErrorInFunction
+            << "index out of range"
+            << abort(FatalError);
+    }
+    #endif
+
+    return vs_[BStart + i];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::operator+=
+template<class Form, class Cmpt, direction Ncmpts>
+template<class SubVector, direction BStart>
+inline const Cmpt&
+VectorSpace<Form, Cmpt, Ncmpts>::
+ConstBlock<SubVector, BStart>::operator()
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
-)
+    const direction i,
+    const direction j
+) const
 {
-    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, plusEqOp<Cmpt>());
+    #ifdef FULLDEBUG
+    if (i >= Ncmpts)
+    {
+        FatalErrorInFunction
+            << "index out of range"
+            << abort(FatalError);
+    }
+
+    if (j != 0)
+    {
+        FatalErrorInFunction
+            << "j != 0"
+            << abort(FatalError);
+    }
+    #endif
+
+    return vs_[BStart + i];
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::operator-=
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator=
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
-    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, minusEqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::eqOp(*this, vs, eqOp<Cmpt>());
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::operator*=
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator+=
+(
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
+)
+{
+    VectorSpaceOps<Ncmpts,0>::eqOp(*this, vs, plusEqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator-=
+(
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
+)
+{
+    VectorSpaceOps<Ncmpts,0>::eqOp(*this, vs, minusEqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator=(const CML::zero)
+{
+    VectorSpaceOps<Ncmpts,0>::eqOpS(*this, 0, eqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator*=
 (
     const scalar s
 )
 {
-    VectorSpaceOps<nCmpt,0>::eqOpS(*this, s, multiplyEqOp2<Cmpt, scalar>());
+    VectorSpaceOps<Ncmpts,0>::eqOpS(*this, s, multiplyEqOp2<Cmpt, scalar>());
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline void VectorSpace<Form, Cmpt, nCmpt>::operator/=
+template<class Form, class Cmpt, direction Ncmpts>
+inline void VectorSpace<Form, Cmpt, Ncmpts>::operator/=
 (
     const scalar s
 )
 {
-    VectorSpaceOps<nCmpt,0>::eqOpS(*this, s, divideEqOp2<Cmpt, scalar>());
+    VectorSpaceOps<Ncmpts,0>::eqOpS(*this, s, divideEqOp2<Cmpt, scalar>());
 }
 
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt& setComponent
 (
-    VectorSpace<Form, Cmpt, nCmpt>& vs,
+    VectorSpace<Form, Cmpt, Ncmpts>& vs,
     const direction d
 )
 {
@@ -398,10 +560,10 @@ inline Cmpt& setComponent
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline const Cmpt& component
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs,
     const direction d
 )
 {
@@ -412,10 +574,10 @@ inline const Cmpt& component
 // Powers of a Form
 // Equivalent to outer-products between the Form and itself
 // Form^0 = 1.0
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline typename powProduct<Form, 0>::type pow
 (
-    const VectorSpace<Form, Cmpt, nCmpt>&,
+    const VectorSpace<Form, Cmpt, Ncmpts>&,
     typename powProduct<Form, 0>::type
     = pTraits<typename powProduct<Form, 0>::type>::zero
 )
@@ -424,10 +586,10 @@ inline typename powProduct<Form, 0>::type pow
 }
 
 // Form^1 = Form
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline typename powProduct<Form, 1>::type pow
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& v,
+    const VectorSpace<Form, Cmpt, Ncmpts>& v,
     typename powProduct<Form, 1>::type
   = pTraits<typename powProduct<Form, 1>::type>::zero
 )
@@ -437,10 +599,10 @@ inline typename powProduct<Form, 1>::type pow
 
 
 // Form^2 = sqr(Form)
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline typename powProduct<Form, 2>::type pow
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& v,
+    const VectorSpace<Form, Cmpt, Ncmpts>& v,
     typename powProduct<Form, 2>::type
   = pTraits<typename powProduct<Form, 2>::type>::zero
 )
@@ -449,171 +611,184 @@ inline typename powProduct<Form, 2>::type pow
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline scalar magSqr
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     scalar ms = magSqr(vs.v_[0]);
-    VectorSpaceOps<nCmpt,1>::SeqOp(ms, vs, plusEqMagSqrOp2<scalar, Cmpt>());
+    VectorSpaceOps<Ncmpts,1>::SeqOp(ms, vs, plusEqMagSqrOp2<scalar, Cmpt>());
     return ms;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline scalar mag
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     return ::sqrt(magSqr(static_cast<const Form&>(vs)));
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline VectorSpace<Form, Cmpt, nCmpt> cmptMultiply
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts> cmptMultiply
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, cmptMultiplyOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, cmptMultiplyOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline VectorSpace<Form, Cmpt, nCmpt> cmptDivide
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts> cmptPow
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, cmptDivideOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, cmptPowOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
-inline VectorSpace<Form, Cmpt, nCmpt> stabilise
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts> cmptDivide
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
+)
+{
+    Form v;
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, cmptDivideOp<Cmpt>());
+    return v;
+}
+
+
+template<class Form, class Cmpt, direction Ncmpts>
+inline VectorSpace<Form, Cmpt, Ncmpts> stabilise
+(
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs,
     const Cmpt& small
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::opVS(v, vs, small, stabiliseOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::opVS(v, vs, small, stabiliseOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt cmptMax
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Cmpt cMax = vs.v_[0];
-    VectorSpaceOps<nCmpt,1>::SeqOp(cMax, vs, maxEqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,1>::SeqOp(cMax, vs, maxEqOp<Cmpt>());
     return cMax;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt cmptMin
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Cmpt cMin = vs.v_[0];
-    VectorSpaceOps<nCmpt,1>::SeqOp(cMin, vs, minEqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,1>::SeqOp(cMin, vs, minEqOp<Cmpt>());
     return cMin;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt cmptSum
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Cmpt sum = vs.v_[0];
-    VectorSpaceOps<nCmpt,1>::SeqOp(sum, vs, plusEqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,1>::SeqOp(sum, vs, plusEqOp<Cmpt>());
     return sum;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt cmptAv
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
-    return cmptSum(vs)/nCmpt;
+    return cmptSum(vs)/Ncmpts;
 }
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt cmptProduct
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Cmpt product = vs.v_[0];
-    VectorSpaceOps<nCmpt,1>::SeqOp(product, vs, multiplyEqOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,1>::SeqOp(product, vs, multiplyEqOp<Cmpt>());
     return product;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form cmptMag
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::eqOp(v, vs, eqMagOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::eqOp(v, vs, eqMagOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form max
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, maxOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, maxOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form min
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, minOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form minMod
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minModOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, minModOp<Cmpt>());
     return v;
 }
 
@@ -634,13 +809,13 @@ inline Type dot(const Type& t, const scalar s)
 
 template
 <
-    class Form1, class Cmpt1, int nCmpt1,
-    class Form2, class Cmpt2, int nCmpt2
+    class Form1, class Cmpt1, direction Ncmpts1,
+    class Form2, class Cmpt2, direction Ncmpts2
 >
 inline typename innerProduct<Form1, Form2>::type dot
 (
-    const VectorSpace<Form1, Cmpt1, nCmpt1>& t1,
-    const VectorSpace<Form2, Cmpt2, nCmpt2>& t2
+    const VectorSpace<Form1, Cmpt1, Ncmpts1>& t1,
+    const VectorSpace<Form2, Cmpt2, Ncmpts2>& t2
 )
 {
     return static_cast<const Form1&>(t1) & static_cast<const Form2&>(t2);
@@ -649,118 +824,118 @@ inline typename innerProduct<Form1, Form2>::type dot
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator-
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::eqOp(v, vs, eqMinusOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::eqOp(v, vs, eqMinusOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator+
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, plusOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, plusOp<Cmpt>());
     return v;
 }
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator-
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minusOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, minusOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator*
 (
     scalar s,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::opSV(v, s, vs, multiplyOp3<Cmpt, scalar, Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::opSV(v, s, vs, multiplyOp3<Cmpt, scalar, Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator*
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs,
     scalar s
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::opVS(v, vs, s, multiplyOp3<Cmpt, Cmpt, scalar>());
+    VectorSpaceOps<Ncmpts,0>::opVS(v, vs, s, multiplyOp3<Cmpt, Cmpt, scalar>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator/
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs,
     scalar s
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::opVS(v, vs, s, divideOp3<Cmpt, Cmpt, scalar>());
+    VectorSpaceOps<Ncmpts,0>::opVS(v, vs, s, divideOp3<Cmpt, Cmpt, scalar>());
     return v;
 }
 
 /*
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator/
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, divideOp<Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::op(v, vs1, vs2, divideOp<Cmpt>());
     return v;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Form operator/
 (
     scalar s,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     Form v;
-    VectorSpaceOps<nCmpt,0>::opSV(v, s, vs, divideOp2<scalar, Cmpt>());
+    VectorSpaceOps<Ncmpts,0>::opSV(v, s, vs, divideOp2<scalar, Cmpt>());
     return v;
 }
 */
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline Cmpt operator&&
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     Cmpt ddProd = vs1.v_[0]*vs2.v_[0];
-    for (int i=1; i<nCmpt; ++i)
+    for (direction i=1; i<Ncmpts; ++i)
     {
         ddProd += vs1.v_[i]*vs2.v_[i];
     }
@@ -768,15 +943,15 @@ inline Cmpt operator&&
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator==
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     bool eq = true;
-    for (int i=0; i<nCmpt; ++i)
+    for (direction i=0; i<Ncmpts; ++i)
     {
         if (!(eq &= (equal(vs1.v_[i], vs2.v_[i])))) break;
     }
@@ -784,26 +959,26 @@ inline bool operator==
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator!=
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     return !(vs1 == vs2);
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator>
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     bool gt = true;
-    for (int i=0; i<nCmpt; ++i)
+    for (direction i=0; i<Ncmpts; ++i)
     {
         if (!(gt &= vs1.v_[i] > vs2.v_[i])) break;
     }
@@ -811,15 +986,15 @@ inline bool operator>
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator<
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     bool lt = true;
-    for (int i=0; i<nCmpt; ++i)
+    for (direction i=0; i<Ncmpts; ++i)
     {
         if (!(lt &= vs1.v_[i] < vs2.v_[i])) break;
     }
@@ -827,22 +1002,22 @@ inline bool operator<
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator>=
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     return !(vs1 < vs2);
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, direction Ncmpts>
 inline bool operator<=
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs1,
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs2
 )
 {
     return !(vs1 > vs2);
@@ -860,47 +1035,44 @@ inline bool operator<=
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from Istream
-template<class Form, class Cmpt, int nCmpt>
-CML::VectorSpace<Form, Cmpt, nCmpt>::VectorSpace
+template<class Form, class Cmpt, CML::direction Ncmpts>
+CML::VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace
 (
     Istream& is
 )
 {
     // Read beginning of VectorSpace<Cmpt>
-    is.readBegin("VectorSpace<Form, Cmpt, nCmpt>");
+    is.readBegin("VectorSpace<Form, Cmpt, Ncmpts>");
 
-    for (int i=0; i<nCmpt; i++)
+    for (direction i=0; i<Ncmpts; i++)
     {
         is >> v_[i];
     }
 
     // Read end of VectorSpace<Cmpt>
-    is.readEnd("VectorSpace<Form, Cmpt, nCmpt>");
+    is.readEnd("VectorSpace<Form, Cmpt, Ncmpts>");
 
     // Check state of Istream
-    is.check("VectorSpace<Form, Cmpt, nCmpt>::VectorSpace(Istream&)");
+    is.check("VectorSpace<Form, Cmpt, Ncmpts>::VectorSpace(Istream&)");
 }
 
 
-// Return a string representation
-template<class Form, class Cmpt, int nCmpt>
-CML::word
-CML::name
+template<class Form, class Cmpt, CML::direction Ncmpts>
+CML::word CML::name
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
     std::ostringstream buf;
 
-    buf << '(';
+    buf << '(' << vs.v_[0];
 
-    for (int i=0; i<nCmpt-1; i++)
+    for (direction i=1; i<Ncmpts; i++)
     {
-        buf << vs.v_[i] << ',';
+        buf << ',' << vs.v_[i];
     }
 
-    buf << vs.v_[nCmpt-1] << ')';
+    buf << ')';
 
     return buf.str();
 }
@@ -908,56 +1080,52 @@ CML::name
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, CML::direction Ncmpts>
 CML::Istream& CML::operator>>
 (
     Istream& is,
-    VectorSpace<Form, Cmpt, nCmpt>& vs
+    VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
-    // Read beginning of VectorSpace<Cmpt, nCmpt>
-    is.readBegin("VectorSpace<Form, Cmpt, nCmpt>");
+    // Read beginning of VectorSpace<Cmpt, Ncmpts>
+    is.readBegin("VectorSpace<Form, Cmpt, Ncmpts>");
 
-    for (int i=0; i<nCmpt; i++)
+    for (direction i=0; i<Ncmpts; i++)
     {
         is >> vs.v_[i];
     }
 
-    // Read end of VectorSpace<Cmpt, nCmpt>
-    is.readEnd("VectorSpace<Form, Cmpt, nCmpt>");
+    // Read end of VectorSpace<Cmpt, Ncmpts>
+    is.readEnd("VectorSpace<Form, Cmpt, Ncmpts>");
 
     // Check state of Istream
-    is.check("operator>>(Istream&, VectorSpace<Form, Cmpt, nCmpt>&)");
+    is.check("operator>>(Istream&, VectorSpace<Form, Cmpt, Ncmpts>&)");
 
     return is;
 }
 
 
-template<class Form, class Cmpt, int nCmpt>
+template<class Form, class Cmpt, CML::direction Ncmpts>
 CML::Ostream& CML::operator<<
 (
     Ostream& os,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, Ncmpts>& vs
 )
 {
-    os << token::BEGIN_LIST;
+    os << token::BEGIN_LIST << vs.v_[0];
 
-    for (int i=0; i<nCmpt-1; i++)
+    for (direction i=1; i<Ncmpts; i++)
     {
-        os << vs.v_[i] << token::SPACE;
+        os << token::SPACE << vs.v_[i];
     }
 
-    os << vs.v_[nCmpt-1] << token::END_LIST;
+    os << token::END_LIST;
 
     // Check state of Ostream
-    os.check("operator<<(Ostream&, const VectorSpace<Form, Cmpt, nCmpt>&)");
+    os.check("operator<<(Ostream&, const VectorSpace<Form, Cmpt, Ncmpts>&)");
 
     return os;
 }
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -247,6 +247,9 @@ public:
             return parent_;
         }
 
+        //- Return the top of the tree
+        const dictionary& topDict() const;
+
         //- Return line number of first token in dictionary
         label startLineNumber() const;
 
@@ -255,6 +258,7 @@ public:
 
         //- Return the SHA1 digest of the dictionary contents
         SHA1Digest digest() const;
+
 
 
         // Search and lookup
@@ -350,6 +354,15 @@ public:
                 bool patternMatch=true
             ) const;
 
+            //- Find and return an entry data stream pointer if present
+            //  otherwise return NULL. Allows scoping using '.'
+            const entry* lookupScopedEntryPtr
+            (
+                const word&,
+                bool recursive,
+                bool patternMatch
+            ) const;
+
             //- Check if entry is a sub-dictionary
             bool isDict(const word&) const;
 
@@ -374,6 +387,9 @@ public:
             //- Return the table of contents
             wordList toc() const;
 
+            //- Return the sorted table of contents
+            wordList sortedToc() const;
+
             //- Return the list of available keys or patterns
             List<keyType> keys(bool patterns=false) const;
 
@@ -383,6 +399,10 @@ public:
             //- Substitute the given keyword prepended by '$' with the
             //  corresponding sub-dictionary entries
             bool substituteKeyword(const word& keyword);
+
+            //- Substitute the given scoped keyword prepended by '$' with the
+            //  corresponding sub-dictionary entries
+            bool substituteScopedKeyword(const word& keyword);
 
             //- Add a new entry
             //  With the merge option, dictionaries are interwoven and
@@ -579,13 +599,13 @@ T CML::dictionary::lookupOrAddDefault
 template<class T>
 bool CML::dictionary::readIfPresent
 (
-    const word& k,
+    const word& keyword,
     T& val,
     bool recursive,
     bool patternMatch
 ) const
 {
-    const entry* entryPtr = lookupEntryPtr(k, recursive, patternMatch);
+    const entry* entryPtr = lookupEntryPtr(keyword, recursive, patternMatch);
 
     if (entryPtr)
     {

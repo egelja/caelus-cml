@@ -1,83 +1,54 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-simpSearSurfEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = simpSearSurfEnv['LIB_SRC']
+target = 'simpleSearchableSurfaces'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-simpSearSurfEnv.Append(CXXFLAGS = '')
+sources = Split("""
+wrapperSearchableSurface.cpp
+Objects/planeSearchableSurface.cpp
+Objects/unitCylinderSearchableSurface.cpp
+Objects/searchableCylinderWithDirections.cpp
+Objects/searchableBoxWithDirections.cpp
+Objects/searchableSphereWithFix.cpp
+Transformations/transformationSearchableSurface.cpp
+Transformations/translateSearchableSurface.cpp
+Transformations/scaleSearchableSurface.cpp
+Transformations/rotateSearchableSurface.cpp
+Operations/binaryOperationSearchableSurface.cpp
+Operations/unionSearchableSurface.cpp
+Operations/intersectSearchableSurface.cpp
+Operations/differenceSearchableSurface.cpp
+Operations/exclusiveSearchableSurface.cpp
+Operations/invertSearchableSurface.cpp
+Modificators/oneRegionSearchableSurface.cpp
+Modificators/renameRegionsSearchableSurface.cpp
+Modificators/mergeRegionsSearchableSurface.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude'
+caelus_inc = [
+'swakParsers/lnInclude',
+'sampling/lnInclude'
 ]
-	
-simpSearSurfEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-simpSearSurfEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['sampling']
-  
-simpSearSurfEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_simpSearSurf = Split("""
-  wrapperSearchableSurface.cpp
-  Objects/planeSearchableSurface.cpp
-  Objects/unitCylinderSearchableSurface.cpp
-  Objects/searchableCylinderWithDirections.cpp
-  Objects/searchableBoxWithDirections.cpp
-  Objects/searchableSphereWithFix.cpp
-  Transformations/transformationSearchableSurface.cpp
-  Transformations/translateSearchableSurface.cpp
-  Transformations/scaleSearchableSurface.cpp
-  Transformations/rotateSearchableSurface.cpp
-  Operations/binaryOperationSearchableSurface.cpp
-  Operations/unionSearchableSurface.cpp
-  Operations/intersectSearchableSurface.cpp
-  Operations/differenceSearchableSurface.cpp
-  Operations/exclusiveSearchableSurface.cpp
-  Operations/invertSearchableSurface.cpp
-  Modificators/oneRegionSearchableSurface.cpp
-  Modificators/renameRegionsSearchableSurface.cpp
-  Modificators/mergeRegionsSearchableSurface.cpp
-  """)
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'simpleSearcableSurfaces'),
+                  os.path.join(env['SWAK_PATH'],'simpleSearcableSurfaces/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-src_files = src_files_simpSearSurf
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsimpSearSurfs = simpSearSurfEnv.SharedLibrary(target = 'libsimpleSearchableSurfaces',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = simpSearSurfEnv['LIB_PLATFORM_INSTALL']
-simpSearSurfEnv.Alias('install', install_dir)
-simpSearSurfEnv.Install(install_dir, libsimpSearSurfs)
-
-if (simpSearSurfEnv['WHICH_OS'] == "darwin"):
-
-  simpSearSurfEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsimpleSearchableSurfaces.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

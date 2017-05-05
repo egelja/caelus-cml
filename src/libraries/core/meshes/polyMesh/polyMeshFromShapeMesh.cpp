@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -427,11 +428,13 @@ CML::polyMesh::polyMesh
     const word& defaultBoundaryPatchName,
     const word& defaultBoundaryPatchType,
     const wordList& boundaryPatchPhysicalTypes,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     objectRegistry(io),
-    primitiveMesh(),
+    primitiveMesh(defectCorr, areaSwitch),
     points_
     (
         IOobject
@@ -703,11 +706,13 @@ CML::polyMesh::polyMesh
     const PtrList<dictionary>& boundaryDicts,
     const word& defaultBoundaryPatchName,
     const word& defaultBoundaryPatchType,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     objectRegistry(io),
-    primitiveMesh(),
+    primitiveMesh(defectCorr, areaSwitch),
     points_
     (
         IOobject

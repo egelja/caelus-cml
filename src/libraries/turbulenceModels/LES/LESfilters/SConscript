@@ -1,57 +1,25 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent
-# libraries
-LESFiltersEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-LESFiltersEnv.Append(CCFLAGS = '')
+target = 'LESfilters'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude'] 
-LESFiltersEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-LESFiltersEnv.Prepend(LIBPATH = lib_link_path)
+sources = Split("""
+LESfilter/LESfilter.cpp
+simpleFilter/simpleFilter.cpp
+laplaceFilter/laplaceFilter.cpp
+anisotropicFilter/anisotropicFilter.cpp
+""")
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core'] 
-LESFiltersEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  LESfilter/LESfilter.cpp
-  simpleFilter/simpleFilter.cpp
-  laplaceFilter/laplaceFilter.cpp
-  anisotropicFilter/anisotropicFilter.cpp
-  """)
+caelus_inc = []
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libLESfilters = LESFiltersEnv.SharedLibrary(target = 'LESfilters', 
-source = src_files)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = LESFiltersEnv['LIB_PLATFORM_INSTALL']
-LESFiltersEnv.Alias('install', install_dir)
-LESFiltersEnv.Install(install_dir, libLESfilters)
-
-if (LESFiltersEnv['WHICH_OS'] == "darwin"):
-
-  LESFiltersEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libLESfilters.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

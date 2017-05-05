@@ -96,7 +96,7 @@ tmp<volScalarField> SpalartAllmarasIDDES::dTilda(const volScalarField& S) const
 {
     const volScalarField alpha(this->alpha());
 
-    tmp<volScalarField> fb = min(2*exp(-9*sqr(alpha)),1.0);
+    tmp<volScalarField> fb = min(2*exp(-9*sqr(alpha)),scalar(1.0));
 
     tmp<volScalarField> fe1 = 
       2*(pos(alpha)*exp(-11.09*sqr(alpha)) + neg(alpha)*exp(-9*sqr(alpha)));

@@ -1,0 +1,46 @@
+# -*- mode: python -*-
+
+import os
+import utils
+from build import process_lninclude
+Import('env')
+
+subdirs = Split("""
+    libraries/swakParsers
+    libraries/groovyBC
+    libraries/groovyStandardBCs
+    libraries/simpleFunctionObjects
+    libraries/simpleLagrangianFunctionObjects
+    libraries/simpleSearchableSurfaces
+    libraries/simpleSwakFunctionObjects
+    libraries/swakFunctionObjects
+    libraries/swakFvOptions
+    libraries/swakLagrangianParser
+    libraries/swakTopoSources
+    libraries/swakSourceFields
+    libraries/functionPlugins/swakMeshQualityFunctionPlugin
+    libraries/functionPlugins/swakLocalCalculationsFunctionPlugin
+    libraries/functionPlugins/swakRandomFunctionPlugin
+    libraries/functionPlugins/swakFvcSchemesFunctionPlugin
+    libraries/functionPlugins/swakThermoTurbFunctionPlugin
+    libraries/functionPlugins/swakTransportTurbFunctionPlugin
+    libraries/functionPlugins/swakSurfacesAndSetsFunctionPlugin
+    libraries/functionPlugins/swakLagrangianCloudSourcesFunctionPlugin
+    libraries/functionPlugins/swakVelocityFunctionPlugin
+    libraries/functionPlugins/swakChemistryModelFunctionPlugin
+    libraries/functionPlugins/swakRadiationModelFunctionPlugin
+    libraries/functionPlugins/lagrangianCloudAdaptors/coalCloudAdaptor
+    utilities/calcNonUniformOffsetsForMapped
+    utilities/fieldReport
+    utilities/funkyDoCalc
+    utilities/funkySetBoundaryField
+    utilities/funkySetFields
+    utilities/funkySetLagrangianField
+    utilities/funkyWarpMesh
+    utilities/replayTransientBC
+""")
+
+for d in subdirs:
+    lninclude = list(process_lninclude(env, d))
+    SConscript(os.path.join(d,'SConscript'),
+               exports=['env','lninclude'])

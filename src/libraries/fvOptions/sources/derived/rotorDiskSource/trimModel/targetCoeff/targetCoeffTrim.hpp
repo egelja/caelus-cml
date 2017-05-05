@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -65,8 +65,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef targetCoeffTrim_H
-#define targetCoeffTrim_H
+#ifndef targetCoeffTrim_HPP
+#define targetCoeffTrim_HPP
 
 #include "trimModel.hpp"
 #include "tensor.hpp"

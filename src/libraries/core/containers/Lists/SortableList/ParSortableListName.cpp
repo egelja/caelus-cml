@@ -23,6 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::ParSortableListName, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(ParSortableListName, 0);
+}
+
 
 // ************************************************************************* //

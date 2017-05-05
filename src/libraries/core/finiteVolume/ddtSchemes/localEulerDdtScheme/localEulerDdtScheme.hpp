@@ -22,13 +22,19 @@ Class
 
 Description
     Local time-step first-order Euler implicit/explicit ddt.
-    The reciprocal of the local time-step field is looked-up from the
-    database with the name provided.
 
-    This scheme should only be used for steady-state computations
-    using transient codes where local time-stepping is preferably to
-    under-relaxation for transport consistency reasons.
+    The reciprocal of the local time-step field is looked-up from the database.
 
+    This scheme should only be used for steady-state computations using
+    transient codes where local time-stepping is preferably to under-relaxation
+    for transport consistency reasons.
+
+See also
+    Foam::fv::CoEulerDdtScheme
+
+SourceFiles
+    localEulerDdt.cpp
+    localEulerDdtSchemes.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -48,20 +54,62 @@ namespace fv
 {
 
 /*---------------------------------------------------------------------------*\
+                       Class localEulerDdt Declaration
+\*---------------------------------------------------------------------------*/
+
+class localEulerDdt
+{
+public:
+
+    //- Name of the reciprocal local time-step field
+    static word rDeltaTName;
+
+    //- Name of the reciprocal local face time-step field
+    static word rDeltaTfName;
+
+    //- Name of the reciprocal local sub-cycling time-step field
+    static word rSubDeltaTName;
+
+
+    // Constructors
+
+        localEulerDdt()
+        {}
+
+
+    // Member Functions
+
+        //- Return true if LTS is enabled
+        static bool enabled(const fvMesh& mesh);
+
+        //- Return the reciprocal of the local time-step
+        //  looked-up from the objectRegistry
+        static const volScalarField& localRDeltaT(const fvMesh& mesh);
+
+        //- Return the reciprocal of the local face time-step
+        //  looked-up from the objectRegistry
+        static const surfaceScalarField& localRDeltaTf(const fvMesh& mesh);
+
+        //- Calculate and return the reciprocal of the local sub-cycling
+        //  time-step
+        static tmp<volScalarField> localRSubDeltaT
+        (
+            const fvMesh& mesh,
+            const label nAlphaSubCycles
+        );
+};
+
+
+/*---------------------------------------------------------------------------*\
                        Class localEulerDdtScheme Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
 class localEulerDdtScheme
 :
+    public localEulerDdt,
     public fv::ddtScheme<Type>
 {
-    // Private Data
-
-        //- Name of the reciprocal local time-step field
-        word rDeltaTName_;
-
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -73,6 +121,9 @@ class localEulerDdtScheme
         //- Return the reciprocal of the local time-step
         const volScalarField& localRDeltaT() const;
 
+        //- Return the reciprocal of the local face time-step
+        const surfaceScalarField& localRDeltaTf() const;
+
 
 public:
 
@@ -82,18 +133,16 @@ public:
 
     // Constructors
 
-        //- Construct from mesh and name of the rDeltaT field
-        localEulerDdtScheme(const fvMesh& mesh, const word& rDeltaTName)
+        //- Construct from mesh
+        localEulerDdtScheme(const fvMesh& mesh)
         :
-            ddtScheme<Type>(mesh),
-            rDeltaTName_(rDeltaTName)
+            ddtScheme<Type>(mesh)
         {}
 
         //- Construct from mesh and Istream
         localEulerDdtScheme(const fvMesh& mesh, Istream& is)
         :
-            ddtScheme<Type>(mesh, is),
-            rDeltaTName_(is)
+            ddtScheme<Type>(mesh, is)
         {}
 
 
@@ -256,8 +305,14 @@ namespace fv
 template<class Type>
 const volScalarField& localEulerDdtScheme<Type>::localRDeltaT() const
 {
-    return mesh().objectRegistry::template lookupObject<volScalarField>
-        (rDeltaTName_);
+    return localEulerDdt::localRDeltaT(mesh());
+}
+
+
+template<class Type>
+const surfaceScalarField& localEulerDdtScheme<Type>::localRDeltaTf() const
+{
+    return localEulerDdt::localRDeltaTf(mesh());
 }
 
 
@@ -295,7 +350,7 @@ localEulerDdtScheme<Type>::fvcDdt
         );
 
         tdtdt().internalField() =
-            rDeltaT.internalField()*dt.value()*(1.0 - mesh().V0()/mesh().V());
+            rDeltaT.internalField()*dt.value()*(1.0 - mesh().Vsc0()/mesh().Vsc());
 
         return tdtdt;
     }
@@ -348,7 +403,7 @@ localEulerDdtScheme<Type>::fvcDdt
                 rDeltaT.internalField()*
                 (
                     vf.internalField()
-                  - vf.oldTime().internalField()*mesh().V0()/mesh().V()
+                  - vf.oldTime().internalField()*mesh().Vsc0()/mesh().Vsc()
                 ),
                 rDeltaT.boundaryField()*
                 (
@@ -400,7 +455,7 @@ localEulerDdtScheme<Type>::fvcDdt
                 rDeltaT.internalField()*rho.value()*
                 (
                     vf.internalField()
-                  - vf.oldTime().internalField()*mesh().V0()/mesh().V()
+                  - vf.oldTime().internalField()*mesh().Vsc0()/mesh().Vsc()
                 ),
                 rDeltaT.boundaryField()*rho.value()*
                 (
@@ -453,7 +508,7 @@ localEulerDdtScheme<Type>::fvcDdt
                 (
                     rho.internalField()*vf.internalField()
                   - rho.oldTime().internalField()
-                   *vf.oldTime().internalField()*mesh().V0()/mesh().V()
+                   *vf.oldTime().internalField()*mesh().Vsc0()/mesh().Vsc()
                 ),
                 rDeltaT.boundaryField()*
                 (
@@ -514,7 +569,7 @@ localEulerDdtScheme<Type>::fvcDdt
 
                   - alpha.oldTime().internalField()
                    *rho.oldTime().internalField()
-                   *vf.oldTime().internalField()*mesh().Vsc0()/mesh().V()
+                   *vf.oldTime().internalField()*mesh().Vsc0()/mesh().Vsc()
                 ),
                 rDeltaT.boundaryField()*
                 (
@@ -567,15 +622,15 @@ localEulerDdtScheme<Type>::fvmDdt
 
     const scalarField& rDeltaT = localRDeltaT().internalField();
 
-    fvm.diag() = rDeltaT*mesh().V();
+    fvm.diag() = rDeltaT*mesh().Vsc();
 
     if (mesh().moving())
     {
-        fvm.source() = rDeltaT*vf.oldTime().internalField()*mesh().V0();
+        fvm.source() = rDeltaT*vf.oldTime().internalField()*mesh().Vsc0();
     }
     else
     {
-        fvm.source() = rDeltaT*vf.oldTime().internalField()*mesh().V();
+        fvm.source() = rDeltaT*vf.oldTime().internalField()*mesh().Vsc();
     }
 
     return tfvm;
@@ -602,17 +657,17 @@ localEulerDdtScheme<Type>::fvmDdt
 
     const scalarField& rDeltaT = localRDeltaT().internalField();
 
-    fvm.diag() = rDeltaT*rho.value()*mesh().V();
+    fvm.diag() = rDeltaT*rho.value()*mesh().Vsc();
 
     if (mesh().moving())
     {
         fvm.source() = rDeltaT
-            *rho.value()*vf.oldTime().internalField()*mesh().V0();
+            *rho.value()*vf.oldTime().internalField()*mesh().Vsc0();
     }
     else
     {
         fvm.source() = rDeltaT
-            *rho.value()*vf.oldTime().internalField()*mesh().V();
+            *rho.value()*vf.oldTime().internalField()*mesh().Vsc();
     }
 
     return tfvm;
@@ -639,19 +694,19 @@ localEulerDdtScheme<Type>::fvmDdt
 
     const scalarField& rDeltaT = localRDeltaT().internalField();
 
-    fvm.diag() = rDeltaT*rho.internalField()*mesh().V();
+    fvm.diag() = rDeltaT*rho.internalField()*mesh().Vsc();
 
     if (mesh().moving())
     {
         fvm.source() = rDeltaT
             *rho.oldTime().internalField()
-            *vf.oldTime().internalField()*mesh().V0();
+            *vf.oldTime().internalField()*mesh().Vsc0();
     }
     else
     {
         fvm.source() = rDeltaT
             *rho.oldTime().internalField()
-            *vf.oldTime().internalField()*mesh().V();
+            *vf.oldTime().internalField()*mesh().Vsc();
     }
 
     return tfvm;
@@ -679,21 +734,21 @@ localEulerDdtScheme<Type>::fvmDdt
 
     const scalarField& rDeltaT = localRDeltaT().internalField();
 
-    fvm.diag() = rDeltaT*alpha.internalField()*rho.internalField()*mesh().V();
+    fvm.diag() = rDeltaT*alpha.internalField()*rho.internalField()*mesh().Vsc();
 
     if (mesh().moving())
     {
         fvm.source() = rDeltaT
             *alpha.oldTime().internalField()
             *rho.oldTime().internalField()
-            *vf.oldTime().internalField()*mesh().V0();
+            *vf.oldTime().internalField()*mesh().Vsc0();
     }
     else
     {
         fvm.source() = rDeltaT
             *alpha.oldTime().internalField()
             *rho.oldTime().internalField()
-            *vf.oldTime().internalField()*mesh().V();
+            *vf.oldTime().internalField()*mesh().Vsc();
     }
 
     return tfvm;
@@ -790,6 +845,7 @@ localEulerDdtScheme<Type>::fvcDdtPhiCorr
         );
     }
 }
+
 
 template<class Type>
 tmp<typename localEulerDdtScheme<Type>::fluxFieldType>

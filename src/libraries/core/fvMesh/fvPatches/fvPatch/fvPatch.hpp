@@ -218,6 +218,10 @@ public:
             //  to coupled-cell-centre vector is returned
             virtual tmp<vectorField> delta() const;
 
+            //- Return cell-centre to face-centre vector
+            virtual tmp<vectorField> deltaFull() const;
+
+
 
         // Access functions for demand driven data
 

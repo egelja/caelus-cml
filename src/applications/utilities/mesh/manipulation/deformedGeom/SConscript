@@ -1,56 +1,23 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-deformedGeomEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = deformedGeomEnv['LIB_SRC']
+target = 'deformedGeom'
 
-deformedGeomEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-deformedGeomEnv.Append(CCFLAGS = '')
+sources = Split("""
+deformedGeom.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
+caelus_inc = [
+]
 
-deformedGeomEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-deformedGeomEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = []
-  
-deformedGeomEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  deformedGeom.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bindeformedGeom = deformedGeomEnv.Program(target = 
-'deformedGeom', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = deformedGeomEnv['BIN_PLATFORM_INSTALL']
-deformedGeomEnv.Alias('install', install_dir)
-deformedGeomEnv.Install(install_dir, bindeformedGeom)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

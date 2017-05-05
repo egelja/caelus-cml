@@ -25,6 +25,9 @@ Description
 #include "windows.hpp"
 #include "timer.hpp"
 
+//Undefine DebugInfo, because we don't use it here and it collides with a
+#undef DebugInfo
+
 #define WINVER 0x0500 // To access CreateTimerQueueTimer
 #include <windows.h>
 
@@ -33,13 +36,18 @@ Description
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::timer, 0);
 
-jmp_buf CML::timer::envAlarm;
+namespace CML
+{
+    defineTypeNameAndDebug(timer, 0);
 
-__p_sig_fn_t CML::timer::oldAction_ = SIG_DFL;
+    jmp_buf timer::envAlarm;
 
-static HANDLE hTimer_ = NULL;
+    __p_sig_fn_t timer::oldAction_ = SIG_DFL;
+
+    static HANDLE hTimer_ = NULL;
+}
+
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
 

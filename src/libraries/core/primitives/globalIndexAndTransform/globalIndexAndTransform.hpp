@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -120,7 +120,7 @@ private:
         void determineTransformPermutations();
 
         //- Determine which patch uses which transform (if any) and which
-        //- sign to use
+        //- Sign to use
         void determinePatchTransformSign();
 
         //- Test a list of reference transforms to see if the test
@@ -191,7 +191,8 @@ public:
         (
             const label transformIndex,
             const label patchI,
-            const bool isSendingSide = true
+            const bool isSendingSide = true,
+            const scalar tol = SMALL
         ) const;
 
         //- Combine two transformIndices

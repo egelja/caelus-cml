@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,42 +21,64 @@ License
 
 #include "sphericalTensor2D.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const sphericalTensor2D::typeName = "sphericalTensor2D";
+const char* const CML::sphericalTensor2D::vsType::typeName
+(
+    "sphericalTensor2D"
+);
 
 template<>
-const char* sphericalTensor2D::componentNames[] = {"ii"};
+const char* const CML::sphericalTensor2D::vsType::componentNames[] =
+{
+    "ii"
+};
 
 template<>
-const sphericalTensor2D sphericalTensor2D::zero(0);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::vsType::zero
+(
+    sphericalTensor2D::uniform(0)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::one(1);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::one
+(
+    sphericalTensor2D::uniform(1)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::max(VGREAT);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::max
+(
+    sphericalTensor2D::uniform(VGREAT)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::min(-VGREAT);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::min
+(
+    sphericalTensor2D::uniform(-VGREAT)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::I(1);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::rootMax
+(
+    sphericalTensor2D::uniform(ROOTVGREAT)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::oneThirdI(1.0/3.0);
+const CML::sphericalTensor2D CML::sphericalTensor2D::vsType::rootMin
+(
+    sphericalTensor2D::uniform(-ROOTVGREAT)
+);
 
 template<>
-const sphericalTensor2D sphericalTensor2D::twoThirdsI(2.0/3.0);
+const CML::sphericalTensor2D CML::sphericalTensor2D::I(1);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<>
+const CML::sphericalTensor2D CML::sphericalTensor2D::oneThirdI(1.0/3.0);
 
-} // End namespace CML
+template<>
+const CML::sphericalTensor2D CML::sphericalTensor2D::twoThirdsI(2.0/3.0);
+
 
 // ************************************************************************* //

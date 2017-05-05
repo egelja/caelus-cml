@@ -23,7 +23,7 @@ Class
 Description
     Contains the interface properties.
 
-    Properties to aid interCML:
+    Properties to aid vofSolver:
     -# Correct the alpha boundary condition for dynamic contact angle.
     -# Calculate interface curvature.
 
@@ -32,12 +32,13 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef interfaceProperties_H
-#define interfaceProperties_H
+#ifndef interfaceProperties_HPP
+#define interfaceProperties_HPP
 
 #include "IOdictionary.hpp"
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
+#include "dynCompressionModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,11 +53,23 @@ class interfaceProperties
 {
     // Private data
 
+        //- Mesh
+        const fvMesh& mesh_;
+
+        //- Flux
+        const surfaceScalarField& phi_;
+
+        //- Reference to velocity field 
+        const volVectorField& U_;
+
+        //- Reference to volume fraction field
+        const volScalarField& alpha1_;
+
         //- Keep a reference to the transportProperties dictionary
         const dictionary& transportPropertiesDict_;
 
-        //- Compression coefficient
-        scalar cAlpha_;
+        //- Dynamic interface compression model
+        autoPtr<dynCompressionModel> dynCompPtr_;
 
         //- Surface tension
         dimensionedScalar sigma_;
@@ -64,9 +77,10 @@ class interfaceProperties
         //- Stabilisation for normalisation of the interface normal
         const dimensionedScalar deltaN_;
 
-        const volScalarField& alpha1_;
-        const volVectorField& U_;
+        //- Interface normal
         surfaceScalarField nHatf_;
+
+        // Interface curvature
         volScalarField K_;
 
 
@@ -100,18 +114,14 @@ public:
         //- Construct from volume fraction field gamma and IOdictionary
         interfaceProperties
         (
-            const volScalarField& alpha1,
             const volVectorField& U,
+            const surfaceScalarField& phi,
+            const volScalarField& alpha1,
             const IOdictionary&
         );
 
 
     // Member Functions
-
-        scalar cAlpha() const
-        {
-            return cAlpha_;
-        }
 
         const dimensionedScalar& deltaN() const
         {
@@ -138,10 +148,22 @@ public:
             return sigma_*K_;
         }
 
+        tmp<surfaceScalarField> surfaceTensionForce() const;
+
+        //- Indicator of the proximity of the interface
+        //  Field values are 1 near and 0 away for the interface.
+        tmp<volScalarField> nearInterface() const;
+
+        //- Compression flux
+        tmp<surfaceScalarField> phir();
+
         void correct()
         {
             calculateK();
         }
+
+        //- Read transportProperties dictionary
+        bool read();
 };
 
 

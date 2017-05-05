@@ -21,7 +21,12 @@ License
 
 #include "diagonalSolver.hpp"
 
-defineTypeNameAndDebug(CML::diagonalSolver, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(diagonalSolver, 0);
+}
+
 
 CML::diagonalSolver::diagonalSolver
 (

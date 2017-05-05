@@ -1,77 +1,59 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-PeEnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = PeEnv['LIB_SRC']
+target = 'Pe'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-PeEnv.Append(CCFLAGS = '')
+sources = Split("""
+Pe.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/postProcessing/postCalc',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',  
-src + '/turbulenceModels/incompressible/LES/lnInclude',  
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/compressible/RAS/lnInclude',  
-src + '/turbulenceModels/compressible/LES/lnInclude',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',  
-src + '/sampling/lnInclude'
-]        
-PeEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'postProcessing/postCalc',
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',  
+'turbulenceModels/incompressible/LES/lnInclude',  
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',  
+'turbulenceModels/compressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'transportModels/incompressible/lnInclude',
+'thermophysicalModels/basic/lnInclude',  
+'sampling/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-PeEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'compressibleTurbulenceModel',
+'compressibleRASModels',
+'compressibleLESModels',
+'specie',
+'basicThermophysicalModels',
+'incompressibleTransportModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if PeEnv['WHICH_OS'] == "windows":
-  PeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad' )
+post_calc = [os.path.join(env['LIB_PLATFORM_INSTALL'],'postCalc.o')]
+sources += post_calc
 
-lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
-'incompressibleLESModels','compressibleTurbulenceModel',
-'compressibleRASModels','compressibleLESModels','specie',
-'basicThermophysicalModels','incompressibleTransportModels',
-'genericPatchFields']
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-PeEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_postCalc = [PeEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
-src_files_exec = Split("""  
-  Pe.cpp
-  """)
-
-src_files = src_files_postCalc + src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binPe = PeEnv.Program(target = 'Pe',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = PeEnv['BIN_PLATFORM_INSTALL']
-PeEnv.Alias('install', install_dir)
-PeEnv.Install(install_dir, binPe)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -60,8 +60,6 @@ class cachedRandom;
 
 class cachedRandom
 {
-private:
-
     // Private data
 
         //- Initial random number seed
@@ -73,6 +71,12 @@ private:
         //- Current sample marker
         label sampleI_;
 
+        //- Indicator, which tells if there is a stored gaussian sample
+        bool hasGaussSample_;
+
+        //- Stored sample value
+        scalar gaussSample_;
+
 
     // Private Member Functions
 
@@ -81,7 +85,6 @@ private:
 
 
 public:
-
 
     // Constructors
 
@@ -119,9 +122,15 @@ public:
         // Evaluation
 
             // Random numbers
+
                 //- Return a sample whose components lie in the range 0-1
                 template<class Type>
                 Type sample01();
+
+                //- Return a sample whose components are normally distributed
+                //  with zero mean and unity variance N(0, 1)
+                template<class Type>
+                Type GaussNormal();
 
                 //- Return a sample between start and end
                 template<class Type>
@@ -138,6 +147,11 @@ public:
                 template<class Type>
                 Type globalSample01();
 
+                //- Return a sample whose components are normally distributed
+                //  with zero mean and unity variance N(0, 1)
+                template<class Type>
+                Type globalGaussNormal();
+
                 //- Return a sample between start and end
                 template<class Type>
                 Type globalPosition(const Type& start, const Type& end);
@@ -145,12 +159,6 @@ public:
                 //- Randomise value in the range 0-1
                 template<class Type>
                 void globalRandomise01(Type& value);
-
-
-        // Operators
-
-            //- Assignment operator
-            void operator=(const cachedRandom& cr);
 };
 
 
@@ -158,13 +166,16 @@ public:
 // Template specialisations
 
 template<>
-label cachedRandom::sample01<label>();
-
-template<>
 scalar cachedRandom::sample01<scalar>();
 
 template<>
-label cachedRandom::position<label>(const label& start, const label& end);
+label cachedRandom::sample01<label>();
+
+template<>
+scalar cachedRandom::GaussNormal<scalar>();
+
+template<>
+label cachedRandom::GaussNormal<label>();
 
 template<>
 scalar cachedRandom::position<scalar>
@@ -174,13 +185,19 @@ scalar cachedRandom::position<scalar>
 );
 
 template<>
-label cachedRandom::globalSample01<label>();
+label cachedRandom::position<label>(const label& start, const label& end);
 
 template<>
 scalar cachedRandom::globalSample01<scalar>();
 
 template<>
-label cachedRandom::globalPosition<label>(const label& start, const label& end);
+label cachedRandom::globalSample01<label>();
+
+template<>
+scalar cachedRandom::globalGaussNormal<scalar>();
+
+template<>
+label cachedRandom::globalGaussNormal<label>();
 
 template<>
 scalar cachedRandom::globalPosition<scalar>
@@ -188,6 +205,10 @@ scalar cachedRandom::globalPosition<scalar>
     const scalar& start,
     const scalar& end
 );
+
+template<>
+label cachedRandom::globalPosition<label>(const label& start, const label& end);
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -235,6 +256,19 @@ Type CML::cachedRandom::sample01()
 
 
 template<class Type>
+Type CML::cachedRandom::GaussNormal()
+{
+    Type value;
+    for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
+    {
+        value.component(cmpt) = GaussNormal<scalar>();
+    }
+
+    return value;
+}
+
+
+template<class Type>
 Type CML::cachedRandom::position(const Type& start, const Type& end)
 {
     Type value(start);
@@ -263,6 +297,22 @@ Type CML::cachedRandom::globalSample01()
     if (Pstream::master())
     {
         value = sample01<Type>();
+    }
+
+    reduce(value, maxOp<Type>());
+
+    return value;
+}
+
+
+template<class Type>
+Type CML::cachedRandom::globalGaussNormal()
+{
+    Type value = -GREAT*pTraits<Type>::one;
+
+    if (Pstream::master())
+    {
+        value = GaussNormal<Type>();
     }
 
     reduce(value, maxOp<Type>());

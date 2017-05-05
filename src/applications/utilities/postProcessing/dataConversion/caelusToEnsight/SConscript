@@ -1,62 +1,39 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-caelusDataToEnsightEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = caelusDataToEnsightEnv['LIB_SRC']
+target = 'caelusDataToEnsight'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-caelusDataToEnsightEnv.Append(CCFLAGS = '')
+sources = Split("""
+itoa.cpp
+ensightMesh.cpp
+ensightParticlePositions.cpp
+caelusToEnsight.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude',
-  src + '/sampling/lnInclude']
-caelusDataToEnsightEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'lagrangian/basic/lnInclude',
+'sampling/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian',
+'sampling']
 
-caelusDataToEnsightEnv.Prepend(LIBPATH = lib_link_path)
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if caelusDataToEnsightEnv['WHICH_OS'] == "windows":
-  caelusDataToEnsightEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','lagrangian','sampling']
-     
-
-caelusDataToEnsightEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  itoa.cpp
-  ensightMesh.cpp
-  ensightParticlePositions.cpp
-  caelusToEnsight.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincaelusDataToEnsight = caelusDataToEnsightEnv.Program(target = 'caelusDataToEnsight', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = caelusDataToEnsightEnv['BIN_PLATFORM_INSTALL']
-caelusDataToEnsightEnv.Alias('install', install_dir)
-caelusDataToEnsightEnv.Install(install_dir, bincaelusDataToEnsight)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

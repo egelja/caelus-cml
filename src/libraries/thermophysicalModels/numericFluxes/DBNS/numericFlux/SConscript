@@ -1,63 +1,29 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-numericFluxEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = numericFluxEnv['LIB_SRC']
+target = 'numericFlux'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-numericFluxEnv.Append(CCFLAGS = '')
+sources = Split("""
+roeFDSFlux/roeFDSFlux.cpp
+llfFlux/llfFlux.cpp
+hllcFlux/hllcFlux.cpp
+ktpFlux/ktpFlux.cpp
+dwFlux/dwFlux.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/specie/lnInclude'
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude'
 ]
-numericFluxEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-numericFluxEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'specie'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','specie']
-numericFluxEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  roeFDSFlux/roeFDSFlux.cpp
-  llfFlux/llfFlux.cpp
-  hllcFlux/hllcFlux.cpp
-  ktpFlux/ktpFlux.cpp
-  dwFlux/dwFlux.cpp
-  """) 
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libnumericFlux = numericFluxEnv.SharedLibrary(target = 
-'numericFlux', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = numericFluxEnv['LIB_PLATFORM_INSTALL']
-numericFluxEnv.Alias('install', install_dir)
-numericFluxEnv.Install(install_dir, libnumericFlux)
-
-if (numericFluxEnv['WHICH_OS'] == "darwin"):
-
-  numericFluxEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libnumericFlux.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

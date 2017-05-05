@@ -1,61 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-decomposeMethodsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-decomposeMethodsEnv.Append(CXXFLAGS = '')
+target = 'decompositionMethods'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-decomposeMethodsEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+decompositionMethod/decompositionMethod.cpp
+geomDecomp/geomDecomp.cpp
+simpleGeomDecomp/simpleGeomDecomp.cpp
+hierarchGeomDecomp/hierarchGeomDecomp.cpp
+manualDecomp/manualDecomp.cpp
+multiLevelDecomp/multiLevelDecomp.cpp
+structuredDecomp/topoDistanceData.cpp
+structuredDecomp/structuredDecomp.cpp
+decompositionConstraints/decompositionConstraint/decompositionConstraint.cpp
+decompositionConstraints/preserveBaffles/preserveBafflesConstraint.cpp
+decompositionConstraints/preserveFaceZones/preserveFaceZonesConstraint.cpp
+decompositionConstraints/preservePatches/preservePatchesConstraint.cpp
+decompositionConstraints/singleProcessorFaceSets/singleProcessorFaceSetsConstraint.cpp
+decompositionConstraints/refinementHistory/refinementHistoryConstraint.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-decomposeMethodsEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-decomposeMethodsEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core',
+'dynamicMesh'
+]
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  decompositionMethod/decompositionMethod.cpp
-  geomDecomp/geomDecomp.cpp
-  simpleGeomDecomp/simpleGeomDecomp.cpp
-  hierarchGeomDecomp/hierarchGeomDecomp.cpp
-  manualDecomp/manualDecomp.cpp
-  multiLevelDecomp/multiLevelDecomp.cpp
-  structuredDecomp/topoDistanceData.cpp
-  structuredDecomp/structuredDecomp.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libdecompositionMethods = decomposeMethodsEnv.SharedLibrary(target = 
-'decompositionMethods', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = decomposeMethodsEnv['LIB_PLATFORM_INSTALL']
-decomposeMethodsEnv.Alias('install', install_dir)
-decomposeMethodsEnv.Install(install_dir, libdecompositionMethods)
-
-if (decomposeMethodsEnv['WHICH_OS'] == "darwin"):
-
-  decomposeMethodsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdecompositionMethods.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

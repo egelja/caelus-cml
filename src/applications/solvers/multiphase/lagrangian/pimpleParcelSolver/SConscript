@@ -1,0 +1,57 @@
+# -*- mode: python -*-
+
+import utils
+from build import build_app
+Import('env')
+
+target = "pimpleParcelSolver"
+
+sources = Split("""
+pimpleParcelSolver.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels/',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude',
+'lagrangian/intermediate/lnInclude',
+'lagrangian/coalCombustion/lnInclude',
+'lagrangian/distributionModels/lnInclude',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude' 
+]
+
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'fvOptions',
+'sampling',
+'lagrangian',
+'lagrangianIntermediate',
+'regionModels',
+'surfaceFilmModels'
+]
+
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad -u turbulenceDerivedFvPatchFieldsLoad -u lagrangianIntermediateLoad'
+}
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -1,67 +1,40 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakMshQualEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakMshQualEnv['LIB_SRC']
+target = 'swakMeshQualityFunctionPlugin'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakMshQualEnv.Append(CXXFLAGS = '')
+sources = Split("""
+mqFaceNonOrthoPluginFunction.cpp
+mqFaceSkewnessPluginFunction.cpp
+mqCellAspectRatioPluginFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../../swakParsers/lnInclude',
-src + '/sampling/lnInclude'
+caelus_inc = [
+'sampling/lnInclude'
 ]
-	
-swakMshQualEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakMshQualEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakMeshQualityFunctionPlugin'),
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakMeshQualityFunctionPlugin/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakMshQualEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakMshQual = Split("""
-  mqFaceNonOrthoPluginFunction.cpp
-  mqFaceSkewnessPluginFunction.cpp
-  mqCellAspectRatioPluginFunction.cpp
-  """)
-
-src_files = src_files_swakMshQual
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakMshQuals = swakMshQualEnv.SharedLibrary(target = 'libswakMeshQualityFunctionPlugin',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakMshQualEnv['LIB_PLATFORM_INSTALL']
-swakMshQualEnv.Alias('install', install_dir)
-swakMshQualEnv.Install(install_dir, libswakMshQuals)
-
-if (swakMshQualEnv['WHICH_OS'] == "darwin"):
-
-  swakMshQualEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakMeshQualityFunctionPlugin.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

@@ -1,0 +1,55 @@
+/*---------------------------------------------------------------------------*\
+ Caelus darrin                                 
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+6
+(
+    body
+    {
+        type            wall;
+        nFaces          3295;
+        startFace       510396;
+    }
+    inlet
+    {
+        type            patch;
+        nFaces          336;
+        startFace       513691;
+    }
+    inlet-walls
+    {
+        type            wall;
+        nFaces          101;
+        startFace       514027;
+    }
+    overflow
+    {
+        type            patch;
+        nFaces          533;
+        startFace       514128;
+    }
+    underflow
+    {
+        type            patch;
+        nFaces          627;
+        startFace       514661;
+    }
+    vortexfinder
+    {
+        type            wall;
+        nFaces          2768;
+        startFace       515288;
+    }
+)
+
+// ************************************************************************* //

@@ -30,13 +30,7 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvGradScheme(faceMDLimitedGrad)
-}
-}
+makeFvGradScheme(faceMDLimitedGrad)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

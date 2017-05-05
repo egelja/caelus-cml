@@ -1,0 +1,50 @@
+# -*- mode: python -*-
+
+import utils
+from build import build_app
+Import('env')
+
+target = "vofSolver"
+
+sources = Split("""
+vofSolver.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels/',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'transportModels/interfaceProperties/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'interfaceProperties',
+'twoPhaseInterfaceProperties',
+'fvOptions',
+'sampling'
+]
+
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad -u interfacePropertiesLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

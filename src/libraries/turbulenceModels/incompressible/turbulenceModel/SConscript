@@ -1,76 +1,43 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-turbModelEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = turbModelEnv['LIB_SRC']
+target = 'incompressibleTurbulenceModel'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-turbModelEnv.Append(CCFLAGS = '')
+sources = Split("""
+turbulenceModel.cpp
+laminar/laminar.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkWallFunction/nutkWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkRoughWallFunction/nutkRoughWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkAtmRoughWallFunction/nutkAtmRoughWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUWallFunction/nutUWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUSpaldingWallFunction/nutUSpaldingWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUTabWallFunction/nutUTabWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutLowReWallFunction/nutLowReWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/nutWallFunctions/nutURoughWallFunction/nutURoughWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/epsilonWallFunctions/epsilonWallFunction/epsilonWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/omegaWallFunctions/omegaWallFunction/omegaWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/alphatWallFunctions/alphatJayaWallFunction/alphatJayaWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.cpp
+derivedFvPatchFields/turbulentMixingLengthDissRateInlet/turbulentMixingLengthDissRateInletFvPatchScalarField.cpp
+derivedFvPatchFields/turbulentMixingLengthFreqInlet/turbulentMixingLengthFreqInletFvPatchScalarField.cpp
+derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.cpp
+derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels']
-turbModelEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-turbModelEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = [
+'transportModels',
+'turbulenceModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-turbModelEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  turbulenceModel.cpp
-  laminar/laminar.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkWallFunction/nutkWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkRoughWallFunction/nutkRoughWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkAtmRoughWallFunction/nutkAtmRoughWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUWallFunction/nutUWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUSpaldingWallFunction/nutUSpaldingWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUTabulatedWallFunction/nutUTabulatedWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutLowReWallFunction/nutLowReWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutURoughWallFunction/nutURoughWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/epsilonWallFunctions/epsilonWallFunction/epsilonWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/omegaWallFunctions/omegaWallFunction/omegaWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
-  derivedFvPatchFields/wallFunctions/alphatWallFunctions/alphatJayatillekeWallFunction/alphatJayatillekeWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.cpp
-  derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.cpp
-  derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.cpp
-  derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.cpp
-  derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.cpp
-  """) 
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libincompressibleTurbulenceModel = turbModelEnv.SharedLibrary(target = 
-'incompressibleTurbulenceModel', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = turbModelEnv['LIB_PLATFORM_INSTALL']
-turbModelEnv.Alias('install', install_dir)
-turbModelEnv.Install(install_dir, libincompressibleTurbulenceModel)
-
-if (turbModelEnv['WHICH_OS'] == "darwin"):
-
-  turbModelEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleTurbulenceModel.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

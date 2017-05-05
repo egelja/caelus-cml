@@ -1,0 +1,59 @@
+# -*- mode: python -*-
+
+import os
+import utils
+from build import process_lninclude
+Import('env')
+
+cfmesh_env = env.Clone()
+
+subdirs = Split("""
+    meshLibrary
+    executables/cartesian2DMesh
+    executables/cartesianMesh
+    executables/pMesh
+    executables/tetMesh
+    utilities/checkSurfaceMesh
+    utilities/copySurfaceParts
+    utilities/extrudeEdgesInto2DSurface
+    utilities/FLMAToSurface
+    utilities/FMSToSurface
+    utilities/FMSToVTK
+    utilities/generateBoundaryLayers
+    utilities/importSurfaceAsSubset
+    utilities/improveMeshQuality
+    utilities/improveSymmetryPlanes
+    utilities/mergeSurfacePatches
+    utilities/meshToFPMA
+    utilities/patchesToSubsets
+    utilities/preparePar
+    utilities/removeSurfaceFacets
+    utilities/scaleMesh
+    utilities/scaleSurfaceMesh
+    utilities/subsetToPatch
+    utilities/surfaceFeatureEdges
+    utilities/surfaceGenerateBoundingBox
+    utilities/surfaceToFMS
+""")
+
+cfmesh_env.Append(CPPPATH = [
+                        os.path.join(cfmesh_env['LIB_SRC'],'edgeMesh/lnInclude'),
+                        os.path.join(cfmesh_env['CFMESH_PATH'],'meshLibrary/lnInclude'),
+                     ]
+                  )
+
+cfmesh_env.Append(LIBS = ['core','edgeMesh'])
+
+if cfmesh_env['OMP'] and cfmesh_env['CXX'] != 'clang++' and cfmesh_env['CXX'] != 'icc' :
+    cfmesh_env.Append(CXXFLAGS = '-DUSE_OMP -fopenmp')
+    cfmesh_env.Append(LIBS = ['gomp'])
+
+ostype = utils.ostype()
+if ostype == 'windows' or ostype == 'darwin':
+	cfmesh_env.Append(LIBS = ['pthread'])
+
+env = cfmesh_env
+for d in subdirs:
+    lninclude = list(process_lninclude(env, d))
+    SConscript(os.path.join(d,'SConscript'),
+               exports=['env','lninclude'])

@@ -27,23 +27,9 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace combustionModels
-{
-    makeCombustionTypes
-    (
-        PaSR,
-        psiChemistryCombustionModel
-    );
+makeCombustionTypes(PaSR, psiChemistryCombustionModel);
 
-    makeCombustionTypes
-    (
-        PaSR,
-        rhoChemistryCombustionModel
-    );
-}
-}
+makeCombustionTypes(PaSR, rhoChemistryCombustionModel);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

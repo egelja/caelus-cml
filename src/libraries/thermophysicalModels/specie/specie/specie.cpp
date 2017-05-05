@@ -34,7 +34,11 @@ const CML::scalar CML::specie::Pstd = constant::standard::Pstd.value();
 //- Standard temperature (default in [K])
 const CML::scalar CML::specie::Tstd = constant::standard::Tstd.value();
 
-defineTypeNameAndDebug(CML::specie, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(specie, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

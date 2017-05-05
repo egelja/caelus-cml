@@ -364,7 +364,7 @@ void CML::PatchPostProcessing<CloudType>::preEvolve()
 template<class CloudType>
 void CML::PatchPostProcessing<CloudType>::postEvolve()
 {
-    // Do nothing
+    CloudFunctionObject<CloudType>::postEvolve();
 }
 
 

@@ -1,58 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-barCompEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-barCompEnv.Append(CCFLAGS = '')
+target = 'barotropicCompressibilityModel'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-barCompEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+barotropicCompressibilityModel/barotropicCompressibilityModel.cpp
+barotropicCompressibilityModel/barotropicCompressibilityModelNew.cpp
+linear/linear.cpp
+Wallis/Wallis.cpp
+Chung/Chung.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-barCompEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-barCompEnv.Append(LIBS = lib_link)
-    
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  barotropicCompressibilityModel/barotropicCompressibilityModel.cpp
-  barotropicCompressibilityModel/barotropicCompressibilityModelNew.cpp
-  linear/linear.cpp
-  Wallis/Wallis.cpp
-  Chung/Chung.cpp
-  """)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libbarotropicCompressibilityModel = barCompEnv.SharedLibrary(target = 
-'barotropicCompressibilityModel', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = barCompEnv['LIB_PLATFORM_INSTALL']
-barCompEnv.Alias('install', install_dir)
-barCompEnv.Install(install_dir, libbarotropicCompressibilityModel)
-
-if (barCompEnv['WHICH_OS'] == "darwin"):
-
-  barCompEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libbarotropicCompressibilityModel.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

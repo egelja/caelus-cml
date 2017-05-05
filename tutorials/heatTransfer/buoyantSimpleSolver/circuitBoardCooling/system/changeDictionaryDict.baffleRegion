@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 6.10
+Caelus 7.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -41,7 +41,7 @@ dictionaryReplacement
         {
             "region0_to_.*"
             {
-                type            compressible::kqRWallFunction;
+                type            kqRWallFunction;
                 value           uniform 0.01;
             }
 

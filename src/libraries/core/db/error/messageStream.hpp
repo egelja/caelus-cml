@@ -263,6 +263,27 @@ extern messageStream Info;
 #define IOInfoIn(fn, ios) \
     ::CML::Info((fn), __FILE__, __LINE__, (ios))
 
+//- Report an information message using CML::Info
+//  if the local debug switch is true
+#define DebugInfo                                                              \
+    if (debug) Info
+
+//- Report an information message using CML::Info
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  if the local debug switch is true
+#define DebugIn(functionName)                                                  \
+    if (debug) InfoIn(functionName)
+
+//- Report a variable name and value
+//  using CML::Pout in file __FILE__ at line __LINE__
+#define DebugVar(var)                                                          \
+{                                                                              \
+    ::CML::string oldPrefix(::CML::Pout.prefix());                             \
+    ::CML::Pout<< "["<< __FILE__ << ":" << __LINE__ << "] ";                   \
+    ::CML::Pout.prefix() = oldPrefix + #var " ";                               \
+    ::CML::Pout<< var << ::CML::endl;                                          \
+    ::CML::Pout.prefix() = oldPrefix;                                          \
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif

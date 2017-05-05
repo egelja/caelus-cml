@@ -277,7 +277,7 @@ scalar MeshesRepository::setTime(
         mesh.readUpdate();
         mesh.readModifiedObjects();
 
-        typedef HashTable<const regIOobject*> regIOTable;
+        typedef HashTable<regIOobject*> regIOTable;
 
         regIOTable content(mesh.lookupClass<regIOobject>());
 

@@ -928,7 +928,7 @@ void CML::ParticleCollector<CloudType>::preEvolve()
 template<class CloudType>
 void CML::ParticleCollector<CloudType>::postEvolve()
 {
-    // Do nothing
+    CloudFunctionObject<CloudType>::postEvolve();
 }
 
 template<class CloudType>

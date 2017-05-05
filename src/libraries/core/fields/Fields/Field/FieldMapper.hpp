@@ -33,6 +33,8 @@ Description
 namespace CML
 {
 
+class mapDistributeBase;
+
 /*---------------------------------------------------------------------------*\
                            Class FieldMapper Declaration
 \*---------------------------------------------------------------------------*/
@@ -59,6 +61,23 @@ public:
         virtual label size() const = 0;
 
         virtual bool direct() const = 0;
+
+        virtual bool distributed() const
+        {
+            return false;
+        }
+
+        virtual const mapDistributeBase& distributeMap() const
+        {
+            FatalErrorIn("FieldMapper::distributeMap() const")
+                << "attempt to access null distributeMap"
+                << abort(FatalError);
+            return *reinterpret_cast<mapDistributeBase*>(NULL);
+        }
+
+        //- Are there unmapped values? I.e. do all size() elements get
+        //  get value
+        virtual bool hasUnmapped() const = 0;
 
         virtual const labelUList& directAddressing() const
         {

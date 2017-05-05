@@ -1,95 +1,63 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-funcObjFieldEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-sl = funcObjFieldEnv['SLASH']
+target = 'fieldFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-funcObjFieldEnv.Append(CCFLAGS = '')
+sources = Split("""
+fieldAverage/fieldAverage/fieldAverage.cpp
+fieldAverage/fieldAverageItem/fieldAverageItem.cpp
+fieldAverage/fieldAverageItem/fieldAverageItemIO.cpp
+fieldAverage/fieldAverageFunctionObject/fieldAverageFunctionObject.cpp
+fieldCoordinateSystemTransform/fieldCoordinateSystemTransform.cpp
+fieldCoordinateSystemTransform/fieldCoordinateSystemTransformFunctionObject.cpp
+fieldMinMax/fieldMinMax.cpp
+fieldMinMax/fieldMinMaxFunctionObject.cpp
+fieldValues/fieldValue/fieldValue.cpp
+fieldValues/fieldValue/fieldValueNew.cpp
+fieldValues/fieldValueDelta/fieldValueDelta.cpp
+fieldValues/fieldValueDelta/fieldValueDeltaFunctionObject.cpp
+fieldValues/faceSource/faceSource.cpp
+fieldValues/faceSource/faceSourceFunctionObject.cpp
+fieldValues/cellSource/cellSource.cpp
+fieldValues/cellSource/cellSourceFunctionObject.cpp
+nearWallFields/nearWallFields.cpp
+nearWallFields/nearWallFieldsFunctionObject.cpp
+nearWallFields/findCellParticle.cpp
+nearWallFields/findCellParticleCloud.cpp
+processorField/processorField.cpp
+processorField/processorFieldFunctionObject.cpp
+readFields/readFields.cpp
+readFields/readFieldsFunctionObject.cpp
+streamLine/streamLine.cpp
+streamLine/streamLineParticle.cpp
+streamLine/streamLineParticleCloud.cpp
+wallBoundedStreamLine/wallBoundedStreamLine.cpp
+wallBoundedStreamLine/wallBoundedStreamLineFunctionObject.cpp
+wallBoundedStreamLine/wallBoundedStreamLineParticle.cpp
+wallBoundedStreamLine/wallBoundedStreamLineParticleCloud.cpp
+wallBoundedStreamLine/wallBoundedParticle.cpp
+streamLine/streamLineFunctionObject.cpp
+surfaceInterpolateFields/surfaceInterpolateFields.cpp
+surfaceInterpolateFields/surfaceInterpolateFieldsFunctionObject.cpp
+regionSizeDistribution/regionSizeDistribution.cpp
+regionSizeDistribution/regionSizeDistributionFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-funcObjFieldEnv['LIB_SRC'] + '/sampling/lnInclude',
-funcObjFieldEnv['LIB_SRC'] + '/lagrangian/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude'
 ]
-funcObjFieldEnv.Prepend(CPPPATH = lib_inc)
-     
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-funcObjFieldEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core', 'lagrangian', 'sampling']
-funcObjFieldEnv.Append(LIBS = lib_link)
-            
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  fieldAverage/fieldAverage/fieldAverage.cpp
-  fieldAverage/fieldAverageItem/fieldAverageItem.cpp
-  fieldAverage/fieldAverageItem/fieldAverageItemIO.cpp
-  fieldAverage/fieldAverageFunctionObject/fieldAverageFunctionObject.cpp
-  fieldCoordinateSystemTransform/fieldCoordinateSystemTransform.cpp
-  fieldCoordinateSystemTransform/fieldCoordinateSystemTransformFunctionObject.cpp
-  fieldMinMax/fieldMinMax.cpp
-  fieldMinMax/fieldMinMaxFunctionObject.cpp
-  fieldValues/fieldValue/fieldValue.cpp
-  fieldValues/fieldValue/fieldValueNew.cpp
-  fieldValues/fieldValueDelta/fieldValueDelta.cpp
-  fieldValues/fieldValueDelta/fieldValueDeltaFunctionObject.cpp
-  fieldValues/faceSource/faceSource.cpp
-  fieldValues/faceSource/faceSourceFunctionObject.cpp
-  fieldValues/cellSource/cellSource.cpp
-  fieldValues/cellSource/cellSourceFunctionObject.cpp
-  nearWallFields/nearWallFields.cpp
-  nearWallFields/nearWallFieldsFunctionObject.cpp
-  nearWallFields/findCellParticle.cpp
-  nearWallFields/findCellParticleCloud.cpp
-  processorField/processorField.cpp
-  processorField/processorFieldFunctionObject.cpp
-  readFields/readFields.cpp
-  readFields/readFieldsFunctionObject.cpp
-  streamLine/streamLine.cpp
-  streamLine/streamLineParticle.cpp
-  streamLine/streamLineParticleCloud.cpp
-  wallBoundedStreamLine/wallBoundedStreamLine.cpp
-  wallBoundedStreamLine/wallBoundedStreamLineFunctionObject.cpp
-  wallBoundedStreamLine/wallBoundedStreamLineParticle.cpp
-  wallBoundedStreamLine/wallBoundedStreamLineParticleCloud.cpp
-  wallBoundedStreamLine/wallBoundedParticle.cpp
-  streamLine/streamLineFunctionObject.cpp
-  surfaceInterpolateFields/surfaceInterpolateFields.cpp
-  surfaceInterpolateFields/surfaceInterpolateFieldsFunctionObject.cpp
-  regionSizeDistribution/regionSizeDistribution.cpp
-  regionSizeDistribution/regionSizeDistributionFunctionObject.cpp
-  """)
+caelus_libs = [
+'core',
+'lagrangian',
+'sampling'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libfieldFunctionObjects = funcObjFieldEnv.SharedLibrary(target = 
-'fieldFunctionObjects', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = funcObjFieldEnv['LIB_PLATFORM_INSTALL']
-funcObjFieldEnv.Alias('install', install_dir)
-funcObjFieldEnv.Install(install_dir, libfieldFunctionObjects)
-
-if (funcObjFieldEnv['WHICH_OS'] == "darwin"):
-
-  funcObjFieldEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libfieldFunctionObjects.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

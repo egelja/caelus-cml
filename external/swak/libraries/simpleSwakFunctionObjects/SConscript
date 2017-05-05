@@ -1,76 +1,49 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-simpSwakFuncObjEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = simpSwakFuncObjEnv['LIB_SRC']
+target = 'simpleSwakFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-simpSwakFuncObjEnv.Append(CXXFLAGS = '')
+sources = Split("""
+general/swakExpressionFunctionObject.cpp
+general/dumpSwakExpressionFunctionObject.cpp
+general/dumpSwakGlobalVariableFunctionObject.cpp
+general/swakExpressionDistributionFunctionObject.cpp
+general/swakExpressionAverageDistributionFunctionObject.cpp
+general/writeAndEndSwakExpressionFunctionObject.cpp
+general/writeIfSwakExpressionFunctionObject.cpp
+patch/patchExpressionFunctionObject.cpp
+patch/patchExpressionDistributionFunctionObject.cpp
+functionObjectProxy/executeIfSwakExpression/executeIfSwakExpressionFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../simpleFunctionObjects/lnInclude',
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/lagrangian/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude'
 ]
-	
-simpSwakFuncObjEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-simpSwakFuncObjEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'sampling',
+'swakParsers',
+'simpleFunctionObjects',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['sampling','swakParsers','simpleFunctionObjects','lagrangian']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'simpleSwakFunctionObjects'),
+                  os.path.join(env['SWAK_PATH'],'simpleSwakFunctionObjects/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'simpleFunctionObjects/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-simpSwakFuncObjEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_simpSwakFuncObj = Split("""
-  general/swakExpressionFunctionObject.cpp
-  general/dumpSwakExpressionFunctionObject.cpp
-  general/dumpSwakGlobalVariableFunctionObject.cpp
-  general/swakExpressionDistributionFunctionObject.cpp
-  general/swakExpressionAverageDistributionFunctionObject.cpp
-  general/writeAndEndSwakExpressionFunctionObject.cpp
-  general/writeIfSwakExpressionFunctionObject.cpp
-  patch/patchExpressionFunctionObject.cpp
-  patch/patchExpressionDistributionFunctionObject.cpp
-  functionObjectProxy/executeIfSwakExpression/executeIfSwakExpressionFunctionObject.cpp
-  """)
-
-src_files = src_files_simpSwakFuncObj
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsimpSwakFuncObjs = simpSwakFuncObjEnv.SharedLibrary(target = 'libsimpleSwakFunctionObjects',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = simpSwakFuncObjEnv['LIB_PLATFORM_INSTALL']
-simpSwakFuncObjEnv.Alias('install', install_dir)
-simpSwakFuncObjEnv.Install(install_dir, libsimpSwakFuncObjs)
-
-if (simpSwakFuncObjEnv['WHICH_OS'] == "darwin"):
-
-  simpSwakFuncObjEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsimpleSwakFunctionObjects.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

@@ -24,12 +24,6 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvDdtScheme(CrankNicolsonDdtScheme)
-}
-}
+makeFvDdtScheme(CrankNicolsonDdtScheme)
 
 // ************************************************************************* //

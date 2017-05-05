@@ -1,55 +1,23 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-caelusToTetDualMeshEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = caelusToTetDualMeshEnv['LIB_SRC']
+target = 'caelusToTetDualMesh'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-caelusToTetDualMeshEnv.Append(CCFLAGS = '')
+sources = Split("""
+caelusToTetDualMesh.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
-caelusToTetDualMeshEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-caelusToTetDualMeshEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = []
-     
-
-caelusToTetDualMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  caelusToTetDualMesh.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincaelusToTetDualMesh = caelusToTetDualMeshEnv.Program(target = 'caelusToTetDualMesh', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = caelusToTetDualMeshEnv['BIN_PLATFORM_INSTALL']
-caelusToTetDualMeshEnv.Alias('install', install_dir)
-caelusToTetDualMeshEnv.Install(install_dir, bincaelusToTetDualMesh)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -1,64 +1,32 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-thermoFuncEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-thermoFuncEnv.Append(CCFLAGS = '')
+target = 'thermophysicalFunctions'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude'] 
-thermoFuncEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+thermophysicalFunction/thermophysicalFunction.cpp
+NSRDSfunctions/NSRDSfunc0/NSRDSfunc0.cpp
+NSRDSfunctions/NSRDSfunc1/NSRDSfunc1.cpp
+NSRDSfunctions/NSRDSfunc2/NSRDSfunc2.cpp
+NSRDSfunctions/NSRDSfunc3/NSRDSfunc3.cpp
+NSRDSfunctions/NSRDSfunc4/NSRDSfunc4.cpp
+NSRDSfunctions/NSRDSfunc5/NSRDSfunc5.cpp
+NSRDSfunctions/NSRDSfunc6/NSRDSfunc6.cpp
+NSRDSfunctions/NSRDSfunc7/NSRDSfunc7.cpp
+NSRDSfunctions/NSRDSfunc14/NSRDSfunc14.cpp
+APIfunctions/APIdiffCoefFunc/APIdiffCoefFunc.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-thermoFuncEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core'] 
-thermoFuncEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  thermophysicalFunction/thermophysicalFunction.cpp
-  NSRDSfunctions/NSRDSfunc0/NSRDSfunc0.cpp
-  NSRDSfunctions/NSRDSfunc1/NSRDSfunc1.cpp
-  NSRDSfunctions/NSRDSfunc2/NSRDSfunc2.cpp
-  NSRDSfunctions/NSRDSfunc3/NSRDSfunc3.cpp
-  NSRDSfunctions/NSRDSfunc4/NSRDSfunc4.cpp
-  NSRDSfunctions/NSRDSfunc5/NSRDSfunc5.cpp
-  NSRDSfunctions/NSRDSfunc6/NSRDSfunc6.cpp
-  NSRDSfunctions/NSRDSfunc7/NSRDSfunc7.cpp
-  NSRDSfunctions/NSRDSfunc14/NSRDSfunc14.cpp
-  APIfunctions/APIdiffCoefFunc/APIdiffCoefFunc.cpp
-              """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libthermophysicalFunctions = thermoFuncEnv.SharedLibrary(target = 
-'thermophysicalFunctions', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = thermoFuncEnv['LIB_PLATFORM_INSTALL']
-thermoFuncEnv.Alias('install', install_dir)
-thermoFuncEnv.Install(install_dir, libthermophysicalFunctions)
-
-if (thermoFuncEnv['WHICH_OS'] == "darwin"):
-
-  thermoFuncEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libthermophysicalFunctions.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,42 +21,57 @@ License
 
 #include "sphericalTensor.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const sphericalTensor::typeName = "sphericalTensor";
+const char* const CML::sphericalTensor::vsType::typeName = "sphericalTensor";
 
 template<>
-const char* sphericalTensor::componentNames[] = {"ii"};
+const char* const CML::sphericalTensor::vsType::componentNames[] = {"ii"};
 
 template<>
-const sphericalTensor sphericalTensor::zero(0);
+const CML::sphericalTensor CML::sphericalTensor::vsType::zero
+(
+    sphericalTensor::uniform(0)
+);
 
 template<>
-const sphericalTensor sphericalTensor::one(1);
+const CML::sphericalTensor CML::sphericalTensor::vsType::one
+(
+    sphericalTensor::uniform(1)
+);
 
 template<>
-const sphericalTensor sphericalTensor::max(VGREAT);
+const CML::sphericalTensor CML::sphericalTensor::vsType::max
+(
+    sphericalTensor::uniform(VGREAT)
+);
 
 template<>
-const sphericalTensor sphericalTensor::min(-VGREAT);
+const CML::sphericalTensor CML::sphericalTensor::vsType::min
+(
+    sphericalTensor::uniform(-VGREAT)
+);
 
 template<>
-const sphericalTensor sphericalTensor::I(1);
+const CML::sphericalTensor CML::sphericalTensor::vsType::rootMax
+(
+    sphericalTensor::uniform(ROOTVGREAT)
+);
 
 template<>
-const sphericalTensor sphericalTensor::oneThirdI(1.0/3.0);
+const CML::sphericalTensor CML::sphericalTensor::vsType::rootMin
+(
+    sphericalTensor::uniform(-ROOTVGREAT)
+);
 
 template<>
-const sphericalTensor sphericalTensor::twoThirdsI(2.0/3.0);
+const CML::sphericalTensor CML::sphericalTensor::I(1);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<>
+const CML::sphericalTensor CML::sphericalTensor::oneThirdI(1.0/3.0);
 
-} // End namespace CML
+template<>
+const CML::sphericalTensor CML::sphericalTensor::twoThirdsI(2.0/3.0);
 
 // ************************************************************************* //

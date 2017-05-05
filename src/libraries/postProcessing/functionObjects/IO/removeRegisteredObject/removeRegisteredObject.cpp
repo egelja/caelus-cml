@@ -27,7 +27,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(removeRegisteredObject, 0);
+    defineTypeNameAndDebug(removeRegisteredObject, 0);
 }
 
 

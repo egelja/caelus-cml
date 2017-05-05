@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015-16 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,11 +38,14 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::polyMesh, 0);
 
+namespace CML
+{
+    defineTypeNameAndDebug(polyMesh, 0);
 
-CML::word CML::polyMesh::defaultRegion = "region0";
-CML::word CML::polyMesh::meshSubDir = "polyMesh";
+    word polyMesh::defaultRegion = "region0";
+    word polyMesh::meshSubDir = "polyMesh";
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -135,10 +138,10 @@ void CML::polyMesh::calcDirections() const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::polyMesh::polyMesh(const IOobject& io)
+CML::polyMesh::polyMesh(const IOobject& io, const bool defectCorr, const scalar areaSwitch)
 :
     objectRegistry(io),
-    primitiveMesh(),
+    primitiveMesh(defectCorr, areaSwitch),
     points_
     (
         IOobject
@@ -322,11 +325,13 @@ CML::polyMesh::polyMesh
     const Xfer<faceList>& faces,
     const Xfer<labelList>& owner,
     const Xfer<labelList>& neighbour,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     objectRegistry(io),
-    primitiveMesh(),
+    primitiveMesh(defectCorr, areaSwitch),
     points_
     (
         IOobject
@@ -335,7 +340,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::AUTO_WRITE
         ),
         points
@@ -348,7 +353,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::AUTO_WRITE
         ),
         faces
@@ -361,7 +366,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::AUTO_WRITE
         ),
         owner
@@ -374,7 +379,7 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::AUTO_WRITE
         ),
         neighbour
@@ -388,11 +393,11 @@ CML::polyMesh::polyMesh
             instance(),
             meshSubDir,
             *this,
-            IOobject::NO_READ,
+            io.readOpt(),
             IOobject::AUTO_WRITE
         ),
         *this,
-        0
+        polyPatchList()
     ),
     bounds_(points_, syncPar),
     geometricD_(Vector<label>::zero),
@@ -411,7 +416,7 @@ CML::polyMesh::polyMesh
             IOobject::NO_WRITE
         ),
         *this,
-        0
+        PtrList<pointZone>()
     ),
     faceZones_
     (
@@ -425,7 +430,7 @@ CML::polyMesh::polyMesh
             IOobject::NO_WRITE
         ),
         *this,
-        0
+        PtrList<faceZone>()
     ),
     cellZones_
     (
@@ -439,7 +444,7 @@ CML::polyMesh::polyMesh
             IOobject::NO_WRITE
         ),
         *this,
-        0
+        PtrList<cellZone>()
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
@@ -480,11 +485,13 @@ CML::polyMesh::polyMesh
     const Xfer<pointField>& points,
     const Xfer<faceList>& faces,
     const Xfer<cellList>& cells,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     objectRegistry(io),
-    primitiveMesh(),
+    primitiveMesh(defectCorr, areaSwitch),
     points_
     (
         IOobject

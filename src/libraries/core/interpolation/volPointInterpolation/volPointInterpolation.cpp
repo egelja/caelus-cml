@@ -24,24 +24,20 @@ License
 #include "volFields.hpp"
 #include "pointFields.hpp"
 #include "demandDrivenData.hpp"
-#include "coupledPointPatchFields.hpp"
-#include "pointConstraint.hpp"
-
+#include "pointConstraints.hpp"
 #include "surfaceFields.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(volPointInterpolation, 0);
+namespace CML
+{
+    defineTypeNameAndDebug(volPointInterpolation, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void volPointInterpolation::calcBoundaryAddressing()
+void CML::volPointInterpolation::calcBoundaryAddressing()
 {
     if (debug)
     {
@@ -109,7 +105,12 @@ void volPointInterpolation::calcBoundaryAddressing()
     {
         boolList oldData(isPatchPoint_);
 
-        syncUntransformedData(isPatchPoint_, orEqOp<bool>());
+        pointConstraints::syncUntransformedData
+        (
+            mesh(),
+            isPatchPoint_,
+            orEqOp<bool>()
+        );
 
         forAll(isPatchPoint_, pointI)
         {
@@ -147,7 +148,7 @@ void volPointInterpolation::calcBoundaryAddressing()
 }
 
 
-void volPointInterpolation::makeInternalWeights(scalarField& sumWeights)
+void CML::volPointInterpolation::makeInternalWeights(scalarField& sumWeights)
 {
     if (debug)
     {
@@ -187,7 +188,7 @@ void volPointInterpolation::makeInternalWeights(scalarField& sumWeights)
 }
 
 
-void volPointInterpolation::makeBoundaryWeights(scalarField& sumWeights)
+void CML::volPointInterpolation::makeBoundaryWeights(scalarField& sumWeights)
 {
     if (debug)
     {
@@ -235,7 +236,7 @@ void volPointInterpolation::makeBoundaryWeights(scalarField& sumWeights)
 }
 
 
-void volPointInterpolation::makeWeights()
+void CML::volPointInterpolation::makeWeights()
 {
     if (debug)
     {
@@ -286,7 +287,12 @@ void volPointInterpolation::makeWeights()
 
 
     // Sum collocated contributions
-    syncUntransformedData(sumWeights, plusEqOp<scalar>());
+    pointConstraints::syncUntransformedData
+    (
+        mesh(),
+        sumWeights,
+        plusEqOp<scalar>()
+    );
 
     // And add separated contributions
     addSeparated(sumWeights);
@@ -334,302 +340,31 @@ void volPointInterpolation::makeWeights()
 }
 
 
-void volPointInterpolation::makePatchPatchAddressing()
-{
-    if (debug)
-    {
-        Pout<< "volPointInterpolation::makePatchPatchAddressing() : "
-            << "constructing boundary addressing"
-            << endl;
-    }
-
-    const fvBoundaryMesh& bm = mesh().boundary();
-    const pointBoundaryMesh& pbm = pointMesh::New(mesh()).boundary();
-
-
-    // first count the total number of patch-patch points
-
-    label nPatchPatchPoints = 0;
-
-    forAll(bm, patchi)
-    {
-        if (!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
-        {
-            nPatchPatchPoints += bm[patchi].patch().boundaryPoints().size();
-
-            if (debug)
-            {
-                Pout<< "On patch:" << bm[patchi].patch()
-                    << " nBoundaryPoints:"
-                    << bm[patchi].patch().boundaryPoints().size() << endl;
-            }
-        }
-    }
-
-    if (debug)
-    {
-        Pout<< "Found nPatchPatchPoints:" << nPatchPatchPoints << endl;
-    }
-
-
-    // Go through all patches and mark up the external edge points
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    // From meshpoint to index in patchPatchPointConstraints.
-    Map<label> patchPatchPointSet(2*nPatchPatchPoints);
-
-    // Constraints (initialised to unconstrained)
-    List<pointConstraint> patchPatchPointConstraints(nPatchPatchPoints);
-
-    // From constraint index to mesh point
-    labelList patchPatchPoints(nPatchPatchPoints);
-
-    label pppi = 0;
-
-    forAll(bm, patchi)
-    {
-        if (!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
-        {
-            const labelList& bp = bm[patchi].patch().boundaryPoints();
-            const labelList& meshPoints = bm[patchi].patch().meshPoints();
-
-            forAll(bp, pointi)
-            {
-                label ppp = meshPoints[bp[pointi]];
-
-                Map<label>::iterator iter = patchPatchPointSet.find(ppp);
-
-                label constraintI = -1;
-
-                if (iter == patchPatchPointSet.end())
-                {
-                    patchPatchPointSet.insert(ppp, pppi);
-                    patchPatchPoints[pppi] = ppp;
-                    constraintI = pppi++;
-                }
-                else
-                {
-                    constraintI = iter();
-                }
-
-                // Apply to patch constraints
-                pbm[patchi].applyConstraint
-                (
-                    bp[pointi],
-                    patchPatchPointConstraints[constraintI]
-                );
-            }
-        }
-    }
-
-    if (debug)
-    {
-        Pout<< "Have (local) constrained points:"
-            << nPatchPatchPoints << endl;
-    }
-
-
-    // Extend set with constraints across coupled points
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    {
-        const globalMeshData& gd = mesh().globalData();
-        const labelListList& globalPointSlaves = gd.globalPointSlaves();
-        const mapDistribute& globalPointSlavesMap = gd.globalPointSlavesMap();
-        const Map<label>& cpPointMap = gd.coupledPatch().meshPointMap();
-        const labelList& cpMeshPoints = gd.coupledPatch().meshPoints();
-
-        // Constraints on coupled points
-        List<pointConstraint> constraints
-        (
-            globalPointSlavesMap.constructSize()
-        );
-
-        // Copy from patchPatch constraints into coupledConstraints.
-        forAll(bm, patchi)
-        {
-            if (!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
-            {
-                const labelList& bp = bm[patchi].patch().boundaryPoints();
-                const labelList& meshPoints = bm[patchi].patch().meshPoints();
-
-                forAll(bp, pointi)
-                {
-                    label ppp = meshPoints[bp[pointi]];
-
-                    Map<label>::const_iterator fnd = cpPointMap.find(ppp);
-                    if (fnd != cpPointMap.end())
-                    {
-                        // Can just copy (instead of apply) constraint
-                        // will already be consistent across multiple patches.
-                        constraints[fnd()] = patchPatchPointConstraints
-                        [
-                            patchPatchPointSet[ppp]
-                        ];
-                    }
-                }
-            }
-        }
-
-        // Exchange data
-        globalPointSlavesMap.distribute(constraints);
-
-        // Combine master with slave constraints
-        forAll(globalPointSlaves, pointI)
-        {
-            const labelList& slaves = globalPointSlaves[pointI];
-
-            // Combine master constraint with slave constraints
-            forAll(slaves, i)
-            {
-                constraints[pointI].combine(constraints[slaves[i]]);
-            }
-            // Duplicate master constraint into slave slots
-            forAll(slaves, i)
-            {
-                constraints[slaves[i]] = constraints[pointI];
-            }
-        }
-
-        // Send back
-        globalPointSlavesMap.reverseDistribute
-        (
-            cpMeshPoints.size(),
-            constraints
-        );
-
-        // Add back into patchPatch constraints
-        forAll(constraints, coupledPointI)
-        {
-            if (constraints[coupledPointI].first() != 0)
-            {
-                label meshPointI = cpMeshPoints[coupledPointI];
-
-                Map<label>::iterator iter = patchPatchPointSet.find(meshPointI);
-
-                label constraintI = -1;
-
-                if (iter == patchPatchPointSet.end())
-                {
-                    //Pout<< "on meshpoint:" << meshPointI
-                    //    << " coupled:" << coupledPointI
-                    //    << " at:" << mesh().points()[meshPointI]
-                    //    << " have new constraint:"
-                    //    << constraints[coupledPointI]
-                    //    << endl;
-
-                    // Allocate new constraint
-                    if (patchPatchPoints.size() <= pppi)
-                    {
-                        patchPatchPoints.setSize(pppi+100);
-                    }
-                    patchPatchPointSet.insert(meshPointI, pppi);
-                    patchPatchPoints[pppi] = meshPointI;
-                    constraintI = pppi++;
-                }
-                else
-                {
-                    //Pout<< "on meshpoint:" << meshPointI
-                    //    << " coupled:" << coupledPointI
-                    //    << " at:" << mesh().points()[meshPointI]
-                    //    << " have possibly extended constraint:"
-                    //    << constraints[coupledPointI]
-                    //    << endl;
-
-                    constraintI = iter();
-                }
-
-                // Combine (new or existing) constraint with one
-                // on coupled.
-                patchPatchPointConstraints[constraintI].combine
-                (
-                    constraints[coupledPointI]
-                );
-            }
-        }
-    }
-
-
-
-    nPatchPatchPoints = pppi;
-    patchPatchPoints.setSize(nPatchPatchPoints);
-    patchPatchPointConstraints.setSize(nPatchPatchPoints);
-
-
-    if (debug)
-    {
-        Pout<< "Have (global) constrained points:"
-            << nPatchPatchPoints << endl;
-    }
-
-
-    // Copy out all non-trivial constraints
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    patchPatchPointConstraintPoints_.setSize(nPatchPatchPoints);
-    patchPatchPointConstraintTensors_.setSize(nPatchPatchPoints);
-
-    label nConstraints = 0;
-
-    forAll(patchPatchPointConstraints, i)
-    {
-        if (patchPatchPointConstraints[i].first() != 0)
-        {
-            patchPatchPointConstraintPoints_[nConstraints] =
-                patchPatchPoints[i];
-
-            patchPatchPointConstraintTensors_[nConstraints] =
-                patchPatchPointConstraints[i].constraintTransformation();
-
-            nConstraints++;
-        }
-    }
-
-    if (debug)
-    {
-        Pout<< "Have non-trivial constrained points:"
-            << nConstraints << endl;
-    }
-
-    patchPatchPointConstraintPoints_.setSize(nConstraints);
-    patchPatchPointConstraintTensors_.setSize(nConstraints);
-
-
-    if (debug)
-    {
-        Pout<< "volPointInterpolation::makePatchPatchAddressing() : "
-            << "finished constructing boundary addressing"
-            << endl;
-    }
-}
-
-
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-volPointInterpolation::volPointInterpolation(const fvMesh& vm)
+CML::volPointInterpolation::volPointInterpolation(const fvMesh& vm)
 :
     MeshObject<fvMesh, volPointInterpolation>(vm)
 {
-    updateMesh();
+    makeWeights();
 }
 
 
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
 
-volPointInterpolation::~volPointInterpolation()
+CML::volPointInterpolation::~volPointInterpolation()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void volPointInterpolation::updateMesh()
+void CML::volPointInterpolation::updateMesh()
 {
     makeWeights();
-    makePatchPatchAddressing();
 }
 
 
-bool volPointInterpolation::movePoints()
+bool CML::volPointInterpolation::movePoints()
 {
     makeWeights();
 
@@ -637,18 +372,22 @@ bool volPointInterpolation::movePoints()
 }
 
 
-// Specialisaion of applyCornerConstraints for scalars because
-// no constraint need be applied
-template<>
-void volPointInterpolation::applyCornerConstraints<scalar>
+void CML::volPointInterpolation::interpolateDisplacement
 (
-    GeometricField<scalar, pointPatchField, pointMesh>& pf
+    const volVectorField& vf,
+    pointVectorField& pf
 ) const
-{}
+{
+    interpolateInternalField(vf, pf);
 
+    // Interpolate to the patches but no constraints
+    interpolateBoundaryField(vf, pf);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    // Apply displacement constraints
+    const pointConstraints& pcs = pointConstraints::New(pf.mesh());
 
-} // End namespace CML
+    pcs.constrainDisplacement(pf, false);
+}
+
 
 // ************************************************************************* //

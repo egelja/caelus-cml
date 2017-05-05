@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,12 +33,17 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::intersectedSurface, 0);
 
-const CML::label CML::intersectedSurface::UNVISITED = 0;
-const CML::label CML::intersectedSurface::STARTTOEND = 1;
-const CML::label CML::intersectedSurface::ENDTOSTART = 2;
-const CML::label CML::intersectedSurface::BOTH = STARTTOEND | ENDTOSTART;
+namespace CML
+{
+    defineTypeNameAndDebug(intersectedSurface, 0);
+
+    const label intersectedSurface::UNVISITED = 0;
+    const label intersectedSurface::STARTTOEND = 1;
+    const label intersectedSurface::ENDTOSTART = 2;
+    const label intersectedSurface::BOTH = STARTTOEND | ENDTOSTART;
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

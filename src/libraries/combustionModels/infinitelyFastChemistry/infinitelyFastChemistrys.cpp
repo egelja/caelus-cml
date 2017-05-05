@@ -29,33 +29,26 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace combustionModels
-{
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    psiCombustionModel,
+    gasThermoPhysics
+);
 
-    makeCombustionTypesThermo
-    (
-        infinitelyFastChemistry,
-        psiCombustionModel,
-        gasThermoPhysics
-    );
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    psiCombustionModel,
+    constGasThermoPhysics
+);
 
-    makeCombustionTypesThermo
-    (
-        infinitelyFastChemistry,
-        psiCombustionModel,
-        constGasThermoPhysics
-    );
-
-    makeCombustionTypesThermo
-    (
-        infinitelyFastChemistry,
-        rhoCombustionModel,
-        gasThermoPhysics
-    );
-}
-}
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    rhoCombustionModel,
+    gasThermoPhysics
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

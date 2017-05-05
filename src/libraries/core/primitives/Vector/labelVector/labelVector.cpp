@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,19 +23,50 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-namespace CML
+template<>
+const char* const CML::labelVector::vsType::typeName = "labelVector";
+
+template<>
+const char* const CML::labelVector::vsType::componentNames[] =
 {
-    template<>
-    const char* const CML::labelVector::typeName = "labelVector";
+    "x", "y", "z"
+};
 
-    template<>
-    const char* CML::labelVector::componentNames[] = {"x", "y", "z"};
+template<>
+const CML::labelVector CML::labelVector::vsType::zero
+(
+    labelVector::uniform(0)
+);
 
-    template<>
-    const CML::labelVector CML::labelVector::zero(0, 0, 0);
+template<>
+const CML::labelVector CML::labelVector::vsType::one
+(
+    labelVector::uniform(1)
+);
 
-    template<>
-    const CML::labelVector CML::labelVector::one(1, 1, 1);
-}
+template<>
+const CML::labelVector CML::labelVector::vsType::max
+(
+    labelVector::uniform(labelMax)
+);
+
+template<>
+const CML::labelVector CML::labelVector::vsType::min
+(
+    labelVector::uniform(-labelMax)
+);
+
+template<>
+const CML::labelVector CML::labelVector::vsType::rootMax
+(
+    labelVector::uniform(sqrt(scalar(labelMax)))
+);
+
+template<>
+const CML::labelVector CML::labelVector::vsType::rootMin
+(
+    labelVector::uniform(-sqrt(scalar(labelMax)))
+);
+
 
 // ************************************************************************* //

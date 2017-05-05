@@ -1,63 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-turbInRASEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = turbInRASEnv['LIB_SRC']
+target = 'incompressibleRASModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-turbInRASEnv.Append(CCFLAGS = '')
+sources = Split("""
+RASModel/RASModel.cpp
+laminar/laminar.cpp
+realizableKE/realizableKE.cpp
+kEpsilon/kEpsilon.cpp
+kOmegaSST/kOmegaSST.cpp
+kOmegaSSTSAS/kOmegaSSTSAS.cpp
+SpalartAllmaras/SpalartAllmaras.cpp
+gammaReTheta/gammaReTheta.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels'] 
-turbInRASEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-turbInRASEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = [
+'transportModels',
+'turbulenceModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','incompressibleTurbulenceModel'] 
-turbInRASEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  RASModel/RASModel.cpp
-  laminar/laminar.cpp
-  realizableKE/realizableKE.cpp
-  kOmegaSST/kOmegaSST.cpp
-  kOmegaSSTSAS/kOmegaSSTSAS.cpp
-  SpalartAllmaras/SpalartAllmaras.cpp
-  gammaReTheta/gammaReTheta.cpp
-  """)
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libincompressibleRASModels = turbInRASEnv.SharedLibrary(target = 
-'incompressibleRASModels', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = turbInRASEnv['LIB_PLATFORM_INSTALL']
-turbInRASEnv.Alias('install', install_dir)
-turbInRASEnv.Install(install_dir, libincompressibleRASModels)
-
-if (turbInRASEnv['WHICH_OS'] == "darwin"):
-
-  turbInRASEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleRASModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

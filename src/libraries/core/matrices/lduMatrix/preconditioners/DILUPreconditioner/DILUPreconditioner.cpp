@@ -88,7 +88,7 @@ void CML::DILUPreconditioner::approximateInverse
     
     for (register label cell=0; cell<nCells; cell++)
     {
-        rDPtr[cell] = 1.0/rDPtr[cell];
+        rDPtr[cell] = scalar(1.0)/rDPtr[cell];
     }
 }
 

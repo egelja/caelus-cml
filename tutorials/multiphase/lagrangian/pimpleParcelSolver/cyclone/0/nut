@@ -1,0 +1,54 @@
+/*---------------------------------------------------------------------------*\
+ Caelus darrin                                 
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      nut;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    body
+    {
+        type            nutUSpaldingWallFunction;
+        value           uniform 0;
+    }
+    inlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    inlet-walls
+    {
+        type            nutUSpaldingWallFunction;
+        value           uniform 0;
+    }
+    overflow
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    underflow
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    vortexfinder
+    {
+        type            nutUSpaldingWallFunction;
+        value           uniform 0;
+    }
+}
+
+
+// ************************************************************************* //

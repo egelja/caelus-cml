@@ -38,7 +38,6 @@ CML::SSGSPreconditioner::SSGSPreconditioner
 ) :
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag()),
-    D_(sol.matrix().diag()),
     rDuUpper_(sol.matrix().upper().size()),
     rDlUpper_(sol.matrix().upper().size())
 {
@@ -47,8 +46,9 @@ CML::SSGSPreconditioner::SSGSPreconditioner
 
 void CML::SSGSPreconditioner::approximateInverse()
 {
+    scalarField const D(solver_.matrix().diag());
     scalar* RESTRICT rDPtr = rD_.begin();
-    scalar* RESTRICT DPtr = D_.begin();
+    const scalar* const RESTRICT DPtr = D.begin();
     scalar* RESTRICT rDuUpperPtr = rDuUpper_.begin();
     scalar* RESTRICT rDlUpperPtr = rDlUpper_.begin();
 
@@ -64,13 +64,13 @@ void CML::SSGSPreconditioner::approximateInverse()
 
     for (register label face=0; face<nFaces; face++)
     {
-        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/DPtr[lPtr[face]];
+        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/(DPtr[lPtr[face]]+SMALL);
     }
 
     // Generate reciprocal diagonal
     for (register label cell=0; cell<nCells; cell++)
     {
-        rDPtr[cell] = 1.0/rDPtr[cell];
+        rDPtr[cell] = scalar(1.0)/rDPtr[cell];
     }
 
     for (register label face=0; face<nFaces; face++)

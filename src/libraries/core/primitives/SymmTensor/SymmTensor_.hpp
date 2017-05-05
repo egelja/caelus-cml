@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,21 +60,12 @@ public:
 
     // Member constants
 
-        enum
-        {
-            rank = 2 // Rank of SymmTensor is 2
-        };
+        //- Rank of SymmTensor is 2
+        static const direction rank = 2;
 
 
     // Static data members
 
-        static const char* const typeName;
-        static const char* componentNames[];
-
-        static const SymmTensor zero;
-        static const SymmTensor one;
-        static const SymmTensor max;
-        static const SymmTensor min;
         static const SymmTensor I;
 
 
@@ -87,6 +77,9 @@ public:
 
         //- Construct null
         inline SymmTensor();
+
+        //- Construct initialized to zero
+        inline SymmTensor(const CML::zero);
 
         //- Construct given VectorSpace of the same rank
         template<class Cmpt2>
@@ -131,7 +124,10 @@ public:
 
     // Member Operators
 
-        //- Construct given SphericalTensor
+        //- Inherit VectorSpace assignment operators
+        using SymmTensor::vsType::operator=;
+
+        //- Assign to given SphericalTensor
         inline void operator=(const SphericalTensor<Cmpt>&);
 };
 

@@ -1,142 +1,112 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-simpFuncObjEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = simpFuncObjEnv['LIB_SRC']
+target = 'simpleFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-simpFuncObjEnv.Append(CXXFLAGS = '')
+sources = Split("""
+SolverInfo/SolverInfo.cpp
+DataStructures/TimeClone/TimeClone.cpp
+DataStructures/TimeClone/TimeCloneList.cpp
+simpleFunctionObject/simpleFunctionObject.cpp
+simpleDataFunctionObject/simpleDataFunctionObject.cpp
+timelineFunctionObject/timelineFunctionObject.cpp
+distributionFunctionObject/distributionFunctionObject.cpp
+distributionFunctionObject/field/fieldDistributionFunctionObject.cpp
+distributionFunctionObject/patchField/patchFieldDistributionFunctionObject.cpp
+patch/patchFunctionObject/patchFunctionObject.cpp
+patch/patchFieldFunctionObject/patchFieldFunctionObject.cpp
+patch/patchAverageFunctionObject/patchAverageFunctionObject.cpp
+patch/patchIntegrateFunctionObject/patchIntegrateFunctionObject.cpp
+patch/patchMassFlowFunctionObject/patchMassFlowFunctionObject.cpp
+patch/patchMassFlowAverageFunctionObject/patchMassFlowAverageFunctionObject.cpp
+patch/patchFieldFlowFunctionObject/patchFieldFlowFunctionObject.cpp
+volume/volumeAverageFunctionObject/volumeAverageFunctionObject.cpp
+volume/volumeFieldFunctionObject/volumeFieldFunctionObject.cpp
+volume/volumeIntegrateFunctionObject/volumeIntegrateFunctionObject.cpp
+volume/volumeMinMaxFunctionObject/volumeMinMaxFunctionObject.cpp
+misc/panicDump/panicDumpFunctionObject.cpp
+misc/listRegisteredObjects/listRegisteredObjectsFunctionObject.cpp
+misc/readGravitation/readGravitationFunctionObject.cpp
+misc/readAndUpdateFields/readAndUpdateFields.cpp
+misc/readAndUpdateFields/readAndUpdateFieldsFunctionObject.cpp
+writeFields/writeAdditionalFields/writeAdditionalFieldsFunctionObject.cpp
+writeFields/writeFieldsOften/writeFieldsOftenFunctionObject.cpp
+writeFields/writeFieldsGeneral/writeFieldsGeneralFunctionObject.cpp
+writeFields/conditionDrivenWriting/conditionDrivenWritingFunctionObject.cpp
+writeFields/conditionDrivenWriting/writeIfFieldOutside/writeIfFieldOutsideFunctionObject.cpp
+trackDictionary/trackDictionaryFunctionObject.cpp
+functionObjectProxy/functionObjectListProxy/functionObjectListProxy.cpp
+functionObjectProxy/conditionalFunctionObjectListProxy/conditionalFunctionObjectListProxy.cpp
+functionObjectProxy/executeIfExecutableFitsFunctionObject/executeIfExecutableFitsFunctionObject.cpp
+functionObjectProxy/executeIfObjectExistsFunctionObject/executeIfObjectExistsFunctionObject.cpp
+functionObjectProxy/executeIfEnvironmentVariableFunctionObject/executeIfEnvironmentVariableFunctionObject.cpp
+functionObjectProxy/executeIfFunctionObjectPresentFunctionObject/executeIfFunctionObjectPresentFunctionObject.cpp
+functionObjectProxy/executeIfParallelSerialFunctionObject/executeIfParallelSerialFunctionObject.cpp
+functionObjectProxy/executeIfStartTimeFunctionObject/executeIfStartTimeFunctionObject.cpp
+functionObjectProxy/dynamicFunctionObjectListProxy/dynamicFunctionObjectListProxy.cpp
+functionObjectProxy/dynamicFunctionObjectListProxy/providers/fromFileDictionaryProvider.cpp
+functionObjectProxy/dynamicFunctionObjectListProxy/providers/stdoutFromCommandProvider.cpp
+misc/writeAndEndFunctionObject/writeAndEndFunctionObject.cpp
+misc/writeAndEndFieldRangeFunctionObject/writeAndEndFieldRangeFunctionObject.cpp
+modelLoading/loadThermoModelFunctionObjects.cpp
+modelLoading/loadIncompressibleTurbulenceModelFunctionObject.cpp
+modelLoading/loadCompressibleTurbulenceModelFunctionObject.cpp
+modelLoading/loadSLGThermoModelFunctionObject.cpp
+timeManipulation/timeManipulationFunctionObject/timeManipulationFunctionObject.cpp
+timeManipulation/setDeltaTByTimelineFunctionObject/setDeltaTByTimelineFunctionObject.cpp
+initialization/initPotentialFlow/initPotentialFlowFunctionObject.cpp
+update/updateSimple/updateSimpleFunctionObject.cpp
+update/recalcPhi/recalcPhiFunctionObject.cpp
+update/correctThermo/correctThermoFunctionObject.cpp
+update/recalcThermoE/recalcThermoEFunctionObject.cpp
+update/recalcThermoH/recalcThermoHFunctionObject.cpp
+update/recalcThermoHs/recalcThermoHsFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/SLGThermo/lnInclude',
-src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
-src + '/regionModels/regionModel/lnInclude',
-src + '/regionModels/surfaceFilmModels/lnInclude',
-src + '/turbulenceModels',
-src + '/transportModels',
-src + '/lagrangian/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/properties/solidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude',
+'thermophysicalModels/properties/liquidProperties/lnInclude',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'turbulenceModels',
+'transportModels',
+'lagrangian/basic/lnInclude'
 ]
-	
-simpFuncObjEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-simpFuncObjEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'sampling',
+'basicThermophysicalModels',
+'SLGThermo',
+'incompressibleTransportModels',
+'compressibleTurbulenceModel',
+'incompressibleTurbulenceModel',
+'specie',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-if simpFuncObjEnv['WHICH_OS'] == "windows":
-	lib_link = ['libswakParsers','libsampling','libbasicThermophysicalModels',
-	'libSLGThermo','libincompressibleTransportModels',
-	'libcompressibleTurbulenceModel','libincompressibleTurbulenceModel',
-	'libspecie','liblagrangian']
-else:
-	lib_link = ['swakParsers','sampling','basicThermophysicalModels',
-	'SLGThermo','incompressibleTransportModels','compressibleTurbulenceModel',
-	'incompressibleTurbulenceModel','specie','lagrangian']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'simpleFunctionObjects'),
+                  os.path.join(env['SWAK_PATH'],'simpleFunctionObjects/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-simpFuncObjEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_simpFuncObj = Split("""
-  SolverInfo/SolverInfo.cpp
-  DataStructures/TimeClone/TimeClone.cpp
-  DataStructures/TimeClone/TimeCloneList.cpp
-  simpleFunctionObject/simpleFunctionObject.cpp
-  simpleDataFunctionObject/simpleDataFunctionObject.cpp
-  timelineFunctionObject/timelineFunctionObject.cpp
-  distributionFunctionObject/distributionFunctionObject.cpp
-  distributionFunctionObject/field/fieldDistributionFunctionObject.cpp
-  distributionFunctionObject/patchField/patchFieldDistributionFunctionObject.cpp
-  patch/patchFunctionObject/patchFunctionObject.cpp
-  patch/patchFieldFunctionObject/patchFieldFunctionObject.cpp
-  patch/patchAverageFunctionObject/patchAverageFunctionObject.cpp
-  patch/patchIntegrateFunctionObject/patchIntegrateFunctionObject.cpp
-  patch/patchMassFlowFunctionObject/patchMassFlowFunctionObject.cpp
-  patch/patchMassFlowAverageFunctionObject/patchMassFlowAverageFunctionObject.cpp
-  patch/patchFieldFlowFunctionObject/patchFieldFlowFunctionObject.cpp
-  volume/volumeAverageFunctionObject/volumeAverageFunctionObject.cpp
-  volume/volumeFieldFunctionObject/volumeFieldFunctionObject.cpp
-  volume/volumeIntegrateFunctionObject/volumeIntegrateFunctionObject.cpp
-  volume/volumeMinMaxFunctionObject/volumeMinMaxFunctionObject.cpp
-  misc/panicDump/panicDumpFunctionObject.cpp
-  misc/listRegisteredObjects/listRegisteredObjectsFunctionObject.cpp
-  misc/readGravitation/readGravitationFunctionObject.cpp
-  misc/readAndUpdateFields/readAndUpdateFields.cpp
-  misc/readAndUpdateFields/readAndUpdateFieldsFunctionObject.cpp
-  writeFields/writeAdditionalFields/writeAdditionalFieldsFunctionObject.cpp
-  writeFields/writeFieldsOften/writeFieldsOftenFunctionObject.cpp
-  writeFields/writeFieldsGeneral/writeFieldsGeneralFunctionObject.cpp
-  writeFields/conditionDrivenWriting/conditionDrivenWritingFunctionObject.cpp
-  writeFields/conditionDrivenWriting/writeIfFieldOutside/writeIfFieldOutsideFunctionObject.cpp
-  trackDictionary/trackDictionaryFunctionObject.cpp
-  functionObjectProxy/functionObjectListProxy/functionObjectListProxy.cpp
-  functionObjectProxy/conditionalFunctionObjectListProxy/conditionalFunctionObjectListProxy.cpp
-  functionObjectProxy/executeIfExecutableFitsFunctionObject/executeIfExecutableFitsFunctionObject.cpp
-  functionObjectProxy/executeIfObjectExistsFunctionObject/executeIfObjectExistsFunctionObject.cpp
-  functionObjectProxy/executeIfEnvironmentVariableFunctionObject/executeIfEnvironmentVariableFunctionObject.cpp
-  functionObjectProxy/executeIfFunctionObjectPresentFunctionObject/executeIfFunctionObjectPresentFunctionObject.cpp
-  functionObjectProxy/executeIfParallelSerialFunctionObject/executeIfParallelSerialFunctionObject.cpp
-  functionObjectProxy/executeIfStartTimeFunctionObject/executeIfStartTimeFunctionObject.cpp
-  functionObjectProxy/dynamicFunctionObjectListProxy/dynamicFunctionObjectListProxy.cpp
-  functionObjectProxy/dynamicFunctionObjectListProxy/providers/fromFileDictionaryProvider.cpp
-  functionObjectProxy/dynamicFunctionObjectListProxy/providers/stdoutFromCommandProvider.cpp
-  misc/writeAndEndFunctionObject/writeAndEndFunctionObject.cpp
-  misc/writeAndEndFieldRangeFunctionObject/writeAndEndFieldRangeFunctionObject.cpp
-  modelLoading/loadThermoModelFunctionObjects.cpp
-  modelLoading/loadIncompressibleTurbulenceModelFunctionObject.cpp
-  modelLoading/loadCompressibleTurbulenceModelFunctionObject.cpp
-  modelLoading/loadSLGThermoModelFunctionObject.cpp
-  timeManipulation/timeManipulationFunctionObject/timeManipulationFunctionObject.cpp
-  timeManipulation/setDeltaTByTimelineFunctionObject/setDeltaTByTimelineFunctionObject.cpp
-  initialization/initPotentialFlow/initPotentialFlowFunctionObject.cpp
-  update/updateSimple/updateSimpleFunctionObject.cpp
-  update/recalcPhi/recalcPhiFunctionObject.cpp
-  update/correctThermo/correctThermoFunctionObject.cpp
-  update/recalcThermoE/recalcThermoEFunctionObject.cpp
-  update/recalcThermoH/recalcThermoHFunctionObject.cpp
-  update/recalcThermoHs/recalcThermoHsFunctionObject.cpp
-  """)
-
-src_files = src_files_simpFuncObj
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsimpFuncObjs = simpFuncObjEnv.SharedLibrary(target = 'libsimpleFunctionObjects',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = simpFuncObjEnv['LIB_PLATFORM_INSTALL']
-simpFuncObjEnv.Alias('install', install_dir)
-simpFuncObjEnv.Install(install_dir, libsimpFuncObjs)
-
-if (simpFuncObjEnv['WHICH_OS'] == "darwin"):
-
-  simpFuncObjEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsimpleFunctionObjects.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

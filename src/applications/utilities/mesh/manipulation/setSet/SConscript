@@ -1,59 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-setSetEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = setSetEnv['LIB_SRC']
+target = 'setSet'
 
-setSetEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-setSetEnv.Append(CCFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
-
-setSetEnv.Prepend(CPPPATH = lib_inc)
-
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-setSetEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = []
-  
-setSetEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  writePointSet.cpp
+sources = Split("""
+writePointSet.cpp
   writeFuns.cpp
   writePatch.cpp
   setSet.cpp
-  """)
+""")
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-binsetSet = setSetEnv.Program(target = 
-'setSet', source = src_files)
+caelus_inc = [
+]
 
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = setSetEnv['BIN_PLATFORM_INSTALL']
-setSetEnv.Alias('install', install_dir)
-setSetEnv.Install(install_dir, binsetSet)
+caelus_libs = [
+'core'
+]
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,65 +21,73 @@ License
 
 #include "Vector_.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline SphericalTensor<Cmpt>::SphericalTensor()
+inline CML::SphericalTensor<Cmpt>::SphericalTensor()
+{}
+
+
+template<class Cmpt>
+inline CML::SphericalTensor<Cmpt>::SphericalTensor(const CML::zero)
+:
+    SphericalTensor::vsType(Zero)
 {}
 
 
 template<class Cmpt>
 template<class Cmpt2>
-inline SphericalTensor<Cmpt>::SphericalTensor
+inline CML::SphericalTensor<Cmpt>::SphericalTensor
 (
     const VectorSpace<SphericalTensor<Cmpt2>, Cmpt2, 1>& vs
 )
 :
-    VectorSpace<SphericalTensor<Cmpt>, Cmpt, 1>(vs)
+    SphericalTensor::vsType(vs)
 {}
 
 
 template<class Cmpt>
-inline SphericalTensor<Cmpt>::SphericalTensor(const Cmpt& stii)
+inline CML::SphericalTensor<Cmpt>::SphericalTensor(const Cmpt& stii)
 {
     this->v_[II] = stii;
 }
 
 
 template<class Cmpt>
-inline SphericalTensor<Cmpt>::SphericalTensor(Istream& is)
+inline CML::SphericalTensor<Cmpt>::SphericalTensor(Istream& is)
 :
-    VectorSpace<SphericalTensor<Cmpt>, Cmpt, 1>(is)
+    SphericalTensor::vsType(is)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Cmpt&  SphericalTensor<Cmpt>::ii() const
+inline const Cmpt& CML::SphericalTensor<Cmpt>::ii() const
 {
     return this->v_[II];
 }
 
 
 template<class Cmpt>
-inline Cmpt& SphericalTensor<Cmpt>::ii()
+inline Cmpt& CML::SphericalTensor<Cmpt>::ii()
 {
     return this->v_[II];
 }
 
 
 template<class Cmpt>
-inline const SphericalTensor<Cmpt>& SphericalTensor<Cmpt>::T() const
+inline const CML::SphericalTensor<Cmpt>&
+CML::SphericalTensor<Cmpt>::T() const
 {
     return *this;
 }
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 

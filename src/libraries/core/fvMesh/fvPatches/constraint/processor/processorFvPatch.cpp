@@ -97,6 +97,13 @@ tmp<vectorField> processorFvPatch::delta() const
 }
 
 
+tmp<vectorField> processorFvPatch::deltaFull() const
+{
+    return processorFvPatch::delta();
+}
+
+
+
 tmp<labelField> processorFvPatch::interfaceInternalField
 (
     const labelUList& internalData

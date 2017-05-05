@@ -26,7 +26,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::zone, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(zone, 0);
+}
 
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //

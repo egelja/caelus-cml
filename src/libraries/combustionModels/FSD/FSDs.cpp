@@ -27,19 +27,12 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace combustionModels
-{
-    makeCombustionTypesThermo
-    (
-        FSD,
-        psiCombustionModel,
-        gasThermoPhysics
-    );
-
-}
-}
+makeCombustionTypesThermo
+(
+    FSD,
+    psiCombustionModel,
+    gasThermoPhysics
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

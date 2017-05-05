@@ -1,60 +1,28 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-thermoSpecieEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-thermoSpecieEnv.Append(CCFLAGS = '')
+target = 'specie'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-thermoSpecieEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+atomicWeights/atomicWeights.cpp
+specie/specie.cpp
+equationOfState/perfectGas/perfectGas.cpp
+equationOfState/incompressible/incompressible.cpp
+equationOfState/isobaricPerfectGas/isobaricPerfectGas.cpp
+reaction/reactions/makeReactionThermoReactions.cpp
+reaction/reactions/makeLangmuirHinshelwoodReactions.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-thermoSpecieEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-thermoSpecieEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  atomicWeights/atomicWeights.cpp
-  specie/specie.cpp
-  equationOfState/perfectGas/perfectGas.cpp
-  equationOfState/incompressible/incompressible.cpp
-  equationOfState/isobaricPerfectGas/isobaricPerfectGas.cpp
-  reaction/reactions/makeReactionThermoReactions.cpp
-  reaction/reactions/makeLangmuirHinshelwoodReactions.cpp
-  """) 
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libspecie = thermoSpecieEnv.SharedLibrary(target = 'specie', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#================================================================================
-install_dir = thermoSpecieEnv['LIB_PLATFORM_INSTALL']
-thermoSpecieEnv.Alias('install', install_dir)
-thermoSpecieEnv.Install(install_dir, libspecie)
-
-if (thermoSpecieEnv['WHICH_OS'] == "darwin"):
-
-  thermoSpecieEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libspecie.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

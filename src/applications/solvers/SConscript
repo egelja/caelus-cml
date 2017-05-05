@@ -1,0 +1,29 @@
+# -*- mode: python -*-
+
+import os
+Import('env')
+
+subdirs = Split("""
+   basic/potentialSolver
+   heatTransfer/buoyantBoussinesqSimpleSolver
+   heatTransfer/buoyantSimpleSolver
+   incompressible/simpleSolver
+   incompressible/simpleSolver/SRFSimpleSolver
+   incompressible/pisoSolver
+   incompressible/pimpleSolver
+   incompressible/pimpleSolver/SRFPimpleSolver
+   incompressible/pimpleSolver/pimpleDyMSolver
+   compressible/PBNS/cpbnsLTS
+   compressible/PBNS/cpbnsPIMPLE
+   compressible/DBNS/explicitDBNSSolver
+   compressible/DBNS/explicitDBNSSRFSolver
+   combustion/reactingSolver
+   multiphase/vof/vofSolver
+   multiphase/vof/vofSolver/vofDyMSolver
+   multiphase/vof/vofLPTSolver
+   multiphase/lagrangian/pimpleParcelSolver
+""")
+
+for d in subdirs:
+    SConscript(os.path.join(d,'SConscript'),
+               exports=['env'])

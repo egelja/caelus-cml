@@ -1,58 +1,35 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-createBaffles_oldEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = createBaffles_oldEnv['LIB_SRC']
+target = 'createBaffles_old'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-createBaffles_oldEnv.Append(CCFLAGS = '')
+sources = Split("""
+createBaffles_old.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude']
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-createBaffles_oldEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'dynamicMesh',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-createBaffles_oldEnv.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+      '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if createBaffles_oldEnv['WHICH_OS'] == "windows":
-  createBaffles_oldEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['dynamicMesh', 'genericPatchFields']
-  
-createBaffles_oldEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  createBaffles_old.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincreateBaffles_old = createBaffles_oldEnv.Program(target = 
-'createBaffles_old', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = createBaffles_oldEnv['BIN_PLATFORM_INSTALL']
-createBaffles_oldEnv.Alias('install', install_dir)
-createBaffles_oldEnv.Install(install_dir, bincreateBaffles_old)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

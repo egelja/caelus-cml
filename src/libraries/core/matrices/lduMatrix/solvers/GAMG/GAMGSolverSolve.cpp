@@ -22,7 +22,7 @@ License
 
 #include "GAMGSolver.hpp"
 #include "coarsePCG.hpp"
-#include "coarsePBiCG.hpp"
+#include "coarsePBiCGStab.hpp"
 #include "SubField.hpp"
 
 CML::lduMatrix::solverPerformance CML::GAMGSolver::solve
@@ -441,7 +441,7 @@ void CML::GAMGSolver::solveCoarsestLevel
 
         if (matrixLevels_[coarsestLevel].asymmetric())
         {
-	    coarseSolverPerf = CoarsePBiCG
+	    coarseSolverPerf = CoarsePBiCGStab
             (
                 "coarsestLevelCorr",
                 matrixLevels_[coarsestLevel],

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,10 +25,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::KRR4, 0);
 
 namespace CML
 {
+    defineTypeNameAndDebug(KRR4, 0);
+
     addToRunTimeSelectionTable(ODESolver, KRR4, ODE);
 
 const scalar

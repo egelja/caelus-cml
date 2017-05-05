@@ -68,8 +68,17 @@ public:
 
     // Constructors
 
+        //- Construct null
+        inline globalIndex();
+
         //- Construct from local max size
         globalIndex(const label localSize, const int tag = Pstream::msgType());
+
+        //- Construct from components
+        globalIndex(const labelList& offsets);
+
+        //- Construct from components
+        inline globalIndex(const Xfer<labelList>& offsets);
 
         //- Construct from Istream
         globalIndex(Istream& is);

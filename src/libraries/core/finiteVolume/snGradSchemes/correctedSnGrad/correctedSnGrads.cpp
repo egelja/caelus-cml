@@ -24,13 +24,7 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeSnGradScheme(correctedSnGrad)
-}
-}
+makeSnGradScheme(correctedSnGrad)
 
 
 template<>

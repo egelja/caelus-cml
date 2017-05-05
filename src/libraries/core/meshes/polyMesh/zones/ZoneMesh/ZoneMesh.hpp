@@ -70,6 +70,9 @@ class ZoneMesh
 
     // Private Member Functions
 
+        //- Read if IOobject flags set. Return true if read.
+        bool read();
+
         //- Disallow construct as copy
         ZoneMesh(const ZoneMesh&);
 
@@ -99,6 +102,15 @@ public:
             const MeshType&,
             const label size
         );
+
+         //- Construct given a PtrList
+        ZoneMesh
+        (
+            const IOobject&,
+            const MeshType&,
+            const PtrList<ZoneType>&
+        );
+
 
     //- Destructor
     ~ZoneMesh();
@@ -231,20 +243,8 @@ void CML::ZoneMesh<ZoneType, MeshType>::calcZoneMap() const
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// Read constructor given IOobject and a MeshType reference
 template<class ZoneType, class MeshType>
-CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
-(
-    const IOobject& io,
-    const MeshType& mesh
-)
-:
-    PtrList<ZoneType>(),
-    regIOobject(io),
-    mesh_(mesh),
-    zoneMapPtr_(NULL)
+bool CML::ZoneMesh<ZoneType, MeshType>::read()
 {
     if
     (
@@ -298,12 +298,33 @@ CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
         );
 
         close();
+
+        return true;
     }
     else
     {
-        // No files found.  Force a write of zero-sized zones
-        // write();
+        // Nothing read
+        return false;
     }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Read constructor given IOobject and a MeshType reference
+template<class ZoneType, class MeshType>
+CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
+(
+    const IOobject& io,
+    const MeshType& mesh
+)
+:
+    PtrList<ZoneType>(),
+    regIOobject(io),
+    mesh_(mesh),
+    zoneMapPtr_(NULL)
+{
+    read();
 }
 
 
@@ -320,7 +341,36 @@ CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
     regIOobject(io),
     mesh_(mesh),
     zoneMapPtr_(NULL)
-{}
+{
+    // Optionally read contents, otherwise keep size
+    read();
+}
+
+
+template<class ZoneType, class MeshType>
+CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
+(
+    const IOobject& io,
+    const MeshType& mesh,
+    const PtrList<ZoneType>& pzm
+)
+:
+    PtrList<ZoneType>(),
+    regIOobject(io),
+    mesh_(mesh),
+    zoneMapPtr_(NULL)
+{
+    if (!read())
+    {
+        // Nothing read. Use supplied zones
+        PtrList<ZoneType>& zones = *this;
+        zones.setSize(pzm.size());
+        forAll (zones, zoneI)
+        {
+            zones.set(zoneI, pzm[zoneI].clone(*this).ptr());
+        }
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -627,7 +677,7 @@ bool CML::ZoneMesh<ZoneType, MeshType>::checkParallelSync
                         << " of type " << zones[zoneI].type()
                         << " is not correctly synchronised"
                         << " across coupled boundaries."
-                        << " (coupled faces are either not both "
+                        << " (coupled faces are either not both"
                         << " present in set or have same flipmap)" << endl;
                 }
             }

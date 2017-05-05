@@ -24,11 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::gnuplotGraph, 0);
-const CML::word CML::gnuplotGraph::ext_("gplt");
 
 namespace CML
 {
+    defineTypeNameAndDebug(gnuplotGraph, 0);
+    const word gnuplotGraph::ext_("gplt");
+
     typedef graph::writer graphWriter;
     addToRunTimeSelectionTable(graphWriter, gnuplotGraph, word);
 }

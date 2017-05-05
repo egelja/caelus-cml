@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,31 +21,59 @@ License
 
 #include "labelSphericalTensor.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const labelSphericalTensor::typeName = "labelSphericalTensor";
+const char* const CML::labelSphericalTensor::vsType::typeName
+(
+    "labelSphericalTensor"
+);
 
 template<>
-const char* labelSphericalTensor::componentNames[] = {"ii"};
+const char* const CML::labelSphericalTensor::vsType::componentNames[] =
+{
+    "ii"
+};
 
 template<>
-const labelSphericalTensor labelSphericalTensor::zero(0);
+const CML::labelSphericalTensor
+CML::labelSphericalTensor::vsType::vsType::zero
+(
+    labelSphericalTensor::uniform(0)
+);
 
 template<>
-const labelSphericalTensor labelSphericalTensor::one(1);
+const CML::labelSphericalTensor CML::labelSphericalTensor::vsType::one
+(
+    labelSphericalTensor::uniform(1)
+);
 
 template<>
-const labelSphericalTensor labelSphericalTensor::I(1);
+const CML::labelSphericalTensor CML::labelSphericalTensor::vsType::max
+(
+    labelSphericalTensor::uniform(labelMax)
+);
 
+template<>
+const CML::labelSphericalTensor CML::labelSphericalTensor::vsType::min
+(
+    labelSphericalTensor::uniform(-labelMax)
+);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<>
+const CML::labelSphericalTensor CML::labelSphericalTensor::vsType::rootMax
+(
+    labelSphericalTensor::uniform(sqrt(scalar(labelMax)))
+);
 
-} // End namespace CML
+template<>
+const CML::labelSphericalTensor CML::labelSphericalTensor::vsType::rootMin
+(
+    labelSphericalTensor::uniform(-sqrt(scalar(labelMax)))
+);
+
+template<>
+const CML::labelSphericalTensor CML::labelSphericalTensor::I(1);
+
 
 // ************************************************************************* //

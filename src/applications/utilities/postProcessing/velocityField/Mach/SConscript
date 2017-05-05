@@ -1,62 +1,41 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-MachEnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = MachEnv['LIB_SRC']
+target = 'Mach'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-MachEnv.Append(CCFLAGS = '')
+sources = Split("""
+Mach.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/postProcessing/postCalc',
-src + '/thermophysicalModels/basic/lnInclude',
-]        
-MachEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'postProcessing/postCalc',
+'thermophysicalModels/basic/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-MachEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'basicThermophysicalModels',
+'specie'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if MachEnv['WHICH_OS'] == "windows":
-  MachEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+post_calc = [os.path.join(env['LIB_PLATFORM_INSTALL'],'postCalc.o')]
+sources += post_calc
 
-lib_link = ['core','genericPatchFields','basicThermophysicalModels','specie']
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-MachEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_postCalc = [MachEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
-src_files_exec = Split("""  
-  Mach.cpp
-  """)
-
-src_files = src_files_postCalc + src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binMach = MachEnv.Program(target = 'Mach',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = MachEnv['BIN_PLATFORM_INSTALL']
-MachEnv.Alias('install', install_dir)
-MachEnv.Install(install_dir, binMach)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

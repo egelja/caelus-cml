@@ -24,12 +24,7 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvConvectionScheme(gaussConvectionScheme)
-}
-}
+
+makeFvConvectionScheme(gaussConvectionScheme)
 
 // ************************************************************************* //

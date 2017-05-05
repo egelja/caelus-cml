@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,38 +77,34 @@ inline bool CML::keyType::isPattern() const
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-inline const CML::keyType& CML::keyType::operator=(const keyType& s)
+inline void CML::keyType::operator=(const keyType& s)
 {
     // Bypass checking
     string::operator=(s);
     isPattern_ = s.isPattern_;
-    return *this;
 }
 
 
-inline const CML::keyType& CML::keyType::operator=(const word& s)
+inline void CML::keyType::operator=(const word& s)
 {
     word::operator=(s);
     isPattern_ = false;
-    return *this;
 }
 
 
-inline const CML::keyType& CML::keyType::operator=(const string& s)
+inline void CML::keyType::operator=(const string& s)
 {
     // Bypass checking
     string::operator=(s);
     isPattern_ = true;
-    return *this;
 }
 
 
-inline const CML::keyType& CML::keyType::operator=(const char* s)
+inline void CML::keyType::operator=(const char* s)
 {
     // Bypass checking
     string::operator=(s);
     isPattern_ = false;
-    return *this;
 }
 
 

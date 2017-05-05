@@ -1,70 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-fluent3DMeshConvEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = fluent3DMeshConvEnv['LIB_SRC']
+# Build Fluent mesh converter
+ostype = utils.ostype()
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-fluent3DMeshConvEnv.Append(CCFLAGS = '')
-
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-if fluent3DMeshConvEnv['WHICH_OS'] == "windows":
-  lib_inc = [ fluent3DMeshConvEnv['FLEXXX_PATH'] + '/include',
-  src + '/dynamicMesh/lnInclude'
-]
+if ostype == "windows":
+    src_from_flex = ['windows/fluent3DMeshToCAELUS.cpp']
 else:
-  lib_inc = [ src + '/dynamicMesh/lnInclude' ]
+    src = 'fluent3DMeshToCAELUS.ll'
+    tgt = 'posix/fluent3DMeshToCAELUS.cpp'
+    flex_env = env.Clone()
+    flex_env.CXXFile(tgt, src, LEXFLAGS='-+')
+    src_from_flex = [tgt]
 
-fluent3DMeshConvEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-fluent3DMeshConvEnv.Prepend(LIBPATH = lib_link_path)
+target = 'fluent3DMeshToCAELUS'
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = ['dynamicMesh']
-  
-fluent3DMeshConvEnv.Append(LIBS = lib_link)
+sources = Split("""
+""") + src_from_flex
 
-#===============================================================================
-# flex ++ - only for Linux and Mac
-#===============================================================================
-if fluent3DMeshConvEnv['WHICH_OS'] == "windows" :
-  src_from_flex = ['windows/fluent3DMeshToCAELUS.cpp']
-else :
-  src_to_flex = 'fluent3DMeshToCAELUS.ll'
-  flex_target = 'posix/fluent3DMeshToCAELUS.cpp'
-  fluent3DMeshConvEnv.CXXFile(target= flex_target, source = src_to_flex,
- LEXFLAGS = '-+')
-  src_from_flex = [flex_target]
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = src_from_flex
+caelus_libs = [
+'core',
+'dynamicMesh'
+]
 
-#===============================================================================
-# Build this executable
-#===============================================================================
-binfluent3DMeshConv = fluent3DMeshConvEnv.Program(target = 'fluent3DMeshToCAELUS',
- source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = fluent3DMeshConvEnv['BIN_PLATFORM_INSTALL']
-fluent3DMeshConvEnv.Alias('install', install_dir)
-fluent3DMeshConvEnv.Install(install_dir, binfluent3DMeshConv)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

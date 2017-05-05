@@ -1,60 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-thermoSolMixPropEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = thermoSolMixPropEnv['LIB_SRC']
+target = 'solidMixtureProperties'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-thermoSolMixPropEnv.Append(CCFLAGS = '')
+sources = Split("""
+solidMixtureProperties/solidMixtureProperties.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude'
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude'
 ]
-thermoSolMixPropEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-thermoSolMixPropEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'solidProperties'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','solidProperties']
-thermoSolMixPropEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  solidMixtureProperties/solidMixtureProperties.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsolidMixtureProperties = thermoSolMixPropEnv.SharedLibrary(target = 
-'solidMixtureProperties', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = thermoSolMixPropEnv['LIB_PLATFORM_INSTALL']
-thermoSolMixPropEnv.Alias('install', install_dir)
-thermoSolMixPropEnv.Install(install_dir, libsolidMixtureProperties)
-
-if (thermoSolMixPropEnv['WHICH_OS'] == "darwin"):
-
-  thermoSolMixPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidMixtureProperties.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

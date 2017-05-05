@@ -70,6 +70,8 @@ class pointPatchMapper
 
     // Demand-driven private data
 
+        mutable bool hasUnmapped_;
+
         //- Direct addressing (only one for of addressing is used)
         mutable labelList* directAddrPtr_;
 
@@ -124,6 +126,11 @@ public:
         virtual label size() const
         {
             return patch_.size();
+        }
+
+        virtual bool hasUnmapped() const
+        {
+            return hasUnmapped_;
         }
 
         //- Return size of field before mapping

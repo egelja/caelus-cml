@@ -1,59 +1,25 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-distribEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = distribEnv['LIB_SRC']
+target = 'distributed'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-distribEnv.Append(CCFLAGS = '')
+sources = Split("""
+distributedTriSurfaceMesh/distributedTriSurfaceMesh.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/parallel/decompose/decompositionMethods/lnInclude'
+caelus_inc = [
+'parallel/decompose/decompositionMethods/lnInclude'
 ]
-distribEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-distribEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'decompositionMethods'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['decompositionMethods', 'core']
-distribEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-    distributedTriSurfaceMesh/distributedTriSurfaceMesh.cpp
-              """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libdistributed = distribEnv.SharedLibrary(target = 'distributed', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = distribEnv['LIB_PLATFORM_INSTALL']
-distribEnv.Alias('install', install_dir)
-distribEnv.Install(install_dir, libdistributed)
-
-if (distribEnv['WHICH_OS'] == "darwin"):
-
-  distribEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdistributed.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

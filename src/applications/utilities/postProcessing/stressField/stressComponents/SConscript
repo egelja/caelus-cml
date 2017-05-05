@@ -1,60 +1,38 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-stressComponentsEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = stressComponentsEnv['LIB_SRC']
+target = 'stressComponents'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-stressComponentsEnv.Append(CCFLAGS = '')
+sources = Split("""
+stressComponents.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/turbulenceModels/RAS', src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude'
+caelus_inc = [
+'turbulenceModels/RAS', 
+'transportModels',
+'transportModels/incompressible/lnInclude'
 ]
-stressComponentsEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-stressComponentsEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'incompressibleRASModels',
+'incompressibleTransportModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if stressComponentsEnv['WHICH_OS'] == "windows":
-  stressComponentsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','incompressibleRASModels',
-'incompressibleTransportModels']
-    
-stressComponentsEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  stressComponents.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binstressComponents = stressComponentsEnv.Program(target = 'stressComponents', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = stressComponentsEnv['BIN_PLATFORM_INSTALL']
-stressComponentsEnv.Alias('install', install_dir)
-stressComponentsEnv.Install(install_dir, binstressComponents)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

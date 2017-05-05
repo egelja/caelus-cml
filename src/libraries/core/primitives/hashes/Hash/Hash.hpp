@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,6 +33,8 @@ Description
 #include "uLabel.hpp"
 #include "Hasher.hpp"
 #include "pTraits.hpp"
+#include "fileName.hpp"
+#include "wordRe.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -93,6 +95,107 @@ public:
         return p;
     }
 };
+
+
+//- Hash specialization for hashing strings
+template<>
+class Hash<CML::string>
+{
+public:
+
+    Hash()
+    {}
+
+    unsigned operator()(const string& p, unsigned seed) const
+    {
+        return string::hash()(p, seed);
+    }
+    unsigned operator()(const string& p) const
+    {
+        return string::hash()(p);
+    }
+};
+
+
+//- Hash specialization for hashing words
+template<>
+class Hash<CML::word>
+{
+public:
+
+    Hash()
+    {}
+
+    unsigned operator()(const word& p, unsigned seed) const
+    {
+        return word::hash()(p, seed);
+    }
+    unsigned operator()(const word& p) const
+    {
+        return word::hash()(p);
+    }
+};
+
+
+//- Hash specialization for hashing fileNames
+template<>
+class Hash<CML::fileName>
+{
+public:
+
+    Hash()
+    {}
+
+    unsigned operator()(const fileName& p, unsigned seed) const
+    {
+        return fileName::hash()(p, seed);
+    }
+    unsigned operator()(const fileName& p) const
+    {
+        return fileName::hash()(p);
+    }
+};
+
+
+//- Hash specialization for hashing wordRes
+template<>
+class Hash<CML::wordRe>
+{
+public:
+
+    Hash()
+    {}
+
+    unsigned operator()(const wordRe& p, unsigned seed) const
+    {
+        return wordRe::hash()(p, seed);
+    }
+    unsigned operator()(const wordRe& p) const
+    {
+        return wordRe::hash()(p);
+    }
+};
+
+
+//- Hash specialization for hashing keyTypes
+template<>
+class Hash<CML::keyType>
+{
+public:
+
+    Hash()
+    {}
+
+    unsigned operator()(const keyType& p, unsigned seed) const
+    {
+        return keyType::hash()(p, seed);
+    }
+    unsigned operator()(const keyType& p) const
+    {
+        return keyType::hash()(p);
+    }
+};
+
 
 
 //- Hash specialization for hashing pointer addresses.

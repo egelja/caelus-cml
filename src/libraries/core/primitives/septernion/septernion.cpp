@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,8 +26,16 @@ License
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 const char* const CML::septernion::typeName = "septernion";
-const CML::septernion CML::septernion::zero(vector::zero, quaternion::zero);
-const CML::septernion CML::septernion::I(vector::zero, quaternion::I);
+const CML::septernion CML::septernion::zero
+(
+    vector(0, 0, 0),
+    quaternion(0, vector(0, 0, 0))
+);
+const CML::septernion CML::septernion::I
+(
+    vector(0, 0, 0),
+    quaternion(1, vector(0, 0, 0))
+);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -44,6 +52,46 @@ CML::word CML::name(const septernion& s)
     OStringStream buf;
     buf << '(' << s.t() << ',' << s.r() << ')';
     return buf.str();
+}
+
+
+CML::septernion CML::slerp
+(
+    const septernion& sa,
+    const septernion& sb,
+    const scalar t
+)
+{
+    return septernion((1 - t)*sa.t() + t*sb.t(), slerp(sa.r(), sb.r(), t));
+}
+
+
+CML::septernion CML::average
+(
+    const UList<septernion>& ss,
+    const UList<scalar> w
+)
+{
+    septernion sa(w[0]*ss[0]);
+
+    for (label i=1; i<ss.size(); i++)
+    {
+        sa.t() += w[i]*ss[i].t();
+
+        // Invert quaternion if it has the opposite sign to the average
+        if ((sa.r() & ss[i].r()) > 0)
+        {
+            sa.r() += w[i]*ss[i].r();
+        }
+        else
+        {
+            sa.r() -= w[i]*ss[i].r();
+        }
+    }
+
+    sa.r().normalize();
+
+    return sa;
 }
 
 

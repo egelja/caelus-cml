@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,9 +29,13 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::meshSearch, 0);
 
-CML::scalar CML::meshSearch::tol_ = 1e-3;
+namespace CML
+{
+    defineTypeNameAndDebug(meshSearch, 0);
+
+    scalar meshSearch::tol_ = 1e-3;
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //

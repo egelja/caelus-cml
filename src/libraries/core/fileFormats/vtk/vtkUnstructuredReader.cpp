@@ -30,7 +30,7 @@ License
 
 namespace CML
 {
-    defineTypeNameAndDebug(vtkUnstructuredReader, 1);   //0);
+    defineTypeNameAndDebug(vtkUnstructuredReader, 0);
 
     template<>
     const char*

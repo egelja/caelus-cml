@@ -1,63 +1,28 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-thermoSolPropEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = thermoSolPropEnv['LIB_SRC']
+target = 'solidProperties'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-thermoSolPropEnv.Append(CCFLAGS = '')
+sources = Split("""
+solidProperties/solidProperties.cpp
+solidProperties/solidPropertiesNew.cpp
+ash/ash.cpp
+C/C.cpp
+CaCO3/CaCO3.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/specie/lnInclude'
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude'
 ]
-thermoSolPropEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-thermoSolPropEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-thermoSolPropEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  solidProperties/solidProperties.cpp
-  solidProperties/solidPropertiesNew.cpp
-  ash/ash.cpp
-  C/C.cpp
-  CaCO3/CaCO3.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libsolidProperties = thermoSolPropEnv.SharedLibrary(target = 
-'solidProperties', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = thermoSolPropEnv['LIB_PLATFORM_INSTALL']
-thermoSolPropEnv.Alias('install', install_dir)
-thermoSolPropEnv.Install(install_dir, libsolidProperties)
-
-if (thermoSolPropEnv['WHICH_OS'] == "darwin"):
-
-  thermoSolPropEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libsolidProperties.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

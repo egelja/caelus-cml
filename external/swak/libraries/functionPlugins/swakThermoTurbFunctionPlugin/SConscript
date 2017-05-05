@@ -1,73 +1,48 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakThermTurbEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakThermTurbEnv['LIB_SRC']
+target = 'swakThermoTurbFunctionPlugin'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakThermTurbEnv.Append(CXXFLAGS = '')
+sources = Split("""
+swakThermophysicalPluginFunction.cpp
+swakCompressibleTurbulencePluginFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/turbulenceModels/',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/compressible/LES/lnInclude',
-src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'turbulenceModels/',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/LES/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'thermophysicalModels/basic/lnInclude'
 ]
-	
-swakThermTurbEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakThermTurbEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'compressibleTurbulenceModel',
+'compressibleLESModels',
+'compressibleRASModels',
+'basicThermophysicalModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','compressibleTurbulenceModel',
-'compressibleLESModels','compressibleRASModels','basicThermophysicalModels']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakThermoTurbFunctionPlugin'),
+                  os.path.join(env['SWAK_PATH'],'functionPlugins',
+                     'swakThermoTurbFunctionPlugin/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakThermTurbEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakThermTurb = Split("""
-  swakThermophysicalPluginFunction.cpp
-  swakCompressibleTurbulencePluginFunction.cpp
-  """)
-
-src_files = src_files_swakThermTurb
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakThermTurbs = swakThermTurbEnv.SharedLibrary(target = 'libswakThermoTurbFunctionPlugin',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakThermTurbEnv['LIB_PLATFORM_INSTALL']
-swakThermTurbEnv.Alias('install', install_dir)
-swakThermTurbEnv.Install(install_dir, libswakThermTurbs)
-
-if (swakThermTurbEnv['WHICH_OS'] == "darwin"):
-
-  swakThermTurbEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakThermoTurbFunctionPlugin.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

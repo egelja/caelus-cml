@@ -38,6 +38,7 @@ SourceFiles
 #ifndef twoDPointCorrector_H
 #define twoDPointCorrector_H
 
+#include "MeshObject.hpp"
 #include "pointField.hpp"
 #include "labelList.hpp"
 #include "vector.hpp"
@@ -51,15 +52,14 @@ namespace CML
 class polyMesh;
 
 /*---------------------------------------------------------------------------*\
-                        Class twoDPointCorrector Declaration
+                     Class twoDPointCorrector Declaration
 \*---------------------------------------------------------------------------*/
 
 class twoDPointCorrector
+:
+    public MeshObject<polyMesh, twoDPointCorrector>
 {
     // Private data
-
-        //- Reference to moving mesh
-        const polyMesh& mesh_;
 
         //- Is 2D correction required, i.e. is the mesh
         bool required_;
@@ -69,6 +69,15 @@ class twoDPointCorrector
 
         //- Indices of edges normal to plane
         mutable labelList* normalEdgeIndicesPtr_;
+
+        //- Flag to indicate a wedge geometry
+        mutable bool isWedge_;
+
+        //- Wedge axis (if wedge geometry)
+        mutable vector wedgeAxis_;
+
+        //- Wedge angle (if wedge geometry)
+        mutable scalar wedgeAngle_;
 
 
     // Private Member Functions
@@ -86,6 +95,9 @@ class twoDPointCorrector
         //- Clear addressing
         void clearAddressing() const;
 
+        //- Snap a point to the wedge patch(es)
+        void snapToWedge(const vector& n, const point& A, point& p) const;
+
 
     // Static data members
 
@@ -94,6 +106,10 @@ class twoDPointCorrector
 
 
 public:
+
+    // Declare name of the class and its debug switch
+    ClassName("twoDPointCorrector");
+
 
     // Constructors
 
@@ -125,8 +141,14 @@ public:
         //- Correct motion points
         void correctPoints(pointField& p) const;
 
+        //- Correct motion displacements
+        void correctDisplacement(const pointField& p, vectorField& disp) const;
+
         //- Update topology
         void updateMesh();
+
+        //- Correct weighting factors for moving mesh.
+        bool movePoints();
 };
 
 

@@ -68,7 +68,7 @@ CML::SSGSSmoother::SSGSSmoother
 
     for (register label face=0; face<nFaces; face++)
     {
-        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/DPtr[lPtr[face]];
+        rDPtr[uPtr[face]] -= sqr(upperPtr[face])/(DPtr[lPtr[face]]+SMALL);
     }
 
     // Generate reciprocal diagonal

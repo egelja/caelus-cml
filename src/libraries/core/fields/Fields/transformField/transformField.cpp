@@ -62,7 +62,7 @@ CML::tmp<CML::vectorField> CML::transform
 }
 
 
-void CML::transform
+void CML::transformPoints
 (
     vectorField& rtf,
     const septernion& tr,
@@ -71,50 +71,44 @@ void CML::transform
 {
     vector T = tr.t();
 
-    // Check if any rotation
-    if (mag(tr.r().R() - I) > SMALL)
+    // Check if any translation
+    if (mag(T) > VSMALL)
     {
-        transform(rtf, tr.r(), tf);
-
-        if (mag(T) > VSMALL)
-        {
-            rtf += T;
-        }
+        TFOR_ALL_F_OP_F_OP_S(vector, rtf, =, vector, tf, -, vector, T);
     }
     else
     {
-        if (mag(T) > VSMALL)
-        {
-            TFOR_ALL_F_OP_S_OP_F(vector, rtf, =, vector, T, +, vector, tf);
-        }
-        else
-        {
-            rtf = tf;
-        }
+        rtf = tf;
+    }
+
+    // Check if any rotation
+    if (mag(tr.r().R() - I) > SMALL)
+    {
+        transform(rtf, tr.r(), rtf);
     }
 }
 
 
-CML::tmp<CML::vectorField> CML::transform
+CML::tmp<CML::vectorField> CML::transformPoints
 (
     const septernion& tr,
     const vectorField& tf
 )
 {
     tmp<vectorField > tranf(new vectorField(tf.size()));
-    transform(tranf(), tr, tf);
+    transformPoints(tranf(), tr, tf);
     return tranf;
 }
 
 
-CML::tmp<CML::vectorField> CML::transform
+CML::tmp<CML::vectorField> CML::transformPoints
 (
     const septernion& tr,
     const tmp<vectorField>& ttf
 )
 {
     tmp<vectorField > tranf = reuseTmp<vector, vector>::New(ttf);
-    transform(tranf(), tr, ttf());
+    transformPoints(tranf(), tr, ttf());
     reuseTmp<vector, vector>::clear(ttf);
     return tranf;
 }

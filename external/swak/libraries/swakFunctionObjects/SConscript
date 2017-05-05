@@ -1,95 +1,69 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakFuncObjEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakFuncObjEnv['LIB_SRC']
+target = 'swakFunctionObjects'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakFuncObjEnv.Append(CXXFLAGS = '-DMPICH_SKIP_MPICXX')
+sources = Split("""
+manipulateField.cpp
+manipulateFieldFunctionObject.cpp
+manipulatePatchField.cpp
+manipulatePatchFieldFunctionObject.cpp
+expressionField.cpp
+expressionFieldFunctionObject.cpp
+clearExpressionField.cpp
+clearExpressionFieldFunctionObject.cpp
+createSampledSurface.cpp
+createSampledSurfaceFunctionObject.cpp
+createSampledSet.cpp
+createSampledSetFunctionObject.cpp
+addGlobalVariable.cpp
+addGlobalVariableFunctionObject.cpp
+removeGlobalVariable.cpp
+removeGlobalVariableFunctionObject.cpp
+calculateGlobalVariables.cpp
+calculateGlobalVariablesFunctionObject.cpp
+addForeignMeshes.cpp
+addForeignMeshesFunctionObject.cpp
+foreignMeshesFollowTime.cpp
+foreignMeshesFollowTimeFunctionObject.cpp
+solvePDECommon.cpp
+solvePDECommonFiniteVolume.cpp
+solveLaplacianPDE.cpp
+solveLaplacianPDEFunctionObject.cpp
+solveTransportPDE.cpp
+solveTransportPDEFunctionObject.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/fvOptions/lnInclude',
-src + '/postProcessing/functionObjects/utilities/lnInclude',
-src + '/lagrangian/basic/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'fvOptions/lnInclude',
+'postProcessing/functionObjects/utilities/lnInclude',
+'lagrangian/basic/lnInclude'
 ]
-	
-swakFuncObjEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakFuncObjEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'fvOptions',
+'sampling',
+'utilityFunctionObjects',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','fvOptions','sampling','utilityFunctionObjects','lagrangian']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakFunctionObjects'),
+                  os.path.join(env['SWAK_PATH'],'swakFunctionObjects/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakFuncObjEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakFuncObj = Split("""
-  manipulateField.cpp
-  manipulateFieldFunctionObject.cpp
-  manipulatePatchField.cpp
-  manipulatePatchFieldFunctionObject.cpp
-  expressionField.cpp
-  expressionFieldFunctionObject.cpp
-  clearExpressionField.cpp
-  clearExpressionFieldFunctionObject.cpp
-  createSampledSurface.cpp
-  createSampledSurfaceFunctionObject.cpp
-  createSampledSet.cpp
-  createSampledSetFunctionObject.cpp
-  addGlobalVariable.cpp
-  addGlobalVariableFunctionObject.cpp
-  removeGlobalVariable.cpp
-  removeGlobalVariableFunctionObject.cpp
-  calculateGlobalVariables.cpp
-  calculateGlobalVariablesFunctionObject.cpp
-  addForeignMeshes.cpp
-  addForeignMeshesFunctionObject.cpp
-  foreignMeshesFollowTime.cpp
-  foreignMeshesFollowTimeFunctionObject.cpp
-  solvePDECommon.cpp
-  solvePDECommonFiniteVolume.cpp
-  solveLaplacianPDE.cpp
-  solveLaplacianPDEFunctionObject.cpp
-  solveTransportPDE.cpp
-  solveTransportPDEFunctionObject.cpp
-  """)
-
-src_files = src_files_swakFuncObj
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakFuncObjs = swakFuncObjEnv.SharedLibrary(target = 'libswakFunctionObjects',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakFuncObjEnv['LIB_PLATFORM_INSTALL']
-swakFuncObjEnv.Alias('install', install_dir)
-swakFuncObjEnv.Install(install_dir, libswakFuncObjs)
-
-if (swakFuncObjEnv['WHICH_OS'] == "darwin"):
-
-  swakFuncObjEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakFunctionObjects.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

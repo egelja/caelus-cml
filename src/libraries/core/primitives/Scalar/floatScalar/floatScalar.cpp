@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,6 +29,8 @@ License
 #define Scalar floatScalar
 #define ScalarVGREAT floatScalarVGREAT
 #define ScalarVSMALL floatScalarVSMALL
+#define ScalarROOTVGREAT floatScalarROOTVGREAT
+#define ScalarROOTVSMALL floatScalarROOTVSMALL
 #define readScalar readFloatScalar
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,8 +44,10 @@ const Scalar pTraits<Scalar>::zero = 0.0;
 const Scalar pTraits<Scalar>::one = 1.0;
 const Scalar pTraits<Scalar>::min = -ScalarVGREAT;
 const Scalar pTraits<Scalar>::max = ScalarVGREAT;
+const Scalar pTraits<Scalar>::rootMin = -ScalarROOTVGREAT;
+const Scalar pTraits<Scalar>::rootMax = ScalarROOTVGREAT;
 
-const char* pTraits<Scalar>::componentNames[] = { "x" };
+const char* const pTraits<Scalar>::componentNames[] = { "" };
 
 pTraits<Scalar>::pTraits(const Scalar& p)
 :
@@ -124,6 +128,8 @@ Ostream& operator<<(Ostream& os, const Scalar s)
 #undef Scalar
 #undef ScalarVSMALL
 #undef ScalarVSMALL
+#undef ScalarROOTVGREAT
+#undef ScalarROOTVSMALL
 #undef readScalar
 
 // ************************************************************************* //

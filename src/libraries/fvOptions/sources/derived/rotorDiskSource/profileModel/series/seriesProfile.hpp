@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -42,8 +42,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef seriesProfile_H
-#define seriesProfile_H
+#ifndef seriesProfile_HPP
+#define seriesProfile_HPP
 
 #include "profileModel.hpp"
 #include "List.hpp"

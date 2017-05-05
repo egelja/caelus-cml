@@ -1,59 +1,36 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-postChannelEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = postChannelEnv['LIB_SRC']
+target = 'postChannel'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-postChannelEnv.Append(CCFLAGS = '')
+sources = Split("""
+postChannel.cpp
+channelIndex.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/sampling/lnInclude']
-postChannelEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'sampling/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-postChannelEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'sampling'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if postChannelEnv['WHICH_OS'] == "windows":
-  postChannelEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','sampling']
-     
-
-postChannelEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  postChannel.cpp
-  channelIndex.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binpostChannel = postChannelEnv.Program(target = 'postChannel', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = postChannelEnv['BIN_PLATFORM_INSTALL']
-postChannelEnv.Alias('install', install_dir)
-postChannelEnv.Install(install_dir, binpostChannel)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

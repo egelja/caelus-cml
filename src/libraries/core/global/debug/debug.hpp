@@ -37,6 +37,10 @@ namespace CML
 
 // Forward declaration of classes
 class dictionary;
+class Istream;
+class Ostream;
+class simpleRegIOobject;
+class simpleObjectRegistry;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,6 +71,17 @@ namespace debug
 
     //- Internal function to lookup a sub-dictionary from controlDict.
     dictionary& switchSet(const char* subDictName, dictionary*& subDictPtr);
+
+
+
+    // Registered debug switches
+
+        //- Register debug switch read/write object
+        void addDebugObject(const char* name, simpleRegIOobject* obj);
+
+        //- Get access to registered debug switch objects
+        simpleObjectRegistry& debugObjects();
+
 
 } // End namespace debug
 

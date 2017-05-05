@@ -1,64 +1,42 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-yPlusLESEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = yPlusLESEnv['LIB_SRC']
+target = 'yPlusLES'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-yPlusLESEnv.Append(CCFLAGS = '')
+sources = Split("""
+yPlusLES.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/LES/lnInclude',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'transportModels/incompressible/lnInclude'
 ]
-yPlusLESEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-yPlusLESEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'incompressibleLESModels',
+'incompressibleTransportModels',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if yPlusLESEnv['WHICH_OS'] == "windows":
-  yPlusLESEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','incompressibleLESModels',
-'incompressibleTransportModels','incompressibleTurbulenceModel']
-
-yPlusLESEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
- yPlusLES.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binyPlusLES=yPlusLESEnv.Program(target = 'yPlusLES', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir =yPlusLESEnv['BIN_PLATFORM_INSTALL']
-yPlusLESEnv.Alias('install', install_dir)
-yPlusLESEnv.Install(install_dir, binyPlusLES)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

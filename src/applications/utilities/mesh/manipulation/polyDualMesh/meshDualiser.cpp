@@ -30,8 +30,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::meshDualiser, 0);
-
+namespace CML
+{
+    defineTypeNameAndDebug(meshDualiser, 0);
+}
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

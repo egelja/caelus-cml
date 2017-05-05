@@ -1,69 +1,48 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-REnv = globalEnv.Clone()
+import os
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = REnv['LIB_SRC']
+target = 'R'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-REnv.Append(CCFLAGS = '')
+sources = Split("""
+R.cpp
+compatibilityFvPatchFields/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/postProcessing/postCalc',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',  
-src + '/turbulenceModels/incompressible/RAS/RASModel',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',  
-]        
-REnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',  
+'turbulenceModels/incompressible/RAS/RASModel',
+'transportModels',
+'transportModels/incompressible/lnInclude',  
+'postProcessing/postCalc'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-REnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'incompressibleRASModels',
+'incompressibleTurbulenceModel',
+'incompressibleTransportModels',
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if REnv['WHICH_OS'] == "windows":
-  REnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
+post_calc = [os.path.join(env['LIB_PLATFORM_INSTALL'],'postCalc.o')]
+sources += post_calc
 
-lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
-'incompressibleTransportModels','genericPatchFields']
-    
-REnv.Append(LIBS = lib_link)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files_postCalc = [REnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
-
-src_files_exec = Split("""  
-  R.cpp
-  compatibilityFvPatchFields/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.cpp
-  """)
-
-src_files = src_files_postCalc + src_files_exec
-#===============================================================================
-# Build this executable
-#===============================================================================
-binR = REnv.Program(target = 'R',
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = REnv['BIN_PLATFORM_INSTALL']
-REnv.Alias('install', install_dir)
-REnv.Install(install_dir, binR)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

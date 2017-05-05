@@ -1,0 +1,29 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'RBFInterpolation'
+
+sources = Split("""
+RBFInterpolation.cpp
+RBFFunctions/RBFFunction/RBFFunction.cpp
+RBFFunctions/RBFFunction/newRBFFunction.cpp
+RBFFunctions/W2/W2.cpp
+RBFFunctions/Gauss/Gauss.cpp
+RBFFunctions/TPS/TPS.cpp
+RBFFunctions/IMQB/IMQB.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

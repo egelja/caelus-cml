@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,33 +21,35 @@ License
 
 #include "Vector2D_.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct null
 template<class Cmpt>
-inline SphericalTensor2D<Cmpt>::SphericalTensor2D()
+inline CML::SphericalTensor2D<Cmpt>::SphericalTensor2D()
+{}
+
+
+template<class Cmpt>
+inline CML::SphericalTensor2D<Cmpt>::SphericalTensor2D(const CML::zero)
+:
+    SphericalTensor2D::vsType(Zero)
 {}
 
 
 // Construct given VectorSpace
 template<class Cmpt>
-inline SphericalTensor2D<Cmpt>::SphericalTensor2D
+inline CML::SphericalTensor2D<Cmpt>::SphericalTensor2D
 (
     const VectorSpace<SphericalTensor2D<Cmpt>, Cmpt, 1>& vs
 )
 :
-    VectorSpace<SphericalTensor2D<Cmpt>, Cmpt, 1>(vs)
+    SphericalTensor2D::vsType(vs)
 {}
 
 
 // Construct given three Cmpts
 template<class Cmpt>
-inline SphericalTensor2D<Cmpt>::SphericalTensor2D(const Cmpt& stii)
+inline CML::SphericalTensor2D<Cmpt>::SphericalTensor2D(const Cmpt& stii)
 {
     this->v_[II] = stii;
 }
@@ -55,27 +57,32 @@ inline SphericalTensor2D<Cmpt>::SphericalTensor2D(const Cmpt& stii)
 
 // Construct from Istream
 template<class Cmpt>
-inline SphericalTensor2D<Cmpt>::SphericalTensor2D(Istream& is)
+inline CML::SphericalTensor2D<Cmpt>::SphericalTensor2D(Istream& is)
 :
-    VectorSpace<SphericalTensor2D<Cmpt>, Cmpt, 1>(is)
+    SphericalTensor2D::vsType(is)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Cmpt>
-inline const Cmpt&  SphericalTensor2D<Cmpt>::ii() const
+inline const Cmpt& CML::SphericalTensor2D<Cmpt>::ii() const
 {
     return this->v_[II];
 }
 
 
 template<class Cmpt>
-inline Cmpt& SphericalTensor2D<Cmpt>::ii()
+inline Cmpt& CML::SphericalTensor2D<Cmpt>::ii()
 {
     return this->v_[II];
 }
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 

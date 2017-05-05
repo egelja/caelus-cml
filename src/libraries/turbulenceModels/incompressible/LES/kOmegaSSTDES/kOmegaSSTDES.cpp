@@ -465,6 +465,7 @@ void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
 
     omegaEqn().relax();
     omegaEqn().boundaryManipulate(omega_.boundaryField());
+    mesh_.updateFvMatrix(omegaEqn());
     omegaEqn().solve();
 
     bound(omega_, dimensionedScalar("zero", omega_.dimensions(), 0.0));
@@ -481,6 +482,7 @@ void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
     );
 
     kEqn().relax();
+    mesh_.updateFvMatrix(kEqn());
     kEqn().solve();
     
     bound(k_, kMin_);

@@ -30,7 +30,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(CourantNo, 0);
+    defineTypeNameAndDebug(CourantNo, 0);
 }
 
 

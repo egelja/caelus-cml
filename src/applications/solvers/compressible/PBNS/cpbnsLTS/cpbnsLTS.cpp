@@ -37,6 +37,7 @@ Author
 #include "pimpleControl.hpp"
 #include "fvIOoptionList.hpp"
 #include "bound.hpp"
+#include "localEulerDdtScheme.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
 
     pimpleControl pimple(mesh);
 
-    #include "setInitialrDeltaT.hpp"
+//    #include "createTimeControls.hpp"
     #include "createFields.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-        #include "readTimeControls.hpp"
+//        #include "readTimeControls.hpp"
 
         runTime++;
 

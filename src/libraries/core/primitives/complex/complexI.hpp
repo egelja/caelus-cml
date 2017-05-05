@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -71,11 +71,10 @@ inline complex complex::conjugate() const
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-inline const complex& complex::operator=(const complex& c)
+inline void complex::operator=(const complex& c)
 {
     re = c.re;
     im = c.im;
-    return *this;
 }
 
 
@@ -105,11 +104,10 @@ inline void complex::operator/=(const complex& c)
 }
 
 
-inline const complex& complex::operator=(const scalar s)
+inline void complex::operator=(const scalar s)
 {
     re = s;
     im = 0.0;
-    return *this;
 }
 
 

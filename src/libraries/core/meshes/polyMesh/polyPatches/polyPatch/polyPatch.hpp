@@ -313,6 +313,16 @@ public:
         //- Return a list of all the constraint patch types
         static wordList constraintTypes();
 
+        //- Extract face cell data
+        template<class T>
+        const UIndirectList<T> patchInternalList
+        (
+            const UList<T>& internalValues
+        ) const
+        {
+            return UIndirectList<T>(internalValues, faceCells());
+        }
+
         //- Slice list to patch
         template<class T>
         const typename List<T>::subList patchSlice(const UList<T>& l) const

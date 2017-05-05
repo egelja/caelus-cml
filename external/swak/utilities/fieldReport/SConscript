@@ -1,68 +1,40 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-fieldReportEnv = globalEnv.Clone()
+import os
+from build import build_app
+Import('env')
 
-# Path to source
-src = fieldReportEnv['LIB_SRC']
+target = 'fieldReport'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-fieldReportEnv.Append(CCFLAGS = '')
+sources = Split("""
+fieldReport.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [
-'../../libraries/simpleFunctionObjects/lnInclude',
-'../../libraries/swakParsers/lnInclude',
-src + '/thermophysicalModels/radiationModels/lnInclude',
-src + '/sampling/lnInclude',
-src + '/fvOptions/lnInclude'
+caelus_inc = [
+'thermophysicalModels/radiationModels/lnInclude',
+'sampling/lnInclude',
+'fvOptions/lnInclude'
 ]
 
-fieldReportEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'basicThermophysicalModels',
+'basicSolidThermo',
+'radiationModels',
+'fvOptions',
+'swakParsers'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'simpleFunctionObjects/lnInclude')
+               ]
+            }
 
-fieldReportEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if fieldReportEnv['WHICH_OS'] == "windows":
-  fieldReportEnv.Prepend(LINKFLAGS = '')
-  lib_link = ['libbasicThermophysicalModels','libbasicSolidThermo',
-'libradiationModels','libfvOptions','libswakParsers']
-else:
-  lib_link = ['basicThermophysicalModels','basicSolidThermo',
-'radiationModels','fvOptions','swakParsers']
-    
-fieldReportEnv.Append(LIBS = lib_link)
-    
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""  
-  fieldReport.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binfieldReport = fieldReportEnv.Program(target = 
-'fieldReport', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = fieldReportEnv['BIN_PLATFORM_INSTALL']
-fieldReportEnv.Alias('install', install_dir)
-fieldReportEnv.Install(install_dir, binfieldReport)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

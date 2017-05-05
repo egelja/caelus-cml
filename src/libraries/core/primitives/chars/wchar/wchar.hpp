@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,7 +26,7 @@ Description
 SourceFiles
     wcharIO.cpp
 
-SeeAlso
+See also
     http://en.wikipedia.org/wiki/UTF-8
     http://en.wikibooks.org/wiki/Unicode/Character_reference
 

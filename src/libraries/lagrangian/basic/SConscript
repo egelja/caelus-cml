@@ -1,61 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-lagBasicEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = lagBasicEnv['LIB_SRC']
+target = 'lagrangian'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-lagBasicEnv.Append(CXXFLAGS = '')
+sources = Split("""
+particle/particle.cpp
+particle/particleIO.cpp
+passiveParticle/passiveParticleCloud.cpp
+indexedParticle/indexedParticleCloud.cpp
+InteractionLists/referredWallFace/referredWallFace.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-lagBasicEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-lagBasicEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-lagBasicEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  particle/particle.cpp
-  particle/particleIO.cpp
-  passiveParticle/passiveParticleCloud.cpp
-  indexedParticle/indexedParticleCloud.cpp
-  InteractionLists/referredWallFace/referredWallFace.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-liblagrangian = lagBasicEnv.SharedLibrary(target = 'lagrangian', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = lagBasicEnv['LIB_PLATFORM_INSTALL']
-lagBasicEnv.Alias('install', install_dir)
-lagBasicEnv.Install(install_dir, liblagrangian)
-
-if (lagBasicEnv['WHICH_OS'] == "darwin"):
-
-  lagBasicEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangian.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

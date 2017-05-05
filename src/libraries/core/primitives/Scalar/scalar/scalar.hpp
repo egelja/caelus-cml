@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,6 +50,7 @@ namespace CML
     static const scalar VGREAT = floatScalarVGREAT;
     static const scalar ROOTVGREAT = floatScalarROOTVGREAT;
     static const scalar SMALL = floatScalarSMALL;
+    static const scalar ROOTSMALL = floatScalarROOTSMALL;
     static const scalar VSMALL = floatScalarVSMALL;
     static const scalar ROOTVSMALL = floatScalarROOTVSMALL;
 
@@ -68,6 +69,7 @@ namespace CML
     static const scalar VGREAT = doubleScalarVGREAT;
     static const scalar ROOTVGREAT = doubleScalarROOTVGREAT;
     static const scalar SMALL = doubleScalarSMALL;
+    static const scalar ROOTSMALL = doubleScalarROOTSMALL;
     static const scalar VSMALL = doubleScalarVSMALL;
     static const scalar ROOTVSMALL = doubleScalarROOTVSMALL;
 

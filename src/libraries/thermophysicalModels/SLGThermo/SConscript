@@ -1,65 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-SGLThermoEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = SGLThermoEnv['LIB_SRC']
+target = 'SLGThermo'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-SGLThermoEnv.Append(CCFLAGS = '')
+sources = Split("""
+SLGThermo/SLGThermo.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+caelus_inc = [
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/properties/liquidProperties/lnInclude',
+'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude',
+'thermophysicalModels/properties/solidMixtureProperties/lnInclude'
 ]
-SGLThermoEnv.Prepend(CPPPATH = lib_inc)
-    
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-SGLThermoEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','liquidMixtureProperties','solidMixtureProperties']
-SGLThermoEnv.Append(LIBS = lib_link)
-    
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  SLGThermo/SLGThermo.cpp
-  """)
+caelus_libs = [
+'core',
+'basicThermophysicalModels',
+'liquidMixtureProperties',
+'solidMixtureProperties'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libSLGThermo = SGLThermoEnv.SharedLibrary(target = 'SLGThermo', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = SGLThermoEnv['LIB_PLATFORM_INSTALL']
-SGLThermoEnv.Alias('install', install_dir)
-SGLThermoEnv.Install(install_dir, libSLGThermo)
-
-if (SGLThermoEnv['WHICH_OS'] == "darwin"):
-
-  SGLThermoEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libSLGThermo.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -28,7 +28,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(timeActivatedFileUpdate, 0);
+    defineTypeNameAndDebug(timeActivatedFileUpdate, 0);
 }
 
 

@@ -31,7 +31,7 @@ License
 
 namespace CML
 {
-defineTypeNameAndDebug(searchableSurfaces, 0);
+    defineTypeNameAndDebug(searchableSurfaces, 0);
 }
 
 

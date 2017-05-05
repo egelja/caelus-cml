@@ -56,4 +56,60 @@ CML::bound(volScalarField& vsf, const dimensionedScalar& lowerBound)
 }
 
 
+void CML::boundMinMax
+(
+    volScalarField& vsf,
+    const dimensionedScalar& vsf0,
+    const dimensionedScalar& vsf1
+)
+{
+    scalar minVsf = min(vsf).value();
+    scalar maxVsf = max(vsf).value();
+
+    if (minVsf < vsf0.value() || maxVsf > vsf1.value())
+    {
+        Info<< "bounding " << vsf.name()
+            << ", min: " << gMin(vsf.internalField())
+            << " max: " << gMax(vsf.internalField())
+            << " average: " << gAverage(vsf.internalField())
+            << endl;
+    }
+
+    if (minVsf < vsf0.value())
+    {
+        vsf.internalField() = max
+        (
+            max
+            (
+                vsf.internalField(),
+                fvc::average(max(vsf, vsf0))().internalField()
+                *pos(vsf0.value() - vsf.internalField())
+            ),
+            vsf0.value()
+        );
+
+        vsf.correctBoundaryConditions();
+        vsf.boundaryField() = max(vsf.boundaryField(), vsf0.value());
+    }
+
+    if (maxVsf > vsf1.value())
+    {
+        vsf.internalField() = min
+        (
+            min
+            (
+                vsf.internalField(),
+                fvc::average(min(vsf, vsf1))().internalField()
+                *neg(vsf1.value() - vsf.internalField())
+                // This is needed when all values are above max
+              + pos(vsf1.value() - vsf.internalField())*vsf1.value()
+            ),
+            vsf1.value()
+        );
+
+        vsf.correctBoundaryConditions();
+        vsf.boundaryField() = min(vsf.boundaryField(), vsf1.value());
+    }
+}
+
 // ************************************************************************* //

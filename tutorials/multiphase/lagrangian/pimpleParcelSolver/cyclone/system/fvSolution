@@ -1,0 +1,78 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          PCG;
+        preconditioner
+        {
+            preconditioner  GAMG;
+            tolerance       1e-5;
+            relTol          0;
+            smoother        GaussSeidel;
+            cacheAgglomeration true;
+            nCellsInCoarsestLevel 10;
+            agglomerator    faceAreaPair;
+            mergeLevels     1;
+        }
+
+        tolerance       1e-06;
+        relTol          0.05;
+        maxIter         100;
+    };
+
+
+    pFinal
+    {
+        $p;
+        tolerance        1e-7;
+        relTol            0.0;
+    }
+
+    "(U|k|epsilon|omega|.*Final)"
+    {
+        solver          PBiCGStab;
+	    preconditioner  USGS;
+        tolerance       1e-5;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    nOuterCorrectors 1;
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 1;
+    momentumPredictor yes;
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p               1.0;
+    }
+    equations
+    {
+        "U.*"           1.0;
+        "k.*"           0.7;
+        "epsilon.*"     0.7;
+        "omega.*"       0.7;
+    }
+}
+
+
+// ************************************************************************* //

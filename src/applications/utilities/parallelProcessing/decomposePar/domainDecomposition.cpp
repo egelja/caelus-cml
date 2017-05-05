@@ -27,9 +27,13 @@ License
 #include "fvMesh.hpp"
 #include "OSspecific.hpp"
 #include "Map.hpp"
-#include "globalMeshData.hpp"
 #include "DynamicList.hpp"
 #include "fvFieldDecomposer.hpp"
+#include "IOobjectList.hpp"
+#include "cellSet.hpp"
+#include "faceSet.hpp"
+#include "pointSet.hpp"
+#include "hexRef8Data.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -61,7 +65,11 @@ void CML::domainDecomposition::mark
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // from components
-CML::domainDecomposition::domainDecomposition(const IOobject& io)
+CML::domainDecomposition::domainDecomposition
+(
+    const IOobject& io,
+    const fileName& decompDictFile
+)
 :
     fvMesh(io),
     facesInstancePointsPtr_
@@ -88,17 +96,33 @@ CML::domainDecomposition::domainDecomposition(const IOobject& io)
     ),
     decompositionDict_
     (
-        #ifdef _WIN32
-        CML::IOobject
-        #else
-        IOobject
-        #endif
         (
-            "decomposeParDict",
-            time().system(),
-            *this,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
+            decompDictFile.size()
+          ?
+        #ifdef _WIN32
+            CML::IOobject
+        #else
+            IOobject
+        #endif
+            (
+                decompDictFile,
+                *this,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE
+            )
+         :  
+        #ifdef _WIN32
+            CML::IOobject
+        #else
+            IOobject
+        #endif
+            (
+                "decomposeParDict",
+                time().system(),
+                *this,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE
+            )
         )
     ),
     nProcs_(readInt(decompositionDict_.lookup("numberOfSubdomains"))),
@@ -127,7 +151,7 @@ CML::domainDecomposition::~domainDecomposition()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool CML::domainDecomposition::writeDecomposition()
+bool CML::domainDecomposition::writeDecomposition(const bool decomposeSets)
 {
     Info<< "\nConstructing processor meshes" << endl;
 
@@ -163,6 +187,53 @@ bool CML::domainDecomposition::writeDecomposition()
         mark(cellZones()[zoneI], zoneI, cellToZone);
     }
 
+    PtrList<const cellSet> cellSets;
+    PtrList<const faceSet> faceSets;
+    PtrList<const pointSet> pointSets;
+    if (decomposeSets)
+    {
+        // Read sets
+        IOobjectList objects(*this, facesInstance(), "polyMesh/sets");
+        {
+            IOobjectList cSets(objects.lookupClass(cellSet::typeName));
+            forAllConstIter(IOobjectList, cSets, iter)
+            {
+                cellSets.append(new cellSet(*iter()));
+            }
+        }
+        {
+            IOobjectList fSets(objects.lookupClass(faceSet::typeName));
+            forAllConstIter(IOobjectList, fSets, iter)
+            {
+                faceSets.append(new faceSet(*iter()));
+            }
+        }
+        {
+            IOobjectList pSets(objects.lookupClass(pointSet::typeName));
+            forAllConstIter(IOobjectList, pSets, iter)
+            {
+                pointSets.append(new pointSet(*iter()));
+            }
+        }
+    }
+
+
+    // Load refinement data (if any)
+    hexRef8Data baseMeshData
+    (
+        IOobject
+        (
+            "dummy",
+            facesInstance(),
+            polyMesh::meshSubDir,
+            *this,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE,
+            false
+        )
+    );
+
+
 
     label maxProcCells = 0;
     label totProcFaces = 0;
@@ -172,10 +243,10 @@ bool CML::domainDecomposition::writeDecomposition()
 
 
     // Write out the meshes
-    for (label procI = 0; procI < nProcs_; procI++)
+    for (label proci = 0; proci < nProcs_; proci++)
     {
         // Create processor points
-        const labelList& curPointLabels = procPointAddressing_[procI];
+        const labelList& curPointLabels = procPointAddressing_[proci];
 
         const pointField& meshPoints = points();
 
@@ -191,7 +262,7 @@ bool CML::domainDecomposition::writeDecomposition()
         }
 
         // Create processor faces
-        const labelList& curFaceLabels = procFaceAddressing_[procI];
+        const labelList& curFaceLabels = procFaceAddressing_[proci];
 
         const faceList& meshFaces = faces();
 
@@ -233,7 +304,7 @@ bool CML::domainDecomposition::writeDecomposition()
         }
 
         // Create processor cells
-        const labelList& curCellLabels = procCellAddressing_[procI];
+        const labelList& curCellLabels = procCellAddressing_[proci];
 
         const cellList& meshCells = cells();
 
@@ -247,9 +318,9 @@ bool CML::domainDecomposition::writeDecomposition()
 
             curCell.setSize(origCellLabels.size());
 
-            forAll(origCellLabels, cellFaceI)
+            forAll(origCellLabels, cellFacei)
             {
-                curCell[cellFaceI] = faceLookup[origCellLabels[cellFaceI]];
+                curCell[cellFacei] = faceLookup[origCellLabels[cellFacei]];
             }
         }
 
@@ -257,7 +328,7 @@ bool CML::domainDecomposition::writeDecomposition()
 
         fileName processorCasePath
         (
-            time().caseName()/fileName(word("processor") + CML::name(procI))
+            time().caseName()/fileName(word("processor") + CML::name(proci))
         );
 
         // make the processor directory
@@ -341,55 +412,38 @@ bool CML::domainDecomposition::writeDecomposition()
 
 
         // Create processor boundary patches
-        const labelList& curPatchSizes = procPatchSize_[procI];
+        const labelList& curPatchSizes = procPatchSize_[proci];
 
-        const labelList& curPatchStarts = procPatchStartIndex_[procI];
+        const labelList& curPatchStarts = procPatchStartIndex_[proci];
 
         const labelList& curNeighbourProcessors =
-            procNeighbourProcessors_[procI];
+            procNeighbourProcessors_[proci];
 
         const labelList& curProcessorPatchSizes =
-            procProcessorPatchSize_[procI];
+            procProcessorPatchSize_[proci];
 
         const labelList& curProcessorPatchStarts =
-            procProcessorPatchStartIndex_[procI];
+            procProcessorPatchStartIndex_[proci];
 
         const labelListList& curSubPatchIDs =
-            procProcessorPatchSubPatchIDs_[procI];
+            procProcessorPatchSubPatchIDs_[proci];
 
         const labelListList& curSubStarts =
-            procProcessorPatchSubPatchStarts_[procI];
+            procProcessorPatchSubPatchStarts_[proci];
 
         const polyPatchList& meshPatches = boundaryMesh();
 
 
         // Count the number of inter-proc patches
         label nInterProcPatches = 0;
-        forAll(curSubPatchIDs, procPatchI)
+        forAll(curSubPatchIDs, procPatchi)
         {
-            //Info<< "For processor " << procI
-            //    << " have to destination processor "
-            //    << curNeighbourProcessors[procPatchI] << endl;
-            //
-            //forAll(curSubPatchIDs[procPatchI], i)
-            //{
-            //    Info<< "    from patch:" << curSubPatchIDs[procPatchI][i]
-            //        << " starting at:" << curSubStarts[procPatchI][i]
-            //        << endl;
-            //}
-
-            nInterProcPatches += curSubPatchIDs[procPatchI].size();
+            nInterProcPatches += curSubPatchIDs[procPatchi].size();
         }
-
-        //Info<< "For processor " << procI
-        //    << " have " << nInterProcPatches
-        //    << " patches to neighbouring processors" << endl;
-
 
         List<polyPatch*> procPatches
         (
-            curPatchSizes.size()
-          + nInterProcPatches,          //curProcessorPatchSizes.size(),
+            curPatchSizes.size() + nInterProcPatches,
             reinterpret_cast<polyPatch*>(0)
         );
 
@@ -424,12 +478,12 @@ bool CML::domainDecomposition::writeDecomposition()
             nPatches++;
         }
 
-        forAll(curProcessorPatchSizes, procPatchI)
+        forAll(curProcessorPatchSizes, procPatchi)
         {
-            const labelList& subPatchID = curSubPatchIDs[procPatchI];
-            const labelList& subStarts = curSubStarts[procPatchI];
+            const labelList& subPatchID = curSubPatchIDs[procPatchi];
+            const labelList& subStarts = curSubStarts[procPatchi];
 
-            label curStart = curProcessorPatchStarts[procPatchI];
+            label curStart = curProcessorPatchStarts[procPatchi];
 
             forAll(subPatchID, i)
             {
@@ -437,15 +491,8 @@ bool CML::domainDecomposition::writeDecomposition()
                 (
                     i < subPatchID.size()-1
                   ? subStarts[i+1] - subStarts[i]
-                  : curProcessorPatchSizes[procPatchI] - subStarts[i]
+                  : curProcessorPatchSizes[procPatchi] - subStarts[i]
                 );
-
-                //Info<< "From processor:" << procI << endl
-                //    << "  to processor:" << curNeighbourProcessors[procPatchI]
-                //    << endl
-                //    << "    via patch:" << subPatchID[i] << endl
-                //    << "    start    :" << curStart << endl
-                //    << "    size     :" << size << endl;
 
                 if (subPatchID[i] == -1)
                 {
@@ -453,38 +500,40 @@ bool CML::domainDecomposition::writeDecomposition()
                     procPatches[nPatches] =
                         new processorPolyPatch
                         (
-                            word("procBoundary") + CML::name(procI)
+                            word("procBoundary") + CML::name(proci)
                           + "to"
-                          + CML::name(curNeighbourProcessors[procPatchI]),
+                          + CML::name(curNeighbourProcessors[procPatchi]),
                             size,
                             curStart,
                             nPatches,
                             procMesh.boundaryMesh(),
-                            procI,
-                            curNeighbourProcessors[procPatchI]
+                            proci,
+                            curNeighbourProcessors[procPatchi]
                         );
                 }
                 else
                 {
+                    const coupledPolyPatch& pcPatch = refCast<const coupledPolyPatch>(boundaryMesh()[subPatchID[i]]);
+
                     // From cyclic
-                    const word& referPatch =
-                        boundaryMesh()[subPatchID[i]].name();
+                    const word& referPatch = boundaryMesh()[subPatchID[i]].name();
 
                     procPatches[nPatches] =
                         new processorCyclicPolyPatch
                         (
-                            word("procBoundary") + CML::name(procI)
+                            word("procBoundary") + CML::name(proci)
                           + "to"
-                          + CML::name(curNeighbourProcessors[procPatchI])
+                          + CML::name(curNeighbourProcessors[procPatchi])
                           + "through"
                           + referPatch,
                             size,
                             curStart,
                             nPatches,
                             procMesh.boundaryMesh(),
-                            procI,
-                            curNeighbourProcessors[procPatchI],
-                            referPatch
+                            proci,
+                            curNeighbourProcessors[procPatchi],
+                            pcPatch.name(),
+                            pcPatch.transform()
                         );
                 }
 
@@ -493,16 +542,6 @@ bool CML::domainDecomposition::writeDecomposition()
                 nPatches++;
             }
         }
-
-
-        //forAll(procPatches, patchI)
-        //{
-        //    Pout<< "    " << patchI
-        //        << '\t' << "name:" << procPatches[patchI]->name()
-        //        << '\t' << "type:" << procPatches[patchI]->type()
-        //        << '\t' << "size:" << procPatches[patchI]->size()
-        //        << endl;
-        //}
 
         // Add boundary patches
         procMesh.addPatches(procPatches);
@@ -686,9 +725,9 @@ bool CML::domainDecomposition::writeDecomposition()
 
             forAll(curCellLabels, celli)
             {
-                label curCellI = curCellLabels[celli];
+                label curCelli = curCellLabels[celli];
 
-                label zoneI = cellToZone[curCellI];
+                label zoneI = cellToZone[curCelli];
 
                 if (zoneI >= 0)
                 {
@@ -700,7 +739,7 @@ bool CML::domainDecomposition::writeDecomposition()
                     // Multiple zones. Lookup.
                     forAll(cz, zoneI)
                     {
-                        label index = cz[zoneI].whichCell(curCellI);
+                        label index = cz[zoneI].whichCell(curCelli);
 
                         if (index != -1)
                         {
@@ -733,8 +772,8 @@ bool CML::domainDecomposition::writeDecomposition()
             }
         }
 
-        // Set the precision of the points data to 10
-        IOstream::defaultPrecision(10);
+        // Set the precision of the points data to be min 10
+        IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
 
         procMesh.write();
 
@@ -758,8 +797,75 @@ bool CML::domainDecomposition::writeDecomposition()
             pointsInstancePoints.write();
         }
 
+
+        // Decompose any sets
+        if (decomposeSets)
+        {
+            forAll(cellSets, csi)
+            {
+                const cellSet& cs = cellSets[csi];
+                cellSet set(procMesh, cs.name(), cs.size()/nProcs_);
+                forAll(curCellLabels, i)
+                {
+                    if (cs.found(curCellLabels[i]))
+                    {
+                        set.insert(i);
+                    }
+                }
+                set.write();
+            }
+            forAll(faceSets, fsi)
+            {
+                const faceSet& fs = faceSets[fsi];
+                faceSet set(procMesh, fs.name(), fs.size()/nProcs_);
+                forAll(curFaceLabels, i)
+                {
+                    if (fs.found(mag(curFaceLabels[i])-1))
+                    {
+                        set.insert(i);
+                    }
+                }
+                set.write();
+            }
+            forAll(pointSets, psi)
+            {
+                const pointSet& ps = pointSets[psi];
+                pointSet set(procMesh, ps.name(), ps.size()/nProcs_);
+                forAll(curPointLabels, i)
+                {
+                    if (ps.found(curPointLabels[i]))
+                    {
+                        set.insert(i);
+                    }
+                }
+                set.write();
+            }
+        }
+
+
+        // Optional hexRef8 data
+        hexRef8Data
+        (
+            IOobject
+            (
+                "dummy",
+                facesInstance(),
+                polyMesh::meshSubDir,
+                procMesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            baseMeshData,
+            procCellAddressing_[proci],
+            procPointAddressing_[proci]
+        ).write();
+
+
+        // Statistics
+
         Info<< endl
-            << "Processor " << procI << nl
+            << "Processor " << proci << nl
             << "    Number of cells = " << procMesh.nCells()
             << endl;
 
@@ -812,7 +918,7 @@ bool CML::domainDecomposition::writeDecomposition()
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            procPointAddressing_[procI]
+            procPointAddressing_[proci]
         );
         pointProcAddressing.write();
 
@@ -827,7 +933,7 @@ bool CML::domainDecomposition::writeDecomposition()
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            procFaceAddressing_[procI]
+            procFaceAddressing_[proci]
         );
         faceProcAddressing.write();
 
@@ -842,7 +948,7 @@ bool CML::domainDecomposition::writeDecomposition()
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            procCellAddressing_[procI]
+            procCellAddressing_[proci]
         );
         cellProcAddressing.write();
 

@@ -1,0 +1,63 @@
+# -*- mode: python -*-
+
+import utils
+from build import build_app
+Import('env')
+
+target = "vofLPTSolver"
+
+sources = Split("""
+vofLPTSolver.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels/incompressible/turbulenceModel',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'transportModels',
+'transportModels/incompressible/singlePhaseTransportModel',
+'transportModels/incompressible/lnInclude',
+'transportModels/interfaceProperties/lnInclude',
+'lagrangian/basic/lnInclude',
+'lagrangian/intermediate/lnInclude',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'fvOptions/lnInclude',
+'sampling/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'incompressibleVLESModels',
+'incompressibleTransportModels',
+'turbulenceDerivedFvPatchFields',
+'interfaceProperties',
+'twoPhaseInterfaceProperties',
+'fvOptions',
+'sampling',
+'lagrangian',
+'lagrangianIntermediate',
+'regionModels',
+'surfaceFilmModels'
+]
+
+append_args = dict(
+    CPPPATH = ["../vofSolver"]
+)
+
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+            '-u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad -u interfacePropertiesLoad -u turbulenceDerivedFvPatchFieldsLoad -u lagrangianIntermediateLoad'
+}
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args,
+          prepend_args=prepend_args)

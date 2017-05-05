@@ -33,25 +33,69 @@ SourceFiles
 #ifndef zero_HPP_
 #define zero_HPP_
 
+#include "label.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 namespace CML
 {
+
+/*---------------------------------------------------------------------------*\
+                           Class zero Declaration
+\*---------------------------------------------------------------------------*/
+
 class zero
 {
 public:
 
-    zero()
-    {}
+    typedef zero value_type;
+
+    // Constructors
+
+        //- Construct null
+        zero()
+        {}
+
+
+    // Member operators
+
+        //- Return 0 for bool
+        inline operator bool() const
+        {
+            return 0;
+        }
+
+        //- Return 0 for label
+        inline operator label() const
+        {
+            return 0;
+        }
+
+        //- Return 0 for float
+        inline operator float() const
+        {
+            return 0;
+        }
+
+        //- Return 0 for double
+        inline operator double() const
+        {
+            return 0;
+        }
 };
 
 
+// Global zero
+static const zero Zero;
+
 template <typename Type>
-inline Type const& operator+(Type const& t, zero const&)
+inline const Type& operator+(const Type& t, const zero&)
 {
     return t;
 }
 
 template <typename Type>
-inline Type const& operator+(zero const&, Type const& t)
+inline const Type& operator+(const zero&, const Type& t)
 {
     return t;
 }
@@ -63,32 +107,33 @@ inline const Type& operator-(const Type& t, const zero&)
 }
 
 template <typename Type>
-inline Type operator-(zero const&, Type const& t)
+inline Type operator-(const zero&, const Type& t)
 {
     return -t;
 }
 
 template <typename Type>
-inline zero operator*(Type const& t, zero const&)
+inline zero operator*(const Type& t, const zero&)
 {
     return zero();
 }
 
 template <typename Type>
-inline zero operator*(zero const&, Type const& t)
+inline zero operator*(const zero&, const Type& t)
 {
     return zero();
 }
 
 template <typename Type>
-inline zero operator/(zero const&, Type const& t)
+inline zero operator/(const zero&, const Type& t)
 {
     return zero();
 }
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
-
+// ************************************************************************* //

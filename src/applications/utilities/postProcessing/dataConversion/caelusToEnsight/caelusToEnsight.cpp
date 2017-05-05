@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
                 cloud::prefix/cloudDirs[cloudI]
             );
 
-            IOobject* positionsPtr = cloudObjs.lookup("positions");
+            IOobject* positionsPtr = cloudObjs.lookup(word("positions"));
 
             if (positionsPtr)
             {

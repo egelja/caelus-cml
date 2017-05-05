@@ -195,7 +195,7 @@ wordList distributionFunctionObject::fileNames() {
 }
 
 stringList distributionFunctionObject::componentNames() {
-    const char **names=NULL;
+    const char * const *names=NULL;
     direction nComp=0;
 
     if(distScalar_.valid()) {

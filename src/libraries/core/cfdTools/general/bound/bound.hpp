@@ -49,6 +49,14 @@ namespace CML
 //  Used extensively in RAS and LES turbulence models.
 volScalarField& bound(volScalarField&, const dimensionedScalar& lowerBound);
 
+//- Bound the given scalar field if it has gone unbounded for min and max
+void boundMinMax
+(
+    volScalarField& vsf,
+    const dimensionedScalar& vsf0,
+    const dimensionedScalar& vsf1
+);
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML

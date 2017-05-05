@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -126,6 +126,49 @@ namespace stringOps
     (
         const string&,
         const dictionary& dict,
+        const char sigil = '$'
+    );
+
+
+    //- Get dictionary or (optionally) environment variable
+    string getVariable
+    (
+        const word& name,
+        const dictionary& dict,
+        const bool allowEnvVars,
+        const bool allowEmpty
+    );
+
+
+    //- Recursively expands (dictionary or environment) variable
+    //  starting at index in string. Updates index.
+    string expand
+    (
+        const string& s,
+        string::size_type& index,
+        const dictionary& dict,
+        const bool allowEnvVars,
+        const bool allowEmpty
+    );
+
+
+    //- Inplace expand occurences of variables according to the dictionary
+    //  and optionally environment variables
+    //  Expansion includes:
+    //  -# variables
+    //    - "$VAR", "${VAR}"
+    //
+    //  with the "${}" syntax doing a recursive substitution.
+    //  Any unknown entries are left as-is
+    //
+    //  \note the leading sigil can be changed to avoid conflicts with other
+    //  string expansions
+    string& inplaceExpand
+    (
+        string& s,
+        const dictionary& dict,
+        const bool allowEnvVars,
+        const bool allowEmpty,
         const char sigil = '$'
     );
 

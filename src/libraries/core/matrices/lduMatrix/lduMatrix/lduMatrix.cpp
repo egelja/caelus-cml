@@ -24,10 +24,14 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::lduMatrix, 1);
 
-const CML::scalar CML::lduMatrix::great_ = 1.0e+20;
-const CML::scalar CML::lduMatrix::small_ = 1.0e-20;
+namespace CML
+{
+    defineTypeNameAndDebug(lduMatrix, 1);
+
+    const scalar lduMatrix::great_ = 1.0e+20;
+    const scalar lduMatrix::small_ = 1.0e-20;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

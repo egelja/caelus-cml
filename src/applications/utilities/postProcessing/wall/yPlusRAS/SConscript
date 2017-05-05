@@ -1,73 +1,51 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-yPlusRASEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = yPlusRASEnv['LIB_SRC']
+target = 'yPlusRAS'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-yPlusRASEnv.Append(CCFLAGS = '')
+sources = Split("""
+yPlusRAS.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/lnInclude',
-src + '/turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions' + 
-'/nutWallFunctions',
-src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
-src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions' + 
-'/mutWallFunctions',
-src + '/transportModels',
-src + '/transportModels/incompressible/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
+caelus_inc = [
+'turbulenceModels',
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',
+'turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWallFunctions',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWallFunctions',
+'transportModels',
+'transportModels/incompressible/lnInclude',
+'thermophysicalModels/basic/lnInclude'
 ]
-yPlusRASEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-yPlusRASEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'compressibleRASModels',
+'specie',
+'basicThermophysicalModels',
+'sampling',
+'compressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleTransportModels',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if yPlusRASEnv['WHICH_OS'] == "windows":
-  yPlusRASEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u compressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','compressibleRASModels',
-'specie','basicThermophysicalModels','sampling',
-'compressibleTurbulenceModel','incompressibleRASModels',
-'incompressibleTransportModels','incompressibleTurbulenceModel']
-
-yPlusRASEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
- yPlusRAS.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binyPlusRAS=yPlusRASEnv.Program(target = 'yPlusRAS', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir =yPlusRASEnv['BIN_PLATFORM_INSTALL']
-yPlusRASEnv.Alias('install', install_dir)
-yPlusRASEnv.Install(install_dir, binyPlusRAS)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

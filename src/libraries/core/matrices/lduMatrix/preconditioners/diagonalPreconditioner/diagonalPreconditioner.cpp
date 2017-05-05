@@ -38,24 +38,13 @@ namespace CML
 
 CML::diagonalPreconditioner::diagonalPreconditioner
 (
-    const lduMatrix::solver& sol,
-    const dictionary&
-)
-:
+    lduMatrix::solver const& sol,
+    dictionary const&
+) :
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag().size())
 {
     this->appInv();
-    // scalar* RESTRICT rDPtr = rD_.begin();
-    // const scalar* RESTRICT DPtr = solver_.matrix().diag().begin();
-
-    // register label nCells = rD_.size();
-
-    // // Generate reciprocal diagonal
-    // for (register label cell=0; cell<nCells; cell++)
-    // {
-    //     rDPtr[cell] = 1.0/DPtr[cell];
-    // }
 }
 
 void CML::diagonalPreconditioner::appInv()
@@ -75,8 +64,8 @@ void CML::diagonalPreconditioner::appInv()
 void CML::diagonalPreconditioner::precondition
 (
     scalarField& w,
-    const scalarField& r,
-    const direction
+    scalarField const& r,
+    direction const
 ) const
 {
     scalar* RESTRICT wPtr = w.begin();

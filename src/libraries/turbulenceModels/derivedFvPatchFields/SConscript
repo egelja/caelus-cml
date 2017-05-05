@@ -1,63 +1,34 @@
-#Copyright (C) 2014-2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-turbDerPatFieldsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = turbDerPatFieldsEnv['LIB_SRC']
+target = 'turbulenceDerivedFvPatchFields'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-turbDerPatFieldsEnv.Append(CCFLAGS = '')
+sources = Split("""
+porousBafflePressure/porousBafflePressureFvPatchFields.cpp
+fixedShearStress/fixedShearStressFvPatchVectorField.cpp
+wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels',   
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/transportModels/incompressible/singlePhaseTransportModel' 
+caelus_inc = [
+'transportModels',
+'turbulenceModels',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'transportModels/incompressible/singlePhaseTransportModel'
 ]
-turbDerPatFieldsEnv.Prepend(CPPPATH = lib_inc)
-          
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-turbDerPatFieldsEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','basicThermophysicalModels','specie',
-'compressibleTurbulenceModel','incompressibleTurbulenceModel'] 
-turbDerPatFieldsEnv.Append(LIBS = lib_link)
-      
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  porousBafflePressure/porousBafflePressureFvPatchFields.cpp
-  fixedShearStress/fixedShearStressFvPatchVectorField.cpp
-  """)
+caelus_libs = [
+'core',
+'basicThermophysicalModels',
+'specie',
+'compressibleTurbulenceModel',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libturbulenceDerivedFvPatchFields = turbDerPatFieldsEnv.SharedLibrary(target = 
-'turbulenceDerivedFvPatchFields', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = turbDerPatFieldsEnv['LIB_PLATFORM_INSTALL']
-turbDerPatFieldsEnv.Alias('install', install_dir)
-turbDerPatFieldsEnv.Install(install_dir, libturbulenceDerivedFvPatchFields)
-
-if (turbDerPatFieldsEnv['WHICH_OS'] == "darwin"):
-
-  turbDerPatFieldsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libturbulenceDerivedFvPatchFields.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -100,6 +100,7 @@ void CML::primitiveMesh::makeFaceCentresAndAreas
             }
 
             fCentre /= nPoints;
+            point fEst = fCentre;
 
             for (label pi = 0; pi < nPoints; pi++)
             {
@@ -123,6 +124,15 @@ void CML::primitiveMesh::makeFaceCentresAndAreas
             }
             else
             {
+                if (sumA < areaSwitch_)
+                {
+                    fCtrs[facei] = fEst;
+                }
+                else
+                {
+                    fCtrs[facei] = fCentre;
+                }
+
                 fCtrs[facei] = (1.0/3.0)*sumAc/sumA;
                 fAreas[facei] = 0.5*sumN;
             }

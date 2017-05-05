@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -167,8 +167,6 @@ bool CML::subModelBase::outputTime() const
 
 void CML::subModelBase::write(Ostream& os) const
 {
-    // not writing complete cloud dictionary, only coeffs
-//    os  << dict_;
     os  << coeffDict_;
 }
 

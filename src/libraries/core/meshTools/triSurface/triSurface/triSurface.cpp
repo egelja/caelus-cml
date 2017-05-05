@@ -30,7 +30,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::triSurface, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(triSurface, 0);
+}
 
 
 CML::fileName CML::triSurface::triSurfInstance(const Time& d)

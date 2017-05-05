@@ -1,79 +1,50 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-autoMeshEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = autoMeshEnv['LIB_SRC'] 
+target = 'autoMesh'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-autoMeshEnv.Append(CCFLAGS = '')
+sources = Split("""
+autoHexMesh/autoHexMeshDriver/autoLayerDriver.cpp
+autoHexMesh/autoHexMeshDriver/autoLayerDriverShrink.cpp
+autoHexMesh/autoHexMeshDriver/autoSnapDriver.cpp
+autoHexMesh/autoHexMeshDriver/autoSnapDriverFeature.cpp
+autoHexMesh/autoHexMeshDriver/autoRefineDriver.cpp
+autoHexMesh/autoHexMeshDriver/layerParameters/layerParameters.cpp
+autoHexMesh/autoHexMeshDriver/refinementParameters/refinementParameters.cpp
+autoHexMesh/autoHexMeshDriver/snapParameters/snapParameters.cpp
+autoHexMesh/autoHexMeshDriver/pointData/pointData.cpp
+autoHexMesh/meshRefinement/meshRefinementBaffles.cpp
+autoHexMesh/meshRefinement/meshRefinement.cpp
+autoHexMesh/meshRefinement/meshRefinementMerge.cpp
+autoHexMesh/meshRefinement/meshRefinementProblemCells.cpp
+autoHexMesh/meshRefinement/meshRefinementRefine.cpp
+autoHexMesh/refinementFeatures/refinementFeatures.cpp
+autoHexMesh/refinementSurfaces/refinementSurfaces.cpp
+autoHexMesh/shellSurfaces/shellSurfaces.cpp
+autoHexMesh/trackedParticle/trackedParticle.cpp
+autoHexMesh/trackedParticle/trackedParticleCloud.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/dynamicMesh/lnInclude', src + '/edgeMesh/lnInclude',
-src + '/lagrangian/basic/lnInclude',
-src + '/parallel/decompose/decompositionMethods/lnInclude'
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'edgeMesh/lnInclude',
+'lagrangian/basic/lnInclude',
+'parallel/decompose/decompositionMethods/lnInclude'
 ]
-autoMeshEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-autoMeshEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'dynamicMesh',
+'lagrangian',
+'edgeMesh',
+'distributed',
+'decompositionMethods'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','dynamicMesh','lagrangian','edgeMesh','distributed']
-autoMeshEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  autoHexMesh/autoHexMeshDriver/autoLayerDriver.cpp
-  autoHexMesh/autoHexMeshDriver/autoLayerDriverShrink.cpp
-  autoHexMesh/autoHexMeshDriver/autoSnapDriver.cpp
-  autoHexMesh/autoHexMeshDriver/autoSnapDriverFeature.cpp
-  autoHexMesh/autoHexMeshDriver/autoRefineDriver.cpp
-  autoHexMesh/autoHexMeshDriver/layerParameters/layerParameters.cpp
-  autoHexMesh/autoHexMeshDriver/refinementParameters/refinementParameters.cpp
-  autoHexMesh/autoHexMeshDriver/snapParameters/snapParameters.cpp
-  autoHexMesh/autoHexMeshDriver/pointData/pointData.cpp
-  autoHexMesh/meshRefinement/meshRefinementBaffles.cpp
-  autoHexMesh/meshRefinement/meshRefinement.cpp
-  autoHexMesh/meshRefinement/meshRefinementMerge.cpp
-  autoHexMesh/meshRefinement/meshRefinementProblemCells.cpp
-  autoHexMesh/meshRefinement/meshRefinementRefine.cpp
-  autoHexMesh/refinementFeatures/refinementFeatures.cpp
-  autoHexMesh/refinementSurfaces/refinementSurfaces.cpp
-  autoHexMesh/shellSurfaces/shellSurfaces.cpp
-  autoHexMesh/trackedParticle/trackedParticle.cpp
-  autoHexMesh/trackedParticle/trackedParticleCloud.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libautoMesh = autoMeshEnv.SharedLibrary(target = 'autoMesh', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = autoMeshEnv['LIB_PLATFORM_INSTALL']
-autoMeshEnv.Alias('install', install_dir)
-autoMeshEnv.Install(install_dir, libautoMesh)
-
-if (autoMeshEnv['WHICH_OS'] == "darwin"):
-
-  autoMeshEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libautoMesh.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

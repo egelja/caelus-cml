@@ -1,57 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-checkMeshEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = checkMeshEnv['LIB_SRC']
+target = 'checkMesh'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-checkMeshEnv.Append(CCFLAGS = '')
+sources = Split("""
+checkMesh.cpp
+checkGeometry.cpp
+checkTopology.cpp
+printMeshStats.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
+caelus_inc = [
+]
 
-checkMeshEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-checkMeshEnv.Prepend(LIBPATH = lib_link_path)
-
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = []
-  
-checkMeshEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  checkMesh.cpp
-  checkGeometry.cpp
-  checkTopology.cpp
-  printMeshStats.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincheckMesh = checkMeshEnv.Program(target = 'checkMesh', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = checkMeshEnv['BIN_PLATFORM_INSTALL']
-checkMeshEnv.Alias('install', install_dir)
-checkMeshEnv.Install(install_dir, bincheckMesh)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

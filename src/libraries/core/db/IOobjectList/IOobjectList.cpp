@@ -36,7 +36,10 @@ CML::IOobjectList::IOobjectList
 (
     const objectRegistry& db,
     const fileName& instance,
-    const fileName& local
+    const fileName& local,
+    IOobject::readOption r,
+    IOobject::writeOption w,
+    bool registerObject
 )
 :
     HashPtrTable<IOobject>()
@@ -65,8 +68,9 @@ CML::IOobjectList::IOobjectList
             newInstance,
             local,
             db,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
+            r,
+            w,
+            registerObject
         );
 
         if (objectPtr->headerOk())
@@ -141,6 +145,50 @@ CML::IOobject* CML::IOobjectList::lookup(const word& name) const
 
         return NULL;
     }
+}
+
+
+CML::IOobjectList CML::IOobjectList::lookup(const wordRe& name) const
+{
+    IOobjectList objectsOfName(size());
+
+    forAllConstIter(HashPtrTable<IOobject>, *this, iter)
+    {
+        if (name.match(iter()->name()))
+        {
+            if (IOobject::debug)
+            {
+                Info<< "IOobjectList::lookupRe : found " << iter.key() << endl;
+            }
+
+            objectsOfName.insert(iter.key(), new IOobject(*iter()));
+        }
+    }
+
+    return objectsOfName;
+}
+
+
+CML::IOobjectList CML::IOobjectList::lookup(const wordReList& patterns) const
+{
+    wordReListMatcher names(patterns);
+
+    IOobjectList objectsOfName(size());
+
+    forAllConstIter(HashPtrTable<IOobject>, *this, iter)
+    {
+        if (names.match(iter()->name()))
+        {
+            if (IOobject::debug)
+            {
+                Info<< "IOobjectList::lookupRe : found " << iter.key() << endl;
+            }
+
+            objectsOfName.insert(iter.key(), new IOobject(*iter()));
+        }
+    }
+
+    return objectsOfName;
 }
 
 

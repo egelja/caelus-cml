@@ -1,57 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-regModelsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-regModelsEnv.Append(CCFLAGS = '')
+target = 'regionModels'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-regModelsEnv.Prepend(CPPPATH = lib_inc)
-    
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-regModelsEnv.Prepend(LIBPATH = lib_link_path)
+sources = Split("""
+regionModel/regionModel.cpp
+singleLayerRegion/singleLayerRegion.cpp
+regionModel1D/regionModel1D.cpp
+regionProperties/regionProperties.cpp
+derivedFvPatches/mappedVariableThicknessWall/mappedVariableThicknessWallFvPatch.cpp
+""")
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-regModelsEnv.Append(LIBS = lib_link)
-       
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  regionModel/regionModel.cpp
-  singleLayerRegion/singleLayerRegion.cpp
-  regionModel1D/regionModel1D.cpp
-  derivedFvPatches/mappedVariableThicknessWall/mappedVariableThicknessWallFvPatch.cpp
-  """)
+caelus_inc = []
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libregionModels = regModelsEnv.SharedLibrary(target = 'regionModels', 
-source = src_files)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = regModelsEnv['LIB_PLATFORM_INSTALL']
-regModelsEnv.Alias('install', install_dir)
-regModelsEnv.Install(install_dir, libregionModels)
-
-if (regModelsEnv['WHICH_OS'] == "darwin"):
-
-  regModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libregionModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

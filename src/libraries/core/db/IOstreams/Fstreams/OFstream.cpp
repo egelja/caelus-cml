@@ -26,7 +26,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::OFstream, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(OFstream, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

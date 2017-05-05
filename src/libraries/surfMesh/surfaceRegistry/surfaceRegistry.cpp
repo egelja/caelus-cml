@@ -24,7 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::surfaceRegistry, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(surfaceRegistry, 0);
+}
+
 
 const CML::word CML::surfaceRegistry::prefix("surfaces");
 CML::word CML::surfaceRegistry::defaultName("default");

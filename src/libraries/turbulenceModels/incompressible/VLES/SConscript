@@ -1,62 +1,31 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-turbInVLESEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = turbInVLESEnv['LIB_SRC']
+target = 'incompressibleVLESModels'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-turbInVLESEnv.Append(CCFLAGS = '')
+sources = Split("""
+VLESModel/VLESModel.cpp
+laminar/laminar.cpp
+realizableKE/realizableKE.cpp
+kOmegaSST/kOmegaSST.cpp
+kOmegaSSTCSModel/kOmegaSSTCSModel.cpp
+SpalartAllmaras/SpalartAllmaras.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels'] 
-turbInVLESEnv.Prepend(CPPPATH = lib_inc)
-      
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [] 
-turbInVLESEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = [
+'transportModels',
+'turbulenceModels'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','incompressibleTurbulenceModel'] 
-turbInVLESEnv.Append(LIBS = lib_link)
-   
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  VLESModel/VLESModel.cpp
-  laminar/laminar.cpp
-  realizableKE/realizableKE.cpp
-  kOmegaSST/kOmegaSST.cpp
-  coherentStructureModel/coherentStructureModel.cpp
-  SpalartAllmaras/SpalartAllmaras.cpp
-  """)
+caelus_libs = [
+'core',
+'incompressibleTurbulenceModel'
+]
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libincompressibleVLESModels = turbInVLESEnv.SharedLibrary(target = 
-'incompressibleVLESModels', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = turbInVLESEnv['LIB_PLATFORM_INSTALL']
-turbInVLESEnv.Alias('install', install_dir)
-turbInVLESEnv.Install(install_dir, libincompressibleVLESModels)
-
-if (turbInVLESEnv['WHICH_OS'] == "darwin"):
-
-  turbInVLESEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleVLESModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

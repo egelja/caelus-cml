@@ -132,7 +132,7 @@ protected:
 
 public:
 
-    TypeName("VLESKOmegaSST");
+    TypeName("kOmegaSSTVLES");
 
     VLESKOmegaSST
     (

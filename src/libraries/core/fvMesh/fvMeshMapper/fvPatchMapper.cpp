@@ -51,6 +51,8 @@ void CML::fvPatchMapper::calcAddressing() const
     const label oldPatchEnd =
         oldPatchStart + faceMap_.oldPatchSizes()[patch_.index()];
 
+    hasUnmapped_ = false;
+
     // Assemble the maps: slice to patch
     if (direct())
     {
@@ -78,7 +80,9 @@ void CML::fvPatchMapper::calcAddressing() const
             }
             else
             {
-                addr[faceI] = 0;
+                //addr[faceI] = 0;
+                addr[faceI] = -1;
+                hasUnmapped_ = true;
             }
         }
 
@@ -86,12 +90,14 @@ void CML::fvPatchMapper::calcAddressing() const
         {
             if (min(addr) < 0)
             {
-                FatalErrorIn
+                //FatalErrorIn
+                WarningIn
                 (
                     "void fvPatchMapper::calcAddressing() const"
-                )   << "Error in patch mapping for patch "
+                )   << "Unmapped entry in patch mapping for patch "
                     << patch_.index() << " named " << patch_.name()
-                    << abort(FatalError);
+                    //<< abort(FatalError);
+                    << endl;
             }
         }
     }
@@ -164,7 +170,14 @@ void CML::fvPatchMapper::calcAddressing() const
                 newWeights.setSize(nActive);
 
                 // Re-scale the weights
-                newWeights /= sum(newWeights);
+                if (nActive > 0)
+                {
+                    newWeights /= sum(newWeights);
+                }
+                else
+                {
+                    hasUnmapped_ = true;
+                }
 
                 // Reset addressing and weights
                 curAddr = newAddr;
@@ -196,6 +209,7 @@ void CML::fvPatchMapper::clearOut()
     deleteDemandDrivenData(directAddrPtr_);
     deleteDemandDrivenData(interpolationAddrPtr_);
     deleteDemandDrivenData(weightsPtr_);
+    hasUnmapped_ = false;
 }
 
 
@@ -211,6 +225,7 @@ CML::fvPatchMapper::fvPatchMapper
     patch_(patch),
     faceMap_(faceMap),
     sizeBeforeMapping_(faceMap.oldPatchSizes()[patch_.index()]),
+    hasUnmapped_(false),
     directAddrPtr_(NULL),
     interpolationAddrPtr_(NULL),
     weightsPtr_(NULL)

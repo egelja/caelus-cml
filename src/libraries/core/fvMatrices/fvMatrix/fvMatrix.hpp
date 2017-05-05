@@ -45,6 +45,7 @@ SourceFiles
 #include "dimensionedTypes.hpp"
 #include "zero.hpp"
 #include "className.hpp"
+#include "fvc.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -417,8 +418,11 @@ public:
             // Diagonal based on row sum
             tmp<volScalarField> Ac() const;
 
+            // Diagonal based on SPAI(0)
+            tmp<volScalarField> spai0() const;
+
             // Residual for vector equations
-            tmp<volVectorField> R() const;
+            tmp<GeometricField<Type, fvPatchField, volMesh> > R() const;
 
 
     // Member operators
@@ -2002,13 +2006,43 @@ CML::fvMatrix<Type>::Ac() const
     return tAphi;
 }
 
+template<class Type> CML::tmp<CML::volScalarField> 
+CML::fvMatrix<Type>::spai0() const
+{
+    tmp<volScalarField> tAphi
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "spai0("+psi_.name()+')',
+                psi_.instance(),
+                psi_.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi_.mesh(),
+            dimensions_/(psi_.dimensions()*dimVol),
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
 
-template<class Type> CML::tmp<CML::volVectorField> 
+    register const label nCells = psi_.mesh().V().size();
+    scalarField s(nCells);
+    lduMatrix::spai0(s);
+    tAphi().internalField() = s/psi_.mesh().V();
+    tAphi().correctBoundaryConditions();
+
+    return tAphi;
+}
+
+template<class Type>
+CML::tmp<CML::GeometricField<Type, CML::fvPatchField, CML::volMesh> >
 CML::fvMatrix<Type>::R() const
 {
-    tmp<volVectorField> tAphi
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tRphi
     (
-        new volVectorField
+        new GeometricField<Type, fvPatchField, volMesh>
         (
             IOobject
             (
@@ -2024,11 +2058,14 @@ CML::fvMatrix<Type>::R() const
         )
     );
 
-    tAphi().internalField() = this->residual();
-    tAphi().correctBoundaryConditions();
+    GeometricField<Type, fvPatchField, volMesh>& Rphi = tRphi();
 
-    return tAphi;
+    Rphi.internalField() = this->residual();
+    Rphi.correctBoundaryConditions();
+
+    return tRphi;
 }
+
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
@@ -3532,6 +3569,15 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
 
     GeometricField<Type, fvPatchField, volMesh>& psi =
        const_cast<GeometricField<Type, fvPatchField, volMesh>&>(psi_);
+
+    tmp<GeometricField<Type, fvPatchField, volMesh> > Residual = this->R();
+
+    tmp<GeometricField<Type, fvPatchField, volMesh> > Correction = psi.mesh().defectCorrVecs() & fvc::grad(Residual());
+
+    source_ += psi.mesh().V()*Correction().internalField();
+
+    Residual.clear();
+    Correction.clear();
 
     lduMatrix::solverPerformance solverPerfVec
     (

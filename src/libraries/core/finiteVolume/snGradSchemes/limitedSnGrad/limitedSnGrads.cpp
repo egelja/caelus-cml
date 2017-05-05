@@ -31,12 +31,6 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeSnGradScheme(limitedSnGrad)
-}
-}
+makeSnGradScheme(limitedSnGrad)
 
 // ************************************************************************* //

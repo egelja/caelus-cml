@@ -60,10 +60,68 @@ int main(int argc, char *argv[])
         "include extra topology checks"
     );
 
+    argList::addBoolOption
+    (
+        "defectCorrection",
+        "include deffect correction"
+    );
+
+    argList::addOption
+    (
+        "areaSwitch",
+        "scalar",
+        "face area below which the centroid method switches to simple nodal average"
+    );
+
+
 #   include "setRootCase.hpp"
 #   include "createTime.hpp"
     instantList timeDirs = timeSelector::select0(runTime, args);
-#   include "createNamedPolyMesh.hpp"
+    const bool defectCorrection = args.optionFound("defectCorrection");
+
+    scalar areaSwitch;
+
+    if (args.optionReadIfPresent("areaSwitch", areaSwitch))
+    {
+        // Do nothing
+    }
+    else
+    {
+        areaSwitch = 1e-8;
+    }
+
+//
+// createNamedPolyMesh.H
+// ~~~~~~~~~~~~~~~~~~~~~
+
+    CML::word regionName;
+
+    if (args.optionReadIfPresent("region", regionName))
+    {
+        CML::Info
+            << "Create polyMesh " << regionName << " for time = "
+            << runTime.timeName() << CML::nl << CML::endl;
+    }
+    else
+    {
+        regionName = CML::polyMesh::defaultRegion;
+        CML::Info
+            << "Create polyMesh for time = "
+            << runTime.timeName() << CML::nl << CML::endl;
+    }
+
+    CML::polyMesh mesh
+    (
+        CML::IOobject
+        (
+            regionName,
+            runTime.timeName(),
+            runTime,
+            CML::IOobject::MUST_READ
+        ),
+        defectCorrection,
+        areaSwitch
+    );
 
     const bool noTopology  = args.optionFound("noTopology");
     const bool allGeometry = args.optionFound("allGeometry");

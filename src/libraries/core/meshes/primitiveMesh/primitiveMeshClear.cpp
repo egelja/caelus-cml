@@ -100,6 +100,11 @@ void CML::primitiveMesh::printAllocated() const
         Pout<< "    Cell-centres" << endl;
     }
 
+    if (cellCentresGeometricPtr_)
+    {
+        Pout<< "    Cell-centres geometric" << endl;
+    }
+
     if (faceCentresPtr_)
     {
         Pout<< "    Face-centres" << endl;
@@ -128,6 +133,7 @@ void CML::primitiveMesh::clearGeom()
     }
 
     deleteDemandDrivenData(cellCentresPtr_);
+    deleteDemandDrivenData(cellCentresGeometricPtr_);
     deleteDemandDrivenData(faceCentresPtr_);
     deleteDemandDrivenData(cellVolumesPtr_);
     deleteDemandDrivenData(faceAreasPtr_);

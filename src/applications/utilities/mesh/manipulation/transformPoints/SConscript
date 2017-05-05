@@ -1,59 +1,33 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-transformPointsEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = transformPointsEnv['LIB_SRC']
+target = 'transformPoints'
 
-transformPointsEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-transformPointsEnv.Append(CCFLAGS = '')
+sources = Split("""
+transformPoints.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = []
+caelus_inc = [
+]
 
-transformPointsEnv.Prepend(CPPPATH = lib_inc)
+caelus_libs = [
+'core',
+'genericPatchFields'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-transformPointsEnv.Prepend(LIBPATH = lib_link_path)
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if transformPointsEnv['WHICH_OS'] == "windows":
-  transformPointsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
-
-lib_link = ['genericPatchFields']
-  
-transformPointsEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  transformPoints.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bintransformPoints = transformPointsEnv.Program(target = 
-'transformPoints', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = transformPointsEnv['BIN_PLATFORM_INSTALL']
-transformPointsEnv.Alias('install', install_dir)
-transformPointsEnv.Install(install_dir, bintransformPoints)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

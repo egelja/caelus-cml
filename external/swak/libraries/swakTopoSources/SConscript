@@ -1,67 +1,37 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakTopoSouEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakTopoSouEnv['LIB_SRC']
+target = 'swakTopoSources'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakTopoSouEnv.Append(CXXFLAGS = '')
+sources = Split("""
+expressionToCell.cpp
+expressionToFace.cpp
+expressionToPoint.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
+caelus_inc = [
+'sampling/lnInclude'
 ]
-	
-swakTopoSouEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakTopoSouEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakTopoSources'),
+                  os.path.join(env['SWAK_PATH'],'swakTopoSources/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakTopoSouEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakTopoSou = Split("""
-  expressionToCell.cpp
-  expressionToFace.cpp
-  expressionToPoint.cpp
-  """)
-
-src_files = src_files_swakTopoSou
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakTopoSous = swakTopoSouEnv.SharedLibrary(target = 'libswakTopoSources',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakTopoSouEnv['LIB_PLATFORM_INSTALL']
-swakTopoSouEnv.Alias('install', install_dir)
-swakTopoSouEnv.Install(install_dir, libswakTopoSous)
-
-if (swakTopoSouEnv['WHICH_OS'] == "darwin"):
-
-  swakTopoSouEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakTopoSources.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

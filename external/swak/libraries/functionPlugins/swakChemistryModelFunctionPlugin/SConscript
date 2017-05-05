@@ -1,70 +1,45 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakChemEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakChemEnv['LIB_SRC']
+target = 'swakChemistryModelFunctionPlugin'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakChemEnv.Append(CXXFLAGS = '')
+sources = Split("""
+swakPsiChemistryModelPluginFunction.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/chemistryModel/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/chemistryModel/lnInclude'
 ]
-	
-swakChemEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakChemEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'basicThermophysicalModels',
+'basicSolidThermo',
+'specie',
+'reactionThermophysicalModels',
+'chemistryModel',
+'ODE'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','basicThermophysicalModels',
-  'basicSolidThermo','specie','reactionThermophysicalModels','chemistryModel','ODE']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakChemistryModelFunctionPlugin'),
+                  os.path.join(env['SWAK_PATH'],'swakChemistryModelFunctionPlugin/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakChemEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakChem = Split("""
-  swakPsiChemistryModelPluginFunction.cpp
-  """)
-
-src_files = src_files_swakChem
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakChems = swakChemEnv.SharedLibrary(target = 'libswakChemistryModelFunctionPlugin',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakChemEnv['LIB_PLATFORM_INSTALL']
-swakChemEnv.Alias('install', install_dir)
-swakChemEnv.Install(install_dir, libswakChems)
-
-if (swakChemEnv['WHICH_OS'] == "darwin"):
-
-  swakChemEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakChemistryModelFunctionPlugin.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

@@ -1,62 +1,30 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-lagDistModelsEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-lagDistModelsEnv.Append(CXXFLAGS = '')
+target = 'distributionModels'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude']
-lagDistModelsEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+distributionModel/distributionModel.cpp
+distributionModel/distributionModelNew.cpp
+exponential/exponential.cpp
+fixedValue/fixedValue.cpp
+general/general.cpp
+multiNormal/multiNormal.cpp
+normal/normal.cpp
+RosinRammler/RosinRammler.cpp
+uniform/uniform.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-lagDistModelsEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = []
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core']
-lagDistModelsEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  distributionModel/distributionModel.cpp
-  distributionModel/distributionModelNew.cpp
-  exponential/exponential.cpp
-  fixedValue/fixedValue.cpp
-  general/general.cpp
-  multiNormal/multiNormal.cpp
-  normal/normal.cpp
-  RosinRammler/RosinRammler.cpp
-  uniform/uniform.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libdistributionModels = lagDistModelsEnv.SharedLibrary(target = 
-'distributionModels', source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = lagDistModelsEnv['LIB_PLATFORM_INSTALL']
-lagDistModelsEnv.Alias('install', install_dir)
-lagDistModelsEnv.Install(install_dir, libdistributionModels)
-
-if (lagDistModelsEnv['WHICH_OS'] == "darwin"):
-
-  lagDistModelsEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libdistributionModels.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

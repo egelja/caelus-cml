@@ -26,7 +26,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::IOobject, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(IOobject, 0);
+}
+
 
 static CML::StaticHashTable<CML::word> replacedFileNames_;
 
@@ -275,7 +280,14 @@ const CML::fileName& CML::IOobject::rootPath() const
 
 CML::fileName CML::IOobject::path() const
 {
-    return rootPath()/caseName()/instance()/db_.dbDir()/local();
+    if (instance().isAbsolute())
+    {
+        return instance();
+    }
+    else
+    {
+        return rootPath()/caseName()/instance()/db_.dbDir()/local();
+    }
 }
 
 
@@ -285,6 +297,7 @@ CML::fileName CML::IOobject::path
     const fileName& local
 ) const
 {
+    // Note: can only be called with relative instance since is word type
     return rootPath()/caseName()/instance/db_.dbDir()/local;
 }
 
@@ -310,56 +323,97 @@ const CML::word & CML::IOobject::uniqueFileName() const
 
 CML::fileName CML::IOobject::filePath() const
 {
-    const word & diskFileName = uniqueFileName();
-    fileName path = this->path();
-    fileName objectPath = path/diskFileName;
-
-    if (isFile(objectPath))
+    if (instance().isAbsolute())
     {
-        return objectPath;
+        fileName objectPath = instance()/uniqueFileName();
+        if (isFile(objectPath))
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "filePath : returning absolute:" << objectPath
+                    << endl;
+            }
+            return objectPath;
+        }
+        else
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "filePath : absolute not found:" << objectPath
+                    << endl;
+            }
+            return fileName::null;
+        }
     }
     else
     {
-        if
-        (
-            time().processorCase()
-         && (
-                instance() == time().system()
-             || instance() == time().constant()
-            )
-        )
-        {
-            fileName parentObjectPath =
-                rootPath()/caseName()
-               /".."/instance()/db_.dbDir()/local()/diskFileName;
+        fileName path = this->path();
+        fileName objectPath = path/uniqueFileName();
 
-            if (isFile(parentObjectPath))
+        if (isFile(objectPath))
+        {
+            if (objectRegistry::debug)
             {
-                return parentObjectPath;
+                Pout<< "filePath : returning time:" << objectPath << endl;
             }
+            return objectPath;
         }
-
-        if (!isDir(path))
+        else
         {
-            word newInstancePath = time().findInstancePath(instant(instance()));
-
-            if (newInstancePath.size())
+            if
+            (
+                time().processorCase()
+             && (
+                    instance() == time().system()
+                 || instance() == time().constant()
+                )
+            )
             {
-                fileName fName
+                fileName parentObjectPath =
+                    rootPath()/time().globalCaseName()
+                   /instance()/db_.dbDir()/local()/uniqueFileName();
+
+                if (isFile(parentObjectPath))
+                {
+                    if (objectRegistry::debug)
+                    {
+                        Pout<< "filePath : returning parent:"
+                            << parentObjectPath << endl;
+                    }
+                    return parentObjectPath;
+                }
+            }
+
+            if (!isDir(path))
+            {
+                word newInstancePath = time().findInstancePath
                 (
-                    rootPath()/caseName()
-                   /newInstancePath/db_.dbDir()/local()/diskFileName
+                    instant(instance())
                 );
 
-                if (isFile(fName))
+                if (newInstancePath.size())
                 {
-                    return fName;
+                    fileName fName
+                    (
+                        rootPath()/caseName()
+                       /newInstancePath/db_.dbDir()/local()/uniqueFileName()
+                    );
+
+                    if (isFile(fName))
+                    {
+                        if (objectRegistry::debug)
+                        {
+                            Pout<< "filePath : returning similar time:"
+                                << fName << endl;
+                        }
+                        return fName;
+                    }
                 }
             }
         }
-    }
 
-    return fileName::null;
+        return fileName::null;
+    }
 }
 
 

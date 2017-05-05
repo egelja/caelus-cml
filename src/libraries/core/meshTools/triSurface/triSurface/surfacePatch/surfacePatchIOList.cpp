@@ -23,7 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::surfacePatchIOList, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(surfacePatchIOList, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

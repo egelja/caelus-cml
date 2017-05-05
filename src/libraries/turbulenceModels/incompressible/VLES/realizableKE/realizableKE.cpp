@@ -30,7 +30,7 @@ namespace incompressible
 namespace VLESModels
 {
 
-defineTypeNameAndDebug(VLESModels::realizableVLESKE, 0);
+defineTypeNameAndDebug(realizableVLESKE, 0);
 addToRunTimeSelectionTable(VLESModel, realizableVLESKE, dictionary);
 
 tmp<volScalarField> realizableVLESKE::F1() const
@@ -421,7 +421,7 @@ void realizableVLESKE::correct()
     }
     else
     {
-        FatalErrorIn("realizableVLESKE")
+        FatalErrorIn("realizableKEVLES")
             << "Case is not 3D or 2D, LES is not applicable"
             << exit(FatalError);
     }

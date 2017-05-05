@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -54,7 +55,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::fvMesh, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(fvMesh, 0);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -68,6 +74,8 @@ void CML::fvMesh::clearGeomNotOldVol()
     deleteDemandDrivenData(SfPtr_);
     deleteDemandDrivenData(magSfPtr_);
     deleteDemandDrivenData(CPtr_);
+    deleteDemandDrivenData(CgPtr_);
+    deleteDemandDrivenData(defectCorrVecsPtr_);
     deleteDemandDrivenData(CfPtr_);
 }
 
@@ -78,6 +86,8 @@ void CML::fvMesh::updateGeomNotOldVol()
     bool haveSf = (SfPtr_ != NULL);
     bool haveMagSf = (magSfPtr_ != NULL);
     bool haveCP = (CPtr_ != NULL);
+    bool haveCPg = (CgPtr_ != NULL);
+    bool haveDefectCorrVec = (defectCorrVecsPtr_ != NULL);
     bool haveCf = (CfPtr_ != NULL);
 
     clearGeomNotOldVol();
@@ -98,6 +108,14 @@ void CML::fvMesh::updateGeomNotOldVol()
     if (haveCP)
     {
         (void)C();
+    }
+    if (haveCPg)
+    {
+        (void)Cg();
+    }
+    if (haveDefectCorrVec)
+    {
+        (void)defectCorrVecs();
     }
     if (haveCf)
     {
@@ -179,9 +197,9 @@ const CML::scalarField CML::fvMesh::patchWeights(const fvPatch& patch) const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::fvMesh::fvMesh(const IOobject& io)
+CML::fvMesh::fvMesh(const IOobject& io, const bool defectCorr, const scalar areaSwitch)
 :
-    polyMesh(io),
+    polyMesh(io, defectCorr, areaSwitch),
     surfaceInterpolation(*this),
     fvSchemes(static_cast<const objectRegistry&>(*this)),
     fvSolution(static_cast<const objectRegistry&>(*this)),
@@ -195,6 +213,8 @@ CML::fvMesh::fvMesh(const IOobject& io)
     SfPtr_(NULL),
     magSfPtr_(NULL),
     CPtr_(NULL),
+    CgPtr_(NULL),
+    defectCorrVecsPtr_(NULL),
     CfPtr_(NULL),
     phiPtr_(NULL)
 {
@@ -216,7 +236,8 @@ CML::fvMesh::fvMesh(const IOobject& io)
                 time().timeName(),
                 *this,
                 IOobject::MUST_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             *this
         );
@@ -236,7 +257,8 @@ CML::fvMesh::fvMesh(const IOobject& io)
                 time().timeName(),
                 *this,
                 IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             *this
         );
@@ -276,7 +298,9 @@ CML::fvMesh::fvMesh
     const PtrList<dictionary>& boundaryDicts,
     const word& defaultBoundaryPatchName,
     const word& defaultBoundaryPatchType,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
     polyMesh
@@ -289,7 +313,9 @@ CML::fvMesh::fvMesh
         boundaryDicts,
         defaultBoundaryPatchName,
         defaultBoundaryPatchType,
-        syncPar
+        syncPar,
+        defectCorr,
+        areaSwitch
     ),
     surfaceInterpolation(*this),
     fvSchemes(static_cast<const objectRegistry&>(*this)),
@@ -304,6 +330,8 @@ CML::fvMesh::fvMesh
     SfPtr_(NULL),
     magSfPtr_(NULL),
     CPtr_(NULL),
+    CgPtr_(NULL),
+    defectCorrVecsPtr_(NULL),
     CfPtr_(NULL),
     phiPtr_(NULL)
 {
@@ -321,15 +349,17 @@ CML::fvMesh::fvMesh
     const Xfer<faceList>& faces,
     const Xfer<labelList>& allOwner,
     const Xfer<labelList>& allNeighbour,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
-    polyMesh(io, points, faces, allOwner, allNeighbour, syncPar),
+    polyMesh(io, points, faces, allOwner, allNeighbour, syncPar, defectCorr, areaSwitch),
     surfaceInterpolation(*this),
     fvSchemes(static_cast<const objectRegistry&>(*this)),
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
-    boundary_(*this),
+    boundary_(*this, boundaryMesh()),
     lduPtr_(NULL),
     curTimeIndex_(time().timeIndex()),
     VPtr_(NULL),
@@ -338,6 +368,8 @@ CML::fvMesh::fvMesh
     SfPtr_(NULL),
     magSfPtr_(NULL),
     CPtr_(NULL),
+    CgPtr_(NULL),
+    defectCorrVecsPtr_(NULL),
     CfPtr_(NULL),
     phiPtr_(NULL)
 {
@@ -354,10 +386,12 @@ CML::fvMesh::fvMesh
     const Xfer<pointField>& points,
     const Xfer<faceList>& faces,
     const Xfer<cellList>& cells,
-    const bool syncPar
+    const bool syncPar,
+    const bool defectCorr,
+    const scalar areaSwitch
 )
 :
-    polyMesh(io, points, faces, cells, syncPar),
+    polyMesh(io, points, faces, cells, syncPar, defectCorr, areaSwitch),
     surfaceInterpolation(*this),
     fvSchemes(static_cast<const objectRegistry&>(*this)),
     fvSolution(static_cast<const objectRegistry&>(*this)),
@@ -371,6 +405,8 @@ CML::fvMesh::fvMesh
     SfPtr_(NULL),
     magSfPtr_(NULL),
     CPtr_(NULL),
+    CgPtr_(NULL),
+    defectCorrVecsPtr_(NULL),
     CfPtr_(NULL),
     phiPtr_(NULL)
 {
@@ -648,7 +684,8 @@ CML::tmp<CML::scalarField> CML::fvMesh::movePoints(const pointField& p)
                 this->time().timeName(),
                 *this,
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             *this,
             dimVolume/dimTime
@@ -744,7 +781,13 @@ bool CML::fvMesh::writeObjects
 //- Write mesh using IO settings from the time
 bool CML::fvMesh::write() const
 {
-    return polyMesh::write();
+    bool ok = true;
+    if (phiPtr_)
+    {
+        ok = phiPtr_->write();
+    }
+
+    return ok && polyMesh::write();
 }
 
 

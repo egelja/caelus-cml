@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,7 +26,7 @@ License
 
 namespace CML
 {
-    defineTypeNameAndDebug(CML::RK, 0);
+    defineTypeNameAndDebug(RK, 0);
     addToRunTimeSelectionTable(ODESolver, RK, ODE);
 
 const scalar

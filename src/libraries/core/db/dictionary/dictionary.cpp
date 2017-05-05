@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,10 +27,13 @@ License
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
-defineTypeNameAndDebug(CML::dictionary, 0);
 
-const CML::dictionary CML::dictionary::null;
+namespace CML
+{
+    defineTypeNameAndDebug(dictionary, 0);
 
+    const dictionary dictionary::null;
+}
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -215,6 +218,21 @@ CML::dictionary::~dictionary()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+const CML::dictionary& CML::dictionary::topDict() const
+{
+    const dictionary& p = parent();
+
+    if (&p != this && !p.name().empty())
+    {
+        return p.topDict();
+    }
+    else
+    {
+        return *this;
+    }
+}
+
 
 CML::label CML::dictionary::startLineNumber() const
 {
@@ -413,6 +431,151 @@ CML::ITstream& CML::dictionary::lookup
 }
 
 
+const CML::entry* CML::dictionary::lookupScopedEntryPtr
+(
+    const word& keyword,
+    bool recursive,
+    bool patternMatch
+) const
+{
+    if (keyword[0] == ':')
+    {
+        // Go up to top level
+        const dictionary* dictPtr = this;
+        while (&dictPtr->parent_ != &dictionary::null)
+        {
+            dictPtr = &dictPtr->parent_;
+        }
+
+        // At top. Recurse to find entries
+        return dictPtr->lookupScopedEntryPtr
+        (
+            keyword.substr(1, keyword.size()-1),
+            false,
+            patternMatch
+        );
+    }
+    else
+    {
+        string::size_type dotPos = keyword.find('.');
+
+        if (dotPos == string::npos)
+        {
+            // Non-scoped lookup
+            return lookupEntryPtr(keyword, recursive, patternMatch);
+        }
+        else
+        {
+            if (dotPos == 0)
+            {
+                // Starting with a '.'. Go up for every 2nd '.' found
+
+                const dictionary* dictPtr = this;
+
+                string::size_type begVar = dotPos + 1;
+                string::const_iterator iter = keyword.begin() + begVar;
+                string::size_type endVar = begVar;
+                while
+                (
+                    iter != keyword.end()
+                 && *iter == '.'
+                )
+                {
+                    ++iter;
+                    ++endVar;
+
+                    // Go to parent
+                    if (&dictPtr->parent_ == &dictionary::null)
+                    {
+                        FatalIOErrorIn
+                        (
+                            "dictionary::lookupScopedEntryPtr"
+                            "(const word&, bool, bool)",
+                            *this
+                        )   << "No parent of current dictionary"
+                            << " when searching for "
+                            << keyword.substr(begVar, keyword.size()-begVar)
+                            << exit(FatalIOError);
+                    }
+                    dictPtr = &dictPtr->parent_;
+                }
+
+                return dictPtr->lookupScopedEntryPtr
+                (
+                    keyword.substr(endVar),
+                    false,
+                    patternMatch
+                );
+            }
+            else
+            {
+                // Extract the first word
+                word firstWord = keyword.substr(0, dotPos);
+
+                const entry* entPtr = lookupScopedEntryPtr
+                (
+                    firstWord,
+                    false,          //recursive
+                    patternMatch
+                );
+
+                if (!entPtr)
+                {
+                    FatalIOErrorIn
+                    (
+                        "dictionary::lookupScopedEntryPtr"
+                        "(const word&, bool, bool)",
+                        *this
+                    )   << "keyword " << firstWord
+                        << " is undefined in dictionary "
+                        << name() << endl
+                        << "Valid keywords are " << keys()
+                        << exit(FatalIOError);
+                }
+
+                if (entPtr->isDict())
+                {
+                    return entPtr->dict().lookupScopedEntryPtr
+                    (
+                        keyword.substr(dotPos, keyword.size()-dotPos),
+                        false,
+                        patternMatch
+                    );
+                }
+                else
+                {
+                    return NULL;
+                }
+            }
+        }
+    }
+}
+
+
+bool CML::dictionary::substituteScopedKeyword(const word& keyword)
+{
+    word varName = keyword(1, keyword.size()-1);
+
+    // Lookup the variable name in the given dictionary
+    const entry* ePtr = lookupScopedEntryPtr(varName, true, true);
+
+    // If defined insert its entries into this dictionary
+    if (ePtr != NULL)
+    {
+        const dictionary& addDict = ePtr->dict();
+
+        forAllConstIter(IDLList<entry>, addDict, iter)
+        {
+            add(iter());
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+
 bool CML::dictionary::isDict(const word& keyword) const
 {
     // Find non-recursive with patterns
@@ -524,6 +687,12 @@ CML::wordList CML::dictionary::toc() const
     }
 
     return keys;
+}
+
+
+CML::wordList CML::dictionary::sortedToc() const
+{
+    return hashedEntries_.sortedToc();
 }
 
 
@@ -676,7 +845,7 @@ void CML::dictionary::set(entry* entryPtr)
 {
     entry* existingPtr = lookupEntryPtr(entryPtr->keyword(), false, true);
 
-    // clear dictionary so merge acts like overwrite
+    // Clear dictionary so merge acts like overwrite
     if (existingPtr && existingPtr->isDict())
     {
         existingPtr->dict().clear();
@@ -736,7 +905,7 @@ bool CML::dictionary::changeKeyword
     bool forceOverwrite
 )
 {
-    // no change
+    // No change
     if (oldKeyword == newKeyword)
     {
         return false;
@@ -804,7 +973,7 @@ bool CML::dictionary::changeKeyword
         }
     }
 
-    // change name and HashTable, but leave DL-List untouched
+    // Change name and HashTable, but leave DL-List untouched
     iter()->keyword() = newKeyword;
     iter()->name() = name() + "::" + newKeyword;
     hashedEntries_.erase(oldKeyword);
@@ -858,7 +1027,7 @@ bool CML::dictionary::merge(const dictionary& dict)
         }
         else
         {
-            // not found - just add
+            // Not found - just add
             add(iter().clone(*this).ptr());
             changed = true;
         }
@@ -879,7 +1048,7 @@ void CML::dictionary::clear()
 
 void CML::dictionary::transfer(dictionary& dict)
 {
-    // changing parents probably doesn't make much sense,
+    // Changing parents probably doesn't make much sense,
     // but what about the names?
     name() = dict.name();
 

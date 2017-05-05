@@ -24,7 +24,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::objectRegistry, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(objectRegistry, 0);
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -147,9 +151,25 @@ CML::wordList CML::objectRegistry::sortedNames(const word& ClassName) const
 
 const CML::objectRegistry& CML::objectRegistry::subRegistry
 (
-    const word& name
+    const word& name,
+    const bool forceCreate
 ) const
 {
+    if (forceCreate && !foundObject<objectRegistry>(name))
+    {
+        objectRegistry* fieldsCachePtr = new objectRegistry
+        (
+            IOobject
+            (
+                name,
+                time().constant(),
+                *this,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            )
+        );
+        fieldsCachePtr->store();
+    }
     return lookupObject<objectRegistry>(name);
 }
 
@@ -331,6 +351,7 @@ bool CML::objectRegistry::writeObject
             Pout<< "objectRegistry::write() : "
                 << name() << " : Considering writing object "
                 << iter.key()
+                << " of type " << iter()->type()
                 << " with writeOpt " << iter()->writeOpt()
                 << " to file " << iter()->objectPath()
                 << endl;

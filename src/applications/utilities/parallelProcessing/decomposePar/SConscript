@@ -1,67 +1,51 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-decomposeParEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = decomposeParEnv['LIB_SRC']
+target = 'decomposePar'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-decomposeParEnv.Append(CCFLAGS = '')
+sources = Split("""
+decomposePar.cpp
+domainDecomposition.cpp
+domainDecompositionMesh.cpp
+domainDecompositionDistribute.cpp
+dimFieldDecomposer.cpp
+pointFieldDecomposer.cpp
+lagrangianFieldDecomposer.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/parallel/decompose/decompose/lnInclude',
-src + '/parallel/decompose/decompositionMethods/lnInclude',
-src + '/lagrangian/basic/lnInclude',
+caelus_inc = [
+'parallel/decompose/decompose/lnInclude',
+'parallel/decompose/decompositionMethods/lnInclude',
+'lagrangian/basic/lnInclude',
+'regionModels/regionModel/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude',
 ]
-decomposeParEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-decomposeParEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian',
+'decompose',
+'decompositionMethods',
+'scotchDecomp',
+'metisDecomp',
+'regionModels',
+'dynamicMesh'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if decomposeParEnv['WHICH_OS'] == "windows":
-  decomposeParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u scotchDecompLoad -u metisDecompLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+      '-u genericPatchFieldsLoad -u scotchDecompLoad -u metisDecompLoad'
+}
 
-lib_link = ['genericPatchFields','lagrangian','decompose',
-'decompositionMethods','scotchDecomp','metisDecomp']
-   
-decomposeParEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  decomposePar.cpp
-  domainDecomposition.cpp
-  domainDecompositionMesh.cpp
-  domainDecompositionDistribute.cpp
-  dimFieldDecomposer.cpp
-  pointFieldDecomposer.cpp
-  lagrangianFieldDecomposer.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bindecomposePar = decomposeParEnv.Program(target = 'decomposePar', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = decomposeParEnv['BIN_PLATFORM_INSTALL']
-decomposeParEnv.Alias('install', install_dir)
-decomposeParEnv.Install(install_dir, bindecomposePar)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

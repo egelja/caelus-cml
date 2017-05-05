@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -74,8 +74,8 @@ public:
     //- Construct from matrix components and preconditioner solver controls
     diagonalPreconditioner
     (
-        const lduMatrix::solver&,
-        const dictionary& solverControlsUnused
+        lduMatrix::solver const&,
+        dictionary const& solverControlsUnused
     );
 
     virtual ~diagonalPreconditioner()
@@ -89,16 +89,16 @@ public:
     virtual void precondition
     (
         scalarField& w,
-        const scalarField& r,
-        const direction cmpt=0
+        scalarField const& r,
+        direction const cmpt=0
     ) const;
 
     //- Return wT the transpose-matrix preconditioned form of residual rT.
     virtual void preconditionT
     (
         scalarField& wT,
-        const scalarField& rT,
-        const direction cmpt=0
+        scalarField const& rT,
+        direction const cmpt=0
     ) const
     {
         return precondition(wT, rT, cmpt);

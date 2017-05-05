@@ -29,8 +29,9 @@ License
 
 namespace CML
 {
-    defineTypeNameAndDebug(graph::writer, 0);
-    defineRunTimeSelectionTable(graph::writer, word);
+    typedef graph::writer graphWriter;
+    defineTypeNameAndDebug(graphWriter, 0);
+    defineRunTimeSelectionTable(graphWriter, word);
 }
 
 

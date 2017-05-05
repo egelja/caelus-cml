@@ -43,10 +43,14 @@ SourceFiles
 namespace CML
 {
 
-// Forward declaration of friend functions and operators
+// Forward declaration of classes
 
-template<class T> class PtrList;
 template<class T> class SLPtrList;
+template<class T> class autoPtr;
+template<class T> class tmp;
+
+// Forward declaration of friend functions and operators
+template<class T> class PtrList;
 
 template<class T>
 inline typename PtrList<T>::iterator operator+
@@ -82,8 +86,7 @@ Istream& operator>>(Istream&, PtrList<T>&);
 template<class T>
 Ostream& operator<<(Ostream&, const PtrList<T>&);
 
-template<class T> class autoPtr;
-template<class T> class tmp;
+
 
 
 /*---------------------------------------------------------------------------*\
@@ -111,13 +114,13 @@ public:
 
     // Constructors
 
-        //- Null Constructor.
+        //- Null Constructor
         PtrList();
 
-        //- Construct with size specified.
+        //- Construct with size specified
         explicit PtrList(const label);
 
-        //- Copy constructor.
+        //- Copy constructor
         PtrList(const PtrList<T>&);
 
         //- Copy constructor with additional argument for clone
@@ -185,6 +188,11 @@ public:
             //  allocated entries.
             void clear();
 
+            //- Append an element at the end of the list
+            inline void append(T*);
+            inline void append(const autoPtr<T>&);
+            inline void append(const tmp<T>&);
+
             //- Transfer the contents of the argument PtrList into this PtrList
             //  and annul the argument list.
             void transfer(PtrList<T>&);
@@ -198,7 +206,11 @@ public:
             //- Set element. Return old element (can be NULL).
             //  No checks on new element.
             inline autoPtr<T> set(const label, T*);
+
+            //- Set element to given autoPtr<T> and return old element
             inline autoPtr<T> set(const label, const autoPtr<T>&);
+
+            //- Set element to given tmp<T> and return old element
             inline autoPtr<T> set(const label, const tmp<T>&);
 
             //- Reorders elements. Ordering does not have to be done in
@@ -321,6 +333,7 @@ public:
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+
 template<class T>
 inline CML::label CML::PtrList<T>::size() const
 {
@@ -369,6 +382,30 @@ inline void CML::PtrList<T>::resize(const label newSize)
     this->setSize(newSize);
 }
 
+template<class T>
+inline void CML::PtrList<T>::append(T* ptr)
+{
+    label sz = this->size();
+    this->setSize(sz+1);
+    this->ptrs_[sz] = ptr;
+}
+
+
+template<class T>
+inline void CML::PtrList<T>::append(const autoPtr<T>& aptr)
+{
+    return append(const_cast<autoPtr<T>&>(aptr).ptr());
+}
+
+
+template<class T>
+inline void CML::PtrList<T>::append
+(
+    const tmp<T>& t
+)
+{
+    return append(const_cast<tmp<T>&>(t).ptr());
+}
 
 template<class T>
 inline bool CML::PtrList<T>::set(const label i) const

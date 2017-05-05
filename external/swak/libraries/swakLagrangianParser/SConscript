@@ -1,98 +1,71 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-LagParserEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = LagParserEnv['LIB_SRC']
+target = 'swakLagrangianParser'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-LagParserEnv.Append(CXXFLAGS = '')
+sources = Split("""
+bison/CloudValueExpressionParser.cpp
+flex/CloudValueExpressionLexer.cpp
+CloudValueExpressionDriver.cpp
+CloudValuePluginFunction.cpp
+CloudProxy.cpp
+makeCloudProxys.cpp
+ReaderParticle/ReaderParticle.cpp
+ReaderParticle/ReaderParticleCloud.cpp
+ReaderParticle/CloudProxyForReaderParticle.cpp
+CloudRepository.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/thermophysicalModels/pdfs/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/liquids/lnInclude',
-src + '/thermophysicalModels/liquidMixture/lnInclude',
-src + '/thermophysicalModels/solids/lnInclude',
-src + '/thermophysicalModels/solidMixture/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/radiation/lnInclude',
-src + '/regionModels/regionModel/lnInclude',
-src + '/thermophysicalModels/SLGThermo/lnInclude',
-src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
-src + '/regionModels/surfaceFilmModels/lnInclude',
-src + '/lagrangian/basic/lnInclude',
-src + '/lagrangian/intermediate/lnInclude',
-src + '/lagrangian/solidParticle/lnInclude',
-'bison',
-'flex'
+caelus_inc = [
+'sampling/lnInclude',
+'thermophysicalModels/pdfs/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/liquids/lnInclude',
+'thermophysicalModels/liquidMixture/lnInclude',
+'thermophysicalModels/solids/lnInclude',
+'thermophysicalModels/solidMixture/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
+'regionModels/regionModel/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/properties/solidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude',
+'thermophysicalModels/properties/liquidProperties/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'lagrangian/basic/lnInclude',
+'lagrangian/intermediate/lnInclude',
+'lagrangian/solidParticle/lnInclude'
 ]
-	
-LagParserEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-LagParserEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'sampling',
+'lagrangian',
+'lagrangianIntermediate',
+'thermophysicalFunctions',
+'radiationModels',
+'solidParticle'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','sampling',
-'lagrangian','lagrangianIntermediate','thermophysicalFunctions','radiationModels',
-'solidParticle']
-  
-LagParserEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_LagParser = Split("""
-  bison/CloudValueExpressionParser.cpp
-  flex/CloudValueExpressionLexer.cpp
-  CloudValueExpressionDriver.cpp
-  CloudValuePluginFunction.cpp
-  CloudProxy.cpp
-  makeCloudProxys.cpp
-  ReaderParticle/ReaderParticle.cpp
-  ReaderParticle/ReaderParticleCloud.cpp
-  ReaderParticle/CloudProxyForReaderParticle.cpp
-  CloudRepository.cpp
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakLagrangianParser'),
+                  os.path.join(env['SWAK_PATH'],'swakLagrangianParser/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakLagrangianParser/bison'),
+                  os.path.join(env['SWAK_PATH'],'swakLagrangianParser/flex'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-  """)
-
-src_files = src_files_LagParser
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakLagParsers = LagParserEnv.SharedLibrary(target = 'libswakLagrangianParser',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = LagParserEnv['LIB_PLATFORM_INSTALL']
-LagParserEnv.Alias('install', install_dir)
-LagParserEnv.Install(install_dir, libswakLagParsers)
-
-if (LagParserEnv['WHICH_OS'] == "darwin"):
-
-  LagParserEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakLagrangianParser.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

@@ -24,84 +24,78 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvLaplacianScheme(gaussLaplacianScheme)
-}
-}
+makeFvLaplacianScheme(gaussLaplacianScheme)
 
-#define declareFvmLaplacianScalarGamma(Type)                                 \
-                                                                             \
-template<>                                                                   \
-CML::tmp<CML::fvMatrix<CML::Type> >                                       \
-CML::fv::gaussLaplacianScheme<CML::Type, CML::scalar>::fvmLaplacian       \
-(                                                                            \
-    const GeometricField<scalar, fvsPatchField, surfaceMesh>& gamma,         \
-    const GeometricField<Type, fvPatchField, volMesh>& vf                    \
-)                                                                            \
-{                                                                            \
-    const fvMesh& mesh = this->mesh();                                       \
-                                                                             \
-    GeometricField<scalar, fvsPatchField, surfaceMesh> gammaMagSf            \
-    (                                                                        \
-        gamma*mesh.magSf()                                                   \
-    );                                                                       \
-                                                                             \
-    tmp<fvMatrix<Type> > tfvm = fvmLaplacianUncorrected(gammaMagSf, vf);     \
-    fvMatrix<Type>& fvm = tfvm();                                            \
-                                                                             \
-    if (this->tsnGradScheme_().corrected())                                  \
-    {                                                                        \
-        if (mesh.fluxRequired(vf.name()))                                    \
-        {                                                                    \
-            fvm.faceFluxCorrectionPtr() = new                                \
-            GeometricField<Type, fvsPatchField, surfaceMesh>                 \
-            (                                                                \
-                gammaMagSf*this->tsnGradScheme_().correction(vf)             \
-            );                                                               \
-                                                                             \
-            fvm.source() -=                                                  \
-                mesh.V()*                                                    \
-                fvc::div                                                     \
-                (                                                            \
-                    *fvm.faceFluxCorrectionPtr()                             \
-                )().internalField();                                         \
-        }                                                                    \
-        else                                                                 \
-        {                                                                    \
-            fvm.source() -=                                                  \
-                mesh.V()*                                                    \
-                fvc::div                                                     \
-                (                                                            \
-                    gammaMagSf*this->tsnGradScheme_().correction(vf)         \
-                )().internalField();                                         \
-        }                                                                    \
-    }                                                                        \
-                                                                             \
-    return tfvm;                                                             \
-}                                                                            \
-                                                                             \
-                                                                             \
-template<>                                                                   \
-CML::tmp<CML::GeometricField<CML::Type, CML::fvPatchField, CML::volMesh> >\
-CML::fv::gaussLaplacianScheme<CML::Type, CML::scalar>::fvcLaplacian       \
-(                                                                            \
-    const GeometricField<scalar, fvsPatchField, surfaceMesh>& gamma,         \
-    const GeometricField<Type, fvPatchField, volMesh>& vf                    \
-)                                                                            \
-{                                                                            \
-    const fvMesh& mesh = this->mesh();                                       \
-                                                                             \
-    tmp<GeometricField<Type, fvPatchField, volMesh> > tLaplacian             \
-    (                                                                        \
-        fvc::div(gamma*this->tsnGradScheme_().snGrad(vf)*mesh.magSf())       \
-    );                                                                       \
-                                                                             \
-    tLaplacian().rename("laplacian(" + gamma.name() + ',' + vf.name() + ')');\
-                                                                             \
-    return tLaplacian;                                                       \
+#define declareFvmLaplacianScalarGamma(Type)                                   \
+                                                                               \
+template<>                                                                     \
+CML::tmp<CML::fvMatrix<CML::Type> >                                            \
+CML::fv::gaussLaplacianScheme<CML::Type, CML::scalar>::fvmLaplacian            \
+(                                                                              \
+    const GeometricField<scalar, fvsPatchField, surfaceMesh>& gamma,           \
+    const GeometricField<Type, fvPatchField, volMesh>& vf                      \
+)                                                                              \
+{                                                                              \
+    const fvMesh& mesh = this->mesh();                                         \
+                                                                               \
+    GeometricField<scalar, fvsPatchField, surfaceMesh> gammaMagSf              \
+    (                                                                          \
+        gamma*mesh.magSf()                                                     \
+    );                                                                         \
+                                                                               \
+    tmp<fvMatrix<Type> > tfvm = fvmLaplacianUncorrected(gammaMagSf, vf);       \
+    fvMatrix<Type>& fvm = tfvm();                                              \
+                                                                               \
+    if (this->tsnGradScheme_().corrected())                                    \
+    {                                                                          \
+        if (mesh.fluxRequired(vf.name()))                                      \
+        {                                                                      \
+            fvm.faceFluxCorrectionPtr() = new                                  \
+            GeometricField<Type, fvsPatchField, surfaceMesh>                   \
+            (                                                                  \
+                gammaMagSf*this->tsnGradScheme_().correction(vf)               \
+            );                                                                 \
+                                                                               \
+            fvm.source() -=                                                    \
+                mesh.V()*                                                      \
+                fvc::div                                                       \
+                (                                                              \
+                    *fvm.faceFluxCorrectionPtr()                               \
+                )().internalField();                                           \
+        }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            fvm.source() -=                                                    \
+                mesh.V()*                                                      \
+                fvc::div                                                       \
+                (                                                              \
+                    gammaMagSf*this->tsnGradScheme_().correction(vf)           \
+                )().internalField();                                           \
+        }                                                                      \
+    }                                                                          \
+                                                                               \
+    return tfvm;                                                               \
+}                                                                              \
+                                                                               \
+                                                                               \
+template<>                                                                     \
+CML::tmp<CML::GeometricField<CML::Type, CML::fvPatchField, CML::volMesh> >     \
+CML::fv::gaussLaplacianScheme<CML::Type, CML::scalar>::fvcLaplacian            \
+(                                                                              \
+    const GeometricField<scalar, fvsPatchField, surfaceMesh>& gamma,           \
+    const GeometricField<Type, fvPatchField, volMesh>& vf                      \
+)                                                                              \
+{                                                                              \
+    const fvMesh& mesh = this->mesh();                                         \
+                                                                               \
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tLaplacian               \
+    (                                                                          \
+        fvc::div(gamma*this->tsnGradScheme_().snGrad(vf)*mesh.magSf())         \
+    );                                                                         \
+                                                                               \
+    tLaplacian().rename("laplacian(" + gamma.name() + ',' + vf.name() + ')');  \
+                                                                               \
+    return tLaplacian;                                                         \
 }
 
 

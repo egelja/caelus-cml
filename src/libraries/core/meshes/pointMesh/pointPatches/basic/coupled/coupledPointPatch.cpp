@@ -26,7 +26,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::coupledPointPatch, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(coupledPointPatch, 0);
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 

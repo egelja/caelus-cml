@@ -1,70 +1,41 @@
-#Copyright (C) 2015 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-swakSouFieldEnv = globalEnv.Clone()
+import os
+from build import build_lib
+Import('env')
 
-# Path to Caelus source
-src = swakSouFieldEnv['LIB_SRC']
+target = 'swakSourceFields'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-swakSouFieldEnv.Append(CXXFLAGS = '')
+sources = Split("""
+expressionSource.cpp
+forceEquation.cpp
+swakSetValues.cpp
+swakExplicitSources.cpp
+swakImplicitSources.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['.','lnInclude', 
-'../swakParsers/lnInclude',
-src + '/sampling/lnInclude',
-src + '/fvOptions/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'fvOptions/lnInclude'
 ]
-	
-swakSouFieldEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-  
-swakSouFieldEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'swakParsers',
+'fvOptions'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['swakParsers','fvOptions']
+append_args = {}
+append_args = { 'CPPPATH' : [
+                  os.path.join(env['SWAK_PATH'],'swakSourceFields'),
+                  os.path.join(env['SWAK_PATH'],'swakSourceFields/lnInclude'),
+                  os.path.join(env['SWAK_PATH'],'swakParsers/lnInclude')
+               ]
+            }
 
-swakSouFieldEnv.Append(LIBS = lib_link)
-  
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files_swakSouField = Split("""
-  expressionSource.cpp
-  forceEquation.cpp
-  swakSetValues.cpp
-  swakExplicitSources.cpp
-  swakImplicitSources.cpp
-  """)
-
-src_files = src_files_swakSouField
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libswakSouFields = swakSouFieldEnv.SharedLibrary(target = 'libswakSourceFields',
- source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = swakSouFieldEnv['LIB_PLATFORM_INSTALL']
-swakSouFieldEnv.Alias('install', install_dir)
-swakSouFieldEnv.Install(install_dir, libswakSouFields)
-
-if (swakSouFieldEnv['WHICH_OS'] == "darwin"):
-
-  swakSouFieldEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libswakSourceFields.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

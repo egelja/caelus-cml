@@ -1,11 +1,9 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 6.04</fullName>
-    <version>6.04</version>
+    <fullName>Caelus 7.04</fullName>
+    <version>7.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
-    <licenseFile>../doc/gpl-3.0.txt</licenseFile>
-    <htmlLicenseFile>../doc/gpl-3.0-standalone.html</htmlLicenseFile>
     <wrapLicenseFileText>0</wrapLicenseFileText>
     <leftImage>images/caelus_logo_black.png</leftImage>
     <logoImage>images/ACCM_logo.png</logoImage>
@@ -37,37 +35,19 @@
                         <distributionFile>
                             <origin>../README.md</origin>
                         </distributionFile>
-                        <distributionFile>
-                            <origin>../BuildCaelus.py</origin>
-                        </distributionFile>
                         <distributionDirectory>
                             <origin>../lib</origin>
                         </distributionDirectory>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>external Windows</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/windows</destination>
-                    <name>externalwin</name>
-                    <platforms>windows</platforms>
-                    <distributionFileList>
+                        <distributionFile>
+                            <origin>../scons_notes.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../SConstruct</origin>
+                        </distributionFile>
                         <distributionDirectory>
-                            <origin>../external/windows/flex-2.5.4a-1</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../external/windows/zlib-1.2.7</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../external/windows/mingw64</origin>
+                            <origin>../site_scons</origin>
                         </distributionDirectory>
                     </distributionFileList>
-                    <shouldPackRuleList>
-                        <compareText>
-                            <logic>equals</logic>
-                            <text>${platform_name}</text>
-                            <value>windows</value>
-                        </compareText>
-                    </shouldPackRuleList>
                 </folder>
                 <folder>
                     <description>src</description>
@@ -101,6 +81,15 @@
                         <distributionDirectory>
                             <origin>../tutorials/compressible</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/combustion</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>../tutorials/CleanTutorials.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../tutorials/RunTutorials.py</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -121,8 +110,35 @@
                         <distributionDirectory>
                             <origin>../external/swak</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/cfmesh</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
+                <folder>
+                    <description>external Windows</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/windows</destination>
+                    <name>externalwin</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/windows/flex-2.5.4a-1</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/zlib-1.2.7</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/mingw64</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>windows</value>
+                        </compareText>
+                    </shouldPackRuleList>
+                </folder>                
             </folderList>
             <startMenuShortcutList>
                 <startMenuShortcut>
@@ -151,7 +167,7 @@
                     <platforms>windows</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <origin>../platforms/windows64SystemDPOpt</origin>
+                            <origin>../platforms/windows64g++DPOpt</origin>
                         </distributionDirectory>
                     </distributionFileList>
                     <shouldPackRuleList>
@@ -161,34 +177,6 @@
                             <value>windows</value>
                         </compareText>
                     </shouldPackRuleList>
-                </folder>
-                <folder>
-                    <description>metislib</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/metis-5.1.0</destination>
-                    <name>metislib</name>
-                    <platforms>windows</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>../external/metis-5.1.0</origin>
-                            <onPackingFilterList>
-                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
-                            </onPackingFilterList>
-                        </distributionDirectory>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>scotchlib</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-6.0.4</destination>
-                    <name>scotchlib</name>
-                    <platforms>windows</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>../external/scotch-6.0.4</origin>
-                            <onPackingFilterList>
-                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
-                            </onPackingFilterList>
-                        </distributionDirectory>
-                    </distributionFileList>
                 </folder>
             </folderList>
             <shouldPackRuleList>
@@ -432,8 +420,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
             </postInstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Caelus 6.04 Terminal</comment>
-                    <name>Caelus 6.04 Terminal</name>
+                    <comment>Caelus 7.04 Terminal</comment>
+                    <name>Caelus 7.04 Terminal</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
@@ -554,21 +542,37 @@ COMPILER_ARCH = '64'
 BUILD_TYPE = 'Opt'
 INT_TYPE = '32'
 FLEXXX = 'flex'
+OMP='True'
 
 # Windows setup
-#COMPILER = 'mingw'
+COMPILER = 'g++'
 PROJECT_DIR = "${installdir.escape_backslashes}"
 
 MPI_BIN = '${mpibinpath.escape_backslashes}'
-MPI_INC = '${mpiincpath.escape_backslashes}'
-MPI_LIB = '${mpilibpath.escape_backslashes}'
+MPI_INC_PATH = '${mpiincpath.escape_backslashes}'
+MPI_LIB_PATH = '${mpilibpath.escape_backslashes}'
 MPI_LIB_NAME = '${mpilibname}'
 #SCOTCH_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scotch-6.0.4'
 #METIS_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\metis-5.1.0'
 #ZLIB_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\zlib-1.2.7'
 #FLEXXX_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\flex-2.5.4a-1'
-CAELUS_TERM = '${project.component(windowsdata).selected}'
-COLOUR_BUILD = '${colourbuildwin}'</text>
+</text>
+        </writeFile>
+        <writeFile>
+            <path>${installdir}\\${product_shortName}-${product_version}\\build_config.py</path>
+            <progressText>Writing Caelus Build Configuration file</progressText>
+            <text>PRECISION_OPTION = 'DP'
+COMPILER_ARCH = '64'
+BUILD_TYPE = 'Opt'
+INT_TYPE = '32'
+FLEXXX = 'flex'
+OMP= 'True'
+CXX = 'g++'
+MPI_BIN = '${mpibinpath.escape_backslashes}'
+MPI_INC_PATH = '${mpiincpath.escape_backslashes}'
+MPI_LIB_PATH = '${mpilibpath.escape_backslashes}'
+MPI_LIB_NAME = '${mpilibname}'
+</text>
         </writeFile>
         <writeFile>
             <path>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py</path>
@@ -586,6 +590,11 @@ from Caelus.write_env import *
             <name>PYTHONPATH</name>
             <scope>user</scope>
             <value>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6;%PYTHONPATH%</value>
+        </addEnvironmentVariable>
+        <addEnvironmentVariable>
+            <name>SCONSFLAGS</name>
+            <scope>user</scope>
+            <value>--site-dir=${installdir}\\${product_shortName}-${product_version}\\site_scons</value>
         </addEnvironmentVariable>
         <addDirectoryToPath>
             <insertAt>end</insertAt>
@@ -651,10 +660,14 @@ from Caelus.write_env import *
             <elseActionList>
                 <deleteEnvironmentVariable>
                     <name>PYTHONPATH</name>
-                    <scope>system</scope>
+                    <scope>user</scope>
                 </deleteEnvironmentVariable>
             </elseActionList>
         </if>
+        <deleteEnvironmentVariable>
+            <name>SCONSFLAGS</name>
+            <scope>user</scope>
+        </deleteEnvironmentVariable>
     </preUninstallationActionList>
     <postUninstallationActionList>
         <deleteFile>
@@ -681,6 +694,18 @@ from Caelus.write_env import *
         <deleteFile>
             <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\platforms</path>
         </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\build</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\build_config.py</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\site_scons</path>
+        </deleteFile>
+        <deleteFile>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\.sconsign.dblite</path>
+        </deleteFile>
     </postUninstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
     <compressionAlgorithm>lzma-ultra</compressionAlgorithm>
@@ -690,7 +715,7 @@ from Caelus.write_env import *
     <licenseFileEncoding>ascii</licenseFileEncoding>
     <projectSchemaVersion>1.0</projectSchemaVersion>
     <readmeFileEncoding>ascii</readmeFileEncoding>
-    <requireInstallationByRootUser>1</requireInstallationByRootUser>
+    <requestedExecutionLevel>highestAvailable</requestedExecutionLevel>
     <saveRelativePaths>1</saveRelativePaths>
     <slideShowTiming>7</slideShowTiming>
     <splashScreenDelay>5</splashScreenDelay>
@@ -703,6 +728,39 @@ from Caelus.write_env import *
             <progressText>Register on Caelus website</progressText>
             <url>http://www.caelus-cml.com/registration</url>
         </launchBrowser>
+
+        <!-- the actual checkbutton that is shown to the user -->
+        <setInstallerVariable>
+            <name>show_license_file</name>
+            <progressText>Show license file</progressText>
+            <value>1</value>
+        </setInstallerVariable>
+
+        <!-- ... 
+ read the License file, setting show to 0 prevents it from being shown as an option -->
+        <readFile>
+            <name>license_contents</name>
+            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\doc\\gpl-3.0.txt</path>
+            <show>0</show>
+            <ruleList>
+                <isTrue>
+                    <value>${show_license_file}</value>
+                </isTrue>
+            </ruleList>
+        </readFile>
+
+        <!-- add option to show the License file -->
+        <showText>
+            <progressText>Show license file</progressText>
+            <show>0</show>
+            <text>${license_contents}</text>
+            <title>License</title>
+            <ruleList>
+                <isTrue>
+                    <value>${show_license_file}</value>
+                </isTrue>
+            </ruleList>
+        </showText>
     </finalPageActionList>
     <parameterList>
         <directoryParameter>
@@ -717,31 +775,6 @@ from Caelus.write_env import *
             <mustExist>0</mustExist>
             <width>40</width>
         </directoryParameter>
-        <parameterGroup>
-            <name>terminalconfigwin</name>
-            <title>Terminal Configuration</title>
-            <explanation></explanation>
-            <value></value>
-            <default></default>
-            <parameterList>
-                <booleanParameter>
-                    <name>colourbuildwin</name>
-                    <description></description>
-                    <explanation>Choose if you want compiling to use colourful output</explanation>
-                    <value>False</value>
-                    <default>False</default>
-                </booleanParameter>
-            </parameterList>
-            <ruleList>
-                <componentTest>
-                    <logic>selected</logic>
-                    <name>windowsdata</name>
-                </componentTest>
-                <platformTest>
-                    <type>windows</type>
-                </platformTest>
-            </ruleList>
-        </parameterGroup>
         <parameterGroup>
             <name>post_install_page</name>
             <title>Need Support?</title>
@@ -887,7 +920,7 @@ from Caelus.write_env import *
     </platformOptionsList>
     <slideShowImageList>
         <slideShowImage>
-            <path>images/CAELUS_logo__version_slide.png</path>
+            <path>images/CAELUS_logo_slide.png</path>
         </slideShowImage>
         <slideShowImage>
             <path>images/ACCM_logo_slide.png</path>
@@ -912,6 +945,9 @@ from Caelus.write_env import *
         </slideShowImage>
         <slideShowImage>
             <path>images/cyclone.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/supersonic-nozzle.png</path>
         </slideShowImage>
     </slideShowImageList>
 </project>

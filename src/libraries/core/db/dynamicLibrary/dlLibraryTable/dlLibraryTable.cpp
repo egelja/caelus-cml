@@ -25,8 +25,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::dlLibraryTable, 0);
 
+namespace CML
+{
+    defineTypeNameAndDebug(dlLibraryTable, 0);
+}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 

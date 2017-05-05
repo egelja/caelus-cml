@@ -187,7 +187,11 @@ private:
 
         //- Set data for parallel running
         static void setParRun();
-
+    
+        //- Set data for parallel running. Special case nProcs=0 to switch off
+        //  parallel running
+        static void setParRun(const label nProcs);
+    
         //- Calculate linear communication schedule
         static void calcLinearComm(const label nProcs);
 

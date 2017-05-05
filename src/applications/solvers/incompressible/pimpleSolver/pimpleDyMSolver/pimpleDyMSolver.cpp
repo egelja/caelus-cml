@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     #include "createFields.hpp"
     #include "createUf.hpp"
     #include "createFvOptions.hpp"
-    #include "readTimeControls.hpp"
+    #include "createControls.hpp"
     #include "createPcorrTypes.hpp"
     #include "CourantNo.hpp"
     #include "setInitialDeltaT.hpp"
@@ -106,15 +106,7 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-#ifdef windows
-        Info<< "ExecutionTime = " << static_cast<double>(runTime.elapsedCpuTime()) << " s"
-            << "  ClockTime = " << static_cast<double>(runTime.elapsedClockTime()) << " s"
-#else
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-#endif
-            << nl << endl;
-
+        #include "reportTimeStats.hpp"
     }
 
     Info<< "End\n" << endl;

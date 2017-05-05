@@ -86,7 +86,7 @@ protected:
 
 public:
 
-    TypeName("realizableVLESKE");
+    TypeName("realizableKEVLES");
 
     realizableVLESKE
     (

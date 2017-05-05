@@ -1,68 +1,45 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-caelusToVTKEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = caelusToVTKEnv['LIB_SRC']
+target = 'caelusToVTK'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-caelusToVTKEnv.Append(CCFLAGS = '')
+sources = Split("""
+surfaceMeshWriter.cpp
+caelusToVTK.cpp
+internalWriter.cpp
+lagrangianWriter.cpp
+patchWriter.cpp
+writeFuns.cpp
+writeFaceSet.cpp
+writePointSet.cpp
+writeSurfFields.cpp
+vtkMesh.cpp
+vtkTopo.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/lagrangian/basic/lnInclude']
-caelusToVTKEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'lagrangian/basic/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-caelusToVTKEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if caelusToVTKEnv['WHICH_OS'] == "windows":
-  caelusToVTKEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','lagrangian']
-     
-
-caelusToVTKEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  surfaceMeshWriter.cpp
-  caelusToVTK.cpp
-  internalWriter.cpp
-  lagrangianWriter.cpp
-  patchWriter.cpp
-  writeFuns.cpp
-  writeFaceSet.cpp
-  writePointSet.cpp
-  writeSurfFields.cpp
-  vtkMesh.cpp
-  vtkTopo.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bincaelusToVTK = caelusToVTKEnv.Program(target = 'caelusToVTK', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = caelusToVTKEnv['BIN_PLATFORM_INSTALL']
-caelusToVTKEnv.Alias('install', install_dir)
-caelusToVTKEnv.Install(install_dir, bincaelusToVTK)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

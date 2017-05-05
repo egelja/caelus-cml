@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -21,7 +22,15 @@ Class
     CML::fv::rotorDiskSource
 
 Description
-    Cell based momemtum source
+    Cell based momentum source
+
+    \verbatim
+        "Development of Virtual Blade Model for Modelling Helicopter 
+        Rotor Downwas in OpenFOAM"
+        Stefano Wahono
+        Defence Science and Technology Organisation, DSTO-TR-2931, 2013.
+
+    \endverbatim
 
     Source approximates the mean effects of rotor forces on a cylindrical
     region within the domain
@@ -33,6 +42,7 @@ Description
     rotorDiskSourceCoeffs
     {
         fieldNames      (U);    // names of fields on which to apply source
+        rhoName         rho;    // density field if compressible case
         nBlades         3;      // number of blades
         tipEffect       0.96;   // normalised radius above which lift = 0
 
@@ -80,17 +90,17 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef rotorDiskSource_H
-#define rotorDiskSource_H
+#ifndef rotorDiskSource_HPP
+#define rotorDiskSource_HPP
 
 #include "fvOption.hpp"
 #include "cylindricalCS.hpp"
-#include "localAxesRotation.hpp"
 #include "NamedEnum.hpp"
 #include "bladeModel.hpp"
 #include "profileModelList.hpp"
 #include "volFieldsFwd.hpp"
 #include "dimensionSet.hpp"
+#include "DataEntry.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -134,96 +144,119 @@ protected:
     // Helper structures to encapsulate flap and trim data
     // Note: all input in degrees (converted to radians internally)
 
-        struct flapData
-        {
-            scalar beta0;   // coning angle
-            scalar beta1c;  // lateral flapping coeff (cos coeff)
-            scalar beta2s;  // longitudinal flapping coeff (sin coeff)
-        };
+    struct flapData
+    {
+        scalar beta0;   // coning angle
+        scalar beta1c;  // lateral flapping coeff (cos coeff)
+        scalar beta1s;  // longitudinal flapping coeff (sin coeff)
+    };
 
 
     // Protected data
 
-        //- Reference density for incompressible case
-        scalar rhoRef_;
+    //- Name of density field
+    word rhoName_;
 
-        //- Rotational speed [rad/s]
-        //  Positive anti-clockwise when looking along -ve lift direction
-        scalar omega_;
+    //- Reference density for rhoName = 'none'
+    scalar rhoRef_;
 
-        //- Number of blades
-        label nBlades_;
+    //- Rotor Debug Mode
+    bool rotorDebug_;
 
-        //- Inlet flow type
-        inletFlowType inletFlow_;
+    //- Rotor Under Relaxation Factor
+    scalar rotorURF_;
 
-        //- Inlet velocity for specified iinflow
-        vector inletVelocity_;
+    //- Rotor RPM as a DataEntry class 
+    //  Positive anti-clockwise when looking along -ve lift direction
+    autoPtr<DataEntry<scalar> > rpm_;
 
-        //- Tip effect [0-1]
-        //  Ratio of blade radius beyond which lift=0
-        scalar tipEffect_;
+    //- Number of blades
+    label nBlades_;
 
-        //- Blade flap coefficients [rad/s]
-        flapData flap_;
+    //- Inlet flow type
+    inletFlowType inletFlow_;
 
-        //- Cell centre positions in local rotor frame
-        //  (Cylindrical r, theta, z)
-        List<point> x_;
+    //- Inlet velocity for specified inflow
+    vector inletVelocity_;
 
-        //- Rotation tensor for flap angle
-        List<tensor> R_;
+    //- Tip effect [0-1]
+    //  Ratio of blade radius beyond which lift=0
+    scalar tipEffect_;
 
-        //- Inverse rotation tensor for flap angle
-        List<tensor> invR_;
+    //- Blade flap coefficients [rad/s]
+    flapData flap_;
 
-        //- Area [m2]
-        List<scalar> area_;
+    //- Cell centre positions in local rotor frame
+    //  (Cylindrical r, theta, z)
+    List<point> x_;
 
-        //- Rotor local cylindrical co-ordinate system (r, theta, z)
-        cylindricalCS coordSys_;
+    //- Rotation tensor for flap angle
+    List<tensor> R_;
 
-         //- Rotor transformation co-ordinate system
-        autoPtr<localAxesRotation> localAxesRotation_;
+    //- Inverse rotation tensor for flap angle
+    List<tensor> invR_;
 
-        //- Maximum radius
-        scalar rMax_;
+	//- Blade flapping velocity
+	List<scalar> rBetaDOT_;
 
-        //- Trim model
-        autoPtr<trimModel> trim_;
+    //- Area [m2]
+    List<scalar> area_;
 
-        //- Blade data
-        bladeModel blade_;
+    //- Rotor co-ordinate system (r, theta, z)
+    cylindricalCS coordSys_;
 
-        //- Profile data
-        profileModelList profiles_;
+    //- Maximum radius
+    scalar rMax_;
 
+    //- A list of psi angle in the rotor zone for IO 
+    List<scalar> psiList_;
+
+    //- Trim model
+    autoPtr<trimModel> trim_;
+
+    //- Blade data
+    bladeModel blade_;
+
+    //- Profile data
+    profileModelList profiles_;
+
+    //- Rotor bank angle
+    scalar bankAng_;
+
+    //- Rotor pitch angle
+    scalar pitchAng_;
+
+    //- Transofrmation from Carteisan to Pitch/Bank plane
+    tensor PB_;
+
+    //- Transformation from Pitch Bank plane to Cartesian
+    tensor invPB_;
 
     // Protected Member Functions
 
-        //- Check data
-        void checkData();
+    //- Check data
+    void checkData();
 
-        //- Set the face areas per cell, and optionally correct the rotor axis
-        void setFaceArea(vector& axis, const bool correct);
+    //- Set the face areas per cell, and optionally correct the rotor axis
+    void setFaceArea(vector& axis, const bool correct);
 
-        //- Create the co-ordinate system
-        void createCoordinateSystem();
+    //- Create the co-ordinate system
+    void createCoordinateSystem();
 
-        //- Construct geometry
-        void constructGeometry();
+    //- Construct geometry
+    void constructGeometry();
 
-        //- Return the inlet flow field
-        tmp<vectorField> inflowVelocity(const volVectorField& U) const;
+    //- Return the inlet flow field
+    tmp<vectorField> inflowVelocity(const volVectorField& U) const;
 
-        //- Helper function to write rotor values
-        template<class Type>
-        void writeField
-        (
-            const word& name,
-            const List<Type>& values,
-            const bool writeNow = false
-        ) const;
+    //- Helper function to write rotor values
+    template<class Type>
+    void writeField
+    (
+        const word& name,
+        const List<Type>& values,
+        const bool writeNow = false
+    ) const;
 
 
 public:
@@ -231,18 +264,16 @@ public:
     //- Runtime type information
     TypeName("rotorDisk");
 
-
     // Constructors
 
-
-        //- Construct from components
-        rotorDiskSource
-        (
-            const word& name,
-            const word& modelType,
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+    //- Construct from components
+    rotorDiskSource
+    (
+        const word& name,
+        const word& modelType,
+        const dictionary& dict,
+        const fvMesh& mesh
+    );
 
 
     //- Destructor
@@ -252,62 +283,61 @@ public:
     // Member Functions
 
         // Access
+        //- Return the reference density for rhoName = 'none'
+        inline scalar rhoRef() const;
 
-            //- Return the reference density for incompressible case
-            inline scalar rhoRef() const;
+        //- Return the cell centre positions in local rotor frame
+        // (Cylindrical r, theta, z)
+        inline const List<point>& x() const;
 
-            //- Return the rotational speed [rad/s]
-            //  Positive anti-clockwise when looking along -ve lift direction
-            inline scalar omega() const;
+        //- Return the rotor co-ordinate system (r, theta, z)
+        inline const cylindricalCS& coordSys() const;
 
-            //- Return the cell centre positions in local rotor frame
-            // (Cylindrical r, theta, z)
-            inline const List<point>& x() const;
+        //- Return the rotational speed [rad/s]
+        //  Positive anti-clockwise when looking along -ve lift direction
+        inline scalar omega() const;
 
-            //- Return the rotor co-ordinate system (r, theta, z)
-            inline const cylindricalCS& coordSys() const;
+        //- Return true if solving a compressible case
+        inline bool compressible() const;
 
+        //- Return the density field [kg/m3]
+        inline tmp<volScalarField> rho() const;
 
         // Evaluation
-
-            //- Calculate forces
-            template<class RhoFieldType>
-            void calculate
-            (
-                const RhoFieldType& rho,
-                const vectorField& U,
-                const scalarField& thetag,
-                vectorField& force,
-                const bool divideVolume = true,
-                const bool output = true
-            ) const;
-
+        //- Calculate forces
+        template<class RhoFieldType>
+        void calculate
+        (
+            const RhoFieldType& rho,
+            const vectorField& U,
+            const scalarField& thetag,
+            vectorField& force,
+            const bool divideVolume = true,
+            const bool output = true
+        ) const;
 
         // Source term addition
+        //- Source term to momentum equation
+        virtual void addSup
+        (
+            fvMatrix<vector>& eqn,
+            const label fieldI
+        );
 
-            //- Source term to momentum equation
-            virtual void addSup
-            (
-                fvMatrix<vector>& eqn,
-                const label fieldI
-            );
-
-            //- Source term to compressible momentum equation
-            virtual void addSup
-            (
-                const volScalarField& rho,
-                fvMatrix<vector>& eqn,
-                const label fieldI
-            );
-
+        //- Source term to compressible momentum equation
+        virtual void addSup
+        (
+            const volScalarField& rho,
+            fvMatrix<vector>& eqn,
+            const label fieldI
+        );
 
         // I-O
+        //- Write the source properties
+        virtual void writeData(Ostream&) const;
 
-            //- Write the source properties
-            virtual void writeData(Ostream&) const;
-
-            //- Read source dictionary
-            virtual bool read(const dictionary& dict);
+        //- Read source dictionary
+        virtual bool read(const dictionary& dict);
 };
 
 
@@ -318,12 +348,59 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "rotorDiskSourceI.hpp"
+#include "mathematicalConstants.hpp"
+
+using namespace CML::constant;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+CML::scalar CML::fv::rotorDiskSource::rhoRef() const
+{
+    return rhoRef_;
+}
+
+
+const CML::List<CML::point>& CML::fv::rotorDiskSource::x() const
+{
+    return x_;
+}
+
+
+const CML::cylindricalCS& CML::fv::rotorDiskSource::coordSys() const
+{
+    return coordSys_;
+}
+
+
+CML::scalar CML::fv::rotorDiskSource::omega() const
+{
+    const scalar t = this->mesh_.time().timeOutputValue();
+    const scalar omega = rpm_->value(t)/60.0*mathematical::twoPi;
+    return omega;
+}
+
+
+bool CML::fv::rotorDiskSource::compressible() const
+{
+    return rhoName_ != "none";
+}
+
+
+CML::tmp<CML::volScalarField> CML::fv::rotorDiskSource::rho() const
+{
+    if (compressible())
+    {
+        return mesh_.lookupObject<volScalarField>(rhoName_);
+    }
+    else
+    {
+        return volScalarField::null();
+    }
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "volFields.hpp"
-using namespace CML::constant;
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
@@ -338,33 +415,73 @@ void CML::fv::rotorDiskSource::calculate
     const bool output
 ) const
 {
+    const vectorField& C = mesh_.C();
     const scalarField& V = mesh_.V();
+
+    const bool compressible = this->compressible();
 
     // Logging info
     scalar dragEff = 0.0;
     scalar liftEff = 0.0;
+    scalar powerRequired = 0.0;
     scalar AOAmin = GREAT;
     scalar AOAmax = -GREAT;
+    scalar epsMin = GREAT;
+    scalar epsMax = -GREAT;
+
+    scalar totalThrust = 0.0;
+    scalar totalPitchingMoment = 0.0;
+    scalar totalRollingMoment = 0.0;
+    scalar totalRotorTorque = 0.0;
+
+    // Update omega  
+    const scalar t = this->mesh_.time().timeOutputValue();
+    scalar omega = rpm_->value(t)/60.0*mathematical::twoPi;
 
     forAll(cells_, i)
     {
         if (area_[i] > ROOTVSMALL)
         {
             const label cellI = cells_[i];
-
             const scalar radius = x_[i].x();
+            const scalar psi = x_[i].y();
 
-            // Transform velocity into local cylindrical reference frame
-            vector Uc = localAxesRotation_->invTransform(U[cellI], i);
+            // Velocity in local cylindrical reference frame
+            // This assumes that the Uz is the same as the rotorDiskPlane normal axis.
 
-            // Transform velocity into local coning system
+            // Aligning U to the pitch bank angle plane
+            vector Upb = PB_ & U[cellI];
+            vector Uc = vector
+                (
+                    Upb.x()*cos(psi)+Upb.y()*sin(psi), -Upb.x()*sin(psi)+Upb.y()*cos(psi), Upb.z()
+                );
+
+            // Transform from rotor cylindrical into local coning system
             Uc = R_[i] & Uc;
 
             // Set radial component of velocity to zero
             Uc.x() = 0.0;
 
             // Set blade normal component of velocity
-            Uc.y() = radius*omega_ - Uc.y();
+            Uc.y() = radius*omega - Uc.y();
+
+            // Set blade normal component of velocity
+            Uc.z() = Uc.z() + rBetaDOT_[i];
+
+            // Air angle (rad)
+            scalar eps = atan2(-Uc.z(), Uc.y());
+
+            if (eps < -mathematical::pi)
+            {
+                eps = (2.0*mathematical::pi + eps);
+            }
+            if (eps > mathematical::pi)
+            {
+                eps = (eps - 2.0*mathematical::pi);
+            }
+
+            epsMin = min(epsMin, eps);
+            epsMax = max(epsMax, eps);
 
             // Determine blade data for this radius
             // i2 = index of upper radius bound data point in blade list
@@ -377,20 +494,21 @@ void CML::fv::rotorDiskSource::calculate
 
             // Flip geometric angle if blade is spinning in reverse (clockwise)
             scalar alphaGeom = thetag[i] + twist;
-            if (omega_ < 0)
+            if (omega < 0)
             {
                 alphaGeom = mathematical::pi - alphaGeom;
             }
 
             // Effective angle of attack
-            scalar alphaEff = alphaGeom - atan2(-Uc.z(), Uc.y());
-            if (alphaEff > mathematical::pi)
-            {
-                alphaEff -= mathematical::twoPi;
-            }
+            scalar alphaEff = alphaGeom - eps;
+
             if (alphaEff < -mathematical::pi)
             {
-                alphaEff += mathematical::twoPi;
+                alphaEff = (2.0*mathematical::pi + alphaEff);
+            }
+            if (alphaEff > mathematical::pi)
+            {
+                alphaEff = (alphaEff - 2.0*mathematical::pi);
             }
 
             AOAmin = min(AOAmin, alphaEff);
@@ -415,23 +533,69 @@ void CML::fv::rotorDiskSource::calculate
             scalar tipFactor = neg(radius/rMax_ - tipEffect_);
 
             // Calculate forces perpendicular to blade
-            scalar pDyn = 0.5*rho[cellI]*magSqr(Uc);
+            scalar pDyn = 0.5*magSqr(Uc);
+
+	        if (compressible)
+	        {
+                pDyn *= rho[cellI];
+	        }
+	        else
+	        {
+		        pDyn *= rhoRef_;
+	        }
 
             scalar f = pDyn*chord*nBlades_*area_[i]/radius/mathematical::twoPi;
-            vector localForce = vector(0.0, -f*Cd, tipFactor*f*Cl);
+
+            // Implementation of Kim et al [7th OpenFOAM Workshop]
+            scalar ftc = (f*Cd*cos(eps) + tipFactor*f*Cl*sin(eps));
+            scalar fnc = (-f*Cd*sin(eps) + tipFactor*f*Cl*cos(eps));
+
+            vector localForce = vector(0.0, -ftc, fnc);
 
             // Accumulate forces
-            dragEff += rhoRef_*localForce.y();
-            liftEff += rhoRef_*localForce.z();
+            dragEff += localForce.y();
+            liftEff += localForce.z();
+
+            if (rotorDebug_)
+            {
+                if (i == 0)
+                {
+                    Info << "CellI    psi    radius    alphaEff    "
+                         << "eps    Cl    Cd     f    fn    fth" << nl << endl;
+                }
+
+                Info << cellI << "    " << psiList_[cellI] << "    " << radius << "    "
+                     << radToDeg(alphaEff) << "    "
+                     << radToDeg(eps) << "    "
+                     << Cl << "    " << Cd << "    "
+                     << f << "    " << localForce.y() << "    " << localForce.z()
+                     << endl;
+            }
 
             // Transform force from local coning system into rotor cylindrical
             localForce = invR_[i] & localForce;
 
             // Transform force into global Cartesian co-ordinate system
-            force[cellI] = localAxesRotation_->transform(localForce, i);
+            // the line below assumes that there is zero tilt on the rotorDiskPlane
+            localForce = vector
+                (
+                    localForce.x()*cos(psi) - localForce.y()*sin(psi),
+                    localForce.x()*sin(psi) + localForce.y()*cos(psi),
+                    localForce.z()
+                );
+
+            force[cellI] = invPB_ & localForce;
+            vector moment = force[cellI]^(C[cellI] - coordSys_.origin());
+
+            // Calculate global thrust
+            totalThrust += force[cellI] & coordSys_.R().e3();
+            totalPitchingMoment += moment & coordSys_.R().e2();
+            totalRollingMoment += moment & coordSys_.R().e1();
+            totalRotorTorque += moment & coordSys_.R().e3();
 
             if (divideVolume)
             {
+                // Calculate momentum source
                 force[cellI] /= V[cellI];
             }
         }
@@ -441,14 +605,44 @@ void CML::fv::rotorDiskSource::calculate
     {
         reduce(AOAmin, minOp<scalar>());
         reduce(AOAmax, maxOp<scalar>());
+        reduce(epsMin, minOp<scalar>());
+        reduce(epsMax, maxOp<scalar>());
         reduce(dragEff, sumOp<scalar>());
         reduce(liftEff, sumOp<scalar>());
+        reduce(totalThrust, sumOp<scalar>());
+        reduce(totalPitchingMoment, sumOp<scalar>());
+        reduce(totalRollingMoment, sumOp<scalar>());
+        reduce(totalRotorTorque, sumOp<scalar>());
+
+        scalar rpm = omega*60/mathematical::twoPi;
+        powerRequired = totalRotorTorque * omega;
+
+        // Check DataEntry type
+        if ((rpm_->type() == "constant") || (rpm_->type() == "CompatibilityConstant"))
+        {
+            Info << "Constant Rotor Speed: " << this->name() << endl;
+            Info << "    RPM                  = " << rpm << endl;
+            Info << "    Omega                = " << omega << " rad/s" << endl;
+        }
+        else
+        {
+            Info << "Variable Rotor Speed: " << this->name() << endl;
+            Info << "    Current RPM          = " << rpm << endl;
+            Info << "    Current omega        = " << omega << " rad/s" << endl;
+        }
 
         Info<< type() << " output:" << nl
-            << "    min/max(AOA)   = " << radToDeg(AOAmin) << ", "
+            << "    Min/Max(AOA)          = " << radToDeg(AOAmin) << ", "
             << radToDeg(AOAmax) << nl
-            << "    Effective drag = " << dragEff << nl
-            << "    Effective lift = " << liftEff << endl;
+            << "    Min/Max(induced AOA)  = " << radToDeg(epsMin) << ", "
+            << radToDeg(epsMax) << nl
+            << "    Effective blade drag  = " << dragEff << nl
+            << "    Effective blade lift  = " << liftEff << nl
+            << "    Total Thrust          = " << totalThrust << nl
+            << "    Total Pitching Moment = " << totalPitchingMoment << nl
+            << "    Total Rolling Moment  = " << totalRollingMoment << nl
+            << "    Total Rotor Torque    = " << totalRotorTorque << nl
+            << "    Rotor Power Required  = " << powerRequired << endl;
     }
 }
 

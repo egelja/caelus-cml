@@ -1,88 +1,68 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-lagSprayEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = lagSprayEnv['LIB_SRC']
+target = 'lagrangianSpray'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-lagSprayEnv.Append(CCFLAGS = '')
+sources = Split("""
+clouds/baseClasses/sprayCloud/sprayCloud.cpp
+parcels/derived/basicSprayParcel/defineBasicSprayParcel.cpp
+parcels/derived/basicSprayParcel/makeBasicSprayParcelSubmodels.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude',
-src + '/sampling/lnInclude',
-src + '/dynamicFvMesh/lnInclude',
-src + '/lagrangian/basic/lnInclude',
-src + '/lagrangian/distributionModels/lnInclude',
-src + '/lagrangian/intermediate/lnInclude',
-src + '/turbulenceModels',
-src + '/turbulenceModels/incompressible/LES/lnInclude',
-src + '/turbulenceModels/LES/LESdeltas/lnInclude',
-src + '/transportModels',
-src + '/regionModels/regionModel/lnInclude',
-src + '/regionModels/surfaceFilmModels/lnInclude',
-src + '/thermophysicalModels/specie/lnInclude',
-src + '/thermophysicalModels/basic/lnInclude',
-src + '/thermophysicalModels/reactionThermo/lnInclude',
-src + '/thermophysicalModels/SLGThermo/lnInclude',
-src + '/thermophysicalModels/radiationModels/lnInclude',
-src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
-src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidProperties/lnInclude',
-src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+caelus_inc = [
+'sampling/lnInclude',
+'dynamicFvMesh/lnInclude',
+'lagrangian/basic/lnInclude',
+'lagrangian/distributionModels/lnInclude',
+'lagrangian/intermediate/lnInclude',
+'turbulenceModels',
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/radiationModels/lnInclude',
+'thermophysicalModels/properties/liquidProperties/lnInclude',
+'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+'thermophysicalModels/properties/solidProperties/lnInclude',
+'thermophysicalModels/properties/solidMixtureProperties/lnInclude'
 ]
-lagSprayEnv.Prepend(CPPPATH = lib_inc)
-    
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-lagSprayEnv.Prepend(LIBPATH = lib_link_path)
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','lagrangian','distributionModels','specie',
-'basicThermophysicalModels','liquidProperties','liquidMixtureProperties',
-'solidProperties','solidMixtureProperties','reactionThermophysicalModels',
-'SLGThermo','radiationModels','compressibleTurbulenceModel',
-'incompressibleTurbulenceModel','incompressibleLESModels',
-'compressibleRASModels','compressibleLESModels','LESdeltas',
-'incompressibleTransportModels','regionModels','surfaceFilmModels',
-'dynamicFvMesh','sampling','lagrangianIntermediate'
+caelus_libs = [
+'core',
+'lagrangian',
+'distributionModels',
+'specie',
+'basicThermophysicalModels',
+'liquidProperties',
+'liquidMixtureProperties',
+'solidProperties',
+'solidMixtureProperties',
+'reactionThermophysicalModels',
+'SLGThermo',
+'radiationModels',
+'compressibleTurbulenceModel',
+'incompressibleTurbulenceModel',
+'incompressibleLESModels',
+'compressibleRASModels',
+'compressibleLESModels',
+'LESdeltas',
+'incompressibleTransportModels',
+'regionModels',
+'surfaceFilmModels',
+'dynamicFvMesh',
+'sampling',
+'lagrangianIntermediate'
 ]
-lagSprayEnv.Append(LIBS = lib_link)
-             
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  clouds/baseClasses/sprayCloud/sprayCloud.cpp
-  parcels/derived/basicSprayParcel/defineBasicSprayParcel.cpp
-  parcels/derived/basicSprayParcel/makeBasicSprayParcelSubmodels.cpp
-  """) 
 
-#===============================================================================
-# Build this library
-#===============================================================================
-liblagrangianSpray = lagSprayEnv.SharedLibrary(target = 'lagrangianSpray', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = lagSprayEnv['LIB_PLATFORM_INSTALL']
-lagSprayEnv.Alias('install', install_dir)
-lagSprayEnv.Install(install_dir, liblagrangianSpray)
-
-if (lagSprayEnv['WHICH_OS'] == "darwin"):
-
-  lagSprayEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/liblagrangianSpray.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

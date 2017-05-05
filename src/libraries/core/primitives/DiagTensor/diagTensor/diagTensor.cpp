@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,34 +24,52 @@ Description
 
 #include "diagTensor.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
-const char* const diagTensor::typeName = "diagTensor";
+const char* const CML::diagTensor::vsType::typeName = "diagTensor";
 
 template<>
-const char* diagTensor::componentNames[] = {"xx", "yy", "zz"};
+const char* const CML::diagTensor::vsType::componentNames[] =
+{
+    "xx", "yy", "zz"
+};
 
 template<>
-const diagTensor diagTensor::zero(0, 0, 0);
+const CML::diagTensor CML::diagTensor::vsType::vsType::zero
+(
+    diagTensor::uniform(0)
+);
 
 template<>
-const diagTensor diagTensor::one(1, 1, 1);
+const CML::diagTensor CML::diagTensor::vsType::one
+(
+    diagTensor::uniform(1)
+);
 
 template<>
-const diagTensor diagTensor::max(VGREAT, VGREAT, VGREAT);
+const CML::diagTensor CML::diagTensor::vsType::max
+(
+    diagTensor::uniform(VGREAT)
+);
 
 template<>
-const diagTensor diagTensor::min(-VGREAT, -VGREAT, -VGREAT);
+const CML::diagTensor CML::diagTensor::vsType::min
+(
+    diagTensor::uniform(-VGREAT)
+);
 
+template<>
+const CML::diagTensor CML::diagTensor::vsType::rootMax
+(
+    diagTensor::uniform(ROOTVGREAT)
+);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<>
+const CML::diagTensor CML::diagTensor::vsType::rootMin
+(
+    diagTensor::uniform(-ROOTVGREAT)
+);
 
-} // End namespace CML
 
 // ************************************************************************* //

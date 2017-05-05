@@ -1,0 +1,435 @@
+# -*- mode: python -*-
+
+import os
+import utils
+from build import build_lib
+Import('env')
+
+scotch_env = env.Clone()
+scotch_env.Replace(LIB_SRC = Dir('.').abspath)
+
+cflags_map = dict(
+    windows=(
+        "-DCOMMON_RANDOM_FIXED_SEED -DCOMMON_STUB_FORK -DSCOTCH_RENAME "
+        "-DCOMMON_RANDOM_RAND -Dwindows -DCOMMON_WINDOWS "
+        "-DCOMMON_FILE_COMPRESS_GZ -DSCOTCH_PTSCOTCH "
+    ),
+
+    linux=(
+        "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD "
+        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD "
+        "-DSCOTCH_PTSCOTCH "
+    ),
+
+    darwin=(
+        "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD "
+        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD "
+        "-DCOMMON_PTHREAD_BARRIER -DCOMMON_TIMING_OLD "
+        "-DSCOTCH_PTSCOTCH "
+        "-Wno-switch -Wno-implicit-int -Wno-empty-body -Wno-format-security "
+    )
+)
+
+# Fix C compiler flags
+scotch_env.Replace(CCFLAGS=cflags_map[utils.ostype()])
+
+### Part I - libscotch
+target = 'scotch'
+
+sources = Split("""
+src/libscotch/arch.c
+src/libscotch/arch_build.c
+src/libscotch/arch_cmplt.c
+src/libscotch/arch_cmpltw.c
+src/libscotch/arch_deco.c
+src/libscotch/arch_dist.c
+src/libscotch/arch_hcub.c
+src/libscotch/arch_mesh.c
+src/libscotch/arch_tleaf.c
+src/libscotch/arch_torus.c
+src/libscotch/arch_vcmplt.c
+src/libscotch/arch_vhcub.c
+src/libscotch/bgraph.c
+src/libscotch/bgraph_bipart_bd.c
+src/libscotch/bgraph_bipart_df.c
+src/libscotch/bgraph_bipart_ex.c
+src/libscotch/bgraph_bipart_fm.c
+src/libscotch/bgraph_bipart_gg.c
+src/libscotch/bgraph_bipart_gp.c
+src/libscotch/bgraph_bipart_ml.c
+src/libscotch/bgraph_bipart_st.c
+src/libscotch/bgraph_bipart_zr.c
+src/libscotch/bgraph_store.c
+src/libscotch/bgraph_check.c
+src/libscotch/common.c
+src/libscotch/common_file.c
+src/libscotch/common_file_compress.c
+src/libscotch/common_file_uncompress.c
+src/libscotch/common_integer.c
+src/libscotch/common_memory.c
+src/libscotch/common_string.c
+src/libscotch/common_stub.c
+src/libscotch/common_thread.c
+src/libscotch/fibo.c
+src/libscotch/gain.c
+src/libscotch/geom.c
+src/libscotch/graph.c
+src/libscotch/graph_base.c
+src/libscotch/graph_band.c
+src/libscotch/graph_check.c
+src/libscotch/graph_coarsen.c
+src/libscotch/graph_induce.c
+src/libscotch/graph_io.c
+src/libscotch/graph_io_chac.c
+src/libscotch/graph_io_habo.c
+src/libscotch/graph_io_mmkt.c
+src/libscotch/graph_io_scot.c
+src/libscotch/graph_list.c
+src/libscotch/graph_match.c
+src/libscotch/hall_order_hd.c
+src/libscotch/hall_order_hf.c
+src/libscotch/hall_order_hx.c
+src/libscotch/hgraph.c
+src/libscotch/hgraph_check.c
+src/libscotch/hgraph_induce.c
+src/libscotch/hgraph_order_bl.c
+src/libscotch/hgraph_order_cp.c
+src/libscotch/hgraph_order_gp.c
+src/libscotch/hgraph_order_hd.c
+src/libscotch/hgraph_order_hf.c
+src/libscotch/hgraph_order_hx.c
+src/libscotch/hgraph_order_kp.c
+src/libscotch/hgraph_order_nd.c
+src/libscotch/hgraph_order_si.c
+src/libscotch/hgraph_order_st.c
+src/libscotch/hmesh.c
+src/libscotch/hmesh_check.c
+src/libscotch/hmesh_hgraph.c
+src/libscotch/hmesh_induce.c
+src/libscotch/hmesh_mesh.c
+src/libscotch/hmesh_order_bl.c
+src/libscotch/hmesh_order_cp.c
+src/libscotch/hmesh_order_gr.c
+src/libscotch/hmesh_order_gp.c
+src/libscotch/hmesh_order_hd.c
+src/libscotch/hmesh_order_hf.c
+src/libscotch/hmesh_order_hx.c
+src/libscotch/hmesh_order_nd.c
+src/libscotch/hmesh_order_si.c
+src/libscotch/hmesh_order_st.c
+src/libscotch/kgraph.c
+src/libscotch/kgraph_band.c
+src/libscotch/kgraph_check.c
+src/libscotch/kgraph_map_bd.c
+src/libscotch/kgraph_map_cp.c
+src/libscotch/kgraph_map_df.c
+src/libscotch/kgraph_map_ex.c
+src/libscotch/kgraph_map_fm.c
+src/libscotch/kgraph_map_ml.c
+src/libscotch/kgraph_map_rb.c
+src/libscotch/kgraph_map_rb_map.c
+src/libscotch/kgraph_map_rb_part.c
+src/libscotch/kgraph_map_st.c
+src/libscotch/kgraph_store.c
+src/libscotch/library_arch.c
+src/libscotch/library_arch_f.c
+src/libscotch/library_arch_build.c
+src/libscotch/library_arch_build_f.c
+src/libscotch/library_common_f.c
+src/libscotch/library_geom.c
+src/libscotch/library_geom_f.c
+src/libscotch/library_graph.c
+src/libscotch/library_graph_f.c
+src/libscotch/library_graph_base.c
+src/libscotch/library_graph_base_f.c
+src/libscotch/library_graph_check.c
+src/libscotch/library_graph_check_f.c
+src/libscotch/library_graph_coarsen.c
+src/libscotch/library_graph_coarsen_f.c
+src/libscotch/library_graph_io_chac.c
+src/libscotch/library_graph_io_chac_f.c
+src/libscotch/library_graph_io_habo.c
+src/libscotch/library_graph_io_habo_f.c
+src/libscotch/library_graph_io_mmkt.c
+src/libscotch/library_graph_io_mmkt_f.c
+src/libscotch/library_graph_io_scot.c
+src/libscotch/library_graph_io_scot_f.c
+src/libscotch/library_graph_map.c
+src/libscotch/library_graph_map_f.c
+src/libscotch/library_graph_map_io.c
+src/libscotch/library_graph_map_io_f.c
+src/libscotch/library_graph_map_view.c
+src/libscotch/library_graph_map_view_f.c
+src/libscotch/library_graph_order.c
+src/libscotch/library_graph_order_f.c
+src/libscotch/library_graph_part_ovl.c
+src/libscotch/library_graph_part_ovl_f.c
+src/libscotch/library_mapping.c
+src/libscotch/library_memory.c
+src/libscotch/library_memory_f.c
+src/libscotch/library_mesh.c
+src/libscotch/library_mesh_f.c
+src/libscotch/library_mesh_graph.c
+src/libscotch/library_mesh_graph_f.c
+src/libscotch/library_mesh_io_habo.c
+src/libscotch/library_mesh_io_habo_f.c
+src/libscotch/library_mesh_io_scot.c
+src/libscotch/library_mesh_io_scot_f.c
+src/libscotch/library_mesh_order.c
+src/libscotch/library_mesh_order_f.c
+src/libscotch/library_order.c
+src/libscotch/library_parser.c
+src/libscotch/library_parser_f.c
+src/libscotch/library_random.c
+src/libscotch/library_random_f.c
+src/libscotch/library_strat.c
+src/libscotch/library_version.c
+src/libscotch/library_version_f.c
+src/libscotch/mapping.c
+src/libscotch/mapping_io.c
+src/libscotch/mesh.c
+src/libscotch/mesh_check.c
+src/libscotch/mesh_coarsen.c
+src/libscotch/mesh_graph.c
+src/libscotch/mesh_induce_sepa.c
+src/libscotch/mesh_io.c
+src/libscotch/mesh_io_habo.c
+src/libscotch/mesh_io_scot.c
+src/libscotch/order.c
+src/libscotch/order_check.c
+src/libscotch/order_io.c
+src/libscotch/parser.c
+src/libscotch/last_resort/parser_ll.c
+src/libscotch/last_resort/parser_yy.c
+src/libscotch/vgraph.c
+src/libscotch/vgraph_check.c
+src/libscotch/vgraph_separate_bd.c
+src/libscotch/vgraph_separate_df.c
+src/libscotch/vgraph_separate_es.c
+src/libscotch/vgraph_separate_fm.c
+src/libscotch/vgraph_separate_gg.c
+src/libscotch/vgraph_separate_gp.c
+src/libscotch/vgraph_separate_ml.c
+src/libscotch/vgraph_separate_st.c
+src/libscotch/vgraph_separate_th.c
+src/libscotch/vgraph_separate_vw.c
+src/libscotch/vgraph_separate_zr.c
+src/libscotch/vgraph_store.c
+src/libscotch/vmesh.c
+src/libscotch/vmesh_check.c
+src/libscotch/vmesh_separate_fm.c
+src/libscotch/vmesh_separate_gg.c
+src/libscotch/vmesh_separate_gr.c
+src/libscotch/vmesh_separate_ml.c
+src/libscotch/vmesh_separate_zr.c
+src/libscotch/vmesh_separate_st.c
+src/libscotch/vmesh_store.c
+src/libscotch/wgraph.c
+src/libscotch/wgraph_check.c
+src/libscotch/wgraph_part_fm.c
+src/libscotch/wgraph_part_gg.c
+src/libscotch/wgraph_part_gp.c
+src/libscotch/wgraph_part_ml.c
+src/libscotch/wgraph_part_rb.c
+src/libscotch/wgraph_part_st.c
+src/libscotch/wgraph_part_zr.c
+src/libscotch/wgraph_store.c
+""")
+
+caelus_inc = [
+'include',
+'src/libscotch'
+]
+
+caelus_libs_base = [
+'z',
+scotch_env['MPI_LIB_NAME']
+]
+
+append_args = {}
+
+ostype = utils.ostype()
+if ostype == "windows":
+    caelus_inc += [
+        os.path.join(env['ZLIB_PATH'],'include')
+    ]
+    append_args['LIBPATH'] = [os.path.join(env['ZLIB_PATH'],'lib')]
+
+elif ostype == "darwin":
+    append_args['LINKFLAGS'] = "-dynamiclib -undefined dynamic_lookup"
+elif ostype == "linux":
+    caelus_libs_base += ['rt']
+
+build_lib(scotch_env,
+          target='scotcherr',
+          sources=['src/libscotcherr/library_error.c'],
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs_base,
+          append_args=append_args)
+build_lib(scotch_env,
+          target='scotcherrexit',
+          sources=['src/libscotcherrexit/library_error_exit.c'],
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs_base,
+          append_args=append_args)
+
+caelus_libs = [
+'scotcherrexit',
+'scotcherr',
+] + caelus_libs_base
+
+build_lib(scotch_env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)
+
+### Part II - libptscotch
+
+target = 'ptscotch'
+
+sources = Split("""
+src/libptscotch/bdgraph.c
+src/libptscotch/bdgraph_bipart_bd.c
+src/libptscotch/bdgraph_bipart_df.c
+src/libptscotch/bdgraph_bipart_ex.c
+src/libptscotch/bdgraph_bipart_ml.c
+src/libptscotch/bdgraph_bipart_sq.c
+src/libptscotch/bdgraph_bipart_st.c
+src/libptscotch/bdgraph_bipart_zr.c
+src/libptscotch/bdgraph_check.c
+src/libptscotch/bdgraph_gather_all.c
+src/libptscotch/bdgraph_store.c
+src/libptscotch/comm.c
+src/libptscotch/dgraph.c
+src/libptscotch/dgraph_allreduce.c
+src/libptscotch/dgraph_band.c
+src/libptscotch/dgraph_build.c
+src/libptscotch/dgraph_build_grid3d.c
+src/libptscotch/dgraph_build_hcub.c
+src/libptscotch/dgraph_check.c
+src/libptscotch/dgraph_coarsen.c
+src/libptscotch/dgraph_fold.c
+src/libptscotch/dgraph_fold_comm.c
+src/libptscotch/dgraph_fold_dup.c
+src/libptscotch/dgraph_gather.c
+src/libptscotch/dgraph_gather_all.c
+src/libptscotch/dgraph_ghst.c
+src/libptscotch/dgraph_halo.c
+src/libptscotch/dgraph_induce.c
+src/libptscotch/dgraph_io_load.c
+src/libptscotch/dgraph_io_save.c
+src/libptscotch/dgraph_match.c
+src/libptscotch/dgraph_match_sync_coll.c
+src/libptscotch/dgraph_match_sync_ptop.c
+src/libptscotch/dgraph_match_check.c
+src/libptscotch/dgraph_redist.c
+src/libptscotch/dgraph_scatter.c
+src/libptscotch/dgraph_view.c
+src/libptscotch/dmapping.c
+src/libptscotch/dmapping_io.c
+src/libptscotch/dorder.c
+src/libptscotch/dorder_gather.c
+src/libptscotch/dorder_io.c
+src/libptscotch/dorder_io_block.c
+src/libptscotch/dorder_io_tree.c
+src/libptscotch/dorder_perm.c
+src/libptscotch/dorder_tree_dist.c
+src/libptscotch/hdgraph.c
+src/libptscotch/hdgraph_check.c
+src/libptscotch/hdgraph_fold.c
+src/libptscotch/hdgraph_gather.c
+src/libptscotch/hdgraph_induce.c
+src/libptscotch/hdgraph_order_nd.c
+src/libptscotch/hdgraph_order_si.c
+src/libptscotch/hdgraph_order_sq.c
+src/libptscotch/hdgraph_order_st.c
+src/libptscotch/kdgraph.c
+src/libptscotch/kdgraph_map_rb.c
+src/libptscotch/kdgraph_map_rb_map.c
+src/libptscotch/kdgraph_map_rb_part.c
+src/libptscotch/kdgraph_map_st.c
+src/libptscotch/library_dgraph.c
+src/libptscotch/library_dgraph_f.c
+src/libptscotch/library_dgraph_band.c
+src/libptscotch/library_dgraph_band_f.c
+src/libptscotch/library_dgraph_build.c
+src/libptscotch/library_dgraph_build_f.c
+src/libptscotch/library_dgraph_build_grid3d.c
+src/libptscotch/library_dgraph_build_grid3d_f.c
+src/libptscotch/library_dgraph_check.c
+src/libptscotch/library_dgraph_check_f.c
+src/libptscotch/library_dgraph_coarsen.c
+src/libptscotch/library_dgraph_coarsen_f.c
+src/libptscotch/library_dgraph_gather.c
+src/libptscotch/library_dgraph_gather_f.c
+src/libptscotch/library_dgraph_grow.c
+src/libptscotch/library_dgraph_halo.c
+src/libptscotch/library_dgraph_halo_f.c
+src/libptscotch/library_dgraph_induce.c
+src/libptscotch/library_dgraph_io_load.c
+src/libptscotch/library_dgraph_io_load_f.c
+src/libptscotch/library_dgraph_io_save.c
+src/libptscotch/library_dgraph_io_save_f.c
+src/libptscotch/library_dgraph_map.c
+src/libptscotch/library_dgraph_map_f.c
+src/libptscotch/library_dgraph_map_view.c
+src/libptscotch/library_dgraph_map_view_f.c
+src/libptscotch/library_dgraph_order.c
+src/libptscotch/library_dgraph_order_f.c
+src/libptscotch/library_dgraph_order_gather.c
+src/libptscotch/library_dgraph_order_gather_f.c
+src/libptscotch/library_dgraph_order_io.c
+src/libptscotch/library_dgraph_order_io_f.c
+src/libptscotch/library_dgraph_order_io_block.c
+src/libptscotch/library_dgraph_order_io_block_f.c
+src/libptscotch/library_dgraph_order_perm.c
+src/libptscotch/library_dgraph_order_perm_f.c
+src/libptscotch/library_dgraph_order_tree_dist.c
+src/libptscotch/library_dgraph_order_tree_dist_f.c
+src/libptscotch/library_dgraph_redist.c
+src/libptscotch/library_dgraph_redist_f.c
+src/libptscotch/library_dgraph_scatter.c
+src/libptscotch/library_dgraph_scatter_f.c
+src/libptscotch/library_dgraph_stat.c
+src/libptscotch/library_dgraph_stat_f.c
+src/libptscotch/library_dmapping.c
+src/libptscotch/library_dorder.c
+src/libptscotch/vdgraph.c
+src/libptscotch/vdgraph_check.c
+src/libptscotch/vdgraph_gather_all.c
+src/libptscotch/vdgraph_separate_bd.c
+src/libptscotch/vdgraph_separate_df.c
+src/libptscotch/vdgraph_separate_ml.c
+src/libptscotch/vdgraph_separate_sq.c
+src/libptscotch/vdgraph_separate_st.c
+src/libptscotch/vdgraph_separate_zr.c
+src/libptscotch/vdgraph_store.c
+""")
+
+build_lib(scotch_env,
+          target='ptscotcherr',
+          sources=['src/libptscotcherr/library_error.c'],
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs_base,
+          append_args=append_args)
+build_lib(scotch_env,
+          target='ptscotcherrexit',
+          sources=['src/libptscotcherrexit/library_error_exit.c'],
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs_base,
+          append_args=append_args)
+
+caelus_libs = [
+'ptscotcherrexit',
+'ptscotcherr',
+'scotch',
+] + caelus_libs_base
+
+build_lib(scotch_env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

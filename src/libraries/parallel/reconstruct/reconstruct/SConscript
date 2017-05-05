@@ -1,60 +1,28 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-reconstructEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-# Path to source
-src = reconstructEnv['LIB_SRC']
+target = 'reconstruct'
 
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-reconstructEnv.Append(CCFLAGS = '')
+sources = Split("""
+processorMeshes.cpp
+fvFieldReconstructor.cpp
+pointFieldReconstructor.cpp
+reconstructLagrangianPositions.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', src + '/lagrangian/basic/lnInclude']
-reconstructEnv.Prepend(CPPPATH = lib_inc)
+caelus_inc = [
+'lagrangian/basic/lnInclude'
+]
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = []
-reconstructEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'lagrangian'
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core', 'lagrangian']
-reconstructEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  processorMeshes.cpp
-  fvFieldReconstructor.cpp
-  pointFieldReconstructor.cpp
-  reconstructLagrangianPositions.cpp
-  """)
-
-#===============================================================================
-# Build this library
-#===============================================================================
-libreconstruct = reconstructEnv.SharedLibrary(target = 'reconstruct', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir = reconstructEnv['LIB_PLATFORM_INSTALL']
-reconstructEnv.Alias('install', install_dir)
-reconstructEnv.Install(install_dir, libreconstruct)
-
-if (reconstructEnv['WHICH_OS'] == "darwin"):
-
-  reconstructEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libreconstruct.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

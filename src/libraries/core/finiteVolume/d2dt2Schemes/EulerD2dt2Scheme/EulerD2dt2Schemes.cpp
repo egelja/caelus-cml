@@ -24,12 +24,6 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace CML
-{
-namespace fv
-{
-    makeFvD2dt2Scheme(EulerD2dt2Scheme)
-}
-}
+makeFvD2dt2Scheme(EulerD2dt2Scheme)
 
 // ************************************************************************* //

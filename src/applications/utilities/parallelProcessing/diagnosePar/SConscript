@@ -1,57 +1,26 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-diagnoseParEnv = globalEnv.Clone()
+from build import build_app
+Import('env')
 
-# Path to source
-src = diagnoseParEnv['LIB_SRC']
+target = 'diagnosePar'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-diagnoseParEnv.Append(CCFLAGS = '')
+sources = Split("""
+diagnosePar.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/parallel/diagnose/diagnose/lnInclude',
-src + '/parallel/diagnose/decompositionMethods/lnInclude',
-src + '/lagrangian/basic/lnInclude',
+caelus_inc = [
+'parallel/diagnose/diagnose/lnInclude',
+'parallel/diagnose/decompositionMethods/lnInclude',
+'lagrangian/basic/lnInclude'
 ]
-diagnoseParEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-diagnoseParEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-lib_link = []
-   
-diagnoseParEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  diagnosePar.cpp
- """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-bindiagnosePar = diagnoseParEnv.Program(target = 'diagnosePar', 
-source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = diagnoseParEnv['BIN_PLATFORM_INSTALL']
-diagnoseParEnv.Alias('install', install_dir)
-diagnoseParEnv.Install(install_dir, bindiagnosePar)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -117,6 +117,14 @@ except NameError:
    os.environ['INT_TYPE'] = '32'
 
 try:
+   OMP
+   os.environ['OMP'] = OMP
+   if OMP != 'True' and OMP != 'False':
+      sys.exit(' ERROR: Valid \'OMP\' is \'True\' or \'False\'')
+except NameError:
+   os.environ['OMP'] = 'False'
+
+try:
    FLEXXX
    os.environ['FLEXXX'] = FLEXXX
    if FLEXXX != 'flex':
@@ -200,24 +208,24 @@ except NameError:
      print " INFO: MPI_BIN not specified using Caelus version"
 
 try:
-   MPI_LIB
-   os.environ['MPI_LIB'] = MPI_LIB
-   check_path(MPI_LIB)
+   MPI_LIB_PATH
+   os.environ['MPI_LIB_PATH'] = MPI_LIB_PATH
+   check_path(MPI_LIB_PATH)
 except NameError:
-   MPI_LIB = os.path.join(os.environ['EXTERNAL_DIR'], WHICH_OS, 'openmpi-1.6.5','lib')
-   os.environ['MPI_LIB'] = MPI_LIB
+   MPI_LIB_PATH = os.path.join(os.environ['EXTERNAL_DIR'], WHICH_OS, 'openmpi-1.6.5','lib')
+   os.environ['MPI_LIB_PATH'] = MPI_LIB_PATH
    if VERBOSE:
-      print " INFO: MPI_LIB not specified using Caelus version"
+      print " INFO: MPI_LIB_PATH not specified using Caelus version"
 
 try:
-   MPI_INC
-   os.environ['MPI_INC'] = MPI_INC
-   check_path(MPI_INC)
+   MPI_INC_PATH
+   os.environ['MPI_INC_PATH'] = MPI_INC_PATH
+   check_path(MPI_INC_PATH)
 except NameError:
-   MPI_INC = os.path.join(os.environ['EXTERNAL_DIR'], WHICH_OS, 'openmpi-1.6.5','include')
-   os.environ['MPI_INC'] = MPI_INC 
+   MPI_INC_PATH = os.path.join(os.environ['EXTERNAL_DIR'], WHICH_OS, 'openmpi-1.6.5','include')
+   os.environ['MPI_INC_PATH'] = MPI_INC_PATH 
    if VERBOSE:
-      print " INFO: MPI_INC not specified using Caelus version"
+      print " INFO: MPI_INC_PATH not specified using Caelus version"
 
 try:
    MPI_LIB_NAME
@@ -312,7 +320,7 @@ LIB_PLATFORM_INSTALL = os.path.join(PROJECT_DIR, PROJECT, \
 os.environ['LIB_PLATFORM_INSTALL'] = LIB_PLATFORM_INSTALL
  
 LD_LIBRARY_PATH = os.environ['LIB_PLATFORM_INSTALL'] + os.pathsep  \
-                + os.environ['MPI_LIB']  \
+                + os.environ['MPI_LIB_PATH']  \
                 + os.pathsep + os.path.join(os.environ['METIS_PATH'], 'lib')  \
                 + os.pathsep + os.path.join(os.environ['SCOTCH_PATH'], 'lib')
    
@@ -368,6 +376,13 @@ if WHICH_OS == 'windows':
 
 # Prepend execution path to existing
 os.environ['PATH'] = PATH + os.pathsep + os.environ['PATH']
+
+# Add local site_scons to global ...
+SITE_SCONS_DIR = '\"--site-dir={0}\"'.format(
+                     os.path.join(CAELUS_PROJECT_DIR,'site_scons')
+                  )
+# ... and override existing values
+os.environ['SCONSFLAGS'] = SITE_SCONS_DIR
 
 # Main environment variables
 os.environ['MPI_BUFFER_SIZE'] = str(20000000)

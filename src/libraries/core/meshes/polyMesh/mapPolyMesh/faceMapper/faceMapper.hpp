@@ -130,6 +130,11 @@ public:
             return direct_;
         }
 
+        virtual bool hasUnmapped() const
+        {
+            return insertedObjects();
+        }
+
         //- Return direct addressing
         virtual const labelUList& directAddressing() const;
 

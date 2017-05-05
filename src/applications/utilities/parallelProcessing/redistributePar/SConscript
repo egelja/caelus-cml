@@ -1,58 +1,44 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-redistributeParEnv = globalEnv.Clone()
+import utils
+from build import build_app
+Import('env')
 
-# Path to source
-src = redistributeParEnv['LIB_SRC']
+target = 'redistributePar'
 
-#===============================================================================
-# Additions to compiler flags for this executable
-#===============================================================================
-redistributeParEnv.Append(CCFLAGS = '')
+sources = Split("""
+redistributePar.cpp
+parLagrangianRedistributor.cpp
+parFvFieldReconstructor.cpp
+loadOrCreateMesh.cpp
+""")
 
-#===============================================================================
-# Additions to include directories for this executable
-#===============================================================================
-lib_inc = [src + '/dynamicMesh/lnInclude', src + '/parallel/decompose' + 
-'/decompositionMethods/lnInclude'
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'parallel/decompose/decompositionMethods/lnInclude',
+'lagrangian/basic/lnInclude' 
 ]
-redistributeParEnv.Prepend(CPPPATH = lib_inc)
 
-#===============================================================================
-# Additions to link library paths for this executable
-#===============================================================================
-lib_link_path = []
-redistributeParEnv.Prepend(LIBPATH = lib_link_path)
+caelus_libs = [
+'core',
+'genericPatchFields',
+'decompositionMethods',
+'dynamicMesh',
+'lagrangian',
+'scotchDecomp',
+'ptscotchDecomp'
+]
 
-#===============================================================================
-# Additions to link libraries for this executable
-#===============================================================================
-if redistributeParEnv['WHICH_OS'] == "windows":
-  redistributeParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+ostype = utils.ostype()
+prepend_args = {}
+if ostype == 'windows':
+   prepend_args = {'LINKFLAGS' :
+         '-u genericPatchFieldsLoad'
+}
 
-lib_link = ['genericPatchFields','decompositionMethods','dynamicMesh']
-  
-redistributeParEnv.Append(LIBS = lib_link)
-
-#===============================================================================
-# Sources for this executable
-#===============================================================================
-src_files = Split("""
-  redistributePar.cpp
-  """)
-
-#===============================================================================
-# Build this executable
-#===============================================================================
-binredistributePar = redistributeParEnv.Program(target = 'redistributePar', source = src_files)
-
-#===============================================================================
-# Install this executable
-#===============================================================================
-install_dir = redistributeParEnv['BIN_PLATFORM_INSTALL']
-redistributeParEnv.Alias('install', install_dir)
-redistributeParEnv.Install(install_dir, binredistributePar)
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

@@ -1,56 +1,34 @@
-#Copyright (C) 2014 Applied CCM
-import subprocess
-Import('globalEnv')
+# -*- mode: python -*-
 
-# Clone the global environment so changes made he are not pass onto subsequent 
-# libraries
-metisDecompEnv = globalEnv.Clone()
+from build import build_lib
+Import('env')
 
-metisDecompEnv.Append(CXXFLAGS = '')
-#===============================================================================
-# Additions to compiler flags for this library
-#===============================================================================
-metisDecompEnv.Append(CXXFLAGS = '')
+target = 'metisDecomp'
 
-#===============================================================================
-# Additions to include directories for this library
-#===============================================================================
-lib_inc = ['lnInclude', '../decompositionMethods/lnInclude',
-metisDecompEnv['METIS_PATH'] + '/include']
-metisDecompEnv.Prepend(CPPPATH = lib_inc)
+sources = Split("""
+metisDecomp.cpp
+""")
 
-#===============================================================================
-# Additions to link library paths for this library
-#===============================================================================
-lib_link_path = [metisDecompEnv['METIS_PATH']  + '/lib']
-metisDecompEnv.Prepend(LIBPATH = lib_link_path)
+caelus_inc = [
+'parallel/decompose/decompositionMethods/lnInclude',
+env['METIS_INC_PATH'],
+]
 
-#===============================================================================
-# Additions to link libraries for this library
-#===============================================================================
-lib_link = ['core','decompositionMethods','metis']
-metisDecompEnv.Append(LIBS = lib_link)
+caelus_libs = [
+'core',
+'decompositionMethods',
+'metis'
+]
 
-#===============================================================================
-# Sources for this library
-#===============================================================================
-src_files = Split("""
-  metisDecomp.cpp
-  """)
+append_args = dict(
+    LIBPATH=[env[
+        'METIS_LIB_PATH']
+    ]
+)
 
-#===============================================================================
-# Build this library
-#===============================================================================
-libmetisDecomp = metisDecompEnv.SharedLibrary(target = 'metisDecomp', 
-source = src_files)
-
-#===============================================================================
-# Install this library
-#===============================================================================
-install_dir =metisDecompEnv['LIB_PLATFORM_INSTALL']
-metisDecompEnv.Alias('install', install_dir)
-metisDecompEnv.Install(install_dir, libmetisDecomp)
-
-if (metisDecompEnv['WHICH_OS'] == "darwin"):
-
-  metisDecompEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libmetisDecomp.dylib')
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

@@ -28,6 +28,8 @@ Description
 #include "fileName.hpp"
 #include "fileStat.hpp"
 
+//Undefine DebugInfo, because we don't need it and it collides with a macro
+#undef DebugInfo
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -41,10 +43,11 @@ Description
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::Windows, 0);
 
 namespace CML 
 {
+
+    defineTypeNameAndDebug(Windows, 0);
 
 // Don't abort under Windows, causes abort dialog to
 // popup. Instead just exit with exitCode.

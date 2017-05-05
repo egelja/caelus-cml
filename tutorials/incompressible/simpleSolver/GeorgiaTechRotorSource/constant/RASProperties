@@ -1,0 +1,31 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      RASProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+RASModel			kEpsilon;
+
+turbulence          on;
+
+printCoeffs         on;
+
+kEpsilonCoeffs
+{
+    Cmu             0.09;
+    C1              1.44;
+    C2              1.92;
+    C3              -0.33;
+    sigmak          1;
+    sigmaEps        2;
+    Prt             1;
+}
+
+// ************************************************************************* //

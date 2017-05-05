@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,8 +47,6 @@ namespace CML
 
 class subModelBase
 {
-private:
-
     // Private Member Functions
 
         //- Disallow default bitwise assignment
@@ -179,15 +177,15 @@ public:
 
                 //- Retrieve generic property from the sub-model
                 template<class Type>
+                void getModelProperty(const word& entryName, Type& value) const;
+
+                //- Retrieve generic property from the sub-model
+                template<class Type>
                 Type getModelProperty
                 (
                     const word& entryName,
                     const Type& defaultValue = pTraits<Type>::zero
                 ) const;
-
-                //- Retrieve generic property from the sub-model
-                template<class Type>
-                void getModelProperty(const word& entryName, Type& value) const;
 
                 //- Add generic property to the sub-model
                 template<class Type>
@@ -264,33 +262,6 @@ void CML::subModelBase::setBaseProperty
 
 
 template<class Type>
-Type CML::subModelBase::getModelProperty
-(
-    const word& entryName,
-    const Type& defaultValue
-) const
-{
-    Type result = defaultValue;
-
-    if (properties_.found(baseName_))
-    {
-        const dictionary& baseDict = properties_.subDict(baseName_);
-
-        if (inLine() && baseDict.found(modelName_))
-        {
-            baseDict.subDict(modelName_).readIfPresent(entryName, result);
-        }
-        else if (baseDict.found(modelType_))
-        {
-            baseDict.subDict(modelType_).readIfPresent(entryName, result);
-        }
-    }
-
-    return result;
-}
-
-
-template<class Type>
 void CML::subModelBase::getModelProperty
 (
     const word& entryName,
@@ -310,6 +281,19 @@ void CML::subModelBase::getModelProperty
             baseDict.subDict(modelType_).readIfPresent(entryName, value);
         }
     }
+}
+
+
+template<class Type>
+Type CML::subModelBase::getModelProperty
+(
+    const word& entryName,
+    const Type& defaultValue
+) const
+{
+    Type result = defaultValue;
+    getModelProperty(entryName, result);
+    return result;
 }
 
 

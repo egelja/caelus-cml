@@ -23,6 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::StaticHashTableCore, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(StaticHashTableCore, 0);
+}
+
 
 // ************************************************************************* //

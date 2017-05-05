@@ -23,13 +23,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::Pstream, 0);
 
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+namespace CML
+{
+    defineTypeNameAndDebug(Pstream, 0);
+}
 
 
 // ************************************************************************* //

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ---------------------------------------------------------------------------
-# Caelus 6.10
+# Caelus 7.04
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -13,9 +13,7 @@ import shutil
 import Caelus
 
 # Starting up the meshing and solving
-print "**********************************"
-print "Cleaning RAE2882 tutorial         "
-print "**********************************"
+print "Cleaning tutorial: RAE2882"
 
 # Cleaning up the case
 os.system('caelus-cleanCase.py')

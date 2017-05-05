@@ -33,7 +33,6 @@ SourceFiles
 #define dimFieldDecomposer_H
 
 #include "fvMesh.hpp"
-#include "fvPatchFieldMapper.hpp"
 #include "surfaceFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -113,7 +112,7 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
@@ -137,7 +136,8 @@ CML::dimFieldDecomposer::decomposeField
                 procMesh_.time().timeName(),
                 procMesh_,
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             procMesh_,
             field.dimensions(),
@@ -159,10 +159,7 @@ void CML::dimFieldDecomposer::decomposeFields
     }
 }
 
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
 // ************************************************************************* //

@@ -89,7 +89,7 @@ void CML::DICPreconditioner::approximateInverse()
     // Generate reciprocal DIC
     for (register label cell=0; cell<nCells; cell++)
     {
-        rDPtr[cell] = 1.0/rDPtr[cell];
+        rDPtr[cell] = scalar(1.0)/rDPtr[cell];
     }
 
     for (register label face=0; face<nFaces; face++)

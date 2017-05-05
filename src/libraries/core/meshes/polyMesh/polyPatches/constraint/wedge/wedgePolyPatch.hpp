@@ -58,6 +58,9 @@ class wedgePolyPatch
         //- Normal to the patch
         vector patchNormal_;
 
+        //- Cosine of the wedge angle
+        scalar cosAngle_;
+
         //- Face transformation tensor
         tensor faceT_;
 
@@ -180,6 +183,12 @@ public:
             const vector& patchNormal() const
             {
                 return patchNormal_;
+            }
+
+            //- Return the cosine of the wedge angle
+            scalar cosAngle() const
+            {
+                return cosAngle_;
             }
 
             //- Return face transformation tensor

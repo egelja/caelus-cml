@@ -22,6 +22,8 @@ License
 #include "targetCoeffTrim.hpp"
 #include "geometricOneField.hpp"
 #include "addToRunTimeSelectionTable.hpp"
+#include "unitConversion.hpp"
+#include "mathematicalConstants.hpp"
 
 using namespace CML::constant;
 
@@ -70,7 +72,15 @@ CML::vector CML::targetCoeffTrim::calcCoeffs
         if (useCoeffs_)
         {
             scalar radius = x[i].x();
-            scalar coeff2 = rho[cellI]*coeff1*pow4(radius);
+	    scalar coeff2 = coeff1*pow4(radius);
+	    if ( rotor_.compressible() )
+	    {
+		coeff2 *= rho[cellI];
+	    }
+	    else
+	    {
+		coeff2 *= rotor_.rhoRef();
+	    }
 
             // add to coefficient vector
             cf[0] += (fc & yawAxis)/(coeff2 + ROOTVSMALL);
@@ -110,9 +120,7 @@ void CML::targetCoeffTrim::correctTrim
         Info<< type() << ":" << nl
             << "    solving for target trim " << calcType << nl;
 
-        const scalar rhoRef = rotor_.rhoRef();
-
-        // iterate to find new pitch angles to achieve target force
+        // Iterate to find new pitch angles to achieve target force
         scalar err = GREAT;
         label iter = 0;
         tensor J(tensor::zero);
@@ -120,13 +128,13 @@ void CML::targetCoeffTrim::correctTrim
         vector old = vector::zero;
         while ((err > tol_) && (iter < nIter_))
         {
-            // cache initial theta vector
+            // Cache initial theta vector
             vector theta0(theta_);
 
-            // set initial values
+            // Set initial values
             old = calcCoeffs(rho, U, thetag(), force);
 
-            // construct Jacobian by perturbing the pitch angles
+            // Construct Jacobian by perturbing the pitch angles
             // by +/-(dTheta_/2)
             for (label pitchI = 0; pitchI < 3; pitchI++)
             {
@@ -145,16 +153,16 @@ void CML::targetCoeffTrim::correctTrim
                 theta_ = theta0;
             }
 
-            // calculate the change in pitch angle vector
-            vector dt = inv(J) & (target_/rhoRef - old);
+            // Calculate the change in pitch angle vector
+            vector dt = inv(J) & (target_ - old);
 
-            // update pitch angles
+            // Update pitch angles
             vector thetaNew = theta_ + relax_*dt;
 
-            // update error
+            // Update error
             err = mag(thetaNew - theta_);
 
-            // update for next iteration
+            // Update for next iteration
             theta_ = thetaNew;
             iter++;
         }
@@ -172,9 +180,9 @@ void CML::targetCoeffTrim::correctTrim
         }
 
         Info<< "    current and target " << calcType << nl
-            << "        thrust  = " << old[0]*rhoRef << ", " << target_[0] << nl
-            << "        pitch   = " << old[1]*rhoRef << ", " << target_[1] << nl
-            << "        roll    = " << old[2]*rhoRef << ", " << target_[2] << nl
+            << "        thrust  = " << old[0] << ", " << target_[0] << nl
+            << "        pitch   = " << old[1] << ", " << target_[1] << nl
+            << "        roll    = " << old[2] << ", " << target_[2] << nl
             << "    new pitch angles [deg]:" << nl
             << "        theta0  = " << radToDeg(theta_[0]) << nl
             << "        theta1c = " << radToDeg(theta_[1]) << nl

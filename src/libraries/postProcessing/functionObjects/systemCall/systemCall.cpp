@@ -25,7 +25,11 @@ Copyright (C) 2011 OpenFOAM Foundation
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::systemCall, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(systemCall, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

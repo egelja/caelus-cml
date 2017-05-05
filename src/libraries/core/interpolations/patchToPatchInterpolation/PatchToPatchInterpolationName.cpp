@@ -23,6 +23,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::PatchToPatchInterpolationName, 0);
+
+namespace CML
+{
+    defineTypeNameAndDebug(PatchToPatchInterpolationName, 0);
+}
+
 
 // ************************************************************************* //

@@ -1,14 +1,15 @@
 PROJECT_NAME = 'caelus'
-PROJECT_VER = '6.04'
+PROJECT_VER = '7.04'
 PRECISION_OPTION = 'DP'
 COMPILER_ARCH = '64'
 BUILD_TYPE = 'Opt'
 INT_TYPE = '32'
+OMP = 'False'
 FLEXXX = 'flex'
 
 # Windows setup
 #PROJECT_DIR = 'C:\\Program Files\\caelus'
-#COMPILER = 'mingw'
+#COMPILER = 'g++'
 #MPI_BIN = 'C:\\Program Files\\MPICH2\\bin'
 #MPI_INC = 'C:\\Program Files\\MPICH2\\include'
 #MPI_LIB = 'C:\\windows\\system32'
@@ -17,7 +18,6 @@ FLEXXX = 'flex'
 #SCOTCH_PATH = 'C:\\Program Files\\caelus\\caelus-5.04\\external\\scotch-5.1.12'
 #ZLIB_PATH = 'C:\\Program Files\\caelus\\caelus-5.04\\external\\windows\\zlib-1.2.7'
 #FLEXXX_PATH = 'C:\\Program Files\\caelus\\caelus-5.04\\external\\windows\\flex-2.5.4a-1'
-#COLOUR_BUILD = '0'
 
 #Linux setup
 #PROJECT_DIR = '/opt/caelus'
@@ -28,7 +28,6 @@ FLEXXX = 'flex'
 #SCOTCH_VERSION = '6.0.4'
 #SCOTCH_PATH = '/opt/caelus/caelus-5.04/external/scotch-5.1.12'
 #METIS_PATH = '/opt/caelus/caelus-5.04/external/metis-5.1.0'
-#COLOUR_BUILD = '0'
 
 #Mac setup
 #PROJECT_DIR = '/Applications/Caelus'
@@ -40,4 +39,3 @@ FLEXXX = 'flex'
 #SCOTCH_VERSION = '6.0.4'
 #SCOTCH_PATH = '/Applications/Caelus/Caelus-5.04/external/scotch-5.1.12'
 #METIS_PATH = '/Applications/Caelus/Caelus-5.04/external/metis-5.1.0'
-#COLOUR_BUILD = '0'

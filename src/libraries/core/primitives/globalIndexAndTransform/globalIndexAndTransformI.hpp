@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -186,7 +186,8 @@ CML::label CML::globalIndexAndTransform::addToTransformIndex
 (
     const label transformIndex,
     const label patchI,
-    const bool isSendingSide
+    const bool isSendingSide,
+    const scalar tol
 ) const
 {
     const Pair<label>& transSign = patchTransformSign_[patchI];

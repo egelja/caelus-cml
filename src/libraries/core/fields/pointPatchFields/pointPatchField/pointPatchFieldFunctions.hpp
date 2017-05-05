@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,7 +43,7 @@ inline void T
 {}
 
 
-template<class Type, int r>
+template<class Type, direction r>
 inline void pow
 (
     Field<typename powProduct<Type, r>::type>& f,
@@ -202,7 +202,7 @@ template                                                                      \
     class Type,                                                               \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt                                                                 \
+    direction nCmpt                                                           \
 >                                                                             \
 inline void opFunc                                                            \
 (                                                                             \
@@ -217,7 +217,7 @@ template                                                                      \
 <                                                                             \
     class Form,                                                               \
     class Cmpt,                                                               \
-    int nCmpt,                                                                \
+    direction nCmpt,                                                          \
     class Type                                                                \
 >                                                                             \
 inline void opFunc                                                            \

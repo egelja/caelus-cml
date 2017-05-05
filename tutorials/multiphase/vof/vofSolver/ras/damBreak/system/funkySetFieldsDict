@@ -1,0 +1,27 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      funkySetFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+expressions
+(
+    box
+    {
+        field alpha1;
+        expression "1";
+        keepPatches true;
+        condition "pos().x<0.1461 && pos().y<0.292";
+    }
+);
+
+
+// ************************************************************************* //

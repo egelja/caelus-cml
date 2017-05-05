@@ -24,25 +24,25 @@ License
 #include "wedgePolyPatch.hpp"
 #include "emptyPolyPatch.hpp"
 #include "SubField.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
+#include "meshTools.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-const scalar twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-4;
+namespace CML
+{
+    defineTypeNameAndDebug(twoDPointCorrector, 0);
+}
+
+const CML::scalar CML::twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-4;
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void twoDPointCorrector::calcAddressing() const
+void CML::twoDPointCorrector::calcAddressing() const
 {
     // Find geometry normal
     planeNormalPtr_ = new vector(0, 0, 0);
     vector& pn = *planeNormalPtr_;
-
-    bool isWedge = false;
 
     // Algorithm:
     // Attempt to find wedge patch and work out the normal from it.
@@ -57,9 +57,15 @@ void twoDPointCorrector::calcAddressing() const
     {
         if (isA<wedgePolyPatch>(patches[patchI]))
         {
-            isWedge = true;
+            isWedge_ = true;
 
-            pn = refCast<const wedgePolyPatch>(patches[patchI]).centreNormal();
+            const wedgePolyPatch& wp =
+                refCast<const wedgePolyPatch>(patches[patchI]);
+
+            pn = wp.centreNormal();
+
+            wedgeAxis_ = wp.axis();
+            wedgeAngle_ = mag(acos(wp.cosAngle()));
 
             if (polyMesh::debug)
             {
@@ -71,7 +77,7 @@ void twoDPointCorrector::calcAddressing() const
     }
 
     // Try to find an empty patch with faces
-    if (!isWedge)
+    if (!isWedge_)
     {
         forAll(patches, patchI)
         {
@@ -121,9 +127,9 @@ void twoDPointCorrector::calcAddressing() const
 
     forAll(meshEdges, edgeI)
     {
-        vector edgeVector =
-            meshEdges[edgeI].vec(meshPoints)/
-            (meshEdges[edgeI].mag(meshPoints) + VSMALL);
+        const edge& e = meshEdges[edgeI];
+
+        vector edgeVector = e.vec(meshPoints)/(e.mag(meshPoints) + VSMALL);
 
         if (mag(edgeVector & pn) > edgeOrthogonalityTol)
         {
@@ -137,7 +143,7 @@ void twoDPointCorrector::calcAddressing() const
     // Construction check: number of points in a read 2-D or wedge geometry
     // should be odd and the number of edges normal to the plane should be
     // exactly half the number of points
-    if (!isWedge)
+    if (!isWedge_)
     {
         if (meshPoints.size() % 2 != 0)
         {
@@ -170,21 +176,38 @@ void twoDPointCorrector::calcAddressing() const
 }
 
 
-void twoDPointCorrector::clearAddressing() const
+void CML::twoDPointCorrector::clearAddressing() const
 {
     deleteDemandDrivenData(planeNormalPtr_);
     deleteDemandDrivenData(normalEdgeIndicesPtr_);
 }
 
 
+void CML::twoDPointCorrector::snapToWedge
+(
+    const vector& n,
+    const point& A,
+    point& p
+) const
+{
+    scalar ADash = mag(A - wedgeAxis_*(wedgeAxis_ & A));
+    vector pDash = ADash*tan(wedgeAngle_)*planeNormal();
+
+    p = A + sign(n & p)*pDash;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
+CML::twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
 :
-    mesh_(mesh),
+    MeshObject<polyMesh, twoDPointCorrector>(mesh),
     required_(mesh_.nGeometricD() == 2),
     planeNormalPtr_(NULL),
-    normalEdgeIndicesPtr_(NULL)
+    normalEdgeIndicesPtr_(NULL),
+    isWedge_(false),
+    wedgeAxis_(Zero),
+    wedgeAngle_(0.0)
 {}
 
 
@@ -199,7 +222,7 @@ CML::twoDPointCorrector::~twoDPointCorrector()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-direction twoDPointCorrector::normalDir() const
+CML::direction CML::twoDPointCorrector::normalDir() const
 {
     const vector& pn = planeNormal();
 
@@ -228,7 +251,7 @@ direction twoDPointCorrector::normalDir() const
 
 
 // Return plane normal
-const vector& twoDPointCorrector::planeNormal() const
+const CML::vector& CML::twoDPointCorrector::planeNormal() const
 {
     if (!planeNormalPtr_)
     {
@@ -240,7 +263,7 @@ const vector& twoDPointCorrector::planeNormal() const
 
 
 // Return indices of normal edges.
-const labelList& twoDPointCorrector::normalEdgeIndices() const
+const CML::labelList& CML::twoDPointCorrector::normalEdgeIndices() const
 {
     if (!normalEdgeIndicesPtr_)
     {
@@ -251,7 +274,7 @@ const labelList& twoDPointCorrector::normalEdgeIndices() const
 }
 
 
-void twoDPointCorrector::correctPoints(pointField& p) const
+void CML::twoDPointCorrector::correctPoints(pointField& p) const
 {
     if (!required_) return;
 
@@ -273,23 +296,84 @@ void twoDPointCorrector::correctPoints(pointField& p) const
         point& pEnd = p[meshEdges[neIndices[edgeI]].end()];
 
         // calculate average point position
-        const point A = 0.5*(pStart + pEnd);
+        point A = 0.5*(pStart + pEnd);
+        meshTools::constrainToMeshCentre(mesh_, A);
 
-        // correct point locations
-        pStart = A + pn*(pn & (pStart - A));
-        pEnd = A + pn*(pn & (pEnd - A));
+        if (isWedge_)
+        {
+            snapToWedge(pn, A, pStart);
+            snapToWedge(pn, A, pEnd);
+        }
+        else
+        {
+            // correct point locations
+            pStart = A + pn*(pn & (pStart - A));
+            pEnd = A + pn*(pn & (pEnd - A));
+        }
     }
 }
 
 
-void twoDPointCorrector::updateMesh()
+void CML::twoDPointCorrector::correctDisplacement
+(
+    const pointField& p,
+    vectorField& disp
+) const
+{
+    if (!required_) return;
+
+    // Algorithm:
+    // Loop through all edges. Calculate the average point position A for
+    // the front and the back. Correct the position of point P (in two planes)
+    // such that vectors AP and planeNormal are parallel
+
+    // Get reference to edges
+    const edgeList&  meshEdges = mesh_.edges();
+
+    const labelList& neIndices = normalEdgeIndices();
+    const vector& pn = planeNormal();
+
+    forAll(neIndices, edgeI)
+    {
+        const edge& e = meshEdges[neIndices[edgeI]];
+
+        label startPointi = e.start();
+        point pStart = p[startPointi] + disp[startPointi];
+
+        label endPointi = e.end();
+        point pEnd = p[endPointi] + disp[endPointi];
+
+        // calculate average point position
+        point A = 0.5*(pStart + pEnd);
+        meshTools::constrainToMeshCentre(mesh_, A);
+
+        if (isWedge_)
+        {
+            snapToWedge(pn, A, pStart);
+            snapToWedge(pn, A, pEnd);
+            disp[startPointi] = pStart - p[startPointi];
+            disp[endPointi] = pEnd - p[endPointi];
+        }
+        else
+        {
+            // correct point locations
+            disp[startPointi] = (A + pn*(pn & (pStart - A))) - p[startPointi];
+            disp[endPointi] = (A + pn*(pn & (pEnd - A))) - p[endPointi];
+        }
+    }
+}
+
+
+void CML::twoDPointCorrector::updateMesh()
 {
     clearAddressing();
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+bool CML::twoDPointCorrector::movePoints()
+{
+    return true;
+}
 
-} // End namespace CML
 
 // ************************************************************************* //

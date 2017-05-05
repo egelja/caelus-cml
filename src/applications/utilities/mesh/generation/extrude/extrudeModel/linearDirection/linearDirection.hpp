@@ -51,7 +51,7 @@ class linearDirection
         //- Extrude direction
         vector direction_;
 
-        //- layer thickness
+        //- Layer thickness
         scalar thickness_;
 
 

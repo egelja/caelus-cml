@@ -161,15 +161,21 @@ public:
             return components_.size();
         }
 
-
         //- Calculate the critical temperature of mixture
         scalar Tc(const scalarField& x) const;
+
+        //- Invert the vapour pressure relationship to retrieve the boiling
+        //  temperature of the mixture as a function of pressure
+        scalar pvInvert(const scalar p, const scalarField& x) const;
 
         //- Return pseudocritical temperature according to Kay's rule
         scalar Tpc(const scalarField& x) const;
 
         //- Return pseudocritical pressure (modified Prausnitz and Gunn)
         scalar Ppc(const scalarField& x) const;
+
+        //- Return pseudo triple point temperature (mole averaged formulation)
+        scalar Tpt(const scalarField& x) const;
 
         //- Return mixture accentric factor
         scalar omega(const scalarField& x) const;

@@ -36,7 +36,7 @@ Description
 #include "polyPatch.hpp"
 #include "wallPolyPatch.hpp"
 #include "tetIndices.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 #include "fvMesh.hpp"
 #include "Time.hpp"
 #include "volFields.hpp"
@@ -53,7 +53,7 @@ namespace CML
 template<class CloudType>
 class PatchInteractionModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 public:
 
@@ -115,13 +115,7 @@ public:
         PatchInteractionModel(const PatchInteractionModel<CloudType>& pim);
 
         //- Construct and return a clone
-        virtual autoPtr<PatchInteractionModel<CloudType> > clone() const
-        {
-            return autoPtr<PatchInteractionModel<CloudType> >
-            (
-                new PatchInteractionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<PatchInteractionModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -159,7 +153,8 @@ public:
             bool& keepParticle,
             const scalar trackFraction,
             const tetIndices& tetIs
-        );
+        ) = 0;
+
 
         // I-O
 
@@ -280,7 +275,7 @@ CML::PatchInteractionModel<CloudType>::PatchInteractionModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     UName_("unknown_UName")
 {}
 
@@ -293,7 +288,7 @@ CML::PatchInteractionModel<CloudType>::PatchInteractionModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     UName_(this->coeffDict().lookupOrDefault("UName", word("U")))
 {}
 
@@ -304,7 +299,7 @@ CML::PatchInteractionModel<CloudType>::PatchInteractionModel
     const PatchInteractionModel<CloudType>& pim
 )
 :
-    SubModelBase<CloudType>(pim),
+    CloudSubModelBase<CloudType>(pim),
     UName_(pim.UName_)
 {}
 
@@ -322,31 +317,6 @@ template<class CloudType>
 const CML::word& CML::PatchInteractionModel<CloudType>::UName() const
 {
     return UName_;
-}
-
-
-template<class CloudType>
-bool CML::PatchInteractionModel<CloudType>::correct
-(
-    typename CloudType::parcelType&,
-    const polyPatch&,
-    bool&,
-    const scalar,
-    const tetIndices&
-)
-{
-    notImplemented
-    (
-        "bool CML::PatchInteractionModel<CloudType>::correct"
-        "("
-            "typename CloudType::parcelType&, "
-            "const polyPatch&, "
-            "bool&, "
-            "const scalar, "
-            "const tetIndices& "
-        ") const"
-    );
-    return false;
 }
 
 

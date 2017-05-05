@@ -29,6 +29,7 @@ if ( ! -z "${OPAL}" ) then
    setenv OPAL_PREFIX $OPAL
 endif
 
+setenv SCOTCH_VERSION &SCOTCH_VERSION
 setenv SCOTCH_PATH &SCOTCH_PATH
 setenv METIS_PATH &METIS_PATH
 setenv ZLIB_PATH &ZLIB_PATH

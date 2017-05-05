@@ -58,6 +58,8 @@ src_files = Split("""
   derivedFvPatchFields/gradientInternalEnergy/gradientInternalEnergyFvPatchScalarField.cpp
   derivedFvPatchFields/mixedInternalEnergy/mixedInternalEnergyFvPatchScalarField.cpp
   derivedFvPatchFields/wallHeatTransfer/wallHeatTransferFvPatchScalarField.cpp
+  derivedFvPatchFields/isentropicTotalTemperature/isentropicTotalTemperatureFvPatchScalarField.cpp
+  derivedFvPatchFields/temperatureDirectedInletOutletVelocity/temperatureDirectedInletOutletVelocityFvPatchVectorField.cpp
   """) 
 
 #===============================================================================

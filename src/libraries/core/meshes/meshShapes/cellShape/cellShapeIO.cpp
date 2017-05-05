@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -124,7 +125,7 @@ Ostream& operator<<(Ostream& os, const InfoProxy<cellShape>& ip)
 {
     const cellShape& cs = ip.t_;
 
-    if (!(&cs.model()))
+    if (isNull(cs.model()))
     {
         os  << "    cellShape has no model!\n";
     }

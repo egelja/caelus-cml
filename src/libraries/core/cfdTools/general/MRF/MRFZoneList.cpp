@@ -150,34 +150,82 @@ void CML::MRFZoneList::addCoriolis
 }
 
 
-void CML::MRFZoneList::relativeVelocity(volVectorField& U) const
+CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
+(
+    const volVectorField& U
+)
+{
+    tmp<volVectorField> tacceleration
+    (
+        new volVectorField
+        (
+            IOobject
+            (
+                "MRFZoneList:acceleration",
+                U.mesh().time().timeName(),
+                U.mesh()
+            ),
+            U.mesh(),
+            dimensionedVector("0", U.dimensions()/dimTime, vector::zero)
+        )
+    );
+    volVectorField& acceleration = tacceleration();
+
+    forAll(*this, i)
+    {
+        operator[](i).addCoriolis(U, acceleration);
+    }
+
+    return tacceleration;
+}
+
+
+CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
+(
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    return rho*operator()(U);
+}
+
+
+void CML::MRFZoneList::makeRelative(volVectorField& U) const
 {
     forAll(*this, i)
     {
-        operator[](i).relativeVelocity(U);
+        operator[](i).makeRelative(U);
     }
 }
 
 
-void CML::MRFZoneList::absoluteVelocity(volVectorField& U) const
+void CML::MRFZoneList::makeRelative(surfaceScalarField& phi) const
 {
     forAll(*this, i)
     {
-        operator[](i).absoluteVelocity(U);
+        operator[](i).makeRelative(phi);
     }
 }
 
 
-void CML::MRFZoneList::relativeFlux(surfaceScalarField& phi) const
+CML::tmp<CML::FieldField<CML::fvsPatchField, CML::scalar> >
+CML::MRFZoneList::relative
+(
+    const tmp<FieldField<fvsPatchField, scalar> >& phi
+) const
 {
+    tmp<FieldField<fvsPatchField, scalar> > rphi(phi.ptr());
+
     forAll(*this, i)
     {
-        operator[](i).relativeFlux(phi);
+        operator[](i).makeRelative(rphi());
     }
+
+    return rphi;
 }
 
 
-void CML::MRFZoneList::relativeFlux
+void CML::MRFZoneList::makeRelative
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
@@ -185,21 +233,30 @@ void CML::MRFZoneList::relativeFlux
 {
     forAll(*this, i)
     {
-        operator[](i).relativeFlux(rho, phi);
+        operator[](i).makeRelative(rho, phi);
     }
 }
 
 
-void CML::MRFZoneList::absoluteFlux(surfaceScalarField& phi) const
+void CML::MRFZoneList::makeAbsolute(volVectorField& U) const
 {
     forAll(*this, i)
     {
-        operator[](i).absoluteFlux(phi);
+        operator[](i).makeAbsolute(U);
     }
 }
 
 
-void CML::MRFZoneList::absoluteFlux
+void CML::MRFZoneList::makeAbsolute(surfaceScalarField& phi) const
+{
+    forAll(*this, i)
+    {
+        operator[](i).makeAbsolute(phi);
+    }
+}
+
+
+void CML::MRFZoneList::makeAbsolute
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
@@ -207,7 +264,7 @@ void CML::MRFZoneList::absoluteFlux
 {
     forAll(*this, i)
     {
-        operator[](i).absoluteFlux(rho, phi);
+        operator[](i).makeAbsolute(rho, phi);
     }
 }
 

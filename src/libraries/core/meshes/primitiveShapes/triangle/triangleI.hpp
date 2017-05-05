@@ -241,6 +241,25 @@ inline Point CML::triangle<Point, PointRef>::randomPoint(Random& rndGen) const
 
 
 template<class Point, class PointRef>
+inline Point CML::triangle<Point, PointRef>::randomPoint
+(
+    cachedRandom& rndGen
+) const
+{
+    // Generating Random Points in Triangles
+    // by Greg Turk
+    // from "Graphics Gems", Academic Press, 1990
+    // http://tog.acm.org/GraphicsGems/gems/TriPoints.c
+
+    scalar s = rndGen.sample01<scalar>();
+
+    scalar t = sqrt(rndGen.sample01<scalar>());
+
+    return (1 - t)*a_ + (1 - s)*t*b_ + s*t*c_;
+}
+
+
+template<class Point, class PointRef>
 CML::scalar CML::triangle<Point, PointRef>::barycentric
 (
     const point& pt,

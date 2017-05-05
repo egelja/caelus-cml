@@ -36,6 +36,7 @@ SourceFiles
 #include "tensor.hpp"
 #include "pointHit.hpp"
 #include "Random.hpp"
+#include "cachedRandom.hpp"
 #include "FixedList.hpp"
 #include "UList.hpp"
 
@@ -156,6 +157,10 @@ public:
             //- Return a random point on the triangle from a uniform
             //  distribution
             inline Point randomPoint(Random& rndGen) const;
+
+            //- Return a random point on the triangle from a uniform
+            //  distribution
+            inline Point randomPoint(cachedRandom& rndGen) const;
 
             //- Calculate the barycentric coordinates of the given
             //  point, in the same order as a, b, c.  Returns the

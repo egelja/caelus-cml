@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM 
+Copyright (C) 2014-2015 Applied CCM 
 
 Description
     Implementation of the k-omega-SST turbulence model for incompressible
@@ -20,7 +20,7 @@ Description
 
     \endverbatim
 
-    Note, a typographical error existed i nthis paper that was subsequently
+    Note, a typographical error existed in this paper that was subsequently
     corrected but the authors. In the omega equation (2nd part of eqn(1)
     in the paper), the production term was incorrectly given as 
     \alpha\rho S^{2} when it should have read 
@@ -29,10 +29,31 @@ Description
     change in this model is the definition of eddy viscosity, which uses the 
     strain invariant rather than magnitude of vorticity in its definition.
  
+    \verbatim
+        "Turbulence Modeling in Rotating and Curved Channels: Assessing the 
+        Spalart-Shur Correction"
+        M.L. Shur,
+        M.K. Strelets,
+        A.K. Travin,
+        P.R. Spalart
+        AIAA Journal, Vol. 38, No. 5, 2000, pp. 784-792.
+
+    \endverbatim
+
+    \verbatim
+        "Sensitization of the SST Turbulence Model to Rotation and Curvature by
+        Applying the Spalart-Shur Correction Term"
+        P.E. Smirnov,
+        F.R. Menter
+        ASME Jorunal of Turbomachinery, Vol. 131, 2009.
+
+    \endverbatim
+
     The default model coefficients correspond to the following:
     \verbatim
         kOmegaSSTCoeffs
         {
+            curvatureCorrection false;
             alphaK1     0.85034;
             alphaK2     1.0;
             alphaOmega1 0.5;
@@ -45,6 +66,9 @@ Description
             a1          0.31;
             b1          1.0;
             c1          10.0;
+            Cr1         1.0;
+            Cr2         2.0;
+            Cr3         1.0;
         }
     \endverbatim
 
@@ -80,6 +104,9 @@ protected:
 
     // Protected data
 
+        //- Curvature correction on/off flag
+            Switch curvatureCorrection_;
+
         // Model coefficients
             dimensionedScalar alphaK1_;
             dimensionedScalar alphaK2_;
@@ -98,15 +125,21 @@ protected:
             dimensionedScalar a1_;
             dimensionedScalar c1_;
 
+            dimensionedScalar Cr1_;
+            dimensionedScalar Cr2_;
+            dimensionedScalar Cr3_;
+            dimensionedScalar Cscale_;
+            dimensionedScalar frMax_;
+
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
         wallDist y_;
 
         // Fields
-
             volScalarField k_;
             volScalarField omega_;
             volScalarField nut_;
+            volScalarField fr1_;
 
 
         tmp<volScalarField> F1(const volScalarField& CDkOmega) const;

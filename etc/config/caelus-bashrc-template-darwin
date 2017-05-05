@@ -29,6 +29,7 @@ if [[ ! -z "${OPAL}" ]]; then
    export OPAL_PREFIX=$OPAL
 fi
 
+export SCOTCH_VERSION=&SCOTCH_VERSION
 export SCOTCH_PATH=&SCOTCH_PATH
 export METIS_PATH=&METIS_PATH
 export ZLIB_PATH=&ZLIB_PATH

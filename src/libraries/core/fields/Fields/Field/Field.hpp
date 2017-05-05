@@ -94,7 +94,7 @@ public:
         //- Return a null field
         inline static const Field<Type>& null()
         {
-            return *reinterpret_cast< Field<Type>* >(0);
+            return NullSingletonRef< Field<Type> >();
         }
 
 
@@ -729,7 +729,7 @@ void CML::Field<Type>::map
     if
     (
         mapper.direct()
-     && &mapper.directAddressing()
+     && notNull(mapper.directAddressing())
      && mapper.directAddressing().size()
     )
     {
@@ -764,7 +764,7 @@ void CML::Field<Type>::autoMap
     (
         (
             mapper.direct()
-         && &mapper.directAddressing()
+//         && &mapper.directAddressing()
          && mapper.directAddressing().size()
         )
      || (!mapper.direct() && mapper.addressing().size())

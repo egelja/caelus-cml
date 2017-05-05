@@ -21,8 +21,8 @@ Application
     Pe
 
 Description
-    Calculates and writes the Pe number as a surfaceScalarField obtained from
-    field phi.
+    Calculates the Peclet number Pe from the flux phi and writes the maximum
+    value, the surfaceScalarField Pef and volScalarField Pe.
 
     The -noWrite option just outputs the max/min values without writing
     the field.
@@ -30,7 +30,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "calc.hpp"
-#include "fvc.hpp"
+#include "surfaceInterpolate.hpp"
+#include "fvcAverage.hpp"
 
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.hpp"
 #include "incompressible/RAS/RASModel/RASModel.hpp"
@@ -116,10 +117,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -147,10 +147,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -183,10 +182,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -234,10 +232,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -276,10 +273,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -312,10 +308,9 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                     (
                         IOobject
                         (
-                            "Pe",
+                            "Pef",
                             runTime.timeName(),
-                            mesh,
-                            IOobject::NO_READ
+                            mesh
                         ),
                         mag(phi)
                        /(
@@ -338,15 +333,30 @@ void CML::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
 
         if (writeResults)
         {
+            Info<< "    Writing surfaceScalarField : "
+                << PePtr().name() << endl;
             PePtr().write();
+
+            volScalarField Pe
+            (
+                IOobject
+                (
+                    "Pe",
+                    runTime.timeName(),
+                    mesh
+                ),
+                fvc::average(PePtr())
+            );
+
+            Info<< "    Writing volScalarField : "
+                << Pe.name() << endl;
+            Pe.write();
         }
     }
     else
     {
         Info<< "    No phi" << endl;
     }
-
-    Info<< "\nEnd\n" << endl;
 }
 
 

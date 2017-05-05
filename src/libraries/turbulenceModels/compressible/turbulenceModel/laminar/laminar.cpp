@@ -75,6 +75,12 @@ autoPtr<laminar> laminar::New
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+const dictionary& laminar::coeffDict() const
+{
+    return dictionary::null;
+}
+
+
 tmp<volScalarField> laminar::mut() const
 {
     return tmp<volScalarField>
@@ -230,7 +236,7 @@ bool laminar::read()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace incompressible
+} // End namespace compressible
 } // End namespace CML
 
 // ************************************************************************* //

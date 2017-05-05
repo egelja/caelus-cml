@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,11 +35,7 @@ Description
 
     As a special case a null-contructed CompactListList has an empty
     offsets_ (instead of size 1).
-
-SourceFiles
-    CompactListList.cpp
-    CompactListListI.hpp
-    CompactListListIO.cpp
+ 
 
 \*---------------------------------------------------------------------------*/
 
@@ -306,7 +303,7 @@ template<class T, class Container>
 inline const CML::CompactListList<T, Container>&
 CML::CompactListList<T, Container>::null()
 {
-    return *reinterpret_cast< CompactListList<T, Container>* >(0);
+    return NullSingletonRef< CompactListList<T, Container> >();
 }
 
 

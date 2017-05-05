@@ -116,6 +116,12 @@ CML::scalar CML::distributionModels::normal::maxValue() const
 }
 
 
+CML::scalar CML::distributionModels::normal::meanValue() const
+{
+    return expectation_;
+}
+
+
 CML::scalar CML::distributionModels::normal::erfInv(const scalar y) const
 {
     scalar k = 2.0/(constant::mathematical::pi*a_) +  0.5*log(1.0 - y*y);

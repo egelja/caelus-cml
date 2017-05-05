@@ -32,7 +32,7 @@ Description
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,7 +46,7 @@ namespace CML
 template<class CloudType>
 class AtomizationModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 public:
 
@@ -176,7 +176,7 @@ CML::AtomizationModel<CloudType>::AtomizationModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner)
+    CloudSubModelBase<CloudType>(owner)
 {}
 
 
@@ -186,7 +186,7 @@ CML::AtomizationModel<CloudType>::AtomizationModel
     const AtomizationModel<CloudType>& am
 )
 :
-    SubModelBase<CloudType>(am)
+    CloudSubModelBase<CloudType>(am)
 {}
 
 
@@ -198,7 +198,7 @@ CML::AtomizationModel<CloudType>::AtomizationModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type)
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type)
 {}
 
 

@@ -47,17 +47,29 @@ src_files = Split("""
   fieldMinMax/fieldMinMax.cpp
   fieldMinMax/fieldMinMaxFunctionObject.cpp
   fieldValues/fieldValue/fieldValue.cpp
+  fieldValues/fieldValue/fieldValueNew.cpp
+  fieldValues/fieldValueDelta/fieldValueDelta.cpp
+  fieldValues/fieldValueDelta/fieldValueDeltaFunctionObject.cpp
   fieldValues/faceSource/faceSource.cpp
   fieldValues/faceSource/faceSourceFunctionObject.cpp
   fieldValues/cellSource/cellSource.cpp
   fieldValues/cellSource/cellSourceFunctionObject.cpp
   nearWallFields/nearWallFields.cpp
   nearWallFields/nearWallFieldsFunctionObject.cpp
+  nearWallFields/findCellParticle.cpp
+  nearWallFields/findCellParticleCloud.cpp
+  processorField/processorField.cpp
+  processorField/processorFieldFunctionObject.cpp
   readFields/readFields.cpp
   readFields/readFieldsFunctionObject.cpp
   streamLine/streamLine.cpp
   streamLine/streamLineParticle.cpp
   streamLine/streamLineParticleCloud.cpp
+  wallBoundedStreamLine/wallBoundedStreamLine.cpp
+  wallBoundedStreamLine/wallBoundedStreamLineFunctionObject.cpp
+  wallBoundedStreamLine/wallBoundedStreamLineParticle.cpp
+  wallBoundedStreamLine/wallBoundedStreamLineParticleCloud.cpp
+  wallBoundedStreamLine/wallBoundedParticle.cpp
   streamLine/streamLineFunctionObject.cpp
   surfaceInterpolateFields/surfaceInterpolateFields.cpp
   surfaceInterpolateFields/surfaceInterpolateFieldsFunctionObject.cpp

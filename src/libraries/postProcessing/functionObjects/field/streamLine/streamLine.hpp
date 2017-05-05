@@ -1,27 +1,95 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::streamLine
 
+Group
+    grpFieldFunctionObjects
+
 Description
-    Generation of streamlines. Samples along track of passive particle.
+    This function object generates streamline data by sampling a set of
+    user-specified fields along a particle track, transported by a
+    user-specified velocity field.
+
+    Example of function object specification:
+    \verbatim
+    streamLine1
+    {
+        type            streamLine;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        setFormat       vtk;
+        UName           U;
+        trackForward    yes;
+        fields
+        (
+            U
+            p
+        );
+        lifeTime        10000;
+        trackLength     1e-3;
+        nSubCycle       5;
+        cloudName       particleTracks;
+        seedSampleSet   uniform;
+        uniformCoeffs
+        {
+            type        uniform;
+            axis        x;  //distance;
+            start       (-0.0205 0.0001 0.00001);
+            end         (-0.0205 0.0005 0.00001);
+            nPoints     100;
+        }
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: streamLine   | yes         |
+        setFormat    | output data type        | yes         |
+        UName        | tracking velocity field name | yes    |
+        fields       | fields to sample        | yes         |
+        lifetime     | maximum number of particle tracking steps | yes |
+        trackLength  | tracking segment length | no          |
+        nSubCycle    | number of tracking steps per cell | no|
+        cloudName    | cloud name to use       | yes         |
+        seedSampleSet| seeding method (see below)| yes       |
+    \endtable
+
+    \linebreak
+    Where \c seedSampleSet is typically one of
+    \plaintable
+        uniform | uniform particle seeding
+        cloud   | cloud of points
+        triSurfaceMeshPointSet | points according to a tri-surface mesh
+    \endplaintable
+
+Note
+    When specifying the track resolution, the \c trackLength OR \c nSubCycle
+    option should be used
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
+    CML::sampledSet
+    CML::wallBoundedStreamLine
 
 SourceFiles
     streamLine.cpp
@@ -39,6 +107,7 @@ SourceFiles
 #include "vectorList.hpp"
 #include "polyMesh.hpp"
 #include "writer.hpp"
+#include "indirectPrimitivePatch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -75,7 +144,6 @@ class streamLine
         //- On/off switch
         bool active_;
 
-
         //- List of fields to sample
         wordList fields_;
 
@@ -93,6 +161,9 @@ class streamLine
 
         //- Number of subcycling steps
         label nSubCycle_;
+
+        //- Track length
+        scalar trackLength_;
 
         //- Optional specified name of particles
         word cloudName_;
@@ -119,9 +190,10 @@ class streamLine
             //- Axis of the sampled points to output
             word sampledSetAxis_;
 
-            //- File output writer
+            //- File writer for scalar data
             autoPtr<writer<scalar> > scalarFormatterPtr_;
 
+            //- File writer for vector data
             autoPtr<writer<vector> > vectorFormatterPtr_;
 
 
@@ -137,6 +209,8 @@ class streamLine
             List<DynamicList<vectorList> > allVectors_;
 
 
+        //- Construct patch out of all wall patch faces
+        autoPtr<indirectPrimitivePatch> wallPatch() const;
 
         //- Do all seeding and tracking
         void track();
@@ -187,6 +261,9 @@ public:
 
         //- Execute the averaging at the final time-loop, currently does nothing
         virtual void end();
+
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
 
         //- Calculate the field average data and write
         virtual void write();

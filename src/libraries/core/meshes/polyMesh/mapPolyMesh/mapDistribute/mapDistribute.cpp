@@ -1331,4 +1331,31 @@ void CML::mapDistribute::operator=(const mapDistribute& rhs)
 }
 
 
+// * * * * * * * * * * * * * * Istream Operator  * * * * * * * * * * * * * * //
+
+CML::Istream& CML::operator>>(Istream& is, mapDistribute& map)
+{
+    is.fatalCheck("operator>>(Istream&, mapDistribute&)");
+
+    is  >> map.constructSize_ >> map.subMap_ >> map.constructMap_
+        >> map.transformElements_ >> map.transformStart_;
+
+    return is;
+}
+
+
+// * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * * //
+
+CML::Ostream& CML::operator<<(Ostream& os, const mapDistribute& map)
+{
+    os  << map.constructSize_ << token::NL
+        << map.subMap_ << token::NL
+        << map.constructMap_ << token::NL
+        << map.transformElements_ << token::NL
+        << map.transformStart_ << token::NL;
+
+    return os;
+}
+
+
 // ************************************************************************* //

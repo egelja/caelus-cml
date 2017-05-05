@@ -168,7 +168,7 @@ const CML::tensorField& CML::axesRotation::Tr() const
     (
         "const CML::tensorField& axesRotation::Tr() const"
     );
-    return *reinterpret_cast<const tensorField*>(0);
+    return NullSingletonRef<const tensorField>();
 }
 
 

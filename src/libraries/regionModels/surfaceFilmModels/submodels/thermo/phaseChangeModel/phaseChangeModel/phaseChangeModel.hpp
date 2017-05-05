@@ -32,7 +32,7 @@ SourceFiles
 #ifndef phaseChangeModel_H
 #define phaseChangeModel_H
 
-#include "subModelBase.hpp"
+#include "filmSubModelBase.hpp"
 #include "runTimeSelectionTables.hpp"
 #include "scalarField.hpp"
 
@@ -51,7 +51,7 @@ namespace surfaceFilmModels
 
 class phaseChangeModel
 :
-    public subModelBase
+    public filmSubModelBase
 {
 private:
 

@@ -11,7 +11,7 @@
 /^License/,/\*\//{
 /^License/,\%http://www.gnu.org/licenses%{
 s?^License.*?\*\/\
-\/\*! \\file %filePath%\
+\/\*! \\file %realFilePath%\
 <b>Original source file</b> <a href="%filePath%">%fileName%</a>\
 \
 \
@@ -58,9 +58,32 @@ s/^    /\\relates /
 # =>
 # \\class Foam::className
 #
-/^Class *$/,/^[^ ]/{
-s/^Class *$//
-s/^    /\\class /
+# Class
+#     Foam::namespaceName::
+#         className
+# =>
+# \\class Foam::namespaceName::className
+#
+/^Class *$/{
+N
+:loop
+/.*:: *$/{
+N
+s/^ *\(.*\) *\n *\(.*\) */\1\2/
+}
+t loop
+s/Class *\n *\(.*\) */\\class \1/
+}
+
+
+# Group
+#     groupName
+# =>
+# \ingroup namespaceName
+#
+/^Group *$/,/^[^ ]/{
+s/^Group//
+s/^    /\\ingroup /
 }
 
 
@@ -149,6 +172,13 @@ s? *\([a-zA-Z0-9]*\.[a-zA-Z]*\)?  <li><a href="%dirName%/\1">\1</a></li>?
 }
 
 s/.*\*\//\*\//
+
+
+# convert /heading in source files to bold font and add some space
+s#\\heading \(.*\)#<br><b>\1</b>#g
+
+# add a linebreak
+s#\\linebreak#<br>#g
 
 }
 

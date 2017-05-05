@@ -44,6 +44,7 @@ src_files = Split("""
   PrandtlDelta/PrandtlDelta.cpp
   smoothDelta/smoothDelta.cpp
   maxDeltaxyz/maxDeltaxyz.cpp
+  IDDESDelta/IDDESDelta.cpp
   """)
 
 #===============================================================================

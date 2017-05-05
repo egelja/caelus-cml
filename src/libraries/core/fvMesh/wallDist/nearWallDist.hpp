@@ -58,8 +58,8 @@ class nearWallDist
 
     // Private Member Functions
 
-        //- Do all calculations.
-        void doAll();
+        //- Do all calculations
+        void calculate();
 
         //- Disallow default bitwise copy construct
         nearWallDist(const nearWallDist&);

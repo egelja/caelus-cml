@@ -1,0 +1,68 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+cpbnsPIMPLEEnv = globalEnv.Clone()
+
+# Path to source
+src = cpbnsPIMPLEEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+cpbnsPIMPLEEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [cpbnsPIMPLEEnv['LIB_SRC'] +  '/turbulenceModels',
+src + '/turbulenceModels/compressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/compressible/RAS/RASModel', 
+src + '/turbulenceModels/compressible/RAS/lnInclude',
+src + '/thermophysicalModels',
+src + '/thermophysicalModels/basic/psiThermo/basicPsiThermo',
+src + '/thermophysicalModels/basic/basicThermo',
+src + '/transportModels/basic/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude'
+]
+cpbnsPIMPLEEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+cpbnsPIMPLEEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if cpbnsPIMPLEEnv['WHICH_OS'] == "windows":
+  cpbnsPIMPLEEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad -u compressibleLESModelsLoad -u compressibleVLESModelsLoad')
+
+lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
+'basicThermophysicalModels', 'fvOptions', 'sampling', 'compressibleLESModels','compressibleVLESModels']
+  
+cpbnsPIMPLEEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  cpbnsPIMPLE.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincpbnsPIMPLE = cpbnsPIMPLEEnv.Program(target = 'cpbnsPIMPLE',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = cpbnsPIMPLEEnv['BIN_PLATFORM_INSTALL']
+cpbnsPIMPLEEnv.Alias('install', install_dir)
+cpbnsPIMPLEEnv.Install(install_dir, bincpbnsPIMPLE)

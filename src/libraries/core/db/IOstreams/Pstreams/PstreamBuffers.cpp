@@ -137,4 +137,19 @@ void CML::PstreamBuffers::finishedSends(labelListList& sizes, const bool block)
 }
 
 
+void CML::PstreamBuffers::clear()
+{
+    forAll(sendBuf_, i)
+    {
+        sendBuf_[i].clear();
+    }
+    forAll(recvBuf_, i)
+    {
+        recvBuf_[i].clear();
+    }
+    recvBufPos_ = 0;
+    finishedSendsCalled_ = false;
+}
+
+
 // ************************************************************************* //

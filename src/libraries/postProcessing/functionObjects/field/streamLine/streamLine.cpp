@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -30,12 +30,68 @@ License
 #include "globalIndex.hpp"
 #include "mapDistribute.hpp"
 #include "interpolationCellPoint.hpp"
+#include "PatchTools.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::streamLine, 0);
+namespace CML
+{
+defineTypeNameAndDebug(streamLine, 0);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+CML::autoPtr<CML::indirectPrimitivePatch>
+CML::streamLine::wallPatch() const
+{
+    const fvMesh& mesh = dynamic_cast<const fvMesh&>(obr_);
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    label nFaces = 0;
+
+    forAll(patches, patchI)
+    {
+        //if (!polyPatch::constraintType(patches[patchI].type()))
+        if (isA<wallPolyPatch>(patches[patchI]))
+        {
+            nFaces += patches[patchI].size();
+        }
+    }
+
+    labelList addressing(nFaces);
+
+    nFaces = 0;
+
+    forAll(patches, patchI)
+    {
+        //if (!polyPatch::constraintType(patches[patchI].type()))
+        if (isA<wallPolyPatch>(patches[patchI]))
+        {
+            const polyPatch& pp = patches[patchI];
+
+            forAll(pp, i)
+            {
+                addressing[nFaces++] = pp.start()+i;
+            }
+        }
+    }
+
+    return autoPtr<indirectPrimitivePatch>
+    (
+        new indirectPrimitivePatch
+        (
+            IndirectList<face>
+            (
+                mesh.faces(),
+                addressing
+            ),
+            mesh.points()
+        )
+    );
+}
+
 
 void CML::streamLine::track()
 {
@@ -68,7 +124,7 @@ void CML::streamLine::track()
 
     label nSeeds = returnReduce(particles.size(), sumOp<label>());
 
-    Info<< "Seeded " << nSeeds << " particles." << endl;
+    Info << "    seeded " << nSeeds << " particles" << endl;
 
     // Read or lookup fields
     PtrList<volScalarField> vsFlds;
@@ -134,10 +190,10 @@ void CML::streamLine::track()
             }
             else
             {
-                FatalErrorIn("streamLine::execute()")
-                    << "Cannot find field " << fields_[i] << endl
+                FatalErrorIn("streamLine::track()")
+                    << "Cannot find field " << fields_[i] << nl
                     << "Valid scalar fields are:"
-                    << mesh.names(volScalarField::typeName) << endl
+                    << mesh.names(volScalarField::typeName) << nl
                     << "Valid vector fields are:"
                     << mesh.names(volVectorField::typeName)
                     << exit(FatalError);
@@ -159,7 +215,6 @@ void CML::streamLine::track()
                 vsInterp.set
                 (
                     nScalar++,
-                    //new interpolationCellPoint<scalar>(f)
                     interpolation<scalar>::New
                     (
                         interpolationScheme_,
@@ -182,7 +237,6 @@ void CML::streamLine::track()
                 vvInterp.set
                 (
                     nVector++,
-                    //new interpolationCellPoint<vector>(f)
                     interpolation<vector>::New
                     (
                         interpolationScheme_,
@@ -209,12 +263,10 @@ void CML::streamLine::track()
 
     if (UIndex == -1)
     {
-        FatalErrorIn("streamLine::execute()")
-            << "Cannot find field to move particles with : " << UName_
-            << endl
-            << "This field has to be present in the sampled fields "
-            << fields_
-            << " and in the objectRegistry." << endl
+        FatalErrorIn("streamLine::track()")
+            << "Cannot find field to move particles with : " << UName_ << nl
+            << "This field has to be present in the sampled fields " << fields_
+            << " and in the objectRegistry."
             << exit(FatalError);
     }
 
@@ -237,6 +289,7 @@ void CML::streamLine::track()
         allVectors_[i].setCapacity(nSeeds);
     }
 
+
     // additional particle info
     streamLineParticle::trackingData td
     (
@@ -244,8 +297,10 @@ void CML::streamLine::track()
         vsInterp,
         vvInterp,
         UIndex,         // index of U in vvInterp
-        trackForward_,  // track in +u direction
-        nSubCycle_,     // step through cells in steps?
+        trackForward_,  // track in +u direction?
+        nSubCycle_,     // automatic track control:step through cells in steps?
+        trackLength_,   // fixed track length
+
         allTracks_,
         allScalars_,
         allVectors_
@@ -275,7 +330,8 @@ CML::streamLine::streamLine
     name_(name),
     obr_(obr),
     loadFromFiles_(loadFromFiles),
-    active_(true)
+    active_(true),
+    nSubCycle_(0)
 {
     // Only active if a fvMesh is available
     if (isA<fvMesh>(obr_))
@@ -312,6 +368,8 @@ void CML::streamLine::read(const dictionary& dict)
 {
     if (active_)
     {
+        Info<< type() << " " << name_ << ":" << nl;
+
         //dict_ = dict;
         dict.lookup("fields") >> fields_;
         if (dict.found("UName"))
@@ -330,6 +388,16 @@ void CML::streamLine::read(const dictionary& dict)
                 dict.lookup("U") >> UName_;
             }
         }
+
+        if (findIndex(fields_, UName_) == -1)
+        {
+            FatalIOErrorIn("streamLine::read(const dictionary&)", dict)
+                << "Velocity field for tracking " << UName_
+                << " should be present in the list of fields " << fields_
+                << exit(FatalIOError);
+        }
+
+
         dict.lookup("trackForward") >> trackForward_;
         dict.lookup("lifeTime") >> lifeTime_;
         if (lifeTime_ < 1)
@@ -339,11 +407,39 @@ void CML::streamLine::read(const dictionary& dict)
                 << exit(FatalError);
         }
 
-        dict.lookup("nSubCycle") >> nSubCycle_;
-        if (nSubCycle_ < 1)
+
+        bool subCycling = dict.found("nSubCycle");
+        bool fixedLength = dict.found("trackLength");
+
+        if (subCycling && fixedLength)
         {
-            nSubCycle_ = 1;
+            FatalIOErrorIn("streamLine::read(const dictionary&)", dict)
+                << "Cannot both specify automatic time stepping (through '"
+                << "nSubCycle' specification) and fixed track length (through '"
+                << "trackLength')"
+                << exit(FatalIOError);
         }
+
+
+        nSubCycle_ = 1;
+        if (dict.readIfPresent("nSubCycle", nSubCycle_))
+        {
+            trackLength_ = VGREAT;
+            if (nSubCycle_ < 1)
+            {
+                nSubCycle_ = 1;
+            }
+            Info<< "    automatic track length specified through"
+                << " number of sub cycles : " << nSubCycle_ << nl << endl;
+        }
+        else
+        {
+            dict.lookup("trackLength") >> trackLength_;
+
+            Info<< "    fixed track length specified : "
+                << trackLength_ << nl << endl;
+        }
+
 
         interpolationScheme_ = dict.lookupOrDefault
         (
@@ -351,7 +447,7 @@ void CML::streamLine::read(const dictionary& dict)
             interpolationCellPoint<scalar>::typeName
         );
 
-        //Info<< typeName << " using interpolation " << interpolationScheme_
+        //Info<< "    using interpolation " << interpolationScheme_
         //    << endl;
 
         cloudName_ = dict.lookupOrDefault<word>("cloudName", "streamLine");
@@ -417,10 +513,16 @@ void CML::streamLine::end()
 {}
 
 
+void CML::streamLine::timeSet()
+{}
+
+
 void CML::streamLine::write()
 {
     if (active_)
     {
+        Info<< type() << " " << name_ << " output:" << nl;
+
         const Time& runTime = obr_.time();
         const fvMesh& mesh = dynamic_cast<const fvMesh&>(obr_);
 
@@ -519,8 +621,9 @@ void CML::streamLine::write()
             n += allTracks_[trackI].size();
         }
 
-        Info<< "Tracks:" << allTracks_.size()
-            << "  total samples:" << n << endl;
+        Info<< "    Tracks:" << allTracks_.size() << nl
+            << "    Total samples:" << n
+            << endl;
 
 
         // Massage into form suitable for writers
@@ -533,8 +636,8 @@ void CML::streamLine::write()
             fileName vtkPath
             (
                 Pstream::parRun()
-              ? runTime.path()/".."/"sets"/name()
-              : runTime.path()/"sets"/name()
+              ? runTime.path()/".."/"postProcessing"/"sets"/name()
+              : runTime.path()/"postProcessing"/"sets"/name()
             );
             if (mesh.name() != fvMesh::defaultRegion)
             {
@@ -590,7 +693,7 @@ void CML::streamLine::write()
                     )
                 );
 
-                Info<< "Writing data to " << vtkFile.path() << endl;
+                Info<< "    Writing data to " << vtkFile.path() << endl;
 
                 scalarFormatterPtr_().write
                 (
@@ -631,7 +734,7 @@ void CML::streamLine::write()
                     )
                 );
 
-                //Info<< "Writing vector data to " << vtkFile << endl;
+                //Info<< "    Writing vector data to " << vtkFile << endl;
 
                 vectorFormatterPtr_().write
                 (

@@ -125,6 +125,8 @@ void CML::Time::adjustDeltaT()
             }
         }
     }
+
+    functionObjects_.adjustTimeStep();
 }
 
 
@@ -932,17 +934,25 @@ void CML::Time::setEndTime(const scalar endTime)
 }
 
 
-void CML::Time::setDeltaT(const dimensionedScalar& deltaT)
+void CML::Time::setDeltaT
+(
+    const dimensionedScalar& deltaT,
+    const bool bAdjustDeltaT
+)
 {
-    setDeltaT(deltaT.value());
+    setDeltaT(deltaT.value(), bAdjustDeltaT);
 }
 
 
-void CML::Time::setDeltaT(const scalar deltaT)
+void CML::Time::setDeltaT(const scalar deltaT, const bool bAdjustDeltaT)
 {
     deltaT_ = deltaT;
     deltaTchanged_ = true;
-    adjustDeltaT();
+
+    if (bAdjustDeltaT)
+    {
+        adjustDeltaT();
+    }
 }
 
 
@@ -1205,6 +1215,7 @@ CML::Time& CML::Time::operator++()
             writeOnce_ = false;
         }
 
+        functionObjects_.timeSet();
     }
 
     return *this;

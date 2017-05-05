@@ -92,7 +92,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        PatchPostProcessing(const dictionary& dict, CloudType& owner);
+        PatchPostProcessing
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         PatchPostProcessing(const PatchPostProcessing<CloudType>& ppm);
@@ -124,13 +129,38 @@ public:
 
         // Evaluation
 
+            //- Pre-evolve hook
+            virtual void preEvolve();
+
+            //- Post-evolve hook
+            virtual void postEvolve();
+
+            //- Post-move hook
+            virtual void postMove
+            (
+                typename CloudType::parcelType& p,
+                const label cellI,
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
+            );
+
             //- Post-patch hook
             virtual void postPatch
             (
-                const parcelType& p,
+                const typename CloudType::parcelType& p,
                 const polyPatch& pp,
                 const scalar trackFraction,
-                const tetIndices& tetIs
+                const tetIndices& tetIs,
+                bool& keepParticle
+            );
+
+            //- Post-face hook
+            virtual void postFace
+            (
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -194,31 +224,14 @@ void CML::PatchPostProcessing<CloudType>::write()
         {
             const fvMesh& mesh = this->owner().mesh();
 
-            fileName outputDir = mesh.time().path();
-
-            if (Pstream::parRun())
-            {
-                // Put in undecomposed case (Note: gives problems for
-                // distributed data running)
-                outputDir =
-                    outputDir/".."/"postProcessing"/cloud::prefix/
-                    this->owner().name()/mesh.time().timeName();
-            }
-            else
-            {
-                outputDir =
-                    outputDir/"postProcessing"/cloud::prefix/
-                    this->owner().name()/mesh.time().timeName();
-            }
-
             // Create directory if it doesn't exist
-            mkDir(outputDir);
+            mkDir(this->outputTimeDir());
 
             const word& patchName = mesh.boundaryMesh()[patchIDs_[i]].name();
 
             OFstream patchOutFile
             (
-                outputDir/patchName + ".post",
+                this->outputTimeDir()/patchName + ".post",
                 IOstream::ASCII,
                 IOstream::currentVersion,
                 mesh.time().writeCompression()
@@ -241,7 +254,7 @@ void CML::PatchPostProcessing<CloudType>::write()
             labelList indices;
             sortedOrder(globalTimes, indices);
 
-            string header("# Time currentProc " + parcelType::propHeader);
+            string header("# Time currentProc " + parcelType::propertyList_);
             patchOutFile<< header.c_str() << nl;
 
             forAll(globalTimes, i)
@@ -267,10 +280,11 @@ template<class CloudType>
 CML::PatchPostProcessing<CloudType>::PatchPostProcessing
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(dict, owner, typeName),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     maxStoredParcels_(readScalar(this->coeffDict().lookup("maxStoredParcels"))),
     patchIDs_(),
     times_(),
@@ -341,12 +355,41 @@ CML::PatchPostProcessing<CloudType>::~PatchPostProcessing()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
+void CML::PatchPostProcessing<CloudType>::preEvolve()
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::PatchPostProcessing<CloudType>::postEvolve()
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::PatchPostProcessing<CloudType>::postMove
+(
+    typename CloudType::parcelType& p,
+    const label cellI,
+    const scalar dt,
+    const point& position0,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
 void CML::PatchPostProcessing<CloudType>::postPatch
 (
-    const parcelType& p,
+    const typename CloudType::parcelType& p,
     const polyPatch& pp,
     const scalar,
-    const tetIndices&
+    const tetIndices& tetIs,
+    bool&
 )
 {
     const label patchI = pp.index();
@@ -361,6 +404,18 @@ void CML::PatchPostProcessing<CloudType>::postPatch
 
         patchData_[localPatchI].append(data.str());
     }
+}
+
+
+template<class CloudType>
+void CML::PatchPostProcessing<CloudType>::postFace
+(
+    const typename CloudType::parcelType& p,
+    const label faceI,
+    bool& keepParticle
+)
+{
+    // Do nothing
 }
 
 

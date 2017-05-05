@@ -163,18 +163,6 @@ class SingleKineticRateDevolatilisation
 
                 return os;
             }
-
-            friend bool operator!=
-            (
-                const volatileData& x, 
-                const volatileData& y
-            )
-            {
-                if (x.A1() != y.A1() && x.E() != y.E())
-                    return true;
-                else
-                    return false;
-            }
     };
 
 
@@ -238,11 +226,14 @@ public:
         virtual void calculate
         (
             const scalar dt,
+            const scalar age,
             const scalar mass0,
             const scalar mass,
             const scalar T,
             const scalarField& YGasEff,
-            bool& canCombust,
+            const scalarField& YLiquidEff,
+            const scalarField& YSolidEff,
+            label& canCombust,
             scalarField& dMassDV
         ) const;
 };
@@ -332,11 +323,14 @@ template<class CloudType>
 void CML::SingleKineticRateDevolatilisation<CloudType>::calculate
 (
     const scalar dt,
+    const scalar age,
     const scalar mass0,
     const scalar mass,
     const scalar T,
     const scalarField& YGasEff,
-    bool& canCombust,
+    const scalarField& YLiquidEff,
+    const scalarField& YSolidEff,
+    label& canCombust,
     scalarField& dMassDV
 ) const
 {
@@ -361,7 +355,10 @@ void CML::SingleKineticRateDevolatilisation<CloudType>::calculate
         dMassDV[id] = min(dt*kappa*massVolatile, massVolatile);
     }
 
-    canCombust = done;
+    if (done && canCombust != -1)
+    {
+        canCombust = 1;
+    }
 }
 
 

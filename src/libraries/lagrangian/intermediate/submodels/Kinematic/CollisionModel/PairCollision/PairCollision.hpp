@@ -58,8 +58,6 @@ class PairCollision
 :
     public CollisionModel<CloudType>
 {
-protected:
-
     // Static data
 
         //- Tolerance to determine flat wall interactions
@@ -73,7 +71,7 @@ protected:
         static scalar flatWallDuplicateExclusion;
 
 
-    // Protected data
+    // Private data
 
         //- PairModel to calculate the interaction between two parcels
         autoPtr<PairModel<CloudType> > pairModel_;
@@ -86,7 +84,7 @@ protected:
         InteractionLists<typename CloudType::parcelType> il_;
 
 
-    // Protected member functions
+    // Private member functions
 
         //- Pre collision tasks
         void preInteraction();
@@ -101,7 +99,7 @@ protected:
         void realReferredInteraction();
 
         //- Interactions with walls
-        virtual void wallInteraction();
+        void wallInteraction();
 
         bool duplicatePointInList
         (
@@ -147,12 +145,7 @@ public:
     // Constructors
 
         //- Construct from components
-        PairCollision
-        (
-            const dictionary& dict,
-            CloudType& owner,
-            const word& type = typeName
-        );
+        PairCollision(const dictionary& dict, CloudType& owner);
 
         //- Construct copy
         PairCollision(PairCollision<CloudType>& cm);
@@ -449,7 +442,7 @@ void CML::PairCollision<CloudType>::wallInteraction()
                             );
 
                             flatSiteData.append(wSD);
- 
+
                             particleHit = true;
                         }
                     }
@@ -466,13 +459,15 @@ void CML::PairCollision<CloudType>::wallInteraction()
 
                     if (particleHit)
                     {
-                        this->owner().functions().postFace(p, realFaceI);
+                        bool keep = true;
+                        this->owner().functions().postFace(p, realFaceI, keep);
                         this->owner().functions().postPatch
                         (
                             p,
                             mesh.boundaryMesh()[patchI],
                             1.0,
-                            p.currentTetIndices()
+                            p.currentTetIndices(),
+                            keep
                         );
                      }
                 }
@@ -721,11 +716,10 @@ template<class CloudType>
 CML::PairCollision<CloudType>::PairCollision
 (
     const dictionary& dict,
-    CloudType& owner,
-    const word& type
+    CloudType& owner
 )
 :
-    CollisionModel<CloudType>(dict, owner, type),
+    CollisionModel<CloudType>(dict, owner, typeName),
     pairModel_
     (
         PairModel<CloudType>::New

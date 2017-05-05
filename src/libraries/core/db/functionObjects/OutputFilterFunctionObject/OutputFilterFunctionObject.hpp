@@ -84,6 +84,10 @@ class OutputFilterFunctionObject
             //- De-activation time - defaults to VGREAT
             scalar timeEnd_;
 
+            //- Number of steps before the dumping time in which the deltaT
+            // will start to change (valid for ocAdjustableTime)
+            label nStepsToStartTimeChange_;
+
 
         //- Output controls
         outputFilterOutputControl outputControl_;
@@ -195,6 +199,11 @@ public:
             //- Called when Time::run() determines that the time-loop exits
             virtual bool end();
 
+            //- Called when time was set at the end of the Time::operator++
+            virtual bool timeSet();
+
+            //- Called at the end of Time::adjustDeltaT() if adjustTime is true
+            virtual bool adjustTimeStep();
 
             //- Read and set the function object if its data have changed
             virtual bool read(const dictionary&);
@@ -222,6 +231,7 @@ void CML::OutputFilterFunctionObject<OutputFilter>::readDict()
     dict_.readIfPresent("storeFilter", storeFilter_);
     dict_.readIfPresent("timeStart", timeStart_);
     dict_.readIfPresent("timeEnd", timeEnd_);
+    dict_.readIfPresent("nStepsToStartTimeChange", nStepsToStartTimeChange_);
 }
 
 
@@ -291,6 +301,10 @@ CML::OutputFilterFunctionObject<OutputFilter>::OutputFilterFunctionObject
     storeFilter_(true),
     timeStart_(-VGREAT),
     timeEnd_(VGREAT),
+    nStepsToStartTimeChange_
+    (
+        dict.lookupOrDefault("nStepsToStartTimeChange", 3)
+    ),
     outputControl_(t, dict)
 {
     readDict();
@@ -379,6 +393,64 @@ bool CML::OutputFilterFunctionObject<OutputFilter>::end()
         if (!storeFilter_)
         {
             destroyFilter();
+        }
+    }
+
+    return true;
+}
+
+
+template<class OutputFilter>
+bool CML::OutputFilterFunctionObject<OutputFilter>::timeSet()
+{
+    if (active())
+    {
+        ptr_->timeSet();
+    }
+
+    return true;
+}
+
+
+template<class OutputFilter>
+bool CML::OutputFilterFunctionObject<OutputFilter>::adjustTimeStep()
+{
+    if
+    (
+        active()
+     && outputControl_.outputControl()
+     == outputFilterOutputControl::ocAdjustableTime
+    )
+    {
+        const label  outputTimeIndex = outputControl_.outputTimeLastDump();
+        const scalar writeInterval = outputControl_.writeInterval();
+
+        scalar timeToNextWrite = max
+        (
+            0.0,
+            (outputTimeIndex + 1)*writeInterval
+          - (time_.value() - time_.startTime().value())
+        );
+
+        scalar deltaT = time_.deltaTValue();
+
+        scalar nSteps = timeToNextWrite/deltaT - SMALL;
+
+        // function objects modify deltaT inside nStepsToStartTimeChange range
+        // NOTE: Potential problem if two function objects dump inside the same
+        // interval
+        if (nSteps < nStepsToStartTimeChange_)
+        {
+            label nStepsToNextWrite = label(nSteps) + 1;
+
+            scalar newDeltaT = timeToNextWrite/nStepsToNextWrite;
+
+            // Adjust time step
+            if (newDeltaT < deltaT)
+            {
+                deltaT = max(newDeltaT, 0.2*deltaT);
+                const_cast<Time&>(time_).setDeltaT(deltaT, false);
+            }
         }
     }
 

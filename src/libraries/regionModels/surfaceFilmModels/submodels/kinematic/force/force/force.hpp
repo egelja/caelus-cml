@@ -31,7 +31,7 @@ SourceFiles
 #ifndef force_H
 #define force_H
 
-#include "subModelBase.hpp"
+#include "filmSubModelBase.hpp"
 #include "runTimeSelectionTables.hpp"
 #include "fvMatrices.hpp"
 
@@ -50,7 +50,7 @@ namespace surfaceFilmModels
 
 class force
 :
-    public subModelBase
+    public filmSubModelBase
 {
 private:
 

@@ -40,7 +40,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                      Class ParticleForce Declaration
+                        Class ParticleForce Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
@@ -161,6 +161,13 @@ public:
                 const scalar mass,
                 const scalar Re,
                 const scalar muc
+            ) const;
+
+            //- Return the added mass
+            virtual scalar massAdd
+            (
+                const typename CloudType::parcelType& p,
+                const scalar mass
             ) const;
 };
 
@@ -292,6 +299,18 @@ CML::forceSuSp CML::ParticleForce<CloudType>::calcNonCoupled
 
     return value;
 }
+
+
+template<class CloudType>
+CML::scalar CML::ParticleForce<CloudType>::massAdd
+(
+    const typename CloudType::parcelType& p,
+    const scalar mass
+) const
+{
+    return 0.0;
+}
+
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

@@ -24,7 +24,7 @@ Description
     Cuts (splits) cells.
 
     Description of cut is given as a loop of 'cuts' per cell (see cellCuts).
-    setRefinement() takes this cut description and inserts the nessecary
+    setRefinement() takes this cut description and inserts the necessary
     topoActions (add points/faces/cells) into the polyTopoChange.
 
     Stores added cells/faces/points.
@@ -125,7 +125,7 @@ class polyMesh;
 class face;
 
 /*---------------------------------------------------------------------------*\
-                           Class meshCutter Declaration
+                         Class meshCutter Declaration
 \*---------------------------------------------------------------------------*/
 
 class meshCutter
@@ -259,10 +259,12 @@ class meshCutter
         //- Disallow default bitwise assignment
         void operator=(const meshCutter&);
 
+
 public:
 
     //- Runtime type information
     ClassName("meshCutter");
+
 
     // Constructors
 
@@ -284,6 +286,7 @@ public:
 
             //- Force recalculation of locally stored data on topological change
             void updateMesh(const mapPolyMesh&);
+
 
         // Access
 

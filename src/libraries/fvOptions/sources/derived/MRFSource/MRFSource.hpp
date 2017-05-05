@@ -74,9 +74,6 @@ protected:
         //- Velocity field name, default = U
         word UName_;
 
-        //- Density field name, default = rho
-        word rhoName_;
-
 
     // Protected Member Functions
 
@@ -130,23 +127,40 @@ public:
             );
 
 
+        // Add explicit and implicit contributions to compressible equation
+
+            //- Vector
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+
         // Flux manipulations
 
             //- Make the given absolute flux relative
-            virtual void relativeFlux(surfaceScalarField& phi) const;
+            virtual void makeRelative(surfaceScalarField& phi) const;
+
+            //- Make the given absolute boundary flux relative
+            virtual void makeRelative
+            (
+                FieldField<fvsPatchField, scalar>& phi
+            ) const;
 
             //- Make the given absolute mass-flux relative
-            virtual void relativeFlux
+            virtual void makeRelative
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi
             ) const;
 
             //- Make the given relative flux absolute
-            virtual void absoluteFlux(surfaceScalarField& phi) const;
+            virtual void makeAbsolute(surfaceScalarField& phi) const;
 
             //- Make the given relative mass-flux absolute
-            virtual void absoluteFlux
+            virtual void makeAbsolute
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi

@@ -91,7 +91,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ParticleErosion(const dictionary& dict, CloudType& owner);
+        ParticleErosion
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         ParticleErosion(const ParticleErosion<CloudType>& pe);
@@ -117,13 +122,35 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
+            //- Post-evolve hook
+            virtual void postEvolve();
+
+            //- Post-move hook
+            virtual void postMove
+            (
+                typename CloudType::parcelType& p,
+                const label cellI,
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
+            );
+
             //- Post-patch hook
             virtual void postPatch
             (
-                const parcelType& p,
+                const typename CloudType::parcelType& p,
                 const polyPatch& pp,
                 const scalar trackFraction,
-                const tetIndices& tetIs
+                const tetIndices& tetIs,
+                bool& keepParticle
+            );
+
+            //- Post-face hook
+            virtual void postFace
+            (
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -175,10 +202,11 @@ template<class CloudType>
 CML::ParticleErosion<CloudType>::ParticleErosion
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(dict, owner, typeName),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     QPtr_(NULL),
     patchIDs_(),
     p_(readScalar(this->coeffDict().lookup("p"))),
@@ -272,12 +300,33 @@ void CML::ParticleErosion<CloudType>::preEvolve()
 
 
 template<class CloudType>
+void CML::ParticleErosion<CloudType>::postEvolve()
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::ParticleErosion<CloudType>::postMove
+(
+    typename CloudType::parcelType& p,
+    const label cellI,
+    const scalar dt,
+    const point& position0,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+template<class CloudType>
 void CML::ParticleErosion<CloudType>::postPatch
 (
-    const parcelType& p,
+    const typename CloudType::parcelType& p,
     const polyPatch& pp,
     const scalar trackFraction,
-    const tetIndices& tetIs
+    const tetIndices& tetIs,
+    bool&
 )
 {
     const label patchI = pp.index();
@@ -289,11 +338,12 @@ void CML::ParticleErosion<CloudType>::postPatch
         vector nw;
         vector Up;
 
+        // patch-normal direction
         this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
 
         // particle velocity relative to patch
-        const vector U = p.U() - Up;
-        
+        const vector& U = p.U() - Up;
+
         // quick reject if particle travelling away from the patch
         if ((nw & U) < 0)
         {
@@ -321,6 +371,19 @@ void CML::ParticleErosion<CloudType>::postPatch
         }
     }
 }
+
+
+template<class CloudType>
+void CML::ParticleErosion<CloudType>::postFace
+(
+    const typename CloudType::parcelType& p,
+    const label faceI,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -48,13 +48,17 @@ subdirs = [
    'heatTransfer/buoyantBoussinesqSimpleSolver',
    'heatTransfer/buoyantSimpleSolver',
    'incompressible/simpleSolver',
-   'incompressible/simplec',
    'incompressible/simpleSolver/SRFSimpleSolver',
    'incompressible/pisoSolver',
    'incompressible/pimpleSolver',
    'incompressible/pimpleSolver/SRFPimpleSolver',
    'incompressible/pimpleSolver/pimpleDyMSolver',
-   'multiphase/vofSolver'
+   'compressible/PBNS/cpbnsLTS',
+   'compressible/PBNS/cpbnsPIMPLE',
+   'compressible/PBNS/cpbnsSIMPLE',
+   'compressible/DBNS/explicitDBNSSolver',
+   'multiphase/vofSolver',
+   'multiphase/vofLPTSolver',
 ]
 
 #===============================================================================

@@ -66,12 +66,20 @@ CML::scalar CML::distributionModels::fixedValue::fixedValue::sample() const
     return value_;
 }
 
+
 CML::scalar CML::distributionModels::fixedValue::fixedValue::minValue() const
 {
     return value_;
 }
 
+
 CML::scalar CML::distributionModels::fixedValue::fixedValue::maxValue() const
+{
+    return value_;
+}
+
+
+CML::scalar CML::distributionModels::fixedValue::fixedValue::meanValue() const
 {
     return value_;
 }

@@ -32,7 +32,7 @@ Description
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 #include "surfaceFilmModel.hpp"
 #include "mathematicalConstants.hpp"
 #include "mappedPatchBase.hpp"
@@ -51,8 +51,6 @@ namespace regionModels
     }
 }
 
-class mappedPatchBase;
-
 /*---------------------------------------------------------------------------*\
                       Class SurfaceFilmModel Declaration
 \*---------------------------------------------------------------------------*/
@@ -60,7 +58,7 @@ class mappedPatchBase;
 template<class CloudType>
 class SurfaceFilmModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 protected:
 
@@ -136,10 +134,9 @@ public:
         dictionary,
         (
             const dictionary& dict,
-            CloudType& owner,
-            const dimensionedVector& g
+            CloudType& owner
         ),
-        (dict, owner, g)
+        (dict, owner)
     );
 
 
@@ -153,7 +150,6 @@ public:
         (
             const dictionary& dict,
             CloudType& owner,
-            const dimensionedVector& g,
             const word& type
         );
 
@@ -178,8 +174,7 @@ public:
     static autoPtr<SurfaceFilmModel<CloudType> > New
     (
         const dictionary& dict,
-        CloudType& owner,
-        const dimensionedVector& g
+        CloudType& owner
     );
 
 
@@ -226,7 +221,7 @@ public:
         // I-O
 
             //- Write surface film info to stream
-            virtual void info(Ostream& os) const;
+            virtual void info(Ostream& os);
 };
 
 
@@ -306,7 +301,7 @@ using namespace CML::constant;
 template<class CloudType>
 CML::SurfaceFilmModel<CloudType>::SurfaceFilmModel(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     g_(owner.g()),
     ejectedParcelType_(0),
     massParcelPatch_(0),
@@ -324,12 +319,11 @@ CML::SurfaceFilmModel<CloudType>::SurfaceFilmModel
 (
     const dictionary& dict,
     CloudType& owner,
-    const dimensionedVector& g,
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
-    g_(g),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
+    g_(owner.g()),
     ejectedParcelType_
     (
         this->coeffDict().lookupOrDefault("ejectedParcelType", -1)
@@ -350,7 +344,7 @@ CML::SurfaceFilmModel<CloudType>::SurfaceFilmModel
     const SurfaceFilmModel<CloudType>& sfm
 )
 :
-    SubModelBase<CloudType>(sfm),
+    CloudSubModelBase<CloudType>(sfm),
     g_(sfm.g_),
     ejectedParcelType_(sfm.ejectedParcelType_),
     massParcelPatch_(sfm.massParcelPatch_),
@@ -405,7 +399,7 @@ void CML::SurfaceFilmModel<CloudType>::inject(TrackData& td)
 
     // Retrieve the film model from the owner database
     const regionModels::surfaceFilmModels::surfaceFilmModel& filmModel =
-        this->owner().db().objectRegistry::template lookupObject
+        this->owner().mesh().time().objectRegistry::template lookupObject
         <regionModels::surfaceFilmModels::surfaceFilmModel>
         (
             "surfaceFilmProperties"
@@ -547,21 +541,39 @@ void CML::SurfaceFilmModel<CloudType>::setParcelProperties
 
 
 template<class CloudType>
-void CML::SurfaceFilmModel<CloudType>::info(Ostream& os) const
+void CML::SurfaceFilmModel<CloudType>::info(Ostream& os)
 {
-    // do nothing
+    label nTrans0 =
+        this->template getModelProperty<label>("nParcelsTransferred");
+
+    label nInject0 =
+        this->template getModelProperty<label>("nParcelsInjected");
+
+    label nTransTotal =
+        nTrans0 + returnReduce(nParcelsTransferred_, sumOp<label>());
+
+    label nInjectTotal =
+        nInject0 + returnReduce(nParcelsInjected_, sumOp<label>());
+
+    os  << "    Parcels absorbed into film      = " << nTransTotal << nl
+        << "    New film detached parcels       = " << nInjectTotal << endl;
+
+    if (this->outputTime())
+    {
+        this->setModelProperty("nParcelsTransferred", nTransTotal);
+        this->setModelProperty("nParcelsInjected", nInjectTotal);
+        nParcelsTransferred_ = 0;
+        nParcelsInjected_ = 0;
+    }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class CloudType>
 CML::autoPtr<CML::SurfaceFilmModel<CloudType> >
 CML::SurfaceFilmModel<CloudType>::New
 (
     const dictionary& dict,
-    CloudType& owner,
-    const dimensionedVector& g
+    CloudType& owner
 )
 {
     const word modelType(dict.lookup("surfaceFilmModel"));
@@ -587,9 +599,8 @@ CML::SurfaceFilmModel<CloudType>::New
             << exit(FatalError);
     }
 
-    return autoPtr<SurfaceFilmModel<CloudType> >(cstrIter()(dict, owner, g));
+    return autoPtr<SurfaceFilmModel<CloudType> >(cstrIter()(dict, owner));
 }
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

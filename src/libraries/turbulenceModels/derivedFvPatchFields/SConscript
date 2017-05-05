@@ -1,4 +1,4 @@
-#Copyright (C) 2014 Applied CCM
+#Copyright (C) 2014-2015 Applied CCM
 import subprocess
 Import('globalEnv')
 
@@ -42,6 +42,7 @@ turbDerPatFieldsEnv.Append(LIBS = lib_link)
 #===============================================================================
 src_files = Split("""
   porousBafflePressure/porousBafflePressureFvPatchFields.cpp
+  fixedShearStress/fixedShearStressFvPatchVectorField.cpp
   """)
 
 #===============================================================================

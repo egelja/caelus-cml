@@ -206,6 +206,7 @@ public:
             //- Particle motion
             template<class TrackData>
             void motion(TrackData& td);
+
 };
 
 

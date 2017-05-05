@@ -22,37 +22,45 @@ Class
     CML::timeVaryingMappedFixedValueFvPatchField
 
 Description
-    CML::timeVaryingMappedFixedValueFvPatchField
+    This boundary conditions interpolates the values from a set of supplied
+    points in space and time.  Supplied data should be specified in
+    constant/boundaryData/\<patchname\> where:
+    - points : pointField with locations
+    - ddd    : supplied values at time ddd
+    The default mode of operation (mapMethod planarInterpolation) is
+    to project the points onto a plane (constructed from the first threee
+    points) and construct a 2D triangulation and finds for the face centres
+    the triangle it is in and the weights to the 3 vertices.
 
-    Interpolates from a set of supplied points in space and time. Supplied
-    data in constant/boundaryData/<patchname>:
-        - points : pointField with locations
-        - ddd    : supplied values at time ddd
-    Points need to be more or less on a plane since get triangulated in 2D.
+    The optional mapMethod nearest will avoid all projection and
+    triangulation and just use the value at the nearest vertex.
 
-    At startup this bc does the triangulation and determines linear
-    interpolation (triangle it is in and weights to the 3 vertices)
-    for every face centre. Interpolates linearly inbetween times.
+    Values are interpolated linearly between times.
 
-    @verbatim
-        inlet
-        {
-            type            timeVaryingMappedFixedValue;
+    \heading Patch usage
 
-            // Maintain average to that of the supplied values
-            setAverage      false;
+    \table
+        Property     | Description             | Required    | Default value
+        setAverage   | flag to activate setting of average value | yes |
+        perturb      | perturb points for regular geometries | no | 1e-5
+        fieldTableName | alternative field name to sample | no| this field name
+        mapMethod    | type of mapping | no | planarInterpolation
+        offset   | for applying offset to mapped values  | no | constant 0.0
+    \endtable
 
-            // Optional: change perturbation (default 1E-5) to avoid any ties
-            // in triangulating regular geometries.
-            //perturb       0.0;
+    \verbatim
+    myPatch
+    {
+        type            timeVaryingMappedFixedValue;
+        setAverage      false;
+        //perturb       0.0;
+        //fieldTableName samples;
+        //offset    constant 0.2;
+    }
+    \endverbatim
 
-            // Optional: use name instead of patchname for location of data
-            //fieldTableName samples;
-        }
-    @endverbatim
-
-    Switch on debug flag to have it dump the triangulation (in transformed
-    space) and transform face centres.
+SeeAlso
+    Foam::fixedValueFvPatchField
 
 SourceFiles
     timeVaryingMappedFixedValueFvPatchField.cpp
@@ -74,7 +82,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-              Class timeVaryingMappedFixedValueFvPatch Declaration
+          Class timeVaryingMappedFixedValueFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -93,7 +101,10 @@ class timeVaryingMappedFixedValueFvPatchField
         //- Fraction of perturbation (fraction of bounding box) to add
         scalar perturb_;
 
-        //- 2D interpolation
+        //- Interpolation scheme to use
+        word mapMethod_;
+
+        //- 2D interpolation (for 'planarInterpolation' mapMethod)
         autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
 
         //- List of boundaryData time directories
@@ -287,6 +298,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -317,6 +329,14 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(iF.name()),
     setAverage_(readBool(dict.lookup("setAverage"))),
     perturb_(dict.lookupOrDefault("perturb", 1e-5)),
+    mapMethod_
+    (
+        dict.lookupOrDefault<word>
+        (
+            "mapMethod",
+            "planarInterpolation"
+        )
+    ),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -327,6 +347,27 @@ timeVaryingMappedFixedValueFvPatchField
     endAverage_(pTraits<Type>::zero),
     offset_(DataEntry<Type>::New("offset", dict))
 {
+    if
+    (
+        mapMethod_ != "planarInterpolation"
+     && mapMethod_ != "nearest"
+    )
+    {
+        FatalIOErrorIn
+        (
+            "timeVaryingMappedFixedValueFvPatchField<Type>::\n"
+            "timeVaryingMappedFixedValueFvPatchField\n"
+            "(\n"
+            "    const fvPatch&\n"
+            "    const DimensionedField<Type, volMesh>&\n"
+            "    const dictionary&\n"
+            ")\n",
+            dict
+        )   << "mapMethod should be one of 'planarInterpolation'"
+            << ", 'nearest'" << exit(FatalIOError);
+    }
+
+
     dict.readIfPresent("fieldTableName", fieldTableName_);
 
     if (dict.found("value"))
@@ -335,7 +376,11 @@ timeVaryingMappedFixedValueFvPatchField
     }
     else
     {
-        updateCoeffs();
+        // Note: we use evaluate() here to trigger updateCoeffs followed
+        //       by re-setting of fvatchfield::updated_ flag. This is
+        //       so if first use is in the next time step it retriggers
+        //       a new update.
+        this->evaluate(Pstream::blocking);
     }
 }
 
@@ -351,6 +396,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -380,6 +426,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -469,6 +516,14 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
                 << samplePointsFile << endl;
         }
 
+
+        // tbd: run-time selection
+        bool nearestOnly =
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        );
+
         // Allocate the interpolator
         mapperPtr_.reset
         (
@@ -476,7 +531,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
             (
                 samplePoints,
                  this->patch().patch().faceCentres(),
-                perturb_
+                perturb_,
+                nearestOnly
             )
         );
 
@@ -747,7 +803,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::updateCoeffs()
     if (debug)
     {
         Pout<< "updateCoeffs : set fixedValue to min:" << gMin(*this)
-            << " max:" << gMax(*this) << endl;
+            << " max:" << gMax(*this)
+            << " avg:" << gAverage(*this) << endl;
     }
 
     fixedValueFvPatchField<Type>::updateCoeffs();
@@ -759,11 +816,26 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::write(Ostream& os) const
 {
     fvPatchField<Type>::write(os);
     os.writeKeyword("setAverage") << setAverage_ << token::END_STATEMENT << nl;
-    os.writeKeyword("perturb") << perturb_ << token::END_STATEMENT << nl;
+    if (perturb_ != 1e-5)
+    {
+        os.writeKeyword("perturb") << perturb_ << token::END_STATEMENT << nl;
+    }
 
     if (fieldTableName_ != this->dimensionedInternalField().name())
     {
         os.writeKeyword("fieldTableName") << fieldTableName_
+            << token::END_STATEMENT << nl;
+    }
+
+    if
+    (
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        )
+    )
+    {
+        os.writeKeyword("mapMethod") << mapMethod_
             << token::END_STATEMENT << nl;
     }
 

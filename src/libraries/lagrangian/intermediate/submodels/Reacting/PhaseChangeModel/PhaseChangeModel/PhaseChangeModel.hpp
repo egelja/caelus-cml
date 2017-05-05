@@ -33,7 +33,7 @@ Description
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,7 +47,7 @@ namespace CML
 template<class CloudType>
 class PhaseChangeModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 public:
 
@@ -174,10 +174,15 @@ public:
         (
             const label idc,
             const label idl,
-            const label p,
-            const label T
+            const scalar p,
+            const scalar T
         ) const;
 
+        //- Return vapourisation temperature
+        virtual scalar Tvap(const scalarField& Y) const;
+
+        //- Return maximum/limiting temperature
+        virtual scalar TMax(const scalar p, const scalarField& Y) const;
 
         //- Add to phase change mass
         void addToPhaseChangeMass(const scalar dMass);
@@ -273,7 +278,7 @@ CML::PhaseChangeModel<CloudType>::PhaseChangeModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     enthalpyTransfer_(etLatentHeat),
     dMass_(0.0)
 {}
@@ -285,7 +290,7 @@ CML::PhaseChangeModel<CloudType>::PhaseChangeModel
     const PhaseChangeModel<CloudType>& pcm
 )
 :
-    SubModelBase<CloudType>(pcm),
+    CloudSubModelBase<CloudType>(pcm),
     enthalpyTransfer_(pcm.enthalpyTransfer_),
     dMass_(pcm.dMass_)
 {}
@@ -299,7 +304,7 @@ CML::PhaseChangeModel<CloudType>::PhaseChangeModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     enthalpyTransfer_
     (
         wordToEnthalpyTransfer(this->coeffDict().lookup("enthalpyTransfer"))
@@ -368,11 +373,29 @@ CML::scalar CML::PhaseChangeModel<CloudType>::dh
 (
     const label idc,
     const label idl,
-    const label p,
-    const label T
+    const scalar p,
+    const scalar T
 ) const
 {
     return 0.0;
+}
+
+
+template<class CloudType>
+CML::scalar CML::PhaseChangeModel<CloudType>::TMax
+(
+    const scalar,
+    const scalarField&
+) const
+{
+    return GREAT;
+}
+
+
+template<class CloudType>
+CML::scalar CML::PhaseChangeModel<CloudType>::Tvap(const scalarField& Y) const
+{
+    return -GREAT;
 }
 
 
@@ -391,11 +414,7 @@ void CML::PhaseChangeModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer phase change      = " << massTotal << nl;
 
-    if
-    (
-        this->owner().solution().transient()
-     && this->owner().db().time().outputTime()
-    )
+    if (this->outputTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

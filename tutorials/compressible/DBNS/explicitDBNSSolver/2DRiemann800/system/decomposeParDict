@@ -1,0 +1,63 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          decomposeParDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+numberOfSubdomains 4;
+
+method          scotch;
+
+simpleCoeffs
+{
+    n               (4 1 1);
+    delta           0.0001;
+}
+
+scotchCoeff
+{
+    processorWeights 
+    (1 1 1 1 1 1 1 1);
+}  
+
+hierarchicalCoeffs
+{
+    n               (2 2 1);
+    delta           0.001;
+    order           xyz;
+}
+
+metisCoeffs
+{
+    processorWeights 
+    (1 1 1 1 1 1 1 1);
+}
+
+manualCoeffs
+{
+    dataFile        "";
+}
+
+distributed     no;
+
+roots           
+(
+);
+
+
+// ************************************************************************* //

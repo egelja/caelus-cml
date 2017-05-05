@@ -1,0 +1,58 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    object          fvSchemes;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear skewCorrected;
+}
+
+divSchemes
+{
+    default         none;
+    div(((muEff*grad(U))&U)) Gauss linear skewCorrected;
+    div(((muEff*dev2(T(grad(U))))&U)) Gauss linear skewCorrected;
+    div((muEff*dev2(T(grad(U))))) Gauss linear skewCorrected;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected skewCorrected;
+}
+
+interpolationSchemes
+{
+    default         linear skewCorrected;
+}
+
+snGradSchemes
+{
+    default         corrected skewCorrected;
+}
+
+fluxRequired
+{
+    default           no;
+    p;
+}
+
+Flux    roeFlux;
+Limiter VLimiter;
+
+
+// ************************************************************************* //

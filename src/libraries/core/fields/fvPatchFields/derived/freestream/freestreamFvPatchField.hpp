@@ -22,7 +22,31 @@ Class
     CML::freestreamFvPatchField
 
 Description
-    CML::freestreamFvPatchField
+    This boundary condition provides a free-stream condition.  It is a 'mixed'
+    condition derived from the \c inletOutlet condition, whereby the mode of
+    operation switches between fixed (free stream) value and zero gradient
+    based on the sign of the flux.
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        freestreamValue   | freestream velocity          | yes         |
+        phi          | flux field name         | no          | phi
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            freestream;
+        phi             phi;
+    }
+    \endverbatim
+
+SeeAlso
+    CML::mixedFvPatchField
+    CML::inletOutletFvPatchField
 
 
 \*---------------------------------------------------------------------------*/
@@ -38,7 +62,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                     Class freestreamFvPatch Declaration
+                   Class freestreamFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -179,6 +203,8 @@ freestreamFvPatchField<Type>::freestreamFvPatchField
 :
     inletOutletFvPatchField<Type>(p, iF)
 {
+    this->phiName_ = dict.lookupOrDefault<word>("phi","phi");
+
     freestreamValue() = Field<Type>("freestreamValue", dict, p.size());
 
     if (dict.found("value"))
@@ -192,8 +218,6 @@ freestreamFvPatchField<Type>::freestreamFvPatchField
     {
         fvPatchField<Type>::operator=(freestreamValue());
     }
-
-    dict.readIfPresent("phi", this->phiName_);
 }
 
 

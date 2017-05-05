@@ -100,7 +100,7 @@ CML::dcLinearUpwindVanLeer<Type>::correction
 
         r = max(0,r);
 
-        scalar const limiter =  (r + mag(r))/(1 + mag(r) + VSMALL);
+        scalar const limiter = 4*r/((r+1)*(r+1));
 
         sfCorr[facei] = limiter*(Cf[facei] - C[cellU]) & gradVf[cellU];
     }
@@ -150,7 +150,7 @@ CML::dcLinearUpwindVanLeer<Type>::correction
 
                     r = max(0,r);
                     
-                    limiter = (r + mag(r))/(1 + mag(r) + VSMALL);
+                    limiter = 4*r/((r+1)*(r+1));
 
                     pSfCorr[facei] = limiter*(pCf[facei] - C[pown]) 
                                    & gradVf[pown];
@@ -164,7 +164,7 @@ CML::dcLinearUpwindVanLeer<Type>::correction
 
                     r = max(0,r);
                     
-                    limiter = (r + mag(r))/(1 + mag(r) + VSMALL);
+                    limiter = 4*r/((r+1)*(r+1));
 
                     pSfCorr[facei] = limiter*(pCf[facei] - pd[facei] - C[pown]) 
                                    & pGradVfNei[facei];

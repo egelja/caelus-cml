@@ -2,35 +2,86 @@
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::forces
 
+Group
+    grpForcesFunctionObjects
+
 Description
-    Calculates the forces and moments by integrating the pressure and
-    skin-friction forces over a given list of patches.
+    This function object calculates the forces and moments by integrating the
+    pressure and skin-friction forces over a given list of patches.
 
     Member function forces::write() calculates the forces/moments and
-    writes the forces/moments into the file \<timeDir\>/forces.dat
+    writes the forces/moments into the file \<timeDir\>/forces.dat and bin
+    data (if selected) to the file \<timeDir\>/forces_bin.dat
+
+    Example of function object specification:
+    \verbatim
+    forces1
+    {
+        type        forces;
+        functionObjectLibs ("libforces.so");
+        ...
+        log         yes;
+        patches     (walls);
+
+        binData
+        {
+            nBin        20;
+            direction   (1 0 0);
+            cumulative  yes;
+        }
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: forces       | yes         |
+        log          | write force data to standard output | no | no
+        patches      | patches included in the forces calculation | yes |
+        pName        | pressure field name     | no          | p
+        UName        | velocity field name     | no          | U
+        rhoName      | density field name (see below) | no   | rho
+        CofR         | centre of rotation (see below) | no   |
+        directForceDensity | force density supplied directly (see below)|no|no
+        fDName       | name of force density field (see below) | no | fD
+    \endtable
+
+    Bin data is optional, but if the dictionary is present, the entries must
+    be defined according o
+    \table
+        nBin         | number of data bins     | yes         |
+        direction    | direction along which bins are defined | yes |
+        cumulative   | bin data accumulated with incresing distance | yes |
+    \endtable
 
 Note
-    The centre of rotation for moment calculations can either be specified
-    by an \c CofR entry, or be taken from origin of the local coordinateSystem.
-    For example,
+  - For incompressible cases, set \c rhoName to \c rhoInf.  You will then be
+    required to provide a \c rhoInf value corresponding to the free-stream
+    constant density.
+  - If the force density is supplied directly, set the \c directForceDensity
+    flag to 'yes', and supply the force density field using the \c
+    fDName entry
+  - The centre of rotation (CofR) for moment calculations can either be
+    specified by an \c CofR entry, or be taken from origin of the local
+    coordinate system.  For example,
     \verbatim
         CofR        (0 0 0);
     \endverbatim
@@ -44,6 +95,11 @@ Note
         }
     \endverbatim
 
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
+    CML::forceCoeffs
+
 SourceFiles
     forces.cpp
     IOforces.hpp
@@ -53,6 +109,7 @@ SourceFiles
 #ifndef forces_H
 #define forces_H
 
+#include "functionObjectFile.hpp"
 #include "coordinateSystem.hpp"
 #include "coordinateSystems.hpp"
 #include "primitiveFieldsFwd.hpp"
@@ -61,7 +118,7 @@ SourceFiles
 #include "Tuple2.hpp"
 #include "OFstream.hpp"
 #include "Switch.hpp"
-#include "pointFieldFwd.hpp"
+#include "writer.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -71,6 +128,7 @@ namespace CML
 // Forward declaration of classes
 class objectRegistry;
 class dictionary;
+class polyMesh;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
@@ -78,47 +136,12 @@ class mapPolyMesh;
 \*---------------------------------------------------------------------------*/
 
 class forces
+:
+    public functionObjectFile
 {
-public:
-
-    // Tuple for pressure (.first()) and viscous (.second()) forces
-    typedef Tuple2<vector, vector> pressureViscous;
-
-    // Tuple for forces (.first()) and moment (.second())
-    // pressure/viscous forces Tuples.
-    typedef Tuple2<pressureViscous, pressureViscous> forcesMoments;
-
-    //- Sum operation class to accumulate pressure/viscous forces and moments
-    class sumOp
-    {
-    public:
-
-        forcesMoments operator()
-        (
-            const forcesMoments& fm1,
-            const forcesMoments& fm2
-        ) const
-        {
-            return forcesMoments
-            (
-                pressureViscous
-                (
-                    fm1.first().first()  + fm2.first().first(),
-                    fm1.first().second() + fm2.first().second()
-                ),
-                pressureViscous
-                (
-                    fm1.second().first()  + fm2.second().first(),
-                    fm1.second().second() + fm2.second().second()
-                )
-            );
-        }
-    };
-
-
 protected:
 
-    // Private data
+    // Protected data
 
         //- Name of this set of forces,
         //  Also used as the name of the probes directory.
@@ -126,11 +149,18 @@ protected:
 
         const objectRegistry& obr_;
 
-        //- on/off switch
+        //- On/off switch
         bool active_;
 
         //- Switch to send output to Info as well as to file
         Switch log_;
+
+        //- Pressure, viscous and porous force per bin
+        List<Field<vector> > force_;
+
+        //- Pressure, viscous and porous moment per bin
+        List<Field<vector> > moment_;
+
 
         // Read from dictionary
 
@@ -164,21 +194,51 @@ protected:
             //- Flag to indicate whether we are using a local co-ordinate sys
             bool localSystem_;
 
+            //- Flag to include porosity effects
+            bool porosity_;
 
-        //- Forces/moment file ptr
-        autoPtr<OFstream> forcesFilePtr_;
+
+            // Bin information
+
+                //- Number of bins
+                label nBin_;
+
+                //- Direction used to determine bin orientation
+                vector binDir_;
+
+                //- Distance between bin divisions
+                scalar binDx_;
+
+                //- Minimum bin bounds
+                scalar binMin_;
+
+                //- Bin positions along binDir
+                List<point> binPoints_;
+
+                //- Should bin data be cumulative?
+                bool binCumulative_;
 
 
-    // Private Member Functions
+            //- Initialised flag
+            bool initialised_;
 
-        //- If the forces file has not been created create it
-        void makeFile();
+
+    // Protected Member Functions
+
+        //- Create file names for forces and bins
+        wordList createFileNames(const dictionary& dict) const;
 
         //- Output file header information
-        virtual void writeFileHeader();
+        virtual void writeFileHeader(const label i);
+
+        //- Initialise the fields
+        void initialise();
 
         //- Return the effective viscous stress (laminar + turbulent).
         tmp<volSymmTensorField> devRhoReff() const;
+
+        //- Dynamic viscosity field
+        tmp<volScalarField> mu() const;
 
         //- Return rho if rhoName is specified otherwise rhoRef
         tmp<volScalarField> rho() const;
@@ -186,6 +246,22 @@ protected:
         //- Return rhoRef if the pressure field is dynamic, i.e. p/rho
         //  otherwise return 1
         scalar rho(const volScalarField& p) const;
+
+        //- Accumulate bin data
+        void applyBins
+        (
+            const vectorField& Md,
+            const vectorField& fN,
+            const vectorField& fT,
+            const vectorField& fP,
+            const vectorField& d
+        );
+
+        //- Helper function to write force data
+        void writeForces();
+
+        //- Helper function to write bin data
+        void writeBins();
 
         //- Disallow default bitwise copy construct
         forces(const forces&);
@@ -209,7 +285,8 @@ public:
             const word& name,
             const objectRegistry&,
             const dictionary&,
-            const bool loadFromFiles = false
+            const bool loadFromFiles = false,
+            const bool readFields = true
         );
 
 
@@ -249,11 +326,20 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Write the forces
         virtual void write();
 
-        //- Calculate and return forces and moment
-        virtual forcesMoments calcForcesMoment() const;
+        //- Calculate the forces and moments
+        virtual void calcForcesMoment();
+
+        //- Return the total force
+        virtual vector forceEff() const;
+
+        //- Return the total moment
+        virtual vector momentEff() const;
 
         //- Update for changes of mesh
         virtual void updateMesh(const mapPolyMesh&)

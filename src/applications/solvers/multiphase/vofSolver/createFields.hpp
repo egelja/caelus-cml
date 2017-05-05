@@ -83,15 +83,6 @@
 
     #include "readGravitationalAcceleration.hpp"
 
-    /*
-    dimensionedVector g0(g);
-
-    // Read the data file and initialise the interpolation table
-    interpolationTable<vector> timeSeriesAcceleration
-    (
-        runTime.path()/runTime.caseConstant()/"acceleration.dat"
-    );
-    */
 
     Info<< "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g & mesh.C());

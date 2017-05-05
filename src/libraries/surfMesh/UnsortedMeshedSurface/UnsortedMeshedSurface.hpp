@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -747,7 +748,7 @@ void CML::UnsortedMeshedSurface<Face>::remapFaces
 )
 {
     // re-assign the zone Ids
-    if (&faceMap && faceMap.size())
+    if (notNull(faceMap) && faceMap.size())
     {
         if (zoneToc_.empty())
         {
@@ -958,7 +959,7 @@ void CML::UnsortedMeshedSurface<Face>::reset
         Xfer<surfZoneList>()
     );
 
-    if (&zoneIds)
+    if (notNull(zoneIds))
     {
         zoneIds_.transfer(zoneIds());
     }
@@ -980,7 +981,7 @@ void CML::UnsortedMeshedSurface<Face>::reset
         Xfer<surfZoneList>()
     );
 
-    if (&zoneIds)
+    if (notNull(zoneIds))
     {
         zoneIds_.transfer(zoneIds());
     }

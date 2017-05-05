@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -39,9 +39,9 @@ boundaryField
     }
     inlet
     {
-        type            flowRateInletVelocity;
-        flowRate        constant 0.1;
-        value           uniform (0 0 0);
+        type                   flowRateInletVelocity;
+        volumetricFlowRate    constant 0.1;
+        value                  uniform (0 0 0);
     }
     outlet
     {

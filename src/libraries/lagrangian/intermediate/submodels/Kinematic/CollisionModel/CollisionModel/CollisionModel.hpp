@@ -36,7 +36,7 @@ SourceFiles
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,7 +50,7 @@ namespace CML
 template<class CloudType>
 class CollisionModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
     // Protected data
 
@@ -166,7 +166,7 @@ public:
 template<class CloudType>
 CML::CollisionModel<CloudType>::CollisionModel(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner)
+    CloudSubModelBase<CloudType>(owner)
 {}
 
 
@@ -178,14 +178,14 @@ CML::CollisionModel<CloudType>::CollisionModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type)
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type)
 {}
 
 
 template<class CloudType>
 CML::CollisionModel<CloudType>::CollisionModel(CollisionModel<CloudType>& cm)
 :
-    SubModelBase<CloudType>(cm)
+    CloudSubModelBase<CloudType>(cm)
 {}
 
 

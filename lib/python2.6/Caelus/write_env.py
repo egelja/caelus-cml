@@ -30,7 +30,7 @@ from Caelus.setup import *
 from string import Template
 
 print "Writing environment file to:\n \"{0}\"".format(os.path.join(PROJECT_DIR,
-                                                  'etc'))
+                                                  PROJECT,'etc'))
 # Return OS appropriate path var name
 path_var = lambda os: '%PATH%' if os == 'windows' else '$PATH'
 
@@ -56,6 +56,7 @@ d={
 'MPI_LIB':os.environ['MPI_LIB'],
 'MPI_LIB_NAME':os.environ['MPI_LIB_NAME'],
 'OPAL_PREFIX':os.environ['OPAL_PREFIX'],
+'SCOTCH_VERSION':os.environ['SCOTCH_VERSION'],
 'SCOTCH_PATH':os.environ['SCOTCH_PATH'],
 'METIS_PATH':os.environ['METIS_PATH'],
 'ZLIB_PATH':os.environ['ZLIB_PATH'],

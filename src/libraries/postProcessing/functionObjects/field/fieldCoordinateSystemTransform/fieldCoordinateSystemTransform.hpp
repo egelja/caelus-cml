@@ -1,28 +1,67 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::fieldCoordinateSystemTransform
 
+Group
+    grpFieldFunctionObjects
+
 Description
-    Transforms fields from global cartesian co-ordinates to local co-ordinate
-    system
+    This function object transforms a user-specified selection of fields from
+    global Cartesian co-ordinates to a local co-ordinate system.  The fields
+    are run-time modifiable.
+
+    Example of function object specification:
+    \verbatim
+    fieldCoordinateSystemTransform1
+    {
+        type        fieldCoordinateSystemTransform;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        fields
+        (
+            U
+            UMean
+            UPrime2Mean
+        );
+        coordinateSystem
+        {
+            origin  (0.001  0       0);
+            e1      (1      0.15    0);
+            e3      (0      0      -1);
+        }
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: fieldCoordinateSystemTransform | yes |
+        fields       | list of fields to be transformed |yes |
+        coordinateSystem | local co-ordinate system | yes    |
+    \endtable
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
+    CML::coordinateSystem
 
 SourceFiles
     fieldCoordinateSystemTransform.cpp
@@ -34,14 +73,9 @@ SourceFiles
 #define fieldCoordinateSystemTransform_H
 
 #include "OFstream.hpp"
-#include "pointFieldFwd.hpp"
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "coordinateSystem.hpp"
-#include "volFields.hpp"
-#include "surfaceFields.hpp"
-#include "Time.hpp"
-#include "transformGeometricField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,6 +85,7 @@ namespace CML
 // Forward declaration of classes
 class objectRegistry;
 class dictionary;
+class polyMesh;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
@@ -133,6 +168,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Write
         virtual void write();
 
@@ -150,6 +188,13 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "fieldCoordinateSystemTransform.hpp"
+#include "volFields.hpp"
+#include "surfaceFields.hpp"
+#include "Time.hpp"
+#include "transformGeometricField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -159,27 +204,11 @@ void CML::fieldCoordinateSystemTransform::transformField
     const Type& field
 ) const
 {
-    const word& fieldName = field.name() + "Transformed";
+    const word& fieldName = field.name() + ":Transformed";
 
-    dimensionedTensor R("R", field.dimensions(), coordSys_.R().R());
-
-    if (obr_.foundObject<Type>(fieldName))
+    if (!obr_.foundObject<Type>(fieldName))
     {
-        Type& transField =
-            const_cast<Type&>(obr_.lookupObject<Type>(fieldName));
-
-        transField == field;
-
-        forAll(field, i)
-        {
-            CML::transform(transField, R, transField);
-        }
-
-        transField.write();
-    }
-    else
-    {
-        Type& transField = obr_.store
+        obr_.store
         (
             new Type
             (
@@ -194,11 +223,20 @@ void CML::fieldCoordinateSystemTransform::transformField
                 field
             )
         );
-
-        CML::transform(transField, R, transField);
-
-        transField.write();
     }
+
+    Type& transField =
+        const_cast<Type&>(obr_.lookupObject<Type>(fieldName));
+
+    transField == field;
+
+    dimensionedTensor R("R", field.dimensions(), coordSys_.R().R());
+
+    CML::transform(transField, R, transField);
+
+    Info<< "    writing field " << transField.name() << nl << endl;
+
+    transField.write();
 }
 
 

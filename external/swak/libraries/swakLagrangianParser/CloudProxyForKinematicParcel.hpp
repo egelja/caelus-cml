@@ -212,10 +212,10 @@ CloudProxyForKinematicParcel<CloudType>::CloudProxyForKinematicParcel
         )
     );
     this->addScalarFunction(
-        "minParticleMass",
-        "Minimum particle mass (constant)",
+        "minParcelMass",
+        "Minimum parcel mass (constant)",
         new typename baseType::template ParticleMethodWrapperConstant<scalar>(
-            constProps.minParticleMass()
+            constProps.minParcelMass()
         )
     );
 }

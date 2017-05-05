@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -80,7 +81,7 @@ inline CML::SubField<Type>::SubField
 template<class Type>
 inline const CML::SubField<Type>& CML::SubField<Type>::null()
 {
-    return *reinterpret_cast< SubField<Type>* >(0);
+    return NullSingletonRef< SubField<Type> >();
 }
 
 

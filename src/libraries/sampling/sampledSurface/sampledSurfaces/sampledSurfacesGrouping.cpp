@@ -28,20 +28,54 @@ License
 
 CML::label CML::sampledSurfaces::classifyFields()
 {
-     // check files for a particular time
+    label nFields = 0;
+
     if (loadFromFiles_)
     {
+        // Check files for a particular time
         IOobjectList objects(mesh_, mesh_.time().timeName());
         wordList allFields = objects.sortedNames();
-        labelList indices = findStrings(fieldSelection_, allFields);
-        return indices.size();
+
+        forAll(fieldSelection_, i)
+        {
+            labelList indices = findStrings(fieldSelection_[i], allFields);
+
+            if (indices.size())
+            {
+                nFields += indices.size();
+            }
+            else
+            {
+                WarningIn("sampledSurfaces::classifyFields()")
+                    << "Cannot find field file matching "
+                    << fieldSelection_[i] << endl;
+            }
+        }
     }
     else
     {
+        // Check currently available fields
         wordList allFields = mesh_.sortedNames();
         labelList indices = findStrings(fieldSelection_, allFields);
-        return indices.size();
+
+        forAll(fieldSelection_, i)
+        {
+            labelList indices = findStrings(fieldSelection_[i], allFields);
+
+            if (indices.size())
+            {
+                nFields += indices.size();
+            }
+            else
+            {
+                WarningIn("sampledSurfaces::classifyFields()")
+                    << "Cannot find registered field matching "
+                    << fieldSelection_[i] << endl;
+            }
+        }
     }
+
+    return nFields;
 }
 
 

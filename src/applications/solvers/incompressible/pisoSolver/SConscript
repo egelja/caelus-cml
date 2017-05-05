@@ -35,9 +35,9 @@ pisoSolEnv.Prepend(LIBPATH = lib_link_path)
 # Additions to link libraries for this executable
 #===============================================================================
 if pisoSolEnv['WHICH_OS'] == "windows":
-  pisoSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad')
+  pisoSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad  -u incompressibleVLESModelsLoad')
 
-lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels', 'incompressibleLESModels', 'incompressibleTransportModels']
+lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels', 'incompressibleLESModels', 'incompressibleVLESModels', 'incompressibleTransportModels']
   
 pisoSolEnv.Append(LIBS = lib_link)
 

@@ -76,6 +76,9 @@ class ReactingLookupTableInjection
         //- Number of parcels per injector - common to all injection sources
         const scalar parcelsPerSecond_;
 
+        //- Flag to indicate to randomise injection positions
+        bool randomise_;
+
         //- List of injectors
         reactingParcelInjectionDataIOList injectors_;
 
@@ -101,7 +104,8 @@ public:
         ReactingLookupTableInjection
         (
             const dictionary& dict,
-            CloudType& owner
+            CloudType& owner,
+            const word& modelName
         );
 
         //- Construct copy
@@ -125,6 +129,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -179,16 +186,18 @@ template<class CloudType>
 CML::ReactingLookupTableInjection<CloudType>::ReactingLookupTableInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     inputFileName_(this->coeffDict().lookup("inputFile")),
     duration_(readScalar(this->coeffDict().lookup("duration"))),
     parcelsPerSecond_
     (
         readScalar(this->coeffDict().lookup("parcelsPerSecond"))
     ),
+    randomise_(readBool(this->coeffDict().lookup("randomise"))),
     injectors_
     (
         IOobject
@@ -211,16 +220,7 @@ CML::ReactingLookupTableInjection<CloudType>::ReactingLookupTableInjection
     injectorTetFaces_.setSize(injectors_.size());
     injectorTetPts_.setSize(injectors_.size());
 
-    forAll(injectors_, i)
-    {
-        this->findCellAtPosition
-        (
-            injectorCells_[i],
-            injectorTetFaces_[i],
-            injectorTetPts_[i],
-            injectors_[i].x()
-        );
-    }
+    updateMesh();
 
     // Determine volume of particles to inject
     this->volumeTotal_ = 0.0;
@@ -242,6 +242,7 @@ CML::ReactingLookupTableInjection<CloudType>::ReactingLookupTableInjection
     inputFileName_(im.inputFileName_),
     duration_(im.duration_),
     parcelsPerSecond_(im.parcelsPerSecond_),
+    randomise_(im.randomise_),
     injectors_(im.injectors_),
     injectorCells_(im.injectorCells_),
     injectorTetFaces_(im.injectorTetFaces_),
@@ -257,6 +258,23 @@ CML::ReactingLookupTableInjection<CloudType>::~ReactingLookupTableInjection()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+void CML::ReactingLookupTableInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    forAll(injectors_, i)
+    {
+        this->findCellAtPosition
+        (
+            injectorCells_[i],
+            injectorTetFaces_[i],
+            injectorTetPts_[i],
+            injectors_[i].x()
+        );
+    }
+}
+
 
 template<class CloudType>
 CML::scalar CML::ReactingLookupTableInjection<CloudType>::timeEnd() const
@@ -315,7 +333,16 @@ void CML::ReactingLookupTableInjection<CloudType>::setPositionAndCell
     label& tetPtI
 )
 {
-    label injectorI = parcelI*injectorCells_.size()/nParcels;
+    label injectorI = 0;
+    if (randomise_)
+    {
+        cachedRandom& rnd = this->owner().rndGen();
+        injectorI = rnd.position<label>(0, injectorCells_.size() - 1);
+    }
+    else
+    {
+        injectorI = parcelI*injectorCells_.size()/nParcels;
+    }
 
     position = injectors_[injectorI].x();
     cellOwner = injectorCells_[injectorI];

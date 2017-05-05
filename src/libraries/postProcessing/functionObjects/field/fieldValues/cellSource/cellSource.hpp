@@ -1,54 +1,96 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::fieldValues::cellSource
 
-Description
-    Cell source variant of field value function object. Values of user-
-    specified fields reported for collections of cells.
+Group
+    grpFieldFunctionObjects
 
-    cellObj1                        // Name also used to identify output folder
+Description
+    This function object provides a 'cell source' variant of the fieldValues
+    function object.  Given a list of user-specified fields and a selection
+    of mesh cells, a number of operations can be performed, such as sums,
+    averages and integrations.
+
+
+    Example of function object specification:
+    \verbatim
+    cellSource1
     {
         type            cellSource;
         functionObjectLibs ("libfieldFunctionObjects.so");
-        enabled         true;
-        outputControl   outputTime;
-        log             true;       // log to screen?
-        valueOutput     true;       // Write values at run-time output times?
-        source          cellZone;   // Type of cell source
+        ...
+        log             true;
+        valueOutput     true;
+        source          cellZone;
         sourceName      c0;
         operation       volAverage;
+        weightField     alpha1;
         fields
         (
             p
             U
         );
     }
+    \endverbatim
 
-    where operation is one of:
-      - none
-      - sum
-      - volAverage
-      - volIntegrate
-      - weightedAverage
-      - CoV (Coefficient of variation: standard deviation/mean)
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | Type name: cellSource   | yes         |
+        log          | Write data to standard output | no    | no
+        valueOutput  | Write the raw output values | yes     |
+        writeVolume  | Write the volume of the cellSource | no |
+        source       | cell source: see below  | yes         |
+        sourceName   | name of cell source if required  | no |
+        operation    | operation to perform    | yes         |
+        weightField  | name of field to apply weighting | no |
+        fields       | list of fields to operate on | yes    |
+    \endtable
+
+    \linebreak
+    Where \c source is defined by
+    \plaintable
+        cellZone     | requires a 'sourceName' entry to specify the cellZone
+        all          | all cells
+    \endplaintable
+
+    \linebreak
+    The \c operation is one of:
+    \plaintable
+       none          | no operation
+       sum           | sum
+       sumMag        | sum of component magnitudes
+       average       | ensemble average
+       weightedAverage | weighted average
+       volAverage    | volume weighted average
+       volIntegrate  | volume integral
+       min           | minimum
+       max           | maximum
+       CoV           | coefficient of variation: standard deviation/mean
+    \endplaintable
+
+SeeAlso
+    CML::fieldValues
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     cellSource.cpp
@@ -99,16 +141,18 @@ public:
         {
             opNone,
             opSum,
+            opSumMag,
+            opAverage,
+            opWeightedAverage,
             opVolAverage,
             opVolIntegrate,
-            opWeightedAverage,
             opMin,
             opMax,
             opCoV
         };
 
         //- Operation type names
-        static const NamedEnum<operationType, 8> operationTypeNames_;
+        static const NamedEnum<operationType, 10> operationTypeNames_;
 
 
 private:
@@ -120,6 +164,9 @@ private:
 
         //- Set cells to evaluate based on a patch
         void setPatchCells();
+
+        //- Calculate and return volume of the cellSource: sum(V)
+        scalar volume() const;
 
 
 protected:
@@ -140,6 +187,12 @@ protected:
 
         //- Weight field name - only used for opWeightedAverage mode
         word weightFieldName_;
+
+        //- Volume of the cellSource
+        scalar volume_;
+
+        //- Optionally write the volume of the cellSource
+        bool writeVolume_;
 
 
     // Protected Member Functions
@@ -169,7 +222,7 @@ protected:
         ) const;
 
         //- Output file header information
-        virtual void writeFileHeader();
+        virtual void writeFileHeader(const label i);
 
 
 public:
@@ -226,22 +279,13 @@ public:
 } // End namespace fieldValues
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-inline const CML::fieldValues::cellSource::sourceType&
-CML::fieldValues::cellSource::source() const
-{
-    return source_;
-}
+#include "cellSourceI.hpp"
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-inline const CML::labelList&
-CML::fieldValues::cellSource::cellId() const
-{
-    return cellId_;
-}
-
-
+#include "cellSource.hpp"
 #include "volFields.hpp"
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
@@ -308,6 +352,21 @@ Type CML::fieldValues::cellSource::processValues
             result = sum(values);
             break;
         }
+        case opSumMag:
+        {
+            result = sum(cmptMag(values));
+            break;
+        }
+        case opAverage:
+        {
+            result = sum(values)/values.size();
+            break;
+        }
+        case opWeightedAverage:
+        {
+            result = sum(values)/sum(weightField);
+            break;
+        }
         case opVolAverage:
         {
             result = sum(values*V)/sum(V);
@@ -316,11 +375,6 @@ Type CML::fieldValues::cellSource::processValues
         case opVolIntegrate:
         {
             result = sum(values*V);
-            break;
-        }
-        case opWeightedAverage:
-        {
-            result = sum(values*weightField)/sum(weightField);
             break;
         }
         case opMin:
@@ -370,23 +424,28 @@ bool CML::fieldValues::cellSource::writeValues(const word& fieldName)
     if (ok)
     {
         Field<Type> values(setFieldValues<Type>(fieldName));
-        combineFields(values);
-
         scalarField V(filterField(mesh().V()));
-        combineFields(V);
+        scalarField weightField(values.size(), 1.0);
 
-        scalarField weightField;
-
-        if (operation_ == opWeightedAverage)
+        if (weightFieldName_ != "none")
         {
             weightField = setFieldValues<scalar>(weightFieldName_, true);
         }
 
+        // Combine onto master
+        combineFields(values);
+        combineFields(V);
         combineFields(weightField);
+
+        // apply weight field
+        values *= weightField;
 
         if (Pstream::master())
         {
             Type result = processValues(values, V, weightField);
+
+            // add to result dictionary, over-writing any previous entry
+            resultDict_.add(fieldName, result, true);
 
             if (valueOutput_)
             {
@@ -406,14 +465,11 @@ bool CML::fieldValues::cellSource::writeValues(const word& fieldName)
             }
 
 
-            outputFilePtr_()<< tab << result;
+            file()<< tab << result;
 
-            if (log_)
-            {
-                Info<< "    " << operationTypeNames_[operation_]
-                    << "(" << sourceName_ << ") for " << fieldName
-                    <<  " = " << result << endl;
-            }
+            Info(log_)<< "    " << operationTypeNames_[operation_]
+                << "(" << sourceName_ << ") of " << fieldName
+                <<  " = " << result << endl;
         }
     }
 
@@ -429,7 +485,6 @@ CML::tmp<CML::Field<Type> > CML::fieldValues::cellSource::filterField
 {
     return tmp<Field<Type> >(new Field<Type>(field, cellId_));
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

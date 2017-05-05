@@ -51,7 +51,7 @@ protected:
 
     // Protected data
 
-        const label nLayers_;
+        label nLayers_;
 
         const scalar expansionRatio_;
 

@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -24,7 +24,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::readFields, 0);
+namespace CML
+{
+defineTypeNameAndDebug(readFields, 0);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -43,7 +46,11 @@ CML::readFields::readFields
     fieldSet_()
 {
     // Check if the available mesh is an fvMesh otherise deactivate
-    if (!isA<fvMesh>(obr_))
+    if (isA<fvMesh>(obr_))
+    {
+        read(dict);
+    }
+    else
     {
         active_ = false;
         WarningIn
@@ -55,11 +62,9 @@ CML::readFields::readFields
                 "const dictionary&, "
                 "const bool"
             ")"
-        )   << "No fvMesh available, deactivating."
+        )   << "No fvMesh available, deactivating " << name_
             << endl;
     }
-
-    read(dict);
 }
 
 
@@ -82,34 +87,46 @@ void CML::readFields::read(const dictionary& dict)
 
 void CML::readFields::execute()
 {
-    //Info<< type() << " " << name_ << ":" << nl;
-
-    // Clear out any previously loaded fields
-    vsf_.clear();
-    vvf_.clear();
-    vSpheretf_.clear();
-    vSymmtf_.clear();
-    vtf_.clear();
-
-    ssf_.clear();
-    svf_.clear();
-    sSpheretf_.clear();
-    sSymmtf_.clear();
-    stf_.clear();
-
-    forAll(fieldSet_, fieldI)
+    if (active_)
     {
-        // If necessary load field
-        loadField<scalar>(fieldSet_[fieldI], vsf_, ssf_);
-        loadField<vector>(fieldSet_[fieldI], vvf_, svf_);
-        loadField<sphericalTensor>(fieldSet_[fieldI], vSpheretf_, sSpheretf_);
-        loadField<symmTensor>(fieldSet_[fieldI], vSymmtf_, sSymmtf_);
-        loadField<tensor>(fieldSet_[fieldI], vtf_, stf_);
+        // Clear out any previously loaded fields
+        vsf_.clear();
+        vvf_.clear();
+        vSpheretf_.clear();
+        vSymmtf_.clear();
+        vtf_.clear();
+
+        ssf_.clear();
+        svf_.clear();
+        sSpheretf_.clear();
+        sSymmtf_.clear();
+        stf_.clear();
+
+        forAll(fieldSet_, fieldI)
+        {
+            const word& fieldName = fieldSet_[fieldI];
+
+            // If necessary load field
+            loadField<scalar>(fieldName, vsf_, ssf_);
+            loadField<vector>(fieldName, vvf_, svf_);
+            loadField<sphericalTensor>(fieldName, vSpheretf_, sSpheretf_);
+            loadField<symmTensor>(fieldName, vSymmtf_, sSymmtf_);
+            loadField<tensor>(fieldName, vtf_, stf_);
+        }
     }
 }
 
 
 void CML::readFields::end()
+{
+    if (active_)
+    {
+        execute();
+    }
+}
+
+
+void CML::readFields::timeSet()
 {
     // Do nothing
 }

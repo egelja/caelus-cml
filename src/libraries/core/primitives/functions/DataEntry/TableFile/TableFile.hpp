@@ -24,11 +24,13 @@ Description
     Templated table container data entry where data is read from file.
 
     \verbatim
-        <entryName>   tableFile;
-        tableFileCoeffs
+        <entryName> tableFile;
+        <entryName>Coeffs
         {
-            fileName        dataFile;   // name of data file
-            outOfBounds     clamp;      // optional out-of-bounds handling
+            dimensions          [0 0 1 0 0]; // optional dimensions
+            fileName            dataFile;    // name of data file
+            outOfBounds         clamp;       // optional out-of-bounds handling
+            interpolationScheme linear;      // optional interpolation method
         }
     \endverbatim
 
@@ -37,8 +39,8 @@ Description
     that is (scalar, vector):
     \verbatim
         (
-            0.0 (1 2 3)
-            1.0 (4 5 6)
+            (0.0 (1 2 3))
+            (1.0 (4 5 6))
         );
     \endverbatim
 
@@ -138,6 +140,22 @@ public:
                 return TableBase<Type>::integrate(x1, x2);
             }
 
+            //- Return dimensioned constant value
+            virtual dimensioned<Type> dimValue(const scalar x) const
+            {
+                return TableBase<Type>::dimValue(x);
+            }
+
+            //- Integrate between two values and return dimensioned type
+            virtual dimensioned<Type> dimIntegrate
+            (
+                const scalar x1,
+                const scalar x2
+            )
+            {
+                return TableBase<Type>::dimIntegrate(x1, x2);
+            }
+
 
     // I/O
 
@@ -165,14 +183,28 @@ template<class Type>
 CML::TableFile<Type>::TableFile(const word& entryName, const dictionary& dict)
 :
     DataEntry<Type>(entryName),
-    TableBase<Type>(entryName, dict.subDict(type() + "Coeffs")),
+    TableBase<Type>(entryName, dict.subDict(entryName + "Coeffs")),
     fName_("none")
 {
-    const dictionary coeffs(dict.subDict(type() + "Coeffs"));
+    const dictionary coeffs(dict.subDict(entryName + "Coeffs"));
     coeffs.lookup("fileName") >> fName_;
+
+    if (coeffs.found("dimensions"))
+    {
+        coeffs.lookup("dimensions") >> this->dimensions_;
+    }
 
     fileName expandedFile(fName_);
     IFstream is(expandedFile.expand());
+
+    if (!is.good())
+    {
+        FatalIOErrorIn
+        (
+            "TableFile<Type>::TableFile(const word&, const dictionary&)",
+            is
+        )   << "Cannot open file." << exit(FatalIOError);
+    }
 
     is  >> this->table_;
 
@@ -226,7 +258,7 @@ void CML::TableFile<Type>::writeData(Ostream& os) const
     DataEntry<Type>::writeData(os);
 
     os  << token::END_STATEMENT << nl
-        << indent << word(type() + "Coeffs") << nl
+        << indent << word(this->name() + "Coeffs") << nl
         << indent << token::BEGIN_BLOCK << nl << incrIndent;
 
     // Note: for TableBase write the dictionary entries it needs but not

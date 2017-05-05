@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -20,12 +20,12 @@ boundaryField
 {
     floor
     {
-        type            alphatWallFunction;
+        type            compressible::alphatWallFunction;
         value           uniform 0;
     }
     ceiling
     {
-        type            alphatWallFunction;
+        type            compressible::alphatWallFunction;
         value           uniform 0;
     }
     inlet

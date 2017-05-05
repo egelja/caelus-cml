@@ -1,0 +1,44 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+ptscotchErrEnv = globalEnv.Clone()
+
+sl = ptscotchErrEnv['SLASH']
+
+# Path to source
+src = ptscotchErrEnv['LIB_SRC']
+
+ptscotchErrEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = [src + sl + 'libscotch',  ptscotchErrEnv['MPI_INC']]
+
+ptscotchErrEnv.Prepend(CPPPATH = lib_inc)
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+library_error.c	
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libptscotchErr = ptscotchErrEnv.SharedLibrary(target = 'libptscotcherr',
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = ptscotchErrEnv['LIB_PLATFORM_INSTALL']
+ptscotchErrEnv.Alias('install', install_dir)
+ptscotchErrEnv.Install(install_dir, libptscotchErr)
+
+if (ptscotchErrEnv['WHICH_OS'] == "darwin"):
+
+  ptscotchErrEnv.Append(SHLINKFLAGS ='-install_name @loader_path/../../../external/scotch-6.0.4/lib/libptscotchErr.dylib')

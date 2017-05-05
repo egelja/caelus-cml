@@ -35,7 +35,7 @@ SourceFiles
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,9 +52,15 @@ class tetIndices;
 template<class CloudType>
 class CloudFunctionObject
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
-    // Protected Member Functions
+    // Private data
+
+        //- Output path
+        fileName outputDir_;
+
+
+    // Private Member Functions
 
         //- Write post-processing info
         virtual void write();
@@ -73,9 +79,10 @@ public:
         dictionary,
         (
             const dictionary& dict,
-            CloudType& owner
+            CloudType& owner,
+            const word& modelName
         ),
-        (dict, owner)
+        (dict, owner, modelName)
     );
 
 
@@ -89,7 +96,8 @@ public:
         (
             const dictionary& dict,
             CloudType& owner,
-            const word& modelType
+            const word& objectType,
+            const word& modelName
         );
 
         //- Construct copy
@@ -114,7 +122,8 @@ public:
     (
         const dictionary& dict,
         CloudType& owner,
-        const word& modelType
+        const word& objectType,
+        const word& modelName
     );
 
 
@@ -133,7 +142,9 @@ public:
             (
                 typename CloudType::parcelType& p,
                 const label cellI,
-                const scalar dt
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
             );
 
             //- Post-patch hook
@@ -142,15 +153,26 @@ public:
                 const typename CloudType::parcelType& p,
                 const polyPatch& pp,
                 const scalar trackFraction,
-                const tetIndices& tetIs
+                const tetIndices& testIs,
+                bool& keepParticle
             );
 
             //- Post-face hook
             virtual void postFace
             (
                 const typename CloudType::parcelType& p,
-                const label faceI
+                const label faceI,
+                bool& keepParticle
             );
+
+
+        // Input/output
+
+            //- Return the output path
+            const fileName& outputDir() const;
+
+            //- Return the output time path
+            fileName outputTimeDir() const;
 };
 
 
@@ -199,7 +221,8 @@ void CML::CloudFunctionObject<CloudType>::write()
 template<class CloudType>
 CML::CloudFunctionObject<CloudType>::CloudFunctionObject(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner)
+    CloudSubModelBase<CloudType>(owner),
+    outputDir_()
 {}
 
 
@@ -208,11 +231,28 @@ CML::CloudFunctionObject<CloudType>::CloudFunctionObject
 (
     const dictionary& dict,
     CloudType& owner,
-    const word& type
+    const word& modelName,
+    const word& objectType
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type, "")
-{}
+    CloudSubModelBase<CloudType>(modelName, owner, dict, typeName, objectType),
+    outputDir_(owner.mesh().time().path())
+{
+    const fileName relPath =
+        "postProcessing"/cloud::prefix/owner.name()/this->modelName();
+
+
+    if (Pstream::parRun())
+    {
+        // Put in undecomposed case (Note: gives problems for
+        // distributed data running)
+        outputDir_ = outputDir_/".."/relPath;
+    }
+    else
+    {
+        outputDir_ = outputDir_/relPath;
+    }
+}
 
 
 template<class CloudType>
@@ -221,7 +261,8 @@ CML::CloudFunctionObject<CloudType>::CloudFunctionObject
     const CloudFunctionObject<CloudType>& ppm
 )
 :
-    SubModelBase<CloudType>(ppm)
+    CloudSubModelBase<CloudType>(ppm),
+    outputDir_(ppm.outputDir_)
 {}
 
 
@@ -237,7 +278,11 @@ CML::CloudFunctionObject<CloudType>::~CloudFunctionObject()
 template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::preEvolve()
 {
-    // do nothing
+    FatalErrorIn
+    (
+        "CloudFunctionObject<CloudType>::preEvolve()"
+    )   << "Execution reached a point where it should not "<< nl
+        << exit(FatalError);
 }
 
 
@@ -256,10 +301,23 @@ void CML::CloudFunctionObject<CloudType>::postMove
 (
     typename CloudType::parcelType&,
     const label,
-    const scalar
+    const scalar,
+    const point&,
+    bool&
 )
 {
-    // do nothing
+    FatalErrorIn
+    (
+        "CloudFunctionObject<CloudType>::postMove"
+        "("
+            "const typename CloudType::parcelType&,"
+            "const label,"
+            "const scalar,"
+            "const point&,"
+            "bool&"
+        ")"
+    )   << "Execution reached a point where it should not "<< nl
+        << exit(FatalError);
 }
 
 
@@ -269,10 +327,22 @@ void CML::CloudFunctionObject<CloudType>::postPatch
     const typename CloudType::parcelType&,
     const polyPatch&,
     const scalar,
-    const tetIndices&
+    const tetIndices&,
+    bool&
 )
 {
-    // do nothing
+    FatalErrorIn
+    (
+        "CloudFunctionObject<CloudType>::postPatch"
+        "("
+            "const typename CloudType::parcelType&,"
+            "const polyPatch&,"
+            "const scalar,"
+            "const tetIndices&,"
+            "bool&"
+        ")"
+    )   << "Execution reached a point where it should not "<< nl
+        << exit(FatalError);
 }
 
 
@@ -280,10 +350,34 @@ template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::postFace
 (
     const typename CloudType::parcelType&,
-    const label
+    const label,
+    bool&
 )
 {
-    // do nothing
+    FatalErrorIn
+    (
+        "CloudFunctionObject<CloudType>::postFace"
+        "("
+            "const typename CloudType::parcelType&,"
+            "const label,"
+            "bool&"
+        ")"
+    )   << "Execution reached a point where it should not "<< nl
+        << exit(FatalError);
+}
+
+
+template<class CloudType>
+const CML::fileName& CML::CloudFunctionObject<CloudType>::outputDir() const
+{
+    return outputDir_;
+}
+
+
+template<class CloudType>
+CML::fileName CML::CloudFunctionObject<CloudType>::outputTimeDir() const
+{
+    return outputDir_/this->owner().time().timeName();
 }
 
 
@@ -295,13 +389,15 @@ CML::CloudFunctionObject<CloudType>::New
 (
     const dictionary& dict,
     CloudType& owner,
-    const word& modelType
+    const word& objectType,
+    const word& modelName
 )
 {
-    Info<< "    Selecting cloud function " << modelType << endl;
+    Info<< "    Selecting cloud function " << modelName << " of type "
+        << objectType << endl;
 
     typename dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(modelType);
+        dictionaryConstructorTablePtr_->find(objectType);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
@@ -310,16 +406,26 @@ CML::CloudFunctionObject<CloudType>::New
             "CloudFunctionObject<CloudType>::New"
             "("
                 "const dictionary&, "
-                "CloudType&"
+                "CloudType&, "
+                "const word&, "
+                "const word&"
             ")"
         )   << "Unknown cloud function type "
-            << modelType << nl << nl
+            << objectType << nl << nl
             << "Valid cloud function types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()
             << exit(FatalError);
     }
 
-    return autoPtr<CloudFunctionObject<CloudType> >(cstrIter()(dict, owner));
+    return autoPtr<CloudFunctionObject<CloudType> >
+    (
+        cstrIter()
+        (
+            dict,
+            owner,
+            modelName
+        )
+    );
 }
 
 

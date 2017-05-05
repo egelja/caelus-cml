@@ -119,7 +119,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        InflationInjection(const dictionary& dict, CloudType& owner);
+        InflationInjection
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         InflationInjection(const InflationInjection<CloudType>& im);
@@ -139,6 +144,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -196,10 +204,11 @@ template<class CloudType>
 CML::InflationInjection<CloudType>::InflationInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     generationSetName_(this->coeffDict().lookup("generationCellSet")),
     inflationSetName_(this->coeffDict().lookup("inflationCellSet")),
     generationCells_(),
@@ -312,6 +321,13 @@ CML::InflationInjection<CloudType>::~InflationInjection()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
+void CML::InflationInjection<CloudType>::updateMesh()
+{
+    // do nothing
+}
+
+
+template<class CloudType>
 CML::scalar CML::InflationInjection<CloudType>::timeEnd() const
 {
     return this->SOI_ + duration_;
@@ -364,8 +380,8 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
 
     if ((time0 >= 0.0) && (time0 < duration_))
     {
-         volumeAccumulator_ +=
-             fraction_*flowRateProfile_.integrate(time0, time1);
+        volumeAccumulator_ +=
+            fraction_*flowRateProfile_.integrate(time0, time1);
     }
 
     labelHashSet cellCentresUsed;
@@ -392,8 +408,8 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
                 "CML::label "
                 "CML::InflationInjection<CloudType>::parcelsToInject"
                 "("
-                    "const scalar time0, "
-                    "const scalar time1"
+                    "const scalar, "
+                    "const scalar"
                 ")"
             )
                 << "Maximum particle split iterations ("

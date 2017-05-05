@@ -1,97 +1,47 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fieldValue.hpp"
 #include "fvMesh.hpp"
 #include "Time.hpp"
+#include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
 {
     defineTypeNameAndDebug(fieldValue, 0);
+    defineRunTimeSelectionTable(fieldValue, dictionary);
 }
 
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-void CML::fieldValue::updateMesh(const mapPolyMesh&)
-{
-    // Do nothing
-}
-
-
-void CML::fieldValue::movePoints(const Field<point>&)
-{
-    // Do nothing
-}
-
-
-void CML::fieldValue::makeFile()
-{
-    // Create the output file if not already created
-    if (outputFilePtr_.empty())
-    {
-        if (debug)
-        {
-            Info<< "Creating output file." << endl;
-        }
-
-        // File update
-        if (Pstream::master())
-        {
-            fileName outputDir;
-            word startTimeName =
-                obr_.time().timeName(obr_.time().startTime().value());
-
-            if (Pstream::parRun())
-            {
-                // Put in undecomposed case (Note: gives problems for
-                // distributed data running)
-                outputDir =
-                    obr_.time().path()/".."/name_/startTimeName;
-            }
-            else
-            {
-                outputDir = obr_.time().path()/name_/startTimeName;
-            }
-
-            // Create directory if does not exist
-            mkDir(outputDir);
-
-            // Open new file at start up
-            outputFilePtr_.reset(new OFstream(outputDir/(type() + ".dat")));
-
-            // Add headers to output data
-            writeFileHeader();
-        }
-    }
-}
-
-
 void CML::fieldValue::read(const dictionary& dict)
 {
     if (active_)
     {
-        log_ = dict.lookupOrDefault<Switch>("log", false);
+        dict_ = dict;
+
+        log_ = dict.lookupOrDefault<Switch>("log", true);
         dict.lookup("fields") >> fields_;
         dict.lookup("valueOutput") >> valueOutput_;
     }
@@ -102,12 +52,9 @@ void CML::fieldValue::write()
 {
     if (active_)
     {
-        if (log_)
-        {
-            Info<< type() << " " << name_ << " output:" << nl;
-        }
+        functionObjectFile::write();
 
-        makeFile();
+        Info(log_)<< type() << " " << name_ << " output:" << nl;
     }
 }
 
@@ -119,17 +66,20 @@ CML::fieldValue::fieldValue
     const word& name,
     const objectRegistry& obr,
     const dictionary& dict,
+    const word& valueType,
     const bool loadFromFiles
 )
 :
+    functionObjectFile(obr, name, valueType),
     name_(name),
     obr_(obr),
+    dict_(dict),
     active_(true),
-    log_(false),
-    sourceName_(dict.lookupOrDefault<word>("sourceName", "sampledSurface")),
+    log_(true),
+    sourceName_(word::null),
     fields_(dict.lookup("fields")),
     valueOutput_(dict.lookup("valueOutput")),
-    outputFilePtr_(NULL)
+    resultDict_(fileName("name"), dictionary::null)
 {
     // Only active if obr is an fvMesh
     if (isA<fvMesh>(obr_))
@@ -147,8 +97,8 @@ CML::fieldValue::fieldValue
                 "const dictionary&, "
                 "const bool"
             ")"
-        )   << "No fvMesh available, deactivating."
-            << nl << endl;
+        )   << "No fvMesh available, deactivating " << name << nl
+            << endl;
         active_ = false;
     }
 }
@@ -169,6 +119,24 @@ void CML::fieldValue::execute()
 
 
 void CML::fieldValue::end()
+{
+    // Do nothing
+}
+
+
+void CML::fieldValue::timeSet()
+{
+    // Do nothing
+}
+
+
+void CML::fieldValue::updateMesh(const mapPolyMesh&)
+{
+    // Do nothing
+}
+
+
+void CML::fieldValue::movePoints(const pointField&)
 {
     // Do nothing
 }

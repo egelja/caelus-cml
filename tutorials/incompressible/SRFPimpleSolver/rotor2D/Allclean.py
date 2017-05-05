@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 5.04
+# Caelus 5.10
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -11,6 +11,7 @@ import sys
 import os
 import glob
 import shutil
+import Caelus
 
 # Starting up the meshing and solving
 print "**********************************"

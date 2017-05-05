@@ -61,7 +61,7 @@ src_files = Split("""
   noFilm/noFilm.cpp
   kinematicSingleLayer/kinematicSingleLayer.cpp
   thermoSingleLayer/thermoSingleLayer.cpp
-  submodels/subModelBase.cpp
+  submodels/filmSubModelBase.cpp
   submodels/kinematic/force/force/force.cpp
   submodels/kinematic/force/force/forceNew.cpp
   submodels/kinematic/force/forceList/forceList.cpp

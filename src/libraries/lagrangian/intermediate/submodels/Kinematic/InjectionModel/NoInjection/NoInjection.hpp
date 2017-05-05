@@ -57,7 +57,7 @@ public:
     // Constructors
 
         //- Construct from components
-        NoInjection(const dictionary&, CloudType&);
+        NoInjection(const dictionary&, CloudType&, const word&);
 
         //- Construct copy
         NoInjection(const NoInjection<CloudType>& im);
@@ -130,7 +130,12 @@ public:
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::NoInjection<CloudType>::NoInjection(const dictionary&, CloudType& owner)
+CML::NoInjection<CloudType>::NoInjection
+(
+    const dictionary&,
+    CloudType& owner,
+    const word&
+)
 :
     InjectionModel<CloudType>(owner)
 {}

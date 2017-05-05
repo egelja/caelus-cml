@@ -43,8 +43,7 @@ CML::distributionModels::uniform::uniform
 :
     distributionModel(typeName, dict, rndGen),
     minValue_(readScalar(distributionModelDict_.lookup("minValue"))),
-    maxValue_(readScalar(distributionModelDict_.lookup("maxValue"))),
-    range_(maxValue_ - minValue_)
+    maxValue_(readScalar(distributionModelDict_.lookup("maxValue")))
 {
     check();
 }
@@ -81,6 +80,12 @@ CML::scalar CML::distributionModels::uniform::minValue() const
 CML::scalar CML::distributionModels::uniform::maxValue() const
 {
     return maxValue_;
+}
+
+
+CML::scalar CML::distributionModels::uniform::meanValue() const
+{
+    return 0.5*(minValue_ + maxValue_);
 }
 
 

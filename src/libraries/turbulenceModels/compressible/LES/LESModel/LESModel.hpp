@@ -45,7 +45,7 @@ SourceFiles
 #define compressibleLESModel_H
 
 #include "compressible/turbulenceModel/turbulenceModel.hpp"
-#include "LESdelta.hpp"
+#include "compressible/LES/compressibleLESdelta/compressibleLESdelta.hpp"
 #include "fvm.hpp"
 #include "fvc.hpp"
 #include "fvMatrices.hpp"
@@ -80,7 +80,7 @@ protected:
 
         dimensionedScalar kMin_;
 
-        autoPtr<LESdelta> delta_;
+        autoPtr<CML::LESdelta> delta_;
 
 
     // Protected Member Functions
@@ -163,7 +163,7 @@ public:
             //- Const access to the coefficients dictionary,
             //  which provides info. about choice of models,
             //  and all related data (particularly model coefficients).
-            inline const dictionary& coeffDict() const
+            virtual const dictionary& coeffDict() const
             {
                 return coeffDict_;
             }

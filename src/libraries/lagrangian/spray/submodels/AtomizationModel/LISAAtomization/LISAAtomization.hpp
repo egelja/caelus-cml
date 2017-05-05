@@ -146,7 +146,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::LISAAtomization<CloudType>::LISAAtomization
 (
     const dictionary& dict,
@@ -181,7 +181,7 @@ CML::LISAAtomization<CloudType>::LISAAtomization
     }
 }
 
-template <class CloudType>
+template<class CloudType>
 CML::LISAAtomization<CloudType>::LISAAtomization
 (
     const LISAAtomization<CloudType>& am
@@ -199,7 +199,7 @@ CML::LISAAtomization<CloudType>::LISAAtomization
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::LISAAtomization<CloudType>::~LISAAtomization()
 {}
 

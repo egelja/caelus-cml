@@ -199,6 +199,17 @@ void CML::fv::pressureGradientExplicitSource::addSup
 }
 
 
+void CML::fv::pressureGradientExplicitSource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    this->addSup(eqn, fieldI);
+}
+
+
 void CML::fv::pressureGradientExplicitSource::setValue
 (
     fvMatrix<vector>& eqn,

@@ -1,0 +1,34 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    object          fvSolution;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "(rho|rhoU|rhoE)"
+    {
+        solver          diagonal;
+    }
+
+    "(k|epsilon|omega)"
+    {
+        solver          PBiCG;
+        preconditioner
+        {
+            preconditioner  DILU;
+        }
+        tolerance       1e-08;
+        relTol          1e-05;
+    }
+}
+
+// ************************************************************************* //

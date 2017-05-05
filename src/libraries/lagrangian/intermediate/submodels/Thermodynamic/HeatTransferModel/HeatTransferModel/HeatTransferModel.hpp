@@ -36,7 +36,7 @@ SourceFiles
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,7 +50,7 @@ namespace CML
 template<class CloudType>
 class HeatTransferModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
     // Private data
 
@@ -183,7 +183,7 @@ public:
 template<class CloudType>
 CML::HeatTransferModel<CloudType>::HeatTransferModel(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     BirdCorrection_(false)
 {}
 
@@ -196,7 +196,7 @@ CML::HeatTransferModel<CloudType>::HeatTransferModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     BirdCorrection_(this->coeffDict().lookup("BirdCorrection"))
 {}
 
@@ -207,7 +207,7 @@ CML::HeatTransferModel<CloudType>::HeatTransferModel
     const HeatTransferModel<CloudType>& htm
 )
 :
-    SubModelBase<CloudType>(htm),
+    CloudSubModelBase<CloudType>(htm),
     BirdCorrection_(htm.BirdCorrection_)
 {}
 

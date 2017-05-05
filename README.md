@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with Cae
 
 ## COPYRIGHT Applied CCM 2015
 
-Current version: Caelus 5.04
+Current version: Caelus 5.10
 
 ## Solvers
 ### basic:
@@ -27,11 +27,16 @@ Current version: Caelus 5.04
 - **`pimpleDyMSolver`**: PIMPLE-based incompressible transient dynamic mesh solver provided by the OpenFOAM Foundation
 - **`SRFPimpleSolver`**: PIMPLE-based incompressible transient solver in a single rotating reference frame provided by the OpenFOAM Foundation
 - **`pisoSolver`**: PISO-based incompressible transient solver provided by the OpenFOAM Foundation
+### compressible:
+- **`explicitDBNSSolver`**: density-based explicit compressible solver
+- **`cpbnsLTS`**: steady-state pressure-based compressible solver
+- **`cpbnsPIMPLE`**: transient pressure-based compressible solver
 ### heat-transfer:
 - **`buoyantBoussinesqSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force based on Boussinesq approximation provided by the OpenFOAM Foundation
 - **`buoyantSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force provided by the OpenFOAM Foundation
 ### multiphase:
 - **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids provided by the OpenFOAM Foundation
+- **`vofLPTSolver`**: Volume of Fluid (VOF) phase-fraction based solver with Lagrangian particle tracking
 ## Turbulence Models
 ### Reynolds Avergaged Navier-Stokes:
 - Spalart-Allmaras with curvature correction
@@ -41,12 +46,17 @@ Current version: Caelus 5.04
 #### Wall Functions:
 - nutU high Reynolds number velocity based
 - nutUSpalding all Reynolds number velocity based
+### Very Large Eddy Simulation:
+- k-omega SST
+- Realizable k-epsilon
+- coherent structure
 ### Detached Eddy Simulation:
 - Spalart-Allmaras Delayed DES
 - Spalart-Allmaras Improved Delayed DES
 ### Large Eddy Simulation:
 - Smagorinsky
 - dynamic sub-grid scale kinetic energy
+- coherent structure
 #### Wall Damping:
 - van Driest
 

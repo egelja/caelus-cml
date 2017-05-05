@@ -127,5 +127,15 @@ CML::scalar CML::distributionModels::distributionModel::maxValue() const
     return 0.0;
 }
 
+CML::scalar CML::distributionModels::distributionModel::meanValue() const
+{
+    notImplemented
+    (
+        "CML::scalar "
+        "CML::distributionModels::distributionModel::meanValue() const"
+    );
+    return 0.0;
+}
+
 
 // ************************************************************************* //

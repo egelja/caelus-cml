@@ -1,27 +1,78 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
--------------------------------------------------------------------------------
-License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+ -------------------------------------------------------------------------------
+ License
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::systemCall
 
+Group
+    grpFunctionObjects
+
 Description
-    Executes system calls, entered in the form of a string list
+    This function object executes system calls, entered in the form of a
+    string lists.  Calls can be made at the following points in the
+    calculation:
+    - every time step
+    - every output time
+    - end of the calculation
+
+    Example of function object specification:
+    \verbatim
+    systemCall1
+    {
+        type        systemCall;
+        functionObjectLibs ("libsystemCall.so");
+        ...
+        executeCalls
+        (
+            "echo execute"
+        );
+        writeCalls
+        (
+            "echo \*\*\* writing data \*\*\*"
+        );
+        endCalls
+        (
+            "echo \*\*\* writing .bashrc \*\*\*"
+            "cat ~/.bashrc"
+            "echo \*\*\* done \*\*\*"
+        );
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: systemCall   | yes         |
+        executeCalls | list of calls on execute | yes        |
+        writeCalls   | list of calls on write  | yes         |
+        endCalls     | list of calls on end    | yes         |
+    \endtable
+
+Note
+    Since this function object executes system calls, there is a potential
+    security risk.  In order to use the \c systemCall function object, the
+    \c allowSystemOperations must be set to '1'; otherwise, system calls will
+    not be allowed.
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     systemCall.cpp
@@ -46,7 +97,7 @@ class dictionary;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
-                       Class systemCall Declaration
+                         Class systemCall Declaration
 \*---------------------------------------------------------------------------*/
 
 class systemCall
@@ -116,6 +167,9 @@ public:
 
         //- Execute the "endCalls" at the final time-loop
         virtual void end();
+
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
 
         //- Write, execute the "writeCalls"
         virtual void write();

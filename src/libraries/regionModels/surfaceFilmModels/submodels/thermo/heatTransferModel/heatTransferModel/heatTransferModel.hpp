@@ -32,7 +32,7 @@ SourceFiles
 #ifndef heatTransferModel_H
 #define heatTransferModel_H
 
-#include "subModelBase.hpp"
+#include "filmSubModelBase.hpp"
 #include "runTimeSelectionTables.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,7 +50,7 @@ namespace surfaceFilmModels
 
 class heatTransferModel
 :
-    public subModelBase
+    public filmSubModelBase
 {
 private:
 

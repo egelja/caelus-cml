@@ -1,0 +1,48 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    object          fvSolution;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    rho
+    {
+        solver    diagonal;
+    };
+
+    rhoU
+    {
+        solver    diagonal;
+    };
+
+    rhoE
+    {
+        solver    diagonal;
+    };
+
+    p
+    {
+        solver    diagonal;
+    };
+
+    U
+    {
+        solver    diagonal;
+    };
+
+    T
+    {
+        solver    diagonal;
+    };
+}
+
+// ************************************************************************* //

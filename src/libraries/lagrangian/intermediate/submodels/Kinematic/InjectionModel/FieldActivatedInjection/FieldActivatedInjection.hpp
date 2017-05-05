@@ -121,7 +121,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        FieldActivatedInjection(const dictionary& dict, CloudType& owner);
+        FieldActivatedInjection
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         FieldActivatedInjection(const FieldActivatedInjection<CloudType>& im);
@@ -141,6 +146,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -198,10 +206,11 @@ template<class CloudType>
 CML::FieldActivatedInjection<CloudType>::FieldActivatedInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     factor_(readScalar(this->coeffDict().lookup("factor"))),
     referenceField_
     (
@@ -258,17 +267,7 @@ CML::FieldActivatedInjection<CloudType>::FieldActivatedInjection
     this->volumeTotal_ =
         nParcelsPerInjector_*sum(pow3(diameters_))*pi/6.0;
 
-    // Set/cache the injector cells
-    forAll(positions_, i)
-    {
-        this->findCellAtPosition
-        (
-            injectorCells_[i],
-            injectorTetFaces_[i],
-            injectorTetPts_[i],
-            positions_[i]
-        );
-    }
+    updateMesh();
 }
 
 
@@ -303,6 +302,23 @@ CML::FieldActivatedInjection<CloudType>::~FieldActivatedInjection()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+void CML::FieldActivatedInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    forAll(positions_, i)
+    {
+        this->findCellAtPosition
+        (
+            injectorCells_[i],
+            injectorTetFaces_[i],
+            injectorTetPts_[i],
+            positions_[i]
+        );
+    }
+}
+
 
 template<class CloudType>
 CML::scalar CML::FieldActivatedInjection<CloudType>::timeEnd() const

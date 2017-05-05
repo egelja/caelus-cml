@@ -101,7 +101,7 @@ globalEnv.Append(FLEXXX_PATH = globalEnv['ENV']['FLEXXX_PATH'])
 globalEnv.Replace(LEXCOM = '$LEX $LEXFLAGS -o$TARGET -f $SOURCES')
 
 # Check if 64-bit ints are being
-if Caelus.INT_TYPE == 64:
+if globalEnv['INT_TYPE'] == 64:
    sys.exit('ERROR: swak not compliant with 64-bit integers yet')
 
 #===============================================================================

@@ -22,8 +22,43 @@ Class
     CML::outletInletFvPatchField
 
 Description
-    CML::outletInletFvPatchField
+    This boundary condition provides a generic inflow condition, with
+    specified outflow for the case of reverse flow.
 
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        phi          | Flux field name         | no          | phi
+        outletValue  | Outlet value for reverse flow | yes   |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            outletInlet;
+        phi             phi;
+        outletValue     uniform 0;
+        value           uniform 0;
+    }
+    \endverbatim
+
+    The mode of operation is determined by the sign of the flux across the
+    patch faces.
+
+Note
+    Sign conventions:
+    - Positive flux (out of domain): apply the "outletValue" fixed-value
+    - Negative flux (into of domain): apply zero-gradient condition
+
+SeeAlso
+    CML::mixedFvPatchField
+    CML::zeroGradientFvPatchField
+    CML::inletOutletFvPatchField
+
+SourceFiles
+    outletInletFvPatchField.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -231,7 +266,7 @@ void CML::outletInletFvPatchField<Type>::updateCoeffs()
         return;
     }
 
-    const fvsPatchField<scalar>& phip =
+    const Field<scalar>& phip =
         this->patch().template lookupPatchField<surfaceScalarField, scalar>
         (
             phiName_

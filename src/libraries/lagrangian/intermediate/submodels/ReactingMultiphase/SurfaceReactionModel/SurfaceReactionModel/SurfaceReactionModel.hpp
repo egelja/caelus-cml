@@ -35,7 +35,7 @@ SourceFiles
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 #include "scalarField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,7 +50,7 @@ namespace CML
 template<class CloudType>
 class SurfaceReactionModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 protected:
 
@@ -195,7 +195,7 @@ CML::SurfaceReactionModel<CloudType>::SurfaceReactionModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     dMass_(0.0)
 {}
 
@@ -208,7 +208,7 @@ CML::SurfaceReactionModel<CloudType>::SurfaceReactionModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     dMass_(0.0)
 {}
 
@@ -219,7 +219,7 @@ CML::SurfaceReactionModel<CloudType>::SurfaceReactionModel
     const SurfaceReactionModel<CloudType>& srm
 )
 :
-    SubModelBase<CloudType>(srm),
+    CloudSubModelBase<CloudType>(srm),
     dMass_(srm.dMass_)
 {}
 
@@ -301,11 +301,7 @@ void CML::SurfaceReactionModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer surface reaction  = " << massTotal << nl;
 
-    if
-    (
-        this->owner().solution().transient()
-     && this->owner().db().time().outputTime()
-    )
+    if (this->outputTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

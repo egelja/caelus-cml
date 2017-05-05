@@ -128,7 +128,8 @@ CML::atomicWeightTable::atomicWeights[atomicWeightTable::nElements] =
     {"Es", 254.00000},
     {"Fm", 253.00000},
     {"D",    2.01410},
-    {"e",    5.45e-4}
+    {"e",    5.45e-4},
+    {"T",    3.01604}
 };
 
 

@@ -1,0 +1,37 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 5.10                      
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+3
+(
+    airfoil
+    {
+        type            wall;
+        nFaces          304;
+        startFace       46704;
+    }
+    farfield
+    {
+        type            patch;
+        nFaces          496;
+        startFace       47008;
+    }
+    frontBack
+    {
+        type            empty;
+        nFaces          47104;
+        startFace       47504;
+    }
+)
+
+// ************************************************************************* //

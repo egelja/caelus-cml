@@ -1,23 +1,23 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "streamLineParticle.hpp"
 #include "vectorFieldIOField.hpp"
@@ -55,7 +55,8 @@ CML::vector CML::streamLineParticle::interpolateFields
 (
     const trackingData& td,
     const point& position,
-    const label cellI
+    const label cellI,
+    const label faceI
 )
 {
     if (cellI == -1)
@@ -72,7 +73,8 @@ CML::vector CML::streamLineParticle::interpolateFields
             td.vsInterp_[scalarI].interpolate
             (
                 position,
-                cellI
+                cellI,
+                faceI
             )
         );
     }
@@ -85,7 +87,8 @@ CML::vector CML::streamLineParticle::interpolateFields
             td.vvInterp_[vectorI].interpolate
             (
                 position,
-                cellI
+                cellI,
+                faceI
             )
         );
     }
@@ -197,7 +200,7 @@ bool CML::streamLineParticle::move
 
             // Store current position and sampled velocity.
             sampledPositions_.append(position());
-            vector U = interpolateFields(td, position(), cell());
+            vector U = interpolateFields(td, position(), cell(), face());
 
             if (!td.trackForward_)
             {
@@ -215,7 +218,13 @@ bool CML::streamLineParticle::move
 
             U /= magU;
 
-            if (subIter == 0 && td.nSubCycle_ > 1)
+            if (td.trackLength_ < GREAT)
+            {
+                dt = td.trackLength_;
+                //Pout<< "    subiteration " << subIter
+                //    << " : fixed length: updated dt:" << dt << endl;
+            }
+            else if (subIter == 0 && td.nSubCycle_ > 1)
             {
                 // Adapt dt to cross cell in a few steps
                 dt = calcSubCycleDeltaT(td, dt, U);
@@ -260,7 +269,8 @@ bool CML::streamLineParticle::move
             if (debug)
             {
                 Pout<< "streamLineParticle : Removing stagnant particle:"
-                    << p << " sampled positions:" << sampledPositions_.size()
+                    << p.position()
+                    << " sampled positions:" << sampledPositions_.size()
                     << endl;
             }
             td.keepParticle = false;
@@ -269,12 +279,13 @@ bool CML::streamLineParticle::move
         {
             // Normal exit. Store last position and fields
             sampledPositions_.append(position());
-            interpolateFields(td, position(), cell());
+            interpolateFields(td, position(), cell(), face());
 
             if (debug)
             {
                 Pout<< "streamLineParticle : Removing particle:"
-                    << p << " sampled positions:" << sampledPositions_.size()
+                    << p.position()
+                    << " sampled positions:" << sampledPositions_.size()
                     << endl;
             }
         }
@@ -328,6 +339,17 @@ void CML::streamLineParticle::hitWedgePatch
     // Remove particle
     td.keepParticle = false;
 }
+
+
+//void CML::streamLineParticle::hitSymmetryPlanePatch
+//(
+//    const symmetryPlanePolyPatch& pp,
+//    trackingData& td
+//)
+//{
+    // Remove particle
+//    td.keepParticle = false;
+//}
 
 
 void CML::streamLineParticle::hitSymmetryPatch

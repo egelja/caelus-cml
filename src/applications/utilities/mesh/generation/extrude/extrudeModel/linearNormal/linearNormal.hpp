@@ -30,6 +30,7 @@ Description
 
 #include "point.hpp"
 #include "extrudeModel.hpp"
+#include "scalarList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,8 +49,15 @@ class linearNormal
 {
     // Private data
 
-        //- layer thickness
+        //- Layer thickness
         scalar thickness_;
+
+        //- First cell thickness
+        scalar firstCellThickness_;
+
+        //- Layer cell distibution
+        scalarList layerPoints_;
+
 
 
 public:

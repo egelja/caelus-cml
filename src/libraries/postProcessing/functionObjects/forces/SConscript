@@ -34,10 +34,12 @@ funcObjForceEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['core', 'specie', 'sampling',
+lib_link = ['core', 'specie',
 'incompressibleTransportModels','incompressibleRASModels',
-'incompressibleLESModels','basicThermophysicalModels',
-'compressibleRASModels','compressibleLESModels'
+'incompressibleLESModels','incompressibleVLESModels',
+'basicThermophysicalModels','compressibleRASModels',
+'compressibleLESModels','compressibleVLESModels',
+'incompressibleTurbulenceModel','compressibleTurbulenceModel'
 ]
 funcObjForceEnv.Append(LIBS = lib_link)
  
@@ -49,25 +51,6 @@ src_files = Split("""
   forces/forcesFunctionObject.cpp
   forceCoeffs/forceCoeffs.cpp
   forceCoeffs/forceCoeffsFunctionObject.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotion.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionIO.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionState.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionStateIO.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/sixDoFRigidBodyMotionRestraint/sixDoFRigidBodyMotionRestraint.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/sixDoFRigidBodyMotionRestraint/sixDoFRigidBodyMotionRestraintNew.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/linearAxialAngularSpring/linearAxialAngularSpring.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/linearSpring/linearSpring.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/sphericalAngularSpring/sphericalAngularSpring.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionRestraint/tabulatedAxialAngularSpring/tabulatedAxialAngularSpring.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/sixDoFRigidBodyMotionConstraint/sixDoFRigidBodyMotionConstraint.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/sixDoFRigidBodyMotionConstraint/sixDoFRigidBodyMotionConstraintNew.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/fixedAxis/fixedAxis.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/fixedLine/fixedLine.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/fixedOrientation/fixedOrientation.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/fixedPlane/fixedPlane.cpp
-  pointPatchFields/derived/sixDoFRigidBodyMotion/sixDoFRigidBodyMotionConstraint/fixedPoint/fixedPoint.cpp
-  pointPatchFields/derived/sixDoFRigidBodyDisplacement/sixDoFRigidBodyDisplacementPointPatchVectorField.cpp
-  pointPatchFields/derived/uncoupledSixDoFRigidBodyDisplacement/uncoupledSixDoFRigidBodyDisplacementPointPatchVectorField.cpp
   """) 
 
 #===============================================================================

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,12 +20,14 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+#include "nullSingleton.hpp"
+
 // * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * * //
 
 template<class T>
 inline const CML::Xfer<T>& CML::Xfer<T>::null()
 {
-    return *reinterpret_cast< Xfer<T>* >(0);
+    return NullSingletonRef< Xfer<T> >();
 }
 
 

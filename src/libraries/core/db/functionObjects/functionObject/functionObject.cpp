@@ -113,6 +113,18 @@ bool CML::functionObject::end()
 }
 
 
+bool CML::functionObject::timeSet()
+{
+    return false;
+}
+
+
+bool CML::functionObject::adjustTimeStep()
+{
+    return false;
+}
+
+
 CML::autoPtr<CML::functionObject> CML::functionObject::iNew::operator()
 (
     const word& name,

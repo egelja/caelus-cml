@@ -33,6 +33,7 @@ SourceFiles
 
 #include "pointField.hpp"
 #include "scalarList.hpp"
+#include "gradingDescriptors.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,12 +58,12 @@ public:
 
     // Constructors
 
-        //- Construct from components with discretization and expansion ratio
+        //- Construct from components
         lineDivide
         (
             const curvedEdge&,
             const label ndiv,
-            const scalar xratio = 1.0
+            const gradingDescriptors& gd = gradingDescriptors()
         );
 
 

@@ -26,6 +26,7 @@ License
 #include "fvMatrices.hpp"
 #include "faceSet.hpp"
 #include "geometricOneField.hpp"
+#include "syncTools.hpp"
 
 
 namespace CML
@@ -110,6 +111,9 @@ void CML::MRFZone::setMRFFaces()
             }
         }
     }
+
+    // Synchronize the faceType across processor patches
+    syncTools::syncFaceList(mesh_, faceType, maxEqOp<label>());
 
     // Now we have for faceType:
     //  0   : face not in cellZone
@@ -234,12 +238,12 @@ CML::MRFZone::MRFZone
     mesh_(mesh),
     name_(name),
     coeffs_(dict),
-    active_(true),
+    active_(coeffs_.lookupOrDefault("active", true)),
     cellZoneName_(cellZoneName),
     cellZoneID_(),
     excludedPatchNames_
     (
-        coeffs_.lookupOrDefault("nonRotatingPatches", wordList(0))
+        wordReList(coeffs_.lookupOrDefault("nonRotatingPatches", wordReList()))
     ),
     origin_(coeffs_.lookup("origin")),
     axis_(coeffs_.lookup("axis")),
@@ -247,7 +251,6 @@ CML::MRFZone::MRFZone
 {
     if (cellZoneName_ == word::null)
     {
-        coeffs_.lookup("active") >> active_;
         coeffs_.lookup("cellZone") >> cellZoneName_;
     }
 
@@ -259,32 +262,19 @@ CML::MRFZone::MRFZone
     {
         cellZoneID_ = mesh_.cellZones().findZoneID(cellZoneName_);
 
-        const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-
         axis_ = axis_/mag(axis_);
 
-        excludedPatchLabels_.setSize(excludedPatchNames_.size());
+        const labelHashSet excludedPatchSet
+        (
+            mesh_.boundaryMesh().patchSet(excludedPatchNames_)
+        );
 
-        forAll(excludedPatchNames_, i)
+        excludedPatchLabels_.setSize(excludedPatchSet.size());
+
+        label i = 0;
+        forAllConstIter(labelHashSet, excludedPatchSet, iter)
         {
-            excludedPatchLabels_[i] =
-                patches.findPatchID(excludedPatchNames_[i]);
-
-            if (excludedPatchLabels_[i] == -1)
-            {
-                FatalErrorIn
-                (
-                    "MRFZone"
-                    "("
-                        "const word&, "
-                        "const fvMesh&, "
-                        "const dictionary&, "
-                        "const word&"
-                    ")"
-                )
-                    << "cannot find MRF patch " << excludedPatchNames_[i]
-                    << exit(FatalError);
-            }
+            excludedPatchLabels_[i++] = iter.key();
         }
 
         bool cellZoneFound = (cellZoneID_ != -1);
@@ -416,7 +406,7 @@ void CML::MRFZone::addCoriolis
 }
 
 
-void CML::MRFZone::relativeVelocity(volVectorField& U) const
+void CML::MRFZone::makeRelative(volVectorField& U) const
 {
     const volVectorField& C = mesh_.C();
 
@@ -454,7 +444,29 @@ void CML::MRFZone::relativeVelocity(volVectorField& U) const
 }
 
 
-void CML::MRFZone::absoluteVelocity(volVectorField& U) const
+void CML::MRFZone::makeRelative(surfaceScalarField& phi) const
+{
+    makeRelativeRhoFlux(geometricOneField(), phi);
+}
+
+
+void CML::MRFZone::makeRelative(FieldField<fvsPatchField, scalar>& phi) const
+{
+    makeRelativeRhoFlux(oneFieldField(), phi);
+}
+
+
+void CML::MRFZone::makeRelative
+(
+    const surfaceScalarField& rho,
+    surfaceScalarField& phi
+) const
+{
+    makeRelativeRhoFlux(rho, phi);
+}
+
+
+void CML::MRFZone::makeAbsolute(volVectorField& U) const
 {
     const volVectorField& C = mesh_.C();
 
@@ -492,35 +504,19 @@ void CML::MRFZone::absoluteVelocity(volVectorField& U) const
 }
 
 
-void CML::MRFZone::relativeFlux(surfaceScalarField& phi) const
+void CML::MRFZone::makeAbsolute(surfaceScalarField& phi) const
 {
-    relativeRhoFlux(geometricOneField(), phi);
+    makeAbsoluteRhoFlux(geometricOneField(), phi);
 }
 
 
-void CML::MRFZone::relativeFlux
+void CML::MRFZone::makeAbsolute
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
 ) const
 {
-    relativeRhoFlux(rho, phi);
-}
-
-
-void CML::MRFZone::absoluteFlux(surfaceScalarField& phi) const
-{
-    absoluteRhoFlux(geometricOneField(), phi);
-}
-
-
-void CML::MRFZone::absoluteFlux
-(
-    const surfaceScalarField& rho,
-    surfaceScalarField& phi
-) const
-{
-    absoluteRhoFlux(rho, phi);
+    makeAbsoluteRhoFlux(rho, phi);
 }
 
 
@@ -573,7 +569,7 @@ bool CML::MRFZone::read(const dictionary& dict)
 {
     coeffs_ = dict;
 
-    active_ = readBool(coeffs_.lookup("active"));
+    active_ = coeffs_.lookupOrDefault("active", true);
     coeffs_.lookup("cellZone") >> cellZoneName_;
     cellZoneID_ = mesh_.cellZones().findZoneID(cellZoneName_);
 

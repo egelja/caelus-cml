@@ -113,6 +113,27 @@ public:
             inline void operator=(const T&);
 
 
+    // STL type definitions
+
+        //- Type of values the UList contains.
+        typedef T value_type;
+
+        //- Type that can be used for storing into
+        //  UList::value_type objects.
+        typedef T& reference;
+
+        //- Type that can be used for storing into
+        //  constant UList::value_type objects
+        typedef const T& const_reference;
+
+        //- The type that can represent the difference between any two
+        //  UList iterator objects.
+        typedef label difference_type;
+
+        //- The type that can represent the size of a UList.
+        typedef label size_type;
+
+
     // Ostream operator
 
         //- Write UIndirectList to Ostream

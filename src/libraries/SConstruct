@@ -92,6 +92,7 @@ globalEnv.Append(PROJECT_INC = globalEnv['LIB_SRC'] + '/core/lnInclude')
 globalEnv.Append(MPI_LIB = globalEnv['ENV']['MPI_LIB'])
 globalEnv.Append(MPI_INC = globalEnv['ENV']['MPI_INC'])
 globalEnv.Append(MPI_LIB_NAME = globalEnv['ENV']['MPI_LIB_NAME'])
+globalEnv.Append(SCOTCH_VERSION = globalEnv['ENV']['SCOTCH_VERSION'])
 globalEnv.Append(SCOTCH_PATH = globalEnv['ENV']['SCOTCH_PATH'])
 globalEnv.Append(METIS_PATH = globalEnv['ENV']['METIS_PATH'])
 globalEnv.Append(ZLIB_PATH = globalEnv['ENV']['ZLIB_PATH'])
@@ -349,7 +350,14 @@ else:
 #===============================================================================
 # Sub-directories to traverse for compile
 #===============================================================================
-subdirs = [
+if (globalEnv['SCOTCH_VERSION'] == '6.0.4'):
+  subdirs1 = [
+  'parallel/decompose/ptscotchDecomp',
+  ]
+else:
+  subdirs1 = []
+
+subdirs2 = [
   'core',
   'edgeMesh',
   'surfMesh',
@@ -359,6 +367,7 @@ subdirs = [
   'parallel/decompose/decompose',
   'parallel/decompose/decompositionMethods',
   'parallel/decompose/scotchDecomp',
+
   'parallel/decompose/metisDecomp',
   'parallel/reconstruct/reconstruct',
   'parallel/distributed',
@@ -385,6 +394,7 @@ subdirs = [
   'thermophysicalModels/basicSolidThermo',
   'thermophysicalModels/solidChemistryModel',
   'thermophysicalModels/radiationModels',
+  'thermophysicalModels/numericFluxes/DBNS/numericFlux',
   'transportModels/incompressible',
   'transportModels/interfaceProperties',
   'transportModels/twoPhaseInterfaceProperties',
@@ -393,9 +403,11 @@ subdirs = [
   'turbulenceModels/incompressible/turbulenceModel',
   'turbulenceModels/incompressible/RAS',
   'turbulenceModels/incompressible/LES',
+  'turbulenceModels/incompressible/VLES',
   'turbulenceModels/compressible/turbulenceModel',
   'turbulenceModels/compressible/RAS',
   'turbulenceModels/compressible/LES',
+  'turbulenceModels/compressible/VLES',
   'turbulenceModels/derivedFvPatchFields',
   'combustionModels',
   'regionModels/regionModel',
@@ -422,6 +434,7 @@ subdirs = [
   'fvOptions'
 ]
 
+subdirs = subdirs1 + subdirs2;
 #===============================================================================
 # Execute SConscript files in each sub-directory
 #===============================================================================

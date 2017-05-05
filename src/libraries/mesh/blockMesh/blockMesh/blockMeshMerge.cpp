@@ -114,7 +114,7 @@ void CML::blockMesh::calcMergeInfo()
         // the size of the block.
 
         boundBox bb(blockCells[blockPlabel].points(blockFaces, blockPoints));
-        const scalar mergeSqrDist = magSqr(SMALL*bb.span());
+        const scalar mergeSqrDist = magSqr(10*SMALL*bb.span());
 
         // This is an N^2 algorithm
 

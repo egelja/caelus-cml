@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014-2015 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -336,7 +336,7 @@ template<class Type, class GeoMesh>
 inline const DimensionedField<Type, GeoMesh>&
 DimensionedField<Type, GeoMesh>::null()
 {
-    return *reinterpret_cast< DimensionedField<Type, GeoMesh>* >(0);
+    return NullSingletonRef< DimensionedField<Type, GeoMesh> >();
 }
 
 

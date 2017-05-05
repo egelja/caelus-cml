@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+turbInVLESEnv = globalEnv.Clone()
+
+# Path to source
+src = turbInVLESEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+turbInVLESEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels'] 
+turbInVLESEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+turbInVLESEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','incompressibleTurbulenceModel'] 
+turbInVLESEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  VLESModel/VLESModel.cpp
+  laminar/laminar.cpp
+  realizableKE/realizableKE.cpp
+  kOmegaSST/kOmegaSST.cpp
+  coherentStructureModel/coherentStructureModel.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libincompressibleVLESModels = turbInVLESEnv.SharedLibrary(target = 
+'incompressibleVLESModels', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = turbInVLESEnv['LIB_PLATFORM_INSTALL']
+turbInVLESEnv.Alias('install', install_dir)
+turbInVLESEnv.Install(install_dir, libincompressibleVLESModels)
+
+if (turbInVLESEnv['WHICH_OS'] == "darwin"):
+
+  turbInVLESEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libincompressibleVLESModels.dylib')

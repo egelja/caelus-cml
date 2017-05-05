@@ -25,10 +25,10 @@ Description
     an injection site.
 
     (
-        (x y z) (u v w) d rho mDot T cp  // injector 1
-        (x y z) (u v w) d rho mDot T cp  // injector 2
-        ...
-        (x y z) (u v w) d rho mDot T cp  // injector N
+       (x y z) (u v w) d rho mDot T cp  // injector 1
+       (x y z) (u v w) d rho mDot T cp  // injector 2
+       ...
+       (x y z) (u v w) d rho mDot T cp  // injector N
     );
 
     where:
@@ -47,8 +47,7 @@ Description
 #define ThermoLookupTableInjection_H
 
 #include "InjectionModel.hpp"
-#include "kinematicParcelInjectionDataIOList.hpp"
-#include "scalarIOList.hpp"
+#include "thermoParcelInjectionDataIOList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -75,8 +74,11 @@ class ThermoLookupTableInjection
         //- Number of parcels per injector - common to all injection sources
         const scalar parcelsPerSecond_;
 
+        //- Flag to indicate to randomise injection positions
+        bool randomise_;
+
         //- List of injectors
-        kinematicParcelInjectionDataIOList injectors_;
+        thermoParcelInjectionDataIOList injectors_;
 
         //- List of cell labels corresoponding to injector positions
         labelList injectorCells_;
@@ -97,16 +99,20 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ThermoLookupTableInjection(const dictionary& dict, CloudType& owner);
-
-        //- Construct copy from owner cloud and injection model
         ThermoLookupTableInjection
         (
+            const dictionary& dict,
             CloudType& owner,
+            const word& modelName
+        );
+
+        //- Construct copy
+        ThermoLookupTableInjection
+        (
             const ThermoLookupTableInjection<CloudType>& im
         );
 
-        //- Construct and return a clone using supplied owner cloud
+        //- Construct and return a clone
         virtual autoPtr<InjectionModel<CloudType> > clone() const
         {
             return autoPtr<InjectionModel<CloudType> >
@@ -122,6 +128,9 @@ public:
 
     // Member Functions
 
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
+
         //- Return the end-of-injection time
         scalar timeEnd() const;
 
@@ -130,7 +139,6 @@ public:
 
         //- Volume of parcels to introduce relative to SOI
         virtual scalar volumeToInject(const scalar time0, const scalar time1);
-
 
 
         // Injection geometry
@@ -157,10 +165,7 @@ public:
             );
 
             //- Flag to identify whether model fully describes the parcel
-            virtual bool fullyDescribed() const
-            {
-                return true;
-            }
+            virtual bool fullyDescribed() const;
 
             //- Return flag to identify whether or not injection of parcelI is
             //  permitted
@@ -172,23 +177,25 @@ public:
 
 } // End namespace CML
 
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
+CML::ThermoLookupTableInjection<CloudType>::
+ThermoLookupTableInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     inputFileName_(this->coeffDict().lookup("inputFile")),
     duration_(readScalar(this->coeffDict().lookup("duration"))),
     parcelsPerSecond_
     (
         readScalar(this->coeffDict().lookup("parcelsPerSecond"))
     ),
+    randomise_(readBool(this->coeffDict().lookup("randomise"))),
     injectors_
     (
         IOobject
@@ -211,16 +218,7 @@ CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
     injectorTetFaces_.setSize(injectors_.size());
     injectorTetPts_.setSize(injectors_.size());
 
-    forAll(injectors_, i)
-    {
-        this->findCellAtPosition
-        (
-            injectorCells_[i],
-            injectorTetFaces_[i],
-            injectorTetPts_[i],
-            injectors_[i].x()
-        );
-    }
+    updateMesh();
 
     // Determine volume of particles to inject
     this->volumeTotal_ = 0.0;
@@ -233,7 +231,8 @@ CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
 
 
 template<class CloudType>
-CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
+CML::ThermoLookupTableInjection<CloudType>::
+ThermoLookupTableInjection
 (
     const ThermoLookupTableInjection<CloudType>& im
 )
@@ -242,6 +241,7 @@ CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
     inputFileName_(im.inputFileName_),
     duration_(im.duration_),
     parcelsPerSecond_(im.parcelsPerSecond_),
+    randomise_(im.randomise_),
     injectors_(im.injectors_),
     injectorCells_(im.injectorCells_),
     injectorTetFaces_(im.injectorTetFaces_),
@@ -252,21 +252,41 @@ CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::ThermoLookupTableInjection<CloudType>::~ThermoLookupTableInjection()
+CML::ThermoLookupTableInjection<CloudType>::
+~ThermoLookupTableInjection()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::scalar CML::ThermoLookupTableInjection<CloudType>::timeEnd() const
+void CML::ThermoLookupTableInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    forAll(injectors_, i)
+    {
+        this->findCellAtPosition
+        (
+            injectorCells_[i],
+            injectorTetFaces_[i],
+            injectorTetPts_[i],
+            injectors_[i].x()
+        );
+    }
+}
+
+
+template<class CloudType>
+CML::scalar
+CML::ThermoLookupTableInjection<CloudType>::timeEnd() const
 {
     return this->SOI_ + duration_;
 }
 
 
 template<class CloudType>
-CML::label CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
+CML::label
+CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
 (
     const scalar time0,
     const scalar time1
@@ -284,7 +304,8 @@ CML::label CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
 
 
 template<class CloudType>
-CML::scalar CML::ThermoLookupTableInjection<CloudType>::volumeToInject
+CML::scalar
+CML::ThermoLookupTableInjection<CloudType>::volumeToInject
 (
     const scalar time0,
     const scalar time1
@@ -315,7 +336,16 @@ void CML::ThermoLookupTableInjection<CloudType>::setPositionAndCell
     label& tetPtI
 )
 {
-    label injectorI = parcelI*injectorCells_.size()/nParcels;
+    label injectorI = 0;
+    if (randomise_)
+    {
+        cachedRandom& rnd = this->owner().rndGen();
+        injectorI = rnd.position<label>(0, injectorCells_.size() - 1);
+    }
+    else
+    {
+        injectorI = parcelI*injectorCells_.size()/nParcels;
+    }
 
     position = injectors_[injectorI].x();
     cellOwner = injectorCells_[injectorI];
@@ -330,7 +360,7 @@ void CML::ThermoLookupTableInjection<CloudType>::setProperties
     const label parcelI,
     const label nParcels,
     const scalar,
-    typename CloudType::parcelType* pPtr
+    typename CloudType::parcelType& parcel
 )
 {
     label injectorI = parcelI*injectorCells_.size()/nParcels;
@@ -348,23 +378,28 @@ void CML::ThermoLookupTableInjection<CloudType>::setProperties
     parcel.T() = injectors_[injectorI].T();
 
     // set particle specific heat capacity
-    parcel.cp() = injectors_[injectorI].cp();
+    parcel.Cp() = injectors_[injectorI].Cp();
 }
 
 
 template<class CloudType>
-bool CML::ThermoLookupTableInjection<CloudType>::fullyDescribed() const
+bool
+CML::ThermoLookupTableInjection<CloudType>::fullyDescribed() const
 {
     return true;
 }
 
 
 template<class CloudType>
-bool CML::ThermoLookupTableInjection<CloudType>::validInjection(const label)
+bool CML::ThermoLookupTableInjection<CloudType>::validInjection
+(
+    const label
+)
 {
     return true;
 }
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

@@ -325,11 +325,14 @@ inline void CML::constTransport<Thermo>::operator+=
 
     Thermo::operator+=(st);
 
-    molr1 /= this->nMoles();
-    scalar molr2 = st.nMoles()/this->nMoles();
+    if (mag(molr1) + mag(st.nMoles()) > SMALL)
+    {
+        molr1 /= this->nMoles();
+        scalar molr2 = st.nMoles()/this->nMoles();
 
-    mu_ = molr1*mu_ + molr2*st.mu_;
-    rPr_ = 1.0/(molr1/rPr_ + molr2/st.rPr_);
+        mu_ = molr1*mu_ + molr2*st.mu_;
+        rPr_ = 1.0/(molr1/rPr_ + molr2/st.rPr_);
+    }
 }
 
 
@@ -343,11 +346,14 @@ inline void CML::constTransport<Thermo>::operator-=
 
     Thermo::operator-=(st);
 
-    molr1 /= this->nMoles();
-    scalar molr2 = st.nMoles()/this->nMoles();
+    if (mag(molr1) + mag(st.nMoles()) > SMALL)
+    {
+        molr1 /= this->nMoles();
+        scalar molr2 = st.nMoles()/this->nMoles();
 
-    mu_ = molr1*mu_ - molr2*st.mu_;
-    rPr_ = 1.0/(molr1/rPr_ - molr2/st.rPr_);
+        mu_ = molr1*mu_ - molr2*st.mu_;
+        rPr_ = 1.0/(molr1/rPr_ - molr2/st.rPr_);
+    }
 }
 
 
@@ -375,15 +381,27 @@ inline CML::constTransport<Thermo> CML::operator+
         static_cast<const Thermo&>(ct1) + static_cast<const Thermo&>(ct2)
     );
 
-    scalar molr1 = ct1.nMoles()/t.nMoles();
-    scalar molr2 = ct2.nMoles()/t.nMoles();
+    if (mag(ct1.nMoles()) + mag(ct2.nMoles()) < SMALL)
+    {
+        return constTransport<Thermo>
+        (
+            t,
+            0,
+            ct1.rPr_
+        );
+    }
+    else
+    {
+        scalar molr1 = ct1.nMoles()/t.nMoles();
+        scalar molr2 = ct2.nMoles()/t.nMoles();
 
-    return constTransport<Thermo>
-    (
-        t,
-        molr1*ct1.mu_ + molr2*ct2.mu_,
-        1.0/(molr1/ct1.rPr_ + molr2/ct2.rPr_)
-    );
+        return constTransport<Thermo>
+        (
+            t,
+            molr1*ct1.mu_ + molr2*ct2.mu_,
+            1.0/(molr1/ct1.rPr_ + molr2/ct2.rPr_)
+        );
+    }
 }
 
 
@@ -399,15 +417,27 @@ inline CML::constTransport<Thermo> CML::operator-
         static_cast<const Thermo&>(ct1) - static_cast<const Thermo&>(ct2)
     );
 
-    scalar molr1 = ct1.nMoles()/t.nMoles();
-    scalar molr2 = ct2.nMoles()/t.nMoles();
+    if (mag(ct1.nMoles()) + mag(ct2.nMoles()) < SMALL)
+    {
+        return constTransport<Thermo>
+        (
+            t,
+            0,
+            ct1.rPr_
+        );
+    }
+    else
+    {
+        scalar molr1 = ct1.nMoles()/t.nMoles();
+        scalar molr2 = ct2.nMoles()/t.nMoles();
 
-    return constTransport<Thermo>
-    (
-        t,
-        molr1*ct1.mu_ - molr2*ct2.mu_,
-        1.0/(molr1/ct1.rPr_ - molr2/ct2.rPr_)
-    );
+        return constTransport<Thermo>
+        (
+            t,
+            molr1*ct1.mu_ - molr2*ct2.mu_,
+            1.0/(molr1/ct1.rPr_ - molr2/ct2.rPr_)
+        );
+    }
 }
 
 

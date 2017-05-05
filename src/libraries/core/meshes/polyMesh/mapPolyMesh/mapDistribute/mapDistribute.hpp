@@ -639,6 +639,15 @@ public:
 
         void operator=(const mapDistribute&);
 
+
+    // IOstream operators
+
+        //- Read dictionary from Istream
+        friend Istream& operator>>(Istream&, mapDistribute&);
+
+        //- Write dictionary to Ostream
+        friend Ostream& operator<<(Ostream&, const mapDistribute&);
+
 };
 
 

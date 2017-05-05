@@ -47,23 +47,4 @@ const CML::cylindricalCS& CML::fv::rotorDiskSource::coordSys() const
 }
 
 
-bool CML::fv::rotorDiskSource::compressible() const
-{
-    return rhoName_ != "none";
-}
-
-
-CML::tmp<CML::volScalarField> CML::fv::rotorDiskSource::rho() const
-{
-    if (compressible())
-    {
-        return mesh_.lookupObject<volScalarField>(rhoName_);
-    }
-    else
-    {
-        return volScalarField::null();
-    }
-}
-
-
 // ************************************************************************* //

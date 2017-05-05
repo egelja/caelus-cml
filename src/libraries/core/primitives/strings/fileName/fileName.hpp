@@ -138,17 +138,23 @@ public:
 
         // Interrogation
 
-             //- Return the file type: FILE, DIRECTORY or UNDEFINED
-             Type type() const;
+            //- Return the file type: FILE, DIRECTORY or UNDEFINED
+            Type type() const;
 
-             //- Return true if file name is absolute
-             bool isAbsolute() const;
+            //- Return true if file name is absolute
+            bool isAbsolute() const;
+
+            //- Convert from relative to absolute
+            fileName& toAbsolute();
 
 
         // Decomposition
 
             //- Return file name (part beyond last /)
             word name() const;
+
+            //- Return file name (part beyond last /), subsitute for CAELUS_CASE
+            string caseName() const;
 
             //- Return file name, optionally without extension
             word name(const bool noExt) const;

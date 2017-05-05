@@ -27,11 +27,11 @@ vofSolEnv.Prepend(CPPPATH = lib_inc)
 # Additions to link libraries for this executable
 #===============================================================================
 if vofSolEnv['WHICH_OS'] == "windows":
-  vofSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad')
+  vofSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad')
 
 lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
 'incompressibleLESModels','incompressibleTransportModels','twoPhaseInterfaceProperties',
-'fvOptions','interfaceProperties']
+'fvOptions','interfaceProperties','incompressibleVLESModels']
 vofSolEnv.Append(LIBS = lib_link)
 
 #===============================================================================

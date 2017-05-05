@@ -42,7 +42,7 @@ heatTransferModel::heatTransferModel
     const surfaceFilmModel& owner
 )
 :
-    subModelBase(owner)
+    filmSubModelBase(owner)
 {}
 
 
@@ -53,7 +53,7 @@ heatTransferModel::heatTransferModel
     const dictionary& dict
 )
 :
-    subModelBase(type, owner, dict)
+    filmSubModelBase(type, owner, dict)
 {}
 
 

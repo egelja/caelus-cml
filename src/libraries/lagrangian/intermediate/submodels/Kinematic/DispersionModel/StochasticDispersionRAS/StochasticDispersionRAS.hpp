@@ -160,9 +160,16 @@ CML::vector CML::StochasticDispersionRAS<CloudType>::update
         {
             tTurb = 0.0;
 
-            scalar sigma = sqrt(2.0*k/3.0);
-            vector dir = 2.0*rnd.sample01<vector>() - vector::one;
-            dir /= mag(dir) + SMALL;
+            const scalar sigma = sqrt(2*k/3.0);
+
+            // Calculate a random direction dir distributed uniformly
+            // in spherical coordinates
+
+            const scalar theta = rnd.sample01<scalar>()*twoPi;
+            const scalar u = 2*rnd.sample01<scalar>() - 1;
+
+            const scalar a = sqrt(1 - sqr(u));
+            const vector dir(a*cos(theta), a*sin(theta), u);
 
             // Numerical Recipes... Ch. 7. Random Numbers...
             scalar x1 = 0.0;
@@ -180,7 +187,6 @@ CML::vector CML::StochasticDispersionRAS<CloudType>::update
             fac *= mag(x1);
 
             UTurb = sigma*fac*dir;
-
         }
     }
     else

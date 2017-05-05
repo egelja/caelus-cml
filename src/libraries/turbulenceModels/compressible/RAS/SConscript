@@ -44,20 +44,9 @@ src_files = Split("""
   RASModel/RASModel.cpp
   laminar/laminar.cpp
   realizableKE/realizableKE.cpp
-  derivedFvPatchFields/wallFunctions/alphatWallFunctions/alphatWallFunction/alphatWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/alphatWallFunctions/alphatJayatillekeWallFunction/alphatJayatillekeWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutkRoughWallFunction/mutkRoughWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutkWallFunction/mutkWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutURoughWallFunction/mutURoughWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutUSpaldingWallFunction/mutUSpaldingWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutUWallFunction/mutUWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/mutWallFunctions/mutLowReWallFunction/mutLowReWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/epsilonWallFunctions/epsilonWallFunction/epsilonWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/omegaWallFunctions/omegaWallFunction/omegaWallFunctionFvPatchScalarField.cpp
-  derivedFvPatchFields/wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
-  derivedFvPatchFields/htcConv/htcConvFvPatchScalarField.cpp
-  derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.cpp
-  derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.cpp
+  SpalartAllmaras/SpalartAllmaras.cpp
+  kOmegaSST/kOmegaSST.cpp
+  kOmegaSSTSAS/kOmegaSSTSAS.cpp
   """)
 
 #===============================================================================

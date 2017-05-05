@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,7 +73,7 @@ public:
             faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return max(min(min(2*r, 0.5*r + 0.5), 2), 0);
+        return scalar(2)/(r+scalar(1)+VSMALL)*max(min(min(2*r, 0.5*r + 0.5), 2), 0);
     }
 };
 

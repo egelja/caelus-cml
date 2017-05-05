@@ -82,10 +82,13 @@ public:
         virtual void calculate
         (
             const scalar dt,
+            const scalar age,
             const scalar mass0,
             const scalar mass,
             const scalar T,
             const scalarField& YGasEff,
+            const scalarField& YLiquidEff,
+            const scalarField& YSolidEff,
             bool& canCombust,
             scalarField& dMassDV
         ) const;
@@ -142,13 +145,16 @@ void CML::NoDevolatilisation<CloudType>::calculate
     const scalar,
     const scalar,
     const scalar,
+    const scalar,
+    const scalarField&,
+    const scalarField&,
     const scalarField&,
     bool& canCombust,
     scalarField&
 ) const
 {
     // Model does not stop combustion taking place
-    canCombust = true;
+    canCombust = 1;
 }
 
 

@@ -107,7 +107,7 @@ CML::linearUpwindVanAlbadaV<Type>::correction
 
         scalar const r(max(0,(min(min(R[0],R[1]),R[2]))));
 
-        scalar const limiter = (r+1)/(r+1/stabilise(r,VSMALL));
+        scalar const limiter = 2*r/(r*r+1);
 
         sfCorr[facei] = limiter*(Cf[facei] - C[cellU]) & gradVf[cellU];
     }
@@ -162,7 +162,7 @@ CML::linearUpwindVanAlbadaV<Type>::correction
 
                     r = (max(0,(min(min(R[0],R[1]),R[2]))));
 
-                    limiter = (r+1)/(r+1/stabilise(r,VSMALL));
+                    limiter = 2*r/(r*r+1);
 
                     pSfCorr[facei] = limiter*(pCf[facei] - C[pown]) 
                                    & gradVf[pown];
@@ -180,7 +180,7 @@ CML::linearUpwindVanAlbadaV<Type>::correction
 
                     r = (max(0,(min(min(R[0],R[1]),R[2]))));
 
-                    limiter = (r+1)/(r+1/stabilise(r,VSMALL));
+                    limiter = 2*r/(r*r+1);
 
                     pSfCorr[facei] = limiter*(pCf[facei] - pd[facei] - C[pown]) 
                                    & pGradVfNei[facei];

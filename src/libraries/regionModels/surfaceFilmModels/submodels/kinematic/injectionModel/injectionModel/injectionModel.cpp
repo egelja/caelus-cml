@@ -39,7 +39,7 @@ defineRunTimeSelectionTable(injectionModel, dictionary);
 
 injectionModel::injectionModel(const surfaceFilmModel& owner)
 :
-    subModelBase(owner)
+    filmSubModelBase(owner)
 {}
 
 
@@ -50,7 +50,7 @@ injectionModel::injectionModel
     const dictionary& dict
 )
 :
-    subModelBase(type, owner, dict)
+    filmSubModelBase(type, owner, dict)
 {}
 
 

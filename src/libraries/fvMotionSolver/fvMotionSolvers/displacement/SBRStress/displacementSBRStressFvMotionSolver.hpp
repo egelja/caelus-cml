@@ -120,6 +120,12 @@ public:
             return cellDisplacement_;
         }
 
+        //- Return diffusivity
+        motionDiffusivity& diffusivity()
+        {
+            return diffusivityPtr_();
+        }
+
         //- Return point location obtained from the current motion field
         virtual tmp<pointField> curPoints() const;
 

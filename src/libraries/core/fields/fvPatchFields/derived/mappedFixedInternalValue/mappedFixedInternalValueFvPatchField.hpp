@@ -22,8 +22,38 @@ Class
     CML::mappedFixedInternalValueFvPatchField
 
 Description
-    Recycles the boundary and internal values of a neighbour patch field to
-    the boundary and internal values of *this.
+    This boundary condition maps the boundary and internal values of a
+    neighbour patch field to the boundary and internal values of *this.
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        fieldName    | name of field to be mapped | no       | this field name
+        setAverage   | flag to activate setting of average value | yes |
+        average      | average value to apply if \c setAverage = yes | yes |
+    \endtable
+
+    \verbatim
+    myPatch
+    {
+        type            mappedFixedInternalValue;
+        fieldName       T;
+        setAverage      no;
+        average         0;
+        value           uniform 0;
+    }
+    \endverbatim
+
+Note
+    This boundary condition can only be applied to patches that are of
+    the \c mappedPolyPatch type.
+
+SeeAlso
+    CML::mappedPatchBase
+    CML::mappedPolyPatch
+    CML::mappedFvPatch
+    CMK::mappedFixedValueFvPatchField
 
 
 \*---------------------------------------------------------------------------*/
@@ -39,7 +69,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-         Class mappedFixedInternalValueFvPatchField Declaration
+           Class mappedFixedInternalValueFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -245,6 +275,7 @@ void CML::mappedFixedInternalValueFvPatchField<Type>::updateCoeffs()
             break;
         }
         case mappedPatchBase::NEARESTPATCHFACE:
+        case mappedPatchBase::NEARESTPATCHFACEAMI:
         {
             const label samplePatchI = mpp.samplePolyPatch().index();
             const fvPatchField<Type>& nbrPatchField =

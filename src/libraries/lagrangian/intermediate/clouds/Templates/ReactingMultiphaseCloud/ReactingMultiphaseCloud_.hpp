@@ -205,6 +205,9 @@ public:
             inline const typename parcelType::constantProperties&
                 constProps() const;
 
+            //- Return access to the constant properties
+            inline typename parcelType::constantProperties& constProps();
+
 
             // Sub-models
 
@@ -271,7 +274,7 @@ public:
 
             //- Remap the cells of particles corresponding to the
             //  mesh topology change with a default tracking data object
-            void autoMap(const mapPolyMesh&);
+            virtual void autoMap(const mapPolyMesh&);
 
 
         // I-O
@@ -302,6 +305,14 @@ CML::ReactingMultiphaseCloud<CloudType>::cloudCopy() const
 template<class CloudType>
 inline const typename CloudType::particleType::constantProperties&
 CML::ReactingMultiphaseCloud<CloudType>::constProps() const
+{
+    return constProps_;
+}
+
+
+template<class CloudType>
+inline typename CloudType::particleType::constantProperties&
+CML::ReactingMultiphaseCloud<CloudType>::constProps()
 {
     return constProps_;
 }
@@ -587,6 +598,8 @@ void CML::ReactingMultiphaseCloud<CloudType>::autoMap
     tdType td(*this);
 
     Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+
+    this->updateMesh();
 }
 
 

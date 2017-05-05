@@ -64,9 +64,10 @@ public:
             LOOKUP
         };
 
-private:
 
-    // Private data
+protected:
+
+    // Protected data
 
         static const NamedEnum<KMethodType, 4> KMethodTypeNames_;
 

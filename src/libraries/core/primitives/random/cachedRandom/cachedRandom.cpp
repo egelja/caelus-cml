@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +21,7 @@ License
 
 #include "cachedRandom.hpp"
 #include "OSspecific.hpp"
+#include "PstreamReduceOps.hpp"
 
 // * * * * * * * * * * * * * private Member Functions  * * * * * * * * * * * //
 
@@ -91,7 +92,8 @@ CML::cachedRandom::cachedRandom(const cachedRandom& cr, const bool reset)
 
         osRandomSeed(seed_);
     }
-    else if (reset)
+
+    if (reset && samples_.size())
     {
         sampleI_ = 0;
     }
@@ -135,6 +137,78 @@ CML::scalar CML::cachedRandom::position
 )
 {
     return start + scalar01()*(end - start);
+}
+
+
+template<>
+CML::label CML::cachedRandom::globalSample01()
+{
+    scalar value = -GREAT;
+
+    if (Pstream::master())
+    {
+        value = scalar01();
+    }
+
+    reduce(value, maxOp<scalar>());
+
+    return round(value);
+}
+
+
+template<>
+CML::scalar CML::cachedRandom::globalSample01()
+{
+    scalar value = -GREAT;
+
+    if (Pstream::master())
+    {
+        value = scalar01();
+    }
+
+    reduce(value, maxOp<scalar>());
+
+    return value;
+}
+
+
+template<>
+CML::label CML::cachedRandom::globalPosition
+(
+    const label& start,
+    const label& end
+)
+{
+    label value = labelMin;
+
+    if (Pstream::master())
+    {
+        value = round(scalar01()*(end - start));
+    }
+
+    reduce(value, maxOp<label>());
+
+    return start + value;
+}
+
+
+template<>
+CML::scalar CML::cachedRandom::globalPosition
+(
+    const scalar& start,
+    const scalar& end
+)
+{
+    scalar value = -GREAT;
+
+    if (Pstream::master())
+    {
+        value = scalar01()*(end - start);
+    }
+
+    reduce(value, maxOp<scalar>());
+
+    return start + value;
 }
 
 

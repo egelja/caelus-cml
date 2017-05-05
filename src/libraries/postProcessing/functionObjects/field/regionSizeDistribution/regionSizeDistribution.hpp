@@ -1,99 +1,114 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::regionSizeDistribution
 
-Description
-    Droplet size distribution calculation.
+Group
+    grpFieldFunctionObjects
 
-    Looks up a void-fraction (alpha) field and splits the mesh into regions
-    based on where the field is below the threshold value. These
+Description
+    This function object creates a size distribution via interrogating a
+    continuous phase fraction field.
+
+    Looks up a phase-fraction (alpha) field and splits the mesh into regions
+    based on where the field is below the threshold value.  These
     regions ("droplets") can now be analysed.
 
     Regions:
-    - (debug) write regions as a volScalarField
-    - (debug) print for all regions the sum of volume and alpha*volume
     - print the regions connected to a user-defined set of patches.
       (in spray calculation these form the liquid core)
-    - print the regions with too large volume. These are the 'background'
+    - print the regions with too large volume.  These are the 'background'
       regions.
+    - (debug) write regions as a volScalarField
+    - (debug) print for all regions the sum of volume and alpha*volume
 
-    Fields:
-    - write volScalarField alpha_liquidCore : alpha with outside liquid core
-                                              set to 0.
-                           alpha_background : alpha with outside background
-                                              set to 0.
+    Output (volume scalar) fields include:
+    - alpha_liquidCore : alpha with outside liquid core set to 0
+    - alpha_background : alpha with outside background set to 0.
 
-    Histogram:
+    %Histogram:
     - determine histogram of diameter (given minDiameter, maxDiameter, nBins)
     - write graph of number of droplets per bin
     - write graph of sum, average and deviation of droplet volume per bin
-    - write graph of sum, average and deviation of user-defined fields. For
+    - write graph of sum, average and deviation of user-defined fields.  For
       volVectorFields these are those of the 3 components and the magnitude.
 
-    Sample input:
-
-    functions
+    Example of function object specification:
+    \verbatim
+    regionSizeDistribution1
     {
-        regionSizeDistribution
+        type            regionSizeDistribution;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        field           alpha;
+        patches         (inlet);
+        threshold       0.4;
+        fields          (p U);
+        nBins           100;
+        maxDiameter     0.5e-4;
+        minDiameter     0;
+        setFormat       gnuplot;
+        coordinateSystem
         {
-            type            regionSizeDistribution;
-
-            outputControl   timeStep;
-            outputInterval  1;
-
-            // Field to determine regions from
-            field           alpha;
-            // Patches that provide the liquid core
-            patches         (inlet);
-            // Delimit alpha regions
-            threshold       0.4;
-
-            // Fields to sample (no need to include alpha)
-            fields          (p U);
-
-            // Number of bins for histogram
-            nBins           100;
-            // Max droplet diameter
-            maxDiameter     0.5e-4;
-            //// Min droplet diameter (default is 0)
-            //minDiameter     0;
-
-            // Writing format
-            setFormat       gnuplot;
+            type            cartesian;
+            origin          (0 0 0);
+            e3              (0 1 1);
+            e1              (1 0 0);
         }
     }
+    \endverbatim
 
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: regionSizeDistribution |yes|
+        field        | phase field to interrogate | yes      |
+        patches      | patches from which the liquid core is identified | yes|
+        threshold    | phase fraction applied to delimit regions | yes |
+        fields       | fields to sample        | yes         |
+        nBins        | number of bins for histogram | yes    |
+        maxDiameter  | maximum region equivalent diameter | yes |
+        minDiameter  | minimum region equivalent diameter | no  | 0
+        setFormat    | writing format          | yes         |
+        coordinateSystem | transformation for vector fields | no         |
+    \endtable
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
+
+SourceFiles
+    regionSizeDistribution.cpp
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef regionSizeDistribution_H
 #define regionSizeDistribution_H
 
+#include "functionObjectFile.hpp"
 #include "pointFieldFwd.hpp"
 #include "writer.hpp"
 #include "Map.hpp"
 #include "volFieldsFwd.hpp"
 #include "wordReList.hpp"
-#include "regionSplit.hpp"
-#include "volFields.hpp"
+#include "coordinateSystem.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -108,10 +123,12 @@ class regionSplit;
 class polyMesh;
 
 /*---------------------------------------------------------------------------*\
-                           Class regionSizeDistribution Declaration
+                   Class regionSizeDistribution Declaration
 \*---------------------------------------------------------------------------*/
 
 class regionSizeDistribution
+:
+    public functionObjectFile
 {
     // Private data
 
@@ -146,6 +163,9 @@ class regionSizeDistribution
 
         //- Output formatter to write
         autoPtr<writer<scalar> > formatterPtr_;
+
+        //- Optional coordinate system
+        autoPtr<coordinateSystem> coordSysPtr_;
 
 
     // Private Member Functions
@@ -254,6 +274,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Calculate the regionSizeDistribution and write
         virtual void write();
 
@@ -271,6 +294,11 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "regionSizeDistribution.hpp"
+#include "regionSplit.hpp"
+#include "volFields.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -321,7 +349,6 @@ CML::List<Type> CML::regionSizeDistribution::extractData
     }
     return sortedData;
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

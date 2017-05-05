@@ -149,6 +149,15 @@ public:
 
     // Member Functions
 
+        //- Const access to the coefficients dictionary
+        virtual const dictionary& coeffDict() const = 0;
+
+        //- Helper function to return the name of the turbulence G field
+        inline word GName() const
+        {
+            return word(type() + ":G");
+        }
+
         //- Access function to velocity field
         inline const volVectorField& U() const
         {

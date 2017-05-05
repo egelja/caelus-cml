@@ -149,6 +149,8 @@ void CML::radiation::P1::calculate()
     E_ = absorptionEmission_->E();
     const volScalarField sigmaEff(scatter_->sigmaEff());
 
+    const dimensionedScalar a0 ("a0", a_.dimensions(), ROOTVSMALL);
+
     // Construct diffusion
     const volScalarField gamma
     (
@@ -160,7 +162,7 @@ void CML::radiation::P1::calculate()
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        1.0/(3.0*a_ + sigmaEff)
+        1.0/(3.0*a_ + sigmaEff + a0)
     );
 
     // Solve G transport equation

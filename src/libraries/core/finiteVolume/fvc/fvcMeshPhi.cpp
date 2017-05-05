@@ -144,4 +144,74 @@ void CML::fvc::makeAbsolute
 }
 
 
+CML::tmp<CML::surfaceScalarField> CML::fvc::relative
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi - fvc::meshPhi(U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+CML::tmp<CML::surfaceScalarField> CML::fvc::relative
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi - fvc::interpolate(rho)*fvc::meshPhi(rho, U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+CML::tmp<CML::surfaceScalarField> CML::fvc::absolute
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi + fvc::meshPhi(U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+CML::tmp<CML::surfaceScalarField> CML::fvc::absolute
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi + fvc::interpolate(rho)*fvc::meshPhi(rho, U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
 // ************************************************************************* //

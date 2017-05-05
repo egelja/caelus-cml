@@ -32,7 +32,7 @@ SourceFiles
 #ifndef filmRadiationModel_H
 #define filmRadiationModel_H
 
-#include "subModelBase.hpp"
+#include "filmSubModelBase.hpp"
 #include "runTimeSelectionTables.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,7 +50,7 @@ namespace surfaceFilmModels
 
 class filmRadiationModel
 :
-    public subModelBase
+    public filmSubModelBase
 {
 private:
 

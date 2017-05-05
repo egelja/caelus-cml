@@ -32,18 +32,19 @@ Description
 #include "vector.hpp"
 #include "Cloud.hpp"
 #include "IDLList.hpp"
-#include "labelList.hpp"
 #include "pointField.hpp"
 #include "faceList.hpp"
 #include "OFstream.hpp"
 #include "tetPointRef.hpp"
 #include "FixedList.hpp"
 #include "polyMeshTetDecomposition.hpp"
+#include "particleMacros.hpp"
+
 #include "polyMesh.hpp"
 #include "Time.hpp"
-
 #include "IOPosition.hpp"
 #include "cyclicPolyPatch.hpp"
+#include "cyclicAMIPolyPatch.hpp"
 #include "processorPolyPatch.hpp"
 #include "symmetryPolyPatch.hpp"
 #include "wallPolyPatch.hpp"
@@ -86,6 +87,15 @@ class particle
 :
     public IDLList<particle>::link
 {
+        // Private member data
+
+        //- Size in bytes of the position data
+        static const std::size_t sizeofPosition_;
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
+        
+        
 public:
 
     template<class CloudType>
@@ -264,6 +274,15 @@ protected:
         template<class TrackData>
         void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
 
+        //- Overridable function to handle the particle hitting a cyclicAMIPatch
+        template<class TrackData>
+        void hitCyclicAMIPatch
+        (
+            const cyclicAMIPolyPatch&,
+            TrackData& td,
+            const vector& direction
+        );
+
         //- Overridable function to handle the particle hitting a
         //  processorPatch
         template<class TrackData>
@@ -292,7 +311,7 @@ public:
         TypeName("particle");
 
         //- String representation of properties
-        static string propHeader;
+        DefinePropertyList("(Px Py Pz) cellI tetFaceI tetPtI origProc origId");
 
         //- Cumulative particle counter - used to provode unique ID
         static label particleCount_;
@@ -304,6 +323,9 @@ public:
         //- Fraction of the cell volume to use in determining tolerance values
         //  for the denominator and numerator of lambda
         static const scalar lambdaDistanceToleranceCoeff;
+
+        //- Minimum stepFraction tolerance
+        static const scalar minStepFractionTol;
 
 
     // Constructors
@@ -1284,7 +1306,7 @@ inline void CML::particle::initCellFacePt()
                 // number, but hasn't been able to find a cell to
                 // occupy.
 
-                if(!mesh_.pointInCellBB(position_, oldCellI, 0.1))
+                if (!mesh_.pointInCellBB(position_, oldCellI, 0.1))
                 {
                     // If the position is not inside the (slightly
                     // extended) bound-box of the cell that it thought
@@ -1292,8 +1314,14 @@ inline void CML::particle::initCellFacePt()
                     // error.
 
                     FatalErrorIn("void CML::particle::initCellFacePt()")
-                        << "cell, tetFace and tetPt search failure at position "
-                        << position_ << nl << "for requested cell " << oldCellI
+                        << "    cell, tetFace and tetPt search failure at "
+                        << "position " << position_ << nl
+                        << "    for requested cell " << oldCellI << nl
+                        << "    If this is a restart or "
+                           "reconstruction/decomposition etc. it is likely that"
+                           " the write precision is not sufficient.\n"
+                           "    Either increase 'writePrecision' or "
+                           "set 'writeFormat' to 'binary'"
                         << abort(FatalError);
                 }
 
@@ -1466,13 +1494,6 @@ inline CML::label CML::particle::faceInterpolation() const
 {
     return faceI_;
 }
-/*
-#define defineParticleTypeNameAndDebug(Type, DebugSwitch)                     \
-    template<>                                                                \
-    const CML::word Particle<Type>::typeName(#Type);                         \
-    template<>                                                                \
-    int Particle<Type>::debug(CML::debug::debugSwitch(#Type, DebugSwitch));
-*/
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -1952,9 +1973,9 @@ CML::scalar CML::particle::trackToFace
             }
             else
             {
-                trackFraction = 1.0;
-
                 position_ = endPosition;
+
+                return 1.0;
             }
         }
         else
@@ -2039,6 +2060,15 @@ CML::scalar CML::particle::trackToFace
                 p.hitCyclicPatch
                 (
                     static_cast<const cyclicPolyPatch&>(patch), td
+                );
+            }
+            else if (isA<cyclicAMIPolyPatch>(patch))
+            {
+                p.hitCyclicAMIPatch
+                (
+                    static_cast<const cyclicAMIPolyPatch&>(patch),
+                    td,
+                    endPosition - position_
                 );
             }
             else if (isA<processorPolyPatch>(patch))
@@ -2447,6 +2477,78 @@ void CML::particle::hitCyclicPatch
             (receiveCpp.separation().size() == 1)
           ? receiveCpp.separation()[0]
           : receiveCpp.separation()[patchFacei]
+        );
+        transformProperties(-s);
+    }
+}
+
+
+template<class TrackData>
+void CML::particle::hitCyclicAMIPatch
+(
+    const cyclicAMIPolyPatch& cpp,
+    TrackData& td,
+    const vector& direction
+)
+{
+    const cyclicAMIPolyPatch& receiveCpp = cpp.neighbPatch();
+
+    // patch face index on sending side
+    label patchFaceI = faceI_ - cpp.start();
+
+    // patch face index on receiving side - also updates position
+    patchFaceI = cpp.pointFace(patchFaceI, direction, position_);
+
+    if (patchFaceI < 0)
+    {
+        FatalErrorIn
+        (
+            "template<class TrackData>"
+            "void CML::particle::hitCyclicAMIPatch"
+            "("
+                "const cyclicAMIPolyPatch&, "
+                "TrackData&, "
+                "const vector&"
+            ")"
+        )
+            << "Particle lost across " << cyclicAMIPolyPatch::typeName
+            << " patches " << cpp.name() << " and " << receiveCpp.name()
+            << " at position " << position_ << abort(FatalError);
+    }
+
+    // convert face index into global numbering
+    faceI_ = patchFaceI + receiveCpp.start();
+
+    cellI_ = mesh_.faceOwner()[faceI_];
+
+    tetFaceI_ = faceI_;
+
+    // See note in correctAfterParallelTransfer for tetPtI_ addressing.
+    tetPtI_ = mesh_.faces()[tetFaceI_].size() - 1 - tetPtI_;
+
+    // Now the particle is on the receiving side
+
+    // Have patch transform the position
+    receiveCpp.transformPosition(position_, patchFaceI);
+
+    // Transform the properties
+    if (!receiveCpp.parallel())
+    {
+        const tensor& T =
+        (
+            receiveCpp.forwardT().size() == 1
+          ? receiveCpp.forwardT()[0]
+          : receiveCpp.forwardT()[patchFaceI]
+        );
+        transformProperties(T);
+    }
+    else if (receiveCpp.separated())
+    {
+        const vector& s =
+        (
+            (receiveCpp.separation().size() == 1)
+          ? receiveCpp.separation()[0]
+          : receiveCpp.separation()[patchFaceI]
         );
         transformProperties(-s);
     }

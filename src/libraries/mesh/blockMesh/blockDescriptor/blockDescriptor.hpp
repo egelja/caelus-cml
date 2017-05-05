@@ -38,6 +38,7 @@ SourceFiles
 #include "pointField.hpp"
 #include "scalarList.hpp"
 #include "curvedEdgeList.hpp"
+#include "gradingDescriptors.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,7 +49,6 @@ class Istream;
 class Ostream;
 
 // Forward declaration of friend functions and operators
-class blockMesh;
 class blockDescriptor;
 Ostream& operator<<(Ostream&, const blockDescriptor&);
 
@@ -79,10 +79,11 @@ class blockDescriptor
         scalarListList edgeWeights_;
 
         //- Expansion ratios in all directions
-        scalarList expand_;
+        List<gradingDescriptors> expand_;
 
         //- Name of the zone (empty string if none)
         word zoneName_;
+
 
     // Private Member Functions
 
@@ -110,7 +111,7 @@ public:
             const pointField& blockPointField,
             const curvedEdgeList&,
             const Vector<label>& meshDensity,
-            const UList<scalar>& expand,
+            const UList<gradingDescriptors>& expand,
             const word& zoneName = ""
         );
 
@@ -155,7 +156,6 @@ public:
 
         //- Return the (optional) zone name
         const word& zoneName() const;
-
 
         //- Return the number of points
         label nPoints() const;

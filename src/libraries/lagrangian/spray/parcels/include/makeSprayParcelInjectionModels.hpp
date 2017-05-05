@@ -47,8 +47,8 @@ License
     makeInjectionModelType(InflationInjection, CloudType);                    \
     makeInjectionModelType(ManualInjection, CloudType);                       \
     makeInjectionModelType(NoInjection, CloudType);                           \
-    makeInjectionModelType(PatchInjection, CloudType);                        \
-    makeInjectionModelType(PatchFlowRateInjection, CloudType);
+    makeInjectionModelType(PatchFlowRateInjection, CloudType);                \
+    makeInjectionModelType(PatchInjection, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -108,7 +108,9 @@ public:
             (
                 typename CloudType::parcelType& p,
                 const label cellI,
-                const scalar dt
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
             );
 
             //- Post-patch hook
@@ -117,14 +119,16 @@ public:
                 const typename CloudType::parcelType& p,
                 const polyPatch& pp,
                 const scalar trackFraction,
-                const tetIndices& tetIs
+                const tetIndices& tetIs,
+                bool& keepParticle
             );
 
             //- Post-face hook
             virtual void postFace
             (
                 const typename CloudType::parcelType& p,
-                const label faceI
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -197,13 +201,19 @@ CML::CloudFunctionObjectList<CloudType>::CloudFunctionObjectList
             {
                 const word& modelName = modelNames[i];
 
+                const dictionary& modelDict(dict.subDict(modelName));
+
+                // read the type of the function object
+                const word objectType(modelDict.lookup("type"));
+
                 this->set
                 (
                     i,
                     CloudFunctionObject<CloudType>::New
                     (
-                        dict,
+                        modelDict,
                         owner,
+                        objectType,
                         modelName
                     )
                 );
@@ -263,12 +273,19 @@ void CML::CloudFunctionObjectList<CloudType>::postMove
 (
     typename CloudType::parcelType& p,
     const label cellI,
-    const scalar dt
+    const scalar dt,
+    const point& position0,
+    bool& keepParticle
 )
 {
     forAll(*this, i)
     {
-        this->operator[](i).postMove(p, cellI, dt);
+        this->operator[](i).postMove(p, cellI, dt, position0, keepParticle);
+
+        if (!keepParticle)
+        {
+            return;
+        }
     }
 }
 
@@ -279,12 +296,25 @@ void CML::CloudFunctionObjectList<CloudType>::postPatch
     const typename CloudType::parcelType& p,
     const polyPatch& pp,
     const scalar trackFraction,
-    const tetIndices& tetIs
+    const tetIndices& tetIs,
+    bool& keepParticle
 )
 {
     forAll(*this, i)
     {
-        this->operator[](i).postPatch(p, pp, trackFraction, tetIs);
+        this->operator[](i).postPatch
+        (
+            p,
+            pp,
+            trackFraction,
+            tetIs,
+            keepParticle
+        );
+
+        if (!keepParticle)
+        {
+            return;
+        }
     }
 }
 
@@ -293,12 +323,18 @@ template<class CloudType>
 void CML::CloudFunctionObjectList<CloudType>::postFace
 (
     const typename CloudType::parcelType& p,
-    const label faceI
+    const label faceI,
+    bool& keepParticle
 )
 {
     forAll(*this, i)
     {
-        this->operator[](i).postFace(p, faceI);
+        this->operator[](i).postFace(p, faceI, keepParticle);
+
+        if (!keepParticle)
+        {
+            return;
+        }
     }
 }
 

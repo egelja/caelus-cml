@@ -1,6 +1,7 @@
 #!/usr/bin/python
+
 # ---------------------------------------------------------------------------
-# Caelus 5.04
+# Caelus 5.10
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
@@ -10,14 +11,15 @@ import sys
 import os
 import glob
 import shutil
+import Caelus
 
 # Code name and version
 code = 'Caelus'
-version = 5.04
+version = Caelus.PROJECT_VER
 
 # Starting up the meshing and solving
 print "**********************************"
-print "Starting %s %.2f simulation" % (code, version)
+print "Starting %s %s simulation" % (code, version)
 print "**********************************"
 
 if sys.platform == 'win32':

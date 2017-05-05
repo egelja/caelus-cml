@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 5.04
+# Caelus 5.10
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
 # Importing the required modules for Python
 import sys, subprocess, os, getopt, fnmatch, re
+import Caelus
 
 # Split a path into a list
 def splitpath(path, maxdepth=20):
@@ -17,7 +18,7 @@ def splitpath(path, maxdepth=20):
 
 # Code name and version
 code = 'Caelus'
-version = 5.04
+version = Caelus.PROJECT_VER
 
 val_tuts = False
 
@@ -79,5 +80,6 @@ for tut in tut_dirs:
    subprocess.call(['python', script], cwd=tut_dir, shell=pltfrm, \
                     stdout=sys.stdout, stderr=sys.stderr)
 
+print ""
 print "Done running %s %s tutorials" % (code, version)
 print "**********************************"

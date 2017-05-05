@@ -33,13 +33,9 @@ License
 
 namespace CML
 {
-
-defineTypeNameAndDebug(surfaceToCell, 0);
-
-addToRunTimeSelectionTable(topoSetSource, surfaceToCell, word);
-
-addToRunTimeSelectionTable(topoSetSource, surfaceToCell, istream);
-
+    defineTypeNameAndDebug(surfaceToCell, 0);
+    addToRunTimeSelectionTable(topoSetSource, surfaceToCell, word);
+    addToRunTimeSelectionTable(topoSetSource, surfaceToCell, istream);
 }
 
 
@@ -101,11 +97,11 @@ bool CML::surfaceToCell::differingPointNormals
 (
     const triSurfaceSearch& querySurf,
 
-    const vector& span,         // current search span
+    const vector& span,         // Current search span
     const label cellI,
-    const label cellTriI,       // nearest (to cell centre) surface triangle
+    const label cellTriI,       // Nearest (to cell centre) surface triangle
 
-    Map<label>& pointToNearest  // cache for nearest triangle to point
+    Map<label>& pointToNearest  // Cache for nearest triangle to point
 ) const
 {
     const triSurface& surf = querySurf.surface();
@@ -395,7 +391,7 @@ CML::surfaceToCell::surfaceToCell
 )
 :
     topoSetSource(mesh),
-    surfName_(dict.lookup("file")),
+    surfName_(fileName(dict.lookup("file")).expand()),
     outsidePoints_(dict.lookup("outsidePoints")),
     includeCut_(readBool(dict.lookup("includeCut"))),
     includeInside_(readBool(dict.lookup("includeInside"))),

@@ -75,6 +75,9 @@ public:
     {
         // Private data
 
+            //- Devolatilisation activation temperature [K]
+            scalar TDevol_;
+
             //- Latent heat of devolatilisation [J/kg]
             scalar LDevol_;
 
@@ -102,6 +105,9 @@ public:
 
 
         // Access
+
+            //- Return const access to the devolatilisation temperature
+            inline scalar TDevol() const;
 
             //- Return const access to the latent heat of devolatilisation
             inline scalar LDevol() const;
@@ -177,9 +183,13 @@ protected:
             //- Mass fractions of solids []
             scalarField YSolid_;
 
-            //- Flag to say that the particle is allowed to combust
-            //  Only true after volatile content falls below threshold value
-            bool canCombust_;
+            //- Flag to identify if the particle can devolatilise and combust
+            //  Combustion possible only after volatile content falls below
+            //  threshold value.  States include:
+            //  0 = can devolatilise, cannot combust but can change
+            //  1 = can devolatilise, can combust
+            // -1 = cannot devolatilise or combust, and cannot change
+            label canCombust_;
 
 
     // Protected Member Functions
@@ -190,13 +200,16 @@ protected:
         (
             TrackData& td,
             const scalar dt,           // timestep
-            const scalar Ts,           // Surface temperature
+            const scalar age,          // age
+            const scalar Ts,           // surface temperature
             const scalar d,            // diameter
             const scalar T,            // temperature
             const scalar mass,         // mass
             const scalar mass0,        // mass (initial on injection)
-            const scalarField& YGasEff,// Gas component mass fractions
-            bool& canCombust,          // 'can combust' flag
+            const scalarField& YGasEff,// gas component mass fractions
+            const scalarField& YLiquidEff,// liquid component mass fractions
+            const scalarField& YSolidEff,// solid component mass fractions
+            label& canCombust,          // 'can combust' flag
             scalarField& dMassDV,      // mass transfer - local to particle
             scalar& Sh,                // explicit particle enthalpy source
             scalar& N,                 // flux of species emitted from particle
@@ -214,7 +227,7 @@ protected:
             const scalar d,            // diameter
             const scalar T,            // temperature
             const scalar mass,         // mass
-            const bool canCombust,     // 'can combust' flag
+            const label canCombust,     // 'can combust' flag
             const scalar N,            // flux of species emitted from particle
             const scalarField& YMix,   // mixture mass fractions
             const scalarField& YGas,   // gas-phase mass fractions
@@ -233,11 +246,17 @@ public:
 
     // Static data members
 
-        //- String representation of properties
-        static string propHeader;
-
         //- Runtime type information
         TypeName("ReactingMultiphaseParcel");
+
+        //- String representation of properties
+        AddToPropertyList
+        (
+            ParcelType,
+            " nGas(Y1..YN)"
+          + " nLiquid(Y1..YN)"
+          + " nSolid(Y1..YN)"
+        );
 
 
     // Constructors
@@ -347,7 +366,7 @@ public:
             inline const scalarField& YSolid() const;
 
             //- Return const access to the canCombust flag
-            inline bool canCombust() const;
+            inline label canCombust() const;
 
 
         // Edit
@@ -362,7 +381,7 @@ public:
             inline scalarField& YSolid();
 
             //- Return access to the canCombust flag
-            inline bool& canCombust();
+            inline label& canCombust();
 
 
         // Main calculation loop
@@ -444,6 +463,7 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::
 constantProperties()
 :
     ParcelType::constantProperties(),
+    TDevol_(0.0),
     LDevol_(0.0),
     hRetentionCoeff_(0.0)
 {}
@@ -457,6 +477,7 @@ constantProperties
 )
 :
     ParcelType::constantProperties(cp),
+    TDevol_(cp.TDevol_),
     LDevol_(cp.LDevol_),
     hRetentionCoeff_(cp.hRetentionCoeff_)
 {}
@@ -471,11 +492,13 @@ constantProperties
 )
 :
     ParcelType::constantProperties(parentDict, readFields),
+    TDevol_(0.0),
     LDevol_(0.0),
     hRetentionCoeff_(0.0)
 {
     if (readFields)
     {
+        this->dict().lookup("TDevol") >> TDevol_;
         this->dict().lookup("LDevol") >> LDevol_;
         this->dict().lookup("hRetentionCoeff") >> hRetentionCoeff_;
 
@@ -508,7 +531,7 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     YGas_(0),
     YLiquid_(0),
     YSolid_(0),
-    canCombust_(false)
+    canCombust_(0)
 {}
 
 
@@ -556,11 +579,19 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     YGas_(YGas0),
     YLiquid_(YLiquid0),
     YSolid_(YSolid0),
-    canCombust_(false)
+    canCombust_(0)
 {}
 
 
 // * * * * * * * * * constantProperties Member Functions * * * * * * * * * * //
+
+template<class ParcelType>
+inline CML::scalar
+CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::TDevol() const
+{
+    return TDevol_;
+}
+
 
 template<class ParcelType>
 inline CML::scalar
@@ -606,7 +637,8 @@ YSolid() const
 
 
 template<class ParcelType>
-inline bool CML::ReactingMultiphaseParcel<ParcelType>::canCombust() const
+inline CML::label
+CML::ReactingMultiphaseParcel<ParcelType>::canCombust() const
 {
     return canCombust_;
 }
@@ -634,7 +666,7 @@ inline CML::scalarField& CML::ReactingMultiphaseParcel<ParcelType>::YSolid()
 
 
 template<class ParcelType>
-inline bool& CML::ReactingMultiphaseParcel<ParcelType>::canCombust()
+inline CML::label& CML::ReactingMultiphaseParcel<ParcelType>::canCombust()
 {
     return canCombust_;
 }
@@ -884,12 +916,15 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     (
         td,
         dt,
+        this->age_,
         Ts,
         d0,
         T0,
         mass0,
         this->mass0_,
         YMix[GAS]*YGas_,
+        YMix[LIQ]*YLiquid_,
+        YMix[SLD]*YSolid_,
         canCombust_,
         dMassDV,
         Sh,
@@ -954,7 +989,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     }
 
     // Remove the particle when mass falls below minimum threshold
-    if (np0*mass1 < td.cloud().constProps().minParticleMass())
+    if (np0*mass1 < td.cloud().constProps().minParcelMass())
     {
         td.keepParticle = false;
 
@@ -1082,6 +1117,16 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
         // Update sensible enthalpy transfer
         td.cloud().hsTrans()[cellI] += np0*dhsTrans;
         td.cloud().hsCoeff()[cellI] += np0*Sph;
+
+        // Update radiation fields
+        if (td.cloud().radiation())
+        {
+            const scalar ap = this->areaP();
+            const scalar T4 = pow4(this->T_);
+            td.cloud().radAreaP()[cellI] += dt*np0*ap;
+            td.cloud().radT4()[cellI] += dt*np0*T4;
+            td.cloud().radAreaPT4()[cellI] += dt*np0*ap*T4;
+        }
     }
 }
 
@@ -1092,13 +1137,16 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
 (
     TrackData& td,
     const scalar dt,
+    const scalar age,
     const scalar Ts,
     const scalar d,
     const scalar T,
     const scalar mass,
     const scalar mass0,
     const scalarField& YGasEff,
-    bool& canCombust,
+    const scalarField& YLiquidEff,
+    const scalarField& YSolidEff,
+    label& canCombust,
     scalarField& dMassDV,
     scalar& Sh,
     scalar& N,
@@ -1126,10 +1174,13 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
     td.cloud().devolatilisation().calculate
     (
         dt,
+        age,
         mass0,
         mass,
         T,
         YGasEff,
+        YLiquidEff,
+        YSolidEff,
         canCombust,
         dMassDV
     );
@@ -1185,7 +1236,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcSurfaceReactions
     const scalar d,
     const scalar T,
     const scalar mass,
-    const bool canCombust,
+    const label canCombust,
     const scalar N,
     const scalarField& YMix,
     const scalarField& YGas,
@@ -1233,7 +1284,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcSurfaceReactions
        *(sum(dMassSRGas) + sum(dMassSRLiquid) + sum(dMassSRSolid))
     );
 
-    const scalar xsi = min(T/5000.0, 1.0);
+    const scalar xsi = min(T/td.cloud().constProps().TMax(), 1.0);
     const scalar coeff =
         (1.0 - xsi*xsi)*td.cloud().constProps().hRetentionCoeff();
 
@@ -1254,7 +1305,8 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     ParcelType(p),
     YGas_(p.YGas_),
     YLiquid_(p.YLiquid_),
-    YSolid_(p.YSolid_)
+    YSolid_(p.YSolid_),
+    canCombust_(p.canCombust_)
 {}
 
 
@@ -1268,7 +1320,8 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     ParcelType(p, mesh),
     YGas_(p.YGas_),
     YLiquid_(p.YLiquid_),
-    YSolid_(p.YSolid_)
+    YSolid_(p.YSolid_),
+    canCombust_(p.canCombust_)
 {}
 
 
@@ -1276,11 +1329,8 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<class ParcelType>
-CML::string CML::ReactingMultiphaseParcel<ParcelType>::propHeader =
-    ParcelType::propHeader
-  + " nGas(Y1..YN)"
-  + " nLiquid(Y1..YN)"
-  + " nSolid(Y1..YN)";
+CML::string CML::ReactingMultiphaseParcel<ParcelType>::propertyList_ =
+    CML::ReactingMultiphaseParcel<ParcelType>::propertyList();
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -1297,7 +1347,7 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     YGas_(0),
     YLiquid_(0),
     YSolid_(0),
-    canCombust_(false)
+    canCombust_(0)
 {
     if (readFields)
     {

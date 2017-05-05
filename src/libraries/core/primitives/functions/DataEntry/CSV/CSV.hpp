@@ -25,15 +25,17 @@ Description
     e.g. time
 
     \verbatim
-        <entryName>   csvFile;
-        csvFileCoeffs
+        <entryName> csvFile;
+        <entryName>Coeffs
         {
-            hasHeaderLine   true;
-            refColumn       0;          // reference column index
-            componentColumns (1 2 3);   // component column indices
-            separator       ",";        // optional (defaults to ",")
-            fileName        "fileXYZ";  // name of csv data file
-            outOfBounds     clamp;      // optional out-of-bounds handling
+            nHeaderLine         4;
+            refColumn           0;          // reference column index
+            componentColumns    (1 2 3);    // component column indices
+            separator           ",";        // optional (defaults to ",")
+            mergeSeparators     no;         // merge multiple separators
+            fileName            "fileXYZ";  // name of csv data file
+            outOfBounds         clamp;      // optional out-of-bounds handling
+            interpolationScheme linear;     // optional interpolation scheme
         }
     \endverbatim
 
@@ -81,8 +83,8 @@ class CSV
         //- Coefficients dictionary (for convenience on reading)
         dictionary coeffs_;
 
-        //- Does the file have a header line?
-        bool headerLine_;
+        //- Number header lines
+        label nHeaderLine_;
 
         //- Column of the time
         label refColumn_;
@@ -93,7 +95,10 @@ class CSV
         //- Separator character
         char separator_;
 
-        //- File name for csv table (optional)
+        //- Merge separators flag, e.g. ',,,' becomes ','
+        bool mergeSeparators_;
+
+        //- File name for csv table
         fileName fName_;
 
 
@@ -117,8 +122,13 @@ public:
 
     // Constructors
 
-        //- Construct from entry name and Istream
-        CSV(const word& entryName, const dictionary& dict);
+        //- Construct from entry name and dictionary
+        CSV
+        (
+            const word& entryName,
+            const dictionary& dict,
+            const word& ext = "Coeffs"
+        );
 
         //- Copy constructor
         CSV(const CSV<Type>& tbl);
@@ -145,6 +155,12 @@ public:
             }
 
 
+        // Access
+
+            //- Return const access to the file name
+            virtual const fileName& fName() const;
+
+
         // Evaluation
 
             //- Return Table value
@@ -157,6 +173,22 @@ public:
             virtual Type integrate(const scalar x1, const scalar x2) const
             {
                 return TableBase<Type>::integrate(x1, x2);
+            }
+
+            //- Return dimensioned constant value
+            virtual dimensioned<Type> dimValue(const scalar x) const
+            {
+                return TableBase<Type>::dimValue(x);
+            }
+
+            //- Integrate between two values and return dimensioned type
+            virtual dimensioned<Type> dimIntegrate
+            (
+                const scalar x1,
+                const scalar x2
+            ) const
+            {
+                return TableBase<Type>::dimIntegrate(x1, x2);
             }
 
 
@@ -187,7 +219,20 @@ public:
 
 namespace CML
 {
-    // doesn't recognize specialization otherwise
+    template<>
+    label CSV<label>::readValue(const List<string>& splitted)
+    {
+        if (componentColumns_[0] >= splitted.size())
+        {
+            FatalErrorIn("CSV<label>::readValue(const List<string>&)")
+                << "No column " << componentColumns_[0] << " in "
+                << splitted << endl
+                << exit(FatalError);
+        }
+
+        return readLabel(IStringStream(splitted[componentColumns_[0]])());
+    }
+
     template<>
     scalar CSV<scalar>::readValue(const List<string>& splitted)
     {
@@ -243,11 +288,13 @@ void CML::CSV<Type>::read()
     DynamicList<Tuple2<scalar, Type> > values;
 
     // skip header
-    if (headerLine_)
+    for (label i = 0; i < nHeaderLine_; i++)
     {
         string line;
         is.getLine(line);
     }
+
+    label nEntries = max(componentColumns_);
 
     // read data
     while (is.good())
@@ -255,24 +302,69 @@ void CML::CSV<Type>::read()
         string line;
         is.getLine(line);
 
+
+        label n = 0;
+        std::size_t pos = 0;
         DynamicList<string> splitted;
 
-        std::size_t pos = 0;
-        while (pos != std::string::npos)
+        if (mergeSeparators_)
         {
-            std::size_t nPos = line.find(separator_, pos);
+            std::size_t nPos = 0;
 
-            if (nPos == std::string::npos)
+            while ((pos != std::string::npos) && (n <= nEntries))
             {
-                splitted.append(line.substr(pos));
-                pos = nPos;
-            }
-            else
-            {
-                splitted.append(line.substr(pos, nPos - pos));
-                pos = nPos + 1;
+                bool found = false;
+                while (!found)
+                {
+                    nPos = line.find(separator_, pos);
+
+                    if ((nPos != std::string::npos) && (nPos - pos == 0))
+                    {
+                        pos = nPos + 1;
+                    }
+                    else
+                    {
+                        found = true;
+                    }
+                }
+
+                nPos = line.find(separator_, pos);
+
+                if (nPos == std::string::npos)
+                {
+                    splitted.append(line.substr(pos));
+                    pos = nPos;
+                    n++;
+                }
+                else
+                {
+                    splitted.append(line.substr(pos, nPos - pos));
+                    pos = nPos + 1;
+                    n++;
+                }
             }
         }
+        else
+        {
+            while ((pos != std::string::npos) && (n <= nEntries))
+            {
+                std::size_t nPos = line.find(separator_, pos);
+
+                if (nPos == std::string::npos)
+                {
+                    splitted.append(line.substr(pos));
+                    pos = nPos;
+                    n++;
+                }
+                else
+                {
+                    splitted.append(line.substr(pos, nPos - pos));
+                    pos = nPos + 1;
+                    n++;
+                }
+            }
+        }
+
 
         if (splitted.size() <= 1)
         {
@@ -292,15 +384,21 @@ void CML::CSV<Type>::read()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::CSV<Type>::CSV(const word& entryName, const dictionary& dict)
+CML::CSV<Type>::CSV
+(
+    const word& entryName,
+    const dictionary& dict,
+    const word& ext
+)
 :
     DataEntry<Type>(entryName),
-    TableBase<Type>(entryName, dict.subDict(type() + "Coeffs")),
-    coeffs_(dict.subDict(type() + "Coeffs")),
-    headerLine_(readBool(coeffs_.lookup("hasHeaderLine"))),
+    TableBase<Type>(entryName, dict.subDict(entryName + ext)),
+    coeffs_(dict.subDict(entryName + ext)),
+    nHeaderLine_(readLabel(coeffs_.lookup("nHeaderLine"))),
     refColumn_(readLabel(coeffs_.lookup("refColumn"))),
     componentColumns_(coeffs_.lookup("componentColumns")),
     separator_(coeffs_.lookupOrDefault<string>("separator", string(","))[0]),
+    mergeSeparators_(readBool(coeffs_.lookup("mergeSeparators"))),
     fName_(coeffs_.lookup("fileName"))
 {
     if (componentColumns_.size() != pTraits<Type>::nComponents)
@@ -322,10 +420,11 @@ CML::CSV<Type>::CSV(const CSV<Type>& tbl)
 :
     DataEntry<Type>(tbl),
     TableBase<Type>(tbl),
-    headerLine_(tbl.headerLine_),
+    nHeaderLine_(tbl.nHeaderLine_),
     refColumn_(tbl.refColumn_),
     componentColumns_(tbl.componentColumns_),
     separator_(tbl.separator_),
+    mergeSeparators_(tbl.mergeSeparators_),
     fName_(tbl.fName_)
 {}
 
@@ -335,6 +434,15 @@ CML::CSV<Type>::CSV(const CSV<Type>& tbl)
 template<class Type>
 CML::CSV<Type>::~CSV()
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+const CML::fileName& CML::CSV<Type>::fName() const
+{
+    return fName_;
+}
 
 
 // * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
@@ -353,10 +461,11 @@ CML::Ostream& CML::operator<<
     if (os.format() == IOstream::ASCII)
     {
         os  << static_cast<const DataEntry<Type>& >(tbl)
-            << token::SPACE << tbl.headerLine_
+            << token::SPACE << tbl.nHeaderLine_
             << token::SPACE << tbl.timeColumn_
             << token::SPACE << tbl.componentColumns_
             << token::SPACE << tbl.separator_
+            << token::SPACE << tbl.mergeSeparators_
             << token::SPACE << tbl.fileName_;
     }
     else
@@ -365,10 +474,7 @@ CML::Ostream& CML::operator<<
     }
 
     // Check state of Ostream
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const CSV<Type>&)"
-    );
+    os.check("Ostream& operator<<(Ostream&, const CSV<Type>&)");
 
     return os;
 }
@@ -379,14 +485,14 @@ void CML::CSV<Type>::writeData(Ostream& os) const
 {
     DataEntry<Type>::writeData(os);
     os  << token::END_STATEMENT << nl;
-    os  << indent << word(type() + "Coeffs") << nl;
+    os  << indent << word(this->name() + "Coeffs") << nl;
     os  << indent << token::BEGIN_BLOCK << incrIndent << nl;
 
     // Note: for TableBase write the dictionary entries it needs but not
     // the values themselves
     TableBase<Type>::writeEntries(os);
 
-    os.writeKeyword("hasHeaderLine") << headerLine_ << token::END_STATEMENT
+    os.writeKeyword("nHeaderLine") << nHeaderLine_ << token::END_STATEMENT
         << nl;
     os.writeKeyword("refColumn") << refColumn_ << token::END_STATEMENT << nl;
 
@@ -405,6 +511,8 @@ void CML::CSV<Type>::writeData(Ostream& os) const
     os  << token::END_STATEMENT << nl;
 
     os.writeKeyword("separator") << string(separator_)
+        << token::END_STATEMENT << nl;
+    os.writeKeyword("mergeSeparators") << mergeSeparators_
         << token::END_STATEMENT << nl;
     os.writeKeyword("fileName") << fName_ << token::END_STATEMENT << nl;
     os  << decrIndent << indent << token::END_BLOCK << endl;

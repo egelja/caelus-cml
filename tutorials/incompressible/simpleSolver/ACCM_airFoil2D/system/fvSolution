@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -19,14 +19,14 @@ solvers
 	p
 	{
 		solver			PCG;
-		preconditioner		DIC;
+		preconditioner	DIC;
 		tolerance		1e-8;
 		relTol			0.01;
 	}
 	U
 	{
 		solver			PBiCG;
-		preconditioner		DILU;
+		preconditioner	DILU;
 		tolerance		1e-7;
 		relTol			0.01;
 	}
@@ -53,7 +53,7 @@ relaxationFactors
 {
 	p				0.3;
 	U				0.5;
-	nuTilda				0.5;
+	nuTilda		    0.5;
 	k				0.5;	
-	omega				0.5;
+	omega			0.5;
 }

@@ -32,6 +32,8 @@ Description
 
 #include "ParticleForce.hpp"
 #include "volFields.hpp"
+#include "interpolation.hpp"
+#include "fvcDdt.hpp"
 #include "fvcGrad.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -48,13 +50,15 @@ class PressureGradientForce
 :
     public ParticleForce<CloudType>
 {
-    // Private data
+protected:
+
+    // Protected data
 
         //- Name of velocity field
         const word UName_;
 
-        //- Velocity gradient field
-        const volTensorField* gradUPtr_;
+        //- Rate of change of carrier phase velocity interpolator
+        autoPtr<interpolation<vector> > DUcDtInterpPtr_;
 
 
 public:
@@ -70,7 +74,8 @@ public:
         (
             CloudType& owner,
             const fvMesh& mesh,
-            const dictionary& dict
+            const dictionary& dict,
+            const word& forceType = typeName
         );
 
         //- Construct copy
@@ -94,8 +99,8 @@ public:
 
         // Access
 
-            //- Return const access to the velocity gradient field
-            inline const volTensorField& gradU() const;
+            //- Return the rate of change of carrier phase velocity interpolator
+            inline const interpolation<vector>& DUcDtInterp() const;
 
 
         // Evaluation
@@ -112,6 +117,13 @@ public:
                 const scalar Re,
                 const scalar muc
             ) const;
+
+            //- Return the added mass
+            virtual scalar massAdd
+            (
+                const typename CloudType::parcelType& p,
+                const scalar mass
+            ) const;
 };
 
 
@@ -122,23 +134,20 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-const CML::volTensorField& CML::PressureGradientForce<CloudType>::gradU()
-const
+inline const CML::interpolation<CML::vector>&
+CML::PressureGradientForce<CloudType>::DUcDtInterp() const
 {
-    if (gradUPtr_)
-    {
-        return *gradUPtr_;
-    }
-    else
+    if (!DUcDtInterpPtr_.valid())
     {
         FatalErrorIn
         (
-            "const volTensorField& PressureGradientForce<CloudType>::gradU()"
-            "const"
-        )   << "gradU field not allocated" << abort(FatalError);
-
-        return *reinterpret_cast<const volTensorField*>(0);
+            "inline const CML::interpolation<CML::vector>&"
+            "CML::PressureGradientForce<CloudType>::DUcDtInterp() const"
+        )   << "Carrier phase DUcDt interpolation object not set"
+            << abort(FatalError);
     }
+
+    return DUcDtInterpPtr_();
 }
 
 
@@ -149,12 +158,13 @@ CML::PressureGradientForce<CloudType>::PressureGradientForce
 (
     CloudType& owner,
     const fvMesh& mesh,
-    const dictionary& dict
+    const dictionary& dict,
+    const word& forceType
 )
 :
-    ParticleForce<CloudType>(owner, mesh, dict, typeName, true),
-    UName_(this->coeffs().lookup("U")),
-    gradUPtr_(NULL)
+    ParticleForce<CloudType>(owner, mesh, dict, forceType, true),
+    UName_(this->coeffs().template lookupOrDefault<word>("U", "U")),
+    DUcDtInterpPtr_(NULL)
 {}
 
 
@@ -166,7 +176,7 @@ CML::PressureGradientForce<CloudType>::PressureGradientForce
 :
     ParticleForce<CloudType>(pgf),
     UName_(pgf.UName_),
-    gradUPtr_(NULL)
+    DUcDtInterpPtr_(NULL)
 {}
 
 
@@ -182,18 +192,48 @@ CML::PressureGradientForce<CloudType>::~PressureGradientForce()
 template<class CloudType>
 void CML::PressureGradientForce<CloudType>::cacheFields(const bool store)
 {
+    static word fName("DUcDt");
+
+    bool fieldExists = this->mesh().template foundObject<volVectorField>(fName);
+
     if (store)
     {
-        const volVectorField& U = this->mesh().template
-            lookupObject<volVectorField>(UName_);
-        gradUPtr_ = fvc::grad(U).ptr();
+        if (!fieldExists)
+        {
+            const volVectorField& Uc = this->mesh().template
+                lookupObject<volVectorField>(UName_);
+
+            volVectorField* DUcDtPtr = new volVectorField
+            (
+                fName,
+                fvc::ddt(Uc) + (Uc & fvc::grad(Uc))
+            );
+
+            DUcDtPtr->store();
+        }
+
+        const volVectorField& DUcDt = this->mesh().template
+            lookupObject<volVectorField>(fName);
+
+        DUcDtInterpPtr_.reset
+        (
+            interpolation<vector>::New
+            (
+                this->owner().solution().interpolationSchemes(),
+                DUcDt
+            ).ptr()
+        );
     }
     else
     {
-        if (gradUPtr_)
+        DUcDtInterpPtr_.clear();
+
+        if (fieldExists)
         {
-            delete gradUPtr_;
-            gradUPtr_ = NULL;
+            const volVectorField& DUcDt = this->mesh().template
+                lookupObject<volVectorField>(fName);
+
+            const_cast<volVectorField&>(DUcDt).checkOut();
         }
     }
 }
@@ -211,14 +251,24 @@ CML::forceSuSp CML::PressureGradientForce<CloudType>::calcCoupled
 {
     forceSuSp value(vector::zero, 0.0);
 
-    const volTensorField& gradU = *gradUPtr_;
-    value.Su() = mass*p.rhoc()/p.rho()*(p.U() & gradU[p.cell()]);
+    vector DUcDt =
+        DUcDtInterp().interpolate(p.position(), p.currentTetIndices());
+
+    value.Su() = mass*p.rhoc()/p.rho()*DUcDt;
 
     return value;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class CloudType>
+CML::scalar CML::PressureGradientForce<CloudType>::massAdd
+(
+    const typename CloudType::parcelType&,
+    const scalar
+) const
+{
+    return 0.0;
+}
 
 #endif
 

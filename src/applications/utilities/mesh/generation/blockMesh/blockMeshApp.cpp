@@ -24,8 +24,10 @@ Description
     A multi-block mesh generator.
 
     Uses the block mesh description found in
-    \a constant/polyMesh/blockMeshDict
-    (or \a constant/\<region\>/polyMesh/blockMeshDict).
+    \a system/blockMeshDict
+    or \a system/\<region\>/blockMeshDict
+    or \a constant/polyMesh/blockMeshDict
+    or \a constant/\<region\>/polyMesh/blockMeshDict
 
 Usage
 
@@ -61,11 +63,9 @@ Usage
 using namespace CML;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Main program:
 
 int main(int argc, char *argv[])
 {
-	
     argList::noParallel();
     argList::addBoolOption
     (
@@ -79,82 +79,82 @@ int main(int argc, char *argv[])
         "specify alternative dictionary for the blockMesh description"
     );
 
-#   include "addRegionOption.hpp"
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
+    #include "addRegionOption.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
 
     const word dictName("blockMeshDict");
 
     word regionName;
-    fileName polyMeshDir;
+    word regionPath;
 
+    // Check if the region is specified otherwise mesh the default region
     if (args.optionReadIfPresent("region", regionName, polyMesh::defaultRegion))
     {
-        // constant/<region>/polyMesh/blockMeshDict
-        polyMeshDir = regionName/polyMesh::meshSubDir;
-
         Info<< nl << "Generating mesh for region " << regionName << endl;
-    }
-    else
-    {
-        // constant/polyMesh/blockMeshDict
-        polyMeshDir = polyMesh::meshSubDir;
+        regionPath = regionName;
     }
 
-    autoPtr<IOobject> meshDictIoPtr;
+    // Search for the appropriate blockMesh dictionary....
 
+    fileName dictPath;
+
+    // Check if the dictionary is specified on the command-line
     if (args.optionFound("dict"))
     {
-        const fileName dictPath = args["dict"];
+        dictPath = args["dict"];
 
-        meshDictIoPtr.set
+        dictPath =
         (
-            new IOobject
-            (
-                (
-                    isDir(dictPath)
-                  ? dictPath/dictName
-                  : dictPath
-                ),
-                runTime,
-                IOobject::MUST_READ_IF_MODIFIED,
-                IOobject::NO_WRITE,
-                false
-            )
+            isDir(dictPath)
+          ? dictPath/dictName
+          : dictPath
         );
     }
+    // Check if dictionary is present in the constant directory
+    else if
+    (
+        exists
+        (
+            runTime.path()/runTime.constant()
+           /regionPath/polyMesh::meshSubDir/dictName
+        )
+    )
+    {
+        dictPath =
+            runTime.constant()
+           /regionPath/polyMesh::meshSubDir/dictName;
+    }
+    // Otherwise assume the dictionary is present in the system directory
     else
     {
-        meshDictIoPtr.set
-        (
-            new IOobject
-            (
-                dictName,
-                runTime.constant(),
-                polyMeshDir,
-                runTime,
-                IOobject::MUST_READ_IF_MODIFIED,
-                IOobject::NO_WRITE,
-                false
-            )
-        );
+        dictPath = runTime.system()/regionPath/dictName;
     }
 
-    if (!meshDictIoPtr->headerOk())
+    IOobject meshDictIO
+    (
+        dictPath,
+        runTime,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE,
+        false
+    );
+
+    if (!meshDictIO.headerOk())
     {
         FatalErrorIn(args.executable())
             << "Cannot open mesh description file\n    "
-            << meshDictIoPtr->objectPath()
+            << meshDictIO.objectPath()
             << nl
             << exit(FatalError);
     }
 
     Info<< "Creating block mesh from\n    "
-        << meshDictIoPtr->objectPath() << endl;
+        << meshDictIO.objectPath() << endl;
 
     blockMesh::verbose(true);
 
-    IOdictionary meshDict(meshDictIoPtr());
+    IOdictionary meshDict(meshDictIO);
     blockMesh blocks(meshDict, regionName);
 
 
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             meshDict.lookup("mergePatchPairs")
         );
 
-#       include "mergePatchPairs.hpp"
+        #include "mergePatchPairs.hpp"
     }
     else
     {
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
     }
 
     // Set the precision of the points data to 10
-    IOstream::defaultPrecision(10);
+    IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
 
     Info<< nl << "Writing polyMesh" << endl;
     mesh.removeFiles();

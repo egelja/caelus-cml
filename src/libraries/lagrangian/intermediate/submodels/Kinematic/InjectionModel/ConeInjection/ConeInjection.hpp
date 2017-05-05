@@ -85,10 +85,10 @@ class ConeInjection
         //- Parcel velocity magnitude relative to SOI [m/s]
         const TimeDataEntry<scalar> Umag_;
 
-        //- Inner cone angle relative to SOI [deg]
+        //- Inner half-cone angle relative to SOI [deg]
         const TimeDataEntry<scalar> thetaInner_;
 
-        //- Outer cone angle relative to SOI [deg]
+        //- Outer half-cone angle relative to SOI [deg]
         const TimeDataEntry<scalar> thetaOuter_;
 
         //- Parcel size distribution model
@@ -116,7 +116,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ConeInjection(const dictionary& dict, CloudType& owner);
+        ConeInjection
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         ConeInjection(const ConeInjection<CloudType>& im);
@@ -136,6 +141,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -195,10 +203,11 @@ template<class CloudType>
 CML::ConeInjection<CloudType>::ConeInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     positionAxis_(this->coeffDict().lookup("positionAxis")),
     injectorCells_(positionAxis_.size()),
     injectorTetFaces_(positionAxis_.size()),
@@ -284,17 +293,7 @@ CML::ConeInjection<CloudType>::ConeInjection
     // Set total volume to inject
     this->volumeTotal_ = flowRateProfile_.integrate(0.0, duration_);
 
-    // Set/cache the injector cells
-    forAll(positionAxis_, i)
-    {
-        this->findCellAtPosition
-        (
-            injectorCells_[i],
-            injectorTetFaces_[i],
-            injectorTetPts_[i],
-            positionAxis_[i].first()
-        );
-    }
+    updateMesh();
 }
 
 
@@ -330,6 +329,23 @@ CML::ConeInjection<CloudType>::~ConeInjection()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+void CML::ConeInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    forAll(positionAxis_, i)
+    {
+        this->findCellAtPosition
+        (
+            injectorCells_[i],
+            injectorTetFaces_[i],
+            injectorTetPts_[i],
+            positionAxis_[i].first()
+        );
+    }
+}
+
 
 template<class CloudType>
 CML::scalar CML::ConeInjection<CloudType>::timeEnd() const

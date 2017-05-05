@@ -161,13 +161,13 @@ void CML::cyclicAMIPolyPatch::calcTransforms
                   + sin(-rotationAngle_)*S
                 );
 
-                // check - assume correct angle when difference in face areas
+                // Check - assume correct angle when difference in face areas
                 // is the smallest
                 vector transformedAreaPos = gSum(half1Areas & revTPos);
                 vector transformedAreaNeg = gSum(half1Areas & revTNeg);
                 vector area0 = gSum(half0Areas);
 
-                // areas have opposite sign, so sum should be zero when
+                // Areas have opposite sign, so sum should be zero when
                 // correct rotation applied
                 scalar errorPos = mag(transformedAreaPos + area0);
                 scalar errorNeg = mag(transformedAreaNeg + area0);
@@ -261,7 +261,7 @@ void CML::cyclicAMIPolyPatch::calcTransforms
 
                 if (debug)
                 {
-                    scalar theta = radToDeg(acos(n0 & n1));
+                    scalar theta = radToDeg(acos(-(n0 & n1)));
 
                     Pout<< "cyclicAMIPolyPatch::calcTransforms: patch:"
                         << name()
@@ -353,7 +353,7 @@ void CML::cyclicAMIPolyPatch::resetAMI
             meshTools::writeOBJ(os, neighbPatch().localFaces(), nbrPoints);
         }
 
-        // transform neighbour patch to local system
+        // Transform neighbour patch to local system
         transformPosition(nbrPoints);
         primitivePatch nbrPatch0
         (
@@ -596,7 +596,7 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
         }
         default:
         {
-            // no additional info required
+            // No additional info required
         }
     }
 
@@ -891,6 +891,64 @@ void CML::cyclicAMIPolyPatch::transformPosition
 }
 
 
+void CML::cyclicAMIPolyPatch::reverseTransformPosition
+(
+    point& l,
+    const label faceI
+) const
+{
+    if (!parallel())
+    {
+        const tensor& T =
+        (
+            reverseT().size() == 1
+          ? reverseT()[0]
+          : reverseT()[faceI]
+        );
+
+        if (transform() == ROTATIONAL)
+        {
+            l = CML::transform(T, l - rotationCentre_) + rotationCentre_;
+        }
+        else
+        {
+            l = CML::transform(T, l);
+        }
+    }
+    else if (separated())
+    {
+        const vector& s =
+        (
+            separation().size() == 1
+          ? separation()[0]
+          : separation()[faceI]
+        );
+
+        l += s;
+    }
+}
+
+
+void CML::cyclicAMIPolyPatch::reverseTransformDirection
+(
+    vector& d,
+    const label faceI
+) const
+{
+    if (!parallel())
+    {
+        const tensor& T =
+        (
+            reverseT().size() == 1
+          ? reverseT()[0]
+          : reverseT()[faceI]
+        );
+
+        d = CML::transform(T, d);
+    }
+}
+
+
 void CML::cyclicAMIPolyPatch::calcGeometry
 (
     const primitivePatch& referPatch,
@@ -947,28 +1005,43 @@ CML::label CML::cyclicAMIPolyPatch::pointFace
     point& p
 ) const
 {
+    point prt(p);
+    reverseTransformPosition(prt, faceI);
+
+    vector nrt(n);
+    reverseTransformDirection(nrt, faceI);
+
+    label nbrFaceI = -1;
+
     if (owner())
     {
-        return AMI().tgtPointFace
+        nbrFaceI = AMI().tgtPointFace
         (
             *this,
             neighbPatch(),
-            n,
+            nrt,
             faceI,
-            p
+            prt
         );
     }
     else
     {
-        return neighbPatch().AMI().srcPointFace
+        nbrFaceI = neighbPatch().AMI().srcPointFace
         (
             neighbPatch(),
             *this,
-            n,
+            nrt,
             faceI,
-            p
+            prt
         );
     }
+
+    if (nbrFaceI >= 0)
+    {
+        p = prt;
+    }
+
+    return nbrFaceI;
 }
 
 
@@ -1010,7 +1083,7 @@ void CML::cyclicAMIPolyPatch::write(Ostream& os) const
         }
         default:
         {
-            // no additional info to write
+            // No additional info to write
         }
     }
 

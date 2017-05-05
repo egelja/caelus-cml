@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 5.04</fullName>
-    <version>5.04</version>
+    <fullName>Caelus 5.10</fullName>
+    <version>5.10</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../doc/gpl-3.0.txt</licenseFile>
@@ -74,6 +74,9 @@
                         <distributionDirectory>
                             <origin>../tutorials/multiphase</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/compressible</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -94,7 +97,7 @@
                         </distributionDirectory>
                         <distributionDirectory>
                             <allowWildcards>1</allowWildcards>
-                            <origin>../external/scotch-5.1.12</origin>
+                            <origin>../external/scotch-6.0.4</origin>
                             <onPackingFilterList>
                                 <fileNameFilter logic="does_not_match" pattern="*.so"/>
                             </onPackingFilterList>
@@ -148,18 +151,18 @@
                 </folder>
                 <folder>
                     <description>scotchlib</description>
-                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-5.1.12/lib</destination>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-6.0.4/lib</destination>
                     <name>scotchlib</name>
                     <platforms>linux-x64</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>../external/scotch-5.1.12/lib/libscotch.so</origin>
+                            <origin>../external/scotch-6.0.4/lib/libscotch.so</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../external/scotch-5.1.12/lib/libscotcherr.so</origin>
+                            <origin>../external/scotch-6.0.4/lib/libscotcherr.so</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../external/scotch-5.1.12/lib/libscotcherrexit.so</origin>
+                            <origin>../external/scotch-6.0.4/lib/libscotcherrexit.so</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -234,7 +237,7 @@ PROJECT_DIR = "${installdir}"
 #MPI_INC = '${mpiincpath}'
 #MPI_LIB = '${mpilibpath}'
 #MPI_LIB_NAME = '${mpilibname}'
-#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-5.1.12'
+#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-6.0.4'
 #METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
 COLOUR_BUILD = '${colourbuildlin}'</text>
             <ruleList>
@@ -264,7 +267,7 @@ MPI_BIN = "${mpibinpath}"
 MPI_INC = "${mpiincpath}"
 MPI_LIB = "${mpilibpath}"
 MPI_LIB_NAME = "${mpilibname}"
-#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-5.1.12'
+#SCOTCH_PATH = '${installdir}/${product_shortName}-${product_version}/external/scotch-6.0.4'
 #METIS_PATH = '${installdir}/${product_shortName}-${product_version}/external/metis-5.1.0'
 COLOUR_BUILD = '${colourbuildlin}'</text>
             <ruleList>
@@ -525,6 +528,9 @@ from Caelus.write_env import *
         </slideShowImage>
         <slideShowImage>
             <path>images/g2995.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/forward_step_temperature2.png</path>
         </slideShowImage>
     </slideShowImageList>
 </project>

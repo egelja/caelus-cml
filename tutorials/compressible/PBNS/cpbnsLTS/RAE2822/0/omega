@@ -1,0 +1,39 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 5.10                      
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 6.25;
+
+boundaryField
+{
+    airfoil
+    {
+        type            compressible::omegaWallFunction;
+        value           uniform 1000;
+    }
+    farfield
+    {
+        type            inletOutlet;
+        inletValue      uniform 6.25;
+        value           uniform 6.25;
+    }
+    frontBack
+    {
+        type            empty;
+    }
+}
+
+
+// ************************************************************************* //

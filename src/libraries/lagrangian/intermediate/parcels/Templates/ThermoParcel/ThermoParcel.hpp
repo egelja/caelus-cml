@@ -76,6 +76,9 @@ public:
             //- Minimum temperature [K]
             scalar TMin_;
 
+            //- Maximum temperature [K]
+            scalar TMax_;
+
             //- Particle specific heat capacity [J/(kg.K)]
             scalar Cp0_;
 
@@ -117,6 +120,7 @@ public:
                 const scalar poissonsRatio,
                 const scalar T0,
                 const scalar TMin,
+                const scalar TMax,
                 const scalar Cp0,
                 const scalar epsilon0,
                 const scalar f0,
@@ -133,6 +137,12 @@ public:
 
                 //- Return const access to minimum temperature [K]
                 inline scalar TMin() const;
+
+                //- Return const access to maximum temperature [K]
+                inline scalar TMax() const;
+
+                //- Return non-const access to maximum temperature [K]
+                inline scalar& TMax();
 
                 //- Return const access to the particle specific heat capacity
                 //  [J/(kg.K)]
@@ -164,6 +174,10 @@ public:
             //  Cp not stored on carrier thermo, but returned as tmp<...>
             const volScalarField Cp_;
 
+            //- Local copy of carrier thermal conductivity field
+            //  kappa not stored on carrier thermo, but returned as tmp<...>
+//            const volScalarField kappa_;
+
 
             // Interpolators for continuous phase fields
 
@@ -173,9 +187,11 @@ public:
                 //- Specific heat capacity field interpolator
                 autoPtr<interpolation<scalar> > CpInterp_;
 
+                //- Thermal conductivity field interpolator
+//                autoPtr<interpolation<scalar> > kappaInterp_;
+
                 //- Radiation field interpolator
                 autoPtr<interpolation<scalar> > GInterp_;
-
 
 
     public:
@@ -199,6 +215,9 @@ public:
             //- Return access to the locally stored carrier Cp field
             inline const volScalarField& Cp() const;
 
+            //- Return access to the locally stored carrier kappa field
+//            inline const volScalarField& kappa() const;
+
             //- Return const access to the interpolator for continuous
             //  phase temperature field
             inline const interpolation<scalar>& TInterp() const;
@@ -206,6 +225,10 @@ public:
             //- Return const access to the interpolator for continuous
             //  phase specific heat capacity field
             inline const interpolation<scalar>& CpInterp() const;
+
+            //- Return const access to the interpolator for continuous
+            //  phase thermal conductivity field
+//            inline const interpolation<scalar>& kappaInterp() const;
 
             //- Return const access to the interpolator for continuous
             //  radiation field
@@ -258,11 +281,16 @@ public:
 
     // Static data members
 
-        //- String representation of properties
-        static string propHeader;
-
         //- Runtime type information
         TypeName("ThermoParcel");
+
+        //- String representation of properties
+        AddToPropertyList
+        (
+            ParcelType,
+            " T"
+          + " Cp"
+        );
 
 
     // Constructors
@@ -453,6 +481,7 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties()
     ParcelType::constantProperties(),
     T0_(0.0),
     TMin_(0.0),
+    TMax_(VGREAT),
     Cp0_(0.0),
     epsilon0_(0.0),
     f0_(0.0),
@@ -469,6 +498,7 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
     ParcelType::constantProperties(cp),
     T0_(cp.T0_),
     TMin_(cp.TMin_),
+    TMax_(cp.TMax_),
     Cp0_(cp.Cp0_),
     epsilon0_(cp.epsilon0_),
     f0_(cp.f0_),
@@ -485,7 +515,8 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
 :
     ParcelType::constantProperties(parentDict, readFields),
     T0_(0.0),
-    TMin_(0.0),
+    TMin_(200),
+    TMax_(5000),
     Cp0_(0.0),
     epsilon0_(0.0),
     f0_(0.0),
@@ -493,8 +524,16 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
 {
     if (readFields)
     {
+        if (this->dict().readIfPresent("TMin", TMin_))
+        {
+            Info<< "    employing parcel TMin of " << TMin_ << endl;
+        }
+        if (this->dict().readIfPresent("TMax", TMax_))
+        {
+            Info<< "    employing parcel TMax of " << TMax_ << endl;
+        }
+
         this->dict().lookup("T0") >> T0_;
-        this->dict().lookup("TMin") >> TMin_;
         this->dict().lookup("Cp0") >> Cp0_;
         this->dict().lookup("epsilon0") >> epsilon0_;
         this->dict().lookup("f0") >> f0_;
@@ -514,6 +553,7 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
     const scalar poissonsRatio,
     const scalar T0,
     const scalar TMin,
+    const scalar TMax,
     const scalar Cp0,
     const scalar epsilon0,
     const scalar f0,
@@ -531,6 +571,7 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
     ),
     T0_(T0),
     TMin_(TMin),
+    TMax_(TMax),
     Cp0_(Cp0),
     epsilon0_(epsilon0),
     f0_(f0),
@@ -619,6 +660,22 @@ CML::ThermoParcel<ParcelType>::constantProperties::TMin() const
 
 template<class ParcelType>
 inline CML::scalar
+CML::ThermoParcel<ParcelType>::constantProperties::TMax() const
+{
+    return TMax_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar&
+CML::ThermoParcel<ParcelType>::constantProperties::TMax()
+{
+    return TMax_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::Cp0() const
 {
     return Cp0_;
@@ -647,7 +704,6 @@ CML::ThermoParcel<ParcelType>::constantProperties::Pr() const
 {
     return Pr_;
 }
-
 
 // * * * * * * * * * * ThermoParcel Member Functions * * * * * * * * * * * * //
 
@@ -712,6 +768,7 @@ inline CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TrackingData
 :
     ParcelType::template TrackingData<CloudType>(cloud, part),
     Cp_(cloud.thermo().thermo().Cp()),
+//    kappa_(cloud.thermo().thermo().kappa()),
     TInterp_
     (
         interpolation<scalar>::New
@@ -728,6 +785,14 @@ inline CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TrackingData
             Cp_
         )
     ),
+//    kappaInterp_
+//    (
+//        interpolation<scalar>::New
+//        (
+//            cloud.solution().interpolationSchemes(),
+//            kappa_
+//        )
+//    ),
     GInterp_(NULL)
 {
     if (cloud.radiation())
@@ -754,6 +819,15 @@ CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::Cp() const
 }
 
 
+//template<class ParcelType>
+//template<class CloudType>
+//inline const CML::volScalarField&
+//CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::kappa() const
+//{
+//    return kappa_;
+//}
+
+
 template<class ParcelType>
 template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
@@ -770,6 +844,15 @@ CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::CpInterp() const
 {
     return CpInterp_();
 }
+
+
+//template<class ParcelType>
+//template<class CloudType>
+//inline const CML::interpolation<CML::scalar>&
+//CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::kappaInterp() const
+//{
+//    return kappaInterp_();
+//}
 
 
 template<class ParcelType>
@@ -912,13 +995,14 @@ void CML::ThermoParcel<ParcelType>::calcSurfaceValues
         Ts = td.cloud().constProps().TMin();
     }
 
-    // Assuming thermo props vary linearly with T for small dT
+    // Assuming thermo props vary linearly with T for small d(T)
     const scalar TRatio = Tc_/Ts;
 
     rhos = this->rhoc_*TRatio;
 
     tetIndices tetIs = this->currentTetIndices();
     mus = td.muInterp().interpolate(this->position(), tetIs)/TRatio;
+//    kappas = td.kappaInterp().interpolate(this->position(), tetIs)/TRatio;
 
     Pr = td.cloud().constProps().Pr();
     Pr = max(ROOTVSMALL, Pr);
@@ -1020,6 +1104,16 @@ void CML::ThermoParcel<ParcelType>::calc
 
         // Update sensible enthalpy coefficient
         td.cloud().hsCoeff()[cellI] += np0*Sph;
+
+        // Update radiation fields
+        if (td.cloud().radiation())
+        {
+            const scalar ap = this->areaP();
+            const scalar T4 = pow4(this->T_);
+            td.cloud().radAreaP()[cellI] += dt*np0*ap;
+            td.cloud().radT4()[cellI] += dt*np0*T4;
+            td.cloud().radAreaPT4()[cellI] += dt*np0*ap*T4;
+        }
     }
 }
 
@@ -1082,11 +1176,20 @@ CML::scalar CML::ThermoParcel<ParcelType>::calcHeatTransfer
     IntegrationScheme<scalar>::integrationResult Tres =
         td.cloud().TIntegrator().integrate(T_, dt, ap*bp, bp);
 
-    scalar Tnew = max(Tres.value(), td.cloud().constProps().TMin());
+    scalar Tnew =
+        min
+        (
+            max
+            (
+                Tres.value(),
+                td.cloud().constProps().TMin()
+            ),
+            td.cloud().constProps().TMax()
+        );
 
     Sph = dt*htc*As;
 
-    dhsTrans += Sph*(0.5*(T_ + Tnew) - Tc_);
+    dhsTrans += Sph*(Tres.average() - Tc_);
 
     return Tnew;
 }
@@ -1127,10 +1230,8 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<class ParcelType>
-CML::string CML::ThermoParcel<ParcelType>::propHeader =
-    ParcelType::propHeader
-  + " T"
-  + " Cp";
+CML::string CML::ThermoParcel<ParcelType>::propertyList_ =
+    CML::ThermoParcel<ParcelType>::propertyList();
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -1158,12 +1259,8 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&T_),
-              + sizeof(T_)
-              + sizeof(Cp_)
-            );
+            label size = reinterpret_cast<const char*>(&Cp_) - reinterpret_cast<const char*>(&T_) + sizeof(Cp_);
+            is.read(reinterpret_cast<char*>(&T_), size);
         }
     }
 
@@ -1211,7 +1308,7 @@ void CML::ThermoParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<scalar> T(c.fieldIOobject("T", IOobject::NO_READ), np);
     IOField<scalar> Cp(c.fieldIOobject("Cp", IOobject::NO_READ), np);
@@ -1249,11 +1346,9 @@ CML::Ostream& CML::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-        os.write
-        (
-            reinterpret_cast<const char*>(&p.T_),
-            sizeof(p.T()) + sizeof(p.Cp())
-        );
+
+        label size = reinterpret_cast<const char*>(&p.Cp_) - reinterpret_cast<const char*>(&p.T_) + sizeof(p.Cp_);
+        os.write(reinterpret_cast<const char*>(&p.T_), size);
     }
 
     // Check state of Ostream

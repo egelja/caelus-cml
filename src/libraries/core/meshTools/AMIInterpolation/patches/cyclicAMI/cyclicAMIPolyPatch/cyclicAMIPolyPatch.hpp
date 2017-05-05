@@ -306,7 +306,7 @@ public:
                 //- Axis of rotation for rotational cyclic AMI
                 inline const vector& rotationAxis() const;
 
-                //- point on axis of rotation for rotational cyclic AMI
+                //- Point on axis of rotation for rotational cyclic AMI
                 inline const point& rotationCentre() const;
 
                 //- Translation vector for translational cyclic AMI
@@ -319,6 +319,20 @@ public:
                 virtual void transformPosition
                 (
                     point& l,
+                    const label faceI
+                ) const;
+
+                //- Transform a patch-based position from this side to nbr side
+                virtual void reverseTransformPosition
+                (
+                    point& l,
+                    const label faceI
+                ) const;
+
+                //- Transform a patch-based direction from this side to nbr side
+                virtual void reverseTransformDirection
+                (
+                    vector& d,
                     const label faceI
                 ) const;
 

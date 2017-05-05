@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "error.hpp"
+#include <typeinfo>
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -58,7 +59,41 @@ inline CML::tmp<T>::tmp(const tmp<T>& t)
         {
             FatalErrorIn("CML::tmp<T>::tmp(const tmp<T>&)")
                 << "attempted copy of a deallocated temporary"
+                << " of type " << typeid(T).name()
                 << abort(FatalError);
+        }
+    }
+}
+
+
+template<class T>
+inline CML::tmp<T>::tmp(const tmp<T>& t, bool allowTransfer)
+:
+    isTmp_(t.isTmp_),
+    ptr_(t.ptr_),
+    ref_(t.ref_)
+{
+    if (isTmp_)
+    {
+        if (allowTransfer)
+        {
+            const_cast<tmp<T>&>(t).ptr_ = 0;
+        }
+        else
+        {
+            if (ptr_)
+            {
+                ptr_->operator++();
+            }
+            else
+            {
+                FatalErrorIn
+                (
+                    "CML::tmp<T>::tmp(const tmp<T>&, bool allowTransfer)"
+                )   << "attempted copy of a deallocated temporary"
+                    << " of type " << typeid(T).name()
+                    << abort(FatalError);
+            }
         }
     }
 }
@@ -113,7 +148,7 @@ inline T* CML::tmp<T>::ptr() const
          if (!ptr_)
          {
              FatalErrorIn("CML::tmp<T>::ptr() const")
-                 << "temporary deallocated"
+                 << "temporary of type " << typeid(T).name() << " deallocated"
                  << abort(FatalError);
          }
 
@@ -152,7 +187,7 @@ inline T& CML::tmp<T>::operator()()
         if (!ptr_)
         {
             FatalErrorIn("T& CML::tmp<T>::operator()()")
-                << "temporary deallocated"
+                << "temporary of type " << typeid(T).name() << " deallocated"
                 << abort(FatalError);
         }
 
@@ -181,7 +216,7 @@ inline const T& CML::tmp<T>::operator()() const
         if (!ptr_)
         {
             FatalErrorIn("const T& CML::tmp<T>::operator()() const")
-                << "temporary deallocated"
+                << "temporary of type " << typeid(T).name() << " deallocated"
                 << abort(FatalError);
         }
 
@@ -209,7 +244,7 @@ inline T* CML::tmp<T>::operator->()
          if (!ptr_)
          {
              FatalErrorIn("CML::tmp<T>::operator->()")
-                 << "temporary deallocated"
+                 << "temporary of type " << typeid(T).name() << " deallocated"
                  << abort(FatalError);
          }
 
@@ -258,6 +293,7 @@ inline void CML::tmp<T>::operator=(const tmp<T>& t)
         {
             FatalErrorIn("CML::tmp<T>::operator=(const tmp<T>&)")
                 << "attempted copy of a deallocated temporary"
+                << " of type " << typeid(T).name()
                 << abort(FatalError);
         }
     }
@@ -265,6 +301,7 @@ inline void CML::tmp<T>::operator=(const tmp<T>& t)
     {
         FatalErrorIn("CML::tmp<T>::operator=(const tmp<T>&)")
             << "attempted to assign to a const reference to constant object"
+            << " of type " << typeid(T).name()
             << abort(FatalError);
     }
 }

@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -23,10 +23,94 @@ License
 #include "dictionary.hpp"
 #include "Time.hpp"
 #include "Pstream.hpp"
+#include "IOmanip.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::forceCoeffs, 0);
+namespace CML
+{
+    defineTypeNameAndDebug(forceCoeffs, 0);
+}
+
+
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
+void CML::forceCoeffs::writeFileHeader(const label i)
+{
+    if (i == 0)
+    {
+        // force coeff data
+
+        writeHeader(file(i), "Force coefficients");
+        writeHeaderValue(file(i), "liftDir", liftDir_);
+        writeHeaderValue(file(i), "dragDir", dragDir_);
+        writeHeaderValue(file(i), "pitchAxis", pitchAxis_);
+        writeHeaderValue(file(i), "magUInf", magUInf_);
+        writeHeaderValue(file(i), "lRef", lRef_);
+        writeHeaderValue(file(i), "Aref", Aref_);
+        writeHeaderValue(file(i), "CofR", coordSys_.origin());
+        writeCommented(file(i), "Time");
+        writeTabbed(file(i), "Cm");
+        writeTabbed(file(i), "Cd");
+        writeTabbed(file(i), "Cl");
+        writeTabbed(file(i), "Cl(f)");
+        writeTabbed(file(i), "Cl(r)");
+        file(i)
+            << tab << "Cm" << tab << "Cd" << tab << "Cl" << tab << "Cl(f)"
+            << tab << "Cl(r)";
+    }
+    else if (i == 1)
+    {
+        // bin coeff data
+
+        writeHeader(file(i), "Force coefficient bins");
+        writeHeaderValue(file(i), "bins", nBin_);
+        writeHeaderValue(file(i), "start", binMin_);
+        writeHeaderValue(file(i), "delta", binDx_);
+        writeHeaderValue(file(i), "direction", binDir_);
+
+        vectorField binPoints(nBin_);
+        writeCommented(file(i), "x co-ords  :");
+        forAll(binPoints, pointI)
+        {
+            binPoints[pointI] = (binMin_ + (pointI + 1)*binDx_)*binDir_;
+            file(i) << tab << binPoints[pointI].x();
+        }
+        file(i) << nl;
+
+        writeCommented(file(i), "y co-ords  :");
+        forAll(binPoints, pointI)
+        {
+            file(i) << tab << binPoints[pointI].y();
+        }
+        file(i) << nl;
+
+        writeCommented(file(i), "z co-ords  :");
+        forAll(binPoints, pointI)
+        {
+            file(i) << tab << binPoints[pointI].z();
+        }
+        file(i) << nl;
+
+        writeCommented(file(i), "Time");
+
+        for (label j = 0; j < nBin_; j++)
+        {
+            const word jn('(' + CML::name(j) + ')');
+            writeTabbed(file(i), "Cm" + jn);
+            writeTabbed(file(i), "Cd" + jn);
+            writeTabbed(file(i), "Cl" + jn);
+        }
+    }
+    else
+    {
+        FatalErrorIn("void CML::forces::writeFileHeader(const label)")
+            << "Unhandled file index: " << i
+            << abort(FatalError);
+    }
+
+    file(i)<< endl;
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -39,7 +123,7 @@ CML::forceCoeffs::forceCoeffs
     const bool loadFromFiles
 )
 :
-    forces(name, obr, dict, loadFromFiles),
+    forces(name, obr, dict, loadFromFiles, false),
     liftDir_(vector::zero),
     dragDir_(vector::zero),
     pitchAxis_(vector::zero),
@@ -48,6 +132,8 @@ CML::forceCoeffs::forceCoeffs
     Aref_(0.0)
 {
     read(dict);
+
+    Info<< endl;
 }
 
 
@@ -80,16 +166,6 @@ void CML::forceCoeffs::read(const dictionary& dict)
 }
 
 
-void CML::forceCoeffs::writeFileHeader()
-{
-    if (forcesFilePtr_.valid())
-    {
-        forcesFilePtr_()
-            << "# Time" << tab << "Cd" << tab << "Cl" << tab << "Cm" << endl;
-    }
-}
-
-
 void CML::forceCoeffs::execute()
 {
     // Do nothing - only valid on write
@@ -102,45 +178,84 @@ void CML::forceCoeffs::end()
 }
 
 
+void CML::forceCoeffs::timeSet()
+{
+    // Do nothing - only valid on write
+}
+
+
 void CML::forceCoeffs::write()
 {
-    if (active_)
-    {
-        // Create the forces file if not already created
-        makeFile();
+    forces::calcForcesMoment();
 
-        forcesMoments fm = forces::calcForcesMoment();
+    if (!active_)
+    {
+        return;
+    }
+
+    if (Pstream::master())
+    {
+        functionObjectFile::write();
 
         scalar pDyn = 0.5*rhoRef_*magUInf_*magUInf_;
 
-        vector totForce = fm.first().first() + fm.first().second();
-        vector totMoment = fm.second().first() + fm.second().second();
+        Field<vector> totForce(force_[0] + force_[1] + force_[2]);
+        Field<vector> totMoment(moment_[0] + moment_[1] + moment_[2]);
 
-        scalar liftForce = totForce & liftDir_;
-        scalar dragForce = totForce & dragDir_;
-        scalar pitchMoment = totMoment & pitchAxis_;
+        List<Field<scalar> > coeffs(3);
+        coeffs[0].setSize(nBin_);
+        coeffs[1].setSize(nBin_);
+        coeffs[2].setSize(nBin_);
 
-        scalar Cl = liftForce/(Aref_*pDyn);
-        scalar Cd = dragForce/(Aref_*pDyn);
-        scalar Cm = pitchMoment/(Aref_*lRef_*pDyn);
+        // lift, drag and moment
+        coeffs[0] = (totForce & liftDir_)/(Aref_*pDyn);
+        coeffs[1] = (totForce & dragDir_)/(Aref_*pDyn);
+        coeffs[2] = (totMoment & pitchAxis_)/(Aref_*lRef_*pDyn);
 
-        if (Pstream::master())
+        scalar Cl = sum(coeffs[0]);
+        scalar Cd = sum(coeffs[1]);
+        scalar Cm = sum(coeffs[2]);
+
+        scalar Clf = Cl/2.0 + Cm;
+        scalar Clr = Cl/2.0 - Cm;
+
+        file(0)
+            << obr_.time().value() << tab << Cm << tab  << Cd
+            << tab << Cl << tab << Clf << tab << Clr << endl;
+
+        Info(log_)<< type() << " " << name_ << " output:" << nl
+            << "    Cm    = " << Cm << nl
+            << "    Cd    = " << Cd << nl
+            << "    Cl    = " << Cl << nl
+            << "    Cl(f) = " << Clf << nl
+            << "    Cl(r) = " << Clr << endl;
+
+        if (nBin_ > 1)
         {
-            forcesFilePtr_()
-                << obr_.time().value() << tab
-                << Cd << tab << Cl << tab << Cm << endl;
-
-            if (log_)
+            if (binCumulative_)
             {
-                Info<< "forceCoeffs output:" << nl
-                    << "    Cd = " << Cd << nl
-                    << "    Cl = " << Cl << nl
-                    << "    Cm = " << Cm << nl
-                    << "    Cl(f) = " << Cl/2.0 - Cm << nl
-                    << "    Cl(r) = " << Cl/2.0 + Cm << nl
-                    << endl;
+                for (label i = 1; i < coeffs[0].size(); i++)
+                {
+                    coeffs[0][i] += coeffs[0][i-1];
+                    coeffs[1][i] += coeffs[1][i-1];
+                    coeffs[2][i] += coeffs[2][i-1];
+                }
             }
+
+            file(1)<< obr_.time().value();
+
+            forAll(coeffs[0], i)
+            {
+                file(1)
+                    << tab << coeffs[2][i]
+                    << tab << coeffs[1][i]
+                    << tab << coeffs[0][i];
+            }
+
+            file(1) << endl;
         }
+
+        Info(log_)<< endl;
     }
 }
 

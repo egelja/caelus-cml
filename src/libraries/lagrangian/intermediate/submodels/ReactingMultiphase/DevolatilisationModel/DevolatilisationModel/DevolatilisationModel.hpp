@@ -36,7 +36,7 @@ SourceFiles
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,13 +44,13 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                      Class DevolatilisationModel Declaration
+                    Class DevolatilisationModel Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
 class DevolatilisationModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 protected:
 
@@ -123,11 +123,14 @@ public:
         virtual void calculate
         (
             const scalar dt,
+            const scalar age,
             const scalar mass0,
             const scalar mass,
             const scalar T,
             const scalarField& YGasEff,
-            bool& canCombust,
+            const scalarField& YLiquidEff,
+            const scalarField& YSolidEff,
+            label& canCombust,
             scalarField& dMassDV
         ) const;
 
@@ -185,7 +188,7 @@ CML::DevolatilisationModel<CloudType>::DevolatilisationModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     dMass_(0.0)
 {}
 
@@ -198,7 +201,7 @@ CML::DevolatilisationModel<CloudType>::DevolatilisationModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     dMass_(0.0)
 {}
 
@@ -209,7 +212,7 @@ CML::DevolatilisationModel<CloudType>::DevolatilisationModel
     const DevolatilisationModel<CloudType>& dm
 )
 :
-    SubModelBase<CloudType>(dm),
+    CloudSubModelBase<CloudType>(dm),
     dMass_(dm.dMass_)
 {}
 
@@ -230,8 +233,11 @@ void CML::DevolatilisationModel<CloudType>::calculate
     const scalar,
     const scalar,
     const scalar,
+    const scalar,
     const scalarField&,
-    bool&,
+    const scalarField&,
+    const scalarField&,
+    label&,
     scalarField&
 ) const
 {
@@ -243,8 +249,11 @@ void CML::DevolatilisationModel<CloudType>::calculate
             "const scalar, "
             "const scalar, "
             "const scalar, "
+            "const scalar, "
             "const scalarField&, "
-            "bool&, "
+            "const scalarField&, "
+            "const scalarField&, "
+            "label&, "
             "scalarField&"
         ") const"
     );
@@ -269,11 +278,7 @@ void CML::DevolatilisationModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer devolatilisation  = " << massTotal << nl;
 
-    if
-    (
-        this->owner().solution().transient()
-     && this->owner().db().time().outputTime()
-    )
+    if (this->outputTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

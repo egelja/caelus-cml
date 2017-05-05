@@ -218,12 +218,12 @@ public:
             //- Calculate y+ at the edge of the laminar sublayer
             scalar yPlusLam(const scalar kappa, const scalar E) const;
 
-            //- Const access to the coefficients dictionary
-            const dictionary& coeffDict() const
-            {
-                return coeffDict_;
-            }
 
+         //- Const access to the coefficients dictionary
+         virtual const dictionary& coeffDict() const
+         {
+               return coeffDict_;
+         }
 
         //- Return the effective viscosity
         virtual tmp<volScalarField> muEff() const

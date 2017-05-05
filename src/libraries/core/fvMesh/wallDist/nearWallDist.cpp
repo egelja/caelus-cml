@@ -27,7 +27,7 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void CML::nearWallDist::doAll()
+void CML::nearWallDist::calculate()
 {
     cellDistFuncs wallUtils(mesh_);
 
@@ -97,7 +97,7 @@ CML::nearWallDist::nearWallDist(const CML::fvMesh& mesh)
     ),
     mesh_(mesh)
 {
-    doAll();
+    calculate();
 }
 
 
@@ -111,16 +111,28 @@ CML::nearWallDist::~nearWallDist()
 
 void CML::nearWallDist::correct()
 {
-    if (mesh_.changing())
+    if (mesh_.topoChanging())
     {
-        // Update size of GeometricBoundaryField
-        forAll(mesh_.boundary(), patchI)
+        const DimensionedField<scalar, volMesh>& V = mesh_.V();
+        const fvBoundaryMesh& bnd = mesh_.boundary();
+
+        this->setSize(bnd.size());
+        forAll(*this, patchI)
         {
-            operator[](patchI).setSize(mesh_.boundary()[patchI].size());
+            this->set
+            (
+                patchI,
+                fvPatchField<scalar>::New
+                (
+                    calculatedFvPatchScalarField::typeName,
+                    bnd[patchI],
+                    V
+                )
+            );
         }
     }
 
-    doAll();
+    calculate();
 }
 
 

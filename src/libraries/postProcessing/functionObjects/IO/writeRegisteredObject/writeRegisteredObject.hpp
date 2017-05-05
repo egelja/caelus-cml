@@ -2,26 +2,64 @@
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::writeRegisteredObject
 
+Group
+    grpIOFunctionObjects
+
 Description
-    Takes over the writing of registered IO objects
+    This function object allows specification of different writing frequency
+    of objects registered to the database. It has similar functionality
+    as the main time database through the outputControl setting:
+        timeStep
+        outputTime
+        adjustableTime
+        runTime
+        clockTime
+        cpuTime
+
+    Example of function object specification:
+    \verbatim
+    writeRegisteredObject1
+    {
+        type        writeRegisteredObject;
+        functionObjectLibs ("libIOFunctionObjects.so");
+        exclusiveWriting     true;
+        ...
+        objectNames (obj1 obj2);
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: writeRegisteredObject | yes |
+        objectNames  | objects to write        | yes         |
+        exclusiveWriting    | Takes over object writing | no | yes
+    \endtable
+
+    exclusiveWriting disables automatic writing (i.e through database) of the
+    objects to avoid duplicate writing.
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     writeRegisteredObject.cpp
@@ -33,7 +71,7 @@ SourceFiles
 #define writeRegisteredObject_H
 
 #include "pointFieldFwd.hpp"
-#include "wordList.hpp"
+#include "wordReList.hpp"
 #include "runTimeSelectionTables.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -59,12 +97,16 @@ protected:
         //- Name of this set of writeRegisteredObject
         word name_;
 
+        //- Takes over the writing from Db
+        bool exclusiveWriting_;
+
+        //- Refererence to Db
         const objectRegistry& obr_;
 
         // Read from dictionary
 
             //- Names of objects to control
-            wordList objectNames_;
+            wordReList objectNames_;
 
 
     // Private Member Functions
@@ -116,6 +158,9 @@ public:
 
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
+
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
 
         //- Write the writeRegisteredObject
         virtual void write();

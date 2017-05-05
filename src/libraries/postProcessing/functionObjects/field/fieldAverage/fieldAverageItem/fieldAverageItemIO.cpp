@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -27,9 +27,12 @@ License
 
 CML::fieldAverageItem::fieldAverageItem(Istream& is)
 :
+    active_(false),
     fieldName_("unknown"),
     mean_(0),
+    meanFieldName_("unknown"),
     prime2Mean_(0),
+    prime2MeanFieldName_("unknown"),
     base_(ITER),
     window_(-1.0)
 {
@@ -42,6 +45,15 @@ CML::fieldAverageItem::fieldAverageItem(Istream& is)
     entry.lookup("prime2Mean") >> prime2Mean_;
     base_ = baseTypeNames_[entry.lookup("base")];
     window_ = entry.lookupOrDefault<scalar>("window", -1.0);
+    windowName_ = entry.lookupOrDefault<word>("windowName", "");
+
+    meanFieldName_ = fieldName_ + EXT_MEAN;
+    prime2MeanFieldName_ = fieldName_ + EXT_PRIME2MEAN;
+    if ((window_ > 0) && (windowName_ != ""))
+    {
+        meanFieldName_ = meanFieldName_ + "_" + windowName_;
+        prime2MeanFieldName_ = prime2MeanFieldName_ + "_" + windowName_;
+    }
 }
 
 
@@ -57,12 +69,26 @@ CML::Istream& CML::operator>>(Istream& is, fieldAverageItem& faItem)
 
     const dictionaryEntry entry(dictionary::null, is);
 
+    faItem.active_ = false;
     faItem.fieldName_ = entry.keyword();
     entry.lookup("mean") >> faItem.mean_;
     entry.lookup("prime2Mean") >> faItem.prime2Mean_;
     faItem.base_ = faItem.baseTypeNames_[entry.lookup("base")];
     faItem.window_ = entry.lookupOrDefault<scalar>("window", -1.0);
+    faItem.windowName_ = entry.lookupOrDefault<word>("windowName", "");
 
+    faItem.meanFieldName_ = faItem.fieldName_ + fieldAverageItem::EXT_MEAN;
+    faItem.prime2MeanFieldName_ =
+        faItem.fieldName_ + fieldAverageItem::EXT_PRIME2MEAN;
+
+    if ((faItem.window_ > 0) && (faItem.windowName_ != ""))
+    {
+        faItem.meanFieldName_ =
+            faItem.meanFieldName_ + "_" + faItem.windowName_;
+
+        faItem.prime2MeanFieldName_ =
+            faItem.prime2MeanFieldName_ + "_" + faItem.windowName_;
+    }
     return is;
 }
 
@@ -86,6 +112,12 @@ CML::Ostream& CML::operator<<(Ostream& os, const fieldAverageItem& faItem)
     {
         os.writeKeyword("window") << faItem.window_
             << token::END_STATEMENT << nl;
+
+        if (faItem.windowName_ != "")
+        {
+            os.writeKeyword("windowName") << faItem.windowName_
+                << token::END_STATEMENT << nl;
+        }
     }
 
     os  << token::END_BLOCK << nl;

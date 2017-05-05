@@ -2,27 +2,83 @@
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::forceCoeffs
 
+Group
+    grpForcesFunctionObjects
+
 Description
-    Derived from the forces function object, creates a specialisation to
-    calculate lift and drag forces.
+    This function object extends the CML::forces function object by providing
+    lift, drag and moment coefficients.  The data can optionally be output into
+    bins, defined in a given direction.
+
+    Example of function object specification:
+    \verbatim
+    forceCoeffs1
+    {
+        type        forceCoeffs;
+        functionObjectLibs ("libforces.so");
+        ...
+        log         yes;
+        patches     (walls);
+        liftDir     (0 1 0);
+        dragDir     (-1 0 0);
+        pitchAxis   (0 0 1);
+        magUInf     100;
+        lRef        3.5;
+        Aref        2.2;
+
+        binData
+        {
+            nBin        20;
+            direction   (1 0 0);
+            cumulative  yes;
+        }
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: forces       | yes         |
+        log          | write force data to standard output | no | no
+        patches      | patches included in the forces calculation | yes |
+        liftDir      | lift direction          | yes         |
+        dragDir      | drag direction          | yes         |
+        pitchAxis    | picth axis              | yes         |
+        magUInf      | free stream velocity magnitude | yes  |
+        lRef         | reference length scale for moment calculations | yes |
+        Aref         | reference area          | yes |
+    \endtable
+
+    Bin data is optional, but if the dictionary is present, the entries must
+    be defined according o
+    \table
+        nBin         | number of data bins     | yes         |
+        direction    | direction along which bins are defined | yes |
+        cumulative   | bin data accumulated with incresing distance | yes |
+    \endtable
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
+    CML::forces
 
 SourceFiles
     forceCoeffs.cpp
@@ -41,7 +97,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                        Class forceCoeffs Declaration
+                         Class forceCoeffs Declaration
 \*---------------------------------------------------------------------------*/
 
 class forceCoeffs
@@ -89,7 +145,7 @@ class forceCoeffs
 protected:
 
     //- Output file header information
-    virtual void writeFileHeader();
+    virtual void writeFileHeader(const label i);
 
 
 public:
@@ -125,6 +181,9 @@ public:
 
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
+
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
 
         //- Write the forces
         virtual void write();

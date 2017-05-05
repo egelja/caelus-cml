@@ -118,7 +118,6 @@ CML::fv::interRegionExplicitPorositySource::interRegionExplicitPorositySource
     porosityPtr_(NULL),
     firstIter_(-1),
     UName_(coeffs_.lookupOrDefault<word>("UName", "U")),
-    rhoName_(coeffs_.lookupOrDefault<word>("rhoName", "rho")),
     muName_(coeffs_.lookupOrDefault<word>("muName", "thermo:mu"))
 {
     if (active_)
@@ -167,64 +166,108 @@ void CML::fv::interRegionExplicitPorositySource::addSup
 
     fvMatrix<vector> nbrEqn(UNbr, eqn.dimensions());
 
-    if (eqn.dimensions() == dimForce)
-    {
-        const volScalarField& rho =
-            mesh_.lookupObject<volScalarField>(rhoName_);
+    porosityPtr_->addResistance(nbrEqn);
 
-        const volScalarField& mu =
-            mesh_.lookupObject<volScalarField>(muName_);
+    // convert source from neighbour to local region
+    fvMatrix<vector> porosityEqn(U, eqn.dimensions());
+    scalarField& Udiag = porosityEqn.diag();
+    vectorField& Usource = porosityEqn.source();
 
-        volScalarField rhoNbr
+    Udiag.setSize(eqn.diag().size(), 0.0);
+    Usource.setSize(eqn.source().size(), vector::zero);
+
+    meshInterp().mapTgtToSrc(nbrEqn.diag(), plusEqOp<scalar>(), Udiag);
+    meshInterp().mapTgtToSrc(nbrEqn.source(), plusEqOp<vector>(), Usource);
+
+    eqn -= porosityEqn;
+}
+
+
+void CML::fv::interRegionExplicitPorositySource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    initialise();
+
+    const fvMesh& nbrMesh = mesh_.time().lookupObject<fvMesh>(nbrRegionName_);
+
+    const volVectorField& U = eqn.psi();
+
+    volVectorField UNbr
+    (
+        IOobject
         (
-            IOobject
-            (
-                "rho:UNbr",
-                nbrMesh.time().timeName(),
-                nbrMesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
+            name_ + ":UNbr",
+            nbrMesh.time().timeName(),
             nbrMesh,
-            dimensionedScalar("zero", dimDensity, 0.0)
-        );
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        nbrMesh,
+        dimensionedVector("zero", U.dimensions(), vector::zero)
+    );
 
-        volScalarField muNbr
+    // map local velocity onto neighbour region
+    meshInterp().mapSrcToTgt
+    (
+        U.internalField(),
+        plusEqOp<vector>(),
+        UNbr.internalField()
+    );
+
+    fvMatrix<vector> nbrEqn(UNbr, eqn.dimensions());
+
+    volScalarField rhoNbr
+    (
+        IOobject
         (
-            IOobject
-            (
-                "mu:UNbr",
-                nbrMesh.time().timeName(),
-                nbrMesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
+            "rho:UNbr",
+            nbrMesh.time().timeName(),
             nbrMesh,
-            dimensionedScalar("zero", mu.dimensions(), 0.0)
-        );
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        nbrMesh,
+        dimensionedScalar("zero", dimDensity, 0.0)
+    );
 
-        // map local rho onto neighbour region
-        meshInterp().mapSrcToTgt
+    volScalarField muNbr
+    (
+        IOobject
         (
-            rho.internalField(),
-            plusEqOp<scalar>(),
-            rhoNbr.internalField()
-        );
+            "mu:UNbr",
+            nbrMesh.time().timeName(),
+            nbrMesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        nbrMesh,
+        dimensionedScalar("zero", dimViscosity, 0.0)
+    );
 
-        // map local mu onto neighbour region
-        meshInterp().mapSrcToTgt
-        (
-            mu.internalField(),
-            plusEqOp<scalar>(),
-            muNbr.internalField()
-        );
+    const volScalarField& mu =
+        mesh_.lookupObject<volScalarField>(muName_);
 
-        porosityPtr_->addResistance(nbrEqn, rhoNbr, muNbr);
-    }
-    else
-    {
-        porosityPtr_->addResistance(nbrEqn);
-    }
+    // map local rho onto neighbour region
+    meshInterp().mapSrcToTgt
+    (
+        rho.internalField(),
+        plusEqOp<scalar>(),
+        rhoNbr.internalField()
+    );
+
+    // map local mu onto neighbour region
+    meshInterp().mapSrcToTgt
+    (
+        mu.internalField(),
+        plusEqOp<scalar>(),
+        muNbr.internalField()
+    );
+
+    porosityPtr_->addResistance(nbrEqn, rhoNbr, muNbr);
 
     // convert source from neighbour to local region
     fvMatrix<vector> porosityEqn(U, eqn.dimensions());
@@ -253,7 +296,6 @@ bool CML::fv::interRegionExplicitPorositySource::read(const dictionary& dict)
     if (option::read(dict))
     {
         coeffs_.readIfPresent("UName", UName_);
-        coeffs_.readIfPresent("rhoName", rhoName_);
         coeffs_.readIfPresent("muName", muName_);
 
         // reset the porosity model?

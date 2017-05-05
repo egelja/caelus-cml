@@ -53,23 +53,13 @@ namespace CML
 int main(int argc, char *argv[])
 {
     CML::timeSelector::addOptions();
-#   include "addRegionOption.hpp"
+    #include "addRegionOption.hpp"
     CML::argList::addBoolOption
     (
         "noWrite",
         "suppress writing results"
     );
-    CML::argList::addBoolOption
-    (
-        "noFlow",
-        "suppress creating flow models (execFlowFunctionObjects only)"
-    );
-    CML::argList::addOption
-    (
-        "dict",
-        "name",
-        "dictionary to use"
-    );
+    #include "addDictOption.hpp"
 
     #include "setRootCase.hpp"
     #include "createTime.hpp"

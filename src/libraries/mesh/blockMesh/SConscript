@@ -46,6 +46,8 @@ src_files = Split("""
   curvedEdges/lineDivide.cpp
   curvedEdges/BSplineEdge.cpp
   curvedEdges/splineEdge.cpp
+  gradingDescriptor/gradingDescriptor.cpp
+  gradingDescriptor/gradingDescriptors.cpp
   blockDescriptor/blockDescriptor.cpp
   blockDescriptor/blockDescriptorEdges.cpp
   block/block.cpp

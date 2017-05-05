@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,10 +27,6 @@ Description
 
     Storage is allocated on free-store during construction.
 
-SourceFiles
-    List.cpp
-    ListI.hpp
-    ListIO.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -264,7 +261,7 @@ inline CML::autoPtr<CML::List<T> > CML::List<T>::clone() const
 template<class T>
 inline const CML::List<T>& CML::List<T>::null()
 {
-    return *reinterpret_cast< List<T>* >(0);
+    return NullSingletonRef< List<T> >();
 }
 
 

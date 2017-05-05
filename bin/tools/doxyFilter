@@ -1,26 +1,22 @@
 #!/bin/sh
 #------------------------------------------------------------------------------
-# =========                 |
-# \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-#  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
-#    \\/     M anipulation  |
+# Copyright (C) 2011 OpenFOAM Foundation
 #-------------------------------------------------------------------------------
 # License
-#     This file is part of OpenFOAM.
+#     This file is part of CAELUS.
 #
-#     OpenFOAM is free software: you can redistribute it and/or modify it
+#     CAELUS is free software: you can redistribute it and/or modify it
 #     under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+#     CAELUS is distributed in the hope that it will be useful, but WITHOUT
 #     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 #     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 #     for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+#     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Script
 #     doxyFilter
@@ -38,7 +34,15 @@
 
 if [ "$#" -gt 0 ]
 then
-    filePath=$(echo $1 | sed -e s@^$CAELUS_PROJECT_DIR@../../..@ )
+
+    realFilePath=$(echo $1 | sed -e s@^$CAELUS_PROJECT_DIR@../../..@ )
+    if [ -n "$CAELUS_ONLINE_REPO" ]
+    then
+        filePath=$(echo $1 | sed -e s@^$CAELUS_PROJECT_DIR@$CAELUS_ONLINE_REPO@ )
+    else
+        filePath=$realFilePath
+    fi
+
     # dirName=$(echo "$filePath" | sed -e 's@/[^/]*$@@' )
     dirName=${filePath%/[^/]*}
     fileName=${filePath##*/}
@@ -54,8 +58,10 @@ then
 #        ;;
     esac
 
-    awk -f $awkScript $1 | \
+    awk -f $CAELUS_PROJECT_DIR/bin/tools/doxyFilter-table.awk $1 | \
+    awk -f $awkScript  | \
     sed -f $CAELUS_PROJECT_DIR/bin/tools/doxyFilter.sed \
+        -e s@%realFilePath%@$realFilePath@g \
         -e s@%filePath%@$filePath@g \
         -e s@%fileName%@$fileName@g \
         -e s@%dirName%@$dirName@g

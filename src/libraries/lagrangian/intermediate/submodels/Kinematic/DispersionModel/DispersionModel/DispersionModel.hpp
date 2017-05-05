@@ -31,7 +31,7 @@ Description
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,7 +45,7 @@ namespace CML
 template<class CloudType>
 class DispersionModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 public:
 
@@ -153,7 +153,7 @@ public:
 template<class CloudType>
 CML::DispersionModel<CloudType>::DispersionModel(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner)
+    CloudSubModelBase<CloudType>(owner)
 {}
 
 
@@ -165,7 +165,7 @@ CML::DispersionModel<CloudType>::DispersionModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type)
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type)
 {}
 
 
@@ -175,7 +175,7 @@ CML::DispersionModel<CloudType>::DispersionModel
     DispersionModel<CloudType>& dm
 )
 :
-    SubModelBase<CloudType>(dm)
+    CloudSubModelBase<CloudType>(dm)
 {}
 
 

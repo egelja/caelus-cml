@@ -16,8 +16,7 @@ funcObjSysEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this library
 #===============================================================================
-lib_inc = ['lnInclude',
-funcObjSysEnv['LIB_SRC'] + '/sampling/lnInclude']
+lib_inc = ['lnInclude']
 funcObjSysEnv.Prepend(CPPPATH = lib_inc)
 
 #===============================================================================
@@ -29,7 +28,7 @@ funcObjSysEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['core','sampling'] 
+lib_link = ['core'] 
 funcObjSysEnv.Append(LIBS = lib_link)
    
 #===============================================================================

@@ -109,6 +109,68 @@ CML::scalar CML::liquidMixtureProperties::Tc(const scalarField& x) const
 }
 
 
+CML::scalar CML::liquidMixtureProperties::Tpt(const scalarField& x) const
+{
+    scalar Tpt = 0.0;
+    forAll(properties_, i)
+    {
+        Tpt += x[i]*properties_[i].Tt();
+    }
+
+    return Tpt;
+}
+
+
+CML::scalar CML::liquidMixtureProperties::pvInvert
+(
+    const scalar p,
+    const scalarField& x
+) const
+{
+    // Set upper and lower bounds
+    scalar Thi = Tc(x);
+    scalar Tlo = Tpt(x);
+
+    // Check for critical and solid phase conditions
+    if (p >= pv(p, Thi, x))
+    {
+        return Thi;
+    }
+    else if (p < pv(p, Tlo, x))
+    {
+        WarningIn
+        (
+            "CML::scalar CML::liquidMixtureProperties::pvInvert"
+            "("
+            "    const scalar,"
+            "    const scalarField&"
+            ") const"
+        )   << "Pressure below triple point pressure: "
+            << "p = " << p << " < Pt = " << pv(p, Tlo, x) <<  nl << endl;
+        return -1;
+    }
+
+    // Set initial guess
+    scalar T = (Thi + Tlo)*0.5;
+
+    while ((Thi - Tlo) > 1.0e-4)
+    {
+        if ((pv(p, T, x) - p) <= 0.0)
+        {
+            Tlo = T;
+        }
+        else
+        {
+            Thi = T;
+        }
+
+        T = (Thi + Tlo)*0.5;
+    }
+
+    return T;
+}
+
+
 CML::scalar CML::liquidMixtureProperties::Tpc(const scalarField& x) const
 {
     scalar Tpc = 0.0;

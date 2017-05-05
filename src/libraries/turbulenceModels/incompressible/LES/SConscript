@@ -40,6 +40,7 @@ turbInLESEnv.Append(LIBS = lib_link)
 # Sources for this library
 #===============================================================================
 src_files = Split("""
+  incompressibleLESdelta/incompressibleLESdelta.cpp
   vanDriestDelta/vanDriestDelta.cpp
   LESModel/LESModel.cpp
   GenEddyVisc/GenEddyVisc.cpp
@@ -48,10 +49,10 @@ src_files = Split("""
   SpalartAllmarasDES/SpalartAllmarasDES.cpp
   SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
   SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
-  SpalartAllmarasIDDES/IDDESDelta/IDDESDelta.cpp
   dynOneEqEddy/dynOneEqEddy.cpp
   Smagorinsky/Smagorinsky.cpp
   oneEqEddy/oneEqEddy.cpp
+  coherentStructureModel/coherentStructureModel.cpp
   """)
 
 #===============================================================================

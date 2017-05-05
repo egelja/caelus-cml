@@ -90,9 +90,6 @@ class FacePostProcessing
         //- Output file pointer per zone
         PtrList<OFstream> outputFilePtr_;
 
-        //- Output directory
-        fileName outputDir_;
-
         //- Last calculation time
         scalar timeOld_;
 
@@ -126,7 +123,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        FacePostProcessing(const dictionary& dict, CloudType& owner);
+        FacePostProcessing
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         FacePostProcessing(const FacePostProcessing<CloudType>& ppm);
@@ -155,11 +157,38 @@ public:
 
         // Evaluation
 
+            //- Pre-evolve hook
+            virtual void preEvolve();
+
+            //- Post-evolve hook
+            virtual void postEvolve();
+
+            //- Post-move hook
+            virtual void postMove
+            (
+                typename CloudType::parcelType& p,
+                const label cellI,
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
+            );
+
+            //- Post-patch hook
+            virtual void postPatch
+            (
+                const typename CloudType::parcelType& p,
+                const polyPatch& pp,
+                const scalar trackFraction,
+                const tetIndices& testIs,
+                bool& keepParticle
+            );
+
             //- Post-face hook
             virtual void postFace
             (
-                const parcelType& p,
-                const label faceI
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -199,16 +228,17 @@ void CML::FacePostProcessing<CloudType>::makeLogFile
 
         if (Pstream::master())
         {
-            const fileName logDir = outputDir_/this->owner().time().timeName();
-
             // Create directory if does not exist
-            mkDir(logDir);
+            mkDir(this->outputTimeDir());
 
             // Open new file at start up
             outputFilePtr_.set
             (
                 zoneI,
-                new OFstream(logDir/(type() + '_' + zoneName + ".dat"))
+                new OFstream
+                (
+                    this->outputTimeDir()/(type() + '_' + zoneName + ".dat")
+                )
             );
 
             outputFilePtr_[zoneI]
@@ -282,7 +312,7 @@ void CML::FacePostProcessing<CloudType>::write()
         {
             OFstream& os = outputFilePtr_[zoneI];
             os  << time.timeName() << token::TAB << sumMassTotal << token::TAB
-                <<  sumMassFlowRate<< endl;
+                << sumMassFlowRate<< endl;
         }
     }
 
@@ -340,12 +370,17 @@ void CML::FacePostProcessing<CloudType>::write()
 
                 autoPtr<surfaceWriter> writer
                 (
-                    surfaceWriter::New(surfaceFormat_)
+                    surfaceWriter::New
+                    (
+                        surfaceFormat_,
+                        this->coeffDict().subOrEmptyDict("formatOptions").
+                            subOrEmptyDict(surfaceFormat_)
+                    )
                 );
 
                 writer->write
                 (
-                    outputDir_/time.timeName(),
+                    this->outputTimeDir(),
                     fZone.name(),
                     allPoints,
                     allFaces,
@@ -356,7 +391,7 @@ void CML::FacePostProcessing<CloudType>::write()
 
                 writer->write
                 (
-                    outputDir_/time.timeName(),
+                    this->outputTimeDir(),
                     fZone.name(),
                     allPoints,
                     allFaces,
@@ -394,10 +429,11 @@ template<class CloudType>
 CML::FacePostProcessing<CloudType>::FacePostProcessing
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(dict, owner, typeName),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     faceZoneIDs_(),
     surfaceFormat_(this->coeffDict().lookup("surfaceFormat")),
     resetOnWrite_(this->coeffDict().lookup("resetOnWrite")),
@@ -407,7 +443,6 @@ CML::FacePostProcessing<CloudType>::FacePostProcessing
     massFlowRate_(),
     log_(this->coeffDict().lookup("log")),
     outputFilePtr_(),
-    outputDir_(owner.mesh().time().path()),
     timeOld_(owner.mesh().time().value())
 {
     wordList faceZoneNames(this->coeffDict().lookup("faceZones"));
@@ -416,19 +451,6 @@ CML::FacePostProcessing<CloudType>::FacePostProcessing
     massFlowRate_.setSize(faceZoneNames.size());
 
     outputFilePtr_.setSize(faceZoneNames.size());
-
-    if (Pstream::parRun())
-    {
-        // Put in undecomposed case (Note: gives problems for
-        // distributed data running)
-        outputDir_ =
-            outputDir_/".."/"postProcessing"/cloud::prefix/owner.name();
-    }
-    else
-    {
-        outputDir_ =
-            outputDir_/"postProcessing"/cloud::prefix/owner.name();
-    }
 
     DynamicList<label> zoneIDs;
     const faceZoneMesh& fzm = owner.mesh().faceZones();
@@ -502,7 +524,6 @@ CML::FacePostProcessing<CloudType>::FacePostProcessing
     massFlowRate_(pff.massFlowRate_),
     log_(pff.log_),
     outputFilePtr_(),
-    outputDir_(pff.outputDir_),
     timeOld_(0.0)
 {}
 
@@ -517,10 +538,51 @@ CML::FacePostProcessing<CloudType>::~FacePostProcessing()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
+void CML::FacePostProcessing<CloudType>::preEvolve()
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::FacePostProcessing<CloudType>::postEvolve()
+{
+    // Do nothing
+}
+
+template<class CloudType>
+void CML::FacePostProcessing<CloudType>::postMove
+(
+    typename CloudType::parcelType& p,
+    const label cellI,
+    const scalar dt,
+    const point& position0,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+template<class CloudType>
+void CML::FacePostProcessing<CloudType>::postPatch
+(
+    const typename CloudType::parcelType& p,
+    const polyPatch& pp,
+    const scalar trackFraction,
+    const tetIndices& testIs,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
 void CML::FacePostProcessing<CloudType>::postFace
 (
-    const parcelType& p,
-    const label faceI
+    const typename CloudType::parcelType& p,
+    const label faceI,
+    bool&
 )
 {
     if

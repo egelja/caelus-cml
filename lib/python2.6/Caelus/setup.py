@@ -234,13 +234,23 @@ except NameError:
       MPI_LIB_NAME = 'mpi'
       os.environ['MPI_LIB_NAME'] = MPI_LIB_NAME
 
-# Scotch may be defined in conf module
+# Scotch version may be defined in conf module
+try:
+   SCOTCH_VERSION
+   os.environ['SCOTCH_VERSION'] = SCOTCH_VERSION
+except NameError:
+   SCOTCH_VERSION = '6.0.4'
+   os.environ['SCOTCH_VERSION'] = SCOTCH_VERSION
+   if VERBOSE:
+      print " INFO: SCOTCH_VERSION not specified using Caelus version"
+
+# Scotch path may be defined in conf module
 try:
    SCOTCH_PATH
    os.environ['SCOTCH_PATH'] = SCOTCH_PATH
    check_path(SCOTCH_PATH)
 except NameError:
-   SCOTCH_PATH = os.path.join(os.environ['EXTERNAL_DIR'], 'scotch-5.1.12')
+   SCOTCH_PATH = os.path.join(os.environ['EXTERNAL_DIR'], 'scotch-'+SCOTCH_VERSION )
    os.environ['SCOTCH_PATH'] = SCOTCH_PATH
    if VERBOSE:
       print " INFO: SCOTCH_PATH not specified using Caelus version"
@@ -304,7 +314,11 @@ os.environ['LIB_PLATFORM_INSTALL'] = LIB_PLATFORM_INSTALL
 LD_LIBRARY_PATH = os.environ['LIB_PLATFORM_INSTALL'] + os.pathsep  \
                 + os.environ['MPI_LIB']  \
                 + os.pathsep + os.path.join(os.environ['METIS_PATH'], 'lib')  \
-                + os.pathsep + os.path.join(os.environ['SCOTCH_PATH'], 'lib')   
+                + os.pathsep + os.path.join(os.environ['SCOTCH_PATH'], 'lib')
+   
+# If user has defiend a zlib path add to LD_LIBRARY
+if ZLIB_PATH !='':
+   LD_LIBRARY_PATH = LD_LIBRARY_PATH + os.pathsep + os.path.join(os.environ['ZLIB_PATH'], 'lib')
 
 if WHICH_OS == "darwin":
    try:

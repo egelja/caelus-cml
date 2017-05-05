@@ -39,7 +39,7 @@ defineRunTimeSelectionTable(force, dictionary);
 
 force::force(const surfaceFilmModel& owner)
 :
-    subModelBase(owner)
+    filmSubModelBase(owner)
 {}
 
 
@@ -50,7 +50,7 @@ force::force
     const dictionary& dict
 )
 :
-    subModelBase(type, owner, dict)
+    filmSubModelBase(type, owner, dict)
 {}
 
 

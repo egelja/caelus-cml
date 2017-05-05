@@ -54,7 +54,7 @@ CML::scalar CML::tetOverlapVolume::tetTetOverlapVol
     tetPointRef::sumVolOp volInside;
     tetPointRef::dummyOp outside;
 
-    if ((tetA.tet().mag() < SMALL) || (tetB.tet().mag() < SMALL))
+    if ((tetA.tet().mag() < SMALL*SMALL) || (tetB.tet().mag() < SMALL*SMALL))
     {
         return 0.0;
     }
@@ -256,7 +256,6 @@ CML::scalar CML::tetOverlapVolume::cellCellOverlapVolumeMinDecomp
 (
     const primitiveMesh& meshA,
     const label cellAI,
-
     const primitiveMesh& meshB,
     const label cellBI,
     const treeBoundBox& cellBbB

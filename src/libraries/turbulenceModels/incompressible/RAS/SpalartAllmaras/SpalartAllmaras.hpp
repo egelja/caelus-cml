@@ -39,16 +39,17 @@ Notes
     \verbatim
         SpalartAllmarasCoeffs
         {
-            Cb1         0.1355;
-            Cb2         0.622;
-            Cw2         0.3;
-            Cw3         2.0;
-            Cv1         7.1;
-            Cr1         1.0;
-            Cr2         12.0;
-            Cr3         1.0;
-            sigmaNut    0.66666;
-            kappa       0.41;
+            curvatureCorrection false;
+            Cb1                 0.1355;
+            Cb2                 0.622;
+            Cw2                 0.3;
+            Cw3                 2.0;
+            Cv1                 7.1;
+            Cr1                 1.0;
+            Cr2                 12.0;
+            Cr3                 1.0;
+            sigmaNut            0.66666;
+            kappa               0.41;
         }
     \endverbatim
 
@@ -83,6 +84,9 @@ protected:
 
     // Protected data
 
+        //- Curvature correction on/off flag
+            Switch curvatureCorrection_;
+
         // Model coefficients
 
             dimensionedScalar sigmaNut_;
@@ -100,7 +104,6 @@ protected:
 
 
         // Fields
-
             volScalarField nuTilda_;
             volScalarField nut_;
             volScalarField fr1_;

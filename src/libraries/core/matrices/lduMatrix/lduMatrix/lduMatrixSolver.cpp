@@ -169,7 +169,7 @@ void CML::lduMatrix::solver::readControls()
 {
     maxIter_   = controlDict_.lookupOrDefault<label>("maxIter", 1000);
     minIter_   = controlDict_.lookupOrDefault<label>("minIter", 1);
-    eps_       = controlDict_.lookupOrDefault<label>("eps", 1e-6);
+    eps_       = controlDict_.lookupOrDefault<scalar>("eps", 1e-6);
     tolerance_ = controlDict_.lookupOrDefault<scalar>("tolerance", 1e-6);
     relTol_    = controlDict_.lookupOrDefault<scalar>("relTol", 0);
 }

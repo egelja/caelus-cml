@@ -21,12 +21,46 @@ Class
     CML::uniformTotalPressureFvPatchScalarField
 
 Description
-    A time-varying form of a uniform total pressure boundary condition. The
-    variation is specified as an DataEntry (see CML::DataEntry).
+    This boundary condition provides a time-varying form of the uniform total
+    pressure boundary condition.
 
-See Also
-    CML::uniformFixedValueFvPatchField.hpp
-    and CML::totalPressureFvPatchScalarField.hpp
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        U            | velocity field name     | no          | U
+        phi          | flux field name         | no          | phi
+        rho          | density field name      | no          | none
+        psi          | compressibility field name | no       | none
+        gamma        | ratio of specific heats (Cp/Cv) | yes |
+        pressure     | total pressure as a function of time | yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            uniformTotalPressure;
+        U               U;
+        phi             phi;
+        rho             rho;
+        psi             psi;
+        gamma           1.4;
+        pressure        uniform 1e5;
+    }
+    \endverbatim
+
+    The \c pressure entry is specified as a DataEntry type, able to describe
+    time varying functions.
+
+Note
+    The default boundary behaviour is for subsonic, incompressible flow.
+
+
+SeeAlso
+    CML::DataEntry
+    CML::uniformFixedValueFvPatchField
+    CML::totalPressureFvPatchField
 
 SourceFiles
     uniformTotalPressureFvPatchScalarField.cpp
@@ -37,7 +71,6 @@ SourceFiles
 #define uniformTotalPressureFvPatchScalarField_H
 
 #include "fixedValueFvPatchFields.hpp"
-#include "interpolationTable.hpp"
 #include "DataEntry.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -70,9 +103,6 @@ class uniformTotalPressureFvPatchScalarField
 
         //- Heat capacity ratio
         scalar gamma_;
-
-        //- Total pressure
-        scalar p0_;
 
         //- Table of time vs total pressure, including the bounding treatment
         autoPtr<DataEntry<scalar> > pressure_;
@@ -172,18 +202,6 @@ public:
             scalar& gamma()
             {
                 return gamma_;
-            }
-
-            //- Return the total pressure
-            scalar p0() const
-            {
-                return p0_;
-            }
-
-            //- Return reference to the total pressure to allow adjustment
-            scalar p0()
-            {
-                return p0_;
             }
 
 

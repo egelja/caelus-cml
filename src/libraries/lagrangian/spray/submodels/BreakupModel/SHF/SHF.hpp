@@ -204,7 +204,7 @@ CML::SHF<CloudType>::SHF
 {}
 
 
-template <class CloudType>
+template<class CloudType>
 CML::SHF<CloudType>::SHF(const SHF<CloudType>& bum)
 :
     BreakupModel<CloudType>(bum),
@@ -242,7 +242,7 @@ CML::SHF<CloudType>::SHF(const SHF<CloudType>& bum)
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::SHF<CloudType>::~SHF()
 {}
 
@@ -313,11 +313,11 @@ bool CML::SHF<CloudType>::update
 
     if (weGas > weConst_)
     {
-        if(weGas < weCrit1_)
+        if (weGas < weCrit1_)
         {
             tCharSecond = c1_*pow((weGas - weConst_), cExp1_);
         }
-        else if(weGas >= weCrit1_ && weGas <= weCrit2_)
+        else if (weGas >= weCrit1_ && weGas <= weCrit2_)
         {
             tCharSecond = c2_*pow((weGas - weConst_), cExp2_);
         }

@@ -62,6 +62,8 @@ class general
         scalar minValue_;
         scalar maxValue_;
 
+        scalar meanValue_;
+
         List<scalar> integral_;
 
 
@@ -100,6 +102,9 @@ public:
 
         //- Return the maximum value
         virtual scalar maxValue() const;
+
+        //- Return the mean value
+        virtual scalar meanValue() const;
 };
 
 

@@ -91,7 +91,14 @@ else:
 #===============================================================================
 # Sub-directories to traverse for compile
 #===============================================================================
-subdirs = [
+if (globalEnv['SCOTCH_VERSION'] == '6.0.4'):
+  subdirs1 = [
+  'parallel/decompose/ptscotchDecomp',
+  ]
+else:
+  subdirs1 = []
+
+subdirs2 = [
    'core',
    'edgeMesh',
    'surfMesh',
@@ -127,6 +134,7 @@ subdirs = [
    'thermophysicalModels/basicSolidThermo',
    'thermophysicalModels/solidChemistryModel',
    'thermophysicalModels/radiationModels',
+   'thermophysicalModels/numericFluxes/DBNS/numericFlux',
    'transportModels/incompressible',
    'transportModels/interfaceProperties',
    'transportModels/twoPhaseInterfaceProperties',
@@ -135,9 +143,11 @@ subdirs = [
    'turbulenceModels/incompressible/turbulenceModel',
    'turbulenceModels/incompressible/RAS',
    'turbulenceModels/incompressible/LES',
+   'turbulenceModels/incompressible/VLES',
    'turbulenceModels/compressible/turbulenceModel',
    'turbulenceModels/compressible/RAS',
    'turbulenceModels/compressible/LES',
+   'turbulenceModels/compressible/VLES',
    'turbulenceModels/derivedFvPatchFields',
    'combustionModels',
    'regionModels/regionModel',
@@ -164,6 +174,7 @@ subdirs = [
    'fvOptions'
 ]
 
+subdirs = subdirs1 + subdirs2;
 #===============================================================================
 # Execute SConscript files in each sub-directory
 #===============================================================================

@@ -1,41 +1,35 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
 #include "cellSource.hpp"
 #include "fvMesh.hpp"
 #include "volFields.hpp"
+#include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::fieldValues::cellSource, 0);
-
 namespace CML
 {
-
     template<>
-    const char* CML::NamedEnum
-    <
-        CML::fieldValues::cellSource::sourceType,
-        2
-    >::names[] =
+    const char* NamedEnum<fieldValues::cellSource::sourceType, 2>::names[] =
     {
         "cellZone",
         "all"
@@ -43,28 +37,32 @@ namespace CML
 
 
     template<>
-    const char* CML::NamedEnum
-    <
-        CML::fieldValues::cellSource::operationType,
-        8
-    >::names[] =
+    const char* NamedEnum<fieldValues::cellSource::operationType, 10>::names[] =
     {
         "none",
         "sum",
+        "sumMag",
+        "average",
+        "weightedAverage",
         "volAverage",
         "volIntegrate",
-        "weightedAverage",
         "min",
         "max",
         "CoV"
     };
+
+    namespace fieldValues
+    {
+        defineTypeNameAndDebug(cellSource, 0);
+        addToRunTimeSelectionTable(fieldValue, cellSource, dictionary);
+    }
 }
 
 
 const CML::NamedEnum<CML::fieldValues::cellSource::sourceType, 2>
     CML::fieldValues::cellSource::sourceTypeNames_;
 
-const CML::NamedEnum<CML::fieldValues::cellSource::operationType, 8>
+const CML::NamedEnum<CML::fieldValues::cellSource::operationType, 10>
     CML::fieldValues::cellSource::operationTypeNames_;
 
 
@@ -76,6 +74,8 @@ void CML::fieldValues::cellSource::setCellZoneCells()
     {
         case stCellZone:
         {
+            dict().lookup("sourceName") >> sourceName_;
+
             label zoneId = mesh().cellZones().findZoneID(sourceName_);
 
             if (zoneId < 0)
@@ -113,6 +113,12 @@ void CML::fieldValues::cellSource::setCellZoneCells()
 }
 
 
+CML::scalar CML::fieldValues::cellSource::volume() const
+{
+    return gSum(filterField(mesh().V()));
+}
+
+
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void CML::fieldValues::cellSource::initialise(const dictionary& dict)
@@ -124,8 +130,7 @@ void CML::fieldValues::cellSource::initialise(const dictionary& dict)
         WarningIn
         (
             "CML::fieldValues::cellSource::initialise(const dictionary&)"
-        )
-            << type() << " " << name_ << ": "
+        )   << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
             << "    Source has no cells - deactivating" << endl;
 
@@ -133,15 +138,16 @@ void CML::fieldValues::cellSource::initialise(const dictionary& dict)
         return;
     }
 
+    volume_ = volume();
+
     Info<< type() << " " << name_ << ":"
         << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
         << "    total cells  = " << nCells_ << nl
-        << "    total volume = " << gSum(filterField(mesh().V()))
+        << "    total volume = " << volume_
         << nl << endl;
 
-    if (operation_ == opWeightedAverage)
+    if (dict.readIfPresent("weightField", weightFieldName_))
     {
-        dict.lookup("weightField") >> weightFieldName_;
         Info<< "    weight field = " << weightFieldName_;
     }
 
@@ -149,24 +155,29 @@ void CML::fieldValues::cellSource::initialise(const dictionary& dict)
 }
 
 
-void CML::fieldValues::cellSource::writeFileHeader()
+void CML::fieldValues::cellSource::writeFileHeader(const label i)
 {
-    if (outputFilePtr_.valid())
+    writeCommented(file(), "Source : ");
+    file() << sourceTypeNames_[source_] << " " << sourceName_ << endl;
+    writeCommented(file(), "Cells  : ");
+    file() << nCells_ << endl;
+    writeCommented(file(), "Volume : ");
+    file() << volume_ << endl;
+
+    writeCommented(file(), "Time");
+    if (writeVolume_)
     {
-        outputFilePtr_()
-            << "# Source : " << sourceTypeNames_[source_] << " "
-            << sourceName_ <<  nl << "# Cells  : " << nCells_ << nl
-            << "# Time" << tab << "sum(V)";
-
-        forAll(fields_, i)
-        {
-            outputFilePtr_()
-                << tab << operationTypeNames_[operation_]
-                << "(" << fields_[i] << ")";
-        }
-
-        outputFilePtr_() << endl;
+        file() << tab << "Volume";
     }
+
+    forAll(fields_, i)
+    {
+        file()
+            << tab << operationTypeNames_[operation_]
+            << "(" << fields_[i] << ")";
+    }
+
+    file() << endl;
 }
 
 
@@ -180,11 +191,13 @@ CML::fieldValues::cellSource::cellSource
     const bool loadFromFiles
 )
 :
-    fieldValue(name, obr, dict, loadFromFiles),
+    fieldValue(name, obr, dict, typeName, loadFromFiles),
     source_(sourceTypeNames_.read(dict.lookup("source"))),
     operation_(operationTypeNames_.read(dict.lookup("operation"))),
     nCells_(0),
-    cellId_()
+    cellId_(),
+    weightFieldName_("none"),
+    writeVolume_(dict.lookupOrDefault("writeVolume", false))
 {
     read(dict);
 }
@@ -216,30 +229,47 @@ void CML::fieldValues::cellSource::write()
 
     if (active_)
     {
-        scalar totalVolume = gSum(filterField(mesh().V()));
         if (Pstream::master())
         {
-            outputFilePtr_() << obr_.time().value() << tab << totalVolume;
+            file() << obr_.time().value();
+        }
+
+        if (writeVolume_)
+        {
+            volume_ = volume();
+            if (Pstream::master())
+            {
+                file() << tab << volume_;
+            }
+            Info(log_)<< "    total volume = " << volume_ << endl;
         }
 
         forAll(fields_, i)
         {
-            writeValues<scalar>(fields_[i]);
-            writeValues<vector>(fields_[i]);
-            writeValues<sphericalTensor>(fields_[i]);
-            writeValues<symmTensor>(fields_[i]);
-            writeValues<tensor>(fields_[i]);
+            const word& fieldName = fields_[i];
+            bool processed = false;
+
+            processed = processed || writeValues<scalar>(fieldName);
+            processed = processed || writeValues<vector>(fieldName);
+            processed = processed || writeValues<sphericalTensor>(fieldName);
+            processed = processed || writeValues<symmTensor>(fieldName);
+            processed = processed || writeValues<tensor>(fieldName);
+
+            if (!processed)
+            {
+                WarningIn("void CML::fieldValues::cellSource::write()")
+                    << "Requested field " << fieldName
+                    << " not found in database and not processed"
+                    << endl;
+            }
         }
 
         if (Pstream::master())
         {
-            outputFilePtr_()<< endl;
+            file()<< endl;
         }
 
-        if (log_)
-        {
-            Info<< endl;
-        }
+        Info(log_)<< endl;
     }
 }
 

@@ -1,0 +1,164 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      reactingCloud1Properties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         true;
+    transient       yes;
+    cellValueSourceCorrection on; // must be off for steady state
+
+    sourceTerms
+    {
+        // Scheme and under-relaxation factor
+        schemes
+        {  
+          U               semiImplicit 0.5; // Number is the source under-relaxation factor
+        }
+    }
+
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        mu              cell;
+        curlUcDt		cell;
+        DUcDt			cell;
+    }
+
+    integrationSchemes
+    {
+        U               Euler;
+    }
+}
+
+constantProperties
+{
+	//- Parcel type id - used for post-processing to flag the type of parcels issued by this cloud
+    parcelTypeId    1;
+
+	//- Minimum density [kg/m3]
+    rhoMin          1e-16;
+
+	//- Minimum parcel mass [kg]
+    minParcelMass 1.0e-15;
+
+	//- Particle density [kg/m3] (constant)
+    rho0            1.2;
+
+	//- Young's modulus [N/m2]
+    youngsModulus   6e8;
+
+    //- Poisson's ratio
+    poissonsRatio   0.35;
+}
+
+subModels
+{
+    // Particle force models
+    particleForces
+    {
+        gravity;
+        sphereDrag;
+        TomiyamaLift
+        {
+            U	U;
+        	sigma 0.07;
+        }
+        pressureGradient
+        {
+            U	U;
+        }
+		virtualMass
+		{
+			Cvm 0.5;
+		}
+    }
+
+   // Injection models
+   injectionModels
+   {
+        model1
+        {
+            type            patchInjection;
+            patchName 		inlet;      // Name of patch
+            SOI             0;          // Start Of Injection
+            flowRateProfile constant 1; // Flow rate profile relative to SOI
+       		massTotal       0.02025;    // Total mass injected over injection duration
+            parcelBasisType mass;       // How are the number of particles calculated
+            duration 		150;        // Duration of injection. NOTE: set to 1 for steady state
+            U0              (0 0.08 0); // Initial parcel velocity
+            parcelsPerSecond 3357;      // Number of parcels to introduce per second
+
+        	sizeDistribution
+        	{
+            	type         fixedValue;
+            	fixedValueDistribution
+            	{
+                	value        4e-03;
+            	}
+			}
+        }
+   }
+
+    // Dispersion model
+    dispersionModel stochasticDispersionLES;
+
+    // Wall interaction model
+    patchInteractionModel standardWallInteraction;
+
+    // Heat transer model
+    heatTransferModel none;
+
+    // Surface film model
+    surfaceFilmModel none;
+
+    // Collision model
+    collisionModel none;
+
+    radiation off;
+
+    // Dictionaries for chosen models
+    standardWallInteractionCoeffs
+    {
+        type            escape; // Other options: stick, rebound (optional coeffs - e [elasticity coeff], mu [restitution coeff]
+    }
+}
+
+cloudFunctions
+{
+
+    patchPostProcessing1
+    {
+        type            patchPostProcessing;
+        maxStoredParcels 10000;
+        patches         ( top );
+    }
+
+   parcelRemoval1
+    {
+        type parcelRemoval;
+        alphaName   alpha1;      // name volume fraction field
+        threshold   0.5;       // alpha value below which bubbles are killed
+    }
+
+    voidFraction
+    {
+        type voidFraction;
+    }
+
+}
+
+
+// ************************************************************************* //

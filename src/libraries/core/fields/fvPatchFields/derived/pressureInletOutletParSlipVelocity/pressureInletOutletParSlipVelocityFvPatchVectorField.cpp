@@ -113,8 +113,6 @@ void CML::pressureInletOutletParSlipVelocityFvPatchVectorField::updateCoeffs()
         return;
     }
 
-    const label patchI = patch().index();
-
     const surfaceScalarField& phi =
         db().lookupObject<surfaceScalarField>(phiName_);
 
@@ -122,23 +120,22 @@ void CML::pressureInletOutletParSlipVelocityFvPatchVectorField::updateCoeffs()
         patch().patchField<surfaceScalarField, scalar>(phi);
 
     tmp<vectorField> n = patch().nf();
-    const Field<scalar>& magS = patch().magSf();
+    const Field<scalar>& magSf = patch().magSf();
 
-    const volVectorField& U = db().lookupObject<volVectorField>("U");
-
-    vectorField Uc(U.boundaryField()[patchI].patchInternalField());
-    Uc -= n()*(Uc & n());
+    // Get the tangential component from the internalField (zero-gradient)
+    vectorField Ut(patchInternalField());
+    Ut -= n()*(Ut & n());
 
     if (phi.dimensions() == dimVelocity*dimArea)
     {
-        refValue() = Uc + n*phip/magS;
+        refValue() = Ut + n*phip/magSf;
     }
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
             patch().lookupPatchField<volScalarField, scalar>(rhoName_);
 
-        refValue() = Uc + n*phip/(rhop*magS);
+        refValue() = Ut + n*phip/(rhop*magSf);
     }
     else
     {
@@ -178,11 +175,7 @@ void CML::pressureInletOutletParSlipVelocityFvPatchVectorField::operator=
     const fvPatchField<vector>& pvf
 )
 {
-    fvPatchField<vector>::operator=
-    (
-        valueFraction()*(patch().nf()*(patch().nf() & pvf))
-      + (1 - valueFraction())*pvf
-    );
+    fvPatchField<vector>::operator=(pvf);
 }
 
 

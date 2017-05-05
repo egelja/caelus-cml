@@ -35,6 +35,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.hpp"
+#include "timeSelector.hpp"
+
 #include "Time.hpp"
 #include "IOobjectList.hpp"
 #include "labelIOList.hpp"
@@ -51,7 +53,7 @@ using namespace CML;
 
 // Tolerance (as fraction of the bounding box). Needs to be fairly lax since
 // usually meshes get written with limited precision (6 digits)
-static const scalar defaultMergeTol = 1E-7;
+static const scalar defaultMergeTol = 1e-7;
 
 
 static void renumber
@@ -91,8 +93,8 @@ autoPtr<faceCoupleInfo> determineCoupledFaces
             (
                 masterMesh,
                 meshToAdd,
-                mergeDist,      // absolute merging distance
-                true            // matching faces identical
+                mergeDist,      // Absolute merging distance
+                true            // Matching faces identical
             )
         );
     }
@@ -190,9 +192,9 @@ autoPtr<faceCoupleInfo> determineCoupledFaces
                 masterFaces,
                 meshToAdd,
                 addFaces,
-                mergeDist,      // absolute merging distance
-                true,           // matching faces identical?
-                false,          // if perfectmatch are faces already ordered
+                mergeDist,      // Absolute merging distance
+                true,           // Matching faces identical?
+                false,          // If perfect match are faces already ordered
                                 // (e.g. processor patches)
                 false           // are faces each on separate patch?
             )
@@ -280,13 +282,16 @@ int main(int argc, char *argv[])
         "reconstruct a mesh using geometric information only"
     );
 
+    // Enable -constant ... if someone really wants it
+    // Enable -withZero to prevent accidentally trashing the initial fields
+    timeSelector::addOptions(true, true);
     argList::noParallel();
     argList::addOption
     (
         "mergeTol",
         "scalar",
         "specify the merge distance relative to the bounding box size "
-        "(default 1E-7)"
+        "(default 1e-7)"
     );
     argList::addBoolOption
     (
@@ -294,7 +299,6 @@ int main(int argc, char *argv[])
         "do (slower) geometric matching on all boundary faces"
     );
 
-    #include "addTimeOptions.hpp"
     #include "addRegionOption.hpp"
     #include "setRootCase.hpp"
     #include "createTime.hpp"
@@ -378,7 +382,7 @@ int main(int argc, char *argv[])
     Info<< "Found " << nProcs << " processor directories" << nl << endl;
 
 
-    // Read all databases.
+    // Read all time databases
     PtrList<Time> databases(nProcs);
 
     forAll(databases, procI)

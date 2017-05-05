@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funcObjCloudEnv = globalEnv.Clone()
+
+sl = funcObjCloudEnv['SLASH']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+funcObjCloudEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+funcObjCloudEnv['LIB_SRC'] + '/lagrangian/lnInclude',
+funcObjCloudEnv['LIB_SRC'] + '/lagrangian/intermediate/lnInclude'
+]
+funcObjCloudEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+funcObjCloudEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core', 'lagrangian', 'lagrangianIntermediate']
+funcObjCloudEnv.Append(LIBS = lib_link)
+ 
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  cloudInfo/cloudInfo.cpp
+  cloudInfo/cloudInfoFunctionObject.cpp
+  """) 
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libcloudFuncObj = funcObjCloudEnv.SharedLibrary(target = 'cloudFunctionObjects', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = funcObjCloudEnv['LIB_PLATFORM_INSTALL']
+funcObjCloudEnv.Alias('install', install_dir)
+funcObjCloudEnv.Install(install_dir, libcloudFuncObj)
+
+if (funcObjCloudEnv['WHICH_OS'] == "darwin"):
+
+  funcObjCloudEnv.Append(SHLINKFLAGS ='-install_name @executable_path/../lib/libcloudFunctionObjects.dylib')

@@ -21,10 +21,9 @@ License
 
 #include "rotorDiskSource.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "mathematicalConstants.hpp"
 #include "trimModel.hpp"
-#include "unitConversion.hpp"
 #include "fvMatrices.hpp"
+#include "geometricOneField.hpp"
 #include "syncTools.hpp"
 
 using namespace CML::constant;
@@ -66,14 +65,14 @@ namespace CML
 
 void CML::fv::rotorDiskSource::checkData()
 {
-    // set inflow type
+    // Set inflow type
     switch (selectionMode())
     {
         case smCellSet:
         case smCellZone:
         case smAll:
         {
-            // set the profile ID for each blade section
+            // Set the profile ID for each blade section
             profiles_.connectBlades(blade_.profileName(), blade_.profileID());
             switch (inletFlow_)
             {
@@ -93,7 +92,7 @@ void CML::fv::rotorDiskSource::checkData()
                 }
                 case ifLocal:
                 {
-                    // do nothing
+                    // Do nothing
                     break;
                 }
                 default:
@@ -134,7 +133,7 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
 
     vector n = vector::zero;
 
-    // calculate cell addressing for selected cells
+    // Calculate cell addressing for selected cells
     labelList cellAddr(mesh_.nCells(), -1);
     UIndirectList<label>(cellAddr, cells_) = identity(cells_.size());
     labelList nbrFaceCellAddr(mesh_.nFaces() - nInternalFaces, -1);
@@ -154,10 +153,10 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
         }
     }
 
-    // correct for parallel running
+    // Correct for parallel running
     syncTools::swapBoundaryFaceList(mesh_, nbrFaceCellAddr);
 
-    // add internal field contributions
+    // Add internal field contributions
     for (label faceI = 0; faceI < nInternalFaces; faceI++)
     {
         const label own = cellAddr[mesh_.faceOwner()[faceI]];
@@ -186,7 +185,7 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
     }
 
 
-    // add boundary contributions
+    // Add boundary contributions
     forAll(pbm, patchI)
     {
         const polyPatch& pp = pbm[patchI];
@@ -231,12 +230,35 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
         reduce(n, sumOp<vector>());
         axis = n/mag(n);
     }
+
+    if (debug)
+    {
+        volScalarField area
+        (
+            IOobject
+            (
+                name_ + ":area",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedScalar("0", dimArea, 0)
+        );
+        UIndirectList<scalar>(area.internalField(), cells_) = area_;
+
+        Info<< type() << ": " << name_ << " writing field " << area.name()
+            << endl;
+
+        area.write();
+    }
 }
 
 
 void CML::fv::rotorDiskSource::createCoordinateSystem()
 {
-    // construct the local rotor co-prdinate system
+    // Construct the local rotor co-prdinate system
     vector origin(vector::zero);
     vector axis(vector::zero);
     vector refDir(vector::zero);
@@ -248,7 +270,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
     {
         case gmAuto:
         {
-            // determine rotation origin (cell volume weighted)
+            // Determine rotation origin (cell volume weighted)
             scalar sumV = 0.0;
             const scalarField& V = mesh_.V();
             const vectorField& C = mesh_.C();
@@ -262,7 +284,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             reduce(sumV, sumOp<scalar>());
             origin /= sumV;
 
-            // determine first radial vector
+            // Determine first radial vector
             vector dx1(vector::zero);
             scalar magR = -GREAT;
             forAll(cells_, i)
@@ -295,7 +317,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             reduce(axis, maxMagSqrOp<vector>());
             axis /= mag(axis);
 
-            // correct the axis direction using a point above the rotor
+            // Correct the axis direction using a point above the rotor
             {
                 vector pointAbove(coeffs_.lookup("pointAbove"));
                 vector dir = pointAbove - origin;
@@ -319,7 +341,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
                 )
             );
 
-            // set the face areas and apply correction to calculated axis
+            // Set the face areas and apply correction to calculated axis
             // e.g. if cellZone is more than a single layer in thickness
             setFaceArea(axis, true);
 
@@ -379,20 +401,20 @@ void CML::fv::rotorDiskSource::constructGeometry()
         {
             const label cellI = cells_[i];
 
-            // position in (planar) rotor co-ordinate system
+            // Position in (planar) rotor co-ordinate system
             x_[i] = coordSys_.localPosition(C[cellI]);
 
-            // cache max radius
+            // Cache max radius
             rMax_ = max(rMax_, x_[i].x());
 
-            // swept angle relative to rDir axis [radians] in range 0 -> 2*pi
+            // Swept angle relative to rDir axis [radians] in range 0 -> 2*pi
             scalar psi = x_[i].y();
 
-            // blade flap angle [radians]
+            // Blade flap angle [radians]
             scalar beta =
                 flap_.beta0 - flap_.beta1c*cos(psi) - flap_.beta2s*sin(psi);
 
-            // determine rotation tensor to convert from planar system into the
+            // Determine rotation tensor to convert from planar system into the
             // rotor cone system
             scalar c = cos(beta);
             scalar s = sin(beta);
@@ -453,7 +475,6 @@ CML::fv::rotorDiskSource::rotorDiskSource
 )
 :
     option(name, modelType, dict, mesh),
-    rhoName_("none"),
     rhoRef_(1.0),
     omega_(0.0),
     nBlades_(0),
@@ -484,170 +505,75 @@ CML::fv::rotorDiskSource::~rotorDiskSource()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void CML::fv::rotorDiskSource::calculate
-(
-    const vectorField& U,
-    const scalarField& thetag,
-    vectorField& force,
-    const bool divideVolume,
-    const bool output
-) const
-{
-    const scalarField& V = mesh_.V();
-    const bool compressible = this->compressible();
-    tmp<volScalarField> trho(rho());
-
-    // logging info
-    scalar dragEff = 0.0;
-    scalar liftEff = 0.0;
-    scalar AOAmin = GREAT;
-    scalar AOAmax = -GREAT;
-
-    forAll(cells_, i)
-    {
-        if (area_[i] > ROOTVSMALL)
-        {
-            const label cellI = cells_[i];
-
-            const scalar radius = x_[i].x();
-
-            // velocity in local cylindrical reference frame
-            vector Uc = localAxesRotation_->transform(U[cellI], i);
-
-            // transform from rotor cylindrical into local coning system
-            Uc = R_[i] & Uc;
-
-            // set radial component of velocity to zero
-            Uc.x() = 0.0;
-
-            // set blade normal component of velocity
-            Uc.y() = radius*omega_ - Uc.y();
-
-            // determine blade data for this radius
-            // i2 = index of upper radius bound data point in blade list
-            scalar twist = 0.0;
-            scalar chord = 0.0;
-            label i1 = -1;
-            label i2 = -1;
-            scalar invDr = 0.0;
-            blade_.interpolate(radius, twist, chord, i1, i2, invDr);
-
-            // flip geometric angle if blade is spinning in reverse (clockwise)
-            scalar alphaGeom = thetag[i] + twist;
-            if (omega_ < 0)
-            {
-                alphaGeom = mathematical::pi - alphaGeom;
-            }
-
-            // effective angle of attack
-            scalar alphaEff = alphaGeom - atan2(-Uc.z(), Uc.y());
-
-            AOAmin = min(AOAmin, alphaEff);
-            AOAmax = max(AOAmax, alphaEff);
-
-            // determine profile data for this radius and angle of attack
-            const label profile1 = blade_.profileID()[i1];
-            const label profile2 = blade_.profileID()[i2];
-
-            scalar Cd1 = 0.0;
-            scalar Cl1 = 0.0;
-            profiles_[profile1].Cdl(alphaEff, Cd1, Cl1);
-
-            scalar Cd2 = 0.0;
-            scalar Cl2 = 0.0;
-            profiles_[profile2].Cdl(alphaEff, Cd2, Cl2);
-
-            scalar Cd = invDr*(Cd2 - Cd1) + Cd1;
-            scalar Cl = invDr*(Cl2 - Cl1) + Cl1;
-
-            // apply tip effect for blade lift
-            scalar tipFactor = neg(radius/rMax_ - tipEffect_);
-
-            // calculate forces perpendicular to blade
-            scalar pDyn = 0.5*magSqr(Uc);
-            if (compressible)
-            {
-                pDyn *= trho()[cellI];
-            }
-
-            scalar f = pDyn*chord*nBlades_*area_[i]/radius/mathematical::twoPi;
-            vector localForce = vector(0.0, -f*Cd, tipFactor*f*Cl);
-
-            // accumulate forces
-            dragEff += rhoRef_*localForce.y();
-            liftEff += rhoRef_*localForce.z();
-
-            // convert force from local coning system into rotor cylindrical
-            localForce = invR_[i] & localForce;
-
-            // convert force to global cartesian co-ordinate system
-            force[cellI] = localAxesRotation_->invTransform(localForce, i);
-
-            if (divideVolume)
-            {
-                force[cellI] /= V[cellI];
-            }
-        }
-    }
-
-    if (output)
-    {
-        reduce(AOAmin, minOp<scalar>());
-        reduce(AOAmax, maxOp<scalar>());
-        reduce(dragEff, sumOp<scalar>());
-        reduce(liftEff, sumOp<scalar>());
-
-        Info<< type() << " output:" << nl
-            << "    min/max(AOA)   = " << radToDeg(AOAmin) << ", "
-            << radToDeg(AOAmax) << nl
-            << "    Effective drag = " << dragEff << nl
-            << "    Effective lift = " << liftEff << endl;
-    }
-}
-
-
 void CML::fv::rotorDiskSource::addSup
 (
     fvMatrix<vector>& eqn,
     const label fieldI
 )
 {
-    dimensionSet dims = dimless;
-    if (eqn.dimensions() == dimForce)
-    {
-        coeffs_.lookup("rhoName") >> rhoName_;
-        dims.reset(dimForce/dimVolume);
-    }
-    else
-    {
-        coeffs_.lookup("rhoRef") >> rhoRef_;
-        dims.reset(dimForce/dimVolume/dimDensity);
-    }
-
     volVectorField force
     (
         IOobject
         (
             name_ + ":rotorForce",
             mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
+            mesh_
         ),
         mesh_,
-        dimensionedVector("zero", dims, vector::zero)
+        dimensionedVector
+        (
+            "zero",
+            eqn.dimensions()/dimVolume,
+            vector::zero
+        )
     );
 
-    const volVectorField& U = eqn.psi();
+    // Read the reference density for incompressible flow
+    coeffs_.lookup("rhoRef") >> rhoRef_;
 
-    const vectorField Uin(inflowVelocity(U));
-
+    const vectorField Uin(inflowVelocity(eqn.psi()));
     trim_->correct(Uin, force);
+    calculate(geometricOneField(), Uin, trim_->thetag(), force);
 
-    calculate(Uin, trim_->thetag(), force);
+    // Add source to rhs of eqn
+    eqn -= force;
+
+    if (mesh_.time().outputTime())
+    {
+        force.write();
+    }
+}
 
 
-    // add source to rhs of eqn
+void CML::fv::rotorDiskSource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    volVectorField force
+    (
+        IOobject
+        (
+            name_ + ":rotorForce",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedVector
+        (
+            "zero",
+            eqn.dimensions()/dimVolume,
+            vector::zero
+        )
+    );
+
+    const vectorField Uin(inflowVelocity(eqn.psi()));
+    trim_->correct(rho, Uin, force);
+    calculate(rho, Uin, trim_->thetag(), force);
+
+    // Add source to rhs of eqn
     eqn -= force;
 
     if (mesh_.time().outputTime())
@@ -671,7 +597,7 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
         coeffs_.lookup("fieldNames") >> fieldNames_;
         applied_.setSize(fieldNames_.size(), false);
 
-        // read co-ordinate system/geometry invariant properties
+        // Read co-ordinate system/geometry invariant properties
         scalar rpm(readScalar(coeffs_.lookup("rpm")));
         omega_ = rpm/60.0*mathematical::twoPi;
 
@@ -690,10 +616,10 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
         flap_.beta2s = degToRad(flap_.beta2s);
 
 
-        // create co-ordinate system
+        // Create co-ordinate system
         createCoordinateSystem();
 
-        // read co-odinate system dependent properties
+        // Read co-odinate system dependent properties
         checkData();
 
         constructGeometry();

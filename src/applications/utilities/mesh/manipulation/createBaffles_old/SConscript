@@ -41,7 +41,7 @@ createBaffles_oldEnv.Append(LIBS = lib_link)
 # Sources for this executable
 #===============================================================================
 src_files = Split("""
-  createBaffles.cpp
+  createBaffles_old.cpp
   """)
 
 #===============================================================================

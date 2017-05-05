@@ -109,7 +109,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::NoAtomization<CloudType>::NoAtomization
 (
     const dictionary& dict,
@@ -120,7 +120,7 @@ CML::NoAtomization<CloudType>::NoAtomization
 {}
 
 
-template <class CloudType>
+template<class CloudType>
 CML::NoAtomization<CloudType>::NoAtomization
 (
     const NoAtomization<CloudType>& am
@@ -132,7 +132,7 @@ CML::NoAtomization<CloudType>::NoAtomization
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::NoAtomization<CloudType>::~NoAtomization()
 {}
 

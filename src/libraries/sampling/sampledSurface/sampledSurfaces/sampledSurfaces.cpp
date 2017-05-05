@@ -45,7 +45,7 @@ CML::scalar CML::sampledSurfaces::mergeTol_ = 1e-10;
 void CML::sampledSurfaces::writeGeometry() const
 {
     // Write to time directory under outputPath_
-    // skip surface without faces (eg, a failed cut-plane)
+    // Skip surface without faces (eg, a failed cut-plane)
 
     const fileName outputDir = outputPath_/mesh_.time().timeName();
 
@@ -149,7 +149,7 @@ void CML::sampledSurfaces::write()
 {
     if (size())
     {
-        // finalize surfaces, merge points etc.
+        // Finalize surfaces, merge points etc.
         update();
 
         const label nFields = classifyFields();
@@ -166,7 +166,7 @@ void CML::sampledSurfaces::write()
             mkDir(outputPath_/mesh_.time().timeName());
         }
 
-        // write geometry first if required,
+        // Write geometry first if required,
         // or when no fields would otherwise be written
         if (nFields == 0 || formatter_->separateGeometry())
         {
@@ -201,8 +201,8 @@ void CML::sampledSurfaces::read(const dictionary& dict)
         dict.lookup("interpolationScheme") >> interpolationScheme_;
         const word writeType(dict.lookup("surfaceFormat"));
 
-        // define the surface formatter
-        // optionally defined extra controls for the output formats
+        // Define the surface formatter
+        // Optionally defined extra controls for the output formats
         formatter_ = surfaceWriter::New
         (
             writeType,
@@ -221,7 +221,7 @@ void CML::sampledSurfaces::read(const dictionary& dict)
             mergeList_.setSize(size());
         }
 
-        // ensure all surfaces and merge information are expired
+        // Ensure all surfaces and merge information are expired
         expire();
 
         if (this->size())
@@ -297,7 +297,7 @@ bool CML::sampledSurfaces::expire()
             justExpired = true;
         }
 
-        // clear merge information
+        // Clear merge information
         if (Pstream::parRun())
         {
             mergeList_[surfI].clear();
@@ -318,7 +318,7 @@ bool CML::sampledSurfaces::update()
         return updated;
     }
 
-    // serial: quick and easy, no merging required
+    // Serial: quick and easy, no merging required
     if (!Pstream::parRun())
     {
         forAll(*this, surfI)
@@ -332,7 +332,7 @@ bool CML::sampledSurfaces::update()
         return updated;
     }
 
-    // dimension as fraction of mesh bounding box
+    // Dimension as fraction of mesh bounding box
     scalar mergeDim = mergeTol_ * mesh_.bounds().mag();
 
     if (Pstream::master() && debug)

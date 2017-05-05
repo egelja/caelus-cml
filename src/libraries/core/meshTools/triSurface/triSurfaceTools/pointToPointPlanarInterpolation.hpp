@@ -52,6 +52,9 @@ class pointToPointPlanarInterpolation
         //- Perturbation factor
         const scalar perturb_;
 
+        //- Whether to use nearest point only (avoids triangulation, projection)
+        const bool nearestOnly_;
+
         //- Coordinate system
         coordinateSystem referenceCS_;
 
@@ -87,12 +90,15 @@ public:
     // Constructors
 
         //- Construct from 3D locations. Determines local coordinate system
-        //  from sourcePoints and maps onto that.
+        //  from sourcePoints and maps onto that. If nearestOnly skips any
+        //  local coordinate system and triangulation and uses nearest vertex
+        //  only
         pointToPointPlanarInterpolation
         (
             const pointField& sourcePoints,
             const pointField& destPoints,
-            const scalar perturb
+            const scalar perturb,
+            const bool nearestOnly = false
         );
 
         //- Construct from coordinate system and locations.

@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
--------------------------------------------------------------------------------
-License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+ -------------------------------------------------------------------------------
+ License
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::timeActivatedFileUpdate
@@ -26,22 +26,23 @@ Description
     Example usage to update the fvSolution dictionary at various times
     throughout the calculation:
 
-        fileUpdate1
-        {
-            type              timeActivatedFileUpdate;
-            functionObjectLibs ("libutilityFunctionObjects.so");
-            outputControl     timeStep;
-            outputInterval    1;
-            fileToUpdate      "$CAELUS_CASE/system/fvSolution";
-            timeVsFile
-            (
-                (-1 "$CAELUS_CASE/system/fvSolution.0")
-                (0.10 "$CAELUS_CASE/system/fvSolution.10")
-                (0.20 "$CAELUS_CASE/system/fvSolution.20")
-                (0.35 "$CAELUS_CASE/system/fvSolution.35")
-            );
-        }
-
+    \verbatim
+    fileUpdate1
+    {
+        type              timeActivatedFileUpdate;
+        functionObjectLibs ("libutilityFunctionObjects.so");
+        outputControl     timeStep;
+        outputInterval    1;
+        fileToUpdate      "$CAELUS_CASE/system/fvSolution";
+        timeVsFile
+        (
+            (-1 "$CAELUS_CASE/system/fvSolution.0")
+            (0.10 "$CAELUS_CASE/system/fvSolution.10")
+            (0.20 "$CAELUS_CASE/system/fvSolution.20")
+            (0.35 "$CAELUS_CASE/system/fvSolution.35")
+        );
+    }
+    \endverbatim
 
 SourceFiles
     timeActivatedFileUpdate.cpp
@@ -52,8 +53,8 @@ SourceFiles
 #ifndef timeActivatedFileUpdate_H
 #define timeActivatedFileUpdate_H
 
-#include "pointFieldFwd.hpp"
 #include "Tuple2.hpp"
+#include "pointFieldFwd.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -143,6 +144,9 @@ public:
 
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
+
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
 
         //- Calculate the timeActivatedFileUpdate and write
         virtual void write();

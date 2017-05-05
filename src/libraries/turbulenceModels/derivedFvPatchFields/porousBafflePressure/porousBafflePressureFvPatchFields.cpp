@@ -62,8 +62,6 @@ void CML::porousBafflePressureFvPatchField<CML::scalar>::updateCoeffs()
 
     scalarField Un(phip/patch().magSf());
 
-    scalarField magUn(mag(Un));
-
     if (phi.dimensions() == dimensionSet(0, 3, -1, 0, 0))
     {
         const incompressible::turbulenceModel& turbModel =
@@ -73,6 +71,8 @@ void CML::porousBafflePressureFvPatchField<CML::scalar>::updateCoeffs()
             );
 
         const scalarField nu = turbModel.nu()().boundaryField()[patchI];
+
+        scalarField magUn(mag(Un));
 
         jump_ = -sign(Un)*(D_*nu + I_*0.5*magUn)*magUn*length_;
     }
@@ -90,6 +90,7 @@ void CML::porousBafflePressureFvPatchField<CML::scalar>::updateCoeffs()
             patch().lookupPatchField<volScalarField, scalar>("rho");
 
         Un /= rhow;
+        scalarField magUn(mag(Un));
 
         jump_ = -sign(Un)*(D_*mu + I_*0.5*rhow*magUn)*magUn*length_;
     }

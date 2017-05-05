@@ -1,50 +1,64 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::nearWallFields
 
+Group
+    grpFieldFunctionObjects
+
 Description
-    Samples near-patch volFields
+    This function object samples near-patch volume fields
 
-    Holds fields
-    - every timestep the field get updated with new values
-    - at write it writes the fields
-    so this functionObject can either be used to calculate a new field
-    as a postprocessing step or (since the fields are registered)
-    use these in another functionObject (e.g. faceSource).
+    Fields are stored
+    - every time step the field is updated with new values
+    - at output it writes the fields
 
-    surfaceValues
+    This functionObject can either be used
+    - to calculate a new field as a  post-processing step or
+    - since the fields are registered, used in another functionObject
+
+    Example of function object specification:
+    \verbatim
+    nearWallFields1
     {
         type        nearWallFields;
-        ..
-        enabled         true;
-        outputControl   outputTime;
-        ..
-        // Name of volField and corresponding surfaceField
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
         fields      ((p pNear)(U UNear));
-        // Name of patch to sample
         patches     (movingWall);
-        // Distance away from the wall
-        distance    0.13;   // distance away from wall
+        distance    0.13;
     }
+    \endverbatim
 
+    \heading Function object usage
+    \table
+        Property | Description               | Required    | Default value
+        type     | type name: nearWallFields | yes         |
+        fields   | list of fields with correspoding output field names | yes |
+        patches  | list of patches to sample | yes         |
+        distance | distance from patch to sample | yes     |
+    \endtable
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     nearWallFields.cpp
@@ -58,6 +72,7 @@ SourceFiles
 #include "OFstream.hpp"
 #include "volFields.hpp"
 #include "Tuple2.hpp"
+#include "interpolationCellPoint.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -70,7 +85,7 @@ class dictionary;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
-                         Class nearWallFields Declaration
+                       Class nearWallFields Declaration
 \*---------------------------------------------------------------------------*/
 
 class nearWallFields
@@ -104,26 +119,45 @@ protected:
             //- From resulting back to original field
             HashTable<word> reverseFieldMap_;
 
-        //- Locally constructed fields
-        PtrList<volScalarField> vsf_;
-        PtrList<volVectorField> vvf_;
-        PtrList<volSphericalTensorField> vSpheretf_;
-        PtrList<volSymmTensorField> vSymmtf_;
-        PtrList<volTensorField> vtf_;
+
+        // Calculated addressing
+
+            //- From cell to seed patch faces
+            labelListList cellToWalls_;
+
+            //- From cell to tracked end point
+            List<List<point> > cellToSamples_;
+
+            //- Map from cell based data back to patch based data
+            autoPtr<mapDistribute> getPatchDataMapPtr_;
+
+
+        // Locally constructed fields
+
+            PtrList<volScalarField> vsf_;
+            PtrList<volVectorField> vvf_;
+            PtrList<volSphericalTensorField> vSpheretf_;
+            PtrList<volSymmTensorField> vSymmtf_;
+            PtrList<volTensorField> vtf_;
 
 
     // Protected Member Functions
 
-        //- Disallow default bitwise copy construct
-        nearWallFields(const nearWallFields&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const nearWallFields&);
+        //- Calculate addressing from cells back to patch faces
+        void calcAddressing();
 
         template<class Type>
         void createFields
         (
             PtrList<GeometricField<Type, fvPatchField, volMesh> >&
+        ) const;
+
+        //- Override boundary fields with sampled values
+        template<class Type>
+        void sampleBoundaryField
+        (
+            const interpolationCellPoint<Type>& interpolator,
+            GeometricField<Type, fvPatchField, volMesh>& fld
         ) const;
 
         template<class Type>
@@ -132,6 +166,14 @@ protected:
             PtrList<GeometricField<Type, fvPatchField, volMesh> >&
         ) const;
 
+
+private:
+
+        //- Disallow default bitwise copy construct
+        nearWallFields(const nearWallFields&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const nearWallFields&);
 
 public:
 
@@ -173,6 +215,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Write
         virtual void write();
 
@@ -190,8 +235,9 @@ public:
 
 } // End namespace CML
 
-#include "mappedFieldFvPatchFields.hpp"
-#include "interpolationCellPoint.hpp"
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "nearWallFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -230,38 +276,58 @@ void CML::nearWallFields::createFields
                 io.rename(sampleFldName);
 
                 sflds.set(sz, new vfType(io, fld));
-                vfType& sampleFld = sflds[sz];
 
-                // Reset the bcs to be mapped
-                forAllConstIter(labelHashSet, patchSet_, iter)
-                {
-                    label patchI = iter.key();
-
-                    sampleFld.boundaryField().set
-                    (
-                        patchI,
-                        new mappedFieldFvPatchField<Type>
-                        (
-                            sampleFld.mesh().boundary()[patchI],
-                            sampleFld.dimensionedInternalField(),
-
-                            sampleFld.mesh().name(),
-                            mappedPatchBase::NEARESTCELL,
-                            word::null,     // samplePatch
-                            -distance_,
-
-                            sampleFld.name(),       // fieldName
-                            false,                  // setAverage
-                            pTraits<Type>::zero,    // average
-                            interpolationCellPoint<Type>::typeName
-                        )
-                    );
-                }
-
-                Info<< "    created " << sampleFld.name() << " to sample "
+                Info<< "    created " << sflds[sz].name() << " to sample "
                     << fld.name() << endl;
             }
         }
+    }
+}
+
+
+template<class Type>
+void CML::nearWallFields::sampleBoundaryField
+(
+    const interpolationCellPoint<Type>& interpolator,
+    GeometricField<Type, fvPatchField, volMesh>& fld
+) const
+{
+    // Construct flat fields for all patch faces to be sampled
+    Field<Type> sampledValues(getPatchDataMapPtr_().constructSize());
+
+    forAll(cellToWalls_, cellI)
+    {
+        const labelList& cData = cellToWalls_[cellI];
+
+        forAll(cData, i)
+        {
+            const point& samplePt = cellToSamples_[cellI][i];
+            sampledValues[cData[i]] = interpolator.interpolate(samplePt, cellI);
+        }
+    }
+
+    // Send back sampled values to patch faces
+    getPatchDataMapPtr_().reverseDistribute
+    (
+        getPatchDataMapPtr_().constructSize(),
+        sampledValues
+    );
+
+    // Pick up data
+    label nPatchFaces = 0;
+    forAllConstIter(labelHashSet, patchSet_, iter)
+    {
+        label patchI = iter.key();
+
+        fvPatchField<Type>& pfld = fld.boundaryField()[patchI];
+
+        Field<Type> newFld(pfld.size());
+        forAll(pfld, i)
+        {
+            newFld[i] = sampledValues[nPatchFaces++];
+        }
+
+        pfld == newFld;
     }
 }
 
@@ -281,8 +347,12 @@ void CML::nearWallFields::sampleFields
 
         // Take over internal and boundary values
         sflds[i] == fld;
-        // Evaluate to update the mapped
-        sflds[i].correctBoundaryConditions();
+
+        // Construct interpolation method
+        interpolationCellPoint<Type> interpolator(fld);
+
+        // Override sampled values
+        sampleBoundaryField(interpolator, sflds[i]);
     }
 }
 

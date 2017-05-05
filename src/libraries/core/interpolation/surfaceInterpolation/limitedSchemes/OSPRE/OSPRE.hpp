@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014-2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,7 +72,7 @@ public:
         );
 
         scalar rrp1 = r*(r + 1);
-        return 1.5*rrp1/(rrp1 + 1);
+        return scalar(2)/(r+scalar(1)+VSMALL)*1.5*rrp1/(rrp1 + 1);
     }
 };
 

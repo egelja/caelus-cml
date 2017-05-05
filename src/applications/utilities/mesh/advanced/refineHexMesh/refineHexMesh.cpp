@@ -47,17 +47,26 @@ using namespace CML;
 // Main program:
 int main(int argc, char *argv[])
 {
-#   include "addOverwriteOption.hpp"
+    #include "addOverwriteOption.hpp"
+    #include "addRegionOption.hpp"
     argList::validArgs.append("cellSet");
+    argList::addBoolOption
+    (
+        "minSet",
+        "remove cells from input cellSet to keep to 2:1 ratio"
+        " (default is to extend set)"
+    );
 
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
     runTime.functionObjects().off();
-#   include "createMesh.hpp"
+    #include "createNamedMesh.hpp"
     const word oldInstance = mesh.pointsInstance();
 
     word cellSetName(args.args()[1]);
     const bool overwrite = args.optionFound("overwrite");
+
+    const bool minSet = args.optionFound("minSet");
 
     Info<< "Reading cells to refine from cellSet " << cellSetName
         << nl << endl;
@@ -137,7 +146,7 @@ int main(int argc, char *argv[])
         meshCutter.consistentRefinement
         (
             cellsToRefine.toc(),
-            true                  // extend set
+            !minSet                 // extend set
         )
     );
 
@@ -167,7 +176,7 @@ int main(int argc, char *argv[])
         mesh.movePoints(map().preMotionPoints());
     }
 
-    Pout<< "Refined from " << returnReduce(map().nOldCells(), sumOp<label>())
+    Info<< "Refined from " << returnReduce(map().nOldCells(), sumOp<label>())
         << " to " << mesh.globalData().nTotalCells() << " cells." << nl << endl;
 
     if (overwrite)

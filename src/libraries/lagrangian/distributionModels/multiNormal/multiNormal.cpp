@@ -141,4 +141,16 @@ CML::scalar CML::distributionModels::multiNormal::maxValue() const
 }
 
 
+CML::scalar CML::distributionModels::multiNormal::meanValue() const
+{
+    scalar mean = 0.0;
+    forAll(strength_, i)
+    {
+        mean += strength_[i]*expectation_[i];
+    }
+
+    return mean;
+}
+
+
 // ************************************************************************* //

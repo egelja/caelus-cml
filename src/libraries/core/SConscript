@@ -13,7 +13,7 @@ src = CoreEnv['LIB_SRC']
 # Additions to compiler flags for this library
 #===============================================================================
 if CoreEnv['WHICH_OS'] == "windows" :
-  CoreEnv.Append(CXXFLAGS = '-DOMPI_SKIP_MPICXX')
+  CoreEnv.Append(CXXFLAGS = '-DMPICH_SKIP_MPICXX')
 
 elif CoreEnv['WHICH_OS'] == "darwin" :
   CoreEnv.Append(CXXFLAGS = '-DOMPI_SKIP_MPICXX')
@@ -27,7 +27,7 @@ else :
 if CoreEnv['WHICH_OS'] == "windows" :
   lib_inc = [CoreEnv['ZLIB_PATH'] + '/include',
              CoreEnv['MPI_INC'],
-	         CoreEnv['FLEXXX_PATH'] + '/include'] 
+	         CoreEnv['FLEXXX_PATH'] + '/include']
 elif CoreEnv['WHICH_OS'] == "darwin" :
   lib_inc = [CoreEnv['MPI_INC']]
 
@@ -185,6 +185,7 @@ src_files_core = Split("""
   primitives/ranges/labelRange/labelRanges.cpp
   primitives/ranges/scalarRange/scalarRange.cpp
   primitives/ranges/scalarRange/scalarRanges.cpp
+  primitives/subModelBase/subModelBase.cpp
   containers/HashTables/HashTable/HashTableCore.cpp
   containers/HashTables/StaticHashTable/StaticHashTableCore.cpp
   containers/Lists/SortableList/ParSortableListName.cpp
@@ -242,6 +243,7 @@ src_files_core = Split("""
   db/dynamicLibrary/dlLibraryTable/dlLibraryTable.cpp
   db/functionObjects/functionObject/functionObject.cpp
   db/functionObjects/functionObjectList/functionObjectList.cpp
+  db/functionObjects/functionObjectFile/functionObjectFile.cpp
   db/functionObjects/outputFilterOutputControl/outputFilterOutputControl.cpp
   db/Time/TimePaths.cpp
   db/Time/TimeState.cpp
@@ -412,6 +414,7 @@ src_files_core = Split("""
   meshes/polyMesh/mapPolyMesh/cellMapper/cellMapper.cpp
   meshes/polyMesh/mapPolyMesh/mapDistribute/mapDistribute.cpp
   meshes/polyMesh/mapPolyMesh/mapDistribute/mapDistributePolyMesh.cpp
+  meshes/polyMesh/mapPolyMesh/mapDistribute/IOmapDistribute.cpp
   meshes/polyMesh/mapPolyMesh/mapAddedPolyMesh.cpp
   meshes/primitiveMesh/PrimitivePatch_/PrimitivePatchName.cpp
   meshes/pointMesh/pointMesh.cpp
@@ -489,6 +492,9 @@ src_files_core = Split("""
   interpolations/interpolationTable/tableReaders/tableReaders.cpp
   interpolations/interpolationTable/tableReaders/caelus/caelusTableReaders.cpp
   interpolations/interpolationTable/tableReaders/csv/csvTableReaders.cpp
+  interpolations/interpolationWeights/interpolationWeights/interpolationWeights.cpp
+  interpolations/interpolationWeights/linearInterpolationWeights/linearInterpolationWeights.cpp
+  interpolations/interpolationWeights/splineInterpolationWeights/splineInterpolationWeights.cpp
   algorithms/indexedOctree/indexedOctreeName.cpp
   algorithms/indexedOctree/treeDataCell.cpp
   algorithms/indexedOctree/volumeType.cpp
@@ -502,6 +508,7 @@ src_files_core = Split("""
   fileFormats/vtk/vtkUnstructuredReader.cpp
   fileFormats/coordSet/coordSet.cpp
   fileFormats/nas/NASCore.cpp
+  fileFormats/obj/OBJstream.cpp
   fileFormats/starcd/STARCDCore.cpp
   fileFormats/sampledSetWriters/writers.cpp
   fileFormats/sampledSetWriters/ensight/ensightSetWriterRunTime.cpp
@@ -560,6 +567,7 @@ src_files_core = Split("""
   meshTools/polyMeshZipUpCells/polyMeshZipUpCells.cpp
   meshTools/primitiveMeshGeometry/primitiveMeshGeometry.cpp
   meshTools/meshSearch/meshSearch.cpp
+  meshTools/meshSearch/meshSearchMeshObject.cpp
   meshTools/meshTools/meshTools.cpp
   meshTools/algorithms/PointEdgeWave/PointEdgeWaveName.cpp
   meshTools/algorithms/PointEdgeWave/pointEdgePoint.cpp
@@ -575,6 +583,7 @@ src_files_core = Split("""
   meshTools/indexedOctree/treeDataTriSurface.cpp
   meshTools/searchableSurface/searchableBox.cpp
   meshTools/searchableSurface/searchableCylinder.cpp
+  meshTools/searchableSurface/searchableDisk.cpp
   meshTools/searchableSurface/searchablePlane.cpp
   meshTools/searchableSurface/searchablePlate.cpp
   meshTools/searchableSurface/searchableSphere.cpp
@@ -839,7 +848,6 @@ src_files_core = Split("""
   interpolation/surfaceInterpolation/schemes/localMax/localMax.cpp
   interpolation/surfaceInterpolation/schemes/linearUpwind/linearUpwind.cpp
   interpolation/surfaceInterpolation/schemes/linearUpwind/linearUpwindV.cpp
-  interpolation/surfaceInterpolation/schemes/LUST/LUST.cpp
   interpolation/surfaceInterpolation/limitedSchemes/limitedSurfaceInterpolationScheme/limitedSurfaceInterpolationSchemes.cpp
   interpolation/surfaceInterpolation/limitedSchemes/upwind/upwind.cpp
   interpolation/surfaceInterpolation/limitedSchemes/blended/blended.cpp
@@ -852,6 +860,8 @@ src_files_core = Split("""
   interpolation/surfaceInterpolation/limitedSchemes/SuperBee/SuperBee.cpp
   interpolation/surfaceInterpolation/limitedSchemes/MUSCL/MUSCL.cpp
   interpolation/surfaceInterpolation/limitedSchemes/Phi/Phi.cpp
+  interpolation/surfaceInterpolation/limitedSchemes/BarthJespersen/BarthJespersen.cpp
+  interpolation/surfaceInterpolation/limitedSchemes/Venkatakrishnan/Venkatakrishnan.cpp
   interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmod.cpp
   interpolation/surfaceInterpolation/TVD/implicit/linearUpwindMinmod/linearUpwindMinmodV.cpp
   interpolation/surfaceInterpolation/TVD/implicit/linearUpwindDL/linearUpwindDL.cpp
@@ -880,6 +890,10 @@ src_files_core = Split("""
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJV.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMC.cpp
   interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMC/dcLinearUpwindMCV.cpp
+  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDBJ/linearUpwindMDBJ.cpp
+  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDBJ/linearUpwindMDBJV.cpp
+  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDV/linearUpwindMDV.cpp
+  interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDV/linearUpwindMDVV.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSurfaceInterpolationScheme/multivariateSurfaceInterpolationSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateSelectionScheme/multivariateSelectionSchemes.cpp
   interpolation/surfaceInterpolation/multivariateSchemes/multivariateIndependentScheme/multivariateIndependentSchemes.cpp

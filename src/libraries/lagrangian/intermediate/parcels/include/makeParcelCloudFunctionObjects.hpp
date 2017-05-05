@@ -26,11 +26,13 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "FacePostProcessing.hpp"
+#include "ParticleCollector.hpp"
 #include "ParticleErosion.hpp"
 #include "ParticleTracks.hpp"
 #include "ParticleTrap.hpp"
 #include "PatchPostProcessing.hpp"
 #include "VoidFraction.hpp"
+#include "ParcelRemoval.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,8 +44,10 @@ License
     makeCloudFunctionObjectType(ParticleErosion, CloudType);                  \
     makeCloudFunctionObjectType(ParticleTracks, CloudType);                   \
     makeCloudFunctionObjectType(ParticleTrap, CloudType);                     \
+    makeCloudFunctionObjectType(ParticleCollector, CloudType);                \
     makeCloudFunctionObjectType(PatchPostProcessing, CloudType);              \
-    makeCloudFunctionObjectType(VoidFraction, CloudType);
+    makeCloudFunctionObjectType(VoidFraction, CloudType);                     \
+    makeCloudFunctionObjectType(ParcelRemoval, CloudType);  
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

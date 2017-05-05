@@ -107,6 +107,15 @@ public:
             const dictionary&
         );
 
+        //- Return a reference to the selected LES delta
+        static autoPtr<LESdelta> New
+        (
+            const word& name,
+            const fvMesh&,
+            const dictionary&,
+            const dictionaryConstructorTable&
+        );
+
 
     //- Destructor
     virtual ~LESdelta()

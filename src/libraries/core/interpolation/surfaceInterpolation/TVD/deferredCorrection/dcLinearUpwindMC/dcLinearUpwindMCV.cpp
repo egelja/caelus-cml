@@ -107,7 +107,7 @@ CML::dcLinearUpwindMCV<Type>::correction
 
         scalar const r(max(0,(min(min(R[0],R[1]),R[2]))));
 
-        scalar const limiter = max(0,min(min(2*r,(1+r)/2),2));
+        scalar const limiter = 2/(r+1+VSMALL)*max(0,min(min(2*r,(1+r)/2),2));
 
         sfCorr[facei] = limiter*(Cf[facei] - C[cellU]) & gradVf[cellU];
     }
@@ -161,7 +161,7 @@ CML::dcLinearUpwindMCV<Type>::correction
 
                     r = (max(0,(min(min(R[0],R[1]),R[2]))));
 
-                    limiter = max(0,min(min(2*r,(1+r)/2),2));
+                    limiter = 2/(r+1+VSMALL)*max(0,min(min(2*r,(1+r)/2),2));
 
                     pSfCorr[facei] = limiter*(pCf[facei] - C[pown]) 
                                    & gradVf[pown];
@@ -179,7 +179,7 @@ CML::dcLinearUpwindMCV<Type>::correction
 
                     r = (max(0,(min(min(R[0],R[1]),R[2]))));
 
-                    limiter = max(0,min(min(2*r,(1+r)/2),2));
+                    limiter = 2/(r+1+VSMALL)*max(0,min(min(2*r,(1+r)/2),2));
 
                     pSfCorr[facei] = limiter*(pCf[facei] - pd[facei] - C[pown]) 
                                    & pGradVfNei[facei];

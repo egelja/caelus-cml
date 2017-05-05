@@ -1,0 +1,74 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    object          setFieldsDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue p 0.1
+    volScalarFieldValue T 0.1
+    volVectorFieldValue U (0 0 0)
+);
+
+regions
+(
+    boxToCell
+    {
+        box (-0.5 0.0 -0.01) (0.0 0.5 0.01);
+
+        fieldValues
+        (
+            volScalarFieldValue T 0.7
+            volScalarFieldValue p 1
+            volVectorFieldValue U (-0.75 0.5 0)
+        );
+    }
+
+    boxToCell
+    {
+        box (0.0 0.0 -0.01) (0.5 0.5 0.01);
+
+        fieldValues
+        (
+            volScalarFieldValue T 1.4
+            volScalarFieldValue p 1
+            volVectorFieldValue U (-0.75 -0.5 0)
+        );
+    }
+
+    boxToCell
+    {
+        box (-0.5 -0.5 -0.01) (0.0 0.0 0.01);
+
+        fieldValues
+        (
+            volScalarFieldValue T 1.4
+            volScalarFieldValue p 1
+            volVectorFieldValue U (0.75 0.5 0)
+        );
+    }
+
+    boxToCell
+    {
+        box (0.0 -0.5 -0.01) (0.5 0.0 0.01);
+
+        fieldValues
+        (
+            volScalarFieldValue T 0.46666
+            volScalarFieldValue p 1
+            volVectorFieldValue U (0.75 -0.5 0)
+        );
+    }
+);
+
+
+// ************************************************************************* //

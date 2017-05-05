@@ -61,12 +61,13 @@ SourceFiles
 #include "ParticleForceList.hpp"
 #include "CloudFunctionObjectList.hpp"
 #include "fvmSup.hpp"
+#include "SortableList.hpp"
 #include "IntegrationScheme.hpp"
 #include "interpolation.hpp"
 #include "subCycleTime.hpp"
 
+#include "InjectionModelList.hpp"
 #include "DispersionModel.hpp"
-#include "InjectionModel.hpp"
 #include "PatchInteractionModel.hpp"
 #include "SurfaceFilmModel_.hpp"
 
@@ -78,10 +79,10 @@ namespace CML
 // Forward declaration of classes
 
 template<class CloudType>
-class DispersionModel;
+class InjectionModelList;
 
 template<class CloudType>
-class InjectionModel;
+class DispersionModel;
 
 template<class CloudType>
 class PatchInteractionModel;
@@ -197,13 +198,12 @@ protected:
 
         // References to the cloud sub-models
 
+            //- Injector models
+            InjectionModelList<KinematicCloud<CloudType> > injectors_;
+
             //- Dispersion model
             autoPtr<DispersionModel<KinematicCloud<CloudType> > >
                 dispersionModel_;
-
-            //- Injector model
-            autoPtr<InjectionModel<KinematicCloud<CloudType> > >
-                injectionModel_;
 
             //- Patch interaction model
             autoPtr<PatchInteractionModel<KinematicCloud<CloudType> > >
@@ -348,6 +348,9 @@ public:
                 inline const typename parcelType::constantProperties&
                     constProps() const;
 
+                //- Return access to the constant properties
+                inline typename parcelType::constantProperties& constProps();
+
                     //- Return reference to the sub-models dictionary
                 inline const dictionary& subModelProperties() const;
 
@@ -401,6 +404,14 @@ public:
 
             // Sub-models
 
+                //- Return const access to the injection model
+                inline const InjectionModelList<KinematicCloud<CloudType> >&
+                    injectors() const;
+
+                //- Return reference to the injection model
+                inline InjectionModelList<KinematicCloud<CloudType> >&
+                    injectors();
+
                 //- Return const-access to the dispersion model
                 inline const DispersionModel<KinematicCloud<CloudType> >&
                     dispersion() const;
@@ -408,14 +419,6 @@ public:
                 //- Return reference to the dispersion model
                 inline DispersionModel<KinematicCloud<CloudType> >&
                     dispersion();
-
-                //- Return const access to the injection model
-                inline const InjectionModel<KinematicCloud<CloudType> >&
-                    injection() const;
-
-                //- Return reference to the injection model
-                inline InjectionModel<KinematicCloud<CloudType> >&
-                    injection();
 
                 //- Return const-access to the patch interaction model
                 inline const PatchInteractionModel<KinematicCloud<CloudType> >&
@@ -479,8 +482,8 @@ public:
             //- Total rotational kinetic energy in the system
             inline scalar rotationalKineticEnergyOfSystem() const;
 
-            //- Penetration for percentage of the current total mass
-            inline scalar penetration(const scalar& prc) const;
+            //- Penetration for fraction [0-1] of the current total mass
+            inline scalar penetration(const scalar fraction) const;
 
             //- Mean diameter Dij
             inline scalar Dij(const label i, const label j) const;
@@ -490,6 +493,9 @@ public:
 
 
             // Fields
+
+                //- Volume swept rate of parcels per cell
+                inline const tmp<volScalarField> vDotSweep() const;
 
                 //- Return the particle volume fraction field
                 //  Note: for particles belonging to this cloud only
@@ -573,14 +579,17 @@ public:
                 const tetIndices& tetIs,
                 vector& normal,
                 vector& Up
-            );
+            ) const;
 
 
         // Mapping
 
+            //- Update mesh
+            void updateMesh();
+
             //- Remap the cells of particles corresponding to the
             //  mesh topology change with a default tracking data object
-            void autoMap(const mapPolyMesh&);
+            virtual void autoMap(const mapPolyMesh&);
 
 
         // I-O
@@ -653,6 +662,14 @@ inline CML::cloudSolution& CML::KinematicCloud<CloudType>::solution()
 template<class CloudType>
 inline const typename CloudType::particleType::constantProperties&
 CML::KinematicCloud<CloudType>::constProps() const
+{
+    return constProps_;
+}
+
+
+template<class CloudType>
+inline typename CloudType::particleType::constantProperties&
+CML::KinematicCloud<CloudType>::constProps()
 {
     return constProps_;
 }
@@ -734,6 +751,22 @@ CML::KinematicCloud<CloudType>::functions()
 
 
 template<class CloudType>
+inline const CML::InjectionModelList<CML::KinematicCloud<CloudType> >&
+CML::KinematicCloud<CloudType>::injectors() const
+{
+    return injectors_;
+}
+
+
+template<class CloudType>
+inline CML::InjectionModelList<CML::KinematicCloud<CloudType> >&
+CML::KinematicCloud<CloudType>::injectors()
+{
+    return injectors_;
+}
+
+
+template<class CloudType>
 inline const CML::DispersionModel<CML::KinematicCloud<CloudType> >&
 CML::KinematicCloud<CloudType>::dispersion() const
 {
@@ -750,14 +783,6 @@ CML::KinematicCloud<CloudType>::dispersion()
 
 
 template<class CloudType>
-inline const CML::InjectionModel<CML::KinematicCloud<CloudType> >&
-CML::KinematicCloud<CloudType>::injection() const
-{
-    return injectionModel_;
-}
-
-
-template<class CloudType>
 inline const CML::PatchInteractionModel<CML::KinematicCloud<CloudType> >&
 CML::KinematicCloud<CloudType>::patchInteraction() const
 {
@@ -770,14 +795,6 @@ inline CML::PatchInteractionModel<CML::KinematicCloud<CloudType> >&
 CML::KinematicCloud<CloudType>::patchInteraction()
 {
     return patchInteractionModel_();
-}
-
-
-template<class CloudType>
-inline CML::InjectionModel<CML::KinematicCloud<CloudType> >&
-CML::KinematicCloud<CloudType>::injection()
-{
-    return injectionModel_();
 }
 
 
@@ -819,7 +836,7 @@ inline CML::scalar CML::KinematicCloud<CloudType>::massInSystem() const
     forAllConstIter(typename KinematicCloud<CloudType>, *this, iter)
     {
          const parcelType& p = iter();
-         sysMass += p.mass()*p.nParticle();
+         sysMass += p.nParticle()*p.mass();
     }
 
     return sysMass;
@@ -914,106 +931,147 @@ inline CML::scalar CML::KinematicCloud<CloudType>::Dmax() const
 
     reduce(d, maxOp<scalar>());
 
-    return d;
+    return max(0.0, d);
 }
 
 
 template<class CloudType>
 inline CML::scalar CML::KinematicCloud<CloudType>::penetration
 (
-    const scalar& prc
+    const scalar fraction
 ) const
 {
-    scalar distance = 0.0;
-    scalar mTot = 0.0;
-
-    label np = this->size();
-
-    // arrays containing the parcels mass and
-    // distance from injector in ascending order
-    scalarField mass(np);
-    scalarField dist(np);
-
-    if (np > 0)
+    if ((fraction < 0) || (fraction > 1))
     {
-        label n = 0;
-
-        // first arrange the parcels in ascending order
-        // the first parcel is closest to its injection position
-        // and the last one is most far away.
-        forAllConstIter(typename KinematicCloud<CloudType>, *this, iter)
-        {
-            const parcelType& p = iter();
-            scalar mi = p.nParticle()*p.mass();
-            scalar di = mag(p.position() - p.position0());
-            mTot += mi;
-
-            // insert at the last place
-            mass[n] = mi;
-            dist[n] = di;
-
-            label i = 0;
-            bool found = false;
-
-            // insert the parcel in the correct place
-            // and move the others
-            while ((i < n) && (!found))
-            {
-                if (di < dist[i])
-                {
-                    found = true;
-                    for (label j=n; j>i; j--)
-                    {
-                        mass[j] = mass[j-1];
-                        dist[j] = dist[j-1];
-                    }
-                    mass[i] = mi;
-                    dist[i] = di;
-                }
-                i++;
-            }
-            n++;
-        }
+        FatalErrorIn
+        (
+            "inline CML::scalar CML::KinematicCloud<CloudType>::penetration"
+            "("
+                "const scalar"
+            ") const"
+        )
+            << "fraction should be in the range 0 < fraction < 1"
+            << exit(FatalError);
     }
 
-    reduce(mTot, sumOp<scalar>());
+    scalar distance = 0.0;
 
-    if (np > 0)
+    const label nParcel = this->size();
+    globalIndex globalParcels(nParcel);
+    const label nParcelSum = globalParcels.size();
+
+    if (nParcelSum == 0)
     {
-        scalar mLimit = prc*mTot;
-        scalar mOff = (1.0 - prc)*mTot;
+        return distance;
+    }
 
-        if (np > 1)
+    // lists of parcels mass and distance from initial injection point
+    List<List<scalar> > procMass(Pstream::nProcs());
+    List<List<scalar> > procDist(Pstream::nProcs());
+
+    List<scalar>& mass = procMass[Pstream::myProcNo()];
+    List<scalar>& dist = procDist[Pstream::myProcNo()];
+
+    mass.setSize(nParcel);
+    dist.setSize(nParcel);
+
+    label i = 0;
+    scalar mSum = 0.0;
+    forAllConstIter(typename KinematicCloud<CloudType>, *this, iter)
+    {
+        const parcelType& p = iter();
+        scalar m = p.nParticle()*p.mass();
+        scalar d = mag(p.position() - p.position0());
+        mSum += m;
+
+        mass[i] = m;
+        dist[i] = d;
+
+        i++;
+    }
+
+    // calculate total mass across all processors
+    reduce(mSum, sumOp<scalar>());
+    Pstream::gatherList(procMass);
+    Pstream::gatherList(procDist);
+
+    if (Pstream::master())
+    {
+        // flatten the mass lists
+        List<scalar> allMass(nParcelSum, 0.0);
+        SortableList<scalar> allDist(nParcelSum, 0.0);
+        for (label procI = 0; procI < Pstream::nProcs(); procI++)
         {
-            // 'prc' is large enough that the parcel most far
-            // away will be used, no need to loop...
-            if (mLimit > mTot - mass[np-1])
+            SubList<scalar>
+            (
+                allMass,
+                globalParcels.localSize(procI),
+                globalParcels.offset(procI)
+            ).assign(procMass[procI]);
+
+            // flatten the distance list
+            SubList<scalar>
+            (
+                allDist,
+                globalParcels.localSize(procI),
+                globalParcels.offset(procI)
+            ).assign(procDist[procI]);
+        }
+
+        // sort allDist distances into ascending order
+        // note: allMass masses are left unsorted
+        allDist.sort();
+
+        if (nParcelSum > 1)
+        {
+            const scalar mLimit = fraction*mSum;
+            const labelList& indices = allDist.indices();
+
+            if (mLimit > (mSum - allMass[indices.last()]))
             {
-                distance = dist[np-1];
+                distance = allDist.last();
             }
             else
             {
-                scalar mOffSum = 0.0;
-                label i = np;
+                // assuming that 'fraction' is generally closer to 1 than 0,
+                // loop through in reverse distance order
+                const scalar mThreshold = (1.0 - fraction)*mSum;
+                scalar mCurrent = 0.0;
+                label i0 = 0;
 
-                while ((mOffSum < mOff) && (i>0))
+                forAllReverse(indices, i)
                 {
-                    i--;
-                    mOffSum += mass[i];
+                    label indI = indices[i];
+
+                    mCurrent += allMass[indI];
+
+                    if (mCurrent > mThreshold)
+                    {
+                        i0 = i;
+                        break;
+                    }
                 }
-                distance =
-                    dist[i+1]
-                  + (dist[i] - dist[i+1])*(mOffSum - mOff)
-                   /mass[i+1] ;
+
+                if (i0 == indices.size() - 1)
+                {
+                    distance = allDist.last();
+                }
+                else
+                {
+                    // linearly interpolate to determine distance
+                    scalar alpha = (mCurrent - mThreshold)/allMass[indices[i0]];
+                    distance =
+                        allDist[i0] + alpha*(allDist[i0+1] - allDist[i0]);
+                }
             }
         }
         else
         {
-            distance = dist[0];
+            distance = allDist.first();
         }
     }
 
-    reduce(distance, maxOp<scalar>());
+    Pstream::scatter(distance);
 
     return distance;
 }
@@ -1109,6 +1167,45 @@ CML::KinematicCloud<CloudType>::SU(volVectorField& U) const
 
 template<class CloudType>
 inline const CML::tmp<CML::volScalarField>
+CML::KinematicCloud<CloudType>::vDotSweep() const
+{
+    tmp<volScalarField> tvDotSweep
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                this->name() + ":vDotSweep",
+                this->db().time().timeName(),
+                this->db(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            mesh_,
+            dimensionedScalar("zero", dimless/dimTime, 0.0),
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+
+    volScalarField& vDotSweep = tvDotSweep();
+    forAllConstIter(typename KinematicCloud<CloudType>, *this, iter)
+    {
+        const parcelType& p = iter();
+        const label cellI = p.cell();
+
+        vDotSweep[cellI] += p.nParticle()*p.areaP()*mag(p.U() - U_[cellI]);
+    }
+
+    vDotSweep.internalField() /= mesh_.V();
+    vDotSweep.correctBoundaryConditions();
+
+    return tvDotSweep;
+}
+
+
+template<class CloudType>
+inline const CML::tmp<CML::volScalarField>
 CML::KinematicCloud<CloudType>::theta() const
 {
     tmp<volScalarField> ttheta
@@ -1117,7 +1214,7 @@ CML::KinematicCloud<CloudType>::theta() const
         (
             IOobject
             (
-                this->name() + "Theta",
+                this->name() + ":theta",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -1156,7 +1253,7 @@ CML::KinematicCloud<CloudType>::alpha() const
         (
             IOobject
             (
-                this->name() + "Alpha",
+                this->name() + ":alpha",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -1193,7 +1290,7 @@ CML::KinematicCloud<CloudType>::rhoEff() const
         (
             IOobject
             (
-                this->name() + "RhoEff",
+                this->name() + ":rhoEff",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -1234,15 +1331,6 @@ void CML::KinematicCloud<CloudType>::setModels()
         ).ptr()
     );
 
-    injectionModel_.reset
-    (
-        InjectionModel<KinematicCloud<CloudType> >::New
-        (
-            subModelProperties_,
-            *this
-        ).ptr()
-    );
-
     patchInteractionModel_.reset
     (
         PatchInteractionModel<KinematicCloud<CloudType> >::New
@@ -1257,8 +1345,7 @@ void CML::KinematicCloud<CloudType>::setModels()
         SurfaceFilmModel<KinematicCloud<CloudType> >::New
         (
             subModelProperties_,
-            *this,
-            g_
+            *this
         ).ptr()
     );
 
@@ -1381,7 +1468,8 @@ void CML::KinematicCloud<CloudType>::evolveCloud(TrackData& td)
 
             preInjectionSize = this->size();
         }
-        this->injection().inject(td);
+
+        injectors_.inject(td);
 
 
         // Assume that motion will update the cellOccupancy as necessary
@@ -1392,7 +1480,7 @@ void CML::KinematicCloud<CloudType>::evolveCloud(TrackData& td)
     {
 //        this->surfaceFilm().injectSteadyState(td);
 
-        this->injection().injectSteadyState(td, solution_.trackTime());
+        injectors_.injectSteadyState(td, solution_.trackTime());
 
         td.part() = TrackData::tpLinearTrack;
         CloudType::move(td,  solution_.trackTime());
@@ -1441,8 +1529,9 @@ void CML::KinematicCloud<CloudType>::cloudReset(KinematicCloud<CloudType>& c)
 
     functions_.transfer(c.functions_);
 
+    injectors_.transfer(c.injectors_);
+
     dispersionModel_.reset(c.dispersionModel_.ptr());
-    injectionModel_.reset(c.injectionModel_.ptr());
     patchInteractionModel_.reset(c.patchInteractionModel_.ptr());
     surfaceFilmModel_.reset(c.surfaceFilmModel_.ptr());
 
@@ -1526,8 +1615,12 @@ CML::KinematicCloud<CloudType>::KinematicCloud
         particleProperties_.subOrEmptyDict("cloudFunctions"),
         solution_.active()
     ),
+    injectors_
+    (
+        subModelProperties_.subOrEmptyDict("injectionModels"),
+        *this
+    ),
     dispersionModel_(NULL),
-    injectionModel_(NULL),
     patchInteractionModel_(NULL),
     surfaceFilmModel_(NULL),
     UIntegrator_(NULL),
@@ -1537,7 +1630,7 @@ CML::KinematicCloud<CloudType>::KinematicCloud
         (
             IOobject
             (
-                this->name() + "UTrans",
+                this->name() + ":UTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::READ_IF_PRESENT,
@@ -1553,7 +1646,7 @@ CML::KinematicCloud<CloudType>::KinematicCloud
         (
             IOobject
             (
-                this->name() + "UCoeff",
+                this->name() + ":UCoeff",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::READ_IF_PRESENT,
@@ -1606,8 +1699,8 @@ CML::KinematicCloud<CloudType>::KinematicCloud
     pAmbient_(c.pAmbient_),
     forces_(c.forces_),
     functions_(c.functions_),
+    injectors_(c.injectors_),
     dispersionModel_(c.dispersionModel_->clone()),
-    injectionModel_(c.injectionModel_->clone()),
     patchInteractionModel_(c.patchInteractionModel_->clone()),
     surfaceFilmModel_(c.surfaceFilmModel_->clone()),
     UIntegrator_(c.UIntegrator_->clone()),
@@ -1617,7 +1710,7 @@ CML::KinematicCloud<CloudType>::KinematicCloud
         (
             IOobject
             (
-                this->name() + "UTrans",
+                this->name() + ":UTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -1633,7 +1726,7 @@ CML::KinematicCloud<CloudType>::KinematicCloud
         (
             IOobject
             (
-                name + "UCoeff",
+                name + ":UCoeff",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -1695,8 +1788,8 @@ CML::KinematicCloud<CloudType>::KinematicCloud
     pAmbient_(c.pAmbient_),
     forces_(*this, mesh),
     functions_(*this),
+    injectors_(*this),
     dispersionModel_(NULL),
-    injectionModel_(NULL),
     patchInteractionModel_(NULL),
     surfaceFilmModel_(NULL),
     UIntegrator_(NULL),
@@ -1742,7 +1835,11 @@ void CML::KinematicCloud<CloudType>::checkParcelProperties
 {
     const scalar carrierDt = mesh_.time().deltaTValue();
     parcel.stepFraction() = (carrierDt - lagrangianDt)/carrierDt;
-    parcel.typeId() = constProps_.parcelTypeId();
+
+    if (parcel.typeId() == -1)
+    {
+        parcel.typeId() = constProps_.parcelTypeId();
+    }
 }
 
 
@@ -1824,7 +1921,11 @@ void CML::KinematicCloud<CloudType>::scaleSources()
 template<class CloudType>
 void CML::KinematicCloud<CloudType>::preEvolve()
 {
-    Info<< "\nSolving cloud " << this->name() << endl;
+    // force calculaion of mesh dimensions - needed for parallel runs
+    // with topology change due to lazy evaluation of valid mesh dimensions
+    label nGeometricD = mesh_.nGeometricD();
+
+    Info<< "\nSolving " << nGeometricD << "-D cloud " << this->name() << endl;
 
     this->dispersion().cacheFields(true);
     forces_.cacheFields(true);
@@ -1870,7 +1971,7 @@ void CML::KinematicCloud<CloudType>::patchData
     const tetIndices& tetIs,
     vector& nw,
     vector& Up
-)
+) const
 {
     label patchI = pp.index();
     label patchFaceI = pp.whichFace(p.face());
@@ -2010,6 +2111,13 @@ void CML::KinematicCloud<CloudType>::patchData
 
 
 template<class CloudType>
+void CML::KinematicCloud<CloudType>::updateMesh()
+{
+    injectors_.updateMesh();
+}
+
+
+template<class CloudType>
 void CML::KinematicCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
     typedef typename particle::TrackingData<KinematicCloud<CloudType> > tdType;
@@ -2017,6 +2125,8 @@ void CML::KinematicCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
     tdType td(*this);
 
     Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+
+    updateMesh();
 }
 
 
@@ -2046,7 +2156,7 @@ void CML::KinematicCloud<CloudType>::info()
         << "    Rotational kinetic energy       = "
         << rotationalKineticEnergy << nl;
 
-    this->injection().info(Info);
+    injectors_.info(Info);
     this->surfaceFilm().info(Info);
     this->patchInteraction().info(Info);
 }

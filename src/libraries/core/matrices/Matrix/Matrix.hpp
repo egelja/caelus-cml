@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -243,7 +244,7 @@ clone() const
 template<class Form, class Type>
 inline const CML::Matrix<Form, Type>& CML::Matrix<Form, Type>::null()
 {
-    return *reinterpret_cast< Matrix<Form, Type>* >(0);
+    return NullSingletonRef< Matrix<Form, Type> >();
 }
 
 

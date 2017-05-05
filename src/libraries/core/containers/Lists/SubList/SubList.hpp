@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,8 +28,6 @@ Description
     de-allocated during its use.  To achieve this behaviour, SubList is
     derived from UList rather than List.
 
-SourceFiles
-    SubListI.hpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -92,9 +91,77 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "SubListI.hpp"
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class T>
+inline CML::SubList<T>::SubList
+(
+ const UList<T>& list,
+ const label subSize
+ )
+:
+UList<T>(list.v_, subSize)
+{
+#   ifdef FULLDEBUG
+    list.checkSize(subSize);
+#   endif
+}
+
+
+template<class T>
+inline CML::SubList<T>::SubList
+(
+ const UList<T>& list,
+ const label subSize,
+ const label startIndex
+ )
+:
+UList<T>(&(list.v_[startIndex]), subSize)
+{
+#   ifdef FULLDEBUG
+    
+    // Artificially allow the start of a zero-sized subList to be
+    // one past the end of the original list.
+    if (subSize)
+    {
+        list.checkStart(startIndex);
+        list.checkSize(startIndex + subSize);
+    }
+    else
+    {
+        // Start index needs to fall between 0 and size.  One position
+        // behind the last element is allowed
+        list.checkSize(startIndex);
+    }
+#   endif
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class T>
+inline const CML::SubList<T>& CML::SubList<T>::null()
+{
+    return NullSingletonRef< SubList<T> >();
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+template<class T>
+inline CML::SubList<T>::operator const CML::List<T>&() const
+{
+    return *reinterpret_cast< const List<T>* >(this);
+}
+
+
+template<class T>
+inline void CML::SubList<T>::operator=(const T& t)
+{
+    UList<T>::operator=(t);
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

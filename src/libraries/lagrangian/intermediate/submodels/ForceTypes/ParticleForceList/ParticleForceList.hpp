@@ -136,6 +136,13 @@ public:
                 const scalar Re,
                 const scalar muc
             ) const;
+
+            //- Return the effective mass
+            virtual scalar massEff
+            (
+                const typename CloudType::parcelType& p,
+                const scalar mass
+            ) const;
 };
 
 
@@ -352,7 +359,21 @@ CML::forceSuSp CML::ParticleForceList<CloudType>::calcNonCoupled
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class CloudType>
+CML::scalar CML::ParticleForceList<CloudType>::massEff
+(
+    const typename CloudType::parcelType& p,
+    const scalar mass
+) const
+{
+    scalar massEff = mass;
+    forAll(*this, i)
+    {
+        massEff += this->operator[](i).massAdd(p, mass);
+    }
+
+    return massEff;
+}
 
 #endif
 

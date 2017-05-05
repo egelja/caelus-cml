@@ -67,13 +67,8 @@ private:
 
         // Model constants
 
-            // Cmu_ and Comega_ are the same as in the TAB model
-            scalar Cmu_;
-            scalar Comega_;
-
             scalar k1_;
             scalar k2_;
-            scalar WeCrit_;
             scalar WeTransition_;
             scalar AWe_;
 
@@ -149,36 +144,21 @@ CML::ETAB<CloudType>::ETAB
     CloudType& owner
 )
 :
-    BreakupModel<CloudType>(dict, owner, typeName),
-    Cmu_(10.0),
-    Comega_(8.0),
+    BreakupModel<CloudType>(dict, owner, typeName, true),
     k1_(0.2),
     k2_(0.2),
-    WeCrit_(12.0),
     WeTransition_(100.0),
     AWe_(0.0)
 {
     if (!this->defaultCoeffs(true))
     {
-        this->coeffDict().lookup("Cmu") >> Cmu_;
-        this->coeffDict().lookup("Comega") >> Comega_;
         this->coeffDict().lookup("k1") >> k1_;
         this->coeffDict().lookup("k2") >> k2_;
-        this->coeffDict().lookup("WeCrit") >> WeCrit_;
         this->coeffDict().lookup("WeTransition") >> WeTransition_;
     }
 
     scalar k21 = k2_/k1_;
     AWe_ = (k21*sqrt(WeTransition_) - 1.0)/pow4(WeTransition_);
-
-    if (!BreakupModel<CloudType>::solveOscillationEq_)
-    {
-        Info<< "Warning: solveOscillationEq is set to "
-            << BreakupModel<CloudType>::solveOscillationEq_ << nl
-            << " Setting it to true in order for the ETAB model to work."
-            << endl;
-        BreakupModel<CloudType>::solveOscillationEq_ = true;
-    }
 }
 
 
@@ -186,11 +166,8 @@ template<class CloudType>
 CML::ETAB<CloudType>::ETAB(const ETAB<CloudType>& bum)
 :
     BreakupModel<CloudType>(bum),
-    Cmu_(bum.Cmu_),
-    Comega_(bum.Comega_),
     k1_(bum.k1_),
     k2_(bum.k2_),
-    WeCrit_(bum.WeCrit_),
     WeTransition_(bum.WeTransition_),
     AWe_(bum.AWe_)
 {}
@@ -238,10 +215,10 @@ bool CML::ETAB<CloudType>::update
     scalar semiMass = nParticle*pow3(d);
 
     // inverse of characteristic viscous damping time
-    scalar rtd = 0.5*Cmu_*mu/(rho*r2);
+    scalar rtd = 0.5*this->TABCmu_*mu/(rho*r2);
 
     // oscillation frequency (squared)
-    scalar omega2 = Comega_*sigma/(rho*r3) - rtd*rtd;
+    scalar omega2 = this->TABComega_*sigma/(rho*r3) - rtd*rtd;
 
     if (omega2 > 0)
     {
@@ -249,7 +226,7 @@ bool CML::ETAB<CloudType>::update
         scalar romega = 1.0/omega;
 
         scalar We = rhoc*sqr(Urmag)*r/sigma;
-        scalar Wetmp = We/WeCrit_;
+        scalar Wetmp = We/this->TABWeCrit_;
 
         scalar y1 = y - Wetmp;
         scalar y2 = yDot*romega;

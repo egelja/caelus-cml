@@ -29,9 +29,13 @@ src_files = Split("""
   extrudeModel/extrudeModel.cpp
   extrudeModel/extrudeModelNew.cpp
   linearNormal/linearNormal.cpp
+  planeExtrusion/planeExtrusion.cpp
   linearDirection/linearDirection.cpp
   linearRadial/linearRadial.cpp
+  radial/radial.cpp
   sigmaRadial/sigmaRadial.cpp
+  sector/sector.cpp
+  cyclicSector/cyclicSector.cpp
   wedge/wedge.cpp
   """)
 

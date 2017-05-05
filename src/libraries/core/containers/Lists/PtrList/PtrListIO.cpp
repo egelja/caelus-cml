@@ -111,6 +111,17 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
         )
         {
             is.putBack(lastToken);
+
+            if (is.eof())
+            {
+                FatalIOErrorIn
+                (
+                    "PtrList<T>::read(Istream&, const INew&)",
+                    is
+                )   << "Premature EOF after reading " << lastToken.info()
+                    << exit(FatalIOError);
+            }
+
             sllPtrs.append(inewt(is).ptr());
             is >> lastToken;
         }

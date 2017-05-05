@@ -122,7 +122,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::ReitzKHRT<CloudType>::ReitzKHRT
 (
     const dictionary& dict,
@@ -149,7 +149,7 @@ CML::ReitzKHRT<CloudType>::ReitzKHRT
 }
 
 
-template <class CloudType>
+template<class CloudType>
 CML::ReitzKHRT<CloudType>::ReitzKHRT(const ReitzKHRT<CloudType>& bum)
 :
     BreakupModel<CloudType>(bum),
@@ -164,7 +164,7 @@ CML::ReitzKHRT<CloudType>::ReitzKHRT(const ReitzKHRT<CloudType>& bum)
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::ReitzKHRT<CloudType>::~ReitzKHRT()
 {}
 

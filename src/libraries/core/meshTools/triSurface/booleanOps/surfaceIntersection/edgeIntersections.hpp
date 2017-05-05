@@ -193,6 +193,17 @@ public:
                 const scalarField& surf1PointTol,
                 pointField& points1
             );
+
+            //- Merge (or override) edge intersection for a subset
+            //  (given as edge map and face map - for face indices stored in
+            //  pointIndexHit.index())
+            void merge
+            (
+                const edgeIntersections&,
+                const labelList& edgeMap,
+                const labelList& faceMap,
+                const bool merge = true
+            );
 };
 
 

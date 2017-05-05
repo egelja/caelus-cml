@@ -22,7 +22,6 @@ License
 #include "adjustPhi.hpp"
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
-#include "processorFvsPatchFields.hpp"
 #include "inletOutletFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
@@ -36,9 +35,6 @@ bool CML::adjustPhi
 {
     if (p.needReference())
     {
-        // p coefficients should not be updated here
-        // p.boundaryField().updateCoeffs();
-
         scalar massIn = 0.0;
         scalar fixedMassOut = 0.0;
         scalar adjustableMassOut = 0.0;
@@ -50,13 +46,9 @@ bool CML::adjustPhi
             const fvPatchVectorField& Up = U.boundaryField()[patchi];
             const fvsPatchScalarField& phip = bphi[patchi];
 
-            if (!isA<processorFvsPatchScalarField>(phip))
+            if (!phip.coupled())
             {
-                if
-                (
-                    Up.fixesValue()
-                 && !isA<inletOutletFvPatchVectorField>(Up)
-                )
+                if (Up.fixesValue() && !isA<inletOutletFvPatchVectorField>(Up))
                 {
                     forAll(phip, i)
                     {
@@ -109,8 +101,12 @@ bool CML::adjustPhi
         {
             FatalErrorIn
             (
-                "adjustPhi(surfaceScalarField& phi, const volVectorField& U,"
-                "const volScalarField& p"
+                "adjustPhi"
+                "("
+                    "surfaceScalarField&, "
+                    "const volVectorField&,"
+                    "volScalarField&"
+                ")"
             )   << "Continuity error cannot be removed by adjusting the"
                    " outflow.\nPlease check the velocity boundary conditions"
                    " and/or run potentialFoam to initialise the outflow." << nl
@@ -126,7 +122,7 @@ bool CML::adjustPhi
             const fvPatchVectorField& Up = U.boundaryField()[patchi];
             fvsPatchScalarField& phip = bphi[patchi];
 
-            if (!isA<processorFvsPatchScalarField>(phip))
+            if (!phip.coupled())
             {
                 if
                 (

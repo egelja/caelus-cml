@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,12 +85,12 @@ void CML::MeshedSurfaceIOAllocator::resetFaces
     const Xfer<surfZoneList>& zones
 )
 {
-    if (&faces)
+    if (notNull(faces))
     {
         faces_.transfer(faces());
     }
 
-    if (&zones)
+    if (notNull(zones))
     {
         zones_.transfer(zones());
     }
@@ -105,7 +106,7 @@ void CML::MeshedSurfaceIOAllocator::reset
 {
     // Take over new primitive data.
     // Optimized to avoid overwriting data at all
-    if (&points)
+    if (notNull(points))
     {
         points_.transfer(points());
     }
@@ -123,7 +124,7 @@ void CML::MeshedSurfaceIOAllocator::reset
 {
     // Take over new primitive data.
     // Optimized to avoid overwriting data at all
-    if (&points)
+    if (notNull(points))
     {
         points_.transfer(points());
     }

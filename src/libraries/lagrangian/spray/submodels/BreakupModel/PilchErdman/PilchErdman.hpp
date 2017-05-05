@@ -140,7 +140,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::PilchErdman<CloudType>::PilchErdman
 (
     const dictionary& dict,
@@ -159,7 +159,7 @@ CML::PilchErdman<CloudType>::PilchErdman
 }
 
 
-template <class CloudType>
+template<class CloudType>
 CML::PilchErdman<CloudType>::PilchErdman(const PilchErdman<CloudType>& bum)
 :
     BreakupModel<CloudType>(bum),
@@ -170,7 +170,7 @@ CML::PilchErdman<CloudType>::PilchErdman(const PilchErdman<CloudType>& bum)
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::PilchErdman<CloudType>::~PilchErdman()
 {}
 
@@ -205,7 +205,7 @@ bool CML::PilchErdman<CloudType>::update
 {
     // Weber number - eq (1)
     scalar We = rhoc*sqr(Urmag)*d/sigma;
-    
+
     // Ohnesorge number - eq (2)
     scalar Oh = mu/sqrt(rho*d*sigma);
 
@@ -250,7 +250,7 @@ bool CML::PilchErdman<CloudType>::update
 
         // velocity of fragmenting drop - eq (20)
         scalar Vd = Urmag*rho12*(B1_*taubBar + B2_*sqr(taubBar));
-        
+
         // maximum stable diameter - eq (33)
         scalar Vd1 = sqr(1.0 - Vd/Urmag);
         Vd1 = max(Vd1, SMALL);

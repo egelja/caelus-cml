@@ -55,7 +55,7 @@ void CML::ensightPart::writeFieldList
     const labelUList& idList
 ) const
 {
-    if (&idList)
+    if (notNull(idList))
     {
         forAll(idList, i)
         {

@@ -22,12 +22,39 @@ Class
     CML::pressureInletOutletParSlipVelocityFvPatchVectorField
 
 Description
-    Velocity inlet/outlet boundary condition for pressure boundary where the
-    pressure is specified.  zero-gradient is applied for outflow (as defined
-    by the flux) and for inflow the velocity is obtained from the flux with
-    the specified `inletDirection'.
+    This velocity inlet/outlet boundary condition for pressure boundary where
+    the pressure is specified.  A zero-gradient is applied for outflow (as
+    defined by the flux); for inflow, the velocity is obtained from the flux
+    with the specified inlet direction.
 
-    Slip condition applied tangential to the patch.
+    A slip condition is applied tangential to the patch.
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        phi          | flux field name         | no          | phi
+        rho          | density field name      | no          | rho
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            pressureInletOutletParSlipVelocity;
+        value           uniform 0;
+    }
+    \endverbatim
+
+Note
+    Sign conventions:
+    - positive flux (out of domain): apply zero-gradient condition
+    - negative flux (into of domain): derive from the flux with specified
+      direction
+
+SeeAlso
+    CML::mixedFvPatchVectorField
+    CML::pressureDirectedInletOutletVelocityFvPatchVectorField
 
 SourceFiles
     pressureInletOutletParSlipVelocityFvPatchVectorField.cpp
@@ -55,7 +82,10 @@ class pressureInletOutletParSlipVelocityFvPatchVectorField
 {
     // Private data
 
+        //- Flux field name
         word phiName_;
+
+        //- Density field name
         word rhoName_;
 
 

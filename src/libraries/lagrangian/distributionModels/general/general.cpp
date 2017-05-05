@@ -46,6 +46,7 @@ CML::distributionModels::general::general
     nEntries_(xy_.size()),
     minValue_(xy_[0][0]),
     maxValue_(xy_[nEntries_-1][0]),
+    meanValue_(0.0),
     integral_(nEntries_)
 {
     check();
@@ -65,10 +66,14 @@ CML::distributionModels::general::general
         integral_[i] = area + integral_[i-1];
     }
 
+    scalar sumArea = integral_.last();
+
+    meanValue_ = sumArea/(maxValue_ - minValue_);
+
     for (label i=0; i<nEntries_; i++)
     {
-        xy_[i][1] /= integral_[nEntries_-1];
-        integral_[i] /= integral_[nEntries_-1];
+        xy_[i][1] /= sumArea;
+        integral_[i] /= sumArea;
     }
 
 }
@@ -146,6 +151,12 @@ CML::scalar CML::distributionModels::general::minValue() const
 CML::scalar CML::distributionModels::general::maxValue() const
 {
     return maxValue_;
+}
+
+
+CML::scalar CML::distributionModels::general::meanValue() const
+{
+    return meanValue_;
 }
 
 

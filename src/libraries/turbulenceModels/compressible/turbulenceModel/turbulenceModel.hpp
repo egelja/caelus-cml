@@ -45,6 +45,7 @@ SourceFiles
 #include "surfaceFieldsFwd.hpp"
 #include "fvMatricesFwd.hpp"
 #include "basicThermo.hpp"
+#include "nearWallDist.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
 
@@ -80,6 +81,9 @@ protected:
         const surfaceScalarField& phi_;
 
         const basicThermo& thermophysicalModel_;
+
+        //- Near wall distance boundary field
+        nearWallDist y_;
 
 
 private:
@@ -150,6 +154,15 @@ public:
 
     // Member Functions
 
+        //- Const access to the coefficients dictionary
+        virtual const dictionary& coeffDict() const = 0;
+
+        //- Helper function to return the name of the turbulence G field
+        inline word GName() const
+        {
+            return word(type() + ":G");
+        }
+
         //- Access function to density field
         const volScalarField& rho() const
         {
@@ -172,6 +185,12 @@ public:
         const basicThermo& thermo() const
         {
              return thermophysicalModel_;
+        }
+
+        //- Return the near wall distances
+        const nearWallDist& y() const
+        {
+            return y_;
         }
 
         //- Return the laminar viscosity

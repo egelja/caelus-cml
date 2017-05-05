@@ -37,6 +37,7 @@ SourceFiles
 
 #include "dictionary.hpp"
 #include "Field.hpp"
+#include "dimensionedType.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -155,18 +156,42 @@ public:
                 const scalarField& x2
             ) const;
 
+            //- Return dimensioned type
+            virtual dimensioned<Type> dimValue(const scalar x) const;
 
-    // I/O
+            //- Return dimensioned type as a function of (scalar)
+            virtual tmp<Field<dimensioned<Type> > > dimValue
+            (
+                const scalarField& x
+            ) const;
 
-        //- Ostream Operator
-        friend Ostream& operator<< <Type>
-        (
-            Ostream& os,
-            const DataEntry<Type>& de
-        );
+            //- Integrate between two scalars and return a dimensioned type
+            virtual dimensioned<Type> dimIntegrate
+            (
+                const scalar x1,
+                const scalar x2
+            ) const;
 
-        //- Write in dictionary format
-        virtual void writeData(Ostream& os) const;
+            //- Integrate between two scalar fields and return a field of
+            //  dimensioned type
+            virtual tmp<Field<dimensioned<Type> > > dimIntegrate
+            (
+                const scalarField& x1,
+                const scalarField& x2
+            ) const;
+
+
+        // I/O
+
+            //- Ostream Operator
+            friend Ostream& operator<< <Type>
+            (
+                Ostream& os,
+                const DataEntry<Type>& de
+            );
+
+            //- Write in dictionary format
+            virtual void writeData(Ostream& os) const;
 };
 
 
@@ -250,6 +275,22 @@ Type CML::DataEntry<Type>::value(const scalar x) const
 
 
 template<class Type>
+Type CML::DataEntry<Type>::integrate(const scalar x1, const scalar x2) const
+{
+    notImplemented
+    (
+        "Type CML::DataEntry<Type>::integrate"
+        "("
+            "const scalar, "
+            "const scalar"
+        ") const"
+    );
+
+    return pTraits<Type>::zero;
+}
+
+
+template<class Type>
 CML::tmp<CML::Field<Type> > CML::DataEntry<Type>::value
 (
     const scalarField& x
@@ -267,22 +308,6 @@ CML::tmp<CML::Field<Type> > CML::DataEntry<Type>::value
 
 
 template<class Type>
-Type CML::DataEntry<Type>::integrate(const scalar x1, const scalar x2) const
-{
-    notImplemented
-    (
-        "Type CML::DataEntry<Type>::integrate"
-        "("
-            "const scalar, "
-            "const scalar"
-        ") const"
-    );
-
-    return pTraits<Type>::zero;
-}
-
-
-template<class Type>
 CML::tmp<CML::Field<Type> > CML::DataEntry<Type>::integrate
 (
     const scalarField& x1,
@@ -295,6 +320,90 @@ CML::tmp<CML::Field<Type> > CML::DataEntry<Type>::integrate
     forAll(x1, i)
     {
         fld[i] = this->integrate(x1[i], x2[i]);
+    }
+    return tfld;
+}
+
+
+
+template<class Type>
+CML::dimensioned<Type> CML::DataEntry<Type>::dimValue(const scalar x) const
+{
+    notImplemented
+    (
+        "dimensioned<Type> CML::DataEntry<dimensioned<Type> >::dimValue"
+        "(const scalar) const"
+    );
+
+    return dimensioned<Type>("zero", dimless, pTraits<Type>::zero);
+}
+
+
+template<class Type>
+CML::dimensioned<Type> CML::DataEntry<Type>::dimIntegrate
+(
+    const scalar x1,
+    const scalar x2
+) const
+{
+    notImplemented
+    (
+        "dimensioned<Type> CML::DataEntry<Type>::dimIntegrate"
+        "("
+            "const scalar, "
+            "const scalar"
+        ") const"
+    );
+
+    return dimensioned<Type>("zero", dimless, pTraits<Type>::zero);
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<CML::dimensioned<Type> > >
+CML::DataEntry<Type>::dimValue
+(
+    const scalarField& x
+) const
+{
+
+    tmp<Field<dimensioned<Type> > > tfld
+    (
+        new Field<dimensioned<Type> >
+        (
+            x.size(),
+            dimensioned<Type>("zero", dimless, pTraits<Type>::zero)
+        )
+    );
+
+    Field<dimensioned<Type> >& fld = tfld();
+
+    forAll(x, i)
+    {
+        fld[i] = this->dimValue(x[i]);
+    }
+    return tfld;
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<CML::dimensioned<Type> > >
+CML::DataEntry<Type>::dimIntegrate
+(
+    const scalarField& x1,
+    const scalarField& x2
+) const
+{
+    tmp<Field<dimensioned<Type> > > tfld
+    (
+        new Field<dimensioned<Type> >(x1.size())
+    );
+
+    Field<dimensioned<Type> >& fld = tfld();
+
+    forAll(x1, i)
+    {
+        fld[i] = this->dimIntegrate(x1[i], x2[i]);
     }
     return tfld;
 }
@@ -338,18 +447,26 @@ CML::autoPtr<CML::DataEntry<Type> > CML::DataEntry<Type>::New
     const dictionary& dict
 )
 {
-    Istream& is(dict.lookup(entryName));
+    Istream& is(dict.lookup(entryName, false));
 
     token firstToken(is);
 
     word DataEntryType;
     if (firstToken.isWord())
     {
-        DataEntryType = firstToken.wordToken();
+        // Dimensioned type default compatibility
+        if (firstToken.wordToken() == entryName)
+        {
+            DataEntryType = "CompatibilityConstant";
+        }
+        else
+        {
+            DataEntryType = firstToken.wordToken();
+        }
     }
     else
     {
-//        DataEntryType = CompatibilityConstant<Type>::typeName;
+        // DataEntryType = CompatibilityConstant<Type>::typeName;
         DataEntryType = "CompatibilityConstant";
     }
 

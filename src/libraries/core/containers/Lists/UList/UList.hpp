@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,10 +29,6 @@ Description
     the constructor as an argument.  This type of list is particularly useful
     for lists that refer to parts of existing lists such as SubList.
 
-SourceFiles
-    UList.cpp
-    UListI.hpp
-    UListIO.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -42,6 +39,7 @@ SourceFiles
 #include "label.hpp"
 #include "uLabel.hpp"
 #include "restrict.hpp"
+#include "nullSingleton.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,6 +53,7 @@ template<class T> class SubList;
 // Forward declaration of friend functions and operators
 template<class T> class UList;
 template<class T> Ostream& operator<<(Ostream&, const UList<T>&);
+template<class T> Istream& operator>>(Istream&, UList<T>&);
 
 typedef UList<label> labelUList;
 
@@ -109,6 +108,24 @@ public:
             }
         };
 
+        //- Greater function class that can be used for sorting
+        class greater
+        {
+            const UList<T>& values_;
+
+        public:
+
+            greater(const UList<T>& values)
+            :
+                values_(values)
+            {}
+
+            bool operator()(const label a, const label b)
+            {
+                return values_[a] > values_[b];
+            }
+        };
+
 
     // Constructors
 
@@ -134,8 +151,9 @@ public:
 
             //- Return the binary size in number of characters of the UList
             //  if the element is a primitive type
-            //  i.e. contiguous<T>() == true
-            label byteSize() const;
+            //  i.e. contiguous<T>() == true.
+            //  Note that is of type streamsize since used in stream ops
+            std::streamsize byteSize() const;
 
 
             //- Return a const pointer to the first data element,
@@ -327,6 +345,14 @@ public:
             Ostream&,
             const UList<T>&
         );
+
+        //- Read UList contents from Istream. Requires size to have been set
+        //  before.
+        friend Istream& operator>> <T>
+        (
+            Istream&,
+            UList<T>&
+        );
 };
 
 template<class T>
@@ -387,7 +413,7 @@ inline CML::UList<T>::UList(T* RESTRICT v, label size)
 template<class T>
 inline const CML::UList<T>& CML::UList<T>::null()
 {
-    return *reinterpret_cast< UList<T>* >(0);
+    return NullSingletonRef< UList<T> >();
 }
 
 
@@ -770,13 +796,13 @@ void CML::UList<T>::assign(const UList<T>& a)
 
     if (this->size_)
     {
-#       ifdef USEMEMCPY
+        #ifdef USEMEMCPY
         if (contiguous<T>())
         {
             memcpy(this->v_, a.v_, this->byteSize());
         }
         else
-#       endif
+        #endif
         {
             List_ACCESS(T, (*this), vp);
             List_CONST_ACCESS(T, a, ap);
@@ -817,8 +843,8 @@ void CML::UList<T>::swap(UList<T>& a)
     List_ACCESS(T, a, ap);
     T tmp;
     List_FOR_ALL((*this), i)
-        tmp = List_ELEM((*this), vp, i);
-        List_ELEM((*this), vp, i) = List_ELEM(a, ap, i);
+        tmp = List_CELEM((*this), vp, i);
+        List_ELEM((*this), vp, i) = List_CELEM(a, ap, i);
         List_ELEM(a, ap, i) = tmp;
     List_END_FOR_ALL
 }
@@ -827,7 +853,7 @@ void CML::UList<T>::swap(UList<T>& a)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class T>
-CML::label CML::UList<T>::byteSize() const
+std::streamsize CML::UList<T>::byteSize() const
 {
     if (!contiguous<T>())
     {
@@ -837,7 +863,7 @@ CML::label CML::UList<T>::byteSize() const
             << abort(FatalError);
     }
 
-    return this->size_*label(sizeof(T));
+    return this->size_*sizeof(T);
 }
 
 
@@ -962,6 +988,7 @@ bool CML::UList<T>::operator>=(const UList<T>& a) const
 
 #include "Ostream.hpp"
 #include "token.hpp"
+#include "SLList.hpp"
 #include "contiguous.hpp"
 
 // * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
@@ -1015,6 +1042,7 @@ CML::Ostream& CML::operator<<(CML::Ostream& os, const CML::UList<T>& L)
                 }
             }
         }
+
         if (uniform)
         {
             // Write size and start delimiter
@@ -1026,7 +1054,7 @@ CML::Ostream& CML::operator<<(CML::Ostream& os, const CML::UList<T>& L)
             // Write end delimiter
             os << token::END_BLOCK;
         }
-        else if (L.size() < 11 && contiguous<T>())
+        else if (L.size() <= 1 || (L.size() < 11 && contiguous<T>()))
         {
             // Write size and start delimiter
             os << L.size() << token::BEGIN_LIST;
@@ -1061,9 +1089,7 @@ CML::Ostream& CML::operator<<(CML::Ostream& os, const CML::UList<T>& L)
         os << nl << L.size() << nl;
         if (L.size())
         {
-            // Note: do not use byteSize to avoid overflow on really big
-            //       arrays.
-            os.write(reinterpret_cast<const char*>(L.v_), L.size()*sizeof(T));
+            os.write(reinterpret_cast<const char*>(L.v_), L.byteSize());
         }
     }
 
@@ -1074,6 +1100,155 @@ CML::Ostream& CML::operator<<(CML::Ostream& os, const CML::UList<T>& L)
 }
 
 
+template<class T>
+CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
+{
+    is.fatalCheck("operator>>(Istream&, UList<T>&)");
+
+    token firstToken(is);
+
+    is.fatalCheck("operator>>(Istream&, UList<T>&) : reading first token");
+
+    if (firstToken.isCompound())
+    {
+        List<T> elems;
+        elems.transfer
+        (
+            dynamicCast<token::Compound<List<T> > >
+            (
+                firstToken.transferCompoundToken(is)
+            )
+        );
+        // Check list length
+        label s = elems.size();
+
+        if (s != L.size())
+        {
+            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+                << "incorrect length for UList. Read " << s
+                << " expected " << L.size()
+                << exit(FatalIOError);
+        }
+        for (register label i=0; i<s; i++)
+        {
+            L[i] = elems[i];
+        }
+    }
+    else if (firstToken.isLabel())
+    {
+        label s = firstToken.labelToken();
+
+        // Set list length to that read
+        if (s != L.size())
+        {
+            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+                << "incorrect length for UList. Read " << s
+                << " expected " << L.size()
+                << exit(FatalIOError);
+        }
+
+        // Read list contents depending on data format
+
+        if (is.format() == IOstream::ASCII || !contiguous<T>())
+        {
+            // Read beginning of contents
+            char delimiter = is.readBeginList("List");
+
+            if (s)
+            {
+                if (delimiter == token::BEGIN_LIST)
+                {
+                    for (register label i=0; i<s; i++)
+                    {
+                        is >> L[i];
+
+                        is.fatalCheck
+                        (
+                            "operator>>(Istream&, UList<T>&) : reading entry"
+                        );
+                    }
+                }
+                else
+                {
+                    T element;
+                    is >> element;
+
+                    is.fatalCheck
+                    (
+                        "operator>>(Istream&, UList<T>&) : "
+                        "reading the single entry"
+                    );
+
+                    for (register label i=0; i<s; i++)
+                    {
+                        L[i] = element;
+                    }
+                }
+            }
+
+            // Read end of contents
+            is.readEndList("List");
+        }
+        else
+        {
+            if (s)
+            {
+                is.read(reinterpret_cast<char*>(L.data()), s*sizeof(T));
+
+                is.fatalCheck
+                (
+                    "operator>>(Istream&, UList<T>&) : reading the binary block"
+                );
+            }
+        }
+    }
+    else if (firstToken.isPunctuation())
+    {
+        if (firstToken.pToken() != token::BEGIN_LIST)
+        {
+            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+                << "incorrect first token, expected '(', found "
+                << firstToken.info()
+                << exit(FatalIOError);
+        }
+
+        // Putback the opening bracket
+        is.putBack(firstToken);
+
+        // Now read as a singly-linked list
+        SLList<T> sll(is);
+
+        if (sll.size() != L.size())
+        {
+            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+                << "incorrect length for UList. Read " << sll.size()
+                << " expected " << L.size()
+                << exit(FatalIOError);
+        }
+
+        // Convert the singly-linked list to this list
+        label i = 0;
+        for
+        (
+            typename SLList<T>::const_iterator iter = sll.begin();
+            iter != sll.end();
+            ++iter
+        )
+        {
+            L[i] = iter();
+        }
+
+    }
+    else
+    {
+        FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+            << "incorrect first token, expected <int> or '(', found "
+            << firstToken.info()
+            << exit(FatalIOError);
+    }
+
+    return is;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

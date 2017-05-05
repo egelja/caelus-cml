@@ -63,7 +63,7 @@ void CML::ensightPartCells::classify
     size_ = mesh.nCells();
 
     bool limited = false;
-    if (&idList)
+    if (notNull(idList))
     {
         limited = true;
         size_ = idList.size();

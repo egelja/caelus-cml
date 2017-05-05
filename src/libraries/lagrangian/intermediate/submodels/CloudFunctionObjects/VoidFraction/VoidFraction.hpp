@@ -76,7 +76,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        VoidFraction(const dictionary& dict, CloudType& owner);
+        VoidFraction
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         VoidFraction(const VoidFraction<CloudType>& vf);
@@ -107,11 +112,30 @@ public:
 
             //- Post-move hook
             virtual void postMove
-            (   
-                parcelType& p,
+            (
+                typename CloudType::parcelType& p,
                 const label cellI,
                 const scalar dt,
-                const point& position0
+                const point& position0,
+                bool& keepParticle
+            );
+
+            //- Post-patch hook
+            virtual void postPatch
+            (
+                const typename CloudType::parcelType& p,
+                const polyPatch& pp,
+                const scalar trackFraction,
+                const tetIndices& testIs,
+                bool& keepParticle
+            );
+
+            //- Post-face hook
+            virtual void postFace
+            (
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -145,10 +169,11 @@ template<class CloudType>
 CML::VoidFraction<CloudType>::VoidFraction
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(owner),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     thetaPtr_(NULL)
 {}
 
@@ -220,15 +245,42 @@ void CML::VoidFraction<CloudType>::postEvolve()
 template<class CloudType>
 void CML::VoidFraction<CloudType>::postMove
 (
-    parcelType& p,
+    typename CloudType::parcelType& p,
     const label cellI,
     const scalar dt,
-    const point&
+    const point&,
+    bool&
 )
 {
     volScalarField& theta = thetaPtr_();
 
     theta[cellI] += dt*p.nParticle()*p.volume();
+}
+
+
+template<class CloudType>
+void CML::VoidFraction<CloudType>::postPatch
+(
+    const typename CloudType::parcelType& p,
+    const polyPatch& pp,
+    const scalar trackFraction,
+    const tetIndices& testIs,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::VoidFraction<CloudType>::postFace
+(
+    const typename CloudType::parcelType& p,
+    const label faceI,
+    bool& keepParticle
+)
+{
+    // Do nothing
 }
 
 

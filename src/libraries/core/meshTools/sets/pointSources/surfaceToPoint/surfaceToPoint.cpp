@@ -30,13 +30,9 @@ License
 
 namespace CML
 {
-
-defineTypeNameAndDebug(surfaceToPoint, 0);
-
-addToRunTimeSelectionTable(topoSetSource, surfaceToPoint, word);
-
-addToRunTimeSelectionTable(topoSetSource, surfaceToPoint, istream);
-
+    defineTypeNameAndDebug(surfaceToPoint, 0);
+    addToRunTimeSelectionTable(topoSetSource, surfaceToPoint, word);
+    addToRunTimeSelectionTable(topoSetSource, surfaceToPoint, istream);
 }
 
 
@@ -148,7 +144,7 @@ CML::surfaceToPoint::surfaceToPoint
 )
 :
     topoSetSource(mesh),
-    surfName_(dict.lookup("file")),
+    surfName_(fileName(dict.lookup("file")).expand()),
     nearDist_(readScalar(dict.lookup("nearDistance"))),
     includeInside_(readBool(dict.lookup("includeInside"))),
     includeOutside_(readBool(dict.lookup("includeOutside")))

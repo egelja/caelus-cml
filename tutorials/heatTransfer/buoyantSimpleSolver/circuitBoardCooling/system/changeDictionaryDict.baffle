@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,7 +19,7 @@ dictionaryReplacement
         {
             "baffle1.*"
             {
-                type            alphatWallFunction;
+                type            compressible::alphatWallFunction;
                 value           uniform 0;
             }
         }

@@ -42,7 +42,7 @@ phaseChangeModel::phaseChangeModel
     const surfaceFilmModel& owner
 )
 :
-    subModelBase(owner),
+    filmSubModelBase(owner),
     latestMassPC_(0.0),
     totalMassPC_(0.0)
 {}
@@ -55,7 +55,7 @@ phaseChangeModel::phaseChangeModel
     const dictionary& dict
 )
 :
-    subModelBase(type, owner, dict),
+    filmSubModelBase(type, owner, dict),
     latestMassPC_(0.0),
     totalMassPC_(0.0)
 {}

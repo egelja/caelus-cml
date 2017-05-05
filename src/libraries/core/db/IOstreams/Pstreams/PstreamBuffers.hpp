@@ -149,6 +149,9 @@ public:
         //  non-blocking.
         void finishedSends(labelListList& sizes, const bool block = true);
 
+        //- Clear storage and reset
+        void clear();
+
 };
 
 

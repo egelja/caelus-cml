@@ -22,7 +22,17 @@ Class
     CML::slipFvPatchField
 
 Description
-    CML::slipFvPatchField
+    This boundary condition provides a slip constraint.
+
+    \heading Patch usage
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            slip;
+    }
+    \endverbatim
 
 
 \*---------------------------------------------------------------------------*/
@@ -38,7 +48,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class slipFvPatch Declaration
+                      Class slipFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>

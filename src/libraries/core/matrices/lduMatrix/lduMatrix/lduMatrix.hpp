@@ -274,7 +274,7 @@ public:
 
             //- Threshold value for switching from relative to absolute
             //  tolerance in the first linear solver iteration
-            label eps_;
+            scalar eps_;
 
             //- Final convergence tolerance
             scalar tolerance_;

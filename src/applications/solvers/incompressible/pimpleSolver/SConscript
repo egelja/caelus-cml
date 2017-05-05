@@ -26,10 +26,10 @@ pimpleSolEnv.Prepend(CPPPATH = lib_inc)
 # Additions to link libraries for this executable
 #===============================================================================
 if pimpleSolEnv['WHICH_OS'] == "windows":
-  pimpleSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad')
+  pimpleSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad  -u incompressibleLESModelsLoad -u incompressibleVLESModelsLoad')
 
 lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
-'libincompressibleLESModels','libincompressibleTransportModels', 'fvOptions', 'sampling']
+'libincompressibleLESModels','libincompressibleTransportModels', 'fvOptions', 'sampling','libincompressibleVLESModels']
 pimpleSolEnv.Append(LIBS = lib_link)
 
 #===============================================================================

@@ -305,23 +305,20 @@ void CML::lduMatrix::operator*=(const scalarField& sf)
         *diagPtr_ *= sf;
     }
 
-    if (upperPtr_)
+    // Non-uniform scaling causes a symmetric matrix
+    // to become asymmetric
+    if (symmetric() || asymmetric())
     {
-        scalarField& upper = *upperPtr_;
+        scalarField& upper = this->upper();
+        scalarField& lower = this->lower();
 
         const labelUList& l = lduAddr().lowerAddr();
+        const labelUList& u = lduAddr().upperAddr();
 
         for (register label face=0; face<upper.size(); face++)
         {
             upper[face] *= sf[l[face]];
         }
-    }
-
-    if (lowerPtr_)
-    {
-        scalarField& lower = *lowerPtr_;
-
-        const labelUList& u = lduAddr().upperAddr();
 
         for (register label face=0; face<lower.size(); face++)
         {

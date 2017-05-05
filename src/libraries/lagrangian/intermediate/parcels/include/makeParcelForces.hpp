@@ -27,12 +27,18 @@ License
 
 #include "SphereDragForce.hpp"
 #include "NonSphereDragForce.hpp"
+#include "ConstantDragCoefficient.hpp"
+
+#include "ConstantLiftCoefficient.hpp"
+#include "SaffmanMeiLiftForce.hpp"
+#include "TomiyamaLiftForce.hpp"
 
 #include "GravityForce.hpp"
 #include "NonInertialFrameForce.hpp"
 #include "ParamagneticForce.hpp"
 #include "PressureGradientForce.hpp"
 #include "SRFForce.hpp"
+#include "VirtualMassForce.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -41,11 +47,16 @@ License
     makeParticleForceModel(CloudType);                                        \
     makeParticleForceModelType(SphereDragForce, CloudType);                   \
     makeParticleForceModelType(NonSphereDragForce, CloudType);                \
+    makeParticleForceModelType(ConstantDragCoefficient, CloudType);           \
+    makeParticleForceModelType(ConstantLiftCoefficient, CloudType);           \
+    makeParticleForceModelType(SaffmanMeiLiftForce, CloudType);               \
+    makeParticleForceModelType(TomiyamaLiftForce, CloudType);                 \
     makeParticleForceModelType(GravityForce, CloudType);                      \
     makeParticleForceModelType(NonInertialFrameForce, CloudType);             \
     makeParticleForceModelType(ParamagneticForce, CloudType);                 \
     makeParticleForceModelType(PressureGradientForce, CloudType);             \
-    makeParticleForceModelType(SRFForce, CloudType);
+    makeParticleForceModelType(SRFForce, CloudType);                          \
+    makeParticleForceModelType(VirtualMassForce, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

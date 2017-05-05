@@ -179,6 +179,10 @@ public:
             const dictionary&
         );
 
+        //- Convert to OSstream
+        //  Use Info for default communicator, control output using bool flag
+        OSstream& operator()(const bool output);
+
         //- Convert to OSstream for << operations
         operator OSstream&();
 

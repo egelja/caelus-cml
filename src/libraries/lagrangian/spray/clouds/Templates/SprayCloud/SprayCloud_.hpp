@@ -23,6 +23,10 @@ Class
 Description
     Templated base class for spray cloud
 
+    - sub-models:
+      - atomization model
+      - break-up model
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef SprayCloud__H

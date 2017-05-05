@@ -40,7 +40,6 @@ uniformTotalPressureFvPatchScalarField
     rhoName_("none"),
     psiName_("none"),
     gamma_(0.0),
-    p0_(0.0),
     pressure_()
 {}
 
@@ -59,7 +58,6 @@ uniformTotalPressureFvPatchScalarField
     rhoName_(dict.lookupOrDefault<word>("rho", "none")),
     psiName_(dict.lookupOrDefault<word>("psi", "none")),
     gamma_(readScalar(dict.lookup("gamma"))),
-    p0_(readScalar(dict.lookup("p0"))),
     pressure_(DataEntry<scalar>::New("pressure", dict))
 {
     if (dict.found("value"))
@@ -71,7 +69,8 @@ uniformTotalPressureFvPatchScalarField
     }
     else
     {
-        fvPatchField<scalar>::operator=(p0_);
+        scalar p0 = pressure_->value(this->db().time().timeOutputValue());
+        fvPatchField<scalar>::operator=(p0);
     }
 }
 
@@ -85,49 +84,60 @@ uniformTotalPressureFvPatchScalarField
     const fvPatchFieldMapper& mapper
 )
 :
-    fixedValueFvPatchScalarField(ptf, p, iF, mapper),
+    fixedValueFvPatchScalarField(p, iF),  // bypass mapper
     UName_(ptf.UName_),
     phiName_(ptf.phiName_),
     rhoName_(ptf.rhoName_),
     psiName_(ptf.psiName_),
     gamma_(ptf.gamma_),
-    p0_(ptf.p0_),
     pressure_(ptf.pressure_().clone().ptr())
-{}
+{
+    // Evaluate since value not mapped
+    const scalar t = this->db().time().timeOutputValue();
+    fvPatchScalarField::operator==(pressure_->value(t));
+}
 
 
 CML::uniformTotalPressureFvPatchScalarField::
 uniformTotalPressureFvPatchScalarField
 (
-    const uniformTotalPressureFvPatchScalarField& tppsf
+    const uniformTotalPressureFvPatchScalarField& ptf
 )
 :
-    fixedValueFvPatchScalarField(tppsf),
-    UName_(tppsf.UName_),
-    phiName_(tppsf.phiName_),
-    rhoName_(tppsf.rhoName_),
-    psiName_(tppsf.psiName_),
-    gamma_(tppsf.gamma_),
-    p0_(tppsf.p0_),
-    pressure_(tppsf.pressure_().clone().ptr())
+    fixedValueFvPatchScalarField(ptf),
+    UName_(ptf.UName_),
+    phiName_(ptf.phiName_),
+    rhoName_(ptf.rhoName_),
+    psiName_(ptf.psiName_),
+    gamma_(ptf.gamma_),
+    pressure_
+    (
+        ptf.pressure_.valid()
+      ? ptf.pressure_().clone().ptr()
+      : NULL
+    )
 {}
 
 
 CML::uniformTotalPressureFvPatchScalarField::
 uniformTotalPressureFvPatchScalarField
 (
-    const uniformTotalPressureFvPatchScalarField& tppsf,
+    const uniformTotalPressureFvPatchScalarField& ptf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
-    fixedValueFvPatchScalarField(tppsf, iF),
-    UName_(tppsf.UName_),
-    phiName_(tppsf.phiName_),
-    rhoName_(tppsf.rhoName_),
-    psiName_(tppsf.psiName_),
-    gamma_(tppsf.gamma_),
-    p0_(tppsf.p0_),
-    pressure_(tppsf.pressure_().clone().ptr())
+    fixedValueFvPatchScalarField(ptf, iF),
+    UName_(ptf.UName_),
+    phiName_(ptf.phiName_),
+    rhoName_(ptf.rhoName_),
+    psiName_(ptf.psiName_),
+    gamma_(ptf.gamma_),
+    pressure_
+    (
+        ptf.pressure_.valid()
+      ? ptf.pressure_().clone().ptr()
+      : NULL
+    )
 {}
 
 
@@ -143,14 +153,14 @@ void CML::uniformTotalPressureFvPatchScalarField::updateCoeffs
         return;
     }
 
-    p0_ = pressure_->value(this->db().time().timeOutputValue());
+    scalar p0 = pressure_->value(this->db().time().timeOutputValue());
 
     const fvsPatchField<scalar>& phip =
         patch().lookupPatchField<surfaceScalarField, scalar>(phiName_);
 
     if (psiName_ == "none" && rhoName_ == "none")
     {
-        operator==(p0_ - 0.5*(1.0 - pos(phip))*magSqr(Up));
+        operator==(p0 - 0.5*(1.0 - pos(phip))*magSqr(Up));
     }
     else if (rhoName_ == "none")
     {
@@ -163,7 +173,7 @@ void CML::uniformTotalPressureFvPatchScalarField::updateCoeffs
 
             operator==
             (
-                p0_
+                p0
                /pow
                 (
                     (1.0 + 0.5*psip*gM1ByG*(1.0 - pos(phip))*magSqr(Up)),
@@ -173,7 +183,7 @@ void CML::uniformTotalPressureFvPatchScalarField::updateCoeffs
         }
         else
         {
-            operator==(p0_/(1.0 + 0.5*psip*(1.0 - pos(phip))*magSqr(Up)));
+            operator==(p0/(1.0 + 0.5*psip*(1.0 - pos(phip))*magSqr(Up)));
         }
     }
     else if (psiName_ == "none")
@@ -181,7 +191,7 @@ void CML::uniformTotalPressureFvPatchScalarField::updateCoeffs
         const fvPatchField<scalar>& rho =
             patch().lookupPatchField<volScalarField, scalar>(rhoName_);
 
-        operator==(p0_ - 0.5*rho*(1.0 - pos(phip))*magSqr(Up));
+        operator==(p0 - 0.5*rho*(1.0 - pos(phip))*magSqr(Up));
     }
     else
     {
@@ -215,7 +225,6 @@ void CML::uniformTotalPressureFvPatchScalarField::write(Ostream& os) const
     os.writeKeyword("rho") << rhoName_ << token::END_STATEMENT << nl;
     os.writeKeyword("psi") << psiName_ << token::END_STATEMENT << nl;
     os.writeKeyword("gamma") << gamma_ << token::END_STATEMENT << nl;
-    os.writeKeyword("p0") << p0_ << token::END_STATEMENT << nl;
     pressure_->writeData(os);
     writeEntry("value", os);
 }

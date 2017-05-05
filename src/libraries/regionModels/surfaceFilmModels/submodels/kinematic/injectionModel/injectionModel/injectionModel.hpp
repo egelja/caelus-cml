@@ -32,7 +32,7 @@ SourceFiles
 #ifndef injectionModel_H
 #define injectionModel_H
 
-#include "subModelBase.hpp"
+#include "filmSubModelBase.hpp"
 #include "runTimeSelectionTables.hpp"
 #include "scalarField.hpp"
 
@@ -51,7 +51,7 @@ namespace surfaceFilmModels
 
 class injectionModel
 :
-    public subModelBase
+    public filmSubModelBase
 {
 private:
 

@@ -25,8 +25,9 @@ License
 #include "vector2D.hpp"
 #include "triSurface.hpp"
 #include "triSurfaceTools.hpp"
-#include "OFstream.hpp"
+#include "OBJstream.hpp"
 #include "Time.hpp"
+#include "matchPoints.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -132,76 +133,174 @@ void CML::pointToPointPlanarInterpolation::calcWeights
     const pointField& destPoints
 )
 {
-    tmp<vectorField> tlocalVertices
-    (
-        referenceCS_.localPosition(sourcePoints)
-    );
-    vectorField& localVertices = tlocalVertices();
-
-    const boundBox bb(localVertices, true);
-    const point bbMid(bb.midpoint());
-
-    if (debug)
+    if (nearestOnly_)
     {
-        Info<< "pointToPointPlanarInterpolation::readData :"
-            << " Perturbing points with " << perturb_
-            << " fraction of a random position inside " << bb
-            << " to break any ties on regular meshes."
-            << nl << endl;
-    }
-
-    Random rndGen(123456);
-    forAll(localVertices, i)
-    {
-        localVertices[i] +=
-            perturb_
-           *(rndGen.position(bb.min(), bb.max())-bbMid);
-    }
-
-    // Determine triangulation
-    List<vector2D> localVertices2D(localVertices.size());
-    forAll(localVertices, i)
-    {
-        localVertices2D[i][0] = localVertices[i][0];
-        localVertices2D[i][1] = localVertices[i][1];
-    }
-
-    triSurface s(triSurfaceTools::delaunay2D(localVertices2D));
-
-    tmp<pointField> tlocalFaceCentres
-    (
-        referenceCS_.localPosition
+        labelList destToSource;
+        bool fullMatch = matchPoints
         (
-            destPoints
-        )
-    );
-    const pointField& localFaceCentres = tlocalFaceCentres();
+            destPoints,
+            sourcePoints,
+            scalarField(destPoints.size(), GREAT),
+            true,       // verbose
+            destToSource
+        );
 
-    if (debug)
-    {
-        Pout<< "pointToPointPlanarInterpolation::readData :"
-            <<" Dumping triangulated surface to triangulation.stl" << endl;
-        s.write("triangulation.stl");
-
-        OFstream str("localFaceCentres.obj");
-        Pout<< "readSamplePoints :"
-            << " Dumping face centres to " << str.name() << endl;
-
-        forAll(localFaceCentres, i)
+        if (!fullMatch)
         {
-            const point& p = localFaceCentres[i];
-            str<< "v " << p.x() << ' ' << p.y() << ' ' << p.z() << nl;
+            FatalErrorIn("pointToPointPlanarInterpolation::calcWeights(..)")
+                << "Did not find a corresponding sourcePoint for every face"
+                << " centre" << exit(FatalError);
+        }
+
+        nearestVertex_.setSize(destPoints.size());
+        nearestVertexWeight_.setSize(destPoints.size());
+        forAll(nearestVertex_, i)
+        {
+            nearestVertex_[i][0] = destToSource[i];
+            nearestVertex_[i][1] = -1;
+            nearestVertex_[i][2] = -1;
+
+            nearestVertexWeight_[i][0] = 1.0;
+            nearestVertexWeight_[i][1] = 0.0;
+            nearestVertexWeight_[i][2] = 0.0;
+        }
+
+        if (debug)
+        {
+            forAll(destPoints, i)
+            {
+                label v0 = nearestVertex_[i][0];
+
+                Pout<< "For location " << destPoints[i]
+                    << " sampling vertex " << v0
+                    << " at:" << sourcePoints[v0]
+                    << " distance:" << mag(sourcePoints[v0]-destPoints[i])
+                    << endl;
+            }
+
+            OBJstream str("destToSource.obj");
+            Pout<< "pointToPointPlanarInterpolation::calcWeights :"
+                << " Dumping lines from face centres to original points to "
+                << str.name() << endl;
+
+            forAll(destPoints, i)
+            {
+                label v0 = nearestVertex_[i][0];
+                str.write(linePointRef(destPoints[i], sourcePoints[v0]));
+            }
         }
     }
+    else
+    {
+        tmp<vectorField> tlocalVertices
+        (
+            referenceCS_.localPosition(sourcePoints)
+        );
+        vectorField& localVertices = tlocalVertices();
 
-    // Determine interpolation onto face centres.
-    triSurfaceTools::calcInterpolationWeights
-    (
-        s,
-        localFaceCentres,   // points to interpolate to
-        nearestVertex_,
-        nearestVertexWeight_
-    );
+        const boundBox bb(localVertices, true);
+        const point bbMid(bb.midpoint());
+
+        if (debug)
+        {
+            Info<< "pointToPointPlanarInterpolation::calcWeights :"
+                << " Perturbing points with " << perturb_
+                << " fraction of a random position inside " << bb
+                << " to break any ties on regular meshes."
+                << nl << endl;
+        }
+
+        Random rndGen(123456);
+        forAll(localVertices, i)
+        {
+            localVertices[i] +=
+                perturb_
+               *(rndGen.position(bb.min(), bb.max())-bbMid);
+        }
+
+        // Determine triangulation
+        List<vector2D> localVertices2D(localVertices.size());
+        forAll(localVertices, i)
+        {
+            localVertices2D[i][0] = localVertices[i][0];
+            localVertices2D[i][1] = localVertices[i][1];
+        }
+
+        triSurface s(triSurfaceTools::delaunay2D(localVertices2D));
+
+        tmp<pointField> tlocalFaceCentres
+        (
+            referenceCS_.localPosition
+            (
+                destPoints
+            )
+        );
+        const pointField& localFaceCentres = tlocalFaceCentres();
+
+        if (debug)
+        {
+            Pout<< "pointToPointPlanarInterpolation::calcWeights :"
+                <<" Dumping triangulated surface to triangulation.stl" << endl;
+            s.write("triangulation.stl");
+
+            OBJstream str("localFaceCentres.obj");
+            Pout<< "pointToPointPlanarInterpolation::calcWeights :"
+                << " Dumping face centres to " << str.name() << endl;
+
+            forAll(localFaceCentres, i)
+            {
+                str.write(localFaceCentres[i]);
+            }
+        }
+
+        // Determine interpolation onto face centres.
+        triSurfaceTools::calcInterpolationWeights
+        (
+            s,
+            localFaceCentres,   // points to interpolate to
+            nearestVertex_,
+            nearestVertexWeight_
+        );
+
+        if (debug)
+        {
+            forAll(sourcePoints, i)
+            {
+                Pout<< "source:" << i << " at:" << sourcePoints[i]
+                    << " 2d:" << localVertices[i]
+                    << endl;
+            }
+
+            forAll(destPoints, i)
+            {
+                label v0 = nearestVertex_[i][0];
+                label v1 = nearestVertex_[i][1];
+                label v2 = nearestVertex_[i][2];
+
+                Pout<< "For location " << destPoints[i]
+                    << " 2d:" << localFaceCentres[i]
+                    << " sampling vertices" << nl
+                    << "    " << v0
+                    << " at:" << sourcePoints[v0]
+                    << " weight:" << nearestVertexWeight_[i][0] << nl;
+
+                if (v1 != -1)
+                {
+                    Pout<< "    " << v1
+                        << " at:" << sourcePoints[v1]
+                        << " weight:" << nearestVertexWeight_[i][1] << nl;
+                }
+                if (v2 != -1)
+                {
+                    Pout<< "    " << v2
+                        << " at:" << sourcePoints[v2]
+                        << " weight:" << nearestVertexWeight_[i][2] << nl;
+                }
+
+                Pout<< endl;
+            }
+        }
+    }
 }
 
 
@@ -211,13 +310,14 @@ CML::pointToPointPlanarInterpolation::pointToPointPlanarInterpolation
 (
     const pointField& sourcePoints,
     const pointField& destPoints,
-    const scalar perturb
+    const scalar perturb,
+    const bool nearestOnly
 )
 :
     perturb_(perturb),
+    nearestOnly_(nearestOnly),
     referenceCS_(calcCoordinateSystem(sourcePoints)),
     nPoints_(sourcePoints.size())
-
 {
     calcWeights(sourcePoints, destPoints);
 }
@@ -232,6 +332,7 @@ CML::pointToPointPlanarInterpolation::pointToPointPlanarInterpolation
 )
 :
     perturb_(perturb),
+    nearestOnly_(false),
     referenceCS_(referenceCS),
     nPoints_(sourcePoints.size())
 {

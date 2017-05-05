@@ -52,21 +52,6 @@ class LocalInteraction
         const patchInteractionDataList patchData_;
 
 
-        // Counters for initial particle fates
-
-            //- Number of parcels escaped
-            List<label> nEscape0_;
-
-            //- Mass of parcels escaped
-            List<scalar> massEscape0_;
-
-            //- Number of parcels stuck to patches
-            List<label> nStick0_;
-
-            //- Mass of parcels stuck to patches
-            List<scalar> massStick0_;
-
-
         // Counters for particle fates
 
             //- Number of parcels escaped
@@ -164,10 +149,6 @@ CML::LocalInteraction<CloudType>::LocalInteraction
 :
     PatchInteractionModel<CloudType>(dict, cloud, typeName),
     patchData_(cloud.mesh(), this->coeffDict()),
-    nEscape0_(patchData_.size(), 0),
-    massEscape0_(patchData_.size(), 0.0),
-    nStick0_(patchData_.size(), 0),
-    massStick0_(patchData_.size(), 0.0),
     nEscape_(patchData_.size(), 0),
     massEscape_(patchData_.size(), 0.0),
     nStick_(patchData_.size(), 0),
@@ -178,8 +159,8 @@ CML::LocalInteraction<CloudType>::LocalInteraction
 {
     if (writeFields_)
     {
-        word massEscapeName(this->owner().name() + "::massEscape");
-        word massStickName(this->owner().name() + "::massStick");
+        word massEscapeName(this->owner().name() + ":massEscape");
+        word massStickName(this->owner().name() + ":massStick");
         Info<< "    Interaction fields will be written to " << massEscapeName
             << " and " << massStickName << endl;
 
@@ -190,12 +171,6 @@ CML::LocalInteraction<CloudType>::LocalInteraction
     {
         Info<< "    Interaction fields will not be written" << endl;
     }
-
-    // intialise starting counters
-    this->getModelProperty("nEscape", nEscape0_);
-    this->getModelProperty("massEscape", massEscape0_);
-    this->getModelProperty("nStick", nStick0_);
-    this->getModelProperty("massStick", massStick0_);
 
     // check that interactions are valid/specified
     forAll(patchData_, patchI)
@@ -227,10 +202,6 @@ CML::LocalInteraction<CloudType>::LocalInteraction
 :
     PatchInteractionModel<CloudType>(pim),
     patchData_(pim.patchData_),
-    nEscape0_(pim.nEscape0_),
-    massEscape0_(pim.massEscape0_),
-    nStick0_(pim.nStick0_),
-    massStick0_(pim.massStick0_),
     nEscape_(pim.nEscape_),
     massEscape_(pim.massEscape_),
     nStick_(pim.nStick_),
@@ -263,7 +234,7 @@ CML::volScalarField& CML::LocalInteraction<CloudType>::massEscape()
             (
                 IOobject
                 (
-                    this->owner().name() + "::massEscape",
+                    this->owner().name() + ":massEscape",
                     mesh.time().timeName(),
                     mesh,
                     IOobject::READ_IF_PRESENT,
@@ -292,7 +263,7 @@ CML::volScalarField& CML::LocalInteraction<CloudType>::massStick()
             (
                 IOobject
                 (
-                    this->owner().name() + "::massStick",
+                    this->owner().name() + ":massStick",
                     mesh.time().timeName(),
                     mesh,
                     IOobject::READ_IF_PRESENT,
@@ -426,21 +397,35 @@ bool CML::LocalInteraction<CloudType>::correct
 template<class CloudType>
 void CML::LocalInteraction<CloudType>::info(Ostream& os)
 {
+    // retrieve any stored data
+    labelList npe0(patchData_.size(), 0);
+    this->getModelProperty("nEscape", npe0);
+
+    scalarList mpe0(patchData_.size(), 0.0);
+    this->getModelProperty("massEscape", mpe0);
+
+    labelList nps0(patchData_.size(), 0);
+    this->getModelProperty("nStick", nps0);
+
+    scalarList mps0(patchData_.size(), 0.0);
+    this->getModelProperty("massStick", mps0);
+
+    // accumulate current data
     labelList npe(nEscape_);
     Pstream::listCombineGather(npe, plusEqOp<label>());
-    npe = npe + nEscape0_;
+    npe = npe + npe0;
 
     scalarList mpe(massEscape_);
     Pstream::listCombineGather(mpe, plusEqOp<scalar>());
-    mpe = mpe + massEscape0_;
+    mpe = mpe + mpe0;
 
     labelList nps(nStick_);
     Pstream::listCombineGather(nps, plusEqOp<label>());
-    nps = nps + nStick0_;
+    nps = nps + nps0;
 
     scalarList mps(massStick_);
     Pstream::listCombineGather(mps, plusEqOp<scalar>());
-    mps = mps + massStick0_;
+    mps = mps + mps0;
 
 
     forAll(patchData_, i)
@@ -453,16 +438,19 @@ void CML::LocalInteraction<CloudType>::info(Ostream& os)
             << ", " << mps[i] << nl;
     }
 
-    if
-    (
-        this->owner().solution().transient()
-     && this->owner().db().time().outputTime()
-    )
+    if (this->outputTime())
     {
         this->setModelProperty("nEscape", npe);
+        nEscape_ = 0;
+
         this->setModelProperty("massEscape", mpe);
+        massEscape_ = 0.0;
+
         this->setModelProperty("nStick", nps);
+        nStick_ = 0;
+
         this->setModelProperty("massStick", mps);
+        massStick_ = 0.0;
     }
 }
 

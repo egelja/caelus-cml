@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,6 +44,7 @@ SourceFiles
 #define cachedRandom_H
 
 #include "scalarList.hpp"
+#include "Pstream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -117,17 +118,33 @@ public:
 
         // Evaluation
 
-            //- Return a sample whose components lie in the range 0-1
-            template<class Type>
-            Type sample01();
+            // Random numbers
+                //- Return a sample whose components lie in the range 0-1
+                template<class Type>
+                Type sample01();
 
-            //- Return a sample between start and end
-            template<class Type>
-            Type position(const Type& start, const Type& end);
+                //- Return a sample between start and end
+                template<class Type>
+                Type position(const Type& start, const Type& end);
 
-            //- Randomise value in the range 0-1
-            template<class Type>
-            void randomise01(Type& value);
+                //- Randomise value in the range 0-1
+                template<class Type>
+                void randomise01(Type& value);
+
+
+            // Global random numbers - consistent across all processors
+
+                //- Return a sample whose components lie in the range 0-1
+                template<class Type>
+                Type globalSample01();
+
+                //- Return a sample between start and end
+                template<class Type>
+                Type globalPosition(const Type& start, const Type& end);
+
+                //- Randomise value in the range 0-1
+                template<class Type>
+                void globalRandomise01(Type& value);
 
 
         // Operators
@@ -151,6 +168,22 @@ label cachedRandom::position<label>(const label& start, const label& end);
 
 template<>
 scalar cachedRandom::position<scalar>
+(
+    const scalar& start,
+    const scalar& end
+);
+
+template<>
+label cachedRandom::globalSample01<label>();
+
+template<>
+scalar cachedRandom::globalSample01<scalar>();
+
+template<>
+label cachedRandom::globalPosition<label>(const label& start, const label& end);
+
+template<>
+scalar cachedRandom::globalPosition<scalar>
 (
     const scalar& start,
     const scalar& end
@@ -221,6 +254,51 @@ void CML::cachedRandom::randomise01(Type& value)
     value = sample01<Type>();
 }
 
+
+template<class Type>
+Type CML::cachedRandom::globalSample01()
+{
+    Type value = -GREAT*pTraits<Type>::one;
+
+    if (Pstream::master())
+    {
+        value = sample01<Type>();
+    }
+
+    reduce(value, maxOp<Type>());
+
+    return value;
+}
+
+
+template<class Type>
+Type CML::cachedRandom::globalPosition(const Type& start, const Type& end)
+{
+    Type value = -GREAT*pTraits<Type>::one;
+
+    if (Pstream::master())
+    {
+        value = position<Type>(start, end);
+    }
+
+    reduce(value, maxOp<Type>());
+
+    return value;
+}
+
+
+template<class Type>
+void CML::cachedRandom::globalRandomise01(Type& value)
+{
+    value = -GREAT*pTraits<Type>::one;
+
+    if (Pstream::master())
+    {
+        value = sample01<Type>();
+    }
+
+    reduce(value, maxOp<Type>());
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

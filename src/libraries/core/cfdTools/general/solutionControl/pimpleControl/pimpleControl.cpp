@@ -223,12 +223,8 @@ bool CML::pimpleControl::loop()
 
         if (corr_ <= nCorrPIMPLE_)
         {
-            if (nCorrPIMPLE_ != 1)
-            {
-                Info<< algorithmName_ << ": iteration " << corr_ << endl;
-                storePrevIterFields();
-            }
-
+            Info<< algorithmName_ << ": iteration " << corr_ << endl;
+            storePrevIterFields();
             completed = false;
         }
     }

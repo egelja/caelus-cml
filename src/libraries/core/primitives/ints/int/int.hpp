@@ -51,6 +51,7 @@ word name(const int);
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 int readInt(Istream&);
+bool readInt(const char*, int&);
 Istream& operator>>(Istream&, int&);
 Ostream& operator<<(Ostream&, const int);
 

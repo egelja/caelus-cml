@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -26,23 +26,23 @@ endTime					50000;
 
 deltaT					1;
 
-writeControl				runTime;
+writeControl			runTime;
 
-writeInterval				1000;
+writeInterval			10000;
 
 purgeWrite				0;
 
 writeFormat				ascii;
 
-writePrecision				12;
+writePrecision			12;
 
-writeCompression			true;
+writeCompression		true;
 
 timeFormat				general;
 
-timePrecision				6;
+timePrecision			6;
 
-runTimeModifiable			true;
+runTimeModifiable		true;
 
 //-------------------------------------------------------------------------------
 

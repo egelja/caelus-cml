@@ -56,6 +56,20 @@ bool CML::fileName::isAbsolute() const
 }
 
 
+CML::fileName& CML::fileName::toAbsolute()
+{
+    fileName& f = *this;
+
+    if (!f.isAbsolute())
+    {
+        f = cwd()/f;
+        f.clean();
+    }
+
+    return f;
+}
+
+
 //
 // * remove repeated slashes
 //       /abc////def        -->   /abc/def
@@ -196,6 +210,25 @@ CML::word CML::fileName::name() const
     else
     {
         return substr(i+1, npos);
+    }
+}
+
+
+CML::string CML::fileName::caseName() const
+{
+    string cName = *this;
+
+    const string caseStr(getEnv("CAELUS_CASE"));
+
+    const size_type i = find(caseStr);
+
+    if (i == npos)
+    {
+        return cName;
+    }
+    else
+    {
+        return cName.replace(i, caseStr.size(), string("$CAELUS_CASE"));
     }
 }
 

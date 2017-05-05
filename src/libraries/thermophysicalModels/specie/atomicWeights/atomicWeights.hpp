@@ -59,7 +59,7 @@ public:
             scalar weight;
         };
 
-        static const int nElements = 103;
+        static const int nElements = 104;
 
         //- Static table of the weights of all known elements
         static const atomicWeight atomicWeights[nElements];

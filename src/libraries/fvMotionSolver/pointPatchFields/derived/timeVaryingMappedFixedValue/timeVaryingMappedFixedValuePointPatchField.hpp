@@ -35,6 +35,7 @@ See Also
 #include "fixedValuePointPatchField.hpp"
 #include "instantList.hpp"
 #include "pointToPointPlanarInterpolation.hpp"
+#include "DataEntry.hpp"
 #include "Time.hpp"
 #include "AverageIOField.hpp"
 
@@ -63,7 +64,10 @@ class timeVaryingMappedFixedValuePointPatchField
         //- Fraction of perturbation (fraction of bounding box) to add
         scalar perturb_;
 
-        //- 2D interpolation
+        //- Interpolation scheme to use
+        word mapMethod_;
+
+        //- 2D interpolation (for 'planarInterpolation' mapMethod)
         autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
 
         //- List of boundaryData time directories
@@ -86,6 +90,9 @@ class timeVaryingMappedFixedValuePointPatchField
 
         //- If setAverage: end average value
         Type endAverage_;
+
+        //- Time varying offset values to interpolated data
+        autoPtr<DataEntry<Type> > offset_;
 
 
 public:
@@ -163,6 +170,23 @@ public:
             void checkTable();
 
 
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            virtual void autoMap
+            (
+                const pointPatchFieldMapper&
+            );
+
+            //- Reverse map the given PointPatchField onto
+            //  this PointPatchField
+            virtual void rmap
+            (
+                const pointPatchField<Type>&,
+                const labelList&
+            );
+
+
         // Evaluation functions
 
             //- Update the coefficients associated with the patch field
@@ -194,14 +218,15 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(iF.name()),
     setAverage_(false),
     perturb_(0),
+    mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
     startAverage_(pTraits<Type>::zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero)
-
+    endAverage_(pTraits<Type>::zero),
+    offset_()
 {}
 
 
@@ -220,14 +245,21 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
-    mapperPtr_(ptf.mapperPtr_),
+    mapMethod_(ptf.mapMethod_),
+    mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
     startAverage_(pTraits<Type>::zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero)
+    endAverage_(pTraits<Type>::zero),
+    offset_
+    (
+        ptf.offset_.valid()
+      ? ptf.offset_().clone().ptr()
+      : NULL
+    )
 {}
 
 
@@ -244,7 +276,15 @@ timeVaryingMappedFixedValuePointPatchField
     fixedValuePointPatchField<Type>(p, iF),
     fieldTableName_(iF.name()),
     setAverage_(readBool(dict.lookup("setAverage"))),
-    perturb_(dict.lookupOrDefault("perturb", 1E-5)),
+    perturb_(dict.lookupOrDefault("perturb", 1e-5)),
+    mapMethod_
+    (
+        dict.lookupOrDefault<word>
+        (
+            "mapMethod",
+            "planarInterpolation"
+        )
+    ),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -252,10 +292,31 @@ timeVaryingMappedFixedValuePointPatchField
     startAverage_(pTraits<Type>::zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero)
+    endAverage_(pTraits<Type>::zero),
+    offset_()
 {
+    if (dict.found("offset"))
+    {
+        offset_ = DataEntry<Type>::New("offset", dict);
+    }
+
     dict.readIfPresent("fieldTableName", fieldTableName_);
-    updateCoeffs();
+
+    if (dict.found("value"))
+    {
+        fixedValuePointPatchField<Type>::operator==
+        (
+            Field<Type>("value", dict, p.size())
+        );
+    }
+    else
+    {
+        // Note: use evaluate to do updateCoeffs followed by a reset
+        //       of the pointPatchField::updated_ flag. This is
+        //       so if first use is in the next time step it retriggers
+        //       a new update.
+        pointPatchField<Type>::evaluate(Pstream::blocking);
+    }
 }
 
 
@@ -271,6 +332,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(ptf.mapperPtr_),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -278,7 +340,13 @@ timeVaryingMappedFixedValuePointPatchField
     startAverage_(ptf.startAverage_),
     endSampleTime_(ptf.endSampleTime_),
     endSampledValues_(ptf.endSampledValues_),
-    endAverage_(ptf.endAverage_)
+    endAverage_(ptf.endAverage_),
+    offset_
+    (
+        ptf.offset_.valid()
+      ? ptf.offset_().clone().ptr()
+      : NULL
+    )
 {}
 
 
@@ -295,6 +363,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(ptf.mapperPtr_),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -302,11 +371,58 @@ timeVaryingMappedFixedValuePointPatchField
     startAverage_(ptf.startAverage_),
     endSampleTime_(ptf.endSampleTime_),
     endSampledValues_(ptf.endSampledValues_),
-    endAverage_(ptf.endAverage_)
+    endAverage_(ptf.endAverage_),
+    offset_
+    (
+        ptf.offset_.valid()
+      ? ptf.offset_().clone().ptr()
+      : NULL
+    )
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+void CML::timeVaryingMappedFixedValuePointPatchField<Type>::autoMap
+(
+    const pointPatchFieldMapper& m
+)
+{
+    fixedValuePointPatchField<Type>::autoMap(m);
+    if (startSampledValues_.size())
+    {
+        startSampledValues_.autoMap(m);
+        endSampledValues_.autoMap(m);
+    }
+    // Clear interpolator
+    mapperPtr_.clear();
+    startSampleTime_ = -1;
+    endSampleTime_ = -1;
+}
+
+
+template<class Type>
+void CML::timeVaryingMappedFixedValuePointPatchField<Type>::rmap
+(
+    const pointPatchField<Type>& ptf,
+    const labelList& addr
+)
+{
+    fixedValuePointPatchField<Type>::rmap(ptf, addr);
+
+    const timeVaryingMappedFixedValuePointPatchField<Type>& tiptf =
+        refCast<const timeVaryingMappedFixedValuePointPatchField<Type> >(ptf);
+
+    startSampledValues_.rmap(tiptf.startSampledValues_, addr);
+    endSampledValues_.rmap(tiptf.endSampledValues_, addr);
+
+    // Clear interpolator
+    mapperPtr_.clear();
+    startSampleTime_ = -1;
+    endSampleTime_ = -1;
+}
+
 
 template<class Type>
 void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
@@ -362,13 +478,22 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
             )
         );
 
+        // tbd: run-time selection
+        bool nearestOnly =
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        );
+
+        // Allocate the interpolator
         mapperPtr_.reset
         (
             new pointToPointPlanarInterpolation
             (
                 samplePoints,
                 meshPts,
-                perturb_
+                perturb_,
+                nearestOnly
             )
         );
 
@@ -465,6 +590,18 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
                 )
             );
 
+            if (vals.size() != mapperPtr_().sourceSize())
+            {
+                FatalErrorIn
+                (
+                    "timeVaryingMappedFixedValuePointPatchField<Type>::"
+                    "checkTable()"
+                )   << "Number of values (" << vals.size()
+                    << ") differs from the number of points ("
+                    <<  mapperPtr_().sourceSize()
+                    << ") in file " << vals.objectPath() << exit(FatalError);
+            }
+
             startAverage_ = vals.average();
             startSampledValues_ = mapperPtr_().interpolate(vals);
         }
@@ -509,6 +646,19 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
                     false
                 )
             );
+
+            if (vals.size() != mapperPtr_().sourceSize())
+            {
+                FatalErrorIn
+                (
+                    "timeVaryingMappedFixedValuePointPatchField<Type>::"
+                    "checkTable()"
+                )   << "Number of values (" << vals.size()
+                    << ") differs from the number of points ("
+                    <<  mapperPtr_().sourceSize()
+                    << ") in file " << vals.objectPath() << exit(FatalError);
+            }
+
             endAverage_ = vals.average();
             endSampledValues_ = mapperPtr_().interpolate(vals);
         }
@@ -603,10 +753,18 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::updateCoeffs()
         }
     }
 
+    // apply offset to mapped values
+    if (offset_.valid())
+    {
+        const scalar t = this->db().time().timeOutputValue();
+        this->operator==(*this + offset_->value(t));
+    }
+
     if (debug)
     {
         Pout<< "updateCoeffs : set fixedValue to min:" << gMin(*this)
-            << " max:" << gMax(*this) << endl;
+            << " max:" << gMax(*this)
+            << " avg:" << gAverage(*this) << endl;
     }
 
     fixedValuePointPatchField<Type>::updateCoeffs();
@@ -621,16 +779,34 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::write
 {
     fixedValuePointPatchField<Type>::write(os);
     os.writeKeyword("setAverage") << setAverage_ << token::END_STATEMENT << nl;
-    os.writeKeyword("perturb") << perturb_ << token::END_STATEMENT << nl;
+    if (perturb_ != 1e-5)
+    {
+        os.writeKeyword("perturb") << perturb_ << token::END_STATEMENT << nl;
+    }
 
     if (fieldTableName_ != this->dimensionedInternalField().name())
     {
         os.writeKeyword("fieldTableName") << fieldTableName_
             << token::END_STATEMENT << nl;
     }
+
+    if
+    (
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        )
+    )
+    {
+        os.writeKeyword("mapMethod") << mapMethod_
+            << token::END_STATEMENT << nl;
+    }
+
+    if (offset_.valid())
+    {
+        offset_->writeData(os);
+    }
 }
-
-
 #endif
 
 // ************************************************************************* //

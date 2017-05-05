@@ -393,22 +393,12 @@ void CML::chemkinReader::addPressureDependentReaction
 
         default:
         {
-            if (fofType < 4)
-            {
-                FatalErrorIn("chemkinReader::addPressureDependentReaction")
-                    << "Fall-off function type "
-                    << fallOffFunctionNames[fofType]
-                    << " on line " << lineNo_-1
-                    << " not implemented"
-                    << exit(FatalError);
-            }
-            else
-            {
-                FatalErrorIn("chemkinReader::addPressureDependentReaction")
-                    << "Unknown fall-off function type " << fofType
-                    << " on line " << lineNo_-1
-                    << exit(FatalError);
-            }
+            FatalErrorIn("chemkinReader::addPressureDependentReaction")
+                << "Fall-off function type "
+                << fallOffFunctionNames[fofType]
+                << " on line " << lineNo_-1
+                << " not implemented"
+                << exit(FatalError);
         }
     }
 }

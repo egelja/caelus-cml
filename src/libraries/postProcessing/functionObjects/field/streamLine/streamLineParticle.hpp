@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::streamLineParticle
@@ -69,6 +69,7 @@ public:
         const label UIndex_;
         const bool trackForward_;
         const label nSubCycle_;
+        const scalar trackLength_;
 
         DynamicList<vectorList>& allPositions_;
         List<DynamicList<scalarList> >& allScalars_;
@@ -85,6 +86,8 @@ public:
                 const label UIndex,
                 const bool trackForward,
                 const label nSubCycle,
+                const scalar trackLength,
+
                 DynamicList<List<point> >& allPositions,
                 List<DynamicList<scalarList> >& allScalars,
                 List<DynamicList<vectorList> >& allVectors
@@ -96,6 +99,8 @@ public:
                 UIndex_(UIndex),
                 trackForward_(trackForward),
                 nSubCycle_(nSubCycle),
+                trackLength_(trackLength),
+
                 allPositions_(allPositions),
                 allScalars_(allScalars),
                 allVectors_(allVectors)
@@ -131,12 +136,20 @@ private:
             const vector& U
         ) const;
 
+        void constrainVelocity
+        (
+            trackingData& td,
+            const scalar dt,
+            vector& U
+        );
+
         //- Interpolate all quantities; return interpolated velocity.
         vector interpolateFields
         (
             const trackingData&,
             const point&,
-            const label cellI
+            const label cellI,
+            const label faceI
         );
 
 
@@ -220,7 +233,15 @@ public:
             );
 
             //- Overridable function to handle the particle hitting a
-            //  symmetryPlane
+            //  symmetry plane
+            //void hitSymmetryPlanePatch
+            //(
+            //    const symmetryPlanePolyPatch&,
+            //    trackingData& td
+            //);
+
+            //- Overridable function to handle the particle hitting a
+            //  symmetry patch
             void hitSymmetryPatch
             (
                 const symmetryPolyPatch&,

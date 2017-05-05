@@ -42,7 +42,7 @@ filmRadiationModel::filmRadiationModel
     const surfaceFilmModel& owner
 )
 :
-    subModelBase(owner)
+    filmSubModelBase(owner)
 {}
 
 
@@ -53,7 +53,7 @@ filmRadiationModel::filmRadiationModel
     const dictionary& dict
 )
 :
-    subModelBase(type, owner, dict)
+    filmSubModelBase(type, owner, dict)
 {}
 
 

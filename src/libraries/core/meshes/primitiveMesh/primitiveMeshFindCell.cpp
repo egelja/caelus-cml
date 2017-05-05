@@ -29,7 +29,7 @@ bool CML::primitiveMesh::pointInCellBB
 (
     const point& p,
     label celli,
-    scalar tol
+    scalar inflationFraction
 ) const
 {
     boundBox bb
@@ -42,13 +42,10 @@ bool CML::primitiveMesh::pointInCellBB
         false
     );
 
-    if (tol > SMALL)
+    if (inflationFraction > SMALL)
     {
-        bb = boundBox
-        (
-            bb.min() - tol*bb.span(),
-            bb.max() + tol*bb.span()
-        );
+        vector inflation = inflationFraction*vector::one*mag(bb.span());
+        bb = boundBox(bb.min() - inflation, bb.max() + inflation);
     }
 
     return bb.contains(p);

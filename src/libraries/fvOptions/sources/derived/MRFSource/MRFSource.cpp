@@ -44,7 +44,7 @@ void CML::fv::MRFSource::initialise()
     if (selectionMode_ != smCellZone)
     {
         FatalErrorIn("void CML::MRFSource::initialise()")
-            << "The porosity region must be specified as a cellZone.  Current "
+            << "The MRF region must be specified as a cellZone.  Current "
             << "selection mode is " << selectionModeTypeNames_[selectionMode_]
             << exit(FatalError);
     }
@@ -79,8 +79,7 @@ CML::fv::MRFSource::MRFSource
 :
     option(name, modelType, dict, mesh),
     mrfPtr_(NULL),
-    UName_(coeffs_.lookupOrDefault<word>("UName", "U")),
-    rhoName_(coeffs_.lookupOrDefault<word>("rhoName", "rho"))
+    UName_(coeffs_.lookupOrDefault<word>("UName", "U"))
 {
     initialise();
 }
@@ -92,51 +91,67 @@ void CML::fv::MRFSource::addSup
     const label fieldI
 )
 {
-    if (eqn.dimensions() == dimForce)
-    {
-        const volScalarField& rho =
-            mesh_.lookupObject<volScalarField>(rhoName_);
+    // Update the velocity boundary conditions for changes in rotation speed
+    mrfPtr_->correctBoundaryVelocity(const_cast<volVectorField&>(eqn.psi()));
 
-        // use 'true' flag to add to rhs of equation
-        mrfPtr_->addCoriolis(rho, eqn, true);
-    }
-    else
-    {
-        // use 'true' flag to add to rhs of equation
-        mrfPtr_->addCoriolis(eqn, true);
-    }
+    // Add to rhs of equation
+    mrfPtr_->addCoriolis(eqn, true);
 }
 
 
-void CML::fv::MRFSource::relativeFlux(surfaceScalarField& phi) const
+void CML::fv::MRFSource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
 {
-    mrfPtr_->relativeFlux(phi);
+    // Update the velocity boundary conditions for changes in rotation speed
+    mrfPtr_->correctBoundaryVelocity(const_cast<volVectorField&>(eqn.psi()));
+
+    // Add to rhs of equation
+    mrfPtr_->addCoriolis(rho, eqn, true);
 }
 
 
-void CML::fv::MRFSource::relativeFlux
+void CML::fv::MRFSource::makeRelative(surfaceScalarField& phi) const
+{
+    mrfPtr_->makeRelative(phi);
+}
+
+
+void CML::fv::MRFSource::makeRelative
+(
+    FieldField<fvsPatchField, scalar>& phi
+) const
+{
+    mrfPtr_->makeRelative(phi);
+}
+
+
+void CML::fv::MRFSource::makeRelative
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
 ) const
 {
-    mrfPtr_->relativeFlux(rho, phi);
+    mrfPtr_->makeRelative(rho, phi);
 }
 
 
-void CML::fv::MRFSource::absoluteFlux(surfaceScalarField& phi) const
+void CML::fv::MRFSource::makeAbsolute(surfaceScalarField& phi) const
 {
-    mrfPtr_->absoluteFlux(phi);
+    mrfPtr_->makeAbsolute(phi);
 }
 
 
-void CML::fv::MRFSource::absoluteFlux
+void CML::fv::MRFSource::makeAbsolute
 (
     const surfaceScalarField& rho,
     surfaceScalarField& phi
 ) const
 {
-    mrfPtr_->absoluteFlux(rho, phi);
+    mrfPtr_->makeAbsolute(rho, phi);
 }
 
 
@@ -152,7 +167,8 @@ bool CML::fv::MRFSource::read(const dictionary& dict)
     if (option::read(dict))
     {
         coeffs_.readIfPresent("UName", UName_);
-        coeffs_.readIfPresent("rhoName", rhoName_);
+
+        initialise();
 
         return true;
     }

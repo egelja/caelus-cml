@@ -36,8 +36,7 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 :
     inletOutletFvPatchScalarField(p, iF),
     intensity_(0.0),
-    UName_("undefined-U"),
-    phiName_("undefined-phi")
+    UName_("U")
 {
     this->refValue() = 0.0;
     this->refGrad() = 0.0;
@@ -55,8 +54,7 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 :
     inletOutletFvPatchScalarField(ptf, p, iF, mapper),
     intensity_(ptf.intensity_),
-    UName_(ptf.UName_),
-    phiName_(ptf.phiName_)
+    UName_(ptf.UName_)
 {}
 
 CML::turbulentIntensityKineticEnergyInletFvPatchScalarField::
@@ -69,21 +67,25 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 :
     inletOutletFvPatchScalarField(p, iF),
     intensity_(readScalar(dict.lookup("intensity"))),
-    UName_(dict.lookupOrDefault<word>("U", "U")),
-    phiName_(dict.lookupOrDefault<word>("phi", "phi"))
+    UName_(dict.lookupOrDefault<word>("U", "U"))
 {
+    this->phiName_ = dict.lookupOrDefault<word>("phi", "phi");
+
     if (intensity_ < 0 || intensity_ > 1)
     {
         FatalErrorIn
         (
             "turbulentIntensityKineticEnergyInletFvPatchScalarField::"
             "turbulentIntensityKineticEnergyInletFvPatchScalarField"
-            "(const fvPatch& p, const DimensionedField<scalar, volMesh>& iF, "
-            "const dictionary& dict)"
+            "("
+                "const fvPatch&, "
+                "const DimensionedField<scalar, volMesh>&, "
+                "const dictionary&"
+            ")"
         )   << "Turbulence intensity should be specified as a fraction 0-1 "
                "of the mean velocity\n"
-               "    value given is " << intensity_
-            << "\n    on patch " << this->patch().name()
+               "    value given is " << intensity_ << nl
+            << "    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()
             << " in file " << this->dimensionedInternalField().objectPath()
             << exit(FatalError);
@@ -104,8 +106,7 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 :
     inletOutletFvPatchScalarField(ptf),
     intensity_(ptf.intensity_),
-    UName_(ptf.UName_),
-    phiName_(ptf.phiName_)
+    UName_(ptf.UName_)
 {}
 
 
@@ -118,8 +119,7 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 :
     inletOutletFvPatchScalarField(ptf, iF),
     intensity_(ptf.intensity_),
-    UName_(ptf.UName_),
-    phiName_(ptf.phiName_)
+    UName_(ptf.UName_)
 {}
 
 
@@ -137,7 +137,7 @@ updateCoeffs()
         patch().lookupPatchField<volVectorField, vector>(UName_);
 
     const fvsPatchScalarField& phip =
-        patch().lookupPatchField<surfaceScalarField, scalar>(phiName_);
+        patch().lookupPatchField<surfaceScalarField, scalar>(this->phiName_);
 
     this->refValue() = 1.5*sqr(intensity_)*magSqr(Up);
     this->valueFraction() = 1.0 - pos(phip);
@@ -153,8 +153,8 @@ void CML::turbulentIntensityKineticEnergyInletFvPatchScalarField::write
 {
     fvPatchScalarField::write(os);
     os.writeKeyword("intensity") << intensity_ << token::END_STATEMENT << nl;
-    os.writeKeyword("U") << UName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("phi") << phiName_ << token::END_STATEMENT << nl;
+    writeEntryIfDifferent<word>(os, "U", "U", UName_);
+    writeEntryIfDifferent<word>(os, "phi", "phi", this->phiName_);
     writeEntry("value", os);
 }
 

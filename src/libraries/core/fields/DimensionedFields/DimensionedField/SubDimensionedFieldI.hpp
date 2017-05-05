@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -76,7 +77,7 @@ template<class Type, class GeoMesh>
 inline const SubDimensionedField<Type, GeoMesh>&
 SubDimensionedField<Type, GeoMesh>::null()
 {
-    return *reinterpret_cast< SubDimensionedField<Type, GeoMesh>* >(0);
+    return NullSingletonRef< SubDimensionedField<Type, GeoMesh> >();
 }
 
 

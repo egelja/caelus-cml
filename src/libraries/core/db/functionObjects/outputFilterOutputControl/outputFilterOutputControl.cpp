@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "outputFilterOutputControl.hpp"
+#include "PstreamReduceOps.hpp"
 
 // * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
 
@@ -29,15 +30,20 @@ namespace CML
     const char* CML::NamedEnum
     <
         CML::outputFilterOutputControl::outputControls,
-        2
+        7
     >::names[] =
     {
         "timeStep",
-        "outputTime"
+        "outputTime",
+        "adjustableTime",
+        "runTime",
+        "clockTime",
+        "cpuTime",
+        "none"
     };
 }
 
-const CML::NamedEnum<CML::outputFilterOutputControl::outputControls, 2>
+const CML::NamedEnum<CML::outputFilterOutputControl::outputControls, 7>
     CML::outputFilterOutputControl::outputControlNames_;
 
 
@@ -51,7 +57,9 @@ CML::outputFilterOutputControl::outputFilterOutputControl
 :
     time_(t),
     outputControl_(ocTimeStep),
-    outputInterval_(0)
+    outputInterval_(0),
+    outputTimeLastDump_(0),
+    writeInterval_(-1)
 {
     read(dict);
 }
@@ -84,6 +92,21 @@ void CML::outputFilterOutputControl::read(const dictionary& dict)
             break;
         }
 
+        case ocOutputTime:
+        {
+            outputInterval_ = dict.lookupOrDefault<label>("outputInterval", 1);
+            break;
+        }
+
+        case ocClockTime:
+        case ocRunTime:
+        case ocCpuTime:
+        case ocAdjustableTime:
+        {
+            writeInterval_ = readScalar(dict.lookup("writeInterval"));
+            break;
+        }
+
         default:
         {
             // do nothing
@@ -93,7 +116,7 @@ void CML::outputFilterOutputControl::read(const dictionary& dict)
 }
 
 
-bool CML::outputFilterOutputControl::output() const
+bool CML::outputFilterOutputControl::output()
 {
     switch (outputControl_)
     {
@@ -109,8 +132,67 @@ bool CML::outputFilterOutputControl::output() const
 
         case ocOutputTime:
         {
-            return time_.outputTime();
+            if (time_.outputTime())
+            {
+                outputTimeLastDump_ ++;
+                return !(outputTimeLastDump_ % outputInterval_);
+            }
             break;
+        }
+
+        case ocRunTime:
+        case ocAdjustableTime:
+        {
+            label outputIndex = label
+            (
+                (
+                    (time_.value() - time_.startTime().value())
+                  + 0.5*time_.deltaTValue()
+                )
+                / writeInterval_
+            );
+
+            if (outputIndex > outputTimeLastDump_)
+            {
+                outputTimeLastDump_ = outputIndex;
+                return true;
+            }
+            break;
+        }
+
+        case ocCpuTime:
+        {
+            label outputIndex = label
+            (
+                returnReduce(time_.elapsedCpuTime(), maxOp<double>())
+                / writeInterval_
+            );
+            if (outputIndex > outputTimeLastDump_)
+            {
+                outputTimeLastDump_ = outputIndex;
+                return true;
+            }
+            break;
+        }
+
+        case ocClockTime:
+        {
+            label outputIndex = label
+            (
+                returnReduce(label(time_.elapsedClockTime()), maxOp<label>())
+                / writeInterval_
+            );
+            if (outputIndex > outputTimeLastDump_)
+            {
+                outputTimeLastDump_ = outputIndex;
+                return true;
+            }
+            break;
+        }
+
+        case ocNone:
+        {
+            return false;
         }
 
         default:

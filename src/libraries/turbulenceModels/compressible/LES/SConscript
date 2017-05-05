@@ -42,9 +42,19 @@ turbCompLESEnv.Append(LIBS = lib_link)
 # Sources for this library
 #===============================================================================
 src_files = Split("""
+  compressibleLESdelta/compressibleLESdelta.cpp
+  vanDriestDelta/vanDriestDelta.cpp
   LESModel/LESModel.cpp
   GenEddyVisc/GenEddyVisc.cpp
   GenSGSStress/GenSGSStress.cpp
+  laminar/laminar.cpp
+  coherentStructureModel/coherentStructureModel.cpp
+  Smagorinsky/Smagorinsky.cpp
+  oneEqEddy/oneEqEddy.cpp
+  dynOneEqEddy/dynOneEqEddy.cpp
+  SpalartAllmarasDES/SpalartAllmarasDES.cpp
+  SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
+  SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
   derivedFvPatchFields/wallFunctions/muSgsWallFunctions/muSgsUSpaldingWallFunction/muSgsUSpaldingWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsWallFunction/alphaSgsWallFunctionFvPatchScalarField.cpp
   derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsJayatillekeWallFunction/alphaSgsJayatillekeWallFunctionFvPatchScalarField.cpp

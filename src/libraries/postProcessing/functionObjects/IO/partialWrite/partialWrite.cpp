@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -66,15 +66,12 @@ void CML::partialWrite::read(const dictionary& dict)
     writeInstance_ = 0;
 
     Info<< type() << " " << name() << ":" << nl
-        << "    dumping every outputTime :";
+        << "    dumping every " << writeInterval_
+        << " th outputTime : " << nl << endl ;
     forAllConstIter(HashSet<word>, objectNames_, iter)
     {
         Info<< ' ' << iter.key();
     }
-    Info<< nl
-        << "    dumping all other fields every "
-        << writeInterval_ << "th outputTime" << nl
-        << endl;
 
     if (writeInterval_ < 1)
     {
@@ -83,13 +80,33 @@ void CML::partialWrite::read(const dictionary& dict)
             << ". It should be >= 1."
             << exit(FatalIOError);
     }
+
+    // Clear out any previously loaded fields
+    vsf_.clear();
+    vvf_.clear();
+    vSpheretf_.clear();
+    vSymmtf_.clear();
+    vtf_.clear();
+
+    ssf_.clear();
+    svf_.clear();
+    sSpheretf_.clear();
+    sSymmtf_.clear();
+    stf_.clear();
+
+    forAllConstIter(HashSet<word>, objectNames_, iter)
+    {
+        loadField<scalar>(iter.key(), vsf_, ssf_);
+        loadField<vector>(iter.key(), vvf_, svf_);
+        loadField<sphericalTensor>(iter.key(), vSpheretf_, sSpheretf_);
+        loadField<symmTensor>(iter.key(), vSymmtf_, sSymmtf_);
+        loadField<tensor>(iter.key(), vtf_, stf_);
+    }
 }
 
 
 void CML::partialWrite::execute()
 {
-    //Pout<< "execute at time " << obr_.time().timeName()
-    //    << " index:" << obr_.time().timeIndex() << endl;
 }
 
 
@@ -100,98 +117,60 @@ void CML::partialWrite::end()
 }
 
 
-void CML::partialWrite::write()
+void CML::partialWrite::timeSet()
 {
-    //Pout<< "write at time " << obr_.time().timeName() << endl;
     if (obr_.time().outputTime())
     {
-        // Above check so it can be used both with
-        //  outputControl   timeStep;
-        //  outputInterval  1;
-        // or with
-        //  outputControl   outputTime;
-
         writeInstance_++;
 
         if (writeInstance_ == writeInterval_)
         {
-            // Normal dump
+            // Next overall dump corresponds to partial write. Change
+            // write options to AUTO_WRITE
             writeInstance_ = 0;
+
+            changeWriteOptions<scalar>(vsf_, ssf_, IOobject::AUTO_WRITE);
+            changeWriteOptions<vector>(vvf_, svf_, IOobject::AUTO_WRITE);
+            changeWriteOptions<sphericalTensor>
+            (
+                vSpheretf_,
+                sSpheretf_,
+                IOobject::AUTO_WRITE
+            );
+            changeWriteOptions<symmTensor>
+            (
+                vSymmtf_,
+                sSymmtf_,
+                IOobject::AUTO_WRITE
+            );
+            changeWriteOptions<tensor>(vtf_, stf_, IOobject::AUTO_WRITE);
         }
         else
         {
-            // Delete all but marked objects
-            fileName dbDir;
-            if (isA<polyMesh>(obr_))
-            {
-                dbDir = dynamic_cast<const polyMesh&>(obr_).dbDir();
-            }
-
-            IOobjectList objects(obr_, obr_.time().timeName());
-
-            if (debug)
-            {
-                Pout<< "For region:" << obr_.name() << endl;
-            }
-
-            forAllConstIter(IOobjectList, objects, iter)
-            {
-                if (!objectNames_.found(iter()->name()))
-                {
-                    const fileName f =
-                        obr_.time().timePath()
-                       /dbDir
-                       /iter()->name();
-                    if (debug)
-                    {
-                        Pout<< "   rm " << f << endl;
-                    }
-                    rm(f);
-                }
-            }
-
-            // Do the lagrangian files as well.
-            fileNameList cloudDirs
+            changeWriteOptions<scalar>(vsf_, ssf_, IOobject::NO_WRITE);
+            changeWriteOptions<vector>(vvf_, svf_, IOobject::NO_WRITE);
+            changeWriteOptions<sphericalTensor>
             (
-                readDir
-                (
-                    obr_.time().timePath()/dbDir/cloud::prefix,
-                    fileName::DIRECTORY
-                )
+                vSpheretf_,
+                sSpheretf_,
+                IOobject::NO_WRITE
             );
-            forAll(cloudDirs, i)
-            {
-                if (debug)
-                {
-                    Pout<< "For cloud:" << cloudDirs[i] << endl;
-                }
-
-                IOobjectList sprayObjs
-                (
-                    obr_,
-                    obr_.time().timeName(),
-                    cloud::prefix/cloudDirs[i]
-                );
-                forAllConstIter(IOobjectList, sprayObjs, iter)
-                {
-                    if (!objectNames_.found(iter()->name()))
-                    {
-                        const fileName f =
-                            obr_.time().timePath()
-                           /dbDir
-                           /cloud::prefix
-                           /cloudDirs[i]
-                           /iter()->name();
-                        if (debug)
-                        {
-                            Pout<< "   rm " << f << endl;
-                        }
-                        rm(f);
-                    }
-                }
-            }
+            changeWriteOptions<symmTensor>
+            (
+                vSymmtf_,
+                sSymmtf_,
+                IOobject::NO_WRITE
+            );
+            changeWriteOptions<tensor>(vtf_, stf_, IOobject::NO_WRITE);
         }
     }
+}
+
+
+void CML::partialWrite::write()
+{
+    // Do nothing. The fields get written through the
+    // standard dump
 }
 
 

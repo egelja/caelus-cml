@@ -45,7 +45,7 @@ namespace CML
 template<class CloudType>
 class BreakupModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
 
 protected:
@@ -90,7 +90,8 @@ public:
         (
             const dictionary& dict,
             CloudType& owner,
-            const word& type
+            const word& type,
+            bool solveOscillationEq = false
         );
 
         //- Construct copy
@@ -221,7 +222,7 @@ CML::BreakupModel<CloudType>::BreakupModel
     CloudType& owner
 )
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     solveOscillationEq_(false),
     y0_(0.0),
     yDot0_(0.0),
@@ -237,7 +238,7 @@ CML::BreakupModel<CloudType>::BreakupModel
     const BreakupModel<CloudType>& bum
 )
 :
-    SubModelBase<CloudType>(bum),
+    CloudSubModelBase<CloudType>(bum),
     solveOscillationEq_(bum.solveOscillationEq_),
     y0_(bum.y0_),
     yDot0_(bum.yDot0_),
@@ -252,11 +253,12 @@ CML::BreakupModel<CloudType>::BreakupModel
 (
     const dictionary& dict,
     CloudType& owner,
-    const word& type
+    const word& type,
+    bool solveOscillationEq
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
-    solveOscillationEq_(this->coeffDict().lookup("solveOscillationEq")),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
+    solveOscillationEq_(solveOscillationEq),
     y0_(0.0),
     yDot0_(0.0),
     TABComega_(0.0),
@@ -265,14 +267,12 @@ CML::BreakupModel<CloudType>::BreakupModel
 {
     if (solveOscillationEq_)
     {
-        const dictionary TABcoeffsDict(dict.subDict("TABCoeffs"));
-        y0_ = TABcoeffsDict.template lookupOrDefault<scalar>("y0", 0.0);
-        yDot0_ = TABcoeffsDict.template lookupOrDefault<scalar>("yDot0", 0.0);
-        TABComega_ =
-            TABcoeffsDict.template lookupOrDefault<scalar>("Comega", 8.0);
-        TABCmu_ = TABcoeffsDict.template lookupOrDefault<scalar>("Cmu", 10.0);
-        TABWeCrit_ =
-            TABcoeffsDict.template lookupOrDefault<scalar>("WeCrit", 12.0);
+        const dictionary coeffs(dict.subDict("TABCoeffs"));
+        y0_ = coeffs.template lookupOrDefault<scalar>("y0", 0.0);
+        yDot0_ = coeffs.template lookupOrDefault<scalar>("yDot0", 0.0);
+        TABComega_ = coeffs.template lookupOrDefault<scalar>("Comega", 8.0);
+        TABCmu_ = coeffs.template lookupOrDefault<scalar>("Cmu", 10.0);
+        TABWeCrit_ = coeffs.template lookupOrDefault<scalar>("WeCrit", 12.0);
     }
 }
 

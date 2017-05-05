@@ -64,6 +64,12 @@ void (*old_new_handler)() = std::set_new_handler(newError);
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Create the nullSingleton object
+
+#include "nullSingleton.hpp"
+const CML::NullSingleton CML::NullSingleton::nullSingleton;
+const CML::NullSingleton* CML::nullSingletonPtr = &CML::NullSingleton::nullSingleton;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Global IO streams
@@ -248,6 +254,19 @@ CML::OSstream& CML::messageStream::operator()
         dict.startLineNumber(),
         dict.endLineNumber()
     );
+}
+
+
+CML::OSstream& CML::messageStream::operator()(const bool output)
+{
+    if (output)
+    {
+        return operator()();
+    }
+    else
+    {
+        return Snull;
+    }
 }
 
 

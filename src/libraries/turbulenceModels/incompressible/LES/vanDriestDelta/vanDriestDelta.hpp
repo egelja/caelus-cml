@@ -31,7 +31,8 @@ SourceFiles
 #ifndef vanDriestDelta_H
 #define vanDriestDelta_H
 
-#include "LESdelta.hpp"
+//#include "LESdelta.hpp"
+#include "incompressibleLESdelta.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,7 +53,7 @@ class vanDriestDelta
 {
     // Private data
 
-        autoPtr<LESdelta> geometricDelta_;
+        autoPtr<CML::LESdelta> geometricDelta_;
         scalar kappa_;
         scalar Aplus_;
         scalar Cdelta_;

@@ -33,6 +33,7 @@ SourceFiles
 
 #include "DataEntry.hpp"
 #include "Tuple2.hpp"
+#include "dimensionSet.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,6 +49,8 @@ Ostream& operator<<
     Ostream&,
     const TableBase<Type>&
 );
+
+class interpolationWeights;
 
 /*---------------------------------------------------------------------------*\
                         Class TableBase Declaration
@@ -75,16 +78,37 @@ protected:
     // Protected data
 
         //- Table name
-        word name_;
+        const word name_;
 
         //- Enumeration for handling out-of-bound values
-        boundsHandling boundsHandling_;
+        const boundsHandling boundsHandling_;
+
+        //- Interpolation type
+        const word interpolationScheme_;
 
         //- Table data
         List<Tuple2<scalar, Type> > table_;
 
+        //- The dimension set
+        dimensionSet dimensions_;
+
+        //- Extracted values
+        mutable autoPtr<scalarField> tableSamplesPtr_;
+
+        //- Interpolator method
+        mutable autoPtr<interpolationWeights> interpolatorPtr_;
+
+        //- Cached indices and weights
+        mutable labelList currentIndices_;
+
+        mutable scalarField currentWeights_;
+
 
     // Protected Member Functions
+
+
+        //- Return (demand driven) interpolator
+        const interpolationWeights& interpolator() const;
 
         //- Disallow default bitwise assignment
         void operator=(const TableBase<Type>&);
@@ -97,7 +121,7 @@ public:
         //- Construct from dictionary - note table is not populated
         TableBase(const word& name, const dictionary& dict);
 
-        //- Copy constructor
+        //- Copy constructor. Note: steals interpolator, tableSamples
         TableBase(const TableBase<Type>& tbl);
 
 
@@ -134,6 +158,22 @@ public:
         //- Integrate between two (scalar) values
         virtual Type integrate(const scalar x1, const scalar x2) const;
 
+        //- Return dimensioned constant value
+        virtual dimensioned<Type> dimValue(const scalar x) const;
+
+        //- Integrate between two values and return dimensioned type
+        virtual dimensioned<Type> dimIntegrate
+        (
+            const scalar x1,
+            const scalar x2
+        ) const;
+
+        //- Return the reference values
+        virtual tmp<scalarField> x() const;
+
+        //- Return the dependent values
+        virtual tmp<Field<Type> > y() const;
+
 
     // I/O
 
@@ -160,6 +200,32 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "Time.hpp"
+#include "interpolationWeights.hpp"
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+template<class Type>
+const CML::interpolationWeights& CML::TableBase<Type>::interpolator() const
+{
+    if (interpolatorPtr_.empty())
+    {
+        // Re-work table into linear list
+        tableSamplesPtr_.reset(new scalarField(table_.size()));
+        scalarField& tableSamples = tableSamplesPtr_();
+        forAll(table_, i)
+        {
+            tableSamples[i] = table_[i].first();
+        }
+        interpolatorPtr_ = interpolationWeights::New
+        (
+            interpolationScheme_,
+            tableSamples
+        );
+    }
+
+    return interpolatorPtr_();
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -174,7 +240,12 @@ CML::TableBase<Type>::TableBase(const word& name, const dictionary& dict)
             dict.lookupOrDefault<word>("outOfBounds", "clamp")
         )
     ),
-    table_()
+    interpolationScheme_
+    (
+        dict.lookupOrDefault<word>("interpolationScheme", "linear")
+    ),
+    table_(),
+    dimensions_(dimless)
 {}
 
 
@@ -183,7 +254,11 @@ CML::TableBase<Type>::TableBase(const TableBase<Type>& tbl)
 :
     name_(tbl.name_),
     boundsHandling_(tbl.boundsHandling_),
-    table_(tbl.table_)
+    interpolationScheme_(tbl.interpolationScheme_),
+    table_(tbl.table_),
+    dimensions_(tbl.dimensions_),
+    tableSamplesPtr_(tbl.tableSamplesPtr_),
+    interpolatorPtr_(tbl.interpolatorPtr_)
 {}
 
 
@@ -275,6 +350,7 @@ CML::TableBase<Type>::outOfBounds
 {
     boundsHandling prev = boundsHandling_;
     boundsHandling_ = bound;
+
     return prev;
 }
 
@@ -440,6 +516,9 @@ void CML::TableBase<Type>::convertTimeBase(const Time& t)
         scalar value = table_[i].first();
         table_[i].first() = t.userTimeToTime(value);
     }
+
+    tableSamplesPtr_.clear();
+    interpolatorPtr_.clear();
 }
 
 
@@ -458,91 +537,86 @@ Type CML::TableBase<Type>::value(const scalar x) const
         return table_.last().second();
     }
 
-    // Find i such that x(i) < xDash < x(i+1)
-    label i = 0;
-    while ((i+1 < table_.size()) && (table_[i+1].first() < xDash))
+    // Use interpolator
+    interpolator().valueWeights(xDash, currentIndices_, currentWeights_);
+
+    Type t = currentWeights_[0]*table_[currentIndices_[0]].second();
+    for (label i = 1; i < currentIndices_.size(); i++)
     {
-        i++;
+        t += currentWeights_[i]*table_[currentIndices_[i]].second();
     }
 
-    if (i+1 == table_.size())
-    {
-        // Reached end of table. This can happen for tables of size 1.
-        return table_[i].second();
-    }
-
-    // Linear interpolation to find value
-    return Type
-    (
-        (xDash - table_[i].first())/(table_[i+1].first() - table_[i].first())
-      * (table_[i+1].second() - table_[i].second())
-      + table_[i].second()
-    );
+    return t;
 }
 
 
 template<class Type>
 Type CML::TableBase<Type>::integrate(const scalar x1, const scalar x2) const
 {
-    // Initialise return value
-    Type sum = pTraits<Type>::zero;
+    // Use interpolator
+    interpolator().integrationWeights(x1, x2, currentIndices_, currentWeights_);
 
-    // Return zero if out of bounds
-    if ((x1 > table_.last().first()) || (x2 < table_[0].first()))
+    Type sum = currentWeights_[0]*table_[currentIndices_[0]].second();
+    for (label i = 1; i < currentIndices_.size(); i++)
     {
-        return sum;
-    }
-
-    // Find next index greater than x1
-    label id1 = 0;
-    while ((table_[id1].first() < x1) && (id1 < table_.size()))
-    {
-        id1++;
-    }
-
-    // Find next index less than x2
-    label id2 = table_.size() - 1;
-    while ((table_[id2].first() > x2) && (id2 >= 1))
-    {
-        id2--;
-    }
-
-    if ((id1 - id2) == 1)
-    {
-        // x1 and x2 lie within 1 interval
-        sum = 0.5*(value(x1) + value(x2))*(x2 - x1);
-    }
-    else
-    {
-        // x1 and x2 cross multiple intervals
-
-        // Integrate table body
-        for (label i=id1; i<id2; i++)
-        {
-            sum +=
-                (table_[i].second() + table_[i+1].second())
-              * (table_[i+1].first() - table_[i].first());
-        }
-        sum *= 0.5;
-
-        // Add table ends (partial segments)
-        if (id1 > 0)
-        {
-            sum += 0.5
-              * (value(x1) + table_[id1].second())
-              * (table_[id1].first() - x1);
-        }
-        if (id2 < table_.size() - 1)
-        {
-            sum += 0.5
-              * (table_[id2].second() + value(x2))
-              * (x2 - table_[id2].first());
-        }
+       sum += currentWeights_[i]*table_[currentIndices_[i]].second();
     }
 
     return sum;
 }
 
+
+template<class Type>
+CML::dimensioned<Type> CML::TableBase<Type>::
+dimValue(const scalar x) const
+{
+    return dimensioned<Type>("dimensionedValue", dimensions_, this->value(x));
+}
+
+
+template<class Type>
+CML::dimensioned<Type> CML::TableBase<Type>::dimIntegrate
+(
+    const scalar x1, const scalar x2
+) const
+{
+    return dimensioned<Type>
+    (
+        "dimensionedValue",
+        dimensions_,
+        this->integrate(x2, x1)
+    );
+}
+
+
+template<class Type>
+CML::tmp<CML::scalarField> CML::TableBase<Type>::x() const
+{
+    tmp<scalarField> tfld(new scalarField(table_.size(), 0.0));
+    scalarField& fld = tfld();
+
+    forAll(table_, i)
+    {
+        fld[i] = table_[i].first();
+    }
+
+    return tfld;
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::TableBase<Type>::y() const
+{
+    tmp<Field<Type> > tfld(new Field<Type>(table_.size(), pTraits<Type>::zero));
+    Field<Type>& fld = tfld();
+
+    forAll(table_, i)
+    {
+        fld[i] = table_[i].second();
+    }
+
+    return tfld;
+}
 
 // * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
 
@@ -566,7 +640,7 @@ CML::Ostream& CML::operator<<
         os.write
         (
             reinterpret_cast<const char*>(&tbl.table_),
-            sizeof(tbl.table_)
+            tbl.table_.byteSize()
         );
     }
 
@@ -594,6 +668,11 @@ void CML::TableBase<Type>::writeEntries(Ostream& os) const
     if (boundsHandling_ != CLAMP)
     {
         os.writeKeyword("outOfBounds") << boundsHandlingToWord(boundsHandling_)
+            << token::END_STATEMENT << nl;
+    }
+    if (interpolationScheme_ != "linear")
+    {
+        os.writeKeyword("interpolationScheme") << interpolationScheme_
             << token::END_STATEMENT << nl;
     }
 }

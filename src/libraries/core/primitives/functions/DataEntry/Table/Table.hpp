@@ -125,6 +125,22 @@ public:
                 return TableBase<Type>::integrate(x1, x2);
             }
 
+             //- Return dimensioned constant value
+            virtual dimensioned<Type> dimValue(const scalar x) const
+            {
+                return TableBase<Type>::dimValue(x);
+            }
+
+            //- Integrate between two values and return dimensioned type
+            virtual dimensioned<Type> dimIntegrate
+            (
+                const scalar x1,
+                const scalar x2
+            )
+            {
+                return TableBase<Type>::dimIntegrate(x1, x2);
+            }
+
 
     // I/O
 
@@ -152,11 +168,17 @@ template<class Type>
 CML::Table<Type>::Table(const word& entryName, const dictionary& dict)
 :
     DataEntry<Type>(entryName),
-    TableBase<Type>(entryName, dictionary::null)
+    TableBase<Type>(entryName, dict)
 {
     Istream& is(dict.lookup(entryName));
     word entryType(is);
 
+    token firstToken(is);
+    is.putBack(firstToken);
+    if (firstToken == token::BEGIN_SQR)
+    {
+        is >> this->dimensions_;
+    }
     is  >> this->table_;
 
     TableBase<Type>::check();

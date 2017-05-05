@@ -26,8 +26,9 @@ Description
 
     Model is activated using:
 
-        particleTrap
+        particleTrap1
         {
+            type        particleTrap;
             alphaName   alpha;      // name volume fraction field
             threshold   0.95;       // alpha value below which model is active
         }
@@ -86,7 +87,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ParticleTrap(const dictionary& dict, CloudType& owner);
+        ParticleTrap
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         ParticleTrap(const ParticleTrap<CloudType>& pe);
@@ -121,7 +127,26 @@ public:
                 typename CloudType::parcelType& p,
                 const label cellI,
                 const scalar dt,
-                const point& position0
+                const point& position0,
+                bool& keepParticle
+            );
+
+            //- Post-patch hook
+            virtual void postPatch
+            (
+                const typename CloudType::parcelType& p,
+                const polyPatch& pp,
+                const scalar trackFraction,
+                const tetIndices& testIs,
+                bool& keepParticle
+            );
+
+            //- Post-face hook
+            virtual void postFace
+            (
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -137,10 +162,11 @@ template<class CloudType>
 CML::ParticleTrap<CloudType>::ParticleTrap
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(dict, owner, typeName),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     alphaName_
     (
         this->coeffDict().template lookupOrDefault<word>("alphaName", "alpha")
@@ -207,10 +233,11 @@ void CML::ParticleTrap<CloudType>::postEvolve()
 template<class CloudType>
 void CML::ParticleTrap<CloudType>::postMove
 (
-    parcelType& p,
+    typename CloudType::parcelType& p,
     const label cellI,
     const scalar,
-    const point&
+    const point&,
+    bool&
 )
 {
     if (alphaPtr_->internalField()[cellI] < threshold_)
@@ -224,6 +251,32 @@ void CML::ParticleTrap<CloudType>::postMove
             p.U() -= 2*nHat*nHatU;
         }
     }
+}
+
+
+template<class CloudType>
+void CML::ParticleTrap<CloudType>::postPatch
+(
+    const typename CloudType::parcelType& p,
+    const polyPatch& pp,
+    const scalar trackFraction,
+    const tetIndices& testIs,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::ParticleTrap<CloudType>::postFace
+(
+    const typename CloudType::parcelType& p,
+    const label faceI,
+    bool& keepParticle
+)
+{
+    // Do nothing
 }
 
 

@@ -26,7 +26,8 @@ License
 
 // Kinematic
 #include "makeThermoParcelForces.hpp" // thermo variant
-#include "makeParcelDispersionModels.hpp"
+#include "makeParcelRASDispersionModels.hpp"
+#include "makeParcelLESDispersionModels.hpp"
 #include "makeReactingMultiphaseParcelInjectionModels.hpp" // MP variant
 #include "makeParcelPatchInteractionModels.hpp"
 
@@ -51,7 +52,8 @@ namespace CML
 
     // Kinematic sub-models
     makeThermoParcelForces(basicReactingMultiphaseCloud);
-    makeParcelDispersionModels(basicReactingMultiphaseCloud);
+    makeParcelRASDispersionModels(basicReactingMultiphaseCloud);
+    makeParcelLESDispersionModels(basicReactingMultiphaseCloud);
     makeReactingMultiphaseParcelInjectionModels(basicReactingMultiphaseCloud);
     makeParcelPatchInteractionModels(basicReactingMultiphaseCloud);
 

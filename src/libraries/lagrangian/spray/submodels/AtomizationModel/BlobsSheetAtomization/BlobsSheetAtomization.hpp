@@ -126,7 +126,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::BlobsSheetAtomization<CloudType>::BlobsSheetAtomization
 (
     const dictionary& dict,
@@ -139,7 +139,7 @@ CML::BlobsSheetAtomization<CloudType>::BlobsSheetAtomization
 {}
 
 
-template <class CloudType>
+template<class CloudType>
 CML::BlobsSheetAtomization<CloudType>::BlobsSheetAtomization
 (
     const BlobsSheetAtomization<CloudType>& am
@@ -153,7 +153,7 @@ CML::BlobsSheetAtomization<CloudType>::BlobsSheetAtomization
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::BlobsSheetAtomization<CloudType>::~BlobsSheetAtomization()
 {}
 

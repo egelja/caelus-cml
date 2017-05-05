@@ -182,6 +182,48 @@ bool CML::functionObjectList::end()
 }
 
 
+bool CML::functionObjectList::timeSet()
+{
+    bool ok = true;
+
+    if (execution_)
+    {
+        if (!updated_)
+        {
+            read();
+        }
+
+        forAll(*this, objectI)
+        {
+            ok = operator[](objectI).timeSet() && ok;
+        }
+    }
+
+    return ok;
+}
+
+
+bool CML::functionObjectList::adjustTimeStep()
+{
+    bool ok = true;
+
+    if (execution_)
+    {
+        if (!updated_)
+        {
+            read();
+        }
+
+        forAll(*this, objectI)
+        {
+            ok = operator[](objectI).adjustTimeStep() && ok;
+        }
+    }
+
+    return ok;
+}
+
+
 bool CML::functionObjectList::read()
 {
     bool ok = true;

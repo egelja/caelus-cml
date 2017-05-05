@@ -82,7 +82,21 @@ CML::tmp<CML::scalarField> CML::fixedTrim::thetag() const
 }
 
 
-void CML::fixedTrim::correct(const vectorField& U, vectorField& force)
+void CML::fixedTrim::correct
+(
+    const vectorField& U,
+    vectorField& force
+)
+{
+    // do nothing
+}
+
+
+void CML::fixedTrim::correct
+(
+    const volScalarField rho,
+    const vectorField& U,
+    vectorField& force)
 {
     // do nothing
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -17,18 +17,28 @@ License
     You should have received a copy of the GNU General Public License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
+Class
+    CML::MRFZone
+
+Description
+    MRF zone definition based on cell zone and parameters
+    obtained from a control dictionary constructed from the given stream.
+
+    The rotation of the MRF region is defined by an origin and axis of
+    rotation and an angular speed.
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef MRFZone_HPP
 #define MRFZone_HPP
 
 #include "dictionary.hpp"
-#include "wordList.hpp"
+#include "wordReList.hpp"
 #include "labelList.hpp"
 #include "dimensionedScalar.hpp"
 #include "dimensionedVector.hpp"
 #include "volFieldsFwd.hpp"
-#include "surfaceFieldsFwd.hpp"
+#include "surfaceFields.hpp"
 #include "fvMatricesFwd.hpp"
 #include "mapPolyMesh.hpp"
 #include "DataEntry.hpp"
@@ -62,7 +72,8 @@ class MRFZone
         //- Cell zone ID
         label cellZoneID_;
 
-        const wordList excludedPatchNames_;
+        const wordReList excludedPatchNames_;
+
         labelList excludedPatchLabels_;
 
         //- Internal faces that are part of MRF
@@ -91,15 +102,23 @@ class MRFZone
 
         //- Make the given absolute mass/vol flux relative within the MRF region
         template<class RhoFieldType>
-        void relativeRhoFlux
+        void makeRelativeRhoFlux
         (
             const RhoFieldType& rho,
             surfaceScalarField& phi
         ) const;
 
+        //- Make the given absolute mass/vol flux relative within the MRF region
+        template<class RhoFieldType>
+        void makeRelativeRhoFlux
+        (
+            const RhoFieldType& rho,
+            FieldField<fvsPatchField, scalar>& phi
+        ) const;
+
         //- Make the given relative mass/vol flux absolute within the MRF region
         template<class RhoFieldType>
-        void absoluteRhoFlux
+        void makeAbsoluteRhoFlux
         (
             const RhoFieldType& rho,
             surfaceScalarField& phi
@@ -185,26 +204,30 @@ public:
             ) const;
 
             //- Make the given absolute velocity relative within the MRF region
-            void relativeVelocity(volVectorField& U) const;
-
-            //- Make the given relative velocity absolute within the MRF region
-            void absoluteVelocity(volVectorField& U) const;
+            void makeRelative(volVectorField& U) const;
 
             //- Make the given absolute flux relative within the MRF region
-            void relativeFlux(surfaceScalarField& phi) const;
+            void makeRelative(surfaceScalarField& phi) const;
+
+            //- Make the given absolute boundary flux relative
+            //  within the MRF region
+            void makeRelative(FieldField<fvsPatchField, scalar>& phi) const;
 
             //- Make the given absolute mass-flux relative within the MRF region
-            void relativeFlux
+            void makeRelative
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi
             ) const;
 
+            //- Make the given relative velocity absolute within the MRF region
+            void makeAbsolute(volVectorField& U) const;
+
             //- Make the given relative flux absolute within the MRF region
-            void absoluteFlux(surfaceScalarField& phi) const;
+            void makeAbsolute(surfaceScalarField& phi) const;
 
             //- Make the given relative mass-flux absolute within the MRF region
-            void absoluteFlux
+            void makeAbsolute
             (
                 const surfaceScalarField& rho,
                 surfaceScalarField& phi
@@ -232,7 +255,7 @@ public:
 #include "fvMatrices.hpp"
 
 template<class RhoFieldType>
-void CML::MRFZone::relativeRhoFlux
+void CML::MRFZone::makeRelativeRhoFlux
 (
     const RhoFieldType& rho,
     surfaceScalarField& phi
@@ -254,6 +277,22 @@ void CML::MRFZone::relativeRhoFlux
         phii[facei] -= rho[facei]*(Omega ^ (Cfi[facei] - origin_)) & Sfi[facei];
     }
 
+    makeRelativeRhoFlux(rho.boundaryField(), phi.boundaryField());
+}
+
+
+template<class RhoFieldType>
+void CML::MRFZone::makeRelativeRhoFlux
+(
+    const RhoFieldType& rho,
+    FieldField<fvsPatchField, scalar>& phi
+) const
+{
+    const surfaceVectorField& Cf = mesh_.Cf();
+    const surfaceVectorField& Sf = mesh_.Sf();
+
+    const vector Omega = omega_->value(mesh_.time().timeOutputValue())*axis_;
+
     // Included patches
     forAll(includedFaces_, patchi)
     {
@@ -261,7 +300,7 @@ void CML::MRFZone::relativeRhoFlux
         {
             label patchFacei = includedFaces_[patchi][i];
 
-            phi.boundaryField()[patchi][patchFacei] = 0.0;
+            phi[patchi][patchFacei] = 0.0;
         }
     }
 
@@ -272,8 +311,8 @@ void CML::MRFZone::relativeRhoFlux
         {
             label patchFacei = excludedFaces_[patchi][i];
 
-            phi.boundaryField()[patchi][patchFacei] -=
-                rho.boundaryField()[patchi][patchFacei]
+            phi[patchi][patchFacei] -=
+                rho[patchi][patchFacei]
               * (Omega ^ (Cf.boundaryField()[patchi][patchFacei] - origin_))
               & Sf.boundaryField()[patchi][patchFacei];
         }
@@ -282,7 +321,7 @@ void CML::MRFZone::relativeRhoFlux
 
 
 template<class RhoFieldType>
-void CML::MRFZone::absoluteRhoFlux
+void CML::MRFZone::makeAbsoluteRhoFlux
 (
     const RhoFieldType& rho,
     surfaceScalarField& phi

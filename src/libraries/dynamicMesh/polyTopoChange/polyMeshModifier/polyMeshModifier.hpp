@@ -59,10 +59,10 @@ class polyMeshModifier
 {
     // Private data
 
-        //- Name of zone
+        //- Name of modifier
         word name_;
 
-        //- Index of zone
+        //- Index of modifier
         label index_;
 
         //- Reference to morph engine
@@ -136,13 +136,13 @@ public:
 
     // Member Functions
 
-        //- Return name
+        //- Return name of this modifier
         const word& name() const
         {
             return name_;
         }
 
-        //- Return the index of this patch in the boundaryMesh
+        //- Return the index of this modifier
         label index() const
         {
             return index_;

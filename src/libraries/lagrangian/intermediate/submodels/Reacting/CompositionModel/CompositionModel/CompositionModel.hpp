@@ -35,7 +35,7 @@ SourceFiles
 #ifndef CompositionModel_H
 #define CompositionModel_H
 
-#include "SubModelBase.hpp"
+#include "CloudSubModelBase.hpp"
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
@@ -57,7 +57,7 @@ namespace CML
 template<class CloudType>
 class CompositionModel
 :
-    public SubModelBase<CloudType>
+    public CloudSubModelBase<CloudType>
 {
     // Private data
         //- Reference to the thermo database
@@ -163,22 +163,37 @@ public:
                 const wordList& componentNames(const label phaseI) const;
 
                 //- Return global id of component cmptName in carrier thermo
-                label globalCarrierId(const word& cmptName) const;
+                label globalCarrierId
+                (
+                    const word& cmptName,
+                    const bool allowNotFound = false
+                ) const;
 
                 //- Return global id of component cmptName in phase phaseI
-                label globalId(const label phaseI, const word& cmptName) const;
+                label globalId
+                (
+                    const label phaseI,
+                    const word& cmptName,
+                    const bool allowNotFound = false
+                ) const;
 
                 //- Return global ids of for phase phaseI
                 const labelList& globalIds(const label phaseI) const;
 
                 //- Return local id of component cmptName in phase phaseI
-                label localId(const label phaseI, const word& cmptName) const;
+                label localId
+                (
+                    const label phaseI,
+                    const word& cmptName,
+                    const bool allowNotFound = false
+                ) const;
 
                 //- Return global carrier id of component given local id
                 label localToGlobalCarrierId
                 (
                     const label phaseI,
-                    const label id
+                    const label id,
+                    const bool allowNotFound = false
                 ) const;
 
                 //- Return the list of phase phaseI mass fractions
@@ -295,7 +310,7 @@ public:
 template<class CloudType>
 CML::CompositionModel<CloudType>::CompositionModel(CloudType& owner)
 :
-    SubModelBase<CloudType>(owner),
+    CloudSubModelBase<CloudType>(owner),
     thermo_(owner.thermo()),
     phaseProps_()
 {}
@@ -309,7 +324,7 @@ CML::CompositionModel<CloudType>::CompositionModel
     const word& type
 )
 :
-    SubModelBase<CloudType>(owner, dict, typeName, type),
+    CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     thermo_(owner.thermo()),
     phaseProps_
     (
@@ -327,7 +342,7 @@ CML::CompositionModel<CloudType>::CompositionModel
     const CompositionModel<CloudType>& cm
 )
 :
-    SubModelBase<CloudType>(cm),
+    CloudSubModelBase<CloudType>(cm),
     thermo_(cm.thermo_),
     phaseProps_(cm.phaseProps_)
 {}
@@ -421,18 +436,20 @@ CML::CompositionModel<CloudType>::componentNames(const label phaseI) const
 template<class CloudType>
 CML::label CML::CompositionModel<CloudType>::globalCarrierId
 (
-    const word& cmptName
+    const word& cmptName,
+    const bool allowNotFound
 ) const
 {
     label id = thermo_.carrierId(cmptName);
 
-    if (id < 0)
+    if (id < 0 && !allowNotFound)
     {
         FatalErrorIn
         (
             "CML::label CML::CompositionModel<CloudType>::globalCarrierId"
             "("
-                "const word&"
+                "const word&, "
+                "const bool"
             ") const"
         )   << "Unable to determine global id for requested component "
             << cmptName << ". Available components are " << nl
@@ -447,19 +464,21 @@ template<class CloudType>
 CML::label CML::CompositionModel<CloudType>::globalId
 (
     const label phaseI,
-    const word& cmptName
+    const word& cmptName,
+    const bool allowNotFound
 ) const
 {
     label id = phaseProps_[phaseI].globalId(cmptName);
 
-    if (id < 0)
+    if (id < 0 && !allowNotFound)
     {
         FatalErrorIn
         (
             "CML::label CML::CompositionModel<CloudType>::globalId"
             "("
                 "const label, "
-                "const word&"
+                "const word&, "
+                "const bool"
             ") const"
         )   << "Unable to determine global id for requested component "
             << cmptName << abort(FatalError);
@@ -483,19 +502,21 @@ template<class CloudType>
 CML::label CML::CompositionModel<CloudType>::localId
 (
     const label phaseI,
-    const word& cmptName
+    const word& cmptName,
+    const bool allowNotFound
 ) const
 {
     label id = phaseProps_[phaseI].id(cmptName);
 
-    if (id < 0)
+    if (id < 0 && !allowNotFound)
     {
         FatalErrorIn
         (
             "CML::label CML::CompositionModel<CloudType>::localId"
             "("
                 "const label, "
-                "const word&"
+                "const word&, "
+                "const bool"
             ") const"
         )   << "Unable to determine local id for component " << cmptName
             << abort(FatalError);
@@ -509,12 +530,13 @@ template<class CloudType>
 CML::label CML::CompositionModel<CloudType>::localToGlobalCarrierId
 (
     const label phaseI,
-    const label id
+    const label id,
+    const bool allowNotFound
 ) const
 {
     label gid = phaseProps_[phaseI].globalCarrierIds()[id];
 
-    if (gid < 0)
+    if (gid < 0 && !allowNotFound)
     {
         FatalErrorIn
         (
@@ -522,7 +544,8 @@ CML::label CML::CompositionModel<CloudType>::localToGlobalCarrierId
             "CML::CompositionModel<CloudType>::localToGlobalCarrierId"
             "("
                 "const label, "
-                "const label"
+                "const label, "
+                "const bool"
             ") const"
         )   << "Unable to determine global carrier id for phase "
             << phaseI << " with local id " << id

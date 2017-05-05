@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -201,7 +202,7 @@ CML::surfMesh::surfMesh
     }
 
     // We can also send Xfer<..>::null just to initialize without allocating
-    if (&surf)
+    if (notNull(surf))
     {
         transfer(surf());
     }

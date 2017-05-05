@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -672,23 +673,23 @@ void CML::polyMesh::resetPrimitives
 
     // Take over new primitive data.
     // Optimized to avoid overwriting data at all
-    if (&points)
+    if (notNull(points))
     {
         points_.transfer(points());
         bounds_ = boundBox(points_, validBoundary);
     }
 
-    if (&faces)
+    if (notNull(faces))
     {
         faces_.transfer(faces());
     }
 
-    if (&owner)
+    if (notNull(owner))
     {
         owner_.transfer(owner());
     }
 
-    if (&neighbour)
+    if (notNull(neighbour))
     {
         neighbour_.transfer(neighbour());
     }
@@ -1335,24 +1336,9 @@ void CML::polyMesh::findTetFacePt
 {
     const polyMesh& mesh = *this;
 
-    tetFaceI = -1;
-    tetPtI = -1;
-
-    List<tetIndices> cellTets =
-        polyMeshTetDecomposition::cellTetIndices(mesh, cellI);
-
-    forAll(cellTets, tetI)
-    {
-        const tetIndices& cellTetIs = cellTets[tetI];
-
-        if (cellTetIs.tet(mesh).inside(pt))
-        {
-            tetFaceI = cellTetIs.face();
-            tetPtI = cellTetIs.tetPt();
-
-            return;
-        }
-    }
+    tetIndices tet(polyMeshTetDecomposition::findTet(mesh, cellI, pt));
+    tetFaceI = tet.face();
+    tetPtI = tet.tetPt();
 }
 
 
@@ -1373,7 +1359,8 @@ bool CML::polyMesh::pointInCell
 
         case FACECENTRETETS:
         {
-            const point& cc = cellCentres()[cellI];
+            // only test that point is on inside of plane defined by cell face
+            // triangles
             const cell& cFaces = cells()[cellI];
 
             forAll(cFaces, cFaceI)
@@ -1399,31 +1386,73 @@ bool CML::polyMesh::pointInCell
                         nextPointI = f[fp];
                     }
 
-                    if
+                    triPointRef faceTri
                     (
-                        tetPointRef
-                        (
-                            points()[nextPointI],
-                            points()[pointI],
-                            fc,
-                            cc
-                        ).inside(p)
-                    )
+                        points()[pointI],
+                        points()[nextPointI],
+                        fc
+                    );
+
+                    vector proj = p - faceTri.centre();
+
+                    if ((faceTri.normal() & proj) > 0)
                     {
-                        return true;
+                        return false;
                     }
                 }
             }
-            return false;
+            return true;
         }
         break;
 
         case FACEDIAGTETS:
         {
-            label tetFaceI, tetPtI;
-            findTetFacePt(cellI, p, tetFaceI, tetPtI);
+            // only test that point is on inside of plane defined by cell face
+            // triangles
+            const cell& cFaces = cells()[cellI];
 
-            return tetFaceI != -1;
+            forAll(cFaces, cFaceI)
+            {
+                label faceI = cFaces[cFaceI];
+                const face& f = faces_[faceI];
+
+                for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI++)
+                {
+                    // Get tetIndices of face triangle
+                    tetIndices faceTetIs
+                    (
+                        polyMeshTetDecomposition::triangleTetIndices
+                        (
+                            *this,
+                            faceI,
+                            cellI,
+                            tetPtI
+                        )
+                    );
+
+                    triPointRef faceTri = faceTetIs.faceTri(*this);
+
+                    vector proj = p - faceTri.centre();
+
+                    if ((faceTri.normal() & proj) > 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        break;
+
+        case CELL_TETS:
+        {
+            label tetFacei;
+            label tetPti;
+
+            findTetFacePt(cellI, p, tetFacei, tetPti);
+
+            return tetFacei != -1;
         }
         break;
     }
@@ -1437,6 +1466,15 @@ CML::label CML::polyMesh::findCell
     const cellRepresentation decompMode
 ) const
 {
+    if (Pstream::parRun() && decompMode == FACEDIAGTETS)
+    {
+        // Force construction of face-diagonal decomposition before testing
+        // for zero cells. If parallel running a local domain might have zero
+        // cells so never construct the face-diagonal decomposition (which
+        // uses parallel transfers)
+        (void)tetBasePtIs();
+    }
+
     if (nCells() == 0)
     {
         return -1;

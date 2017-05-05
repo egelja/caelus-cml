@@ -27,7 +27,7 @@ Description
     and sway (y-translation) motions with changing amplitude and phase.
 
 See Also
-    SKA (Sea Keeping Analysis) for 6DoF motion.
+    CML::solidBodyMotionFunctions::tabulated6DoFMotion
 
 SourceFiles
     SDA.cpp

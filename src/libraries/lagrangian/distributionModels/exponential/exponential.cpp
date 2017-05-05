@@ -87,4 +87,10 @@ CML::scalar CML::distributionModels::exponential::maxValue() const
 }
 
 
+CML::scalar CML::distributionModels::exponential::meanValue() const
+{
+    return 1.0/lambda_;
+}
+
+
 // ************************************************************************* //

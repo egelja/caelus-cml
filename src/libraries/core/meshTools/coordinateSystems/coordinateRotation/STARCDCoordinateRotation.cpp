@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -95,7 +96,7 @@ const CML::tensorField& CML::STARCDCoordinateRotation::Tr() const
     (
         "const tensorField& STARCDCoordinateRotatio::Tr() const"
     );
-     return *reinterpret_cast<const tensorField*>(0);
+     return NullSingletonRef<const tensorField>();
 }
 
 

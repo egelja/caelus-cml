@@ -64,7 +64,7 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        NoSurfaceFilm(const dictionary&, CloudType&, const dimensionedVector&);
+        NoSurfaceFilm(const dictionary&, CloudType&);
 
         //- Construct copy
         NoSurfaceFilm(const NoSurfaceFilm<CloudType>& dm);
@@ -125,8 +125,7 @@ template<class CloudType>
 CML::NoSurfaceFilm<CloudType>::NoSurfaceFilm
 (
     const dictionary&,
-    CloudType& owner,
-    const dimensionedVector&
+    CloudType& owner
 )
 :
     SurfaceFilmModel<CloudType>(owner)

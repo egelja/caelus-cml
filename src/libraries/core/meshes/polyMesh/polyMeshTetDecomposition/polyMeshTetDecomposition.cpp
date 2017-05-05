@@ -206,6 +206,7 @@ CML::labelList CML::polyMeshTetDecomposition::findFaceBasePts
 )
 {
     const labelList& pOwner = mesh.faceOwner();
+    const vectorField& pC = mesh.cellCentres();
 
     // Find a suitable base point for each face, considering both
     // cells for interface faces or those on coupled patches
@@ -224,7 +225,7 @@ CML::labelList CML::polyMeshTetDecomposition::findFaceBasePts
     for(label faceI = nInternalFaces; faceI < mesh.nFaces(); faceI++)
     {
         neighbourCellCentres[faceI - nInternalFaces] =
-            mesh.cellCentres()[pOwner[faceI]];
+            pC[pOwner[faceI]];
     }
 
     syncTools::swapBoundaryFacePositions(mesh, neighbourCellCentres);
@@ -313,8 +314,7 @@ CML::labelList CML::polyMeshTetDecomposition::findFaceBasePts
                     "scalar tol, "
                     "bool report"
                 ")"
-            )
-                << "Coupled face base point exchange failure for face "
+            )   << "Coupled face base point exchange failure for face "
                 << fI
                 << abort(FatalError);
         }
@@ -534,6 +534,9 @@ CML::List<CML::tetIndices> CML::polyMeshTetDecomposition::faceTetIndices
     label cI
 )
 {
+    static label nWarnings = 0;
+    static const label maxWarnings = 100;
+
     const faceList& pFaces = mesh.faces();
     const labelList& pOwner = mesh.faceOwner();
 
@@ -549,19 +552,27 @@ CML::List<CML::tetIndices> CML::polyMeshTetDecomposition::faceTetIndices
 
     if (tetBasePtI == -1)
     {
-        WarningIn
-        (
-            "CML::List<CML::tetIndices> "
-            "CML::polyMeshTetDecomposition::faceTetIndices"
-            "("
-                "const polyMesh&, "
-                "label, "
-                "label"
-            ")"
-        )
-            << "No base point for face " << fI << ", " << f
-            << ", produces a valid tet decomposition."
-            << endl;
+        if (nWarnings < maxWarnings)
+        {
+            WarningIn
+            (
+                "CML::List<tetIndices> "
+                "CML::polyMeshTetDecomposition::faceTetIndices"
+                "("
+                    "const polyMesh&, "
+                    "label, "
+                    "label"
+                ")"
+            )   << "No base point for face " << fI << ", " << f
+                << ", produces a valid tet decomposition."
+                << endl;
+            nWarnings++;
+        }
+        if (nWarnings == maxWarnings)
+        {
+            Warning<< "Suppressing any further warnings." << endl;
+            nWarnings++;
+        }
 
         tetBasePtI = 0;
     }
@@ -597,6 +608,76 @@ CML::List<CML::tetIndices> CML::polyMeshTetDecomposition::faceTetIndices
 }
 
 
+CML::tetIndices CML::polyMeshTetDecomposition::triangleTetIndices
+(
+    const polyMesh& mesh,
+    const label fI,
+    const label cI,
+    const label tetPtI
+)
+{
+    static label nWarnings = 0;
+    static const label maxWarnings = 100;
+
+    const face& f = mesh.faces()[fI];
+    bool own = (mesh.faceOwner()[fI] == cI);
+    label tetBasePtI = mesh.tetBasePtIs()[fI];
+    if (tetBasePtI == -1)
+    {
+        if (nWarnings < maxWarnings)
+        {
+            WarningIn
+            (
+                "tetIndices "
+                "polyMeshTetDecomposition::triangleTetIndices"
+                "("
+                    "const polyMesh&, "
+                    "label, "
+                    "label, "
+                    "label"
+                ")"
+            )   << "No base point for face " << fI << ", " << f
+                << ", produces a valid tet decomposition."
+                << endl;
+            nWarnings++;
+        }
+        if (nWarnings == maxWarnings)
+        {
+            Warning<< "Suppressing any further warnings." << endl;
+            nWarnings++;
+        }
+
+        tetBasePtI = 0;
+    }
+
+    tetIndices faceTetIs;
+
+    label facePtI = (tetPtI + tetBasePtI) % f.size();
+    label otherFacePtI = f.fcIndex(facePtI);
+
+    faceTetIs.cell() = cI;
+
+    faceTetIs.face() = fI;
+
+    faceTetIs.faceBasePt() = tetBasePtI;
+
+    if (own)
+    {
+        faceTetIs.facePtA() = facePtI;
+        faceTetIs.facePtB() = otherFacePtI;
+    }
+    else
+    {
+        faceTetIs.facePtA() = otherFacePtI;
+        faceTetIs.facePtB() = facePtI;
+    }
+
+    faceTetIs.tetPt() = tetPtI;
+
+    return faceTetIs;
+}
+
+
 CML::List<CML::tetIndices> CML::polyMeshTetDecomposition::cellTetIndices
 (
     const polyMesh& mesh,
@@ -625,6 +706,58 @@ CML::List<CML::tetIndices> CML::polyMeshTetDecomposition::cellTetIndices
     }
 
     return cellTets;
+}
+
+
+CML::tetIndices CML::polyMeshTetDecomposition::findTet
+(
+    const polyMesh& mesh,
+    label cI,
+    const point& pt
+)
+{
+    const faceList& pFaces = mesh.faces();
+    const cellList& pCells = mesh.cells();
+
+    const cell& thisCell = pCells[cI];
+
+    tetIndices tetContainingPt;
+
+
+    forAll(thisCell, cFI)
+    {
+        label fI = thisCell[cFI];
+        const face& f = pFaces[fI];
+
+        for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI++)
+        {
+            // Get tetIndices of face triangle
+            tetIndices faceTetIs
+            (
+                triangleTetIndices
+                (
+                    mesh,
+                    fI,
+                    cI,
+                    tetPtI
+                )
+            );
+
+            // Check if inside
+            if (faceTetIs.tet(mesh).inside(pt))
+            {
+                tetContainingPt = faceTetIs;
+                break;
+            }
+        }
+
+        if (tetContainingPt.cell() != -1)
+        {
+            break;
+        }
+    }
+
+    return tetContainingPt;
 }
 
 

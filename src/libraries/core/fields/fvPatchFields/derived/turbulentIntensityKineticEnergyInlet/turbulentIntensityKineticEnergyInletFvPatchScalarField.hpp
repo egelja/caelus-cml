@@ -22,18 +22,45 @@ Class
     CML::turbulentIntensityKineticEnergyInletFvPatchScalarField
 
 Description
-    Calculate turbulent kinetic energy from the intensity provided as a
-    fraction of the mean velocity
+    This boundary condition provides a turbulent kinetic energy condition,
+    based on user-supplied turbulence intensity, defined as a fraction of the
+    mean velocity:
+
+        \f[
+            k_p = 1.5 (I |U|)^2
+        \f]
+
+    where
+
+    \vartable
+        k_p     | kinetic energy at the patch
+        I       | turbulence intensity
+        U       | velocity field
+    \endvartable
+
+    In the event of reverse flow, a zero-gradient condition is applied.
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        intensity    | fraction of mean field [0-1] | yes    |
+        U            | velocity field name     | no          | U
+        phi          | flux field name         | no          | phi
+    \endtable
 
     Example of the boundary condition specification:
     \verbatim
-        inlet
-        {
-            type        turbulentIntensityKineticEnergyInlet;
-            intensity   0.05;           // 5% turbulence
-            value       uniform 1;      // placeholder
-        }
+    myPatch
+    {
+        type        turbulentIntensityKineticEnergyInlet;
+        intensity   0.05;           // 5% turbulence
+        value       uniform 1;      // placeholder
+    }
     \endverbatim
+
+SeeAlso
+    CML::inletOutletFvPatchField
 
 SourceFiles
     turbulentIntensityKineticEnergyInletFvPatchScalarField.cpp
@@ -65,9 +92,6 @@ class turbulentIntensityKineticEnergyInletFvPatchScalarField
 
         //- Name of the velocity field
         word UName_;
-
-        //- Name of the flux field
-        word phiName_;
 
 
 public:

@@ -234,7 +234,7 @@ CML::MultiInteraction<CloudType>::MultiInteraction
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::MultiInteraction<CloudType>::~MultiInteraction()
 {}
 
@@ -255,7 +255,7 @@ bool CML::MultiInteraction<CloudType>::active() const
 }
 
 
-template <class CloudType>
+template<class CloudType>
 bool CML::MultiInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,

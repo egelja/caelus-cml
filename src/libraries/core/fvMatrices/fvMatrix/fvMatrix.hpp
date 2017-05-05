@@ -139,6 +139,7 @@ class fvMatrix
         mutable GeometricField<Type, fvsPatchField, surfaceMesh>
             *faceFluxCorrectionPtr_;
 
+
 protected:
 
     //- Declare friendship with the fvSolver class
@@ -416,6 +417,9 @@ public:
             // Diagonal based on row sum
             tmp<volScalarField> Ac() const;
 
+            // Residual for vector equations
+            tmp<volVectorField> R() const;
+
 
     // Member operators
 
@@ -464,7 +468,6 @@ public:
 
         void operator*=(const DimensionedField<scalar, volMesh>&);
         void operator*=(const tmp<DimensionedField<scalar, volMesh> >&);
-        void operator*=(const volScalarField&);
         void operator*=(const tmp<volScalarField>&);
 
         void operator*=(const dimensioned<scalar>&);
@@ -1976,7 +1979,7 @@ CML::fvMatrix<Type>::Ac() const
         (
             IOobject
             (
-                "A("+psi_.name()+')',
+                "Ac("+psi_.name()+')',
                 psi_.instance(),
                 psi_.mesh(),
                 IOobject::NO_READ,
@@ -1997,6 +2000,33 @@ CML::fvMatrix<Type>::Ac() const
     return tAphi;
 }
 
+
+template<class Type> CML::tmp<CML::volVectorField> 
+CML::fvMatrix<Type>::R() const
+{
+    tmp<volVectorField> tAphi
+    (
+        new volVectorField
+        (
+            IOobject
+            (
+                "R("+psi_.name()+')',
+                psi_.instance(),
+                psi_.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi_.mesh(),
+            dimensions_/dimVol,
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+
+    tAphi().internalField() = this->residual();
+    tAphi().correctBoundaryConditions();
+
+    return tAphi;
+}
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
@@ -2096,7 +2126,7 @@ void CML::fvMatrix<Type>::operator+=(const tmp<fvMatrix<Type> >& tfvmv)
 template<class Type>
 void CML::fvMatrix<Type>::operator-=(const fvMatrix<Type>& fvmv)
 {
-    checkMethod(*this, fvmv, "+=");
+    checkMethod(*this, fvmv, "-=");
 
     dimensions_ -= fvmv.dimensions_;
     lduMatrix::operator-=(fvmv);
@@ -2239,13 +2269,13 @@ void CML::fvMatrix<Type>::operator*=
 
     forAll(boundaryCoeffs_, patchI)
     {
-        scalarField psf
+        scalarField pisf
         (
             dsf.mesh().boundary()[patchI].patchInternalField(dsf.field())
         );
 
-        internalCoeffs_[patchI] *= psf;
-        boundaryCoeffs_[patchI] *= psf;
+        internalCoeffs_[patchI] *= pisf;
+        boundaryCoeffs_[patchI] *= pisf;
     }
 
     if (faceFluxCorrectionPtr_)
@@ -2270,43 +2300,6 @@ void CML::fvMatrix<Type>::operator*=
     tdsf.clear();
 }
 
-
-template<class Type>
-void CML::fvMatrix<Type>::operator*=
-(
-    const volScalarField& vsf
-)
-{
-    dimensions_ *= vsf.dimensions();
-    lduMatrix::operator*=(vsf.field());
-    source_ *= vsf.field();
-
-    forAll(vsf.boundaryField(), patchI)
-    {
-        const fvPatchScalarField& psf = vsf.boundaryField()[patchI];
-
-        if (psf.coupled())
-        {
-            internalCoeffs_[patchI] *= psf.patchInternalField();
-            boundaryCoeffs_[patchI] *= psf.patchNeighbourField();
-        }
-        else
-        {
-            internalCoeffs_[patchI] *= psf.patchInternalField();
-            boundaryCoeffs_[patchI] *= psf;
-        }
-    }
-
-    if (faceFluxCorrectionPtr_)
-    {
-        FatalErrorIn
-        (
-            "fvMatrix<Type>::operator*="
-            "(const DimensionedField<scalar, volMesh>&)"
-        )   << "cannot scale a matrix containing a faceFluxCorrection"
-            << abort(FatalError);
-    }
-}
 
 template<class Type>
 void CML::fvMatrix<Type>::operator*=

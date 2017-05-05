@@ -92,7 +92,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ParticleTracks(const dictionary& dict, CloudType& owner);
+        ParticleTracks
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         ParticleTracks(const ParticleTracks<CloudType>& ppm);
@@ -136,11 +141,35 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
+            //- Post-evolve hook
+            virtual void postEvolve();
+
+            //- Post-move hook
+            virtual void postMove
+            (
+                typename CloudType::parcelType& p,
+                const label cellI,
+                const scalar dt,
+                const point& position0,
+                bool& keepParticle
+            );
+
+            //- Post-patch hook
+            virtual void postPatch
+            (
+                const typename CloudType::parcelType& p,
+                const polyPatch& pp,
+                const scalar trackFraction,
+                const tetIndices& testIs,
+                bool& keepParticle
+            );
+
             //- Post-face hook
             virtual void postFace
             (
-                const parcelType& p,
-                const label faceI
+                const typename CloudType::parcelType& p,
+                const label faceI,
+                bool& keepParticle
             );
 };
 
@@ -225,10 +254,11 @@ template<class CloudType>
 CML::ParticleTracks<CloudType>::ParticleTracks
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    CloudFunctionObject<CloudType>(dict, owner, typeName),
+    CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     trackInterval_(readLabel(this->coeffDict().lookup("trackInterval"))),
     maxSamples_(readLabel(this->coeffDict().lookup("maxSamples"))),
     resetOnWrite_(this->coeffDict().lookup("resetOnWrite")),
@@ -275,10 +305,46 @@ void CML::ParticleTracks<CloudType>::preEvolve()
 
 
 template<class CloudType>
+void CML::ParticleTracks<CloudType>::postEvolve()
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::ParticleTracks<CloudType>::postMove
+(
+    typename CloudType::parcelType& p,
+    const label cellI,
+    const scalar dt,
+    const point& position0,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
+void CML::ParticleTracks<CloudType>::postPatch
+(
+    const typename CloudType::parcelType& p,
+    const polyPatch& pp,
+    const scalar trackFraction,
+    const tetIndices& testIs,
+    bool& keepParticle
+)
+{
+    // Do nothing
+}
+
+
+template<class CloudType>
 void CML::ParticleTracks<CloudType>::postFace
 (
-    const parcelType& p,
-    const label
+    const typename CloudType::parcelType& p,
+    const label,
+    bool&
 )
 {
     if

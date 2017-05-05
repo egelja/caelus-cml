@@ -67,16 +67,16 @@ int main(int argc, char *argv[])
     argList::validArgs.append("n1");
     argList::validArgs.append("n2");
 
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
 
-    vector n1 = args.argRead<vector>(1);
+    vector n1(args.argRead<vector>(1));
     n1 /= mag(n1);
 
-    vector n2 = args.argRead<vector>(2);
+    vector n2(args.argRead<vector>(2));
     n2 /= mag(n2);
 
-    tensor T = rotationTensor(n1, n2);
+    tensor T(rotationTensor(n1, n2));
 
     {
         pointIOField points
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         points = transform(T, points);
 
         // Set the precision of the points data to 10
-        IOstream::defaultPrecision(10);
+        IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
 
         Info<< "Writing points into directory " << points.path() << nl << endl;
         points.write();
@@ -105,8 +105,7 @@ int main(int argc, char *argv[])
 
     instantList timeDirs = timeSelector::select0(runTime, args);
 
-#   include "createMesh.hpp"
-
+    #include "createMesh.hpp"
 
     forAll(timeDirs, timeI)
     {

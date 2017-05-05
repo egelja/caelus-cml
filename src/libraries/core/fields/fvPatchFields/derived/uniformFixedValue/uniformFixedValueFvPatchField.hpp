@@ -21,7 +21,32 @@ Class
     CML::uniformFixedValueFvPatchField
 
 Description
-    CML::uniformFixedValueFvPatchField
+    This boundary condition provides a uniform fixed value condition.
+
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        uniformValue | uniform value           |         yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            uniformFixedValue;
+        uniformValue    constant 0.2;
+    }
+    \endverbatim
+
+Note
+    The uniformValue entry is a DataEntry type, able to describe time
+    varying functions.  The example above gives the usage for supplying a
+    constant value.
+
+SeeAlso
+    CML::DataEntry
+    CML::fixedValueFvPatchField
 
 SourceFiles
     uniformFixedValueFvPatchField.cpp
@@ -31,7 +56,6 @@ SourceFiles
 #ifndef uniformFixedValueFvPatchField_H
 #define uniformFixedValueFvPatchField_H
 
-#include "Random.hpp"
 #include "fixedValueFvPatchFields.hpp"
 #include "DataEntry.hpp"
 
@@ -41,7 +65,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                 Class uniformFixedValueFvPatch Declaration
+                Class uniformFixedValueFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -67,6 +91,14 @@ public:
         (
             const fvPatch&,
             const DimensionedField<Type, volMesh>&
+        );
+
+        //- Construct from patch and internal field and patch field
+        uniformFixedValueFvPatchField
+        (
+            const fvPatch&,
+            const DimensionedField<Type, volMesh>&,
+            const Field<Type>& fld
         );
 
         //- Construct from patch, internal field and dictionary
@@ -124,14 +156,6 @@ public:
 
     // Member functions
 
-        // Mapping functions
-
-            //- Map (and resize as needed) from self given a mapping object
-            virtual void autoMap
-            (
-                const fvPatchFieldMapper&
-            );
-
 
         // Evaluation functions
 
@@ -170,15 +194,29 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 template<class Type>
 uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 (
+    const fvPatch& p,
+    const DimensionedField<Type, volMesh>& iF,
+    const Field<Type>& fld
+)
+:
+    fixedValueFvPatchField<Type>(p, iF, fld),
+    uniformValue_()
+{}
+
+
+template<class Type>
+uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
+(
     const uniformFixedValueFvPatchField<Type>& ptf,
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
-    const fvPatchFieldMapper&
+    const fvPatchFieldMapper& mapper
 )
 :
-    fixedValueFvPatchField<Type>(p, iF),
+    fixedValueFvPatchField<Type>(p, iF),  // bypass mapper
     uniformValue_(ptf.uniformValue_().clone().ptr())
 {
+    // Evaluate since value not mapped
     const scalar t = this->db().time().timeOutputValue();
     fvPatchField<Type>::operator==(uniformValue_->value(t));
 }
@@ -195,8 +233,15 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
     fixedValueFvPatchField<Type>(p, iF),
     uniformValue_(DataEntry<Type>::New("uniformValue", dict))
 {
-    const scalar t = this->db().time().timeOutputValue();
-    fvPatchField<Type>::operator==(uniformValue_->value(t));
+    if (dict.found("value"))
+    {
+        fvPatchField<Type>::operator==(Field<Type>("value", dict, p.size()));
+    }
+    else
+    {
+        const scalar t = this->db().time().timeOutputValue();
+        fvPatchField<Type>::operator==(uniformValue_->value(t));
+    }
 }
 
 
@@ -213,14 +258,7 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
       ? ptf.uniformValue_().clone().ptr()
       : NULL
     )
-{
-    const scalar t = this->db().time().timeOutputValue();
-
-    if (ptf.uniformValue_.valid())
-    {
-        fvPatchField<Type>::operator==(uniformValue_->value(t));
-    }
-}
+{}
 
 
 template<class Type>
@@ -238,6 +276,7 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
       : NULL
     )
 {
+    // For safety re-evaluate
     const scalar t = this->db().time().timeOutputValue();
 
     if (ptf.uniformValue_.valid())
@@ -248,18 +287,6 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class Type>
-void uniformFixedValueFvPatchField<Type>::autoMap
-(
-    const fvPatchFieldMapper& m
-)
-{
-    this->setSize(m.size());
-    const scalar t = this->db().time().timeOutputValue();
-    fvPatchField<Type>::operator==(uniformValue_->value(t));
-}
-
 
 template<class Type>
 void uniformFixedValueFvPatchField<Type>::updateCoeffs()
@@ -279,6 +306,7 @@ void uniformFixedValueFvPatchField<Type>::updateCoeffs()
 template<class Type>
 void uniformFixedValueFvPatchField<Type>::write(Ostream& os) const
 {
+    // Note: do not write value
     fvPatchField<Type>::write(os);
     uniformValue_->writeData(os);
 }

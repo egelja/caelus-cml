@@ -1,17 +1,18 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------------
-# Caelus 5.04
+# Caelus 5.10
 # Web:   www.caelus-cml.com
 # ---------------------------------------------------------------------------
 
 # Importing the required modules for Python
 import subprocess, sys, os, glob, shutil, optparse, getopt
-#import Caelus
+import Caelus
+
 
 # Code name and version
 code = 'Caelus'
-version = '5.04'
+version = '5.10'
 
 clean = True
 build = True
@@ -62,10 +63,19 @@ print "**********************************"
 print "Building %s %s ..." % (code, version)
 print ""
 
-build_dirs = ['external/metis-5.1.0', \
-              'external/scotch-5.1.12', \
-              'src/libraries', \
-              'src/applications']
+build_dirs = [Caelus.METIS_PATH, \
+              Caelus.SCOTCH_PATH]
+
+if (Caelus.SCOTCH_VERSION == '6.0.4'):
+  # Build ptscotch as well
+  build_dirs.append(Caelus.SCOTCH_PATH + '/src')
+
+# Add libraries
+build_dirs.append('src/libraries')
+
+# Add applications
+build_dirs.append('src/applications')
+
 if swak:
    build_dirs.append('external/swak')
 else:
@@ -95,6 +105,13 @@ for curr_dir in build_dirs:
 
    # Build
    if build:
+      if (work_dir == 'scotch-6.0.4' and not clean):
+        print ""
+        print work_dir + " cannot be built without cleaning"
+        pc = subprocess.call(['scons.py', '-f', 'SConstruct.module', \
+                           '-c', 'install'], cwd=curr_dir, \
+                            stdout=sys.stdout, stderr=sys.stderr, \
+                            shell=pltfrm)
       print ""
       print "Building \'" + work_dir + "\'"
       print ""

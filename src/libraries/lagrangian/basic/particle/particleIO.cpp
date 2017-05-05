@@ -25,8 +25,7 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-CML::string CML::particle::propHeader =
-    "(Px Py Pz) cellI tetFaceI tetPtI origProc origId";
+CML::string CML::particle::propertyList_ = CML::particle::propertyList();
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

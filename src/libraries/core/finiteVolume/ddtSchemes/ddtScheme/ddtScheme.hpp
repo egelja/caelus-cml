@@ -332,6 +332,7 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 #include "fv.hpp"
 #include "HashTable.hpp"
 #include "surfaceInterpolate.hpp"
+#include "cyclicAMIFvPatch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -460,7 +461,11 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
 
     forAll(U.boundaryField(), patchi)
     {
-        if (U.boundaryField()[patchi].fixesValue())
+        if
+        (
+            U.boundaryField()[patchi].fixesValue()
+         || isA<cyclicAMIFvPatch>(mesh().boundary()[patchi])
+        )
         {
             ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
         }
@@ -501,7 +506,11 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
 
     forAll(U.boundaryField(), patchi)
     {
-        if (U.boundaryField()[patchi].fixesValue())
+        if
+        (
+            U.boundaryField()[patchi].fixesValue()
+         || isA<cyclicAMIFvPatch>(mesh().boundary()[patchi])
+        )
         {
             ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
         }
@@ -546,7 +555,11 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
 
     forAll(rhoU.boundaryField(), patchi)
     {
-        if (rhoU.boundaryField()[patchi].fixesValue())
+        if
+        (
+            rhoU.boundaryField()[patchi].fixesValue()
+         || isA<cyclicAMIFvPatch>(mesh().boundary()[patchi])
+        )
         {
             ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
         }

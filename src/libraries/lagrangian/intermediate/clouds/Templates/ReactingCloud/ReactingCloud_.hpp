@@ -115,12 +115,6 @@ protected:
             PtrList<DimensionedField<scalar, volMesh> > rhoTrans_;
 
 
-        // Check
-
-            //- Total mass transferred to continuous phase via phase change
-            scalar dMassPhaseChange_;
-
-
     // Protected Member Functions
 
         // New parcel helper functions
@@ -205,6 +199,9 @@ public:
             //- Return the constant properties
             inline const typename parcelType::constantProperties&
                 constProps() const;
+
+            //- Return access to the constant properties
+            inline typename parcelType::constantProperties& constProps();
 
 
             // Sub-models
@@ -297,7 +294,7 @@ public:
 
             //- Remap the cells of particles corresponding to the
             //  mesh topology change with a default tracking data object
-            void autoMap(const mapPolyMesh&);
+            virtual void autoMap(const mapPolyMesh&);
 
 
         // I-O
@@ -327,6 +324,14 @@ CML::ReactingCloud<CloudType>::cloudCopy() const
 template<class CloudType>
 inline const typename CloudType::particleType::constantProperties&
 CML::ReactingCloud<CloudType>::constProps() const
+{
+    return constProps_;
+}
+
+
+template<class CloudType>
+inline typename CloudType::particleType::constantProperties&
+CML::ReactingCloud<CloudType>::constProps()
 {
     return constProps_;
 }
@@ -398,7 +403,7 @@ inline CML::tmp<CML::fvScalarMatrix> CML::ReactingCloud<CloudType>::SYi
                 (
                     IOobject
                     (
-                        this->name() + "rhoTrans",
+                        this->name() + ":rhoTrans",
                         this->db().time().timeName(),
                         this->db(),
                         IOobject::NO_READ,
@@ -446,7 +451,7 @@ CML::ReactingCloud<CloudType>::Srho(const label i) const
         (
             IOobject
             (
-                this->name() + "rhoTrans",
+                this->name() + ":rhoTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -483,7 +488,7 @@ CML::ReactingCloud<CloudType>::Srho() const
         (
             IOobject
             (
-                this->name() + "rhoTrans",
+                this->name() + ":rhoTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -527,7 +532,7 @@ CML::ReactingCloud<CloudType>::Srho(volScalarField& rho) const
             (
                 IOobject
                 (
-                    this->name() + "rhoTrans",
+                    this->name() + ":rhoTrans",
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::NO_READ,
@@ -631,8 +636,6 @@ void CML::ReactingCloud<CloudType>::cloudReset(ReactingCloud<CloudType>& c)
 
     compositionModel_.reset(c.compositionModel_.ptr());
     phaseChangeModel_.reset(c.phaseChangeModel_.ptr());
-
-    dMassPhaseChange_ = c.dMassPhaseChange_;
 }
 
 
@@ -655,8 +658,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
     constProps_(this->particleProperties(), this->solution().active()),
     compositionModel_(NULL),
     phaseChangeModel_(NULL),
-    rhoTrans_(thermo.carrier().species().size()),
-    dMassPhaseChange_(0.0)
+    rhoTrans_(thermo.carrier().species().size())
 {
     if (this->solution().active())
     {
@@ -679,7 +681,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
             (
                 IOobject
                 (
-                    this->name() + "rhoTrans_" + specieName,
+                    this->name() + ":rhoTrans_" + specieName,
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::READ_IF_PRESENT,
@@ -711,8 +713,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
     constProps_(c.constProps_),
     compositionModel_(c.compositionModel_->clone()),
     phaseChangeModel_(c.phaseChangeModel_->clone()),
-    rhoTrans_(c.rhoTrans_.size()),
-    dMassPhaseChange_(c.dMassPhaseChange_)
+    rhoTrans_(c.rhoTrans_.size())
 {
     forAll(c.rhoTrans_, i)
     {
@@ -724,7 +725,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
             (
                 IOobject
                 (
-                    this->name() + "rhoTrans_" + specieName,
+                    this->name() + ":rhoTrans_" + specieName,
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::NO_READ,
@@ -753,8 +754,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
     compositionModel_(c.compositionModel_->clone()),
 //    compositionModel_(NULL),
     phaseChangeModel_(NULL),
-    rhoTrans_(0),
-    dMassPhaseChange_(0.0)
+    rhoTrans_(0)
 {}
 
 
@@ -885,7 +885,6 @@ void CML::ReactingCloud<CloudType>::evolve()
 }
 
 
-
 template<class CloudType>
 void CML::ReactingCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
@@ -894,6 +893,8 @@ void CML::ReactingCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
     tdType td(*this);
 
     Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+
+    this->updateMesh();
 }
 
 

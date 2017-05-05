@@ -80,11 +80,21 @@ public:
 
     // Static data members
 
-        //- String representation of properties
-        static string propHeader;
-
         //- Runtime type information
         TypeName("CollidingParcel");
+
+        //- String representation of properties
+        AddToPropertyList
+        (
+            ParcelType,
+            " collisionRecordsPairAccessed"
+          + " collisionRecordsPairOrigProcOfOther"
+          + " collisionRecordsPairOrigIdOfOther"
+          + " (collisionRecordsPairData)"
+          + " collisionRecordsWallAccessed"
+          + " collisionRecordsWallPRel"
+          + " (collisionRecordsWallData)"
+        );
 
 
     // Constructors
@@ -326,13 +336,6 @@ bool CML::CollidingParcel<ParcelType>::move
     typename TrackData::cloudType::parcelType& p =
         static_cast<typename TrackData::cloudType::parcelType&>(*this);
 
-    td.switchProcessor = false;
-    td.keepParticle = true;
-
-    const polyMesh& mesh = td.cloud().pMesh();
-    const polyBoundaryMesh& pbMesh = mesh.boundaryMesh();
-    const scalarField& V = mesh.cellVolumes();
-
     switch (td.part())
     {
         case TrackData::tpVelocityHalfStep:
@@ -344,64 +347,14 @@ bool CML::CollidingParcel<ParcelType>::move
 
             p.angularMomentum() += 0.5*trackTime*p.torque();
 
+            td.keepParticle = true;
+
             break;
         }
 
         case TrackData::tpLinearTrack:
         {
-            scalar tEnd = (1.0 - p.stepFraction())*trackTime;
-            const scalar dtMax = tEnd;
-
-            while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-            {
-                // Apply correction to position for reduced-D cases
-                meshTools::constrainToMeshCentre(mesh, p.position());
-
-                // Set the Lagrangian time-step
-                scalar dt = min(dtMax, tEnd);
-
-                // Remember which cell the parcel is in since this
-                // will change if a face is hit
-                const label cellI = p.cell();
-
-                const scalar magU = mag(p.U());
-                if (p.active() && magU > ROOTVSMALL)
-                {
-                    const scalar d = dt*magU;
-                    const scalar maxCo = td.cloud().solution().maxCo();
-                    const scalar dCorr = min(d, maxCo*cbrt(V[cellI]));
-                    dt *=
-                        dCorr/d
-                       *p.trackToFace(p.position() + dCorr*p.U()/magU, td);
-                }
-
-                tEnd -= dt;
-                p.stepFraction() = 1.0 - tEnd/trackTime;
-
-                // Avoid problems with extremely small timesteps
-                if (dt > ROOTVSMALL)
-                {
-                    // Update cell based properties
-                    p.setCellValues(td, dt, cellI);
-
-                    if (td.cloud().solution().cellValueSourceCorrection())
-                    {
-                        p.cellValueSourceCorrection(td, dt, cellI);
-                    }
-
-                    p.calc(td, dt, cellI);
-                }
-
-                if (p.onBoundary() && td.keepParticle)
-                {
-                    if (isA<processorPolyPatch>(pbMesh[p.patch(p.face())]))
-                    {
-                        td.switchProcessor = true;
-                    }
-                }
-
-                p.age() += dt;
-            }
+            ParcelType::move(td, trackTime);
 
             break;
         }
@@ -431,15 +384,8 @@ bool CML::CollidingParcel<ParcelType>::move
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<class ParcelType>
-CML::string CML::CollidingParcel<ParcelType>::propHeader =
-    ParcelType::propHeader
-  + " collisionRecordsPairAccessed"
-  + " collisionRecordsPairOrigProcOfOther"
-  + " collisionRecordsPairOrigIdOfOther"
-  + " (collisionRecordsPairData)"
-  + " collisionRecordsWallAccessed"
-  + " collisionRecordsWallPRel"
-  + " (collisionRecordsWallData)";
+CML::string CML::CollidingParcel<ParcelType>::propertyList_ =
+    CML::CollidingParcel<ParcelType>::propertyList();
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

@@ -34,8 +34,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef RASModel_H
-#define RASModel_H
+#ifndef incompressibleRASModel_H
+#define incompressibleRASModel_H
 
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
 #include "volFields.hpp"
@@ -201,7 +201,7 @@ public:
             }
 
             //- Const access to the coefficients dictionary
-            const dictionary& coeffDict() const
+            virtual const dictionary& coeffDict() const
             {
                 return coeffDict_;
             }

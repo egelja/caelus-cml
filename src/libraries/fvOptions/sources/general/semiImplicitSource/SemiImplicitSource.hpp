@@ -76,9 +76,9 @@ namespace fv
 
 // Forward declaration of classes
 
-
 template<class Type>
 class SemiImplicitSource;
+
 
 // Forward declaration of friend functions
 
@@ -88,6 +88,7 @@ Ostream& operator<<
     Ostream&,
     const SemiImplicitSource<Type>&
 );
+
 
 /*---------------------------------------------------------------------------*\
                      Class SemiImplicitSource Declaration
@@ -180,7 +181,19 @@ public:
         // Evaluation
 
             //- Add explicit contribution to equation
-            virtual void addSup(fvMatrix<Type>& eqn, const label fieldI);
+            virtual void addSup
+            (
+                fvMatrix<Type>& eqn,
+                const label fieldI
+            );
+
+            //- Add explicit contribution to compressible equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<Type>& eqn,
+                const label fieldI
+            );
 
 
         // I-O
@@ -368,6 +381,23 @@ void CML::fv::SemiImplicitSource<Type>::addSup
     eqn += Su + fvm::SuSp(Sp, psi);
 }
 
+
+template<class Type>
+void CML::fv::SemiImplicitSource<Type>::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<Type>& eqn,
+    const label fieldI
+)
+{
+    if (debug)
+    {
+        Info<< "SemiImplicitSource<" << pTraits<Type>::typeName
+            << ">::addSup for source " << name_ << endl;
+    }
+
+    return this->addSup(eqn, fieldI);
+}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 

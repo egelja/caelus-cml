@@ -17,6 +17,29 @@ License
     You should have received a copy of the GNU General Public License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
+Class
+    CML::IOMRFZoneList
+
+Description
+    List of MRF zones with IO functionality.  MRF zones are specified by a list
+    of dictionary entries, e.g.
+
+    \verbatim
+    zone1
+    {
+        cellZone    rotor1;
+        active      yes;
+        ...
+    }
+
+    zone2
+    {
+        cellZone    rotor2;
+        active      yes;
+        ...
+    }
+    \endverbatim
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef IOMRFZoneList_H

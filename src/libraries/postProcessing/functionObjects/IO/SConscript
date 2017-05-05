@@ -16,8 +16,7 @@ funcObjIOEnv.Append(CCFLAGS = '')
 #===============================================================================
 # Additions to include directories for this library
 #===============================================================================
-lib_inc = ['lnInclude',
-funcObjIOEnv['LIB_SRC'] + '/sampling/lnInclude']
+lib_inc = ['lnInclude']
 funcObjIOEnv.Prepend(CPPPATH = lib_inc)
      
 #===============================================================================
@@ -29,7 +28,7 @@ funcObjIOEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['core','sampling'] 
+lib_link = ['core'] 
 funcObjIOEnv.Append(LIBS = lib_link)
             
 #===============================================================================
@@ -38,6 +37,10 @@ funcObjIOEnv.Append(LIBS = lib_link)
 src_files = Split("""
   partialWrite/partialWrite.cpp
   partialWrite/partialWriteFunctionObject.cpp
+  removeRegisteredObject/removeRegisteredObject.cpp
+  removeRegisteredObject/removeRegisteredObjectFunctionObject.cpp
+  writeDictionary/writeDictionary.cpp
+  writeDictionary/writeDictionaryFunctionObject.cpp
   writeRegisteredObject/writeRegisteredObject.cpp
   writeRegisteredObject/writeRegisteredObjectFunctionObject.cpp
   """)

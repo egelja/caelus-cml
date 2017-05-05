@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,10 +24,6 @@ Class
 Description
     A 1D vector of objects of type \<T\> with a fixed size \<Size\>.
 
-SourceFiles
-    FixedList.cpp
-    FixedListI.hpp
-    FixedListIO.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -441,7 +438,7 @@ CML::FixedList<T, Size>::clone() const
 template<class T, unsigned Size>
 inline const CML::FixedList<T, Size>& CML::FixedList<T, Size>::null()
 {
-    return *reinterpret_cast< FixedList<T, Size>* >(0);
+    return NullSingletonRef< FixedList<T, Size> >();
 }
 
 
@@ -791,7 +788,6 @@ inline unsigned CML::FixedList<T, Size>::Hash<HashT>::operator()
 
 #include "ListLoopM.hpp"
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * STL Member Functions  * * * * * * * * * * * * //
 
@@ -802,8 +798,8 @@ void CML::FixedList<T, Size>::swap(FixedList<T, Size>& a)
     List_ACCESS(T, a, ap);
     T tmp;
     List_FOR_ALL((*this), i)
-        tmp = List_ELEM((*this), vp, i);
-        List_ELEM((*this), vp, i) = List_ELEM(a, ap, i);
+        tmp = List_CELEM((*this), vp, i);
+        List_ELEM((*this), vp, i) = List_CELEM(a, ap, i);
         List_ELEM(a, ap, i) = tmp;
     List_END_FOR_ALL
 }

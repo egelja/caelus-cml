@@ -110,7 +110,7 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::NoBreakup<CloudType>::NoBreakup
 (
     const dictionary&,
@@ -122,7 +122,7 @@ CML::NoBreakup<CloudType>::NoBreakup
 
 
 
-template <class CloudType>
+template<class CloudType>
 CML::NoBreakup<CloudType>::NoBreakup(const NoBreakup<CloudType>& bum)
 :
     BreakupModel<CloudType>(bum)
@@ -131,7 +131,7 @@ CML::NoBreakup<CloudType>::NoBreakup(const NoBreakup<CloudType>& bum)
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-template <class CloudType>
+template<class CloudType>
 CML::NoBreakup<CloudType>::~NoBreakup()
 {}
 

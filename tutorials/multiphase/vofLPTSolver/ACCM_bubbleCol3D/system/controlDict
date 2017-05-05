@@ -1,0 +1,53 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+application     volLPTSolver;
+
+startFrom       latestTime;
+
+startTime       0.0;
+
+stopAt          endTime;
+
+endTime         150;
+
+deltaT          0.001;
+
+writeControl    timeStep;
+
+writeInterval   1000;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression compressed;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable true;
+
+maxCo           1;
+maxAlphaCo      1;
+
+functions
+(
+    #include "fieldAverageDict"
+);
+
+
+// ************************************************************************* //

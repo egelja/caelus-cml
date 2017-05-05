@@ -26,7 +26,7 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-// set values for what is close to zero and what is considered to
+// Set values for what is close to zero and what is considered to
 // be positive (and not just rounding noise)
 //! \cond localScope
 const CML::scalar zeroish  = CML::SMALL;
@@ -47,7 +47,7 @@ void CML::cuttingPlane::calcCutCells
     const edgeList& edges = mesh.edges();
 
     label listSize = cellEdges.size();
-    if (&cellIdLabels)
+    if (notNull(cellIdLabels))
     {
         listSize = cellIdLabels.size();
     }
@@ -60,7 +60,7 @@ void CML::cuttingPlane::calcCutCells
     for (label listI = 0; listI < listSize; ++listI)
     {
         label cellI = listI;
-        if (&cellIdLabels)
+        if (notNull(cellIdLabels))
         {
             cellI = cellIdLabels[listI];
         }
@@ -259,11 +259,11 @@ void CML::cuttingPlane::walkCellCuts
 {
     const pointField& cutPoints = this->points();
 
-    // use dynamic lists to handle triangulation and/or missed cuts
+    // Use dynamic lists to handle triangulation and/or missed cuts
     DynamicList<face>  dynCutFaces(cutCells_.size());
     DynamicList<label> dynCutCells(cutCells_.size());
 
-    // scratch space for calculating the face vertices
+    // Scratch space for calculating the face vertices
     DynamicList<label> faceVerts(10);
 
     forAll(cutCells_, i)
@@ -363,7 +363,7 @@ CML::cuttingPlane::cuttingPlane
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// recut mesh with existing planeDesc
+// Recut mesh with existing planeDesc
 void CML::cuttingPlane::reCut
 (
     const primitiveMesh& mesh,
@@ -389,14 +389,14 @@ void CML::cuttingPlane::reCut
 }
 
 
-// remap action on triangulation
+// Remap action on triangulation
 void CML::cuttingPlane::remapFaces
 (
     const labelUList& faceMap
 )
 {
-    // recalculate the cells cut
-    if (&faceMap && faceMap.size())
+    // Recalculate the cells cut
+    if (notNull(faceMap) && faceMap.size())
     {
         MeshStorage::remapFaces(faceMap);
 

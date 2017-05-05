@@ -136,9 +136,15 @@ public:
         (
             const label idc,
             const label idl,
-            const label p,
-            const label T
+            const scalar p,
+            const scalar T
         ) const;
+
+        //- Return vapourisation temperature
+        virtual scalar Tvap(const scalarField& Y) const;
+
+        //- Return maximum/limiting temperature
+        virtual scalar TMax(const scalar p, const scalarField& Y) const;
 };
 
 
@@ -273,17 +279,52 @@ void CML::LiquidEvaporationBoil<CloudType>::calculate
     scalarField& dMassPC
 ) const
 {
-    // construct carrier phase species volume fractions for cell, cellI
-    const scalarField XcMix(calcXc(cellI));
-
     // liquid volume fraction
     const scalarField X(liquids_.X(Yl));
+
+    // immediately evaporate mass that has reached critical condition
+    if ((liquids_.Tc(X) - T) < SMALL)
+    {
+        if (debug)
+        {
+            WarningIn
+            (
+                "void CML::LiquidEvaporationBoil<CloudType>::calculate"
+                "("
+                    "const scalar, "
+                    "const label, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalar, "
+                    "const scalarField&, "
+                    "scalarField&"
+                ") const"
+            )   << "Parcel reached critical conditions: "
+                << "evaporating all avaliable mass" << endl;
+        }
+
+        forAll(activeLiquids_, i)
+        {
+            const label lid = liqToLiqMap_[i];
+            dMassPC[lid] = GREAT;
+        }
+
+        return;
+    }
 
     // droplet surface pressure assumed to surface vapour pressure
     scalar ps = liquids_.pv(pc, Ts, X);
 
     // vapour density at droplet surface [kg/m3]
     scalar rhos = ps*liquids_.W(X)/(specie::RR*Ts);
+
+    // construct carrier phase species volume fractions for cell, cellI
+    const scalarField XcMix(calcXc(cellI));
 
     // carrier thermo properties
     scalar Hsc = 0.0;
@@ -415,8 +456,8 @@ CML::scalar CML::LiquidEvaporationBoil<CloudType>::dh
 (
     const label idc,
     const label idl,
-    const label p,
-    const label T
+    const scalar p,
+    const scalar T
 ) const
 {
     scalar dh = 0;
@@ -451,14 +492,39 @@ CML::scalar CML::LiquidEvaporationBoil<CloudType>::dh
                 "("
                     "const label, "
                     "const label, "
-                    "const label, "
-                    "const label"
+                    "const scalar, "
+                    "const scalar"
                 ") const"
             )   << "Unknown enthalpyTransfer type" << abort(FatalError);
         }
     }
 
     return dh;
+}
+
+
+template<class CloudType>
+CML::scalar CML::LiquidEvaporationBoil<CloudType>::Tvap
+(
+    const scalarField& Y
+) const
+{
+    const scalarField X(liquids_.X(Y));
+
+    return liquids_.Tpt(X);
+}
+
+
+template<class CloudType>
+CML::scalar CML::LiquidEvaporationBoil<CloudType>::TMax
+(
+    const scalar p,
+    const scalarField& Y
+) const
+{
+    const scalarField X(liquids_.X(Y));
+
+    return liquids_.pvInvert(p, X);
 }
 
 

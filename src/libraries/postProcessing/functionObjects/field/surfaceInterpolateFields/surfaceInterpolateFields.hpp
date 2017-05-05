@@ -1,46 +1,61 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::surfaceInterpolateFields
 
+Group grpFieldFunctionObjects
+
 Description
-    Linear interpolates volFields to surfaceFields
+    This function object linearly interpolates volume fields to generate
+    surface fields
 
-    - at write it writes the fields
-    - it executes every time step
+    Fields are stored
+    - every time step the field is updated with new values
+    - at output it writes the fields
 
-    so it can either be used to calculate and write the interpolate or
-    (since the interpolates are registered) use some other functionObject
-    to work on them.
+    This functionObject can either be used
+    - to calculate a new field as a  post-processing step or
+    - since the fields are registered, used in another functionObject
 
-    sampleSomeFields
+    Example of function object specification:
+    \verbatim
+    surfaceInterpolateFields1
     {
-        type            surfaceInterpolateFields;
-        ..
-        enabled         true;
-        outputControl   outputTime;
-        ..
-        // Name of volField and corresponding surfaceField
-        fields          ((p pInterpolate)(U UInterpolate));
+        type        surfaceInterpolateFields;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        fields      ((p pNear)(U UNear));
     }
+    \endverbatim
 
+    \heading Function object usage
+    \table
+        Property | Description               | Required    | Default value
+        type     | type name: nearWallFields | yes         |
+        fields   | list of fields with correspoding output field names | yes |
+    \endtable
+
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     surfaceInterpolateFields.cpp
@@ -66,7 +81,7 @@ class dictionary;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
-                         Class surfaceInterpolateFields Declaration
+                  Class surfaceInterpolateFields Declaration
 \*---------------------------------------------------------------------------*/
 
 class surfaceInterpolateFields
@@ -150,6 +165,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Write
         virtual void write();
 
@@ -167,6 +185,9 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "surfaceInterpolateFields.hpp"
 #include "volFields.hpp"
 #include "linear.hpp"
 
@@ -202,7 +223,7 @@ void CML::surfaceInterpolateFields::interpolateFields
 
             if (obr_.found(sName))
             {
-                Info<< "    a surfaceField " << sName << " already exists"
+                Info<< "        surface field " << sName << " already exists"
                     << endl;
             }
             else
@@ -211,12 +232,13 @@ void CML::surfaceInterpolateFields::interpolateFields
                 sflds.setSize(sz+1);
                 sflds.set(sz, new sfType(sName, linearInterpolate(fld)));
 
-                Info<< "    interpolated " << fld.name() << " to create "
+                Info<< "        interpolated " << fld.name() << " to create "
                     << sflds[sz].name() << endl;
             }
         }
     }
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -21,9 +21,9 @@ Class
     CML::RectangularMatrix
 
 Description
-    A templated 2D rectangular matrix of objects of \<T\>, where the n
-    x n matrix dimension is known and used for subscript bounds
-    checking, etc.
+    A templated 2D rectangular m x n matrix of objects of \<Type\>.
+
+    The matrix dimensions are used for subscript bounds checking etc.
 
 SourceFiles
     RectangularMatrixI.hpp
@@ -79,7 +79,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#   include "RectangularMatrixI.hpp"
+#include "RectangularMatrixI.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

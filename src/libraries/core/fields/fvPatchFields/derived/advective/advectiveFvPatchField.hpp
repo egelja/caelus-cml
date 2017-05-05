@@ -22,36 +22,51 @@ Class
     CML::advectiveFvPatchField
 
 Description
-    Advective outflow boundary condition based on solving DDt(psi, U) = 0
-    at the boundary.
+    This boundary condition provides an advective outflow condition, based on
+    solving DDt(psi, U) = 0 at the boundary.
 
     The standard (Euler, backward, CrankNicolson) time schemes are
     supported.  Additionally an optional mechanism to relax the value at
     the boundary to a specified far-field value is provided which is
-    switched on by specifying the relaxation length-scale lInf and the
-    far-field value fieldInf.
+    switched on by specifying the relaxation length-scale \c lInf and the
+    far-field value \c fieldInf.
 
     The flow/wave speed at the outlet is provided by the virtual function
     advectionSpeed() the default implementation of which requires the name of
-    flux field a the outlet (phi) and optionally the density (rho) if the
+    the flux field \c (phi) and optionally the density \c (rho) if the
     mass-flux rather than the volumetric-flux is given.
-    \verbatim
-        outlet
-        {
-            type            advective;
-            phi             phi;
-            // rho          rho; // Not needed, phi volumetric
-            // fieldInf     1e5; // Optional
-            // lInf         0.1; // Optional
-        }
-    \endverbatim
 
     The flow/wave speed at the outlet can be changed by deriving a specialised
-    BC fron this class and overriding advectionSpeed() e.g. in
+    BC from this class and over-riding advectionSpeed()  e.g. in
     waveTransmissiveFvPatchField the advectionSpeed() calculates and returns
     the flow-speed plus the acoustic wave speed creating an acoustic wave
     transmissive boundary condition.
 
+    \heading Patch usage
+
+    \table
+        Property     | Description             | Required    | Default value
+        phi          | flux field name         | no          | phi
+        rho          | density field name      | no          | rho
+        fieldInf     | value of field beyond patch | no      |
+        lInf         | distance beyond patch for \c fieldInf | no |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    myPatch
+    {
+        type            advective;
+        phi             phi;
+    }
+    \endverbatim
+
+Note
+    If \c lInf is specified, \c fieldInf will be required; \c rho is only
+    required in the case of a mass-based flux.
+
+SourceFiles
+    advectiveFvPatchField.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -231,7 +246,7 @@ CML::advectiveFvPatchField<Type>::advectiveFvPatchField
     phiName_("phi"),
     rhoName_("rho"),
     fieldInf_(pTraits<Type>::zero),
-    lInf_(0.0)
+    lInf_(-GREAT)
 {
     this->refValue() = pTraits<Type>::zero;
     this->refGrad() = pTraits<Type>::zero;
@@ -268,7 +283,7 @@ CML::advectiveFvPatchField<Type>::advectiveFvPatchField
     phiName_(dict.lookupOrDefault<word>("phi", "phi")),
     rhoName_(dict.lookupOrDefault<word>("rho", "rho")),
     fieldInf_(pTraits<Type>::zero),
-    lInf_(0.0)
+    lInf_(-GREAT)
 {
     if (dict.found("value"))
     {
@@ -403,7 +418,7 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
 
     // Non-reflecting outflow boundary
     // If lInf_ defined setup relaxation to the value fieldInf_.
-    if (lInf_ > SMALL)
+    if (lInf_ > 0)
     {
         // Calculate the field relaxation coefficient k (See notes)
         const scalarField k(w*deltaT/lInf_);

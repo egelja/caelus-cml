@@ -55,6 +55,7 @@ CML::SRF::SRFModel::SRFModel
     ),
     Urel_(Urel),
     mesh_(Urel_.mesh()),
+    origin_("origin", dimLength, lookup("origin")),
     axis_(lookup("axis")),
     SRFModelCoeffs_(subDict(type + "Coeffs")),
     omega_(dimensionedVector("omega", dimless/dimTime, vector::zero))
@@ -76,6 +77,9 @@ bool CML::SRF::SRFModel::read()
 {
     if (regIOobject::read())
     {
+        // Re-read origin
+        lookup("origin") >> origin_;
+
         // Re-read axis
         lookup("axis") >> axis_;
         axis_ /= mag(axis_);
@@ -89,6 +93,12 @@ bool CML::SRF::SRFModel::read()
     {
         return false;
     }
+}
+
+
+const CML::dimensionedVector& CML::SRF::SRFModel::origin() const
+{
+    return origin_;
 }
 
 
@@ -140,7 +150,7 @@ CML::SRF::SRFModel::Fcentrifugal() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            omega_ ^ (omega_ ^ mesh_.C())
+            omega_ ^ (omega_ ^ (mesh_.C() - origin_))
         )
     );
 }
@@ -159,7 +169,11 @@ CML::vectorField CML::SRF::SRFModel::velocity
 ) const
 {
     tmp<vectorField> tfld =
-        omega_.value() ^ (positions - axis_*(axis_ & positions));
+        omega_.value()
+      ^ (
+            (positions - origin_.value())
+          - axis_*(axis_ & (positions - origin_.value()))
+        );
 
     return tfld();
 }
@@ -179,7 +193,8 @@ CML::tmp<CML::volVectorField> CML::SRF::SRFModel::U() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            omega_ ^ (mesh_.C() - axis_*(axis_ & mesh_.C()))
+            omega_
+          ^ ((mesh_.C() - origin_) - axis_*(axis_ & (mesh_.C() - origin_)))
         )
     );
 }

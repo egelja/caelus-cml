@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 5.04
+Caelus 5.10
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -23,3 +23,15 @@ RASModel				SpalartAllmaras;
 turbulence				on;
 
 printCoeffs				on;
+
+SpalartAllmarasCoeffs
+{
+    curvatureCorrection off;
+}
+
+kOmegaSSTCoeffs
+{
+    curvatureCorrection off;
+    Cscale          1;
+    frMax           1.25;    
+}

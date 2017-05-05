@@ -44,6 +44,7 @@ Description
 #include "TimeDataEntry.hpp"
 #include "distributionModel.hpp"
 #include "mathematicalConstants.hpp"
+#include "surfaceFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -118,7 +119,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        PatchFlowRateInjection(const dictionary& dict, CloudType& owner);
+        PatchFlowRateInjection
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         PatchFlowRateInjection(const PatchFlowRateInjection<CloudType>& im);
@@ -138,6 +144,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -191,10 +200,11 @@ template<class CloudType>
 CML::PatchFlowRateInjection<CloudType>::PatchFlowRateInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName,typeName),
     patchName_(this->coeffDict().lookup("patchName")),
     patchId_(owner.mesh().boundaryMesh().findPatchID(patchName_)),
     patchArea_(0.0),
@@ -238,7 +248,7 @@ CML::PatchFlowRateInjection<CloudType>::PatchFlowRateInjection
 
     duration_ = owner.db().time().userTimeToTime(duration_);
 
-    cellOwners_ = patch.faceCells();
+    updateMesh();
 
     // TODO: retrieve mean diameter from distrution model
     scalar pMeanDiameter =
@@ -294,6 +304,15 @@ CML::PatchFlowRateInjection<CloudType>::~PatchFlowRateInjection()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+void CML::PatchFlowRateInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    const polyPatch& patch = this->owner().mesh().boundaryMesh()[patchId_];
+    cellOwners_ = patch.faceCells();
+}
+
 
 template<class CloudType>
 CML::scalar CML::PatchFlowRateInjection<CloudType>::timeEnd() const

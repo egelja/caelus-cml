@@ -54,7 +54,7 @@ kOmegaSST::kOmegaSST
 )
 :
     RASModel(modelName, U, phi, transport, turbulenceModelName),
-
+    curvatureCorrection_(coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -154,7 +154,51 @@ kOmegaSST::kOmegaSST
             10.0
         )
     ),
-
+    Cr1_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr1",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cr2_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr2",
+            coeffDict_,
+            2.0
+        )
+    ),
+    Cr3_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cr3",
+            coeffDict_,
+            1.0
+        )
+    ),
+    Cscale_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Cscale",
+            coeffDict_,
+            1.0
+        )
+    ),
+    frMax_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "frMax",
+            coeffDict_,
+            1.25
+        )
+    ),
     y_(mesh_),
 
     k_
@@ -192,6 +236,19 @@ kOmegaSST::kOmegaSST
             IOobject::AUTO_WRITE
         ),
         mesh_
+    ),
+    fr1_
+    (
+        IOobject
+        (
+            "fr1",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("one", dimless, 1)
     )
 {
     bound(k_, kMin_);
@@ -207,6 +264,11 @@ kOmegaSST::kOmegaSST
         )
     );
     nut_.correctBoundaryConditions();
+
+    if (curvatureCorrection_)
+    {
+        Info<<" Curvature correction modification enabled" << endl;
+    }
 
     printCoeffs();
 }
@@ -281,6 +343,7 @@ bool kOmegaSST::read()
 {
     if (RASModel::read())
     {
+        curvatureCorrection_.readIfPresent("curvatureCorrection",coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
@@ -292,6 +355,11 @@ bool kOmegaSST::read()
         betaStar_.readIfPresent(coeffDict());
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
+        Cr1_.readIfPresent(coeffDict());
+        Cr2_.readIfPresent(coeffDict());
+        Cr3_.readIfPresent(coeffDict());
+        Cscale_.readIfPresent(coeffDict());
+        frMax_.readIfPresent(coeffDict());
 
         return true;
     }
@@ -318,7 +386,7 @@ void kOmegaSST::correct()
 
     const volScalarField S2(2*magSqr(symm(fvc::grad(U_))));
     const volScalarField Omega(2*magSqr(skew(fvc::grad(U_))));
-    volScalarField G("RASModel::G", nut_*S2);
+    volScalarField G(GName(), nut_*S2);
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
@@ -337,6 +405,26 @@ void kOmegaSST::correct()
         SMALL
      );
 
+    // Curvature correction terms
+    if (curvatureCorrection_)
+    {    
+        const volTensorField Omegaij(skew(fvc::grad(this->U_)));
+        const volScalarField sqrOmega(2*magSqr(Omegaij));
+        const volSymmTensorField Sij(symm(fvc::grad(this->U_)));    
+        const volScalarField sqrS(2*magSqr(Sij));
+        const dimensionedScalar smallOmega("smallOmega",sqrOmega.dimensions(), SMALL);
+        const volScalarField sqrD(0.5*(sqrS + sqrOmega + smallOmega));
+        const volScalarField rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
+        const volSymmTensorField DSijDt(fvc::DDt(this->phi_,Sij));
+        const volScalarField rTilda(  
+            (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt)));
+        const volScalarField frotation ((scalar(1.0) + Cr1_)
+            *scalar(2.0)*rStar/(scalar(1.0) + rStar)*
+            (scalar(1.0)-Cr3_*atan(Cr2_*rTilda)) - Cr1_);
+        const volScalarField frTilda(max(min(frotation, frMax_), scalar(0))); 
+        fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
+    }
+
     // Turbulent frequency equation
     tmp<fvScalarMatrix> omegaEqn
     (
@@ -344,7 +432,7 @@ void kOmegaSST::correct()
       + fvm::div(phi_, omega_)
       - fvm::laplacian(DomegaEff(F1), omega_)
      ==
-        gamma(F1)* min(G, c1_*betaStar_*k_*omega_)/(nut_ + nutMin)
+        gamma(F1)* min(fr1_*G, c1_*betaStar_*k_*omega_)/(nut_ + nutMin)
       - fvm::Sp(beta(F1)*omega_, omega_)
       + 2*(1-F1)*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
     );
@@ -363,7 +451,7 @@ void kOmegaSST::correct()
       + fvm::div(phi_, k_)
       - fvm::laplacian(DkEff(F1), k_)
      ==
-        min(G, c1_*betaStar_*k_*omega_)
+        min(fr1_*G, c1_*betaStar_*k_*omega_)
       - fvm::Sp(betaStar_*omega_, k_)
     );
 

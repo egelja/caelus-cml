@@ -1,0 +1,76 @@
+/*---------------------------------------------------------------------------*
+Caelus 5.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volScalarField;
+    object p;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 29765;
+
+boundaryField
+{
+wingL
+{
+    type            slip;
+}
+
+wingR
+{
+    type            slip;
+}
+
+tail
+{
+    type            slip;
+}
+
+fuselage
+{
+    type            slip;
+}
+
+lateralL
+{
+    type            zeroGradient;
+}
+
+lateralR
+{
+    type            zeroGradient;
+}
+
+top
+{
+    type            zeroGradient;
+}
+
+outlet
+{
+    type            zeroGradient;
+}
+
+bottom
+{
+    type            fixedValue;
+    value           uniform 29765;
+}
+
+inlet
+{
+    type            fixedValue;
+    value           uniform 29765;
+}
+}
+
+
+// ************************************************************************* //

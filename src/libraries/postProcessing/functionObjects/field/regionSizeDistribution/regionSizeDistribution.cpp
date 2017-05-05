@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2013 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -61,32 +61,13 @@ void CML::regionSizeDistribution::writeGraph
     const scalarField& values
 ) const
 {
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
-
     const wordList valNames(1, valueName);
 
-    fileName outputPath;
-    if (Pstream::parRun())
-    {
-        outputPath = mesh.time().path()/".."/name_;
-    }
-    else
-    {
-        outputPath = mesh.time().path()/name_;
-    }
+    fileName outputPath = baseTimeDir();
+    mkDir(outputPath);
 
-    if (mesh.name() != fvMesh::defaultRegion)
-    {
-        outputPath = outputPath/mesh.name();
-    }
+    OFstream str(outputPath/formatterPtr_().getFileName(coords, valNames));
 
-    mkDir(outputPath/mesh.time().timeName());
-    OFstream str
-    (
-        outputPath
-      / mesh.time().timeName()
-      / formatterPtr_().getFileName(coords, valNames)
-    );
     Info<< "Writing distribution of " << valueName << " to " << str.name()
         << endl;
 
@@ -164,10 +145,10 @@ void CML::regionSizeDistribution::writeAlphaFields
     liquidCore.correctBoundaryConditions();
     backgroundAlpha.correctBoundaryConditions();
 
-    Info<< "Volume of liquid-core = "
+    Info<< "    Volume of liquid-core = "
         << fvc::domainIntegrate(liquidCore).value()
         << endl;
-    Info<< "Volume of background  = "
+    Info<< "    Volume of background  = "
         << fvc::domainIntegrate(backgroundAlpha).value()
         << endl;
 
@@ -337,6 +318,7 @@ CML::regionSizeDistribution::regionSizeDistribution
     const bool loadFromFiles
 )
 :
+    functionObjectFile(obr, name, typeName),
     name_(name),
     obr_(obr),
     active_(true),
@@ -344,18 +326,25 @@ CML::regionSizeDistribution::regionSizeDistribution
     patchNames_(dict.lookup("patches"))
 {
     // Check if the available mesh is an fvMesh, otherwise deactivate
-    if (!isA<fvMesh>(obr_))
+    if (isA<fvMesh>(obr_))
+    {
+        read(dict);
+    }
+    else
     {
         active_ = false;
         WarningIn
         (
             "regionSizeDistribution::regionSizeDistribution"
-            "(const objectRegistry&, const dictionary&)"
-        )   << "No fvMesh available, deactivating." << nl
+            "("
+                "const word&,  "
+                "const objectRegistry&, "
+                "const dictionary&, "
+                "const bool"
+            ")"
+        )   << "No fvMesh available, deactivating " << name_ << nl
             << endl;
     }
-
-    read(dict);
 }
 
 
@@ -382,6 +371,14 @@ void CML::regionSizeDistribution::read(const dictionary& dict)
 
         word format(dict.lookup("setFormat"));
         formatterPtr_ = writer<scalar>::New(format);
+
+        if (dict.found("coordinateSystem"))
+        {
+            coordSysPtr_.reset(new coordinateSystem(obr_, dict));
+
+            Info<< "Transforming all vectorFields with coordinate system "
+                << coordSysPtr_().name() << endl;
+        }
     }
 }
 
@@ -398,20 +395,28 @@ void CML::regionSizeDistribution::end()
 }
 
 
+void CML::regionSizeDistribution::timeSet()
+{
+    // Do nothing - only valid on write
+}
+
+
 void CML::regionSizeDistribution::write()
 {
     if (active_)
     {
+        Info<< type() << " " << name_ << " output:" << nl;
+
         const fvMesh& mesh = refCast<const fvMesh>(obr_);
 
         autoPtr<volScalarField> alphaPtr;
         if (obr_.foundObject<volScalarField>(alphaName_))
         {
-            Info<< "Looking up field " << alphaName_ << endl;
+            Info<< "    Looking up field " << alphaName_ << endl;
         }
         else
         {
-            Info<< "Reading field " << alphaName_ << endl;
+            Info<< "    Reading field " << alphaName_ << endl;
             alphaPtr.reset
             (
                 new volScalarField
@@ -437,7 +442,7 @@ void CML::regionSizeDistribution::write()
            : obr_.lookupObject<volScalarField>(alphaName_)
         );
 
-        Info<< "Volume of alpha          = "
+        Info<< "    Volume of alpha          = "
             << fvc::domainIntegrate(alpha).value()
             << endl;
 
@@ -445,9 +450,9 @@ void CML::regionSizeDistribution::write()
         const scalar maxDropletVol = 1.0/6.0*pow(maxDiam_, 3);
         const scalar delta = (maxDiam_-minDiam_)/nBins_;
 
-        Info<< "Mesh volume              = " << meshVol << endl;
-        Info<< "Maximum droplet diameter = " << maxDiam_ << endl;
-        Info<< "Maximum droplet volume   = " << maxDropletVol << endl;
+        Info<< "    Mesh volume              = " << meshVol << endl;
+        Info<< "    Maximum droplet diameter = " << maxDiam_ << endl;
+        Info<< "    Maximum droplet volume   = " << maxDropletVol << endl;
 
 
         // Determine blocked faces
@@ -506,8 +511,8 @@ void CML::regionSizeDistribution::write()
 
         regionSplit regions(mesh, blockedFace);
 
-        Info<< "Determined " << regions.nRegions() << " disconnected regions"
-            << endl;
+        Info<< "    Determined " << regions.nRegions()
+            << " disconnected regions" << endl;
 
 
         if (debug)
@@ -525,7 +530,7 @@ void CML::regionSizeDistribution::write()
                 mesh,
                 dimensionedScalar("zero", dimless, 0)
             );
-            Info<< "Dumping region as volScalarField to " << region.name()
+            Info<< "    Dumping region as volScalarField to " << region.name()
                 << endl;
 
             forAll(regions, cellI)
@@ -557,7 +562,7 @@ void CML::regionSizeDistribution::write()
 
         if (debug)
         {
-            Info<< token::TAB << "Region"
+            Info<< "    " << token::TAB << "Region"
                 << token::TAB << "Volume(mesh)"
                 << token::TAB << "Volume(" << alpha.name() << "):"
                 << token::TAB << "nCells"
@@ -577,7 +582,7 @@ void CML::regionSizeDistribution::write()
                 ++vIter, ++aIter, ++numIter
             )
             {
-                Info<< token::TAB << vIter.key()
+                Info<< "    " << token::TAB << vIter.key()
                     << token::TAB << vIter()
                     << token::TAB << aIter()
                     << token::TAB << numIter()
@@ -587,7 +592,7 @@ void CML::regionSizeDistribution::write()
                 alphaSumVol += aIter();
                 nCells += numIter();
             }
-            Info<< token::TAB << "Total:"
+            Info<< "    " << token::TAB << "Total:"
                 << token::TAB << meshSumVol
                 << token::TAB << alphaSumVol
                 << token::TAB << nCells
@@ -599,15 +604,15 @@ void CML::regionSizeDistribution::write()
 
 
         {
-            Info<< "Patch connected regions (liquid core):" << endl;
-            Info<< token::TAB << "Region"
+            Info<< "    Patch connected regions (liquid core):" << endl;
+            Info<< token::TAB << "    Region"
                 << token::TAB << "Volume(mesh)"
                 << token::TAB << "Volume(" << alpha.name() << "):"
                 << endl;
             forAllConstIter(Map<label>, patchRegions, iter)
             {
                 label regionI = iter.key();
-                Info<< token::TAB << iter.key()
+                Info<< "    " << token::TAB << iter.key()
                     << token::TAB << allRegionVolume[regionI]
                     << token::TAB << allRegionAlphaVolume[regionI] << endl;
 
@@ -616,8 +621,8 @@ void CML::regionSizeDistribution::write()
         }
 
         {
-            Info<< "Background regions:" << endl;
-            Info<< token::TAB << "Region"
+            Info<< "    Background regions:" << endl;
+            Info<< "    " << token::TAB << "Region"
                 << token::TAB << "Volume(mesh)"
                 << token::TAB << "Volume(" << alpha.name() << "):"
                 << endl;
@@ -638,7 +643,7 @@ void CML::regionSizeDistribution::write()
                  && vIter() >= maxDropletVol
                 )
                 {
-                    Info<< token::TAB << vIter.key()
+                    Info<< "    " << token::TAB << vIter.key()
                         << token::TAB << vIter()
                         << token::TAB << aIter() << endl;
                 }
@@ -738,8 +743,8 @@ void CML::regionSizeDistribution::write()
 
             // Write to screen
             {
-                Info<< "Bins:" << endl;
-                Info<< token::TAB << "Bin"
+                Info<< "    Bins:" << endl;
+                Info<< "    " << token::TAB << "Bin"
                     << token::TAB << "Min diameter"
                     << token::TAB << "Count:"
                     << endl;
@@ -747,7 +752,7 @@ void CML::regionSizeDistribution::write()
                 scalar diam = 0.0;
                 forAll(binCount, binI)
                 {
-                    Info<< token::TAB << binI
+                    Info<< "    " << token::TAB << binI
                         << token::TAB << diam
                         << token::TAB << binCount[binI] << endl;
                     diam += delta;
@@ -774,7 +779,7 @@ void CML::regionSizeDistribution::write()
                 forAll(selected, i)
                 {
                     const word& fldName = scalarNames[selected[i]];
-                    Info<< "Scalar field " << fldName << endl;
+                    Info<< "    Scalar field " << fldName << endl;
 
                     const scalarField& fld = obr_.lookupObject
                     <
@@ -803,12 +808,22 @@ void CML::regionSizeDistribution::write()
                 forAll(selected, i)
                 {
                     const word& fldName = vectorNames[selected[i]];
-                    Info<< "Vector field " << fldName << endl;
+                    Info<< "    Vector field " << fldName << endl;
 
-                    const vectorField& fld = obr_.lookupObject
+                    vectorField fld = obr_.lookupObject
                     <
                         volVectorField
                     >(fldName).internalField();
+
+                    if (coordSysPtr_.valid())
+                    {
+                        Info<< "Transforming vector field " << fldName
+                            << " with coordinate system "
+                            << coordSysPtr_().name()
+                            << endl;
+
+                        fld = coordSysPtr_().localVector(fld);
+                    }
 
 
                     // Components

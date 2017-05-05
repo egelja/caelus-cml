@@ -640,7 +640,7 @@ void CML::meshCutter::setRefinement
                         -1,                 // master edge
                         -1,                 // master face
                         cellI,              // master cell
-                        -1                  // zone for cell
+                        mesh().cellZones().whichZone(cellI) // zone for cell
                     )
                 );
 
@@ -665,7 +665,6 @@ void CML::meshCutter::setRefinement
 
         if (loop.size())
         {
-            //
             // Convert loop (=list of cuts) into proper face.
             // Orientation should already be ok. (done by cellCuts)
             //

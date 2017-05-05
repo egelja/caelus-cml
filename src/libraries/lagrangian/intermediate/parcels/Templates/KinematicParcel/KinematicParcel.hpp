@@ -96,8 +96,8 @@ public:
             //- Particle density [kg/m3] (constant)
             scalar rho0_;
 
-            //- Minimum particle mass [kg]
-            scalar minParticleMass_;
+            //- Minimum parcel mass [kg]
+            scalar minParcelMass_;
 
             //- Young's modulus [N/m2]
             scalar youngsModulus_;
@@ -129,7 +129,7 @@ public:
                 const label parcelTypeId,
                 const scalar rhoMin,
                 const scalar rho0,
-                const scalar minParticleMass,
+                const scalar minParcelMass,
                 const scalar youngsModulus,
                 const scalar poissonsRatio
             );
@@ -150,7 +150,7 @@ public:
             inline scalar rho0() const;
 
             //- Return const access to the minimum particle mass
-            inline scalar minParticleMass() const;
+            inline scalar minParcelMass() const;
 
             //- Return const access to Young's Modulus
             inline scalar youngsModulus() const;
@@ -236,6 +236,10 @@ public:
     };
 
 
+    //- Number of particle tracking attempts before we assume that it stalls
+    static label maxTrackAttempts;
+
+
 protected:
 
     // Protected data
@@ -318,11 +322,27 @@ public:
 
     // Static data members
 
-        //- String representation of properties
-        static string propHeader;
-
         //- Runtime type information
         TypeName("KinematicParcel");
+
+        //- String representation of properties
+        AddToPropertyList
+        (
+            ParcelType,
+            " active"
+          + " typeId"
+          + " nParticle"
+          + " d"
+          + " dTarget "
+          + " (Ux Uy Uz)"
+          + " (fx fy fz)"
+          + " (angularMomentumx angularMomentumy angularMomentumz)"
+          + " (torquex torquey torquez)"
+          + " rho"
+          + " age"
+          + " tTurb"
+          + " (UTurbx UTurby UTurbz)"
+        );
 
 
     // Constructors
@@ -555,6 +575,14 @@ public:
                 const scalar sigma      // particle surface tension
             ) const;
 
+            //- Eotvos number
+            inline scalar Eo
+            (
+                const vector& a,        // acceleration
+                const scalar d,         // particle diameter
+                const scalar sigma      // particle surface tension
+            ) const;
+
 
         // Main calculation loop
 
@@ -693,7 +721,7 @@ CML::KinematicParcel<ParcelType>::constantProperties::constantProperties()
     parcelTypeId_(-1),
     rhoMin_(0.0),
     rho0_(0.0),
-    minParticleMass_(0.0),
+    minParcelMass_( 0.0),
     youngsModulus_(0.0),
     poissonsRatio_(0.0)
 {}
@@ -709,7 +737,7 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
     parcelTypeId_(cp.parcelTypeId_),
     rhoMin_(cp.rhoMin_),
     rho0_(cp.rho0_),
-    minParticleMass_(cp.minParticleMass_),
+    minParcelMass_(cp.minParcelMass_),
     youngsModulus_(cp.youngsModulus_),
     poissonsRatio_(cp.poissonsRatio_)
 {}
@@ -726,7 +754,7 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
     parcelTypeId_(-1),
     rhoMin_(0.0),
     rho0_(0.0),
-    minParticleMass_(0.0),
+    minParcelMass_(0.0),
     youngsModulus_(0.0),
     poissonsRatio_(0.0)
 {
@@ -735,7 +763,7 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
         dict_.lookup("parcelTypeId") >> parcelTypeId_;
         dict_.lookup("rhoMin") >> rhoMin_;
         dict_.lookup("rho0") >> rho0_;
-        dict_.lookup("minParticleMass") >> minParticleMass_;
+        dict_.lookup("minParcelMass") >> minParcelMass_;
         dict_.lookup("youngsModulus") >> youngsModulus_;
         dict_.lookup("poissonsRatio") >> poissonsRatio_;
     }
@@ -747,7 +775,7 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
     const label parcelTypeId,
     const scalar rhoMin,
     const scalar rho0,
-    const scalar minParticleMass,
+    const scalar minParcelMass,
     const scalar youngsModulus,
     const scalar poissonsRatio
 )
@@ -756,7 +784,7 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
     parcelTypeId_(parcelTypeId),
     rhoMin_(rhoMin),
     rho0_(rho0),
-    minParticleMass_(minParticleMass),
+    minParcelMass_(minParcelMass),
     youngsModulus_(youngsModulus),
     poissonsRatio_(poissonsRatio)
 {}
@@ -867,9 +895,9 @@ CML::KinematicParcel<ParcelType>::constantProperties::rho0() const
 
 template<class ParcelType>
 inline CML::scalar
-CML::KinematicParcel<ParcelType>::constantProperties::minParticleMass() const
+CML::KinematicParcel<ParcelType>::constantProperties::minParcelMass() const
 {
-    return minParticleMass_;
+    return minParcelMass_;
 }
 
 
@@ -1211,6 +1239,19 @@ inline CML::scalar CML::KinematicParcel<ParcelType>::We
 }
 
 
+template<class ParcelType>
+inline CML::scalar CML::KinematicParcel<ParcelType>::Eo
+(
+    const vector& a,
+    const scalar d,
+    const scalar sigma
+) const
+{
+    vector dir = U_/(mag(U_) + ROOTVSMALL);
+    return mag(a & dir)*mag(rho_ - rhoc_)*sqr(d)/(sigma + ROOTVSMALL);
+}
+
+
 // ************************************************************************* //
 template<class ParcelType>
 template<class CloudType>
@@ -1304,6 +1345,12 @@ CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::part()
 {
     return part_;
 }
+
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+template<class ParcelType>
+CML::label CML::KinematicParcel<ParcelType>::maxTrackAttempts = 1;
 
 
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
@@ -1447,14 +1494,15 @@ const CML::vector CML::KinematicParcel<ParcelType>::calcVelocity
     const forceSuSp Fcp = forces.calcCoupled(p, dt, mass, Re, mu);
     const forceSuSp Fncp = forces.calcNonCoupled(p, dt, mass, Re, mu);
     const forceSuSp Feff = Fcp + Fncp;
+    const scalar massEff = forces.massEff(p, mass);
 
 
     // New particle velocity
     //~~~~~~~~~~~~~~~~~~~~~~
 
     // Update velocity - treat as 3-D
-    const vector abp = (Feff.Sp()*Uc_ + (Feff.Su() + Su))/mass;
-    const scalar bp = Feff.Sp()/mass;
+    const vector abp = (Feff.Sp()*Uc_ + (Feff.Su() + Su))/massEff;
+    const scalar bp = Feff.Sp()/massEff;
 
     Spu = dt*Feff.Sp();
 
@@ -1558,20 +1606,24 @@ bool CML::KinematicParcel<ParcelType>::move
         dtMax *= maxCo;
     }
 
+    bool tracking = true;
+    label nTrackingStalled = 0;
+
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
     {
         // Apply correction to position for reduced-D cases
         meshTools::constrainToMeshCentre(mesh, p.position());
 
+        const point start(p.position());
+
         // Set the Lagrangian time-step
         scalar dt = min(dtMax, tEnd);
 
-        // Remember which cell the parcel is in since this will change if
-        // a face is hit
+        // Cache the parcel current cell as this will change if a face is hit
         const label cellI = p.cell();
 
         const scalar magU = mag(U_);
-        if (p.active() && magU > ROOTVSMALL)
+        if (p.active() && tracking && (magU > ROOTVSMALL))
         {
             const scalar d = dt*magU;
             const scalar dCorr = min(d, maxCo*cbrt(V[cellI]));
@@ -1581,10 +1633,40 @@ bool CML::KinematicParcel<ParcelType>::move
         }
 
         tEnd -= dt;
-        p.stepFraction() = 1.0 - tEnd/trackTime;
+
+        scalar newStepFraction = 1.0 - tEnd/trackTime;
+
+        if (tracking)
+        {
+            if
+            (
+                mag(p.stepFraction() - newStepFraction)
+              < particle::minStepFractionTol
+            )
+            {
+                nTrackingStalled++;
+
+                if (nTrackingStalled > maxTrackAttempts)
+                {
+                    tracking = false;
+                }
+            }
+            else
+            {
+                nTrackingStalled = 0;
+            }
+        }
+
+        p.stepFraction() = newStepFraction;
+
+        bool calcParcel = true;
+        if (!tracking && td.cloud().solution().steadyState())
+        {
+            calcParcel = false;
+        }
 
         // Avoid problems with extremely small timesteps
-        if (dt > ROOTVSMALL)
+        if ((dt > ROOTVSMALL) && calcParcel)
         {
             // Update cell based properties
             p.setCellValues(td, dt, cellI);
@@ -1607,7 +1689,7 @@ bool CML::KinematicParcel<ParcelType>::move
 
         p.age() += dt;
 
-        td.cloud().functions().postMove(p, cellI, dt);
+        td.cloud().functions().postMove(p, cellI, dt, start, td.keepParticle);
     }
 
     return td.keepParticle;
@@ -1621,7 +1703,7 @@ void CML::KinematicParcel<ParcelType>::hitFace(TrackData& td)
     typename TrackData::cloudType::parcelType& p =
         static_cast<typename TrackData::cloudType::parcelType&>(*this);
 
-    td.cloud().functions().postFace(p, p.face());
+    td.cloud().functions().postFace(p, p.face(), td.keepParticle);
 }
 
 
@@ -1650,7 +1732,8 @@ bool CML::KinematicParcel<ParcelType>::hitPatch
         p,
         pp,
         trackFraction,
-        tetIs
+        tetIs,
+        td.keepParticle
     );
 
     // Invoke surface film model
@@ -1747,24 +1830,12 @@ CML::scalar CML::KinematicParcel<ParcelType>::wallImpactDistance
 
 
 // * * * * * * * * * * * * * * IOStream operators  * * * * * * * * * * * * * //
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<class ParcelType>
-CML::string CML::KinematicParcel<ParcelType>::propHeader =
-    ParcelType::propHeader
-  + " active"
-  + " typeId"
-  + " nParticle"
-  + " d"
-  + " dTarget "
-  + " (Ux Uy Uz)"
-  + " (fx fy fz)"
-  + " (angularMomentumx angularMomentumy angularMomentumz)"
-  + " (torquex torquey torquez)"
-  + " rho"
-  + " age"
-  + " tTurb"
-  + " (UTurbx UTurby UTurbz)";
+CML::string CML::KinematicParcel<ParcelType>::propertyList_ =
+    CML::KinematicParcel<ParcelType>::propertyList();
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -1814,23 +1885,8 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&active_),
-                sizeof(active_)
-              + sizeof(typeId_)
-              + sizeof(nParticle_)
-              + sizeof(d_)
-              + sizeof(dTarget_)
-              + sizeof(U_)
-              + sizeof(f_)
-              + sizeof(angularMomentum_)
-              + sizeof(torque_)
-              + sizeof(rho_)
-              + sizeof(age_)
-              + sizeof(tTurb_)
-              + sizeof(UTurb_)
-            );
+            label size = reinterpret_cast<const char*>(&UTurb_) - reinterpret_cast<const char*>(&active_) + sizeof(UTurb_);
+            is.read(reinterpret_cast<char*>(&active_), size);
         }
     }
 
@@ -2020,23 +2076,9 @@ CML::Ostream& CML::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-        os.write
-        (
-            reinterpret_cast<const char*>(&p.active_),
-            sizeof(p.active())
-          + sizeof(p.typeId())
-          + sizeof(p.nParticle())
-          + sizeof(p.d())
-          + sizeof(p.dTarget())
-          + sizeof(p.U())
-          + sizeof(p.f())
-          + sizeof(p.angularMomentum())
-          + sizeof(p.torque())
-          + sizeof(p.rho())
-          + sizeof(p.age())
-          + sizeof(p.tTurb())
-          + sizeof(p.UTurb())
-        );
+        
+        label size = reinterpret_cast<const char*>(&p.UTurb_) - reinterpret_cast<const char*>(&p.active_) + sizeof(p.UTurb_);
+        os.write(reinterpret_cast<const char*>(&p.active_), size);
     }
 
     // Check state of Ostream

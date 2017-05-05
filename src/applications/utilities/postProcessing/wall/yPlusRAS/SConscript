@@ -21,11 +21,11 @@ lib_inc = [
 src + '/turbulenceModels',
 src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
 src + '/turbulenceModels/incompressible/RAS/lnInclude',
-src + '/turbulenceModels/incompressible/RAS/derivedFvPatchFields/wallFunctions' + 
+src + '/turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions' + 
 '/nutWallFunctions',
 src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
 src + '/turbulenceModels/compressible/RAS/lnInclude',
-src + '/turbulenceModels/compressible/RAS/derivedFvPatchFields/wallFunctions' + 
+src + '/turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions' + 
 '/mutWallFunctions',
 src + '/transportModels',
 src + '/transportModels/incompressible/lnInclude',

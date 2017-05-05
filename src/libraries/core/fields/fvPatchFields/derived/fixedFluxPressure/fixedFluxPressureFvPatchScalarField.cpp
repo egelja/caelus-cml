@@ -56,7 +56,7 @@ CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
     gradient().map(ptf.gradient(), mapper);
 
     // Evaluate the value field from the gradient if the internal field is valid
-    if (&iF && iF.size())
+    if (notNull(iF) && iF.size())
     {
         scalarField::operator=
         (

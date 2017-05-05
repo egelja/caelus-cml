@@ -357,16 +357,22 @@ void CML::Cloud<ParticleType>::checkPatches() const
     {
         if (isA<cyclicAMIPolyPatch>(pbm[patchI]))
         {
-            ok = false;
-            break;
+            const cyclicAMIPolyPatch& cami =
+                refCast<const cyclicAMIPolyPatch>(pbm[patchI]);
+
+            if (cami.owner())
+            {
+                ok = ok && (cami.AMI().singlePatchProc() != -1);
+            }
         }
     }
 
     if (!ok)
     {
-        WarningIn("void CML::Cloud<ParticleType>::initCloud(const bool)")
-            << "Particle tracking across AMI patches is not currently "
-            << "supported" << endl;
+        FatalErrorIn("void Foam::Cloud<ParticleType>::initCloud(const bool)")
+            << "Particle tracking across AMI patches is only currently "
+            << "supported for cases where the AMI patches reside on a "
+            << "single processor" << abort(FatalError);
     }
 }
 
@@ -526,22 +532,33 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     // Reset nTrackingRescues
     nTrackingRescues_ = 0;
 
+
+    // List of lists of particles to be transfered for all of the
+    // neighbour processors
+    List<IDLList<ParticleType> > particleTransferLists
+    (
+        neighbourProcs.size()
+    );
+
+    // List of destination processorPatches indices for all of the
+    // neighbour processors
+    List<DynamicList<label> > patchIndexTransferLists
+    (
+        neighbourProcs.size()
+    );
+
+    // Allocate transfer buffers
+    PstreamBuffers pBufs(Pstream::nonBlocking);
+
+
     // While there are particles to transfer
     while (true)
     {
-        // List of lists of particles to be transfered for all of the
-        // neighbour processors
-        List<IDLList<ParticleType> > particleTransferLists
-        (
-            neighbourProcs.size()
-        );
-
-        // List of destination processorPatches indices for all of the
-        // neighbour processors
-        List<DynamicList<label> > patchIndexTransferLists
-        (
-            neighbourProcs.size()
-        );
+        particleTransferLists = IDLList<ParticleType>();
+        forAll(patchIndexTransferLists, i)
+        {
+            patchIndexTransferLists[i].clear();
+        }
 
         // Loop over all particles
         forAllIter(typename Cloud<ParticleType>, *this, pIter)
@@ -595,8 +612,9 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             break;
         }
 
-        // Allocate transfer buffers
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+
+        // Clear transfer buffers
+        pBufs.clear();
 
         // Stream into send buffers
         forAll(particleTransferLists, i)
@@ -615,8 +633,8 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             }
         }
 
-        // Set up transfers when in non-blocking mode. Returns sizes (in bytes)
-        // to be sent/received.
+
+        // Start sending. Sets number of bytes transferred
         labelListList allNTrans(Pstream::nProcs());
 
         pBufs.finishedSends(allNTrans);

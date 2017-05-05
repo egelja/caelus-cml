@@ -51,7 +51,7 @@ void calcIncompressibleYPlus
     volScalarField& yPlus
 )
 {
-    typedef incompressible::RASModels::nutWallFunctionFvPatchScalarField
+    typedef incompressible::nutWallFunctionFvPatchScalarField
         wallFunctionPatchField;
 
     #include "createPhi.hpp"
@@ -103,7 +103,7 @@ void calcCompressibleYPlus
     volScalarField& yPlus
 )
 {
-    typedef compressible::RASModels::mutkWallFunctionFvPatchScalarField
+    typedef compressible::mutkWallFunctionFvPatchScalarField
         wallFunctionPatchField;
 
     IOobject rhoHeader

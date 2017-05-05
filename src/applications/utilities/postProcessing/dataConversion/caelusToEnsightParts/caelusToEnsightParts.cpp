@@ -76,7 +76,7 @@ using namespace CML;
 int main(int argc, char *argv[])
 {
     // enable -constant
-    // probably don't need -zeroTime though, since the fields are vetted
+    // probably don't need -withZero though, since the fields are vetted
     // afterwards anyhow
     timeSelector::addOptions(true, false);
     argList::noParallel();
@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
 
     const char* geometryName = "geometry";
 
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
 
     // get times list
     instantList timeDirs = timeSelector::select0(runTime, args);
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     mkDir(ensightDir);
     mkDir(dataDir);
 
-#   include "createNamedMesh.hpp"
+   #include "createNamedMesh.hpp"
 
     // Mesh instance (region0 gets filtered out)
     fileName regionPrefix;
@@ -200,8 +200,8 @@ int main(int argc, char *argv[])
         partsList.writeSummary(partsInfoFile);
     }
 
-#   include "checkHasMovingMesh.hpp"
-#   include "findFields.hpp"
+    #include "checkHasMovingMesh.hpp"
+    #include "findFields.hpp"
 
     if (hasMovingMesh && optNoMesh)
     {
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
     {
         runTime.setTime(timeDirs[timeI], timeI);
 
-#       include "getTimeIndex.hpp"
+        #include "getTimeIndex.hpp"
 
         // remember the time index
         fieldTimesUsed.append(timeIndex);
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
                 << subDir.c_str() << " " << runTime.timeName() << nl;
         }
 
-#       include "moveMesh.hpp"
+        #include "moveMesh.hpp"
 
         if (timeI == 0 || mesh.moving())
         {

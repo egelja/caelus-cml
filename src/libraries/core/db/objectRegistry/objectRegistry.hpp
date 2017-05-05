@@ -34,6 +34,7 @@ SourceFiles
 
 #include "HashTable.hpp"
 #include "regIOobject.hpp"
+#include "wordReList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -144,6 +145,14 @@ public:
             template<class Type>
             wordList names() const;
 
+            //- Return the list of objects whose name matches the input regExp
+            template<class Type>
+            wordList names(const wordRe& name) const;
+
+            //- Return the list of objects whose name matches the input regExp
+            template<class Type>
+            wordList names(const wordReList& name) const;
+
             //- Lookup and return a const sub-objectRegistry
             const objectRegistry& subRegistry(const word& name) const;
 
@@ -217,6 +226,8 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+#include "stringListOps.hpp"
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
@@ -237,6 +248,42 @@ CML::objectRegistry::names() const
     objectNames.setSize(count);
 
     return objectNames;
+}
+
+
+template<class Type>
+CML::wordList
+CML::objectRegistry::names(const wordRe& name) const
+{
+    wordList objectNames(size());
+
+    label count = 0;
+    forAllConstIter(HashTable<regIOobject*>, *this, iter)
+    {
+        if (isA<Type>(*iter()))
+        {
+            const word& objectName = iter()->name();
+
+            if (name.match(objectName))
+            {
+                objectNames[count++] = objectName;
+            }
+        }
+    }
+
+    objectNames.setSize(count);
+
+    return objectNames;
+}
+
+
+template<class Type>
+CML::wordList
+CML::objectRegistry::names(const wordReList& patterns) const
+{
+    wordList names(this->names<Type>());
+
+    return wordList(names, findStrings(patterns, names));
 }
 
 
@@ -328,7 +375,7 @@ const Type& CML::objectRegistry::lookupObject(const word& name) const
             << abort(FatalError);
     }
 
-    return *reinterpret_cast< const Type* >(0);
+    return NullSingletonRef< Type >();
 }
 
 

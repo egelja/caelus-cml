@@ -129,6 +129,15 @@ protected:
             //- Include radiation
             Switch radiation_;
 
+            //- Radiation sum of parcel projected areas
+            autoPtr<DimensionedField<scalar, volMesh> > radAreaP_;
+
+            //- Radiation sum of parcel temperature^4
+            autoPtr<DimensionedField<scalar, volMesh> > radT4_;
+
+            //- Radiation sum of parcel projected areas * temperature^4
+            autoPtr<DimensionedField<scalar, volMesh> > radAreaPT4_;
+
 
         // Sources
 
@@ -213,6 +222,9 @@ public:
             inline const typename parcelType::constantProperties&
                 constProps() const;
 
+            //- Return access to the constant properties
+            inline typename parcelType::constantProperties& constProps();
+
             //- Return const access to thermo package
             inline const SLGThermo& thermo() const;
 
@@ -240,6 +252,26 @@ public:
 
                  //- Radiation flag
                 inline bool radiation() const;
+
+                //- Radiation sum of parcel projected areas [m2]
+                inline DimensionedField<scalar, volMesh>& radAreaP();
+
+                //- Radiation sum of parcel projected areas [m2]
+                inline const DimensionedField<scalar, volMesh>&
+                    radAreaP() const;
+
+                //- Radiation sum of parcel temperature^4 [K4]
+                inline DimensionedField<scalar, volMesh>& radT4();
+
+                //- Radiation sum of parcel temperature^4 [K4]
+                inline const DimensionedField<scalar, volMesh>& radT4() const;
+
+                //- Radiation sum of parcel projected area*temperature^4 [m2K4]
+                inline DimensionedField<scalar, volMesh>& radAreaPT4();
+
+                //- Radiation sum of parcel temperature^4 [m2K4]
+                inline const DimensionedField<scalar, volMesh>&
+                    radAreaPT4() const;
 
 
             // Sources
@@ -274,6 +306,7 @@ public:
 
                     //- Return tmp equivalent particulate scattering factor
                     inline tmp<volScalarField> sigmap() const;
+
 
         // Check
 
@@ -327,7 +360,7 @@ public:
 
             //- Remap the cells of particles corresponding to the
             //  mesh topology change with a default tracking data object
-            void autoMap(const mapPolyMesh&);
+            virtual void autoMap(const mapPolyMesh&);
 
 
         // I-O
@@ -357,6 +390,14 @@ CML::ThermoCloud<CloudType>::cloudCopy() const
 template<class CloudType>
 inline const typename CloudType::particleType::constantProperties&
 CML::ThermoCloud<CloudType>::constProps() const
+{
+    return constProps_;
+}
+
+
+template<class CloudType>
+inline typename CloudType::particleType::constantProperties&
+CML::ThermoCloud<CloudType>::constProps()
 {
     return constProps_;
 }
@@ -408,6 +449,114 @@ inline bool CML::ThermoCloud<CloudType>::radiation() const
 
 template<class CloudType>
 inline CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radAreaP()
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radAreaP()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radAreaP_();
+}
+
+
+template<class CloudType>
+inline const CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radAreaP() const
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radAreaP()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radAreaP_();
+}
+
+
+template<class CloudType>
+inline CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radT4()
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radT4()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radT4_();
+}
+
+
+template<class CloudType>
+inline const CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radT4() const
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radT4()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radT4_();
+}
+
+
+template<class CloudType>
+inline CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radAreaPT4()
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radAreaPT4()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radAreaPT4_();
+}
+
+
+template<class CloudType>
+inline const CML::DimensionedField<CML::scalar, CML::volMesh>&
+CML::ThermoCloud<CloudType>::radAreaPT4() const
+{
+    if (!radiation_)
+    {
+        FatalErrorIn
+        (
+            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
+            "CML::ThermoCloud<CloudType>::radAreaPT4()"
+        )   << "Radiation field requested, but radiation model not active"
+            << abort(FatalError);
+    }
+
+    return radAreaPT4_();
+}
+
+
+template<class CloudType>
+inline CML::DimensionedField<CML::scalar, CML::volMesh>&
 CML::ThermoCloud<CloudType>::hsTrans()
 {
     return hsTrans_();
@@ -452,7 +601,7 @@ CML::ThermoCloud<CloudType>::Sh(volScalarField& hs) const
 
     if (this->solution().coupled())
     {
-        if (this->solution().semiImplicit("hs"))
+        if (this->solution().semiImplicit("h"))
         {
             const volScalarField Cp(thermo_.thermo().Cp());
             const DimensionedField<scalar, volMesh>
@@ -487,7 +636,7 @@ inline CML::tmp<CML::volScalarField> CML::ThermoCloud<CloudType>::Ep() const
         (
             IOobject
             (
-                this->name() + "radiation::Ep",
+                this->name() + ":radiation:Ep",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -499,21 +648,15 @@ inline CML::tmp<CML::volScalarField> CML::ThermoCloud<CloudType>::Ep() const
         )
     );
 
-    // Need to check if coupled as field is created on-the-fly
-    if (radiation_ && this->solution().coupled())
+    if (radiation_)
     {
         scalarField& Ep = tEp().internalField();
+        const scalar dt = this->db().time().deltaTValue();
         const scalarField& V = this->mesh().V();
         const scalar epsilon = constProps_.epsilon0();
+        const scalarField& sumAreaPT4 = radAreaPT4_->field();
 
-        forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
-        {
-            const parcelType& p = iter();
-            const label cellI = p.cell();
-            Ep[cellI] += p.nParticle()*p.areaP()*pow4(p.T());
-        }
-
-        Ep *= epsilon*physicoChemical::sigma.value()/V;
+        Ep = sumAreaPT4*epsilon*physicoChemical::sigma.value()/V/dt;
     }
 
     return tEp;
@@ -529,7 +672,7 @@ inline CML::tmp<CML::volScalarField> CML::ThermoCloud<CloudType>::ap() const
         (
             IOobject
             (
-                this->name() + "radiation::ap",
+                this->name() + ":radiation:ap",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -541,21 +684,15 @@ inline CML::tmp<CML::volScalarField> CML::ThermoCloud<CloudType>::ap() const
         )
     );
 
-    // Need to check if coupled as field is created on-the-fly
-    if (radiation_ && this->solution().coupled())
+    if (radiation_)
     {
         scalarField& ap = tap().internalField();
+        const scalar dt = this->db().time().deltaTValue();
         const scalarField& V = this->mesh().V();
         const scalar epsilon = constProps_.epsilon0();
+        const scalarField& sumAreaP = radAreaP_->field();
 
-        forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
-        {
-            const parcelType& p = iter();
-            const label cellI = p.cell();
-            ap[cellI] += p.nParticle()*p.areaP();
-        }
-
-        ap *= epsilon/V;
+        ap = sumAreaP*epsilon/V/dt;
     }
 
     return tap;
@@ -572,7 +709,7 @@ CML::ThermoCloud<CloudType>::sigmap() const
         (
             IOobject
             (
-                this->name() + "radiation::sigmap",
+                this->name() + ":radiation:sigmap",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -584,23 +721,16 @@ CML::ThermoCloud<CloudType>::sigmap() const
         )
     );
 
-    // Need to check if coupled as field is created on-the-fly
-    if (radiation_ && this->solution().coupled())
+    if (radiation_)
     {
         scalarField& sigmap = tsigmap().internalField();
-
+        const scalar dt = this->db().time().deltaTValue();
         const scalarField& V = this->mesh().V();
         const scalar epsilon = constProps_.epsilon0();
         const scalar f = constProps_.f0();
+        const scalarField& sumAreaP = radAreaP_->field();
 
-        forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
-        {
-            const parcelType& p = iter();
-            const label cellI = p.cell();
-            sigmap[cellI] += p.nParticle()*p.areaP();
-        }
-
-        sigmap *= (1.0 - f)*(1.0 - epsilon)/V;
+        sigmap *= sumAreaP*(1.0 - f)*(1.0 - epsilon)/V/dt;
     }
 
     return tsigmap;
@@ -611,15 +741,25 @@ template<class CloudType>
 inline CML::scalar CML::ThermoCloud<CloudType>::Tmax() const
 {
     scalar T = -GREAT;
+    scalar n = 0;
     forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
     {
         const parcelType& p = iter();
         T = max(T, p.T());
+        n++;
     }
 
     reduce(T, maxOp<scalar>());
+    reduce(n, sumOp<label>());
 
-    return max(0.0, T);
+    if (n > 0)
+    {
+        return T;
+    }
+    else
+    {
+        return 0.0;
+    }
 }
 
 
@@ -627,15 +767,25 @@ template<class CloudType>
 inline CML::scalar CML::ThermoCloud<CloudType>::Tmin() const
 {
     scalar T = GREAT;
+    scalar n = 0;
     forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
     {
         const parcelType& p = iter();
         T = min(T, p.T());
+        n++;
     }
 
     reduce(T, minOp<scalar>());
+    reduce(n, sumOp<label>());
 
-    return max(0.0, T);
+    if (n > 0)
+    {
+        return T;
+    }
+    else
+    {
+        return 0.0;
+    }
 }
 
 
@@ -662,7 +812,69 @@ void CML::ThermoCloud<CloudType>::setModels()
         ).ptr()
     );
 
-    this->subModelProperties().lookup("radiation") >> radiation_;
+    if (this->solution().coupled())
+    {
+        this->subModelProperties().lookup("radiation") >> radiation_;
+    }
+
+    if (radiation_)
+    {
+        radAreaP_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radAreaP",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::AUTO_WRITE
+                ),
+                this->mesh(),
+                dimensionedScalar("zero", dimArea, 0.0)
+            )
+        );
+
+        radT4_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radT4",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::AUTO_WRITE
+                ),
+                this->mesh(),
+                dimensionedScalar("zero", pow4(dimTemperature), 0.0)
+            )
+        );
+
+        radAreaPT4_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radAreaPT4",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::AUTO_WRITE
+                ),
+                this->mesh(),
+                dimensionedScalar
+                (
+                    "zero",
+                    sqr(dimLength)*pow4(dimTemperature),
+                    0.0
+                )
+            )
+        );
+    }
 }
 
 
@@ -709,13 +921,16 @@ CML::ThermoCloud<CloudType>::ThermoCloud
     heatTransferModel_(NULL),
     TIntegrator_(NULL),
     radiation_(false),
+    radAreaP_(NULL),
+    radT4_(NULL),
+    radAreaPT4_(NULL),
     hsTrans_
     (
         new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
-                this->name() + "hsTrans",
+                this->name() + ":hsTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::READ_IF_PRESENT,
@@ -731,7 +946,7 @@ CML::ThermoCloud<CloudType>::ThermoCloud
         (
             IOobject
             (
-                this->name() + "hsCoeff",
+                this->name() + ":hsCoeff",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::READ_IF_PRESENT,
@@ -776,13 +991,16 @@ CML::ThermoCloud<CloudType>::ThermoCloud
     heatTransferModel_(c.heatTransferModel_->clone()),
     TIntegrator_(c.TIntegrator_->clone()),
     radiation_(c.radiation_),
+    radAreaP_(NULL),
+    radT4_(NULL),
+    radAreaPT4_(NULL),
     hsTrans_
     (
         new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
-                this->name() + "hsTrans",
+                this->name() + ":hsTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -798,7 +1016,7 @@ CML::ThermoCloud<CloudType>::ThermoCloud
         (
             IOobject
             (
-                this->name() + "hsCoeff",
+                this->name() + ":hsCoeff",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -808,7 +1026,61 @@ CML::ThermoCloud<CloudType>::ThermoCloud
             c.hsCoeff()
         )
     )
-{}
+{
+    if (radiation_)
+    {
+        radAreaP_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radAreaP",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    false
+                ),
+                c.radAreaP()
+            )
+        );
+
+        radT4_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radT4",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    false
+                ),
+                c.radT4()
+            )
+        );
+
+        radAreaPT4_.reset
+        (
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    this->name() + ":radAreaPT4",
+                    this->db().time().timeName(),
+                    this->db(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    false
+                ),
+                c.radAreaPT4()
+            )
+        );
+    }
+}
 
 
 template<class CloudType>
@@ -829,6 +1101,9 @@ CML::ThermoCloud<CloudType>::ThermoCloud
     heatTransferModel_(NULL),
     TIntegrator_(NULL),
     radiation_(false),
+    radAreaP_(NULL),
+    radT4_(NULL),
+    radAreaPT4_(NULL),
     hsTrans_(NULL),
     hsCoeff_(NULL)
 {}
@@ -896,6 +1171,13 @@ void CML::ThermoCloud<CloudType>::resetSourceTerms()
     CloudType::resetSourceTerms();
     hsTrans_->field() = 0.0;
     hsCoeff_->field() = 0.0;
+
+    if (radiation_)
+    {
+        radAreaP_->field() = 0.0;
+        radT4_->field() = 0.0;
+        radAreaPT4_->field() = 0.0;
+    }
 }
 
 
@@ -907,8 +1189,15 @@ void CML::ThermoCloud<CloudType>::relaxSources
 {
     CloudType::relaxSources(cloudOldTime);
 
-    this->relax(hsTrans_(), cloudOldTime.hsTrans(), "hs");
-    this->relax(hsCoeff_(), cloudOldTime.hsCoeff(), "hs");
+    this->relax(hsTrans_(), cloudOldTime.hsTrans(), "h");
+    this->relax(hsCoeff_(), cloudOldTime.hsCoeff(), "h");
+
+    if (radiation_)
+    {
+        this->relax(radAreaP_(), cloudOldTime.radAreaP(), "radiation");
+        this->relax(radT4_(), cloudOldTime.radT4(), "radiation");
+        this->relax(radAreaPT4_(), cloudOldTime.radAreaPT4(), "radiation");
+    }
 }
 
 
@@ -917,8 +1206,15 @@ void CML::ThermoCloud<CloudType>::scaleSources()
 {
     CloudType::scaleSources();
 
-    this->scale(hsTrans_(), "hs");
-    this->scale(hsCoeff_(), "hs");
+    this->scale(hsTrans_(), "h");
+    this->scale(hsCoeff_(), "h");
+
+    if (radiation_)
+    {
+        this->scale(radAreaP_(), "radiation");
+        this->scale(radT4_(), "radiation");
+        this->scale(radAreaPT4_(), "radiation");
+    }
 }
 
 
@@ -952,6 +1248,8 @@ void CML::ThermoCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
     tdType td(*this);
 
     Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+
+    this->updateMesh();
 }
 
 

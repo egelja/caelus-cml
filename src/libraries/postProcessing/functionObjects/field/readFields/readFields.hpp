@@ -1,28 +1,57 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2014 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::readFields
 
+Group
+    grpFieldFunctionObjects
+
 Description
-    Reads fields from the time folders and adds them to the mesh database
-    for further post-processing.
+    This function object reads fields from the time directories and adds them to
+    the mesh database for further post-processing.
+
+    Example of function object specification:
+    \verbatim
+    readFields1
+    {
+        type        readFields;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        fields
+        (
+            U
+            p
+        );
+    }
+    \endverbatim
+
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: readFields   | yes         |
+        fields       | list of fields to read  |  no         |
+    \endtable
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     readFields.cpp
@@ -140,6 +169,9 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Write
         virtual void write();
 
@@ -157,6 +189,9 @@ public:
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "readFields.hpp"
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "Time.hpp"
@@ -229,6 +264,7 @@ void CML::readFields::loadField
         }
     }
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014-2015 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -76,7 +76,7 @@ public:
             faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return max
+        return scalar(2)/(r+scalar(1)+VSMALL)*max
         (
             scalar(0),
             min(min(scalar(2)*r,(1+2*r)/scalar(3)),scalar(2))

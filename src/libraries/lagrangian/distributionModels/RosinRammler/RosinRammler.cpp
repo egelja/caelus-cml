@@ -90,4 +90,10 @@ CML::scalar CML::distributionModels::RosinRammler::maxValue() const
 }
 
 
+CML::scalar CML::distributionModels::RosinRammler::meanValue() const
+{
+    return d_;
+}
+
+
 // ************************************************************************* //

@@ -29,7 +29,7 @@ Description
       - injector position
       - direction (along injection axis)
       - parcel flow rate
-      - inner and outer cone angles
+      - inner and outer half-cone angles
 
     - Parcel diameters obtained by size distribution model
 
@@ -132,10 +132,10 @@ private:
         //- Flow rate profile relative to SOI []
         const TimeDataEntry<scalar> flowRateProfile_;
 
-        //- Inner cone angle relative to SOI [deg]
+        //- Inner half-cone angle relative to SOI [deg]
         const TimeDataEntry<scalar> thetaInner_;
 
-        //- Outer cone angle relative to SOI [deg]
+        //- Outer half-cone angle relative to SOI [deg]
         const TimeDataEntry<scalar> thetaOuter_;
 
         //- Parcel size PDF model
@@ -184,7 +184,12 @@ public:
     // Constructors
 
         //- Construct from dictionary
-        ConeNozzleInjection(const dictionary& dict, CloudType& owner);
+        ConeNozzleInjection
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& modelName
+        );
 
         //- Construct copy
         ConeNozzleInjection(const ConeNozzleInjection<CloudType>& im);
@@ -204,6 +209,9 @@ public:
 
 
     // Member Functions
+
+        //- Set injector locations when mesh is updated
+        virtual void updateMesh();
 
         //- Return the end-of-injection time
         scalar timeEnd() const;
@@ -323,10 +331,11 @@ template<class CloudType>
 CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
 (
     const dictionary& dict,
-    CloudType& owner
+    CloudType& owner,
+    const word& modelName
 )
 :
-    InjectionModel<CloudType>(dict, owner, typeName),
+    InjectionModel<CloudType>(dict, owner, modelName, typeName),
     injectionMethod_(imPoint),
     flowType_(ftConstantVelocity),
     outerDiameter_(readScalar(this->coeffDict().lookup("outerDiameter"))),
@@ -391,7 +400,8 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
             "CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection"
             "("
                 "const dictionary&, "
-                "CloudType&"
+                "CloudType&, "
+                "const word&"
             ")"
         )<< "innerNozzleDiameter >= outerNozzleDiameter" << nl
          << exit(FatalError);
@@ -425,6 +435,8 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
 
     // Set total volume to inject
     this->volumeTotal_ = flowRateProfile_.integrate(0.0, duration_);
+
+    updateMesh();
 }
 
 
@@ -467,6 +479,30 @@ CML::ConeNozzleInjection<CloudType>::~ConeNozzleInjection()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+void CML::ConeNozzleInjection<CloudType>::updateMesh()
+{
+    // Set/cache the injector cells
+    switch (injectionMethod_)
+    {
+        case imPoint:
+        {
+            this->findCellAtPosition
+            (
+                injectorCell_,
+                tetFaceI_,
+                tetPtI_,
+                position_
+            );
+        }
+        default:
+        {
+            // do nothing
+        }
+    }
+}
+
 
 template<class CloudType>
 CML::scalar CML::ConeNozzleInjection<CloudType>::timeEnd() const
@@ -566,6 +602,7 @@ void CML::ConeNozzleInjection<CloudType>::setPositionAndCell
                     "const label, "
                     "const scalar, "
                     "vector&, "
+                    "label&, "
                     "label&"
                 ")"
             )<< "Unknown injectionMethod type" << nl

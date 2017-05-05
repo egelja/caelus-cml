@@ -1,33 +1,69 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::fieldMinMax
 
+Group
+    grpFieldFunctionObjects
+
 Description
-    Calculates scalar minimim and maximum field values.
+    This function object calculates the value and location of scalar minimim
+    and maximum for a list of user-specified fields.  For variables with a rank
+    greater than zero, either the min/max of a component value or the magnitude
+    is reported.  When operating in parallel, the processor owning the value
+    is also given.
 
-    For variables with rank > 0, computes the magnitude of the min/max
-    values.
+    Example of function object specification:
+    \verbatim
+    fieldMinMax1
+    {
+        type        fieldMinMax;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        ...
+        write       yes;
+        log         yes;
+        location    yes;
+        mode        magnitude;
+        fields
+        (
+            U
+            p
+        );
+    }
+    \endverbatim
 
-    Data written to the file \<timeDir\>/fieldMinMax.dat
+    \heading Function object usage
+    \table
+        Property     | Description             | Required    | Default value
+        type         | type name: fieldMinMax  | yes         |
+        write        | write min/max data to file |  no      | yes
+        log          | write min/max data to standard output | no | no
+        location     | write location of the min/max value | no | yes
+        mode         | calculation mode: magnitude or component | no | magnitude
+    \endtable
 
+    Output data is written to the file \<timeDir\>/fieldMinMax.dat
+
+SeeAlso
+    CML::functionObject
+    CML::OutputFilterFunctionObject
 
 SourceFiles
     fieldMinMax.cpp
@@ -38,13 +74,10 @@ SourceFiles
 #ifndef fieldMinMax_H
 #define fieldMinMax_H
 
-#include "primitiveFieldsFwd.hpp"
-#include "volFieldsFwd.hpp"
-#include "HashSet.hpp"
-#include "OFstream.hpp"
-#include "Switch.hpp"
 #include "pointFieldFwd.hpp"
-#include "NamedEnum.hpp"
+#include "functionObjectFile.hpp"
+#include "Switch.hpp"
+#include "vector.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -61,6 +94,8 @@ class mapPolyMesh;
 \*---------------------------------------------------------------------------*/
 
 class fieldMinMax
+:
+    public functionObjectFile
 {
 public:
 
@@ -77,8 +112,8 @@ protected:
         //- Mode type names
         static const NamedEnum<modeType, 2> modeTypeNames_;
 
-        //- Name of this set of field min/max.
-        //  Also used as the name of the output directory.
+        //- Name of this set of field min/max
+        //  Also used as the name of the output directory
         word name_;
 
         const objectRegistry& obr_;
@@ -86,11 +121,11 @@ protected:
         //- on/off switch
         bool active_;
 
-        //- Switch to enable/disable writing to file
-        Switch write_;
-
         //- Switch to send output to Info as well
         Switch log_;
+
+        //- Switch to write location of min/max values
+        Switch location_;
 
         //- Mode for min/max - only applicable for ranks > 0
         modeType mode_;
@@ -98,14 +133,22 @@ protected:
         //- Fields to assess min/max
         wordList fieldSet_;
 
-        //- Min/max file ptr
-        autoPtr<OFstream> fieldMinMaxFilePtr_;
-
 
     // Private Member Functions
 
-        //- If the output file has not been created create it
-        void makeFile();
+        //- Helper function to write the output
+        template<class Type>
+        void output
+        (
+            const word& fieldName,
+            const word& outputName,
+            const vector& minC,
+            const vector& maxC,
+            const label minProcI,
+            const label maxProcI,
+            const Type& minValue,
+            const Type& maxValue
+        );
 
         //- Disallow default bitwise copy construct
         fieldMinMax(const fieldMinMax&);
@@ -114,7 +157,7 @@ protected:
         void operator=(const fieldMinMax&);
 
         //- Output file header information
-        virtual void writeFileHeader();
+        virtual void writeFileHeader(const label i);
 
 
 public:
@@ -157,9 +200,16 @@ public:
         //- Execute at the final time-loop, currently does nothing
         virtual void end();
 
+        //- Called when time was set at the end of the Time::operator++
+        virtual void timeSet();
+
         //- Calculate the field min/max
         template<class Type>
-        void calcMinMaxFields(const word& fieldName);
+        void calcMinMaxFields
+        (
+            const word& fieldName,
+            const modeType& mode
+        );
 
         //- Write the fieldMinMax
         virtual void write();
@@ -174,82 +224,251 @@ public:
 };
 
 
-// Template specialisation for scalar fields
-template<>
-void fieldMinMax::calcMinMaxFields<scalar>(const word& fieldName);
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "fieldMinMax.hpp"
 #include "volFields.hpp"
-#include "dictionary.hpp"
-#include "Time.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-void CML::fieldMinMax::calcMinMaxFields(const word& fieldName)
+void CML::fieldMinMax::output
+(
+    const word& fieldName,
+    const word& outputName,
+    const vector& minC,
+    const vector& maxC,
+    const label minProcI,
+    const label maxProcI,
+    const Type& minValue,
+    const Type& maxValue
+)
+{
+    OFstream& file = this->file();
+
+    if (location_)
+    {
+        file<< obr_.time().value();
+
+        writeTabbed(file, fieldName);
+
+        file<< token::TAB << minValue
+            << token::TAB << minC;
+
+        if (Pstream::parRun())
+        {
+            file<< token::TAB << minProcI;
+        }
+
+        file<< token::TAB << maxValue
+            << token::TAB << maxC;
+
+        if (Pstream::parRun())
+        {
+            file<< token::TAB << maxProcI;
+        }
+
+        file<< endl;
+
+        Info(log_)
+            << "    min(" << outputName << ") = " << minValue
+            << " at location " << minC;
+
+        if (Pstream::parRun())
+        {
+            Info(log_)<< " on processor " << minProcI;
+        }
+
+        Info(log_)
+            << nl << "    max(" << outputName << ") = " << maxValue
+            << " at location " << maxC;
+
+        if (Pstream::parRun())
+        {
+            Info(log_)<< " on processor " << maxProcI;
+        }
+    }
+    else
+    {
+        file<< token::TAB << minValue << token::TAB << maxValue;
+
+        Info(log_)
+            << "    min/max(" << outputName << ") = "
+            << minValue << ' ' << maxValue;
+    }
+
+    Info(log_)<< endl;
+}
+
+
+template<class Type>
+void CML::fieldMinMax::calcMinMaxFields
+(
+    const word& fieldName,
+    const modeType& mode
+)
 {
     typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
 
     if (obr_.foundObject<fieldType>(fieldName))
     {
+        const label procI = Pstream::myProcNo();
+
         const fieldType& field = obr_.lookupObject<fieldType>(fieldName);
-        switch (mode_)
+        const fvMesh& mesh = field.mesh();
+
+        const volVectorField::GeometricBoundaryField& CfBoundary =
+            mesh.C().boundaryField();
+
+        switch (mode)
         {
             case mdMag:
             {
-                const scalar minValue = min(mag(field)).value();
-                const scalar maxValue = max(mag(field)).value();
+                const volScalarField magField(mag(field));
+                const volScalarField::GeometricBoundaryField& magFieldBoundary =
+                    magField.boundaryField();
+
+                scalarList minVs(Pstream::nProcs());
+                List<vector> minCs(Pstream::nProcs());
+                label minProcI = findMin(magField);
+                minVs[procI] = magField[minProcI];
+                minCs[procI] = field.mesh().C()[minProcI];
+
+
+                labelList maxIs(Pstream::nProcs());
+                scalarList maxVs(Pstream::nProcs());
+                List<vector> maxCs(Pstream::nProcs());
+                label maxProcI = findMax(magField);
+                maxVs[procI] = magField[maxProcI];
+                maxCs[procI] = field.mesh().C()[maxProcI];
+
+                forAll(magFieldBoundary, patchI)
+                {
+                    const scalarField& mfp = magFieldBoundary[patchI];
+                    if (mfp.size())
+                    {
+                        const vectorField& Cfp = CfBoundary[patchI];
+
+                        label minPI = findMin(mfp);
+                        if (mfp[minPI] < minVs[procI])
+                        {
+                            minVs[procI] = mfp[minPI];
+                            minCs[procI] = Cfp[minPI];
+                        }
+
+                        label maxPI = findMax(mfp);
+                        if (mfp[maxPI] > maxVs[procI])
+                        {
+                            maxVs[procI] = mfp[maxPI];
+                            maxCs[procI] = Cfp[maxPI];
+                        }
+                    }
+                }
+
+                Pstream::gatherList(minVs);
+                Pstream::gatherList(minCs);
+
+                Pstream::gatherList(maxVs);
+                Pstream::gatherList(maxCs);
 
                 if (Pstream::master())
                 {
-                    if (write_)
-                    {
-                        fieldMinMaxFilePtr_()
-                            << obr_.time().value() << tab
-                            << fieldName << tab << minValue << tab << maxValue
-                            << endl;
-                    }
+                    label minI = findMin(minVs);
+                    scalar minValue = minVs[minI];
+                    const vector& minC = minCs[minI];
 
-                    if (log_)
-                    {
-                        Info<< "fieldMinMax output:" << nl
-                            << "    min(mag(" << fieldName << ")) = "
-                            << minValue << nl
-                            << "    max(mag(" << fieldName << ")) = "
-                            << maxValue << nl
-                            << endl;
-                    }
+                    label maxI = findMax(maxVs);
+                    scalar maxValue = maxVs[maxI];
+                    const vector& maxC = maxCs[maxI];
+
+                    output
+                    (
+                        fieldName,
+                        word("mag(" + fieldName + ")"),
+                        minC,
+                        maxC,
+                        minI,
+                        maxI,
+                        minValue,
+                        maxValue
+                    );
                 }
                 break;
             }
             case mdCmpt:
             {
-                const Type minValue = min(field).value();
-                const Type maxValue = max(field).value();
+                const typename fieldType::GeometricBoundaryField&
+                    fieldBoundary = field.boundaryField();
+
+                List<Type> minVs(Pstream::nProcs());
+                List<vector> minCs(Pstream::nProcs());
+                label minProcI = findMin(field);
+                minVs[procI] = field[minProcI];
+                minCs[procI] = field.mesh().C()[minProcI];
+
+                Pstream::gatherList(minVs);
+                Pstream::gatherList(minCs);
+
+                List<Type> maxVs(Pstream::nProcs());
+                List<vector> maxCs(Pstream::nProcs());
+                label maxProcI = findMax(field);
+                maxVs[procI] = field[maxProcI];
+                maxCs[procI] = field.mesh().C()[maxProcI];
+
+                forAll(fieldBoundary, patchI)
+                {
+                    const Field<Type>& fp = fieldBoundary[patchI];
+                    if (fp.size())
+                    {
+                        const vectorField& Cfp = CfBoundary[patchI];
+
+                        label minPI = findMin(fp);
+                        if (fp[minPI] < minVs[procI])
+                        {
+                            minVs[procI] = fp[minPI];
+                            minCs[procI] = Cfp[minPI];
+                        }
+
+                        label maxPI = findMax(fp);
+                        if (fp[maxPI] > maxVs[procI])
+                        {
+                            maxVs[procI] = fp[maxPI];
+                            maxCs[procI] = Cfp[maxPI];
+                        }
+                    }
+                }
+
+                Pstream::gatherList(minVs);
+                Pstream::gatherList(minCs);
+
+                Pstream::gatherList(maxVs);
+                Pstream::gatherList(maxCs);
 
                 if (Pstream::master())
                 {
-                    if (write_)
-                    {
-                        fieldMinMaxFilePtr_()
-                            << obr_.time().value() << tab
-                            << fieldName << tab << minValue << tab << maxValue
-                            << endl;
-                    }
+                    label minI = findMin(minVs);
+                    Type minValue = minVs[minI];
+                    const vector& minC = minCs[minI];
 
-                    if (log_)
-                    {
-                        Info<< "fieldMinMax output:" << nl
-                            << "    cmptMin(" << fieldName << ") = "
-                            << minValue << nl
-                            << "    cmptMax(" << fieldName << ") = "
-                            << maxValue << nl
-                            << endl;
-                    }
+                    label maxI = findMax(maxVs);
+                    Type maxValue = maxVs[maxI];
+                    const vector& maxC = maxCs[maxI];
+
+                    output
+                    (
+                        fieldName,
+                        fieldName,
+                        minC,
+                        maxC,
+                        minI,
+                        maxI,
+                        minValue,
+                        maxValue
+                    );
                 }
                 break;
             }
@@ -258,9 +477,12 @@ void CML::fieldMinMax::calcMinMaxFields(const word& fieldName)
                 FatalErrorIn
                 (
                     "CML::fieldMinMax::calcMinMaxFields"
-                    "(const word& fieldName)"
-                )<< "Unknown min/max mode: " << modeTypeNames_[mode_]
-                 << exit(FatalError);
+                    "("
+                        "const word&, "
+                        "const modeType&"
+                    ")"
+                )   << "Unknown min/max mode: " << modeTypeNames_[mode_]
+                    << exit(FatalError);
             }
         }
     }

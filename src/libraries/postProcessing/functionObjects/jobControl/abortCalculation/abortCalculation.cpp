@@ -2,20 +2,20 @@
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
-
-    CAELUS is free software: you can redistribute it and/or modify it
+    This file is part of Caelus.
+ 
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -28,7 +28,10 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(CML::abortCalculation, 0);
+namespace CML
+{
+defineTypeNameAndDebug(abortCalculation, 0);
+}
 
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -80,7 +83,7 @@ CML::abortCalculation::abortCalculation
 :
     name_(name),
     obr_(obr),
-    abortFile_("$CAELUS_CASE/" + name),
+    abortFile_("$FOAM_CASE/" + name),
     action_(nextWrite)
 {
     abortFile_.expand();
@@ -169,6 +172,12 @@ void CML::abortCalculation::execute()
 void CML::abortCalculation::end()
 {
     removeFile();
+}
+
+
+void CML::abortCalculation::timeSet()
+{
+    // Do nothing - only valid on execute
 }
 
 

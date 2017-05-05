@@ -79,42 +79,69 @@ CML::label CML::sampledSets::classifyFields()
 
     if (loadFromFiles_)
     {
-        // check files for a particular time
+        // Check files for a particular time
         IOobjectList objects(mesh_, mesh_.time().timeName());
         wordList allFields = objects.sortedNames();
 
-        labelList indices = findStrings(fieldSelection_, allFields);
-
-        forAll(indices, fieldI)
+        forAll(fieldSelection_, i)
         {
-            const word& fieldName = allFields[indices[fieldI]];
+            labelList indices = findStrings(fieldSelection_[i], allFields);
 
-            nFields += appendFieldGroup
-            (
-                fieldName,
-                objects.find(fieldName)()->headerClassName()
-            );
+            if (indices.size())
+            {
+                forAll(indices, fieldI)
+                {
+                    const word& fieldName = allFields[indices[fieldI]];
+
+                    nFields += appendFieldGroup
+                    (
+                        fieldName,
+                        objects.find(fieldName)()->headerClassName()
+                    );
+                }
+            }
+            else
+            {
+                WarningIn("sampledSets::classifyFields()")
+                    << "Cannot find field file matching "
+                    << fieldSelection_[i] << endl;
+            }
         }
     }
     else
     {
-        // check currently available fields
+        // Check currently available fields
         wordList allFields = mesh_.sortedNames();
         labelList indices = findStrings(fieldSelection_, allFields);
 
-        forAll(indices, fieldI)
+        forAll(fieldSelection_, i)
         {
-            const word& fieldName = allFields[indices[fieldI]];
+            labelList indices = findStrings(fieldSelection_[i], allFields);
 
-            nFields += appendFieldGroup
-            (
-                fieldName,
-                mesh_.find(fieldName)()->type()
-            );
+            if (indices.size())
+            {
+                forAll(indices, fieldI)
+                {
+                    const word& fieldName = allFields[indices[fieldI]];
+
+                    nFields += appendFieldGroup
+                    (
+                        fieldName,
+                        mesh_.find(fieldName)()->type()
+                    );
+                }
+            }
+            else
+            {
+                WarningIn("sampledSets::classifyFields()")
+                    << "Cannot find registered field matching "
+                    << fieldSelection_[i] << endl;
+            }
         }
     }
 
     return nFields;
 }
+
 
 // ************************************************************************* //

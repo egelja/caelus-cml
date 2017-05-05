@@ -101,11 +101,14 @@ public:
         virtual void calculate
         (
             const scalar dt,
+            const scalar age,
             const scalar mass0,
             const scalar mass,
             const scalar T,
             const scalarField& YGasEff,
-            bool& canCombust,
+            const scalarField& YLiquidEff,
+            const scalarField& YSolidEff,
+            label& canCombust,
             scalarField& dMassDV
         ) const;
 };
@@ -192,11 +195,14 @@ template<class CloudType>
 void CML::ConstantRateDevolatilisation<CloudType>::calculate
 (
     const scalar dt,
+    const scalar age,
     const scalar mass0,
     const scalar mass,
     const scalar T,
     const scalarField& YGasEff,
-    bool& canCombust,
+    const scalarField& YLiquidEff,
+    const scalarField& YSolidEff,
+    label& canCombust,
     scalarField& dMassDV
 ) const
 {
@@ -217,7 +223,10 @@ void CML::ConstantRateDevolatilisation<CloudType>::calculate
         dMassDV[id] = min(dt*A0*massVolatile0, massVolatile);
     }
 
-    canCombust = done;
+    if (done && canCombust != -1)
+    {
+        canCombust = 1;
+    }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

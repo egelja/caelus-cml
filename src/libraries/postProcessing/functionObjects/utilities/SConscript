@@ -18,8 +18,17 @@ funcObjUtilEnv.Append(CCFLAGS = '')
 #===============================================================================
 lib_inc = ['lnInclude',
 funcObjUtilEnv['LIB_SRC'] + '/sampling/lnInclude',
+funcObjUtilEnv['LIB_SRC'] + '/fvOptions/lnInclude',
 funcObjUtilEnv['LIB_SRC'] + '/lagrangian/basic/lnInclude',
-funcObjUtilEnv['LIB_SRC'] + '/lagrangian/dsmc/lnInclude'
+funcObjUtilEnv['LIB_SRC'] + '/lagrangian/dsmc/lnInclude',
+funcObjUtilEnv['LIB_SRC'] + '/transportModels/lnInclude',
+funcObjUtilEnv['LIB_SRC'] + '/transportModels/',
+funcObjUtilEnv['LIB_SRC'] + '/turbulenceModels/',
+funcObjUtilEnv['LIB_SRC'] + '/turbulenceModels/lnInclude',
+funcObjUtilEnv['LIB_SRC'] + '/turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWallFunctions',
+funcObjUtilEnv['LIB_SRC'] + '/turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWallFunctions',
+funcObjUtilEnv['LIB_SRC'] + '/turbulenceModels/LES/LESdeltas/lnInclude',
+funcObjUtilEnv['LIB_SRC'] + '/thermophysicalModels/basic/lnInclude'
 ]
 funcObjUtilEnv.Prepend(CPPPATH = lib_inc)
 
@@ -32,18 +41,46 @@ funcObjUtilEnv.Prepend(LIBPATH = lib_link_path)
 #===============================================================================
 # Additions to link libraries for this library
 #===============================================================================
-lib_link = ['core','sampling','lagrangian']
+lib_link = ['core','sampling','fvOptions','lagrangian',
+'incompressibleTransportModels','incompressibleRASModels','incompressibleVLESModels',
+'incompressibleLESModels','compressibleRASModels','compressibleVLESModels',
+'compressibleLESModels','basicThermophysicalModels',
+'incompressibleTurbulenceModel','compressibleTurbulenceModel'
+]
 funcObjUtilEnv.Append(LIBS = lib_link)
    
 #===============================================================================
 # Sources for this library
 #===============================================================================
 src_files = Split("""
-  staticPressure/staticPressure.cpp
-  staticPressure/staticPressureFunctionObject.cpp
+  CourantNo/CourantNo.cpp
+  CourantNo/CourantNoFunctionObject.cpp
+  Lambda2/Lambda2.cpp
+  Lambda2/Lambda2FunctionObject.cpp
+  Peclet/Peclet.cpp
+  Peclet/PecletFunctionObject.cpp
+  Q/Q.cpp
+  Q/QFunctionObject.cpp
+  pressureTools/pressureTools.cpp
+  pressureTools/pressureToolsFunctionObject.cpp
+  residuals/residuals.cpp
+  residuals/residualsFunctionObject.cpp
+  scalarTransport/scalarTransport.cpp
+  scalarTransport/scalarTransportFunctionObject.cpp
   timeActivatedFileUpdate/timeActivatedFileUpdate.cpp
   timeActivatedFileUpdate/timeActivatedFileUpdateFunctionObject.cpp
-  """)
+  turbulenceFields/turbulenceFields.cpp
+  turbulenceFields/turbulenceFieldsFunctionObject.cpp
+  vorticity/vorticity.cpp
+  vorticity/vorticityFunctionObject.cpp
+  wallShearStress/wallShearStress.cpp
+  wallShearStress/wallShearStressFunctionObject.cpp
+  yPlusLES/yPlusLES.cpp
+  yPlusLES/yPlusLESFunctionObject.cpp
+  yPlusRAS/yPlusRAS.cpp
+  yPlusRAS/yPlusRASFunctionObject.cpp
+  setTimeStep/setTimeStepFunctionObject.cpp
+""")
 
 #===============================================================================
 # Build this library

@@ -1,0 +1,69 @@
+#Copyright (C) 2015 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+ptscotchDecompEnv = globalEnv.Clone()
+
+sl =ptscotchDecompEnv['SLASH']
+
+ptscotchDecompEnv.Append(CXXFLAGS = '-DSCOTCH_PTSCOTCH')
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+if ptscotchDecompEnv['WHICH_OS'] == "windows" :
+  ptscotchDecompEnv.Append(CXXFLAGS = '-DMPICH_SKIP_MPICXX')
+
+elif ptscotchDecompEnv['WHICH_OS'] == "darwin" :
+  ptscotchDecompEnv.Append(CXXFLAGS = '-DOMPI_SKIP_MPICXX')
+
+else :
+  ptscotchDecompEnv.Append(CXXFLAGS = '-DOMPI_SKIP_MPICXX')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+'..' + sl + 'decompositionMethods' + sl + 'lnInclude',
+ptscotchDecompEnv['SCOTCH_PATH'] + sl + 'include',
+ptscotchDecompEnv['MPI_INC']]
+ptscotchDecompEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [ptscotchDecompEnv['SCOTCH_PATH']  + sl + 'lib']
+ptscotchDecompEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','decompositionMethods','ptscotch','ptscotcherr',
+'ptscotcherrexit']
+ptscotchDecompEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  ptscotchDecomp.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+if ptscotchDecompEnv['WHICH_OS'] == "windows" :
+  libptscotchDecomp =ptscotchDecompEnv.SharedLibrary(target = 'ptscotchDecomp', 
+  source = src_files)
+
+else :
+  libptscotchDecomp =ptscotchDecompEnv.SharedLibrary(target = 'libptscotchDecomp', 
+  source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir =ptscotchDecompEnv['LIB_PLATFORM_INSTALL']
+ptscotchDecompEnv.Alias('install', install_dir)
+ptscotchDecompEnv.Install(install_dir, libptscotchDecomp)

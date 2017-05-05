@@ -31,16 +31,25 @@ namespace CML
     addToRunTimeSelectionTable(scalarDataEntry, polynomial, dictionary);
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::polynomial::polynomial(const word& entryName, const dictionary& dict)
 :
     scalarDataEntry(entryName),
     coeffs_(),
-    canIntegrate_(true)
+    canIntegrate_(true),
+    dimensions_(dimless)
 {
     Istream& is(dict.lookup(entryName));
     word entryType(is);
+
+    token firstToken(is);
+    is.putBack(firstToken);
+    if (firstToken == token::BEGIN_SQR)
+    {
+        is  >> this->dimensions_;
+    }
 
     is  >> coeffs_;
 
@@ -76,11 +85,57 @@ CML::polynomial::polynomial(const word& entryName, const dictionary& dict)
 }
 
 
+CML::polynomial::polynomial
+(
+    const word& entryName,
+    const List<Tuple2<scalar, scalar> >& coeffs
+)
+:
+    scalarDataEntry(entryName),
+    coeffs_(coeffs),
+    canIntegrate_(true),
+    dimensions_(dimless)
+{
+    if (!coeffs_.size())
+    {
+        FatalErrorIn
+        (
+            "CML::polynomial::polynomial"
+            "(const word&, const List<Tuple2<scalar, scalar> >&)"
+        )   << "polynomial coefficients for entry " << this->name_
+            << " are invalid (empty)" << nl << exit(FatalError);
+    }
+
+    forAll(coeffs_, i)
+    {
+        if (mag(coeffs_[i].second() + 1) < ROOTVSMALL)
+        {
+            canIntegrate_ = false;
+            break;
+        }
+    }
+
+    if (debug)
+    {
+        if (!canIntegrate_)
+        {
+            WarningIn
+            (
+                "CML::polynomial::polynomial"
+                "(const word&, const List<Tuple2<scalar, scalar> >&)"
+            )   << "Polynomial " << this->name_ << " cannot be integrated"
+                << endl;
+        }
+    }
+}
+
+
 CML::polynomial::polynomial(const polynomial& poly)
 :
     scalarDataEntry(poly),
     coeffs_(poly.coeffs_),
-    canIntegrate_(poly.canIntegrate_)
+    canIntegrate_(poly.canIntegrate_),
+    dimensions_(poly.dimensions_)
 {}
 
 
@@ -132,6 +187,30 @@ CML::scalar CML::polynomial::integrate(const scalar x1, const scalar x2) const
     }
 
     return intx;
+}
+
+
+CML::dimensioned<CML::scalar> CML::polynomial::dimValue
+(
+    const scalar x
+) const
+{
+    return dimensioned<scalar>("dimensionedValue", dimensions_, value(x));
+}
+
+
+CML::dimensioned<CML::scalar> CML::polynomial::dimIntegrate
+(
+    const scalar x1,
+    const scalar x2
+) const
+{
+    return dimensioned<scalar>
+    (
+        "dimensionedValue",
+        dimensions_,
+        integrate(x1, x2)
+    );
 }
 
 

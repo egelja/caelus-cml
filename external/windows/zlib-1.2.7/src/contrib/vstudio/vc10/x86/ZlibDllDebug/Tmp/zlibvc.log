@@ -1,0 +1,71 @@
+﻿Build started 28/12/2012 8:05:22 AM.
+     1>Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "x86\ZlibDllDebug\Tmp\zlibvc.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         cd ..\..\masmx86
+         bld_ml32.bat
+         :VCEnd
+          Assembling: match686.asm
+         Microsoft (R) Macro Assembler Version 10.00.30319.01
+         Copyright (C) Microsoft Corporation.  All rights reserved.
+         
+          Assembling: inffas32.asm
+         Microsoft (R) Macro Assembler Version 10.00.30319.01
+         Copyright (C) Microsoft Corporation.  All rights reserved.
+         
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\.. /I..\..\masmx86 /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _CRT_NONSTDC_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_WARNINGS /D ZLIB_WINAPI /D ASMV /D ASMINF /D _WINDLL /Gm- /MTd /GS- /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x86\ZlibDllDebug\Tmp\\" /Fd"x86\ZlibDllDebug\vc100.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\..\adler32.c ..\..\..\compress.c ..\..\..\crc32.c ..\..\..\deflate.c ..\..\..\gzclose.c ..\..\..\gzlib.c ..\..\..\gzread.c ..\..\..\gzwrite.c ..\..\..\infback.c ..\..\..\inffast.c ..\..\..\inflate.c ..\..\..\inftrees.c ..\..\minizip\ioapi.c ..\..\minizip\iowin32.c ..\..\..\trees.c ..\..\..\uncompr.c ..\..\minizip\unzip.c ..\..\minizip\zip.c ..\..\..\zutil.c
+         adler32.c
+         compress.c
+         crc32.c
+         deflate.c
+         gzclose.c
+         gzlib.c
+         gzread.c
+         gzwrite.c
+         infback.c
+         inffast.c
+         inflate.c
+         inftrees.c
+         ioapi.c
+         iowin32.c
+         trees.c
+         uncompr.c
+         unzip.c
+         zip.c
+         zutil.c
+         Generating Code...
+       ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /l"0x040c" /nologo /fo"x86\ZlibDllDebug\Tmp\zlib.res" zlib.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"x86\ZlibDllDebug\zlibwapi.dll" /INCREMENTAL /NOLOGO ..\..\masmx86\match686.obj ..\..\masmx86\inffas32.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\zlibvc.def" /MANIFEST:NO /DEBUG /PDB:"x86\ZlibDllDebug\zlibwapi.pdb" /MAP:"x86\ZlibDllDebug\zlibwapi.map" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"x86\ZlibDllDebug\zlibwapi.lib" /MACHINE:X86 /DLL x86\ZlibDllDebug\Tmp\zlib.res
+         x86\ZlibDllDebug\Tmp\adler32.obj
+         x86\ZlibDllDebug\Tmp\compress.obj
+         x86\ZlibDllDebug\Tmp\crc32.obj
+         x86\ZlibDllDebug\Tmp\deflate.obj
+         x86\ZlibDllDebug\Tmp\gzclose.obj
+         x86\ZlibDllDebug\Tmp\gzlib.obj
+         x86\ZlibDllDebug\Tmp\gzread.obj
+         x86\ZlibDllDebug\Tmp\gzwrite.obj
+         x86\ZlibDllDebug\Tmp\infback.obj
+         x86\ZlibDllDebug\Tmp\inffast.obj
+         x86\ZlibDllDebug\Tmp\inflate.obj
+         x86\ZlibDllDebug\Tmp\inftrees.obj
+         x86\ZlibDllDebug\Tmp\ioapi.obj
+         x86\ZlibDllDebug\Tmp\iowin32.obj
+         x86\ZlibDllDebug\Tmp\trees.obj
+         x86\ZlibDllDebug\Tmp\uncompr.obj
+         x86\ZlibDllDebug\Tmp\unzip.obj
+         x86\ZlibDllDebug\Tmp\zip.obj
+         x86\ZlibDllDebug\Tmp\zutil.obj /MACHINE:I386 
+            Creating library x86\ZlibDllDebug\zlibwapi.lib and object x86\ZlibDllDebug\zlibwapi.exp
+         zlibvc.vcxproj -> C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\x86\ZlibDllDebug\zlibwapi.dll
+       FinalizeBuildStatus:
+         Deleting file "x86\ZlibDllDebug\Tmp\zlibvc.unsuccessfulbuild".
+         Touching "x86\ZlibDllDebug\Tmp\zlibvc.lastbuildstate".
+     1>Done Building Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.47

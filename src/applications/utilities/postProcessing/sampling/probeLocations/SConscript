@@ -1,0 +1,58 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+probeLocationsEnv = globalEnv.Clone()
+
+# Path to source
+src = probeLocationsEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+probeLocationsEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/sampling/lnInclude', src + '/lagrangian/basic/lnInclude']
+probeLocationsEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+probeLocationsEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if probeLocationsEnv['WHICH_OS'] == "windows":
+  probeLocationsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libgenericPatchFields','libsampling','liblagrangian']
+else:
+  lib_link = ['genericPatchFields','sampling','lagrangian']
+
+probeLocationsEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  probeLocations.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binprobeLocations = probeLocationsEnv.Program(target = 'probeLocations', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = probeLocationsEnv['BIN_PLATFORM_INSTALL']
+probeLocationsEnv.Alias('install', install_dir)
+probeLocationsEnv.Install(install_dir, binprobeLocations)

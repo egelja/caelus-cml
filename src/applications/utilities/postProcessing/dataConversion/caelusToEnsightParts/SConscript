@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+caelusToEnsightPartsEnv = globalEnv.Clone()
+
+# Path to source
+src = caelusToEnsightPartsEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+caelusToEnsightPartsEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/lagrangian/basic/lnInclude', src + '/conversion/lnInclude']
+caelusToEnsightPartsEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+caelusToEnsightPartsEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if caelusToEnsightPartsEnv['WHICH_OS'] == "windows":
+  caelusToEnsightPartsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libgenericPatchFields','liblagrangian','libconversion']
+else:
+  lib_link = ['genericPatchFields','lagrangian','conversion']
+     
+
+caelusToEnsightPartsEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  caelusToEnsightParts.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincaelusToEnsightParts = caelusToEnsightPartsEnv.Program(target = 'caelusToEnsightParts', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = caelusToEnsightPartsEnv['BIN_PLATFORM_INSTALL']
+caelusToEnsightPartsEnv.Alias('install', install_dir)
+caelusToEnsightPartsEnv.Install(install_dir, bincaelusToEnsightParts)

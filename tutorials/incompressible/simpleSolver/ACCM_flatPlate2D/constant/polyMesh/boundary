@@ -1,0 +1,61 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 4.10                                   
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+7
+(
+    bottom
+    {
+        type            symmetryPlane;
+        nFaces          24;
+        startFace       25880;
+    }
+    inflow
+    {
+        type            patch;
+        nFaces          96;
+        startFace       25904;
+    }
+    left
+    {
+        type            empty;
+        nFaces          13056;
+        startFace       26000;
+    }
+    outflow
+    {
+        type            patch;
+        nFaces          96;
+        startFace       39056;
+    }
+    right
+    {
+        type            empty;
+        nFaces          13056;
+        startFace       39152;
+    }
+    top
+    {
+        type            symmetryPlane;
+        nFaces          136;
+        startFace       52208;
+    }
+    wall
+    {
+        type            wall;
+        nFaces          112;
+        startFace       52344;
+    }
+)
+
+// ************************************************************************* //

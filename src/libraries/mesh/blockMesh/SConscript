@@ -1,0 +1,74 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+blockMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = blockMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+blockMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/dynamicMesh/lnInclude']
+blockMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+blockMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','dynamicMesh']
+blockMeshEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  curvedEdges/BSpline.cpp
+  curvedEdges/CatmullRomSpline.cpp
+  curvedEdges/polyLine.cpp
+  curvedEdges/arcEdge.cpp
+  curvedEdges/curvedEdge.cpp
+  curvedEdges/lineEdge.cpp
+  curvedEdges/polyLineEdge.cpp
+  curvedEdges/lineDivide.cpp
+  curvedEdges/splineEdge.cpp
+  blockDescriptor/blockDescriptor.cpp
+  blockDescriptor/blockDescriptorEdges.cpp
+  block/block.cpp
+  block/blockCreate.cpp
+  blockMesh/blockMesh.cpp
+  blockMesh/blockMeshCreate.cpp
+  blockMesh/blockMeshTopology.cpp
+  blockMesh/blockMeshCheck.cpp
+  blockMesh/blockMeshMerge.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libblockMesh = blockMeshEnv.SharedLibrary(target = 'blockMesh', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = blockMeshEnv['LIB_PLATFORM_INSTALL']
+blockMeshEnv.Alias('install', install_dir)
+blockMeshEnv.Install(install_dir, libblockMesh)
+
+if (blockMeshEnv['WHICH_OS'] == "darwin"):
+
+  blockMeshEnv.Append(SHLINKFLAGS ='-install_name @' + blockMeshEnv['LIB_PLATFORM_INSTALL'] + '/libblockMesh.dylib')

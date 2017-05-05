@@ -1,0 +1,278 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2014 Applied CCM
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+Class
+    CML::fixedJumpFvPatchField
+
+Description
+    Base class for "jump" of a field<type>
+
+SourceFiles
+    fixedJumpFvPatchField.cpp
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef fixedJumpFvPatchField_H
+#define fixedJumpFvPatchField_H
+
+#include "jumpCyclicFvPatchField.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+/*---------------------------------------------------------------------------*\
+                    Class fixedJumpFvPatchField Declaration
+\*---------------------------------------------------------------------------*/
+
+template<class Type>
+class fixedJumpFvPatchField
+:
+    public jumpCyclicFvPatchField<Type>
+{
+
+protected:
+
+    // Protected data
+
+        //- "jump" field
+        Field<Type> jump_;
+
+
+public:
+
+
+    // Constructors
+
+        //- Construct from patch and internal field
+        fixedJumpFvPatchField
+        (
+            const fvPatch&,
+            const DimensionedField<Type, volMesh>&
+        );
+
+        //- Construct from patch, internal field and dictionary
+        fixedJumpFvPatchField
+        (
+            const fvPatch&,
+            const DimensionedField<Type, volMesh>&,
+            const dictionary&
+        );
+
+        //- Construct by mapping given fixedJumpFvPatchField onto a
+        //  new patch
+        fixedJumpFvPatchField
+        (
+            const fixedJumpFvPatchField<Type>&,
+            const fvPatch&,
+            const DimensionedField<Type, volMesh>&,
+            const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        fixedJumpFvPatchField
+        (
+            const fixedJumpFvPatchField<Type>&
+        );
+
+        //- Construct and return a clone
+        virtual tmp<fvPatchField<Type> > clone() const
+        {
+            return tmp<fvPatchField<Type> >
+            (
+                new fixedJumpFvPatchField<Type>(*this)
+            );
+        }
+
+        //- Construct as copy setting internal field reference
+        fixedJumpFvPatchField
+        (
+            const fixedJumpFvPatchField<Type>&,
+            const DimensionedField<Type, volMesh>&
+        );
+
+        //- Construct and return a clone setting internal field reference
+        virtual tmp<fvPatchField<Type> > clone
+        (
+            const DimensionedField<Type, volMesh>& iF
+        ) const
+        {
+            return tmp<fvPatchField<Type> >
+            (
+                new fixedJumpFvPatchField<Type>(*this, iF)
+            );
+        }
+
+
+    // Member functions
+
+        // Access
+
+            //- Return the "jump" across the patch.
+            virtual tmp<Field<Type> > jump() const
+            {
+                if (this->cyclicPatch().owner())
+                {
+                    return jump_;
+                }
+                else
+                {
+                    return refCast<const fixedJumpFvPatchField<Type> >
+                    (
+                        this->neighbourPatchField()
+                    ).jump();
+                }
+            }
+
+
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            virtual void autoMap
+            (
+                const fvPatchFieldMapper&
+            );
+
+            //- Reverse map the given fvPatchField onto this fvPatchField
+            virtual void rmap
+            (
+                const fvPatchField<Type>&,
+                const labelList&
+            );
+
+
+        //- Write
+        virtual void write(Ostream&) const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class Type>
+CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
+(
+    const fvPatch& p,
+    const DimensionedField<Type, volMesh>& iF
+)
+:
+    jumpCyclicFvPatchField<Type>(p, iF),
+    jump_(this->size(), pTraits<Type>::zero)
+{}
+
+
+template<class Type>
+CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
+(
+    const fixedJumpFvPatchField<Type>& ptf,
+    const fvPatch& p,
+    const DimensionedField<Type, volMesh>& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    jumpCyclicFvPatchField<Type>(ptf, p, iF, mapper),
+    jump_(ptf.jump_, mapper)
+{}
+
+
+template<class Type>
+CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
+(
+    const fvPatch& p,
+    const DimensionedField<Type, volMesh>& iF,
+    const dictionary& dict
+)
+:
+    jumpCyclicFvPatchField<Type>(p, iF),
+    jump_("jump", dict, p.size())
+{}
+
+
+template<class Type>
+CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
+(
+    const fixedJumpFvPatchField<Type>& ptf
+)
+:
+    cyclicLduInterfaceField(),
+    jumpCyclicFvPatchField<Type>(ptf),
+    jump_(ptf.jump_)
+{}
+
+
+template<class Type>
+CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
+(
+    const fixedJumpFvPatchField<Type>& ptf,
+    const DimensionedField<Type, volMesh>& iF
+)
+:
+    jumpCyclicFvPatchField<Type>(ptf, iF),
+    jump_(ptf.jump_)
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+void CML::fixedJumpFvPatchField<Type>::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    jumpCyclicFvPatchField<Type>::autoMap(m);
+    jump_.autoMap(m);
+}
+
+
+template<class Type>
+void CML::fixedJumpFvPatchField<Type>::rmap
+(
+    const fvPatchField<Type>& ptf,
+    const labelList& addr
+)
+{
+    jumpCyclicFvPatchField<Type>::rmap(ptf, addr);
+
+    const fixedJumpFvPatchField<Type>& tiptf =
+        refCast<const fixedJumpFvPatchField<Type> >(ptf);
+    jump_.rmap(tiptf.jump_, addr);
+}
+
+
+template<class Type>
+void CML::fixedJumpFvPatchField<Type>::write(Ostream& os) const
+{
+    fvPatchField<Type>::write(os);
+    os.writeKeyword("patchType") << "cyclic" << token::END_STATEMENT << nl;
+    jump_.writeEntry("jump", os);
+}
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

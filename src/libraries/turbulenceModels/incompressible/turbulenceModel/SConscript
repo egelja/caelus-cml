@@ -1,0 +1,58 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+turbModelEnv = globalEnv.Clone()
+
+# Path to source
+src = turbModelEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+turbModelEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels']
+turbModelEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+turbModelEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core']
+turbModelEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  turbulenceModel.cpp
+  laminar/laminar.cpp
+  """) 
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libincompressibleTurbulenceModel = turbModelEnv.SharedLibrary(target = 
+'incompressibleTurbulenceModel', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = turbModelEnv['LIB_PLATFORM_INSTALL']
+turbModelEnv.Alias('install', install_dir)
+turbModelEnv.Install(install_dir, libincompressibleTurbulenceModel)
+
+if (turbModelEnv['WHICH_OS'] == "darwin"):
+
+  turbModelEnv.Append(SHLINKFLAGS ='-install_name @' + turbModelEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleTurbulenceModel.dylib')

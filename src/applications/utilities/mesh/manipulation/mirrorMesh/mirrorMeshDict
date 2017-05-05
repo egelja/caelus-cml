@@ -1,0 +1,24 @@
+/*---------------------------------------------------------------------------*
+Caelus V4.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      mirrorMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+planeType           pointAndNormal;
+
+pointAndNormalDict
+{
+    basePoint       (0 0 0);
+    normalVector    (0 1 0);
+}
+
+planeTolerance      1e-3;
+
+// ************************************************************************* //

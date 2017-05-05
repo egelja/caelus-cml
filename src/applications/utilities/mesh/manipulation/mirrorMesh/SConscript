@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+mirrorMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = mirrorMeshEnv['LIB_SRC']
+
+mirrorMeshEnv.Append(CXXFLAGS = '')
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+mirrorMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = []
+
+mirrorMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+mirrorMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if mirrorMeshEnv['WHICH_OS'] == "windows":
+  lib_link = []
+else:
+  lib_link = []
+  
+mirrorMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  mirrorMesh.cpp
+  mirrorFvMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binmirrorMesh = mirrorMeshEnv.Program(target = 
+'mirrorMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = mirrorMeshEnv['BIN_PLATFORM_INSTALL']
+mirrorMeshEnv.Alias('install', install_dir)
+mirrorMeshEnv.Install(install_dir, binmirrorMesh)

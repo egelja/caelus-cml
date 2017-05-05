@@ -1,0 +1,2420 @@
+/*-------------------------------*- C++ -*-----------------------------------*\
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+Description
+    Define the globals used in the CAELUS library.
+    It is important that these are constructed in the appropriate order to
+    avoid the use of unconstructed data in the global namespace.
+
+    This file has the extension .Cver to trigger a Makefile rule that converts
+    'VERSION\_STRING' and 'BUILD\_STRING' into the appropriate strings.
+
+\*---------------------------------------------------------------------------*/
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#include "caelusVersion.hpp"
+
+const char* const CML::CAELUSversion = "VERSION_STRING";
+const char* const CML::CAELUSbuild = "BUILD_STRING";
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Setup an error handler for the global new operator
+
+#include <new>
+#include <iostream>
+#include <cstdlib>
+
+namespace CML
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+void newError()
+{
+    std::cerr<<
+        "new cannot satisfy memory request.\n"
+        "This does not necessarily mean you have run out of virtual memory.\n"
+        "It could be due to a stack violation caused "
+        "by e.g. bad use of pointers or an out of date shared library"
+        << std::endl;
+
+    ::abort();
+}
+
+void (*old_new_handler)() = std::set_new_handler(newError);
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global IO streams
+
+#include "IOstreams.hpp"
+#include "OFstream.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Define the default IOstream versions and precision
+
+const IOstream::versionNumber IOstream::originalVersion(0.5);
+const IOstream::versionNumber IOstream::currentVersion(2.0);
+unsigned int IOstream::precision_(debug::infoSwitch("writePrecision", 6));
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global IO streams
+
+ISstream Sin(cin, "Sin");
+OSstream Sout(cout, "Sout");
+OSstream Serr(cerr, "Serr");
+OFstream Snull("/dev/null");
+
+prefixOSstream Pout(cout, "Pout");
+prefixOSstream Perr(cerr, "Perr");
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "JobInfo.hpp"
+bool CML::JobInfo::constructed(false);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global error definitions (initialised by construction)
+
+#include "error.hpp"
+#include "dictionary.hpp"
+#include "Pstream.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+int CML::messageStream::level(CML::debug::debugSwitch("level", 2));
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+CML::messageStream::messageStream
+(
+    const string& title,
+    errorSeverity sev,
+    const int maxErrors
+)
+:
+    title_(title),
+    severity_(sev),
+    maxErrors_(maxErrors),
+    errorCount_(0)
+{}
+
+
+CML::messageStream::messageStream(const dictionary& dict)
+:
+    title_(dict.lookup("title")),
+    severity_(FATAL),
+    maxErrors_(0),
+    errorCount_(0)
+{}
+
+
+CML::OSstream& CML::messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    OSstream& os = operator OSstream&();
+
+    os  << endl
+        << "    From function " << functionName << endl
+        << "    in file " << sourceFileName
+        << " at line " << sourceFileLineNumber << endl
+        << "    ";
+
+    return os;
+}
+
+
+CML::OSstream& CML::messageStream::operator()
+(
+    const string& functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    return operator()
+    (
+        functionName.c_str(),
+        sourceFileName,
+        sourceFileLineNumber
+    );
+}
+
+
+CML::OSstream& CML::messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const string& ioFileName,
+    const label ioStartLineNumber,
+    const label ioEndLineNumber
+)
+{
+    OSstream& os = operator OSstream&();
+
+    os  << endl
+        << "    From function " << functionName << endl
+        << "    in file " << sourceFileName
+        << " at line " << sourceFileLineNumber << endl
+        << "    Reading " << ioFileName;
+
+    if (ioStartLineNumber >= 0 && ioEndLineNumber >= 0)
+    {
+        os  << " from line " << ioStartLineNumber
+            << " to line " << ioEndLineNumber;
+    }
+    else if (ioStartLineNumber >= 0)
+    {
+        os  << " at line " << ioStartLineNumber;
+    }
+
+    os << endl  << "    ";
+
+    return os;
+}
+
+
+CML::OSstream& CML::messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const IOstream& ioStream
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        ioStream.name(),
+        ioStream.lineNumber(),
+        -1
+    );
+}
+
+
+CML::OSstream& CML::messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const dictionary& dict
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        dict.name(),
+        dict.startLineNumber(),
+        dict.endLineNumber()
+    );
+}
+
+
+CML::messageStream::operator CML::OSstream&()
+{
+    if (level)
+    {
+        bool collect = (severity_ == INFO || severity_ == WARNING);
+
+        // Report the error
+        if (!Pstream::master() && collect)
+        {
+            return Snull;
+        }
+        else
+        {
+            if (title().size())
+            {
+                if (Pstream::parRun() && !collect)
+                {
+                    Pout<< title().c_str();
+                }
+                else
+                {
+                    Sout<< title().c_str();
+                }
+            }
+
+            if (maxErrors_)
+            {
+                errorCount_++;
+
+                if (errorCount_ >= maxErrors_)
+                {
+                    FatalErrorIn("messageStream::operator OSstream&()")
+                        << "Too many errors"
+                        << abort(FatalError);
+                }
+            }
+
+            if (Pstream::parRun() && !collect)
+            {
+                return Pout;
+            }
+            else
+            {
+                return Sout;
+            }
+        }
+    }
+
+    return Snull;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global messageStream definitions
+
+CML::messageStream CML::SeriousError
+(
+    "--> CAELUS Serious Error : ",
+    messageStream::SERIOUS,
+    100
+);
+
+CML::messageStream CML::Warning
+(
+    "--> CAELUS Warning : ",
+    messageStream::WARNING
+);
+
+CML::messageStream CML::Info("", messageStream::INFO);
+
+
+#include "error.hpp"
+#include "OStringStream.hpp"
+#include "fileName.hpp"
+#include "dictionary.hpp"
+#include "JobInfo.hpp"
+#include "Pstream.hpp"
+#include "OSspecific.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+CML::error::error(const string& title)
+:
+    std::exception(),
+    messageStream(title, messageStream::FATAL),
+    functionName_("unknown"),
+    sourceFileName_("unknown"),
+    sourceFileLineNumber_(0),
+    abort_(env("CAELUS_ABORT")),
+    throwExceptions_(false),
+    messageStreamPtr_(new OStringStream())
+{
+    if (!messageStreamPtr_->good())
+    {
+        Perr<< endl
+            << "error::error(const string& title) : cannot open error stream"
+            << endl;
+        exit(1);
+    }
+}
+
+
+CML::error::error(const dictionary& errDict)
+:
+    std::exception(),
+    messageStream(errDict),
+    functionName_(errDict.lookup("functionName")),
+    sourceFileName_(errDict.lookup("sourceFileName")),
+    sourceFileLineNumber_(readLabel(errDict.lookup("sourceFileLineNumber"))),
+    abort_(env("CAELUS_ABORT")),
+    throwExceptions_(false),
+    messageStreamPtr_(new OStringStream())
+{
+    if (!messageStreamPtr_->good())
+    {
+        Perr<< endl
+            << "error::error(const dictionary& errDict) : "
+               "cannot open error stream"
+            << endl;
+        exit(1);
+    }
+}
+
+
+CML::error::error(const error& err)
+:
+    std::exception(),
+    messageStream(err),
+    functionName_(err.functionName_),
+    sourceFileName_(err.sourceFileName_),
+    sourceFileLineNumber_(err.sourceFileLineNumber_),
+    abort_(err.abort_),
+    throwExceptions_(err.throwExceptions_),
+    messageStreamPtr_(new OStringStream(*err.messageStreamPtr_))
+{
+    //*messageStreamPtr_ << err.message();
+}
+
+
+CML::error::~error() throw()
+{
+    delete messageStreamPtr_;
+}
+
+
+CML::OSstream& CML::error::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    functionName_ = functionName;
+    sourceFileName_ = sourceFileName;
+    sourceFileLineNumber_ = sourceFileLineNumber;
+
+    return operator OSstream&();
+}
+
+
+CML::OSstream& CML::error::operator()
+(
+    const string& functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    return operator()
+    (
+        functionName.c_str(),
+        sourceFileName,
+        sourceFileLineNumber
+    );
+}
+
+
+CML::error::operator OSstream&()
+{
+    if (!messageStreamPtr_->good())
+    {
+        Perr<< endl
+            << "error::operator OSstream&() : error stream has failed"
+            << endl;
+        abort();
+    }
+
+    return *messageStreamPtr_;
+}
+
+
+CML::error::operator dictionary() const
+{
+    dictionary errDict;
+
+    string oneLineMessage(message());
+    oneLineMessage.replaceAll('\n', ' ');
+
+    errDict.add("type", word("CML::error"));
+    errDict.add("message", oneLineMessage);
+    errDict.add("function", functionName());
+    errDict.add("sourceFile", sourceFileName());
+    errDict.add("sourceFileLineNumber", sourceFileLineNumber());
+
+    return errDict;
+}
+
+
+CML::string CML::error::message() const
+{
+    return messageStreamPtr_->str();
+}
+
+
+void CML::error::exit(const int errNo)
+{
+    if (!throwExceptions_ && JobInfo::constructed)
+    {
+        jobInfo.add("FatalError", operator dictionary());
+        jobInfo.exit();
+    }
+
+    if (abort_)
+    {
+        abort();
+    }
+
+    if (Pstream::parRun())
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS parallel run exiting\n" << endl;
+        Pstream::exit(errNo);
+    }
+    else
+    {
+        if (throwExceptions_)
+        {
+            // Make a copy of the error to throw
+            error errorException(*this);
+
+            // Rewind the message buffer for the next error message
+            messageStreamPtr_->rewind();
+
+            throw errorException;
+        }
+        else
+        {
+            Perr<< endl << *this << endl
+                << "\nCAELUS exiting\n" << endl;
+            ::exit(1);
+        }
+    }
+}
+
+
+void CML::error::abort()
+{
+    if (!throwExceptions_ && JobInfo::constructed)
+    {
+        jobInfo.add("FatalError", operator dictionary());
+        jobInfo.abort();
+    }
+
+    if (abort_)
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS aborting (CAELUS_ABORT set)\n" << endl;
+        printStack(Perr);
+        ::abort();
+    }
+
+    if (Pstream::parRun())
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS parallel run aborting\n" << endl;
+        printStack(Perr);
+        Pstream::abort();
+    }
+    else
+    {
+        if (throwExceptions_)
+        {
+            // Make a copy of the error to throw
+            error errorException(*this);
+
+            // Rewind the message buffer for the next error message
+            messageStreamPtr_->rewind();
+
+            throw errorException;
+        }
+        else
+        {
+            Perr<< endl << *this << endl
+                << "\nCAELUS aborting\n" << endl;
+            printStack(Perr);
+
+	    // Prefer ::exit(1) to avoid unnecessary warnings on Windows
+#ifdef windows
+	    ::exit(1);
+#else
+            ::abort();
+#endif
+        }
+    }
+}
+
+
+CML::Ostream& CML::operator<<(Ostream& os, const error& fErr)
+{
+    os  << endl
+        << fErr.title().c_str() << endl
+        << fErr.message().c_str();
+
+    if (error::level >= 2 && fErr.sourceFileLineNumber())
+    {
+        os  << endl << endl
+            << "    From function " << fErr.functionName().c_str() << endl
+            << "    in file " << fErr.sourceFileName().c_str()
+            << " at line " << fErr.sourceFileLineNumber() << '.';
+    }
+
+    return os;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global error definitions
+
+CML::error CML::FatalError("--> CAELUS FATAL ERROR: ");
+
+#include "error.hpp"
+#include "OStringStream.hpp"
+#include "fileName.hpp"
+#include "dictionary.hpp"
+#include "JobInfo.hpp"
+#include "Pstream.hpp"
+#include "JobInfo.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+CML::IOerror::IOerror(const string& title)
+:
+    error(title),
+    ioFileName_("unknown"),
+    ioStartLineNumber_(-1),
+    ioEndLineNumber_(-1)
+{}
+
+
+CML::IOerror::IOerror(const dictionary& errDict)
+:
+    error(errDict),
+    ioFileName_(errDict.lookup("ioFileName")),
+    ioStartLineNumber_(readLabel(errDict.lookup("ioStartLineNumber"))),
+    ioEndLineNumber_(readLabel(errDict.lookup("ioEndLineNumber")))
+{}
+
+
+CML::IOerror::~IOerror() throw()
+{}
+
+
+CML::OSstream& CML::IOerror::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const string& ioFileName,
+    const label ioStartLineNumber,
+    const label ioEndLineNumber
+)
+{
+    error::operator()(functionName, sourceFileName, sourceFileLineNumber);
+    ioFileName_ = ioFileName;
+    ioStartLineNumber_ = ioStartLineNumber;
+    ioEndLineNumber_ = ioEndLineNumber;
+
+    return operator OSstream&();
+}
+
+
+CML::OSstream& CML::IOerror::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const IOstream& ioStream
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        ioStream.name(),
+        ioStream.lineNumber(),
+        -1
+    );
+}
+
+
+CML::OSstream& CML::IOerror::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const dictionary& dict
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        dict.name(),
+        dict.startLineNumber(),
+        dict.endLineNumber()
+    );
+}
+
+
+void CML::IOerror::SafeFatalIOError
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const IOstream& ioStream,
+    const string& msg
+)
+{
+    if (JobInfo::constructed)
+    {
+        FatalIOErrorIn
+        (
+            "primitiveEntry::readEntry(const dictionary&, Istream&)",
+            ioStream
+        )   << msg << CML::exit(FatalIOError);
+    }
+    else
+    {
+        std::cerr
+            << std::endl
+            << "--> CAELUS FATAL IO ERROR:" << std::endl
+            << msg
+            << std::endl
+            << "file: " << ioStream.name()
+            << " at line " << ioStream.lineNumber() << '.'
+            << std::endl << std::endl
+            << "    From function " << functionName
+            << std::endl
+            << "    in file " << sourceFileName
+            << " at line " << sourceFileLineNumber << '.'
+            << std::endl;
+        ::exit(1);
+    }
+}
+
+
+CML::IOerror::operator CML::dictionary() const
+{
+    dictionary errDict(error::operator dictionary());
+
+    errDict.remove("type");
+    errDict.add("type", word("CML::IOerror"));
+
+    errDict.add("ioFileName", ioFileName());
+    errDict.add("ioStartLineNumber", ioStartLineNumber());
+    errDict.add("ioEndLineNumber", ioEndLineNumber());
+
+    return errDict;
+}
+
+
+void CML::IOerror::exit(const int)
+{
+    if (!throwExceptions_ && JobInfo::constructed)
+    {
+        jobInfo.add("FatalIOError", operator dictionary());
+        jobInfo.exit();
+    }
+
+    if (abort_)
+    {
+        abort();
+    }
+
+    if (Pstream::parRun())
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS parallel run exiting\n" << endl;
+        Pstream::exit(1);
+    }
+    else
+    {
+        if (throwExceptions_)
+        {
+            // Make a copy of the error to throw
+            IOerror errorException(*this);
+
+            // Rewind the message buffer for the next error message
+            messageStreamPtr_->rewind();
+
+            throw errorException;
+        }
+        else
+        {
+            Perr<< endl << *this << endl
+                << "\nCAELUS exiting\n" << endl;
+            ::exit(1);
+        }
+    }
+}
+
+
+void CML::IOerror::abort()
+{
+    if (!throwExceptions_ && JobInfo::constructed)
+    {
+        jobInfo.add("FatalIOError", operator dictionary());
+        jobInfo.abort();
+    }
+
+    if (abort_)
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS aborting (CAELUS_ABORT set)\n" << endl;
+        printStack(Perr);
+        ::abort();
+    }
+
+    if (Pstream::parRun())
+    {
+        Perr<< endl << *this << endl
+            << "\nCAELUS parallel run aborting\n" << endl;
+        printStack(Perr);
+        Pstream::abort();
+    }
+    else
+    {
+        if (throwExceptions_)
+        {
+            // Make a copy of the error to throw
+            IOerror errorException(*this);
+
+            // Rewind the message buffer for the next error message
+            messageStreamPtr_->rewind();
+
+            throw errorException;
+        }
+        else
+        {
+            Perr<< endl << *this << endl
+                << "\nCAELUS aborting\n" << endl;
+            printStack(Perr);
+
+	    // Prefer ::exit(1) to avoid unnecessary warnings on Windows
+#ifdef windows
+	    ::exit(1);
+#else
+            ::abort();
+#endif
+        }
+    }
+}
+
+
+CML::Ostream& CML::operator<<(Ostream& os, const IOerror& ioErr)
+{
+    os  << endl
+        << ioErr.title().c_str() << endl
+        << ioErr.message().c_str() << endl << endl;
+
+    os  << "file: " << ioErr.ioFileName().c_str();
+
+    if (ioErr.ioStartLineNumber() >= 0 && ioErr.ioEndLineNumber() >= 0)
+    {
+        os  << " from line " << ioErr.ioStartLineNumber()
+            << " to line " << ioErr.ioEndLineNumber() << '.';
+    }
+    else if (ioErr.ioStartLineNumber() >= 0)
+    {
+        os  << " at line " << ioErr.ioStartLineNumber() << '.';
+    }
+
+    if (IOerror::level >= 2 && ioErr.sourceFileLineNumber())
+    {
+        os  << endl << endl
+            << "    From function " << ioErr.functionName().c_str() << endl
+            << "    in file " << ioErr.sourceFileName().c_str()
+            << " at line " << ioErr.sourceFileLineNumber() << '.';
+    }
+
+    return os;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Global error definitions
+
+CML::IOerror CML::FatalIOError("--> CAELUS FATAL IO ERROR: ");
+
+//#include "token.cpp"
+#include "token.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+const char* const CML::token::typeName = "token";
+CML::token CML::token::undefinedToken;
+
+defineTypeNameAndDebug(CML::token::compound, 0);
+defineRunTimeSelectionTable(CML::token::compound, Istream);
+
+
+// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
+
+void CML::token::parseError(const char* expected) const
+{
+    FatalIOError
+        << "Parse error, expected a " << expected
+        << ", found \n    " << info() << endl;
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::token::compound::~compound()
+{}
+
+
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
+
+CML::autoPtr<CML::token::compound> CML::token::compound::New
+(
+    const word& compoundType,
+    Istream& is
+)
+{
+    IstreamConstructorTable::iterator cstrIter =
+        IstreamConstructorTablePtr_->find(compoundType);
+
+    if (cstrIter == IstreamConstructorTablePtr_->end())
+    {
+        FatalIOErrorIn("token::compound::New(const word&, Istream&)", is)
+            << "Unknown compound type " << compoundType << nl << nl
+            << "Valid compound types:" << endl
+            << IstreamConstructorTablePtr_->sortedToc()
+            << abort(FatalIOError);
+    }
+
+    return autoPtr<CML::token::compound>(cstrIter()(is));
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::token::compound::isCompound(const word& name)
+{
+    return
+    (
+        IstreamConstructorTablePtr_
+     && IstreamConstructorTablePtr_->found(name)
+    );
+}
+
+
+CML::token::compound& CML::token::transferCompoundToken(const Istream& is)
+{
+    if (type_ == COMPOUND)
+    {
+        if (compoundTokenPtr_->empty())
+        {
+            FatalIOErrorIn
+            (
+                "token::transferCompoundToken(const Istream& is)",
+                is
+            )   << "compound has already been transfered from token\n    "
+                << info() << abort(FatalIOError);
+        }
+        else
+        {
+            compoundTokenPtr_->empty() = true;
+        }
+
+        return *compoundTokenPtr_;
+    }
+    else
+    {
+        parseError("compound");
+        return *compoundTokenPtr_;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Read the debug and info switches
+
+//#include "debug.cpp"
+#include "debug.hpp"
+#include "dictionary.hpp"
+#include "IFstream.hpp"
+#include "OSspecific.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+namespace debug
+{
+
+//! \cond ignoreDocumentation - local scope
+dictionary* controlDictPtr_(NULL);
+dictionary* debugSwitchesPtr_(NULL);
+dictionary* infoSwitchesPtr_(NULL);
+dictionary* optimisationSwitchesPtr_(NULL);
+
+// to ensure controlDictPtr_ is deleted at the end of the run
+class deleteControlDictPtr
+{
+public:
+
+    deleteControlDictPtr()
+    {}
+
+    ~deleteControlDictPtr()
+    {
+        if (controlDictPtr_)
+        {
+            delete controlDictPtr_;
+            controlDictPtr_ = 0;
+        }
+    }
+};
+
+deleteControlDictPtr deleteControlDictPtr_;
+//! \endcond
+
+
+} // End namespace debug
+} // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+CML::dictionary& CML::debug::controlDict()
+{
+    if (!controlDictPtr_)
+    {
+        fileNameList controlDictFiles = findEtcFiles("controlDict", true);
+        controlDictPtr_ = new dictionary();
+        forAllReverse(controlDictFiles, cdfi)
+        {
+            controlDictPtr_->merge
+            (
+                dictionary(IFstream(controlDictFiles[cdfi])())
+            );
+        }
+    }
+
+    return *controlDictPtr_;
+}
+
+
+CML::dictionary& CML::debug::switchSet
+(
+    const char* subDictName,
+    dictionary*& subDictPtr
+)
+{
+    if (!subDictPtr)
+    {
+        entry* ePtr = controlDict().lookupEntryPtr
+        (
+            subDictName, false, false
+        );
+
+        if (!ePtr || !ePtr->isDict())
+        {
+            cerr<< "debug::switchSet(const char*, dictionary*&):\n"
+                << "    Cannot find " <<  subDictName << " in dictionary "
+                << controlDict().name().c_str()
+                << std::endl << std::endl;
+
+            ::exit(1);
+        }
+
+        subDictPtr = &ePtr->dict();
+    }
+
+    return *subDictPtr;
+}
+
+
+CML::dictionary& CML::debug::debugSwitches()
+{
+    return switchSet("DebugSwitches", debugSwitchesPtr_);
+}
+
+
+CML::dictionary& CML::debug::infoSwitches()
+{
+    return switchSet("InfoSwitches", infoSwitchesPtr_);
+}
+
+
+CML::dictionary& CML::debug::optimisationSwitches()
+{
+    return switchSet("OptimisationSwitches", optimisationSwitchesPtr_);
+}
+
+
+int CML::debug::debugSwitch(const char* name, const int defaultValue)
+{
+    return debugSwitches().lookupOrAddDefault
+    (
+        name, defaultValue, false, false
+    );
+}
+
+
+int CML::debug::infoSwitch(const char* name, const int defaultValue)
+{
+    return infoSwitches().lookupOrAddDefault
+    (
+        name, defaultValue, false, false
+    );
+}
+
+
+int CML::debug::optimisationSwitch(const char* name, const int defaultValue)
+{
+    return optimisationSwitches().lookupOrAddDefault
+    (
+        name, defaultValue, false, false
+    );
+}
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Read file modification checking switches
+
+//#include "regIOobject.cpp"
+#include "regIOobject.hpp"
+#include "Time.hpp"
+#include "polyMesh.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(CML::regIOobject, 0);
+
+int CML::regIOobject::fileModificationSkew
+(
+    CML::debug::optimisationSwitch("fileModificationSkew", 30)
+);
+
+namespace CML
+{
+    template<>
+    const char* CML::NamedEnum
+    <
+        CML::regIOobject::fileCheckTypes,
+        4
+    >::names[] =
+    {
+        "timeStamp",
+        "timeStampMaster",
+        "inotify",
+        "inotifyMaster"
+    };
+}
+
+
+const CML::NamedEnum<CML::regIOobject::fileCheckTypes, 4>
+    CML::regIOobject::fileCheckTypesNames;
+
+// Default fileCheck type
+CML::regIOobject::fileCheckTypes CML::regIOobject::fileModificationChecking
+(
+    fileCheckTypesNames.read
+    (
+        debug::optimisationSwitches().lookup
+        (
+            "fileModificationChecking"
+        )
+    )
+);
+
+
+bool CML::regIOobject::masterOnlyReading = false;
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from IOobject
+CML::regIOobject::regIOobject(const IOobject& io, const bool isTime)
+:
+    IOobject(io),
+    registered_(false),
+    ownedByRegistry_(false),
+    watchIndex_(-1),
+    eventNo_                // Do not get event for top level Time database
+    (
+        isTime
+      ? 0
+      : db().getEvent()
+    ),
+    isPtr_(NULL)
+{
+    // Register with objectRegistry if requested
+    if (registerObject())
+    {
+        checkIn();
+    }
+}
+
+
+// Construct as copy
+CML::regIOobject::regIOobject(const regIOobject& rio)
+:
+    IOobject(rio),
+    registered_(false),
+    ownedByRegistry_(false),
+    watchIndex_(rio.watchIndex_),
+    eventNo_(db().getEvent()),
+    isPtr_(NULL)
+{
+    // Do not register copy with objectRegistry
+}
+
+
+// Construct as copy, and transfering objectRegistry registration to copy
+// if registerCopy is true
+CML::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
+:
+    IOobject(rio),
+    registered_(false),
+    ownedByRegistry_(false),
+    watchIndex_(-1),
+    eventNo_(db().getEvent()),
+    isPtr_(NULL)
+{
+    if (registerCopy && rio.registered_)
+    {
+        const_cast<regIOobject&>(rio).checkOut();
+        checkIn();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+// Delete read stream, checkout from objectRegistry and destroy
+CML::regIOobject::~regIOobject()
+{
+    if (objectRegistry::debug)
+    {
+        Info<< "Destroying regIOobject called " << name()
+            << " of type " << type()
+            << " in directory " << path()
+            << endl;
+    }
+
+    if (isPtr_)
+    {
+        delete isPtr_;
+        isPtr_ = NULL;
+    }
+
+    // Check out of objectRegistry if not owned by the registry
+
+    if (!ownedByRegistry_)
+    {
+        checkOut();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::regIOobject::checkIn()
+{
+    if (!registered_)
+    {
+        // multiple checkin of same object is disallowed - this would mess up
+        // any mapping
+        registered_ = db().checkIn(*this);
+
+        if
+        (
+            registered_
+         && readOpt() == MUST_READ_IF_MODIFIED
+         && time().runTimeModifiable()
+        )
+        {
+            if (watchIndex_ != -1)
+            {
+                FatalErrorIn("regIOobject::checkIn()")
+                    << "Object " << objectPath()
+                    << " already watched with index " << watchIndex_
+                    << abort(FatalError);
+            }
+
+            fileName f = filePath();
+            if (!f.size())
+            {
+                // We don't have this file but would like to re-read it.
+                // Possibly if master-only reading mode.
+                f = objectPath();
+            }
+            watchIndex_ = time().addWatch(f);
+        }
+
+        // check-in on defaultRegion is allowed to fail, since subsetted meshes
+        // are created with the same name as their originating mesh
+        if (!registered_ && debug && name() != polyMesh::defaultRegion)
+        {
+            if (debug == 2)
+            {
+                // for ease of finding where attempted duplicate check-in
+                // originated
+                FatalErrorIn("regIOobject::checkIn()")
+                    << "failed to register object " << objectPath()
+                    << " the name already exists in the objectRegistry"
+                    << abort(FatalError);
+            }
+            else
+            {
+                WarningIn("regIOobject::checkIn()")
+                    << "failed to register object " << objectPath()
+                    << " the name already exists in the objectRegistry"
+                    << endl;
+            }
+        }
+    }
+
+    return registered_;
+}
+
+
+bool CML::regIOobject::checkOut()
+{
+    if (registered_)
+    {
+        registered_ = false;
+
+        if (watchIndex_ != -1)
+        {
+            time().removeWatch(watchIndex_);
+            watchIndex_ = -1;
+        }
+        return db().checkOut(*this);
+    }
+
+    return false;
+}
+
+
+bool CML::regIOobject::upToDate(const regIOobject& a) const
+{
+    if (a.eventNo() >= eventNo_)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+bool CML::regIOobject::upToDate
+(
+    const regIOobject& a,
+    const regIOobject& b
+) const
+{
+    if
+    (
+        a.eventNo() >= eventNo_
+     || b.eventNo() >= eventNo_
+    )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+bool CML::regIOobject::upToDate
+(
+    const regIOobject& a,
+    const regIOobject& b,
+    const regIOobject& c
+) const
+{
+    if
+    (
+        a.eventNo() >= eventNo_
+     || b.eventNo() >= eventNo_
+     || c.eventNo() >= eventNo_
+    )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+bool CML::regIOobject::upToDate
+(
+    const regIOobject& a,
+    const regIOobject& b,
+    const regIOobject& c,
+    const regIOobject& d
+) const
+{
+    if
+    (
+        a.eventNo() >= eventNo_
+     || b.eventNo() >= eventNo_
+     || c.eventNo() >= eventNo_
+     || d.eventNo() >= eventNo_
+    )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+//- Flag me as up to date
+void CML::regIOobject::setUpToDate()
+{
+    eventNo_ = db().getEvent();
+}
+
+
+// Rename object and re-register with objectRegistry under new name
+void CML::regIOobject::rename(const word& newName)
+{
+    // Check out of objectRegistry
+    checkOut();
+
+    IOobject::rename(newName);
+
+    if (registerObject())
+    {
+        // Re-register object with objectRegistry
+        checkIn();
+    }
+}
+
+
+// Assign to IOobject
+void CML::regIOobject::operator=(const IOobject& io)
+{
+    if (isPtr_)
+    {
+        delete isPtr_;
+        isPtr_ = NULL;
+    }
+
+    // Check out of objectRegistry
+    checkOut();
+
+    IOobject::operator=(io);
+
+    if (registerObject())
+    {
+        // Re-register object with objectRegistry
+        checkIn();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Read parallel communication switches
+
+//#include "UPstream.cpp"
+#include "UPstream.hpp"
+#include "debug.hpp"
+#include "dictionary.hpp"
+#include "IOstreams.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(CML::UPstream, 0);
+
+namespace CML
+{
+    template<>
+    const char* CML::NamedEnum
+    <
+        CML::UPstream::commsTypes,
+        3
+    >::names[] =
+    {
+        "blocking",
+        "scheduled",
+        "nonBlocking"
+    };
+}
+
+
+const CML::NamedEnum<CML::UPstream::commsTypes, 3>
+    CML::UPstream::commsTypeNames;
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+void CML::UPstream::setParRun()
+{
+    parRun_ = true;
+
+    Pout.prefix() = '[' +  name(myProcNo()) + "] ";
+    Perr.prefix() = '[' +  name(myProcNo()) + "] ";
+}
+
+
+void CML::UPstream::calcLinearComm(const label nProcs)
+{
+    linearCommunication_.setSize(nProcs);
+
+    // Master
+    labelList belowIDs(nProcs - 1);
+    forAll(belowIDs, i)
+    {
+        belowIDs[i] = i + 1;
+    }
+
+    linearCommunication_[0] = commsStruct
+    (
+        nProcs,
+        0,
+        -1,
+        belowIDs,
+        labelList(0)
+    );
+
+    // Slaves. Have no below processors, only communicate up to master
+    for (label procID = 1; procID < nProcs; procID++)
+    {
+        linearCommunication_[procID] = commsStruct
+        (
+            nProcs,
+            procID,
+            0,
+            labelList(0),
+            labelList(0)
+        );
+    }
+}
+
+
+// Append my children (and my children children etc.) to allReceives.
+void CML::UPstream::collectReceives
+(
+    const label procID,
+    const List<DynamicList<label> >& receives,
+    DynamicList<label>& allReceives
+)
+{
+    const DynamicList<label>& myChildren = receives[procID];
+
+    forAll(myChildren, childI)
+    {
+        allReceives.append(myChildren[childI]);
+        collectReceives(myChildren[childI], receives, allReceives);
+    }
+}
+
+
+// Tree like schedule. For 8 procs:
+// (level 0)
+//      0 receives from 1
+//      2 receives from 3
+//      4 receives from 5
+//      6 receives from 7
+// (level 1)
+//      0 receives from 2
+//      4 receives from 6
+// (level 2)
+//      0 receives from 4
+//
+// The sends/receives for all levels are collected per processor (one send per
+// processor; multiple receives possible) creating a table:
+//
+// So per processor:
+// proc     receives from   sends to
+// ----     -------------   --------
+//  0       1,2,4           -
+//  1       -               0
+//  2       3               0
+//  3       -               2
+//  4       5               0
+//  5       -               4
+//  6       7               4
+//  7       -               6
+void CML::UPstream::calcTreeComm(label nProcs)
+{
+    label nLevels = 1;
+    while ((1 << nLevels) < nProcs)
+    {
+        nLevels++;
+    }
+
+    List<DynamicList<label> > receives(nProcs);
+    labelList sends(nProcs, -1);
+
+    // Info<< "Using " << nLevels << " communication levels" << endl;
+
+    label offset = 2;
+    label childOffset = offset/2;
+
+    for (label level = 0; level < nLevels; level++)
+    {
+        label receiveID = 0;
+        while (receiveID < nProcs)
+        {
+            // Determine processor that sends and we receive from
+            label sendID = receiveID + childOffset;
+
+            if (sendID < nProcs)
+            {
+                receives[receiveID].append(sendID);
+                sends[sendID] = receiveID;
+            }
+
+            receiveID += offset;
+        }
+
+        offset <<= 1;
+        childOffset <<= 1;
+    }
+
+    // For all processors find the processors it receives data from
+    // (and the processors they receive data from etc.)
+    List<DynamicList<label> > allReceives(nProcs);
+    for (label procID = 0; procID < nProcs; procID++)
+    {
+        collectReceives(procID, receives, allReceives[procID]);
+    }
+
+
+    treeCommunication_.setSize(nProcs);
+
+    for (label procID = 0; procID < nProcs; procID++)
+    {
+        treeCommunication_[procID] = commsStruct
+        (
+            nProcs,
+            procID,
+            sends[procID],
+            receives[procID].shrink(),
+            allReceives[procID].shrink()
+        );
+    }
+}
+
+
+// Callback from UPstream::init() : initialize linear and tree communication
+// schedules now that nProcs is known.
+void CML::UPstream::initCommunicationSchedule()
+{
+    calcLinearComm(nProcs());
+    calcTreeComm(nProcs());
+}
+
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+// Initialise my process number to 0 (the master)
+int CML::UPstream::myProcNo_(0);
+
+// By default this is not a parallel run
+bool CML::UPstream::parRun_(false);
+
+// List of process IDs
+CML::List<int> CML::UPstream::procIDs_(label(1), 0);
+
+// Standard transfer message type
+int CML::UPstream::msgType_(1);
+
+// Linear communication schedule
+CML::List<CML::UPstream::commsStruct> CML::UPstream::linearCommunication_(0);
+
+// Multi level communication schedule
+CML::List<CML::UPstream::commsStruct> CML::UPstream::treeCommunication_(0);
+
+// Should compact transfer be used in which floats replace doubles
+// reducing the bandwidth requirement at the expense of some loss
+// in accuracy
+bool CML::UPstream::floatTransfer
+(
+    debug::optimisationSwitch("floatTransfer", 0)
+);
+
+// Number of processors at which the reduce algorithm changes from linear to
+// tree
+int CML::UPstream::nProcsSimpleSum
+(
+    debug::optimisationSwitch("nProcsSimpleSum", 16)
+);
+
+// Default commsType
+CML::UPstream::commsTypes CML::UPstream::defaultCommsType
+(
+    commsTypeNames.read(debug::optimisationSwitches().lookup("commsType"))
+);
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Read constants
+
+//#include "constants.cpp"
+// Constants supplied in the main controlDict
+//#include "fundamentalConstants.cpp"
+#include "fundamentalConstants.hpp"
+
+#include "universalConstants.hpp"
+#include "electromagneticConstants.hpp"
+#include "atomicConstants.hpp"
+#include "physicoChemicalConstants.hpp"
+
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Universal constants
+
+const CML::dimensionedScalar CML::constant::universal::c
+(
+    dimensionedConstant(universal::group, "c")
+);
+
+
+const CML::dimensionedScalar CML::constant::universal::G
+(
+    dimensionedConstant(universal::group, "G")
+);
+
+
+const CML::dimensionedScalar CML::constant::universal::h
+(
+    dimensionedConstant(universal::group, "h")
+);
+
+
+// Electromagnetic
+
+const CML::dimensionedScalar CML::constant::electromagnetic::e
+(
+    dimensionedConstant(electromagnetic::group, "e")
+);
+
+
+// Atomic
+
+const CML::dimensionedScalar CML::constant::atomic::me
+(
+    dimensionedConstant(atomic::group, "me")
+);
+
+
+const CML::dimensionedScalar CML::constant::atomic::mp
+(
+    dimensionedConstant(atomic::group, "mp")
+);
+
+
+// Physico-chemical
+
+const CML::dimensionedScalar CML::constant::physicoChemical::mu
+(
+    dimensionedConstant(physicoChemical::group, "mu")
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::NA
+(
+//    dimensionedConstant(physicoChemical::group, "NA")
+    dimensionedConstant
+    (
+        physicoChemical::group,
+        "NA",
+        dimensionedScalar
+        (
+            "NA",
+            dimless/dimMoles,
+            6.0221417930e+23
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::k
+(
+    dimensionedConstant(physicoChemical::group, "k")
+);
+
+
+// Standard
+
+const CML::dimensionedScalar CML::constant::standard::Pstd
+(
+    dimensionedConstant("standard", "Pstd")
+);
+
+
+const CML::dimensionedScalar CML::constant::standard::Tstd
+(
+    dimensionedConstant("standard", "Tstd")
+);
+
+
+// Derived constants
+//#include "universalConstants.cpp"
+#include "universalConstants.hpp"
+#include "mathematicalConstants.hpp"
+
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+const char* const CML::constant::universal::group = "universal";
+
+
+const CML::dimensionedScalar CML::constant::universal::hr
+(
+    dimensionedConstant
+    (
+        group,
+        "hr",
+        dimensionedScalar
+        (
+            "hr",
+            h/(dimensionedScalar("C", dimless, constant::mathematical::twoPi))
+        )
+    )
+);
+
+
+//#include "electromagneticConstants.cpp"
+#include "mathematicalConstants.hpp"
+#include "universalConstants.hpp"
+#include "electromagneticConstants.hpp"
+#include "atomicConstants.hpp"
+
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+const char* const CML::constant::electromagnetic::group = "electromagnetic";
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::mu0
+(
+    dimensionedConstant
+    (
+        group,
+        "mu0",
+        dimensionedScalar
+        (
+            "mu0",
+            dimensionSet(1, 1, -2, 0, 0, -2, 0),
+            4.0*constant::mathematical::pi*1e-07
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::epsilon0
+(
+    dimensionedConstant
+    (
+        group,
+        "epsilon0",
+        dimensionedScalar
+        (
+            "epsilon0",
+            dimensionedScalar("C", dimless, 1.0)
+           /(mu0*sqr(constant::universal::c))
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::Z0
+(
+    dimensionedConstant
+    (
+        group,
+        "Z0",
+        dimensionedScalar
+        (
+            "Z0",
+            mu0*constant::universal::c
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::kappa
+(
+    dimensionedConstant
+    (
+        group,
+        "kappa",
+        dimensionedScalar
+        (
+            "kappa",
+            dimensionedScalar
+            (
+                "C",
+                dimless,
+                1.0/(4.0*constant::mathematical::pi)
+            )
+           /epsilon0
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::G0
+(
+    dimensionedConstant
+    (
+        group,
+        "G0",
+        dimensionedScalar
+        (
+            "G0",
+            dimensionedScalar("C", dimless, 2)*sqr(e)/constant::universal::h
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::KJ
+(
+    dimensionedConstant
+    (
+        group,
+        "KJ",
+        dimensionedScalar
+        (
+            "KJ",
+            dimensionedScalar("C", dimless, 2)*e/constant::universal::h
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::phi0
+(
+    dimensionedConstant
+    (
+        group,
+        "phi0",
+        dimensionedScalar
+        (
+            "phi0",
+            constant::universal::h/(dimensionedScalar("C", dimless, 2)*e)
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::electromagnetic::RK
+(
+    dimensionedConstant
+    (
+        group,
+        "RK",
+        dimensionedScalar
+        (
+            "RK",
+            constant::universal::h/sqr(e)
+        )
+    )
+);
+
+//#include "atomicConstants.cpp"
+#include "mathematicalConstants.hpp"
+#include "universalConstants.hpp"
+#include "electromagneticConstants.hpp"
+#include "atomicConstants.hpp"
+
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+const char* const CML::constant::atomic::group = "atomic";
+
+
+const CML::dimensionedScalar CML::constant::atomic::alpha
+(
+    dimensionedConstant
+    (
+        group,
+        "alpha",
+        dimensionedScalar
+        (
+            "alpha",
+            sqr(constant::electromagnetic::e)
+           /(
+                dimensionedScalar("C", dimless, 2.0)
+               *constant::electromagnetic::epsilon0
+               *constant::universal::h
+               *constant::universal::c
+            )
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::atomic::Rinf
+(
+    dimensionedConstant
+    (
+        group,
+        "Rinf",
+        dimensionedScalar
+        (
+            "Rinf",
+            sqr(alpha)*me*constant::universal::c
+           /(dimensionedScalar("C", dimless, 2.0)*constant::universal::h)
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::atomic::a0
+(
+    dimensionedConstant
+    (
+        group,
+        "a0",
+        dimensionedScalar
+        (
+            "a0",
+            alpha
+           /(
+               dimensionedScalar("C", dimless, 4.0*constant::mathematical::pi)
+              *Rinf
+           )
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::atomic::re
+(
+    dimensionedConstant
+    (
+        group,
+        "re",
+        dimensionedScalar
+        (
+            "re",
+            sqr(constant::electromagnetic::e)
+           /(
+                dimensionedScalar("C", dimless, 4.0*constant::mathematical::pi)
+               *constant::electromagnetic::epsilon0
+               *me
+               *sqr(constant::universal::c)
+            )
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::atomic::Eh
+(
+    dimensionedConstant
+    (
+        group,
+        "Eh",
+        dimensionedScalar
+        (
+            "Eh",
+            dimensionedScalar("C", dimless, 2.0)
+           *Rinf*constant::universal::h*constant::universal::c
+        )
+    )
+);
+
+//#include "physicoChemicalConstants.cpp"
+#include "mathematicalConstants.hpp"
+#include "universalConstants.hpp"
+#include "electromagneticConstants.hpp"
+#include "physicoChemicalConstants.hpp"
+
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+const char* const CML::constant::physicoChemical::group = "physicoChemical";
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::R
+(
+    dimensionedConstant
+    (
+        group,
+        "R",
+        dimensionedScalar
+        (
+            "R",
+            NA*k
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::F
+(
+    dimensionedConstant
+    (
+        group,
+        "F",
+        dimensionedScalar
+        (
+            "F",
+            NA*constant::electromagnetic::e
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::sigma
+(
+    dimensionedConstant
+    (
+        group,
+        "sigma",
+        dimensionedScalar
+        (
+            "sigma",
+            dimensionedScalar
+            (
+                "C",
+                dimless,
+                sqr(constant::mathematical::pi)/60.0
+            )
+           *pow4(k)/(pow3(constant::universal::hr)*sqr(constant::universal::c))
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::b
+(
+    dimensionedConstant
+    (
+        group,
+        "b",
+        dimensionedScalar
+        (
+            "b",
+            (constant::universal::h*constant::universal::c/k)
+           /dimensionedScalar("C", dimless, 4.965114231)
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::c1
+(
+    dimensionedConstant
+    (
+        group,
+        "c1",
+        dimensionedScalar
+        (
+            "c1",
+            dimensionedScalar("C", dimless, constant::mathematical::twoPi)
+           *constant::universal::h*sqr(constant::universal::c)
+        )
+    )
+);
+
+
+const CML::dimensionedScalar CML::constant::physicoChemical::c2
+(
+    dimensionedConstant
+    (
+        group,
+        "c2",
+        dimensionedScalar
+        (
+            "c2",
+            constant::universal::h*constant::universal::c/k
+        )
+    )
+);
+
+
+//#include "dimensionedConstants.cpp"
+#include "dimensionedConstants.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dictionary* dimensionedConstantsPtr_(NULL);
+
+dictionary& dimensionedConstants()
+{
+    return debug::switchSet
+    (
+        "DimensionedConstants",
+        dimensionedConstantsPtr_
+    );
+}
+
+
+dimensionedScalar dimensionedConstant
+(
+    const word& group,
+    const word& varName
+)
+{
+    dictionary& dict = dimensionedConstants();
+
+    // Check that the entries exist.
+    // Note: should make FatalError robust instead!
+
+    if (!dict.found("unitSet"))
+    {
+        std::cerr<< "Cannot find unitSet in dictionary " << dict.name()
+            << std::endl;
+    }
+
+    const word unitSetCoeffs(word(dict.lookup("unitSet")) + "Coeffs");
+
+    if (!dict.found(unitSetCoeffs))
+    {
+        std::cerr<< "Cannot find " << unitSetCoeffs << " in dictionary "
+            << dict.name() << std::endl;
+    }
+
+    dictionary& unitDict = dict.subDict(unitSetCoeffs);
+
+    dictionary& groupDict = unitDict.subDict(group);
+
+    return dimensionedScalar(groupDict.lookup(varName));
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Read and set cell models
+
+#include "cellModeller.hpp"
+#include "OSspecific.hpp"
+#include "IFstream.hpp"
+
+// * * * * * * * * * * * * * * * Static data * * * * * * * * * * * * * * * * //
+
+
+// PtrList of models
+CML::PtrList<CML::cellModel> CML::cellModeller::models_
+(
+    IFstream(findEtcFile("cellModels", true))()
+);
+
+// List of model pointers
+CML::List<CML::cellModel*> CML::cellModeller::modelPtrs_;
+
+// HashTable of model pointers
+CML::HashTable<const CML::cellModel*> CML::cellModeller::modelDictionary_;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+// Construct a dummy cellModeller which reads the models and fills
+// the above tables
+cellModeller globalCellModeller_;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Create the jobInfo file in the $CAELUS_JOB_DIR/runningJobs directory
+
+#include "JobInfo.hpp"
+#include "OSspecific.hpp"
+#include "clock.hpp"
+#include "OFstream.hpp"
+#include "Pstream.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+bool CML::JobInfo::writeJobInfo(CML::debug::infoSwitch("writeJobInfo", 0));
+CML::JobInfo CML::jobInfo;
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Null constructor
+CML::JobInfo::JobInfo()
+:
+    runningJobPath_(),
+    finishedJobPath_(),
+    cpuTime_()
+{
+    name() = "JobInfo";
+
+    if (writeJobInfo && Pstream::master())
+    {
+        string baseDir = getEnv("CAELUS_JOB_DIR");
+        string jobFile = hostName() + '.' + CML::name(pid());
+
+        fileName runningDir(baseDir/"runningJobs");
+        fileName finishedDir(baseDir/"finishedJobs");
+
+        runningJobPath_  = runningDir/jobFile;
+        finishedJobPath_ = finishedDir/jobFile;
+
+        if (baseDir.empty())
+        {
+            FatalErrorIn("JobInfo::JobInfo()")
+                << "Cannot get JobInfo directory $CAELUS_JOB_DIR"
+                << CML::exit(FatalError);
+        }
+
+        if (!isDir(runningDir) && !mkDir(runningDir))
+        {
+            FatalErrorIn("JobInfo::JobInfo()")
+                << "Cannot make JobInfo directory " << runningDir
+                << CML::exit(FatalError);
+        }
+
+        if (!isDir(finishedDir) && !mkDir(finishedDir))
+        {
+            FatalErrorIn("JobInfo::JobInfo()")
+                << "Cannot make JobInfo directory " << finishedDir
+                << CML::exit(FatalError);
+        }
+    }
+
+    constructed = true;
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::JobInfo::~JobInfo()
+{
+    if (writeJobInfo && constructed && Pstream::master())
+    {
+        mv(runningJobPath_, finishedJobPath_);
+    }
+
+    constructed = false;
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::JobInfo::write(Ostream& os) const
+{
+    if (writeJobInfo && Pstream::master())
+    {
+        if (os.good())
+        {
+            dictionary::write(os, false);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+void CML::JobInfo::write() const
+{
+    if (writeJobInfo && Pstream::master())
+    {
+        if (!write(OFstream(runningJobPath_)()))
+        {
+            FatalErrorIn("JobInfo::write() const")
+                << "Failed to write to JobInfo file "
+                << runningJobPath_
+                << CML::exit(FatalError);
+        }
+    }
+}
+
+
+void CML::JobInfo::end(const word& terminationType)
+{
+    if (writeJobInfo && constructed && Pstream::master())
+    {
+        add("cpuTime", cpuTime_.elapsedCpuTime());
+        add("endDate", clock::date());
+        add("endTime", clock::clockTime());
+
+        if (!found("termination"))
+        {
+            add("termination", terminationType);
+        }
+
+        rm(runningJobPath_);
+        write(OFstream(finishedJobPath_)());
+    }
+
+    constructed = false;
+}
+
+
+void CML::JobInfo::end()
+{
+    end("normal");
+}
+
+
+void CML::JobInfo::exit()
+{
+    end("exit");
+}
+
+
+void CML::JobInfo::abort()
+{
+    end("abort");
+}
+
+
+void CML::JobInfo::signalEnd() const
+{
+    if (writeJobInfo && constructed && Pstream::master())
+    {
+        mv(runningJobPath_, finishedJobPath_);
+    }
+
+    constructed = false;
+}
+
+
+
+// ************************************************************************* //

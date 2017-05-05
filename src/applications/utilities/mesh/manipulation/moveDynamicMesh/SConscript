@@ -1,0 +1,58 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+moveDynamicMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = moveDynamicMeshEnv['LIB_SRC']
+
+moveDynamicMeshEnv.Append(CXXFLAGS = '')
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+moveDynamicMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicFvMesh/lnInclude', src + '/sampling/lnInclude']
+moveDynamicMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+moveDynamicMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if moveDynamicMeshEnv['WHICH_OS'] == "windows":
+  lib_link = ['libdynamicMesh','libdynamicFvMesh','libsampling']
+else:
+  lib_link = ['dynamicMesh','dynamicFvMesh','sampling']
+  
+moveDynamicMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  moveDynamicMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binmoveDynamicMesh = moveDynamicMeshEnv.Program(target = 
+'moveDynamicMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = moveDynamicMeshEnv['BIN_PLATFORM_INSTALL']
+moveDynamicMeshEnv.Alias('install', install_dir)
+moveDynamicMeshEnv.Install(install_dir, binmoveDynamicMesh)

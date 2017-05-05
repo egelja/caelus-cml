@@ -1,0 +1,46 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+extrudeMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = extrudeMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = ['extrudedMesh', '../extrudeModel/lnInclude',
+src + '/dynamicMesh/lnInclude',
+src + '/surfMesh/lnInclude'
+]
+extrudeMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['libsurfMesh','libdynamicMesh','libextrudeModel']
+  
+extrudeMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  extrudedMesh/extrudedMesh.cpp
+  extrudeMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binextrudeMesh = extrudeMeshEnv.Program(target = 'extrudeMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = extrudeMeshEnv['BIN_PLATFORM_INSTALL']
+extrudeMeshEnv.Alias('install', install_dir)
+extrudeMeshEnv.Install(install_dir, binextrudeMesh)

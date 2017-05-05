@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+interPropEnv = globalEnv.Clone()
+
+# Path to source
+src = interPropEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+interPropEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/finiteVolume/lnInclude',
+src + '/transportModels/twoPhaseInterfaceProperties/alphaContactAngle/alphaContactAngle'       
+] 
+interPropEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+interPropEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core']
+interPropEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  interfaceProperties.cpp
+  interfaceCompression/interfaceCompression.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libinterfaceProperties = interPropEnv.SharedLibrary(target = 
+'interfaceProperties', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = interPropEnv['LIB_PLATFORM_INSTALL']
+interPropEnv.Alias('install', install_dir)
+interPropEnv.Install(install_dir, libinterfaceProperties)
+
+if (interPropEnv['WHICH_OS'] == "darwin"):
+
+  interPropEnv.Append(SHLINKFLAGS ='-install_name @' + interPropEnv['LIB_PLATFORM_INSTALL'] + '/libinterfaceProperties.dylib')

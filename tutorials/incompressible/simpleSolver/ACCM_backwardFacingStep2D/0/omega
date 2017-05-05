@@ -1,0 +1,63 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 4.10                                   
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 97.37245;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 97.37245;
+    }
+    outlet
+    {
+        type            zeroGradient;
+    }
+    symm-left
+    {
+        type            empty;
+    }
+    symm-right
+    {
+        type            empty;
+    }
+    top-wall
+    {
+        type            omegaWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        beta1           0.075;
+        value           uniform 97.37245;
+    }
+    upstream
+    {
+        type            symmetryPlane;
+    }
+    wall
+    {
+        type            omegaWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        beta1           0.075;
+        value           uniform 97.37245;
+    }
+}
+
+
+// ************************************************************************* //

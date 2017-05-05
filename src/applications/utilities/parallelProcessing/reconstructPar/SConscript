@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+reconstructParEnv = globalEnv.Clone()
+
+# Path to source
+src = reconstructParEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+reconstructParEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/lagrangian/basic/lnInclude',
+src + '/parallel/reconstruct/reconstruct/lnInclude'
+]
+reconstructParEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+reconstructParEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if reconstructParEnv['WHICH_OS'] == "windows":
+  reconstructParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libgenericPatchFields','liblagrangian','libreconstruct']
+else:
+  lib_link = ['genericPatchFields','lagrangian','reconstruct']
+  
+reconstructParEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  reconstructPar.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binreconstructPar = reconstructParEnv.Program(target = 'reconstructPar', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = reconstructParEnv['BIN_PLATFORM_INSTALL']
+reconstructParEnv.Alias('install', install_dir)
+reconstructParEnv.Install(install_dir, binreconstructPar)

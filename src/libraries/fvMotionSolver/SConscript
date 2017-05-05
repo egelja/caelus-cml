@@ -1,0 +1,87 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+fvMotionEnv = globalEnv.Clone()
+
+# Path to source
+src = fvMotionEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+fvMotionEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/dynamicMesh/lnInclude']
+fvMotionEnv.Prepend(CPPPATH = lib_inc)
+    
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+fvMotionEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','dynamicMesh']
+fvMotionEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  fvMotionSolvers/fvMotionSolver/fvMotionSolver.cpp
+  fvMotionSolvers/velocity/laplacian/velocityLaplacianFvMotionSolver.cpp
+  fvMotionSolvers/displacement/displacementFvMotionSolver/displacementFvMotionSolver.cpp
+  fvMotionSolvers/displacement/layeredSolver/displacementLayeredMotionFvMotionSolver.cpp
+  fvMotionSolvers/displacement/layeredSolver/pointEdgeStructuredWalk.cpp
+  fvMotionSolvers/displacement/interpolation/displacementInterpolationFvMotionSolver.cpp
+  fvMotionSolvers/displacement/laplacian/displacementLaplacianFvMotionSolver.cpp
+  fvMotionSolvers/displacement/SBRStress/displacementSBRStressFvMotionSolver.cpp
+  fvMotionSolvers/velocity/componentLaplacian/velocityComponentLaplacianFvMotionSolver.cpp
+  fvMotionSolvers/displacement/componentLaplacian/displacementComponentLaplacianFvMotionSolver.cpp
+  motionDiffusivity/motionDiffusivity/motionDiffusivity.cpp
+  motionDiffusivity/uniform/uniformDiffusivity.cpp
+  motionDiffusivity/inverseDistance/inverseDistanceDiffusivity.cpp
+  motionDiffusivity/inverseFaceDistance/inverseFaceDistanceDiffusivity.cpp
+  motionDiffusivity/inversePointDistance/inversePointDistanceDiffusivity.cpp
+  motionDiffusivity/inverseVolume/inverseVolumeDiffusivity.cpp
+  motionDiffusivity/directional/directionalDiffusivity.cpp
+  motionDiffusivity/motionDirectional/motionDirectionalDiffusivity.cpp
+  motionDiffusivity/file/fileDiffusivity.cpp
+  motionDiffusivity/manipulators/quadratic/quadraticDiffusivity.cpp
+  motionDiffusivity/manipulators/exponential/exponentialDiffusivity.cpp
+  fvPatchFields/derived/cellMotion/cellMotionFvPatchFields.cpp
+  fvPatchFields/derived/surfaceSlipDisplacement/surfaceSlipDisplacementFvPatchFields.cpp
+  pointPatchFields/derived/oscillatingVelocity/oscillatingVelocityPointPatchVectorField.cpp
+  pointPatchFields/derived/angularOscillatingVelocity/angularOscillatingVelocityPointPatchVectorField.cpp
+  pointPatchFields/derived/oscillatingDisplacement/oscillatingDisplacementPointPatchVectorField.cpp
+  pointPatchFields/derived/angularOscillatingDisplacement/angularOscillatingDisplacementPointPatchVectorField.cpp
+  pointPatchFields/derived/surfaceSlipDisplacement/surfaceSlipDisplacementPointPatchVectorField.cpp
+  pointPatchFields/derived/surfaceDisplacement/surfaceDisplacementPointPatchVectorField.cpp
+  pointPatchFields/derived/waveDisplacement/waveDisplacementPointPatchVectorField.cpp
+  pointPatchFields/derived/timeVaryingMappedFixedValue/timeVaryingMappedFixedValuePointPatchFields.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libfvMotionSolvers = fvMotionEnv.SharedLibrary(target = 'fvMotionSolvers', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = fvMotionEnv['LIB_PLATFORM_INSTALL']
+fvMotionEnv.Alias('install', install_dir)
+fvMotionEnv.Install(install_dir, libfvMotionSolvers)
+
+if (fvMotionEnv['WHICH_OS'] == "darwin"):
+
+  fvMotionEnv.Append(SHLINKFLAGS ='-install_name @' + fvMotionEnv['LIB_PLATFORM_INSTALL'] + '/libfvMotionSolvers.dylib')

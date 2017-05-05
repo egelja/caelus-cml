@@ -1,0 +1,53 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+blockMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = blockMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+blockMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/mesh/blockMesh/lnInclude', src + '/dynamicMesh/lnInclude']
+blockMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+blockMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['blockMesh','dynamicMesh']
+  
+blockMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  blockMeshApp.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binblockMesh = blockMeshEnv.Program(target = 'blockMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = blockMeshEnv['BIN_PLATFORM_INSTALL']
+blockMeshEnv.Alias('install', install_dir)
+blockMeshEnv.Install(install_dir, binblockMesh)

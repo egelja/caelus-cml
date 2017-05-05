@@ -1,0 +1,83 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+PeEnv = globalEnv.Clone()
+
+# Path to source
+src = PeEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+PeEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc',
+src + '/turbulenceModels',
+src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
+src + '/turbulenceModels/incompressible/RAS/lnInclude',  
+src + '/turbulenceModels/incompressible/LES/lnInclude',  
+src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
+src + '/turbulenceModels/compressible/RAS/lnInclude',  
+src + '/turbulenceModels/compressible/LES/lnInclude',
+src + '/turbulenceModels/LES/LESdeltas/lnInclude',
+src + '/transportModels',
+src + '/transportModels/incompressible/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',  
+src + '/sampling/lnInclude'
+]        
+PeEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+PeEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if PeEnv['WHICH_OS'] == "windows":
+  PeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad -u incompressibleLESModelsLoad -u compressibleRASModelsLoad -u compressibleLESModelsLoad' )
+  lib_link = ['libcore','libincompressibleTurbulenceModel',
+  'libincompressibleRASModels','libincompressibleLESModels',
+  'libcompressibleTurbulenceModel',
+  'libcompressibleRASModels','libcompressibleLESModels','libspecie',
+  'libincompressibleTransportModels','libbasicThermophysicalModels',
+  'libgenericPatchFields']
+else:
+  lib_link = ['core','incompressibleTurbulenceModel','incompressibleRASModels',
+  'incompressibleLESModels','compressibleTurbulenceModel',
+  'compressibleRASModels','compressibleLESModels','specie',
+  'basicThermophysicalModels','incompressibleTransportModels',
+  'genericPatchFields']
+
+PeEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [PeEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  Pe.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binPe = PeEnv.Program(target = 'Pe',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = PeEnv['BIN_PLATFORM_INSTALL']
+PeEnv.Alias('install', install_dir)
+PeEnv.Install(install_dir, binPe)

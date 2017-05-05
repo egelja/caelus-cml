@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+flowTypeEnv = globalEnv.Clone()
+
+# Path to source
+src = flowTypeEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+flowTypeEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc' ]        
+flowTypeEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+flowTypeEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if flowTypeEnv['WHICH_OS'] == "windows":
+  flowTypeEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libcore','libgenericPatchFields']
+else:
+  lib_link = ['core','genericPatchFields']
+    
+flowTypeEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [flowTypeEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  flowType.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binflowType = flowTypeEnv.Program(target = 'flowType',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = flowTypeEnv['BIN_PLATFORM_INSTALL']
+flowTypeEnv.Alias('install', install_dir)
+flowTypeEnv.Install(install_dir, binflowType)

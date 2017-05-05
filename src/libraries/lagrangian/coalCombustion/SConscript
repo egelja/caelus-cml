@@ -1,0 +1,83 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+lagCoalCombEnv = globalEnv.Clone()
+
+# Path to source
+src = lagCoalCombEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+lagCoalCombEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/sampling/lnInclude',
+src + '/dynamicFvMesh/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+src + '/lagrangian/distributionModels/lnInclude',
+src + '/lagrangian/intermediate/lnInclude',
+src + '/turbulenceModels',
+src + '/transportModels',
+src + '/regionModels/regionModel/lnInclude',
+src + '/regionModels/surfaceFilmModels/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/SLGThermo/lnInclude',
+src + '/thermophysicalModels/radiationModels/lnInclude',
+src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+]
+lagCoalCombEnv.Prepend(CPPPATH = lib_inc)
+  
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+lagCoalCombEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','lagrangian','distributionModels','specie',
+'basicThermophysicalModels','liquidProperties','liquidMixtureProperties',
+'solidProperties','solidMixtureProperties','reactionThermophysicalModels',
+'SLGThermo','radiationModels','compressibleTurbulenceModel',
+'compressibleRASModels','compressibleLESModels','LESdeltas',
+'incompressibleTransportModels','regionModels','surfaceFilmModels',
+'dynamicFvMesh','sampling','lagrangianIntermediate'
+]
+lagCoalCombEnv.Append(LIBS = lib_link)
+            
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  coalParcel/makeCoalParcelSubmodels.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libcoalCombustion = lagCoalCombEnv.SharedLibrary(target = 'coalCombustion', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = lagCoalCombEnv['LIB_PLATFORM_INSTALL']
+lagCoalCombEnv.Alias('install', install_dir)
+lagCoalCombEnv.Install(install_dir, libcoalCombustion)
+
+if (lagCoalCombEnv['WHICH_OS'] == "darwin"):
+
+  lagCoalCombEnv.Append(SHLINKFLAGS ='-install_name @' + lagCoalCombEnv['LIB_PLATFORM_INSTALL'] + '/libcoalCombustion.dylib')

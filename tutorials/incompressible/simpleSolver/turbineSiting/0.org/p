@@ -1,0 +1,47 @@
+/*---------------------------------------------------------------------------*
+Caelus 4.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include        "include/initialConditions"
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform $pressure;
+
+boundaryField
+{
+    inlet
+    {
+        type            zeroGradient;
+    }
+
+    outlet
+    {
+        type            uniformFixedValue;
+        uniformValue    constant $pressure;
+        value           uniform $pressure;
+    }
+
+    "terrain_.*"
+    {
+        type            zeroGradient;
+    }
+
+    ground
+    {
+        type            zeroGradient;
+    }
+
+    #include "include/sideAndTopPatches"
+}
+
+// ************************************************************************* //

@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+mergeOrSplitBafflesEnv = globalEnv.Clone()
+
+# Path to source
+src = mergeOrSplitBafflesEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+mergeOrSplitBafflesEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicMesh/lnInclude']
+
+mergeOrSplitBafflesEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+mergeOrSplitBafflesEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if mergeOrSplitBafflesEnv['WHICH_OS'] == "windows":
+  mergeOrSplitBafflesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libdynamicMesh', 'libgenericPatchFields']
+else:
+  lib_link = ['dynamicMesh', 'genericPatchFields']
+  
+mergeOrSplitBafflesEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  mergeOrSplitBaffles.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binmergeOrSplitBaffles = mergeOrSplitBafflesEnv.Program(target = 
+'mergeOrSplitBaffles', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = mergeOrSplitBafflesEnv['BIN_PLATFORM_INSTALL']
+mergeOrSplitBafflesEnv.Alias('install', install_dir)
+mergeOrSplitBafflesEnv.Install(install_dir, binmergeOrSplitBaffles)

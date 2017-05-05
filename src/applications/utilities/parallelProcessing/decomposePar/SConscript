@@ -1,0 +1,69 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+decomposeParEnv = globalEnv.Clone()
+
+# Path to source
+src = decomposeParEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+decomposeParEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/parallel/decompose/decompose/lnInclude',
+src + '/parallel/decompose/decompositionMethods/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+]
+decomposeParEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+decomposeParEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if decomposeParEnv['WHICH_OS'] == "windows":
+  decomposeParEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u scotchDecompLoad -u metisDecompLoad')
+  lib_link = ['libgenericPatchFields','liblagrangian','libdecompose',
+  'libdecompositionMethods','libscotchDecomp','libmetisDecomp']
+else:
+  lib_link = ['genericPatchFields','lagrangian','decompose',
+  'decompositionMethods','scotchDecomp','metisDecomp']
+   
+decomposeParEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  decomposePar.cpp
+  domainDecomposition.cpp
+  domainDecompositionMesh.cpp
+  domainDecompositionDistribute.cpp
+  dimFieldDecomposer.cpp
+  pointFieldDecomposer.cpp
+  lagrangianFieldDecomposer.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bindecomposePar = decomposeParEnv.Program(target = 'decomposePar', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = decomposeParEnv['BIN_PLATFORM_INSTALL']
+decomposeParEnv.Alias('install', install_dir)
+decomposeParEnv.Install(install_dir, bindecomposePar)

@@ -1,0 +1,64 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+MachEnv = globalEnv.Clone()
+
+# Path to source
+src = MachEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+MachEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc',
+src + '/thermophysicalModels/basic/lnInclude',
+]        
+MachEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+MachEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if MachEnv['WHICH_OS'] == "windows":
+  MachEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libcore','libgenericPatchFields','libbasicThermophysicalModels',
+  'libspecie']
+else:
+  lib_link = ['core','genericPatchFields','basicThermophysicalModels','specie']
+
+MachEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [MachEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  Mach.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binMach = MachEnv.Program(target = 'Mach',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = MachEnv['BIN_PLATFORM_INSTALL']
+MachEnv.Alias('install', install_dir)
+MachEnv.Install(install_dir, binMach)

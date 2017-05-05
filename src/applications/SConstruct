@@ -1,0 +1,425 @@
+#Copyright (C) 2014 Applied CCM
+import os
+import sys
+import platform
+import subprocess
+import re
+
+#===============================================================================
+# Define colours for pretty output (non-Windows only)
+#===============================================================================
+colors = {}
+colors['cyan']   = '\033[96m'
+colors['purple'] = '\033[95m'
+colors['blue']   = '\033[94m'
+colors['green']  = '\033[92m'
+colors['yellow'] = '\033[93m'
+colors['red']    = '\033[91m'
+colors['end']    = '\033[0m'
+
+#If the output is not a terminal, remove the colors
+if not sys.stdout.isatty():
+ for key, value in colors.iteritems():
+    colors[key] = ''
+
+compile_source_message = '%sCompiling %s==> %s$SOURCE%s' % \
+ (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
+
+compile_shared_source_message = '%sCompiling shared %s==> %s$SOURCE%s' % \
+ (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
+
+link_program_message = '%sLinking Program %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+link_library_message = '%sLinking Static Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+ranlib_library_message = '%sRanlib Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
+ (colors['red'], colors['purple'], colors['yellow'], colors['end'])
+
+#===============================================================================
+# Pass operating system envrionment
+#===============================================================================
+
+# Just grab the type of operating system
+which_os = os.environ['WHICH_OS']
+    
+# Default Global Environment is dependent on the tpye of operating system
+if which_os == 'windows' :
+  globalEnv = Environment(tools = ['mingw'], ENV = os.environ)
+  globalEnv.Append(OSTYPE = 'windows')
+else:
+  globalEnv = Environment(ENV = os.environ)
+  globalEnv.Append(OSTYPE = os.name) 
+
+# Slash for paths
+sl = globalEnv['ENV']['SLASH']
+
+
+#===============================================================================
+# Common environment variables
+#===============================================================================
+# The OS enviornment is placed inside the ENV dictionary, we don't want to index 
+# into this everytime so we now create local copies of the variables
+globalEnv.Append(SLASH = globalEnv['ENV']['SLASH'])
+globalEnv.Append(WHICH_OS = globalEnv['ENV']['WHICH_OS'])
+globalEnv.Append(COLOUR_BUILD = globalEnv['ENV']['COLOUR_BUILD'])
+globalEnv.Append(COMPILER_ARCH = globalEnv['ENV']['COMPILER_ARCH'])
+globalEnv.Append(COMPILER = globalEnv['ENV']['COMPILER'])
+globalEnv.Append(BUILD_TYPE = globalEnv['ENV']['BUILD_TYPE'])
+globalEnv.Append(PRECISION_OPTION = globalEnv['ENV']['PRECISION_OPTION'])
+globalEnv.Append(PROJECT = globalEnv['ENV']['PROJECT'])
+globalEnv.Append(PROJECT_VER = globalEnv['ENV']['PROJECT_VER'])
+globalEnv.Append(CAELUS_PROJECT_DIR=globalEnv['ENV']['CAELUS_PROJECT_DIR'])
+globalEnv.Append(EXTERNAL_DIR = globalEnv['ENV']['EXTERNAL_DIR'])
+globalEnv.Append(BUILD_OPTION = globalEnv['ENV']['BUILD_OPTION'])
+globalEnv.Append(LIB_SRC = globalEnv['ENV']['LIB_SRC'])
+globalEnv.Append(BIN_PLATFORM_INSTALL = globalEnv['ENV']['BIN_PLATFORM_INSTALL'])
+globalEnv.Append(LIB_PLATFORM_INSTALL = globalEnv['ENV']['LIB_PLATFORM_INSTALL'])
+globalEnv.Append(PROJECT_INC = globalEnv['LIB_SRC'] + '/core/lnInclude')
+globalEnv.Append(MPI_LIB = globalEnv['ENV']['MPI_LIB'])
+globalEnv.Append(MPI_INC = globalEnv['ENV']['MPI_INC'])
+globalEnv.Append(SCOTCH_PATH = globalEnv['ENV']['SCOTCH_PATH'])
+globalEnv.Append(METIS_PATH = globalEnv['ENV']['METIS_PATH'])
+globalEnv.Append(FLEXXX_PATH = globalEnv['ENV']['FLEXXX_PATH'])
+
+#Temporary direcory location in Windows
+if which_os == "windows":
+  globalEnv['ENV']['TMP']=os.environ['TMP']
+
+# Override default Lexer flags as they don't work with the caelus lex files
+globalEnv.Replace(LEXCOM = '$LEX $LEXFLAGS -o$TARGET -f $SOURCES')
+
+#for item in sorted(globalEnv.Dictionary().items()):
+#    print "construction variable = '%s', value = '%s'" % item
+
+#===============================================================================
+# Add colourful output
+if (globalEnv['COLOUR_BUILD'] =='on'):
+  globalEnv.Append(CXXCOMSTR = compile_source_message)
+  globalEnv.Append(CCCOMSTR = compile_source_message)
+  globalEnv.Append(SHCCCOMSTR = compile_shared_source_message)
+  globalEnv.Append(SHCXXCOMSTR = compile_shared_source_message)
+  globalEnv.Append(ARCOMSTR = link_library_message)
+  globalEnv.Append(RANLIBCOMSTR = ranlib_library_message)
+  globalEnv.Append(SHLINKCOMSTR = link_shared_library_message)
+  globalEnv.Append(LINKCOMSTR = link_program_message)
+  globalEnv.Append(JARCOMSTR = java_library_message)
+  globalEnv.Append(JAVACCOMSTR = compile_source_message)
+
+# Output system architecture        
+if platform.machine().endswith('64'):
+  platform_arch = '64bit'    
+  print ">> Architecture : " + platform_arch
+else:
+  platform_arch = '32bit'
+  print ">> Architecture : " + platform_arch
+
+# Warn user if requested compiler architecture is different from system
+if platform_arch != globalEnv['COMPILER_ARCH']+'bit' :
+  print '! You have request a ', globalEnv['COMPILER_ARCH']+'bit','build on a',\
+        platform_arch, 'system, this may not be possible'
+
+# build type
+print ">> Build type : " + globalEnv['BUILD_TYPE']
+
+# build architecture
+print ">> Build architecture : " + globalEnv['COMPILER_ARCH']+ 'bit'
+
+# build precision
+print ">> Build precision : " + globalEnv['PRECISION_OPTION'] 
+
+#===============================================================================
+# Common compiler flags
+#===============================================================================
+if which_os == "windows" :
+  # General compiler flags
+  GFLAGS = '-m64' + ' -D' + which_os + ' -DWM_' + globalEnv['PRECISION_OPTION']
+
+  # Warning compiler flags
+  CCWARN = Split(
+    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0 -fdefault-inline')  
+    #Debug compiler flags
+    CCDBUG = Split('-ggdb3 -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O3')  
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of windows compiler flags
+
+elif which_os == "darwin" :
+  # Set the C++ compiler
+  globalEnv.Replace(CXX = globalEnv['COMPILER'])
+  
+  #empty compiler flag for now
+  GFLAGS = '-m64' + ' -fsignaling-nans -ftrapping-math' + ' -D' + which_os \
+            + ' -DWM_'+globalEnv['PRECISION_OPTION']
+
+  # Warning compiler flags
+  CCWARN = Split(
+    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0 -fdefault-inline')  
+    #Debug compiler flags
+    CCDBUG = Split('-ggdb2 -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of macosx compiler flags
+
+else :
+  # General compiler flags
+  GFLAGS = '-m64' + ' -D' + which_os + globalEnv['COMPILER_ARCH'] + ' -DWM_' \
+            + globalEnv['PRECISION_OPTION']
+
+  # Warning compiler flags
+  CCWARN = Split(
+    '-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor')
+
+  if  globalEnv['BUILD_TYPE'] == 'Debug':
+  # Debug
+    # Optimisation compiler flags
+    CCOPT  = Split('-O0 -fdefault-inline')  
+    #Debug compiler flags
+    CCDBUG = Split('-ggdb3 -DFULLDEBUG')
+
+  elif  globalEnv['BUILD_TYPE'] == 'Prof':
+  # Profiling
+    # Optimisation compiler flags
+    CCOPT  = Split('-O2')  
+    #Debug compiler flags
+    CCDBUG = Split('-pg')
+
+  else:
+  # Optimised     
+    # Optimisation compiler flags
+    CCOPT  = Split('-O3')  
+    #Debug compiler flags
+    CCDBUG = Split('')
+
+  # Parameter compiler flags
+  ptFLAGS = Split('-ftemplate-depth-100')
+#end of linux compiler flags
+
+# Setup full compiler flags
+globalEnv.Append(CXXFLAGS = GFLAGS)
+globalEnv.Append(CXXFLAGS = CCWARN)
+globalEnv.Append(CXXFLAGS = CCOPT)
+globalEnv.Append(CXXFLAGS = CCDBUG)
+globalEnv.Append(CXXFLAGS = ptFLAGS)
+
+#===============================================================================
+# Common include path(s)
+#===============================================================================
+globalEnv.Append(CPPPATH = [globalEnv['PROJECT_INC'], 'lnInclude', '.'])
+
+#===============================================================================
+# Common linker flags
+#===============================================================================
+if which_os == "windows" :
+  globalEnv.Prepend(LINKFLAGS = '-Xlinker --add-needed -Xlinker --no-as-needed')
+
+elif which_os == "darwin" :
+  globalEnv.Prepend(LINKFLAGS = '-undefined dynamic_lookup' )
+
+else :
+  globalEnv.Prepend(LINKFLAGS = '-Xlinker --add-needed -Xlinker --no-as-needed')
+
+#===============================================================================
+# Common link library path(s)
+#===============================================================================
+if which_os == "windows" :
+  globalEnv.Append(LIBPATH = [globalEnv['LIB_PLATFORM_INSTALL']])
+
+elif which_os == "darwin" :
+  globalEnv.Append(LIBPATH =[globalEnv['LIB_PLATFORM_INSTALL'],  
+  globalEnv['MPI_LIB']])
+
+else :
+  globalEnv.Append(LIBPATH =[globalEnv['LIB_PLATFORM_INSTALL'],  
+  globalEnv['MPI_LIB']])
+
+#===============================================================================
+# Common link library(ies)
+#===============================================================================
+if which_os == "windows" :
+  lib_link = ['libcore']
+  
+elif which_os == "darwin" :
+  lib_link = ['pthread','mpi','core']
+
+else :
+  lib_link = ['dl','mpi','core']
+
+globalEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sub-directories to traverse for compile
+#===============================================================================
+subdirs = [
+'solvers/basic/potentialSolver',
+'solvers/heatTransfer/buoyantBoussinesqSimpleSolver',
+'solvers/heatTransfer/buoyantSimpleSolver',
+'solvers/incompressible/simpleSolver',
+'solvers/incompressible/simpleSolver/SRFSimpleSolver',
+'solvers/incompressible/pisoSolver',
+'solvers/incompressible/pimpleSolver',
+'solvers/incompressible/pimpleSolver/SRFPimpleSolver',
+'utilities/mesh/advanced/autoRefineMesh',
+'utilities/mesh/advanced/collapseEdges',
+'utilities/mesh/advanced/combinePatchFaces',
+'utilities/mesh/advanced/modifyMesh',
+'utilities/mesh/advanced/refineHexMesh',
+'utilities/mesh/advanced/refinementLevel',
+'utilities/mesh/advanced/refineWallLayer',
+'utilities/mesh/advanced/removeFaces',
+'utilities/mesh/advanced/selectCells',
+'utilities/mesh/advanced/splitCells',
+'utilities/mesh/generation/blockMesh', 
+'utilities/mesh/generation/extrude/extrudeModel',
+'utilities/mesh/generation/extrude/extrudeMesh',
+'utilities/mesh/generation/extrude/extrudeToRegionMesh', 
+'utilities/mesh/conversion/caelusMeshToFluent',
+'utilities/mesh/conversion/fluent3DMeshToCAELUS',
+'utilities/mesh/conversion/fluentMeshToCAELUS',
+'utilities/mesh/conversion/caelusToSurface',
+'utilities/mesh/conversion/mshToCAELUS',
+'utilities/mesh/conversion/writeMeshObj',
+'utilities/mesh/manipulation/attachMesh',
+'utilities/mesh/manipulation/autoPatch',
+'utilities/mesh/manipulation/checkMesh',
+'utilities/mesh/manipulation/createBaffles',
+'utilities/mesh/manipulation/createPatch',
+'utilities/mesh/manipulation/deformedGeom',
+'utilities/mesh/manipulation/flattenMesh',
+'utilities/mesh/manipulation/insideCells',
+'utilities/mesh/manipulation/mergeMeshes',
+'utilities/mesh/manipulation/mergeOrSplitBaffles',
+'utilities/mesh/manipulation/mirrorMesh',
+'utilities/mesh/manipulation/moveDynamicMesh',
+'utilities/mesh/manipulation/moveMesh',
+'utilities/mesh/manipulation/objToVTK',
+'utilities/mesh/manipulation/polyDualMesh',
+'utilities/mesh/manipulation/refineMesh',
+'utilities/mesh/manipulation/renumberMesh',
+'utilities/mesh/manipulation/rotateMesh',
+'utilities/mesh/manipulation/setSet',
+'utilities/mesh/manipulation/setsToZones',
+'utilities/mesh/manipulation/singleCellMesh',
+'utilities/mesh/manipulation/splitMesh',
+'utilities/mesh/manipulation/splitMeshRegions',
+'utilities/mesh/manipulation/stitchMesh',
+'utilities/mesh/manipulation/subsetMesh',
+'utilities/mesh/manipulation/topoSet',
+'utilities/mesh/manipulation/transformPoints',
+'utilities/mesh/manipulation/zipUpMesh',
+'utilities/miscellaneous/caelusDebugSwitches',
+'utilities/miscellaneous/caelusFormatConvert',
+'utilities/miscellaneous/patchSummary',
+'utilities/parallelProcessing/decomposePar',
+'utilities/parallelProcessing/reconstructPar',
+'utilities/parallelProcessing/redistributePar',
+'utilities/parallelProcessing/reconstructParMesh',
+'utilities/postProcessing/dataConversion/caelusDataToFluent',
+'utilities/postProcessing/dataConversion/caelusToEnsight',
+'utilities/postProcessing/dataConversion/caelusToEnsightParts',
+'utilities/postProcessing/dataConversion/caelusToTetDualMesh',
+'utilities/postProcessing/dataConversion/caelusToVTK',
+'utilities/postProcessing/caelusCalc',
+'utilities/postProcessing/lagrangian/particleTracks',
+'utilities/postProcessing/lagrangian/steadyParticleTracks',
+'utilities/postProcessing/miscellaneous/execFlowFunctionObjects',
+'utilities/postProcessing/miscellaneous/caelusListTimes',
+'utilities/postProcessing/miscellaneous/postChannel',
+'utilities/postProcessing/miscellaneous/ptot',
+'utilities/postProcessing/miscellaneous/temporalInterpolate',
+'utilities/postProcessing/miscellaneous/wdot',
+'utilities/postProcessing/miscellaneous/writeCellCentres',
+'utilities/postProcessing/patch/patchAverage',
+'utilities/postProcessing/patch/patchIntegrate',
+'utilities/postProcessing/sampling/probeLocations',
+'utilities/postProcessing/sampling/sample',
+'utilities/postProcessing/scalarField/pPrime2',
+'utilities/postProcessing/stressField/stressComponents',
+'utilities/postProcessing/turbulence/R',
+'utilities/postProcessing/turbulence/createTurbulenceFields',
+'utilities/postProcessing/velocityField/Co',
+'utilities/postProcessing/velocityField/enstrophy',
+'utilities/postProcessing/velocityField/flowType',
+'utilities/postProcessing/velocityField/Lambda2',
+'utilities/postProcessing/velocityField/Mach',
+'utilities/postProcessing/velocityField/Pe',
+'utilities/postProcessing/velocityField/Q',
+'utilities/postProcessing/velocityField/streamFunction',
+'utilities/postProcessing/velocityField/uprime',
+'utilities/postProcessing/velocityField/vorticity',
+'utilities/postProcessing/wall/wallGradU',
+'utilities/postProcessing/wall/wallHeatFlux',
+'utilities/postProcessing/wall/wallShearStress',
+'utilities/postProcessing/wall/yPlusLES',
+'utilities/postProcessing/wall/yPlusRAS',
+'utilities/preProcessing/changeDictionary',
+'utilities/preProcessing/mapFields',
+'utilities/preProcessing/setFields'
+]
+
+#===============================================================================
+# Execute SConscript files in each sub-directory
+#===============================================================================
+for dir in subdirs:
+  if GetOption('clean'):
+    print ">> Removing lnInclude directory for " + dir
+    subprocess.call(['python', 
+    globalEnv['CAELUS_PROJECT_DIR'] + '/bin/cleanLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+	
+  else:
+    print ">> Creating lnInclude directory for " + dir
+    subprocess.call(['python', 
+    globalEnv['CAELUS_PROJECT_DIR'] + '/bin/createLnInclude.py', '-s', dir])
+    SConscript( os.path.join(dir, 'SConscript'), exports = ['globalEnv'])
+ 
+#===============================================================================
+# That's All Folks!
+#===============================================================================

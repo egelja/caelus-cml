@@ -1,0 +1,68 @@
+#
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+basicSolThermoEnv = globalEnv.Clone()
+
+# Path to source
+src = basicSolThermoEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+basicSolThermoEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = [src + '/thermophysicalModels/solid/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+'lnInclude'     
+]
+basicSolThermoEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+basicSolThermoEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','specie','solid']
+basicSolThermoEnv.Append(LIBS = lib_link)
+       
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  basicSolidThermo/basicSolidThermo.cpp
+  basicSolidThermo/basicSolidThermoNew.cpp
+  constSolidThermo/constSolidThermo.cpp
+  directionalKSolidThermo/directionalKSolidThermo.cpp
+  interpolatedSolidThermo/interpolatedSolidThermo.cpp
+  interpolatedSolidThermo/interpolateSolid/interpolateSolid.cpp
+  isotropicKSolidThermo/isotropicKSolidThermo.cpp
+  solidMixtureThermo/mixtures/basicSolidMixture/basicSolidMixture.cpp
+  solidMixtureThermo/solidMixtureThermo/solidMixtureThermos.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libbasicSolidThermo = basicSolThermoEnv.SharedLibrary(target = 
+'basicSolidThermo', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = basicSolThermoEnv['LIB_PLATFORM_INSTALL']
+basicSolThermoEnv.Alias('install', install_dir)
+basicSolThermoEnv.Install(install_dir, libbasicSolidThermo)
+
+if (basicSolThermoEnv['WHICH_OS'] == "darwin"):
+
+  basicSolThermoEnv.Append(SHLINKFLAGS ='-install_name @' + basicSolThermoEnv['LIB_PLATFORM_INSTALL'] + '/libbasicSolidThermo.dylib')

@@ -1,0 +1,54 @@
+export DEFSPLUS=
+export INCLUDESPLUS=
+export CFLAGSPLUS=
+export LDFLAGSPLUS=
+export LIBSPLUS=
+mkfdirs=. src
+export DLLFLAG=
+sedfiles=Makefile libtool config.h
+
+.PHONY: all
+all:
+#	./configure --prefix=c:/progra~1/Flex
+#	list='$(mkfdirs)'; flist='$(sedfiles)'; for dd in $$list; do \
+#		for ff in $$flist; do \
+#			if [ -e $$dd/$$ff ]; then \
+#				cp -fp $$dd/$$ff $$dd/$$ff.orig; \
+#			fi; \
+#		done; \
+#	done
+
+	rm -f Makefile0.sed
+	if [ -e makefile-rc.sed ]; then \
+		cat makefile-rc.sed >Makefile0.sed; \
+	fi
+	if [ -e Makefile.sed ]; then \
+		cat Makefile.sed >>Makefile0.sed; \
+	fi
+
+	rm -f libtool0.sed
+	if [ -n "$$DLLFLAG" ]; then\
+		echo "s/-DDLL_EXPORT/& $$DLLFLAG/g" >libtool0.sed; \
+	fi
+	if [ -e $(DVLDIR)/libtool.sed ]; then \
+		cat $(DVLDIR)/libtool.sed >>libtool0.sed; \
+	fi
+
+	list='$(mkfdirs)'; flist='$(sedfiles)'; for dd in $$list; do \
+		for ff in $$flist; do \
+			if [ -e $$dd/$$ff ]; then \
+				if [ -e $${ff}0.sed ]; then \
+					echo sed -f $${ff}0.sed $$dd/$$ff.orig >$$dd/$$ff; \
+					sed -f $${ff}0.sed $$dd/$$ff.orig >$$dd/$$ff; \
+				elif [ -e $$ff.sed ]; then \
+					echo sed -f $$ff.sed $$dd/$$ff.orig >$$dd/$$ff; \
+					sed -f $$ff.sed $$dd/$$ff.orig >$$dd/$$ff; \
+				fi; \
+			fi; \
+		done; \
+	done
+
+#	make all
+#	make check
+#	make install prefix=c:/temp/sed
+                                 

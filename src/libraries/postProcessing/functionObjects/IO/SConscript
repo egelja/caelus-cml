@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funcObjIOEnv = globalEnv.Clone()
+
+sl = funcObjIOEnv['SLASH']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+funcObjIOEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+funcObjIOEnv['LIB_SRC'] + '/sampling/lnInclude']
+funcObjIOEnv.Prepend(CPPPATH = lib_inc)
+     
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+funcObjIOEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','sampling'] 
+funcObjIOEnv.Append(LIBS = lib_link)
+            
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  partialWrite/partialWrite.cpp
+  partialWrite/partialWriteFunctionObject.cpp
+  writeRegisteredObject/writeRegisteredObject.cpp
+  writeRegisteredObject/writeRegisteredObjectFunctionObject.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libIOFunctionObjects = funcObjIOEnv.SharedLibrary(target = 
+'IOFunctionObjects', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = funcObjIOEnv['LIB_PLATFORM_INSTALL']
+funcObjIOEnv.Alias('install', install_dir)
+funcObjIOEnv.Install(install_dir, libIOFunctionObjects)
+
+if (funcObjIOEnv['WHICH_OS'] == "darwin"):
+
+  funcObjIOEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjIOEnv['LIB_PLATFORM_INSTALL'] + '/libIOFunctionObjects.dylib')

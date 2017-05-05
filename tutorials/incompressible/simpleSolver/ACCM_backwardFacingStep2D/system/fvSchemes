@@ -1,0 +1,69 @@
+/*-------------------------------------------------------------------------------*
+Caelus 4.10
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+	version				2.0;
+	format				ascii;
+	class				dictionary;
+	object				fvSchemes;
+}
+
+//------------------------------------------------------------------------------
+
+ddtSchemes
+{
+	default				steadyState;
+}
+
+gradSchemes
+{
+	default				Gauss	linear;
+	grad(p)				Gauss	linear;
+	grad(U)				Gauss	linear;
+}
+
+divSchemes
+{
+	default				none;
+	div(phi,U)			Gauss	linearUpwind 	grad(U);
+	div(phi,nuTilda)		Gauss	upwind;		                    // Will be used for S-A model only
+	div(phi,k)      		Gauss	upwind; 	                    // will be used for k-epsilon & k-omega only
+	div(phi,omega)  		Gauss 	upwind;				// Will be used for k-omega model only
+	div(phi,epsilon)	  	Gauss 	upwind;	
+	div((nuEff*dev(T(grad(U)))))	Gauss   linear;
+	div(phi,symm(grad(U)))		Gauss	linear;				// Will be used for S-A-Curvature-corr only
+}
+
+laplacianSchemes
+{
+	default				none;
+	laplacian(nu,U)			Gauss 	linear 		corrected;
+	laplacian(nuEff,U)		Gauss 	linear 		corrected;
+	laplacian(DnuTildaEff,nuTilda)  Gauss 	linear 	corrected;        // Will be used for S-A model only
+	laplacian(DkEff,k) 		Gauss 	linear 	corrected;        // Will be used for k-omega & k-omega only
+	laplacian(DomegaEff,omega) 	Gauss 	linear 	corrected;	// Will be used for k-omega model only
+	laplacian(DepsilonEff,epsilon)	Gauss 	linear 	corrected;
+	laplacian((1|A(U)),p)		Gauss 	linear 		corrected;
+	laplacian(1,p)  		Gauss 	linear 		corrected;
+}
+
+interpolationSchemes
+{
+	default				linear;
+	interpolate(HbyA)		linear;
+}
+
+snGradschemes
+{
+	default				corrected;
+}
+
+fluxRequired
+{
+	default				no;
+	p				;
+}
+//--------------------------------------------------------------------------------

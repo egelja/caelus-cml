@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+CoEnv = globalEnv.Clone()
+
+# Path to source
+src = CoEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+CoEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc' ]        
+CoEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+CoEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if CoEnv['WHICH_OS'] == "windows":
+  CoEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libcore','libgenericPatchFields']
+else:
+  lib_link = ['core','genericPatchFields']
+CoEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [CoEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  Co.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binCo = CoEnv.Program(target = 'Co',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = CoEnv['BIN_PLATFORM_INSTALL']
+CoEnv.Alias('install', install_dir)
+CoEnv.Install(install_dir, binCo)

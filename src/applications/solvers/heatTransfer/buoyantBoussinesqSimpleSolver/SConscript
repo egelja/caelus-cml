@@ -1,0 +1,68 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+buoyBoussinesqSimpleSolverEnv = globalEnv.Clone()
+
+# Path to source
+src = buoyBoussinesqSimpleSolverEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+buoyBoussinesqSimpleSolverEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = ['../buoyantBoussinesqSimpleSolver',
+src + '/turbulenceModels',
+src + '/turbulenceModels/incompressible/turbulenceModel',
+src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/incompressible/RAS/lnInclude', 
+src + '/transportModels',
+src + '/transportModels/incompressible/singlePhaseTransportModel',
+src + '/transportModels/incompressible/lnInclude'
+]
+buoyBoussinesqSimpleSolverEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+buoyBoussinesqSimpleSolverEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if buoyBoussinesqSimpleSolverEnv['WHICH_OS'] == "windows":
+  buoyBoussinesqSimpleSolverEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
+  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
+   'libincompressibleTransportModels']
+else:
+  lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
+  'incompressibleTransportModels']
+
+buoyBoussinesqSimpleSolverEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  buoyantBoussinesqSimpleSolver.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binbuoyBoussinesqSimpleSolver = buoyBoussinesqSimpleSolverEnv.Program(target =
+'buoyantBoussinesqSimpleSolver', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = buoyBoussinesqSimpleSolverEnv['BIN_PLATFORM_INSTALL']
+buoyBoussinesqSimpleSolverEnv.Alias('install', install_dir)
+buoyBoussinesqSimpleSolverEnv.Install(install_dir, binbuoyBoussinesqSimpleSolver)

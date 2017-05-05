@@ -1,0 +1,63 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+\*---------------------------------------------------------------------------*/
+
+#include "X3DsurfaceFormatCore.hpp"
+#include "clock.hpp"
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+void CML::fileFormats::X3DsurfaceFormatCore::writeHeader
+(
+    Ostream& os
+)
+{
+    os  <<
+        "<?xml version='1.0' encoding='UTF-8'?>\n"
+        "<!DOCTYPE X3D PUBLIC \"ISO//Web3D//DTD X3D 3.0//EN\" "
+        "\"http://www.web3d.org/specifications/x3d-3.0.dtd\">\n"
+        "<X3D\n"
+        "  version='3.0'\n"
+        "  profile='Immersive'\n"
+        "  xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance'\n"
+        "  xsd:noNamespaceSchemaLocation="
+        "'http://www.web3d.org/specifications/x3d-3.0.xsd'\n"
+        "  >\n";
+}
+
+
+void CML::fileFormats::X3DsurfaceFormatCore::writeAppearance
+(
+    Ostream& os
+)
+{
+    os  <<
+        "  <Appearance>\n"
+        "   <Material"
+        " diffuseColor='0.8 0.8 0.8'"
+        " specularColor='1.0 1.0 1.0'"
+        " shininess='0.5'"
+        " transparency='0.0'"
+        " />\n"           // end material
+        "  </Appearance>\n";
+}
+
+
+// ************************************************************************* //

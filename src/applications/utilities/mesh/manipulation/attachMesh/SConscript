@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+attachMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = attachMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+attachMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicMesh/lnInclude'
+]
+
+attachMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+attachMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if attachMeshEnv['WHICH_OS'] == "windows":
+  lib_link = ['libdynamicMesh']
+else:
+  lib_link = ['dynamicMesh']
+  
+attachMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  attachMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binattachMesh = attachMeshEnv.Program(target = 
+'attachMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = attachMeshEnv['BIN_PLATFORM_INSTALL']
+attachMeshEnv.Alias('install', install_dir)
+attachMeshEnv.Install(install_dir, binattachMesh)

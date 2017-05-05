@@ -1,0 +1,51 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+postCalcEnv = globalEnv.Clone()
+
+sl = postCalcEnv['SLASH']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+postCalcEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude']
+postCalcEnv.Prepend(CPPPATH = lib_inc)
+    
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+postCalcEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core'] 
+postCalcEnv.Append(LIBS = lib_link)
+           
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  postCalc.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+postCalc = postCalcEnv.Object(target = 'postCalc', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = postCalcEnv['LIB_PLATFORM_INSTALL']
+postCalcEnv.Alias('install', install_dir)
+postCalcEnv.Install(install_dir, postCalc)

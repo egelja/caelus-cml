@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+odeEnv = globalEnv.Clone()
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+odeEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude']
+odeEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+odeEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core']
+odeEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  ODESolvers/ODESolver/ODESolver.cpp
+  ODESolvers/ODESolver/ODESolverNew.cpp
+  ODESolvers/RK/RK.cpp
+  ODESolvers/KRR4/KRR4.cpp
+  ODESolvers/SIBS/SIBS.cpp
+  ODESolvers/SIBS/SIMPR.cpp
+  ODESolvers/SIBS/polyExtrapolate.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libODE = odeEnv.SharedLibrary(target = 'ODE', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = odeEnv['LIB_PLATFORM_INSTALL']
+odeEnv.Alias('install', install_dir)
+odeEnv.Install(install_dir, libODE)
+
+if (odeEnv['WHICH_OS'] == "darwin"):
+
+  odeEnv.Append(SHLINKFLAGS ='-install_name @' + odeEnv['LIB_PLATFORM_INSTALL'] + '/libODE.dylib')

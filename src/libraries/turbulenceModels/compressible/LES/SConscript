@@ -1,0 +1,68 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+turbCompLESEnv = globalEnv.Clone()
+
+# Path to source
+src = turbCompLESEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+turbCompLESEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/turbulenceModels',
+src + '/thermophysicalModels/basic/lnInclude',   
+src + '/turbulenceModels/LES/LESdeltas/lnInclude',
+src + '/turbulenceModels/LES/LESfilters/lnInclude' 
+]
+turbCompLESEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+turbCompLESEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','compressibleTurbulenceModel','LESdeltas',
+'LESfilters']
+turbCompLESEnv.Append(LIBS = lib_link)
+       
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  LESModel/LESModel.cpp
+  GenEddyVisc/GenEddyVisc.cpp
+  GenSGSStress/GenSGSStress.cpp
+  derivedFvPatchFields/wallFunctions/muSgsWallFunctions/muSgsUSpaldingWallFunction/muSgsUSpaldingWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsWallFunction/alphaSgsWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/alphaSgsWallFunctions/alphaSgsJayatillekeWallFunction/alphaSgsJayatillekeWallFunctionFvPatchScalarField.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libcompressibleLESModels = turbCompLESEnv.SharedLibrary(target = 
+'compressibleLESModels', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = turbCompLESEnv['LIB_PLATFORM_INSTALL']
+turbCompLESEnv.Alias('install', install_dir)
+turbCompLESEnv.Install(install_dir, libcompressibleLESModels)
+
+if (turbCompLESEnv['WHICH_OS'] == "darwin"):
+
+  turbCompLESEnv.Append(SHLINKFLAGS ='-install_name @' + turbCompLESEnv['LIB_PLATFORM_INSTALL'] + '/libcompressibleLESModels.dylib')

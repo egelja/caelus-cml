@@ -1,0 +1,718 @@
+<project>
+    <shortName>Caelus</shortName>
+    <fullName>Caelus</fullName>
+    <version>4.10</version>
+    <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
+    <readmeFile>../README.md</readmeFile>
+    <licenseFile>../doc/gpl-3.0.txt</licenseFile>
+    <htmlLicenseFile>../doc/gpl-3.0-standalone.html</htmlLicenseFile>
+    <wrapLicenseFileText>0</wrapLicenseFileText>
+    <leftImage>images/caelus_logo_black.png</leftImage>
+    <logoImage>images/ACCM_logo.png</logoImage>
+    <splashImage>images/caelus_splash.png</splashImage>
+    <componentList>
+        <component>
+            <name>caelus</name>
+            <description>Caelus Source and Build Tools</description>
+            <canBeEdited>0</canBeEdited>
+            <detailedDescription>Full source code for Calues libraries, solvers and utilites and associated build tools</detailedDescription>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>caelus</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}</destination>
+                    <name>caelusfiles</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../etc</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../doc</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>../README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../BuildCaelus.py</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>external Windows</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/windows</destination>
+                    <name>externalwin</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/windows/flex-2.5.4a-1</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/zlib-1.2.7</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/mingw64</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>windows</value>
+                        </compareText>
+                    </shouldPackRuleList>
+                </folder>
+                <folder>
+                    <description>src</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/src</destination>
+                    <name>srcfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../src/applications</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../src/libraries</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>tutorials</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/tutorials</destination>
+                    <name>tutorialsfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../tutorials/heatTransfer</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../tutorials/incompressible</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>external</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external</destination>
+                    <name>externalfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/metis-5.1.0</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/scons-local-2.3.4</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/scotch-5.1.12</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <startMenuShortcutList>
+                <startMenuShortcut>
+                    <comment>Uninstall Caelus</comment>
+                    <name>Uninstall Caelus</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}/${project.shortName}-${project.version}/uninstall.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon>${installdir}/${project.shortName}-${project.version}/uninstall.exe</windowsIcon>
+                    <windowsPath></windowsPath>
+                </startMenuShortcut>
+            </startMenuShortcutList>
+        </component>
+        <component>
+            <name>binaries</name>
+            <description>Binaries</description>
+            <canBeEdited>1</canBeEdited>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>platforms Windows</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/platforms</destination>
+                    <name>platformswin</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../platforms/windows64mingwDP</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>windows</value>
+                        </compareText>
+                    </shouldPackRuleList>
+                </folder>
+                <folder>
+                    <description>metislib</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/metis-5.1.0</destination>
+                    <name>metislib</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/metis-5.1.0</origin>
+                            <onPackingFilterList>
+                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
+                            </onPackingFilterList>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>scotchlib</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/scotch-5.1.12</destination>
+                    <name>scotchlib</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/scotch-5.1.12</origin>
+                            <onPackingFilterList>
+                                <fileNameFilter logic="does_not_match" pattern="*.so"/>
+                            </onPackingFilterList>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <shouldPackRuleList>
+                <compareText>
+                    <logic>equals</logic>
+                    <text>"${buildtype}"</text>
+                    <value>"full"</value>
+                </compareText>
+            </shouldPackRuleList>
+        </component>
+        <component>
+            <name>windowsdata</name>
+            <description>Terminal and GNU Tools</description>
+            <canBeEdited>1</canBeEdited>
+            <detailedDescription>Terminal and GNU tools to provide a Linux feel on Windows</detailedDescription>
+            <selected>1</selected>
+            <show>1</show>
+            <desktopShortcutList>
+                <shortcut>
+                    <comment></comment>
+                    <exec></exec>
+                    <icon></icon>
+                    <name>Caelus Console</name>
+                    <path></path>
+                    <platforms>windows</platforms>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon></windowsIcon>
+                    <windowsPath></windowsPath>
+                </shortcut>
+            </desktopShortcutList>
+            <folderList>
+                <folder>
+                    <description>Terminal</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/external/windows/terminal</destination>
+                    <name>terminal</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../external/windows/terminal/ansicon</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/terminal/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/terminal/cmd-scripts</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/windows/terminal/ConsoleZ.x64</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>windows</value>
+                        </compareText>
+                    </shouldPackRuleList>
+                </folder>
+                <folder>
+                    <description>Console</description>
+                    <destination>${windows_folder_appdata}\\Console</destination>
+                    <name>console</name>
+                    <platforms>windows</platforms>
+                    <shouldPackRuleList>
+                        <compareText>
+                            <logic>equals</logic>
+                            <text>${platform_name}</text>
+                            <value>windows</value>
+                        </compareText>
+                    </shouldPackRuleList>
+                </folder>
+            </folderList>
+            <postInstallationActionList>
+                <writeFile>
+                    <path>${installdir}\\${product_shortName}-${product_version}\external\windows\terminal\cmd-scripts\shell-colour.cmd</path>
+                    <text>@echo off
+call "${installdir}\\${product_shortName}-${product_version}\etc\caelus-environment.cmd"
+prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
+"${installdir}\\${product_shortName}-${product_version}\external\windows\terminal\ansicon\x64\ansicon.exe"
+</text>
+                </writeFile>
+                <writeFile>
+                    <path>${windows_folder_appdata}\\Console\\console.xml</path>
+                    <text>&lt;?xml version="1.0"?&gt;
+&lt;settings&gt;
+	&lt;console change_refresh="10" refresh="100" rows="25" columns="80" buffer_rows="500" buffer_columns="0" shell='${installdir}\\${product_shortName}-${product_version}\external\windows\terminal\cmd-scripts\shell-colour.cmd' init_dir='${installdir}\\${product_shortName}-${product_version}' start_hidden="0" save_size="0" background_text_opacity="255"&gt;
+		&lt;colors&gt;
+			&lt;color id="0" r="0" g="0" b="0"/&gt;
+			&lt;color id="1" r="0" g="0" b="128"/&gt;
+			&lt;color id="2" r="0" g="150" b="0"/&gt;
+			&lt;color id="3" r="0" g="150" b="150"/&gt;
+			&lt;color id="4" r="170" g="25" b="25"/&gt;
+			&lt;color id="5" r="128" g="0" b="128"/&gt;
+			&lt;color id="6" r="128" g="128" b="0"/&gt;
+			&lt;color id="7" r="192" g="192" b="192"/&gt;
+			&lt;color id="8" r="128" g="128" b="128"/&gt;
+			&lt;color id="9" r="0" g="100" b="255"/&gt;
+			&lt;color id="10" r="0" g="255" b="0"/&gt;
+			&lt;color id="11" r="0" g="255" b="255"/&gt;
+			&lt;color id="12" r="255" g="50" b="50"/&gt;
+			&lt;color id="13" r="255" g="0" b="255"/&gt;
+			&lt;color id="14" r="255" g="255" b="0"/&gt;
+			&lt;color id="15" r="255" g="255" b="255"/&gt;
+		&lt;/colors&gt;
+	&lt;/console&gt;
+	&lt;appearance&gt;
+		&lt;font name="Courier New" size="10" bold="0" italic="0" smoothing="0" bold_intensified="0" italic_intensified="0" extra_width="0"&gt;
+			&lt;color use="0" r="0" g="0" b="0"/&gt;
+		&lt;/font&gt;
+		&lt;window title="ConsoleZ" icon="" use_tab_icon="1" use_console_title="0" show_cmd="1" show_cmd_tabs="1" use_tab_title="1" trim_tab_titles="20" trim_tab_titles_right="0" main_title_format="?U([%u] )?N({%u} )%m?s( - %s)" tab_title_format="%n. ?U([%u] )?N({%u} )%t?s( - %s)"/&gt;
+		&lt;controls show_menu="1" show_toolbar="1" show_statusbar="1" show_tabs="1" hide_single_tab="1" show_scrollbars="1" flat_scrollbars="0" tabs_on_bottom="0" hide_tab_icons="0" show_searchbar="1"/&gt;
+		&lt;styles caption="1" resizable="1" taskbar_button="1" border="1" inside_border="2" tray_icon="1" quake_like="0" jumplist="0" integrated_ime="0" quake_animation_time="300"&gt;
+			&lt;selection_color r="255" g="255" b="255"/&gt;
+		&lt;/styles&gt;
+		&lt;position x="-1" y="-1" dock="-1" snap="-1" z_order="0" save_position="0" w="-1" h="-1" save_size="0"/&gt;
+		&lt;transparency type="0" active_alpha="255" inactive_alpha="255" r="0" g="0" b="0"/&gt;
+		&lt;fullscreen start_in_fullscreen="0" fullscreen_monitor="0"/&gt;
+	&lt;/appearance&gt;
+	&lt;behavior&gt;
+		&lt;copy_paste copy_on_select="0" clear_on_copy="1" no_wrap="1" trim_spaces="1" copy_newline_char="0" sensitive_copy="1" include_left_delimiter="0" include_right_delimiter="0" left_delimiters=" ([" right_delimiters=" )]" eol_spaces="1" rtf="1"/&gt;
+		&lt;scroll page_scroll_rows="0"/&gt;
+		&lt;tab_highlight flashes="3" stay_highligted="1"/&gt;
+		&lt;close allow_closing_last_view="0" confirm_closing_multiple_views="1"/&gt;
+		&lt;focus follow_mouse="0"/&gt;
+		&lt;instance allow_multi="1"/&gt;
+		&lt;clone use_current_dir="1"/&gt;
+		&lt;search match_case="0" match_whole_word="0"/&gt;&lt;runas use_credprov="1"/&gt;&lt;/behavior&gt;
+	&lt;hotkeys use_scroll_lock="1"&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="83" command="settings"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="112" command="help"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="1" extended="0" code="115" command="exit"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="112" command="newtab1"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="113" command="newtab2"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="114" command="newtab3"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="115" command="newtab4"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="116" command="newtab5"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="117" command="newtab6"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="118" command="newtab7"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="119" command="newtab8"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="120" command="newtab9"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="121" command="newtab10"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="122" command="newtab11"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="123" command="newtab12"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="49" command="switchtab1"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="50" command="switchtab2"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="51" command="switchtab3"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="52" command="switchtab4"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="53" command="switchtab5"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="54" command="switchtab6"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="55" command="switchtab7"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="56" command="switchtab8"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="57" command="switchtab9"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="48" command="switchtab10"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="9" command="nexttab"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="9" command="prevtab"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="87" command="closetab"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="82" command="renametab"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="1" code="34" command="nextview"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="1" code="33" command="prevview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="1" extended="1" code="37" command="leftview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="1" extended="1" code="39" command="rightview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="1" extended="1" code="38" command="topview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="1" extended="1" code="40" command="bottomview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="dechsize"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="inchsize"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="decvsize"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="incvsize"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="87" command="closeview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="detachview"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="attach"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="79" command="splithoriz"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="69" command="splitvert"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="clone"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="122" command="fullscreen"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="96" command="zoom100"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="107" command="zoominc"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="109" command="zoomdec"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="71" command="groupall"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="71" command="ungroupall"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="84" command="grouptab"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="84" command="ungrouptab"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="1" code="45" command="copy"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="0" code="65" command="selectall"/&gt;
+		&lt;hotkey ctrl="1" shift="0" alt="0" extended="1" code="46" command="clear_selection"/&gt;
+		&lt;hotkey ctrl="0" shift="1" alt="0" extended="1" code="45" command="paste"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="stopscroll"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollrowup"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollrowdown"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollpageup"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollpagedown"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollcolleft"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollcolright"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollpageleft"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="scrollpageright"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="find"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="findnext"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="findprev"/&gt;
+		&lt;hotkey ctrl="1" shift="1" alt="0" extended="0" code="112" command="dumpbuffer"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd1"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd2"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd3"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd4"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd5"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd6"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd7"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd8"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd9"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="externalcmd10"/&gt;
+		&lt;hotkey ctrl="0" shift="0" alt="0" extended="0" code="0" command="activate" win="0"/&gt;
+	&lt;/hotkeys&gt;
+	&lt;mouse&gt;
+		&lt;actions&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="1" name="copy"/&gt;
+			&lt;action ctrl="0" shift="1" alt="0" button="1" name="select"/&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="0" name="select_column"/&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="3" name="paste"/&gt;
+			&lt;action ctrl="1" shift="0" alt="0" button="1" name="drag"/&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="2" name="menu"/&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="0" name="menu2"/&gt;
+			&lt;action ctrl="0" shift="0" alt="0" button="0" name="menu3"/&gt;
+		&lt;/actions&gt;
+	&lt;/mouse&gt;
+	&lt;tabs&gt;
+		&lt;tab title="ConsoleZ" use_default_icon="0"&gt;
+			&lt;console shell="" init_dir="" run_as_user="0" user="" net_only="0" run_as_admin="0"/&gt;
+			&lt;cursor style="0" r="255" g="255" b="255"/&gt;
+			&lt;background type="0" r="0" g="0" b="0"&gt;
+				&lt;image file="" relative="0" extend="0" position="0"&gt;
+					&lt;tint opacity="0" r="0" g="0" b="0"/&gt;
+				&lt;/image&gt;
+			&lt;/background&gt;
+		&lt;/tab&gt;
+	&lt;/tabs&gt;
+	&lt;external_commands&gt;
+&lt;/external_commands&gt;&lt;/settings&gt;
+</text>
+                </writeFile>
+            </postInstallationActionList>
+            <startMenuShortcutList>
+                <startMenuShortcut>
+                    <comment>Caelus Terminal</comment>
+                    <name>Caelus Terminal</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console_128.ico</windowsIcon>
+                    <windowsPath></windowsPath>
+                </startMenuShortcut>
+            </startMenuShortcutList>
+        </component>
+    </componentList>
+    <preBuildActionList>
+        <setInstallerVariable>
+            <name>buildtype</name>
+            <value>full</value>
+        </setInstallerVariable>
+    </preBuildActionList>
+    <initializationActionList>
+        <!-- For Windows, enable windowsdata  -->
+        <componentSelection>
+            <deselect></deselect>
+            <select>windowsdata</select>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </componentSelection>
+    </initializationActionList>
+    <preInstallationActionList>
+        <setInstallerVariable>
+            <name>installdir</name>
+            <value>C:\\${product_shortname}</value>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>mpibinpath</name>
+            <value>${windows_folder_program_files}\\MPICH2\\bin</value>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>mpiincpath</name>
+            <value>${windows_folder_program_files}\\MPICH2\\include</value>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>mpilibpath</name>
+            <value>${windows_folder_system}</value>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </setInstallerVariable>
+        <setInstallerVariable>
+            <name>mpilibname</name>
+            <value>mpich2</value>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </setInstallerVariable>
+        <throwError>
+            <text>Python not found in your PATH. Please correct before installing.</text>
+            <ruleList>
+                <programTest>
+                    <condition>is_not_in_path</condition>
+                    <name>python</name>
+                </programTest>
+            </ruleList>
+        </throwError>
+    </preInstallationActionList>
+    <postInstallationActionList>
+        <writeFile>
+            <path>${installdir}/${product_shortName}-${product_version}/etc/caelus_conf.py</path>
+            <progressText>Writing Caelus Configuration file</progressText>
+            <text>PROJECT_NAME = '${project.shortName}'
+PROJECT_VER = '${project.version}'
+PRECISION_OPTION = 'DP'
+COMPILER_ARCH = '64'
+BUILD_TYPE = 'Opt'
+FLEXXX = 'flex'
+
+# Windows setup
+COMPILER = 'mingw'
+PROJECT_DIR = "${installdir.escape_backslashes}"
+
+MPI_BIN = '${mpibinpath.escape_backslashes}'
+MPI_INC = '${mpiincpath.escape_backslashes}'
+MPI_LIB = '${mpilibpath.escape_backslashes}'
+MPI_LIB_NAME = '${mpilibname}'
+#SCOTCH_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scotch-5.1.12'
+#METIS_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\metis-5.1.0'
+#ZLIB_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\zlib-1.2.7'
+#FLEXXX_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\flex-2.5.4a-1'
+CAELUS_TERM = '${project.component(windowsdata).selected}'
+COLOUR_BUILD = '${colourbuildwin}'</text>
+        </writeFile>
+        <runProgram>
+            <program>python</program>
+            <programArguments>"${installdir}/${product_shortName}-${product_version}/etc/caelus_setup.py"</programArguments>
+        </runProgram>
+        <setWindowsACL>
+            <action>allow</action>
+            <files>${installdir}</files>
+            <recurseContainers>1</recurseContainers>
+            <recurseObjects>1</recurseObjects>
+        </setWindowsACL>
+    </postInstallationActionList>
+    <allowComponentSelection>1</allowComponentSelection>
+    <compressionAlgorithm>lzma-ultra</compressionAlgorithm>
+    <enableRollback>0</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <height>400</height>
+    <licenseFileEncoding>ascii</licenseFileEncoding>
+    <projectSchemaVersion>1.0</projectSchemaVersion>
+    <readmeFileEncoding>ascii</readmeFileEncoding>
+    <requireInstallationByRootUser>1</requireInstallationByRootUser>
+    <saveRelativePaths>1</saveRelativePaths>
+    <slideShowTiming>10</slideShowTiming>
+    <splashScreenDelay>5</splashScreenDelay>
+    <startMenuGroupName>${project.fullName}</startMenuGroupName>
+    <uninstallerDirectory>${installdir}/${product_shortName}-${product_version}</uninstallerDirectory>
+    <vendor>Applied CCM</vendor>
+    <windows64bitMode>1</windows64bitMode>
+    <parameterList>
+        <directoryParameter>
+            <name>installdir</name>
+            <description>Installer.Parameter.installdir.description</description>
+            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <value>/opt/${project.shortName}/</value>
+            <default>/opt/${project.shortName}</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <cliOptionName>prefix</cliOptionName>
+            <mustBeWritable>1</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>40</width>
+        </directoryParameter>
+        <parameterGroup>
+            <name>terminalconfigwin</name>
+            <title>Terminal Configuration</title>
+            <explanation></explanation>
+            <value></value>
+            <default></default>
+            <parameterList>
+                <booleanParameter>
+                    <name>colourbuildwin</name>
+                    <description></description>
+                    <explanation>Choose if you want compiling to use colourful output</explanation>
+                    <value>True</value>
+                    <default>True</default>
+                </booleanParameter>
+            </parameterList>
+            <ruleList>
+                <componentTest>
+                    <logic>selected</logic>
+                    <name>windowsdata</name>
+                </componentTest>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </parameterGroup>
+        <parameterGroup>
+            <name>terminalconfiglin</name>
+            <title>Terminal Configuration</title>
+            <explanation></explanation>
+            <value></value>
+            <default></default>
+            <parameterList>
+                <booleanParameter>
+                    <name>colourbuildlin</name>
+                    <description></description>
+                    <explanation>Choose if you want compiling to use colourful output</explanation>
+                    <value>True</value>
+                    <default>True</default>
+                </booleanParameter>
+            </parameterList>
+            <ruleList>
+                <platformTest>
+                    <type>linux</type>
+                </platformTest>
+            </ruleList>
+        </parameterGroup>
+        <booleanParameterGroup>
+            <name>mpi</name>
+            <title>MPI Configuration</title>
+            <description>Set MPI configuration options</description>
+            <explanation></explanation>
+            <value>0</value>
+            <default>0</default>
+            <parameterList>
+                <parameterGroup>
+                    <name>MPIConfig</name>
+                    <title>MPI Configuration</title>
+                    <explanation></explanation>
+                    <value></value>
+                    <default></default>
+                    <parameterList>
+                        <directoryParameter>
+                            <name>mpibinpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI bin directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/bin</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/bin</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>prefix</cliOptionName>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>1</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <directoryParameter>
+                            <name>mpiincpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI include directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/include</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/include</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>prefix</cliOptionName>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>1</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <directoryParameter>
+                            <name>mpilibpath</name>
+                            <description></description>
+                            <explanation>Please specify the path to your MPI lib directory</explanation>
+                            <value>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/lib</value>
+                            <default>${platform_install_prefix}/${project.shortName}/${project.shortName}-${project.version}/external/linux/openmpi-1.6.5/lib</default>
+                            <allowEmptyValue>0</allowEmptyValue>
+                            <cliOptionName>prefix</cliOptionName>
+                            <mustBeWritable>0</mustBeWritable>
+                            <mustExist>1</mustExist>
+                            <width>40</width>
+                        </directoryParameter>
+                        <stringParameter>
+                            <name>mpilibname</name>
+                            <description></description>
+                            <explanation>Please specifc the MPI library name</explanation>
+                            <value>mpi</value>
+                            <default>mpi</default>
+                            <allowEmptyValue>1</allowEmptyValue>
+                            <width>40</width>
+                        </stringParameter>
+                    </parameterList>
+                </parameterGroup>
+            </parameterList>
+        </booleanParameterGroup>
+    </parameterList>
+    <platformOptionsList>
+        <platformOptions>
+            <platform>windows</platform>
+        </platformOptions>
+        <platformOptions>
+            <platform>linux-x64</platform>
+        </platformOptions>
+    </platformOptionsList>
+    <slideShowImageList>
+        <slideShowImage>
+            <path>images/ACCM_logo_slide.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/CAELUS_logo_slide.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/city.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/sub.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/cylinder.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/sphere.png</path>
+        </slideShowImage>
+        <slideShowImage>
+            <path>images/g2995.png</path>
+        </slideShowImage>
+    </slideShowImageList>
+</project>
+

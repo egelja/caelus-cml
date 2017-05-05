@@ -1,0 +1,41 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+dummySizesEnv = globalEnv.Clone()
+
+# Path to source
+src = dummySizesEnv['LIB_SRC']
+
+dummySizesEnv.Append(CCFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 ' \
+                               '-DSCOTCH_PATCHLEVEL=12')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+
+lib_inc = [src + '/libscotch']
+dummySizesEnv.Prepend(CPPPATH = lib_inc)
+
+print  lib_inc 
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  dummysizes.c
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bindummySizes = dummySizesEnv.Program(target = 'dummySizes',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = dummySizesEnv['BIN_PLATFORM_INSTALL']
+dummySizesEnv.Alias('install', install_dir)
+dummySizesEnv.Install(install_dir, bindummySizes)

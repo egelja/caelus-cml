@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+lagSolPartEnv = globalEnv.Clone()
+
+# Path to source
+src = lagSolPartEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+lagSolPartEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = [src + '/lagrangian/basic/lnInclude'
+]
+lagSolPartEnv.Prepend(CPPPATH = lib_inc)
+ 
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+lagSolPartEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','lagrangian']
+lagSolPartEnv.Append(LIBS = lib_link)
+         
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  solidParticle.cpp
+  solidParticleIO.cpp
+  solidParticleCloud.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libsolidParticle = lagSolPartEnv.SharedLibrary(target = 'solidParticle', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = lagSolPartEnv['LIB_PLATFORM_INSTALL']
+lagSolPartEnv.Alias('install', install_dir)
+lagSolPartEnv.Install(install_dir, libsolidParticle)
+
+if (lagSolPartEnv['WHICH_OS'] == "darwin"):
+
+  lagSolPartEnv.Append(SHLINKFLAGS ='-install_name @' + lagSolPartEnv['LIB_PLATFORM_INSTALL'] + '/libsolidParticle.dylib')

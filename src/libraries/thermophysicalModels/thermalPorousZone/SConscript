@@ -1,0 +1,64 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+thermPorZoneEnv = globalEnv.Clone()
+
+# Path to source
+src = thermPorZoneEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+thermPorZoneEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/thermophysicalModels/basic/lnInclude'
+]
+thermPorZoneEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+thermPorZoneEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','basicThermophysicalModels']
+thermPorZoneEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  thermalPorousZone/thermalPorousZone.cpp
+  thermalPorousZone/thermalPorousZones.cpp
+  thermalModel/thermalModel/thermalModel.cpp
+  thermalModel/thermalModel/thermalModelNew.cpp
+  thermalModel/fixedTemperature/fixedTemperature.cpp
+  thermalModel/noThermalModel/noThermalModel.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libthermalPorousZone = thermPorZoneEnv.SharedLibrary(target = 
+'thermalPorousZone', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = thermPorZoneEnv['LIB_PLATFORM_INSTALL']
+thermPorZoneEnv.Alias('install', install_dir)
+thermPorZoneEnv.Install(install_dir, libthermalPorousZone)
+
+if (thermPorZoneEnv['WHICH_OS'] == "darwin"):
+
+  thermPorZoneEnv.Append(SHLINKFLAGS ='-install_name @' + thermPorZoneEnv['LIB_PLATFORM_INSTALL'] + '/libthermalPorousZone.dylib')

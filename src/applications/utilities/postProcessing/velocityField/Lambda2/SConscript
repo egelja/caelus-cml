@@ -1,0 +1,62 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+Lambda2Env = globalEnv.Clone()
+
+# Path to source
+src = Lambda2Env['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+Lambda2Env.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc']        
+
+Lambda2Env.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+Lambda2Env.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if Lambda2Env['WHICH_OS'] == "windows":
+  Lambda2Env.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libcore','libgenericPatchFields']
+else:
+  lib_link = ['core','genericPatchFields']
+    
+Lambda2Env.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [Lambda2Env['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  Lambda2.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binLambda2 = Lambda2Env.Program(target = 'Lambda2',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = Lambda2Env['BIN_PLATFORM_INSTALL']
+Lambda2Env.Alias('install', install_dir)
+Lambda2Env.Install(install_dir, binLambda2)

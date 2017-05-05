@@ -1,0 +1,4 @@
+/* import doxygen-specific styles */
+@import url(tabs.css);    /* m,odifications to doxygen tabs */
+@import url(doxygen.css);    /* standard doxygen style with very minor mods */
+

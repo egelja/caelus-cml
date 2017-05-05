@@ -1,0 +1,388 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+Class
+    CML::BreakupModel
+
+Description
+    Templated break-up model class
+
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef BreakupModel_H
+#define BreakupModel_H
+
+#include "IOdictionary.hpp"
+#include "autoPtr.hpp"
+#include "runTimeSelectionTables.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace CML
+{
+
+/*---------------------------------------------------------------------------*\
+                       Class BreakupModel Declaration
+\*---------------------------------------------------------------------------*/
+
+template<class CloudType>
+class BreakupModel
+:
+    public SubModelBase<CloudType>
+{
+
+protected:
+
+    // Protected data
+
+        Switch solveOscillationEq_;
+
+        scalar y0_;
+        scalar yDot0_;
+        scalar TABComega_;
+        scalar TABCmu_;
+        scalar TABWeCrit_;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("breakupModel");
+
+    //- Declare runtime constructor selection table
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        BreakupModel,
+        dictionary,
+        (
+            const dictionary& dict,
+            CloudType& owner
+        ),
+        (dict, owner)
+    );
+
+
+    // Constructors
+
+        //- Construct null from owner
+        BreakupModel(CloudType& owner);
+
+        //- Construct from dictionary
+        BreakupModel
+        (
+            const dictionary& dict,
+            CloudType& owner,
+            const word& type
+        );
+
+        //- Construct copy
+        BreakupModel(const BreakupModel<CloudType>& bum);
+
+        //- Construct and return a clone
+        virtual autoPtr<BreakupModel<CloudType> > clone() const
+        {
+            return autoPtr<BreakupModel<CloudType> >
+            (
+                new BreakupModel<CloudType>(*this)
+            );
+        }
+
+
+    //- Destructor
+    virtual ~BreakupModel();
+
+
+    //- Selector
+    static autoPtr<BreakupModel<CloudType> > New
+    (
+        const dictionary& dict,
+        CloudType& owner
+    );
+
+
+    // Access
+
+        inline const Switch& solveOscillationEq() const
+        {
+            return solveOscillationEq_;
+        }
+
+        inline const scalar& y0() const
+        {
+            return y0_;
+        }
+
+        inline const scalar& yDot0() const
+        {
+            return yDot0_;
+        }
+
+        inline const scalar& TABComega() const
+        {
+            return TABComega_;
+        }
+
+        inline const scalar& TABCmu() const
+        {
+            return TABCmu_;
+        }
+
+        inline const scalar& TABWeCrit() const
+        {
+            return TABWeCrit_;
+        }
+
+
+    // Member Functions
+
+        //- Update the parcel properties and return true if a child parcel
+        //  should be added
+        virtual bool update
+        (
+            const scalar dt,
+            const vector& g,
+            scalar& d,
+            scalar& tc,
+            scalar& ms,
+            scalar& nParticle,
+            scalar& KHindex,
+            scalar& y,
+            scalar& yDot,
+            const scalar d0,
+            const scalar rho,
+            const scalar mu,
+            const scalar sigma,
+            const vector& U,
+            const scalar rhoc,
+            const scalar muc,
+            const vector& Urel,
+            const scalar Urmag,
+            const scalar tMom,
+            scalar& dChild,
+            scalar& massChild
+        );
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#define makeBreakupModel(CloudType)                                           \
+                                                                              \
+    typedef CloudType::sprayCloudType sprayCloudType;                         \
+    defineNamedTemplateTypeNameAndDebug                                       \
+    (                                                                         \
+        BreakupModel<sprayCloudType>,                                         \
+        0                                                                     \
+    );                                                                        \
+    defineTemplateRunTimeSelectionTable                                       \
+    (                                                                         \
+        BreakupModel<sprayCloudType>,                                         \
+        dictionary                                                            \
+    );
+
+
+#define makeBreakupModelType(SS, CloudType)                                   \
+                                                                              \
+    typedef CloudType::sprayCloudType sprayCloudType;                         \
+    defineNamedTemplateTypeNameAndDebug(SS<sprayCloudType>, 0);               \
+                                                                              \
+    BreakupModel<sprayCloudType>::                                            \
+        adddictionaryConstructorToTable<SS<sprayCloudType> >                  \
+            add##SS##CloudType##sprayCloudType##ConstructorToTable_;
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::BreakupModel<CloudType>::BreakupModel
+(
+    CloudType& owner
+)
+:
+    SubModelBase<CloudType>(owner),
+    solveOscillationEq_(false),
+    y0_(0.0),
+    yDot0_(0.0),
+    TABComega_(0.0),
+    TABCmu_(0.0),
+    TABWeCrit_(0.0)
+{}
+
+
+template<class CloudType>
+CML::BreakupModel<CloudType>::BreakupModel
+(
+    const BreakupModel<CloudType>& bum
+)
+:
+    SubModelBase<CloudType>(bum),
+    solveOscillationEq_(bum.solveOscillationEq_),
+    y0_(bum.y0_),
+    yDot0_(bum.yDot0_),
+    TABComega_(bum.TABComega_),
+    TABCmu_(bum.TABCmu_),
+    TABWeCrit_(bum.TABWeCrit_)
+{}
+
+
+template<class CloudType>
+CML::BreakupModel<CloudType>::BreakupModel
+(
+    const dictionary& dict,
+    CloudType& owner,
+    const word& type
+)
+:
+    SubModelBase<CloudType>(owner, dict, typeName, type),
+    solveOscillationEq_(this->coeffDict().lookup("solveOscillationEq")),
+    y0_(0.0),
+    yDot0_(0.0),
+    TABComega_(0.0),
+    TABCmu_(0.0),
+    TABWeCrit_(0.0)
+{
+    if (solveOscillationEq_)
+    {
+        const dictionary TABcoeffsDict(dict.subDict("TABCoeffs"));
+        y0_ = TABcoeffsDict.template lookupOrDefault<scalar>("y0", 0.0);
+        yDot0_ = TABcoeffsDict.template lookupOrDefault<scalar>("yDot0", 0.0);
+        TABComega_ =
+            TABcoeffsDict.template lookupOrDefault<scalar>("Comega", 8.0);
+        TABCmu_ = TABcoeffsDict.template lookupOrDefault<scalar>("Cmu", 10.0);
+        TABWeCrit_ =
+            TABcoeffsDict.template lookupOrDefault<scalar>("WeCrit", 12.0);
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::BreakupModel<CloudType>::~BreakupModel()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+bool CML::BreakupModel<CloudType>::update
+(
+    const scalar dt,
+    const vector& g,
+    scalar& d,
+    scalar& tc,
+    scalar& ms,
+    scalar& nParticle,
+    scalar& KHindex,
+    scalar& y,
+    scalar& yDot,
+    const scalar d0,
+    const scalar rho,
+    const scalar mu,
+    const scalar sigma,
+    const vector& U,
+    const scalar rhoc,
+    const scalar muc,
+    const vector& Urel,
+    const scalar Urmag,
+    const scalar tMom,
+    scalar& dChild,
+    scalar& massChild
+)
+{
+    notImplemented
+    (
+        "bool CML::BreakupModel<CloudType>::update"
+        "("
+            "const scalar, "
+            "const vector&, "
+            "scalar&, "
+            "scalar&, "
+            "scalar&, "
+            "scalar&, "
+            "scalar&, "
+            "scalar&, "
+            "scalar&, "
+            "const scalar, "
+            "const scalar, "
+            "const scalar, "
+            "const scalar, "
+            "const vector&, "
+            "const scalar, "
+            "const scalar, "
+            "const vector&, "
+            "const scalar, "
+            "const scalar, "
+            "scalar&, "
+            "scalar&"
+        ");"
+    );
+
+    return false;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::autoPtr<CML::BreakupModel<CloudType> >
+CML::BreakupModel<CloudType>::New
+(
+    const dictionary& dict,
+    CloudType& owner
+)
+{
+    word BreakupModelType(dict.lookup("breakupModel"));
+
+    Info<< "Selecting BreakupModel " << BreakupModelType << endl;
+
+    typename dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(BreakupModelType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalErrorIn
+        (
+            "BreakupModel<CloudType>::New"
+            "("
+                "const dictionary&, "
+                "CloudType&"
+            ")"
+        )   << "Unknown BreakupModelType type "
+            << BreakupModelType
+            << ", constructor not in hash table" << nl << nl
+            << "    Valid BreakupModel types are:" << nl
+            << dictionaryConstructorTablePtr_->sortedToc() << exit(FatalError);
+    }
+
+    return autoPtr<BreakupModel<CloudType> >(cstrIter()(dict, owner));
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

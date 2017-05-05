@@ -1,0 +1,94 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+radModelEnv = globalEnv.Clone()
+
+# Path to source
+src = radModelEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+radModelEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/basicSolidThermo/lnInclude',
+src + '/thermophysicalModels/SLGThermo/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/properties/liquidProperties/lnInclude',
+src + '/thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidProperties/lnInclude',
+src + '/thermophysicalModels/properties/solidMixtureProperties/lnInclude',
+]
+radModelEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+radModelEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','specie','basicThermophysicalModels',
+'basicSolidThermo','SLGThermo','solidMixtureProperties',
+'liquidMixtureProperties','solidProperties','liquidProperties'
+]
+radModelEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  radiationModel/radiationModel/radiationModel.cpp
+  radiationModel/radiationModel/radiationModelNew.cpp
+  radiationModel/noRadiation/noRadiation.cpp
+  radiationModel/P1/P1.cpp
+  radiationModel/fvDOM/fvDOM/fvDOM.cpp
+  radiationModel/fvDOM/radiativeIntensityRay/radiativeIntensityRay.cpp
+  radiationModel/fvDOM/blackBodyEmission/blackBodyEmission.cpp
+  radiationModel/fvDOM/absorptionCoeffs/absorptionCoeffs.cpp
+  radiationModel/viewFactor/viewFactor.cpp
+  submodels/scatterModel/scatterModel/scatterModel.cpp
+  submodels/scatterModel/scatterModel/scatterModelNew.cpp
+  submodels/scatterModel/constantScatter/constantScatter.cpp
+  submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModel.cpp
+  submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModelNew.cpp
+  submodels/absorptionEmissionModel/noAbsorptionEmission/noAbsorptionEmission.cpp
+  submodels/absorptionEmissionModel/constantAbsorptionEmission/constantAbsorptionEmission.cpp
+  submodels/absorptionEmissionModel/binaryAbsorptionEmission/binaryAbsorptionEmission.cpp
+  submodels/absorptionEmissionModel/greyMeanAbsorptionEmission/greyMeanAbsorptionEmission.cpp
+  submodels/absorptionEmissionModel/wideBandAbsorptionEmission/wideBandAbsorptionEmission.cpp
+  derivedFvPatchFields/MarshakRadiation/MarshakRadiationMixedFvPatchScalarField.cpp
+  derivedFvPatchFields/MarshakRadiationFixedT/MarshakRadiationFixedTMixedFvPatchScalarField.cpp
+  derivedFvPatchFields/greyDiffusiveRadiation/greyDiffusiveRadiationMixedFvPatchScalarField.cpp
+  derivedFvPatchFields/wideBandDiffusiveRadiation/wideBandDiffusiveRadiationMixedFvPatchScalarField.cpp
+  derivedFvPatchFields/radiationCoupledBase/radiationCoupledBase.cpp
+  derivedFvPatchFields/greyDiffusiveViewFactor/greyDiffusiveViewFactorFixedValueFvPatchScalarField.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libradiationModels = radModelEnv.SharedLibrary(target = 'radiationModels',
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = radModelEnv['LIB_PLATFORM_INSTALL']
+radModelEnv.Alias('install', install_dir)
+radModelEnv.Install(install_dir, libradiationModels)
+
+if (radModelEnv['WHICH_OS'] == "darwin"):
+
+  radModelEnv.Append(SHLINKFLAGS ='-install_name @' + radModelEnv['LIB_PLATFORM_INSTALL'] + '/libradiationModels.dylib')

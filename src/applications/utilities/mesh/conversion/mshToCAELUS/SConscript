@@ -1,0 +1,51 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+mshConvEnv = globalEnv.Clone()
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+mshConvEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = []
+
+mshConvEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+mshConvEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = []
+  
+mshConvEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  mshToCAELUS.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binmshConv = mshConvEnv.Program(target = 'mshToCAELUS', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = mshConvEnv['BIN_PLATFORM_INSTALL']
+mshConvEnv.Alias('install', install_dir)
+mshConvEnv.Install(install_dir, binmshConv)

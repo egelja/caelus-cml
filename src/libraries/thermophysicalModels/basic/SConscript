@@ -1,0 +1,78 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+thermoBasicEnv = globalEnv.Clone()
+
+# Path to source
+src = thermoBasicEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+thermoBasicEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/thermophysicalModels/specie/lnInclude'
+]
+thermoBasicEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+thermoBasicEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','specie']
+thermoBasicEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  mixtures/basicMixture/basicMixture.cpp
+  mixtures/basicMixture/basicMixtures.cpp
+  basicThermo/basicThermo.cpp
+  basicThermo/basicThermoNew.cpp
+  psiThermo/basicPsiThermo/basicPsiThermo.cpp
+  psiThermo/basicPsiThermo/basicPsiThermoNew.cpp
+  psiThermo/hPsiThermo/hPsiThermos.cpp
+  psiThermo/hsPsiThermo/hsPsiThermos.cpp
+  psiThermo/ePsiThermo/ePsiThermos.cpp
+  rhoThermo/basicRhoThermo/basicRhoThermo.cpp
+  rhoThermo/basicRhoThermo/basicRhoThermoNew.cpp
+  rhoThermo/hRhoThermo/hRhoThermos.cpp
+  rhoThermo/hsRhoThermo/hsRhoThermos.cpp
+  derivedFvPatchFields/fixedEnthalpy/fixedEnthalpyFvPatchScalarField.cpp
+  derivedFvPatchFields/gradientEnthalpy/gradientEnthalpyFvPatchScalarField.cpp
+  derivedFvPatchFields/mixedEnthalpy/mixedEnthalpyFvPatchScalarField.cpp
+  derivedFvPatchFields/fixedInternalEnergy/fixedInternalEnergyFvPatchScalarField.cpp
+  derivedFvPatchFields/gradientInternalEnergy/gradientInternalEnergyFvPatchScalarField.cpp
+  derivedFvPatchFields/mixedInternalEnergy/mixedInternalEnergyFvPatchScalarField.cpp
+  derivedFvPatchFields/wallHeatTransfer/wallHeatTransferFvPatchScalarField.cpp
+  """) 
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libbasicThermophysicalModels = thermoBasicEnv.SharedLibrary(target = 
+'basicThermophysicalModels', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = thermoBasicEnv['LIB_PLATFORM_INSTALL']
+thermoBasicEnv.Alias('install', install_dir)
+thermoBasicEnv.Install(install_dir, libbasicThermophysicalModels)
+
+if (thermoBasicEnv['WHICH_OS'] == "darwin"):
+
+  thermoBasicEnv.Append(SHLINKFLAGS ='-install_name @' + thermoBasicEnv['LIB_PLATFORM_INSTALL'] + '/libbasicThermophysicalModels.dylib')

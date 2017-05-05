@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+diagnoseParEnv = globalEnv.Clone()
+
+# Path to source
+src = diagnoseParEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+diagnoseParEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/parallel/diagnose/diagnose/lnInclude',
+src + '/parallel/diagnose/decompositionMethods/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+]
+diagnoseParEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+diagnoseParEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if diagnoseParEnv['WHICH_OS'] == "windows":
+  lib_link = []
+else:
+  lib_link = []
+   
+diagnoseParEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  diagnosePar.cpp
+ """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bindiagnosePar = diagnoseParEnv.Program(target = 'diagnosePar', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = diagnoseParEnv['BIN_PLATFORM_INSTALL']
+diagnoseParEnv.Alias('install', install_dir)
+diagnoseParEnv.Install(install_dir, bindiagnosePar)

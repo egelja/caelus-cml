@@ -1,0 +1,60 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+changeDictionaryEnv = globalEnv.Clone()
+
+sl = changeDictionaryEnv['SLASH']
+
+changeDictionaryEnv.Append(CXXFLAGS = '-Dutil_EXPORTS')
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+changeDictionaryEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [changeDictionaryEnv['LIB_SRC'] + sl + 'dynamicMesh' + sl + 
+'lnInclude'
+]        
+
+changeDictionaryEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+changeDictionaryEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if changeDictionaryEnv['WHICH_OS'] == "windows":
+  lib_link = ['libdynamicMesh']
+else:
+  lib_link = ['dynamicMesh']
+    
+changeDictionaryEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""  
+  changeDictionary.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binchangeDictionary = changeDictionaryEnv.Program(target = 
+'changeDictionary', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = changeDictionaryEnv['BIN_PLATFORM_INSTALL']
+changeDictionaryEnv.Alias('install', install_dir)
+changeDictionaryEnv.Install(install_dir, binchangeDictionary)

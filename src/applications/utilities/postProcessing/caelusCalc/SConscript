@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+caelusCalcEnv = globalEnv.Clone()
+
+# Path to source
+src = caelusCalcEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+caelusCalcEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/CAELUSCalcFunctions/lnInclude']
+
+caelusCalcEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+caelusCalcEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if caelusCalcEnv['WHICH_OS'] == "windows":
+  caelusCalcEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libgenericPatchFields','libCAELUSCalcFunctions']
+else:
+  lib_link = ['genericPatchFields','CAELUSCalcFunctions']
+     
+caelusCalcEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  caelusCalcApp.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincaelusCalc = caelusCalcEnv.Program(target = 'caelusCalc', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = caelusCalcEnv['BIN_PLATFORM_INSTALL']
+caelusCalcEnv.Alias('install', install_dir)
+caelusCalcEnv.Install(install_dir, bincaelusCalc)

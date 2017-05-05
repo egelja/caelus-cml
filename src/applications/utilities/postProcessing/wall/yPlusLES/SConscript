@@ -1,0 +1,66 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+yPlusLESEnv = globalEnv.Clone()
+
+# Path to source
+src = yPlusLESEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+yPlusLESEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/turbulenceModels',
+src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude',
+src + '/turbulenceModels/incompressible/LES/lnInclude',
+src + '/turbulenceModels/LES/LESdeltas/lnInclude',
+src + '/transportModels',
+src + '/transportModels/incompressible/lnInclude',
+]
+yPlusLESEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+yPlusLESEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if yPlusLESEnv['WHICH_OS'] == "windows":
+  yPlusLESEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad -u incompressibleRASModelsLoad')
+  lib_link = ['libgenericPatchFields','libincompressibleLESModels',
+  'libincompressibleTransportModels','libincompressibleTurbulenceModel']
+else:
+  lib_link = ['genericPatchFields','incompressibleLESModels',
+  'incompressibleTransportModels','incompressibleTurbulenceModel']
+
+yPlusLESEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+ yPlusLES.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binyPlusLES=yPlusLESEnv.Program(target = 'yPlusLES', 
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir =yPlusLESEnv['BIN_PLATFORM_INSTALL']
+yPlusLESEnv.Alias('install', install_dir)
+yPlusLESEnv.Install(install_dir, binyPlusLES)

@@ -1,0 +1,64 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+thermoFuncEnv = globalEnv.Clone()
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+thermoFuncEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude'] 
+thermoFuncEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+thermoFuncEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core'] 
+thermoFuncEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  thermophysicalFunction/thermophysicalFunction.cpp
+  NSRDSfunctions/NSRDSfunc0/NSRDSfunc0.cpp
+  NSRDSfunctions/NSRDSfunc1/NSRDSfunc1.cpp
+  NSRDSfunctions/NSRDSfunc2/NSRDSfunc2.cpp
+  NSRDSfunctions/NSRDSfunc3/NSRDSfunc3.cpp
+  NSRDSfunctions/NSRDSfunc4/NSRDSfunc4.cpp
+  NSRDSfunctions/NSRDSfunc5/NSRDSfunc5.cpp
+  NSRDSfunctions/NSRDSfunc6/NSRDSfunc6.cpp
+  NSRDSfunctions/NSRDSfunc7/NSRDSfunc7.cpp
+  NSRDSfunctions/NSRDSfunc14/NSRDSfunc14.cpp
+  APIfunctions/APIdiffCoefFunc/APIdiffCoefFunc.cpp
+              """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libthermophysicalFunctions = thermoFuncEnv.SharedLibrary(target = 
+'thermophysicalFunctions', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = thermoFuncEnv['LIB_PLATFORM_INSTALL']
+thermoFuncEnv.Alias('install', install_dir)
+thermoFuncEnv.Install(install_dir, libthermophysicalFunctions)
+
+if (thermoFuncEnv['WHICH_OS'] == "darwin"):
+
+  thermoFuncEnv.Append(SHLINKFLAGS ='-install_name @' + thermoFuncEnv['LIB_PLATFORM_INSTALL'] + '/libthermophysicalFunctions.dylib')

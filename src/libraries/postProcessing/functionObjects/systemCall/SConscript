@@ -1,0 +1,54 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funcObjSysEnv = globalEnv.Clone()
+
+sl = funcObjSysEnv['SLASH']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+funcObjSysEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+funcObjSysEnv['LIB_SRC'] + '/sampling/lnInclude']
+funcObjSysEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+funcObjSysEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','sampling'] 
+funcObjSysEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  systemCall.cpp
+  systemCallFunctionObject.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libsystemCall = funcObjSysEnv.SharedLibrary(target = 'systemCall', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = funcObjSysEnv['LIB_PLATFORM_INSTALL']
+funcObjSysEnv.Alias('install', install_dir)
+funcObjSysEnv.Install(install_dir, libsystemCall)

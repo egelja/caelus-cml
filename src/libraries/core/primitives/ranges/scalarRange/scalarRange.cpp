@@ -1,0 +1,352 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+\*---------------------------------------------------------------------------*/
+
+#include "scalarRange.hpp"
+#include "token.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+int CML::scalarRange::debug(::CML::debug::debugSwitch("scalarRange", 0));
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+CML::scalarRange::scalarRange()
+:
+    type_(EMPTY),
+    value_(0),
+    value2_(0)
+{}
+
+
+CML::scalarRange::scalarRange(const scalar lower, const scalar upper)
+:
+    type_(RANGE),
+    value_(lower),
+    value2_(upper)
+{
+    // mark invalid range as empty
+    if (lower > upper)
+    {
+        type_ = EMPTY;
+        value_ = value2_ = 0;
+    }
+}
+
+
+CML::scalarRange::scalarRange(Istream& is)
+:
+    type_(EXACT),
+    value_(0),
+    value2_(0)
+{
+    is >> *this;
+
+    if (scalarRange::debug)
+    {
+        Info<<"constructed scalarRange: " << *this << endl;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::scalarRange::empty() const
+{
+    return type_ == EMPTY;
+}
+
+
+bool CML::scalarRange::valid() const
+{
+    return type_ != EMPTY;
+}
+
+
+bool CML::scalarRange::isExact() const
+{
+    return type_ == EXACT;
+}
+
+
+CML::scalar CML::scalarRange::value() const
+{
+    return value_;
+}
+
+
+CML::scalar CML::scalarRange::lower() const
+{
+    if (type_ == UPPER)
+    {
+        return -CML::GREAT;
+    }
+    else
+    {
+        return value_;
+    }
+}
+
+CML::scalar CML::scalarRange::upper() const
+{
+    switch (type_)
+    {
+        case LOWER:
+            return CML::GREAT;
+            break;
+
+        case RANGE:
+            return value2_;
+            break;
+
+        default:
+            return value_;
+            break;
+    }
+}
+
+
+bool CML::scalarRange::selected(const scalar value) const
+{
+    switch (type_)
+    {
+        case LOWER:
+            return value >= value_;
+
+        case UPPER:
+            return value <= value_;
+
+        case RANGE:
+            return value >= value_ && value <= value2_;
+
+        case EXACT:
+            return value == value_;
+
+        default:
+            return false;
+    }
+}
+
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+bool CML::scalarRange::operator==(const scalarRange& range) const
+{
+    return
+    (
+        type_ == range.type_
+     && value_ == range.value_
+     && value2_ == range.value2_
+    );
+}
+
+
+bool CML::scalarRange::operator!=(const scalarRange& range) const
+{
+    return !(operator==(range));
+}
+
+
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+
+CML::Istream& CML::operator>>(Istream& is, scalarRange& range)
+{
+    range.type_ = scalarRange::EXACT;
+    range.value_ = 0;
+    range.value2_ = 0;
+
+    List<token> toks(4);
+    label nTok = 0;
+
+    // skip leading ','
+    do
+    {
+        is.read(toks[nTok]);
+        is.check("scalarRange token read");
+    }
+    while
+    (
+        toks[nTok].isPunctuation()
+     && toks[nTok].pToken() == token::COMMA
+    );
+
+    ++nTok;
+
+    // looks like ':VALUE'
+    if
+    (
+        toks[nTok-1].isPunctuation()
+     && toks[nTok-1].pToken() == token::COLON
+    )
+    {
+        range.type_ = scalarRange::UPPER;
+        is.read(toks[nTok++]);
+        is.check("scalarRange token read");
+    }
+
+    // a number is now required
+    if (!toks[nTok-1].isNumber())
+    {
+        is.setBad();
+        range.type_ = scalarRange::EMPTY;
+        range.value_ = range.value2_ = 0;
+        Info<< "rejected ill-formed or empty range:";
+        for (label i=0; i<nTok; ++i)
+        {
+            Info<< " " << toks[i];
+        }
+        Info<< endl;
+        return is;
+    }
+
+    range.value_ = toks[nTok-1].number();
+    is.read(toks[nTok++]);
+    is.check("scalarRange token read");
+
+    if (scalarRange::debug)
+    {
+        Info<<"tokens:";
+        for (label i=0; i<nTok; ++i)
+        {
+            Info<< " " << toks[i];
+        }
+        Info<< endl;
+    }
+
+    // could be 'VALUE:' or 'VALUE:VALUE'
+    if
+    (
+        toks[nTok-1].isPunctuation()
+     && toks[nTok-1].pToken() == token::COLON
+    )
+    {
+        if (range.type_ == scalarRange::UPPER)
+        {
+            is.setBad();
+            range.type_ = scalarRange::EMPTY;
+            range.value_ = range.value2_ = 0;
+            Info<< "rejected ill-formed range:";
+            for (label i=0; i<nTok; ++i)
+            {
+                Info<< " " << toks[i];
+            }
+            Info<< endl;
+            return is;
+        }
+
+        is.read(toks[nTok++]);
+        is.check("scalarRange token read");
+
+        if (scalarRange::debug)
+        {
+            Info<<"tokens:";
+            for (label i=0; i<nTok; ++i)
+            {
+                Info<< " " << toks[i];
+            }
+            Info<< endl;
+        }
+
+
+        // if there is a number, we have 'VALUE:VALUE' and not simply 'VALUE:'
+        if (toks[nTok-1].isNumber())
+        {
+            range.type_ = scalarRange::RANGE;
+            range.value2_ = toks[nTok-1].number();
+            is.read(toks[nTok++]);
+            is.check("scalarRange token read");
+        }
+        else
+        {
+            range.type_ = scalarRange::LOWER;
+        }
+    }
+
+    if (scalarRange::debug)
+    {
+        Info<<"tokens:";
+        for (label i=0; i<nTok; ++i)
+        {
+            Info<< " " << toks[i];
+        }
+        Info<< endl;
+    }
+
+
+    // some remaining tokens, but they are not the next comma
+    // - this is a problem!
+    if
+    (
+        toks[nTok-1].good()
+     &&
+        (
+            !toks[nTok-1].isPunctuation()
+         || toks[nTok-1].pToken() != token::COMMA
+        )
+    )
+    {
+        is.setBad();
+        range.type_ = scalarRange::EMPTY;
+        range.value_ = range.value2_ = 0;
+
+        Info<< "rejected ill-formed range:";
+        for (label i=0; i<nTok; ++i)
+        {
+            Info<< " " << toks[i];
+        }
+        Info<< endl;
+    }
+
+    return is;
+}
+
+
+CML::Ostream& CML::operator<<(Ostream& os, const scalarRange& range)
+{
+    switch (range.type_)
+    {
+        case scalarRange::LOWER:
+            os << range.value_ << " <=> Inf";
+            break;
+
+        case scalarRange::UPPER:
+            os << "-Inf <=> " << range.value_;
+            break;
+
+        case scalarRange::RANGE:
+            os << range.value_ << " <=> " << range.value2_;
+            break;
+
+        case scalarRange::EXACT:
+            os << range.value_;
+            break;
+
+        default:
+            os << "empty";
+            break;
+    }
+
+    return os;
+}
+
+
+// ************************************************************************* //

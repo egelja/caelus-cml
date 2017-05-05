@@ -1,0 +1,64 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+metisDecompEnv = globalEnv.Clone()
+
+metisDecompEnv.Append(CXXFLAGS = '')
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+metisDecompEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', '../decompositionMethods/lnInclude',
+metisDecompEnv['METIS_PATH'] + '/include']
+metisDecompEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [metisDecompEnv['METIS_PATH']  + '/lib']
+metisDecompEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+if metisDecompEnv['WHICH_OS'] == "windows" :
+  lib_link = ['libcore','libdecompositionMethods','libmetis']
+else:
+  lib_link = ['core','decompositionMethods','metis']
+metisDecompEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  metisDecomp.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+if metisDecompEnv['WHICH_OS'] == "windows" :
+  libmetisDecomp = metisDecompEnv.SharedLibrary(target = 'libmetisDecomp', 
+  source = src_files)
+
+else :
+  libmetisDecomp = metisDecompEnv.SharedLibrary(target = 'libmetisDecomp', 
+  source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir =metisDecompEnv['LIB_PLATFORM_INSTALL']
+metisDecompEnv.Alias('install', install_dir)
+metisDecompEnv.Install(install_dir, libmetisDecomp)
+
+if (metisDecompEnv['WHICH_OS'] == "darwin"):
+
+  metisDecompEnv.Append(SHLINKFLAGS ='-install_name @' + metisDecompEnv['LIB_PLATFORM_INSTALL'] + '/libmetisDecomp.dylib')

@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+createPatchEnv = globalEnv.Clone()
+
+# Path to source
+src = createPatchEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+createPatchEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicMesh/lnInclude'
+]
+
+createPatchEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+createPatchEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if createPatchEnv['WHICH_OS'] == "windows":
+  lib_link = ['libdynamicMesh']
+else:
+  lib_link = ['dynamicMesh']
+  
+createPatchEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  createPatch.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincreatePatch = createPatchEnv.Program(target = 
+'createPatch', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = createPatchEnv['BIN_PLATFORM_INSTALL']
+createPatchEnv.Alias('install', install_dir)
+createPatchEnv.Install(install_dir, bincreatePatch)

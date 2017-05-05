@@ -1,0 +1,35 @@
+/*---------------------------------------------------------------------------*
+Caelus 4.10
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeToRegionMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+region          baffleRegion;
+
+faceZones       (baffleFaces2);
+
+oneD            false;
+
+extrudeModel    linearNormal;
+
+nLayers         10;
+
+expansionRatio  1;
+
+adaptMesh       yes; // apply directMapped to both regions
+
+sampleMode      nearestPatchFace;
+
+linearNormalCoeffs
+{
+    thickness       0.02;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

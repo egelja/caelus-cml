@@ -1,0 +1,46 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 4.10                                   
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0.0010999;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0.0010999;
+    }
+    left
+    {
+        type            empty;
+    }
+    outlet
+    {
+        type            zeroGradient;
+    }
+    right
+    {
+        type            empty;
+    }
+    wall
+    {
+        type            fixedValue;
+        value           uniform 1e-10;
+    }
+}
+
+
+// ************************************************************************* //

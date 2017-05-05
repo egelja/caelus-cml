@@ -1,0 +1,61 @@
+﻿Build started 28/12/2012 8:08:48 AM.
+     1>Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "x64\ZlibDllDebug\Tmp\zlibvc.unsuccessfulbuild".
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /I..\..\.. /I..\..\masmx86 /Zi /nologo /W3 /WX- /Od /D WIN32 /D _CRT_NONSTDC_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_WARNINGS /D ZLIB_WINAPI /D ASMV /D ASMINF /D WIN64 /D _WINDLL /Gm- /MDd /GS- /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\ZlibDllDebug\Tmp\\" /Fd"x64\ZlibDllDebug\vc100.pdb" /Gd /TC /errorReport:prompt ..\..\..\adler32.c ..\..\..\compress.c ..\..\..\crc32.c ..\..\..\deflate.c ..\..\..\gzclose.c ..\..\..\gzlib.c ..\..\..\gzread.c ..\..\..\gzwrite.c ..\..\..\infback.c ..\..\masmx64\inffas8664.c ..\..\..\inffast.c ..\..\..\inflate.c ..\..\..\inftrees.c ..\..\minizip\ioapi.c ..\..\minizip\iowin32.c ..\..\..\trees.c ..\..\..\uncompr.c ..\..\minizip\unzip.c ..\..\minizip\zip.c ..\..\..\zutil.c
+         adler32.c
+         compress.c
+         crc32.c
+         deflate.c
+         gzclose.c
+         gzlib.c
+         gzread.c
+         gzwrite.c
+         infback.c
+         inffas8664.c
+         inffast.c
+         inflate.c
+         inftrees.c
+         ioapi.c
+         iowin32.c
+         trees.c
+         uncompr.c
+         unzip.c
+         zip.c
+         zutil.c
+         Generating Code...
+       ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /l"0x040c" /nologo /fo"x64\ZlibDllDebug\Tmp\zlib.res" zlib.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"x64\ZlibDllDebug\zlibwapi.dll" /INCREMENTAL /NOLOGO ..\..\masmx64\gvmat64.obj ..\..\masmx64\inffasx64.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\zlibvc.def" /MANIFEST:NO /DEBUG /PDB:"x64\ZlibDllDebug\zlibwapi.pdb" /MAP:"x64\ZlibDllDebug\zlibwapi.map" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"x64\ZlibDllDebug\zlibwapi.lib" /MACHINE:X64 /DLL x64\ZlibDllDebug\Tmp\zlib.res
+         x64\ZlibDllDebug\Tmp\adler32.obj
+         x64\ZlibDllDebug\Tmp\compress.obj
+         x64\ZlibDllDebug\Tmp\crc32.obj
+         x64\ZlibDllDebug\Tmp\deflate.obj
+         x64\ZlibDllDebug\Tmp\gzclose.obj
+         x64\ZlibDllDebug\Tmp\gzlib.obj
+         x64\ZlibDllDebug\Tmp\gzread.obj
+         x64\ZlibDllDebug\Tmp\gzwrite.obj
+         x64\ZlibDllDebug\Tmp\infback.obj
+         x64\ZlibDllDebug\Tmp\inffas8664.obj
+         x64\ZlibDllDebug\Tmp\inffast.obj
+         x64\ZlibDllDebug\Tmp\inflate.obj
+         x64\ZlibDllDebug\Tmp\inftrees.obj
+         x64\ZlibDllDebug\Tmp\ioapi.obj
+         x64\ZlibDllDebug\Tmp\iowin32.obj
+         x64\ZlibDllDebug\Tmp\trees.obj
+         x64\ZlibDllDebug\Tmp\uncompr.obj
+         x64\ZlibDllDebug\Tmp\unzip.obj
+         x64\ZlibDllDebug\Tmp\zip.obj
+         x64\ZlibDllDebug\Tmp\zutil.obj
+            Creating library x64\ZlibDllDebug\zlibwapi.lib and object x64\ZlibDllDebug\zlibwapi.exp
+         zlibvc.vcxproj -> C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\x64\ZlibDllDebug\zlibwapi.dll
+       FinalizeBuildStatus:
+         Deleting file "x64\ZlibDllDebug\Tmp\zlibvc.unsuccessfulbuild".
+         Touching "x64\ZlibDllDebug\Tmp\zlibvc.lastbuildstate".
+     1>Done Building Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.80

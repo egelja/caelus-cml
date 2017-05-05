@@ -1,0 +1,39 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+graphchkEnv = globalEnv.Clone()
+
+# Path to source
+src = graphchkEnv['LIB_SRC']
+
+graphchkEnv.Append(CCFLAGS = ' -DSVNINFO=\\"\\"')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = ['../GKlib']
+graphchkEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  io.c
+  graphchk.c
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bingraphchk = graphchkEnv.Program(target = 'graphchk',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = graphchkEnv['BIN_PLATFORM_INSTALL']
+graphchkEnv.Alias('install', install_dir)
+graphchkEnv.Install(install_dir, bingraphchk)

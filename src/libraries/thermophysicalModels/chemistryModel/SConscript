@@ -1,0 +1,73 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+chemModelEnv = globalEnv.Clone()
+
+# Path to source
+src = chemModelEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+chemModelEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/thermophysicalModels/specie/lnInclude',
+src + '/thermophysicalModels/basic/lnInclude',
+src + '/thermophysicalModels/reactionThermo/lnInclude',
+src + '/thermophysicalModels/thermophysicalFunctions/lnInclude',
+src + '/thermophysicalModels/functions/Polynomial/lnInclude',
+src + '/turbulenceModels/compressible/lnInclude',
+src + '/ODE/lnInclude'
+]
+chemModelEnv.Prepend(CPPPATH = lib_inc)
+ 
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+chemModelEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','basicThermophysicalModels','reactionThermophysicalModels',
+'specie','thermophysicalFunctions','ODE']
+chemModelEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  chemistryModel/basicChemistryModel/basicChemistryModel.cpp
+  chemistryModel/psiChemistryModel/psiChemistryModel.cpp
+  chemistryModel/psiChemistryModel/psiChemistryModelNew.cpp
+  chemistryModel/psiChemistryModel/psiChemistryModels.cpp
+  chemistryModel/rhoChemistryModel/rhoChemistryModel.cpp
+  chemistryModel/rhoChemistryModel/rhoChemistryModelNew.cpp
+  chemistryModel/rhoChemistryModel/rhoChemistryModels.cpp
+  chemistrySolver/chemistrySolver/makeChemistrySolvers.cpp
+              """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libchemistryModel = chemModelEnv.SharedLibrary(target = 'chemistryModel',
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = chemModelEnv['LIB_PLATFORM_INSTALL']
+chemModelEnv.Alias('install', install_dir)
+chemModelEnv.Install(install_dir, libchemistryModel)
+
+if (chemModelEnv['WHICH_OS'] == "darwin"):
+
+  chemModelEnv.Append(SHLINKFLAGS ='-install_name @' + chemModelEnv['LIB_PLATFORM_INSTALL'] + '/libchemistryModel.dylib')

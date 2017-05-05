@@ -1,0 +1,45 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+scotchErrEnv = globalEnv.Clone()
+
+sl = scotchErrEnv['SLASH']
+
+# Path to source
+src = scotchErrEnv['LIB_SRC']
+
+scotchErrEnv.Append(CCFLAGS = '-DSCOTCH_VERSION=5 -DSCOTCH_RELEASE=1 '\
+                              '-DSCOTCH_PATCHLEVEL=12')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = [src + sl + 'libscotch']
+scotchErrEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+library_error.c	
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libscotchErr = scotchErrEnv.SharedLibrary(target = 'libscotcherr',
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = scotchErrEnv['LIB_PLATFORM_INSTALL']
+scotchErrEnv.Alias('install', install_dir)
+scotchErrEnv.Install(install_dir, libscotchErr)
+
+if (scotchErrEnv['WHICH_OS'] == "darwin"):
+
+  scotchErrEnv.Append(SHLINKFLAGS ='-install_name @' + scotchErrEnv['LIB_PLATFORM_INSTALL'] + '/libscotchErr.dylib')

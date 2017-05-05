@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+lagBasicEnv = globalEnv.Clone()
+
+# Path to source
+src = lagBasicEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+lagBasicEnv.Append(CXXFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude']
+lagBasicEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+lagBasicEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core']
+lagBasicEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  particle/particle.cpp
+  particle/particleIO.cpp
+  passiveParticle/passiveParticleCloud.cpp
+  indexedParticle/indexedParticleCloud.cpp
+  InteractionLists/referredWallFace/referredWallFace.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+liblagrangian = lagBasicEnv.SharedLibrary(target = 'lagrangian', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = lagBasicEnv['LIB_PLATFORM_INSTALL']
+lagBasicEnv.Alias('install', install_dir)
+lagBasicEnv.Install(install_dir, liblagrangian)
+
+if (lagBasicEnv['WHICH_OS'] == "darwin"):
+
+  lagBasicEnv.Append(SHLINKFLAGS ='-install_name @' + lagBasicEnv['LIB_PLATFORM_INSTALL'] + '/liblagrangian.dylib')

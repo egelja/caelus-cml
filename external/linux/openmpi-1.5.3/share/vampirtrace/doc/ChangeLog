@@ -1,0 +1,501 @@
+5.8.3openmpi
+	- fixed compile error on Red Hat 5.x which occurred if using GNU
+	  compiler with -D_FORTIFY_SOURCE=2
+
+5.8.2openmpi
+	- fixed buffer overflow which occurred if marker or event comment
+	  records generated
+	- fixed bug in MPI-I/O tracing: tracking MPI file handles even if
+	  MPI_File_open isn't recorded
+	- enforced creating of event/summary files even process/thread doesn't
+	  produce trace data
+	- if configuring inside Open MPI, install header files into
+	  <includedir>/vampirtrace even the configure option '--includedir' is
+	  specified
+
+5.8.1openmpi
+	- updated version of internal OTF to 1.6.5openmpi
+	  (see extlib/otf/ChangeLog)
+	- added support for tracing functions in shared libraries instrumented
+	  by the GNU, Intel, PathScale, or PGI 9 compiler
+	- extended support for BlueGene/P in terms of tracing libraries
+	  (e.g. libc I/O) and tracing of multi-threaded applications
+	- added default option file for CrayXT platforms
+	- added support for PAPI-C counters which belong to different components
+	- added environment variable VT_METRICS_SEP to specify a string which
+	  separate the counter names in VT_METRICS
+	- extended usability of environment variable VT_METRICS for PAPI
+	  counters to specifiy whether a counter provides increasing or
+	  absolute values
+	- added support for "re-locate" an existing VampirTrace installation
+	  without re-build it from source
+	- fixed configure's version detection for PAPI to support version 4.x
+	- added configure tests for a few pthread functions which do not exist
+	  on some platforms
+	- added configure tests to detect Bull MPICH2
+	- use Open MPI provided Fortran wrapper library 'libmpi_f77'
+	- added functions 'MPI_Group_range_<incl|excl>' to Fortran MPI wrappers
+	- use more portable 'nm' command instead of the BFD library to collect
+	  symbol information for instrumentation with the GNU, Intel, PathScale,
+	  and PGI 9 compiler
+	- do not shutdown call stack if maximum number of buffer flushes was
+	  reached, because the additional leaves suggest a wrong application
+	  flow
+	- fixed potential stack underflow in vtfilter which might be cause a
+	  segmentation fault
+	- fixed detection of unique node id on MacOS platforms
+	- fixed support for LAM/MPI
+	- fixed potential segmentation fault in vtunify-mpi which might occur
+	  on 32bit platforms
+	- patched libtool to avoid a bug in detection of the PGI 10 compilers
+
+5.8openmpi
+	- updated version of internal OTF to 1.6.4openmpi
+	  (see extlib/otf/ChangeLog)
+	- added support for tracing calls to arbitrary third party libraries
+	  The new tool 'vtlibwrapgen' can be used to generate a wrapper library.
+	- extended the region filter mechanism to allow MPI-rank specific
+	  filter directives
+	- added support for automatic instrumentation with PGI 9 compiler using
+	  its new compiler flag '-Minstrument'
+	- added MPI-parallel trace unifier (vtunify-mpi)
+	- disabled simultaneous support for multiple compiler instrumentation
+	  types in one VampirTrace installation
+	  (all known compiler instrumentation types for the compiler wrappers
+	   (e.g. gnu,pgi,xl) are summarized by "compinst")
+	- added wrapper script 'vtjava' which invoke the usual Java application
+	  launcher with the necessary options for tracing
+	- enhanced creating global definitions in vtunify
+	- create a process group with the real node name on CrayXT platforms
+	- fixed a bug which caused incomplete traces if using automatic instr.
+	  for MPI/C++ applications on CrayXT platforms
+	- fixed erroneous error messaging in libc tracing
+	- fixed wrong order of attributes in 'vt_def_region'
+	- fixed erroneous reading of input filter file in vtfilter
+
+5.7
+	- updated version of internal OTF to 1.6.1stingray
+	  (see extlib/otf/ChangeLog)
+	- added support for MPI correctness checking by Universal MPI
+	  Correctness Interface (UniMCI)
+	- added support for automatic instrumentation by using OpenUH compiler
+	  (version 4.0 or higher required)
+	- added support for Java tracing using JVMTI
+	- added support for CPU ID tracing (requires GLIBC >= 2.6)
+	- added support for MPI-2 one-sided communication
+	- full support for MPI-2 I/O (using I/O begin/end records)
+	- improved tracing of nested POSIX/OpenMP threads: record parent thread
+	  identifier of each child thread so that the parent-child relationship
+	  will be evident
+	- improved tracing of POSIX threads: reuse thread identifiers of
+	  terminated threads
+	- improved memory allocation tracing: write marker for each alloc/free
+	  event which show the allocated/freed bytes
+	- added environment variable VT_MAX_STACK_DEPTH which can be used to
+	  specify the maximum depth of call stack to record
+	- extended user API for intermediate time synchronization and buffer
+	  flushes and for updating all counters which specified by the
+	  environment variables VT_METRICS and VT_RUSAGE
+	- added support email address to assert strings and #error directives
+	- added writing of I/O begin/end records for LIBC's I/O tracing
+	- added support for tracing file locking via 'flockfile()', 'lockf()'
+	  and 'fcntl()'
+	- use handle from dlopen(<libc>) for dlsym() calls instead of RTLD_NEXT
+	  => LIBC (+I/O) tracing works with statically linked programs now
+	- added support for cycle counter timer on Alpha and Sparc platforms
+	- added platform configurartion files that provide several default
+	  options
+	- added configure check for function '__getReg' which required to use
+	  the ITC timer on IA64/Linux
+	- added configure check for PAPI's special type 'long_long'
+	  (will be defined, if the header file 'papi.h' doesn't provide this)
+	- install header files to 'PREFIX/include/vampirtrace' by default to  
+	  avoid conflicts with the OpenMPI integrated version of VT
+	- do not install 'vtCC' and the corresponding config file, if the file
+	  system is case insensitive (e.g. HFS+ on MacOS X)
+	- added configure option '--with[out]-bfd' to control usage of BFD
+	  library to get symbol information for GNU, Intel, and PathScale
+	  compiler instrumentation
+	- preselect availability of MPI type converter functions
+	  (e.g. MPI_Comm_f2c), if '--with-openmpi' was given
+	  (further preselections for other MPI implementations will follow)
+	- fixed detection of Sun Studio compiler for automatic instrumentation
+	- fixed a bug in GNU demangling of C++ names
+	- fixed wrong output of dlsym errors in I/O tracing
+	- fixed faulty searching for matching filter directive
+	- fixed assertion which might be occurred during tracing applications
+	  using pthreads and recording PAPI counters
+	- fixed not-increasing counter values for tracing threaded applications
+	- fixed a bug in Fortran MPI wrappers: added conversion for MPI_BOTTOM
+	  and MPI_IN_PLACE
+	- fixed Fortran User API for markers
+	- fixed a bug in vtfilter: strip the '.otf'-suffix from input/output
+	  trace file names, if necessary
+	- fixed a bug in the Fortran compiler wrappers: don't remove generated
+	- OPARI header files (*.opari.inc) before compiling the table source
+	- file (opari.tab.c)
+	- enhancement to OPARI (see tools/opari/ChangeLog:16,17)
+	- use handle from dlopen(<libc>) for dlsym() calls instead of RTLD_NEXT
+	- fixed segmentation fault when encountering invalid file descriptors
+	- use hard limit for maximum number of fds
+
+5.6.3
+	- updated version of internal OTF to 1.5.2dolphin
+	  (see extlib/otf/ChangeLog)
+	- added environment variables VT_PFORM_LDIR_CHECK and
+	  VT_PFORM_GDIR_CHECK to enable/disable checking for write access to
+	  the local/global trace directories
+	- added configure variable 'NM' for the command to list symbols from
+	  object files
+	- added configure options '--with-mvapich[2]' to set the MPI-libs for
+	  MVAPICH[2]
+	- added configure check for header file 'asm/intrinsics.h' and
+	  definition of '_IA64_REG_AR_ITC' which required to use the ITC timer
+	  on IA64/Linux
+	- added support for demangling of C++ names also if the header file
+	  'demangle.h' is not available
+	- do not build shared libraries on IBM BlueGene
+	- replaced usage of PATH_MAX by VT_PATH_MAX to avoid compile errors
+	  on some platforms
+	- fixed compile error which occurred if support for enhanced time
+	  synchronization enabled and using the Sun Performance Library from
+	  Sun Studio 12
+	- fixed compile error on RedHat/CentOS due to missing header include
+	  of 'cctype.h' in the sources of 'vtunify'
+	- fixed a bug in the compiler wrappers: add compiler flag '-I.' for
+	  compiling OPARI modified sources in subdirectories in order to find
+	  the corresponding OPARI include files
+	- fixed a bug in the compiler wrappers for Fortran: do not mix C flags
+	  (especially the pthread flag '-D_THREAD_SAFE' for IBM compilers) with
+	  Fortran compiler flags
+	- fixed faulty timer selection in configure
+	  (the cycle counter timer is not available on all Linux platforms)
+	- fixed detection of Sun Studio compilers on Linux
+	  (related to the automatic instrumentation)
+	- patch libtool to avoid a bug in detection of the Sun Studio Fortran
+	  compiler
+	- fixed missing definition of vt_node_id in vt_pform_sun
+	- added wrapper for 'pthread_exit' for correct decomposition of the
+	  call stack
+	- fixed I/O calls not being affected by region filters
+	- disabled recording of I/O events from within filtered out functions
+	- disabled recording of MPI messages from within filtered out functions
+	- check return value of MPI_Get_count in status handling
+
+5.6.2
+	- replaced all dots in library names by dashs in order to avoid a
+	  naming problem in libtool and for more consistent
+	- added dependencies to all necessary libraries (e.g. PAPI, BFD, etc.)
+	  to the shared VT libraries
+	- changed default of VT_PFORM_LDIR to '.' on SiCortex platforms
+	- fixed use of gethostid() that may fail without error -> check return
+	  value and retry
+	- use 1 MB buffer for copying traces from local to global destination,
+	  may be tuned by VT_COPY_BUFFER_SIZE
+
+5.6.1
+	- updated version of internal OTF to 1.5.1dolphin
+	  (see extlib/otf/ChangeLog)
+	- added support for building shared libraries
+	- fixed compile error which occurred if configure was unable to find
+	  MPI2 I/O support
+	- fixed compile error due to missing header include in the sources of
+	  the compiler wrappers
+	- fixed faulty calculation of unique node id on SUN Solaris platforms
+	- fixed compiler flags for building OPARI's table object file
+	- fixed a bug which could prevent LIBC's I/O tracing
+
+5.6
+	- updated version of internal OTF to 1.5 (see extlib/otf/ChangeLog)
+	- enhanced time synchronization
+	- added support for MPI-2 extended collective operations
+	- added support for recording statistics of MPI collective operations
+	- added support for hardware performance counters on NEC SX platforms
+	- added support for POSIX threads
+	- extended user API to record user-defined markers
+	- added wrapper for MPI function 'MPI_Init_thread'
+	- fixed faulty calculation of sent/received bytes for MPI_Bcast
+
+5.5.4
+	- added support for OpenMP on BlueGene/P
+	- fixed invalid conversion from 'const char*' to 'char*' in macro
+	  'VT_TRACER'
+
+5.5.3
+	- updated version of internal OTF to 1.4.1 (see extlib/otf/ChangeLog)
+	- added support for NEC MPI/SX Fortran 8-Byte Integers
+	- added support for IBM BlueGene/P
+	- added configure options '--with-sunmpi[-mt]' to set MPI libs for
+	  SUN MPI
+	- bugfix: added configure check for I/O functions functions 'fseeko()'
+	  (this function is not available on NEC SX platforms)
+	- fixed faulty shell comparison in configure which may cause an infinite
+	  loop
+	- fixed compile error: removed faulty header include for builds
+	  without MPI support
+	- fixed stack corios during intercepting I/O function 'unlink()'
+	- fixed stack-level mismatch in regions with tracing disabled (VT_OFF)
+	  in combination with MPI collective operations
+	- fixed faulty handling of MPI_F_STATUS[ES]_IGNORE in MPI wrapper
+	  functions
+
+5.5.2
+	- added wrapper for LIBC's I/O function 'unlink()'
+	- fixed a bug in handling of OpenMP critical sections
+	- fixed a bug in Fortran MPI wrappers: added conversion of MPI_Aint
+
+5.5.1
+	- added wrapper functions for 'wait()' and 'waitpid()'
+	- improved tracing of 'fork()': automatic unifying of local traces
+	- added support for Cray CNL
+	- added option '-p' for vtunify to show a progress display during
+	  unifying events
+	- added configure options to specify the installed MPI-implementation
+	  (e.g. the option '--with-mpich2' sets the MPI-libs for MPICH2)
+	- fixed not-increasing timestamps during buffer flush
+	  (occurred if memory allocation tracing was enabled)
+	- fixed missing variable-declarations in Fortran MPI wrappers
+	- fixed a bug in unique trace file naming which occurred when 'fork()'
+	  used (child process gots a wrong unique file number)
+	- fixed a bug in vtfilter where the tool dies when a counter appears
+	  outside of function
+	- enhancement to OPARI (see tools/opari/ChangeLog:15)
+
+5.5
+	- updated version of internal OTF to 1.4 (see extlib/otf/ChangeLog)
+	- added support for automatic instrumentation by using PathScale
+	  compiler (version 3.1 or higher required)
+	- added support for recording function and message statistics
+	- extended user API for enable/disable tracing
+	- added wrapper functions for the complete MPI-1.2 standard,
+	  MPI-2 One-Sided Communications, and MPI-2 I/O
+	- added support for tracing resource usage via 'getrusage()'
+	- added support for tracing 'fork()', 'system()', and 'exec' functions
+	- added support for unique trace file naming 
+	- added determining of executable's path, if VT_APPPATH not given
+	  (currently that works *only* for linux, altix, macos, ibm, and sun)
+	- set default trace file prefix to name of executable (from VT_APPPATH)
+	- added support for CPC hardware performance counter
+	- enhanced movement of the local temporary traces (VT_PFORM_LDIR) to
+	  the global directory (VT_PFORM_GDIR), if both directories are on the
+	  same device
+	- added configure option (--with-cross-prefix) to set a prefix for the
+	  "cross"-executables of the compiler wrappers (e.g. cross-vtcc)
+	- added configure options (--with-wrapper-<cc|cxx|f77|f90>) to set the
+	  default underlying compiler of the compiler wrappers
+	- enhancement to OPARI (see tools/opari/ChangeLog:14)
+
+5.4.5
+	- updated version of internal OTF to 1.3.10 (see extlib/otf/ChangeLog)
+	- fixed a bug for LIBC's I/O tracing: argument of 'fileno()' must be
+	  a valid file stream
+	- added configure option '--[enable|disable]-binaries' to control
+	  building of binaries (useful for multi-lib installations)
+
+5.4.4
+	- updated version of internal OTF to 1.3.9 (see extlib/otf/ChangeLog)
+	- fixed a portability bug: use own implementation of function
+	  'strdup()'
+	- removed variadic macros (they were introduced in C99)
+	- fixed potential race condition by using OpenMP + LIBC's I/O tracing
+	- fixed potential missing definition records by using OpenMP and the
+	  maximum number of buffer flushes was reached
+	- fixed a bug in the compiler wrappers: added check for SUN's OpenMP
+	  compiler flag (-xopenmp)
+	- fixed a bug for determining the timer-resolution for ITC
+	- added process group definition for MPI communicator MPI_COMM_SELF
+	- cleanup call stack when maximum number of flushes was reached
+	- added configure check if we can link '-lz' in order to pass either
+	  '-lotf -lz' or just '-lotf' as OTF link option
+	- renamed configure's option '--with[out]-mpi-io' to
+	  '[enable/disable]-mpi-io' for more consistent
+
+5.4.3
+	- bugfix for Fortran compiler wrappers (vtf77, vtf90):
+	  OPARI's table source file (opari.tab.c) will be compiled
+	  with the C compiler and flags which were given for VT's
+	  configure (CC/CFLAGS)
+	  (changeable in vt*-wrapper-data.txt)
+	- bugfixes in vtunify:	- keep user's created process groups
+				  for MPI communicators
+				- reserve sorting of global process group
+				  definitions
+
+5.4.2
+	- bugfix for VPATH builds
+	- added configure check for PAPI version
+	  (only support for version 3.x)
+
+5.4.1
+	- bugfix: added check for I/O functions which are a part of the large
+	  file extensions (e.g. open64, creat64, ...); disable corresponding
+	  wrapper functions, if system doesn't support these
+	- added environment variable VT_DEMANGLE to enable/disable GNU
+	  demangling of C++ names (default: disabled, due to a bug in older
+	  versions of the GNU library 'liberty')
+	- disabled support for I/O tracing on MacOS
+
+5.4.0
+	- updated version of internal OTF to 1.3.8 (see extlib/otf/ChangeLog)
+	- added support for user-defined counters
+	- if available, PAPI cycle counter can be used as timer
+	  (see config.h after configure)
+	- recording of events will be stopped if the maximum number of
+	  buffer flushes (env. VT_MAX_FLUSHES) was reached
+	- added support for LIBC's I/O tracing
+	- improved autoconf's m4 scripts for cross buildings
+	- default settings for the compiler wrappers will be stored
+	  in share/vampirtrace/vt*-wrapper-data.txt
+	- vtfilter: - direct filtering without second trace run
+	            - parallelization using OpenMP
+
+5.3.2
+	- updated version of internal OTF to 1.3.7 (see extlib/otf/ChangeLog)
+	- improved autoconf's m4 scripts for cross buildings
+	- added support for VPATH builds
+
+5.3.1
+	- set default trace call limit for all regions/functions to 100000
+
+5.3.0
+	- updated version of internal OTF to 1.3.4 (see extlib/otf/ChangeLog)
+	- added support for automatic instrumentation by using Intel compiler
+	  version 10.x (uses new compiler flag '-finstrument-functions')
+	- added support for binary instrumentation by using Dyninst
+	- added support for GLIBC's memory allocation tracing
+	  (see doc/UserManual*)
+	- bugfix: corrected process id for OpenMP collective operations
+	- changed default function/region group from 'USR' to 'Application'
+	- if only MPI-functions are instrumented, then entry-record of
+	  function 'user' will be generated before MPI_Init
+	- added trace filter generator tool 'vtfilter'
+	  (see doc/USAGE.vtfilter)
+	- added support for multiple compiler-instrumentations from one
+	  installation of VampirTrace (see INSTALL)
+	- replaced vtinst, vtinst-pomp, and vtinst-dyn by VT's compiler
+	  wrapper (see doc/UserManual* and doc/USAGE.compinst)
+	- added simple example applications
+	- changed install directory of documentations from '$prefix/info'
+	  to '$prefix/share/vampirtrace/doc'
+	- changed install directory of metrics-, filter-, and grouping
+	  configuration from '$prefix/doc' to '$prefix/share/vampirtrace'
+
+5.2.5
+	- fixed potentially race condition by tracing OpenMP apps.
+	- fixed some little memory leaks
+	- fixed native counter issue on IA64 systems
+	- added configure check for header files 'stdint.h' and 'inttypes.h';
+	  if none of these files found, then own integer types will be defined
+
+5.2.4
+	- updated version of internal OTF to 1.2.19 (see extlib/otf/ChangeLog)
+	- fixed compile error which occurred by using old SUN compilers
+	- added a configure summary
+	- added HP MPI support
+	- renamed Fortran MPI wrapper library to 'libvt.fmpi' to avoid possible
+	  name conflicts
+	- fixed a bug (integer overflow) in mechanism for getting timer on
+	  Linux systems
+
+5.2.3
+	- changed install directory of documentations from 'doc' to 'info'
+	  (adjustable by configure option '--infodir')
+	- forward configure options '--exec-prefix', '--bindir', '--libdir', ',
+	  '--includedir', and '--infodir' to configure command of internal OTF
+	- added configure check for CPP-Style Fortran preprocessor of gfortran
+	- added configure check for location of 'mmtimer.h'
+	- made sure that peers of events (e.g. msg. send enter + msg. send)
+	  have the same timestamp
+	- clock synchronization can be forced
+	  (see config.h after configure)
+
+5.2.2
+	- fixed a bug in region filter which occurred by tracing OpenMP apps.
+	  instrumented by compiler (vtinst)
+	- added option '-k' for vtunify to keep input trace files
+
+5.2.1
+	- fixed several performance issues
+	- improved mechanism for getting clock cycles on IBM PPC64 machines
+	- the user can specify the mechanism which used for getting timer
+	  (only for Linux, SGI Altix, IBM AIX, Cray X1
+	   - see config.h after configure)
+
+5.2.0
+	- updated version of internal OTF to 1.2.18 (see extlib/otf/ChangeLog)
+	- replaced build system by GNU Autoconf/Automake
+	- changed base name (e.g. environment variables, source files) to VT...
+	  (see doc/USAGE)
+	- added OpenMP support by using OPARI instrumentation tool
+	- write process group records which contain the location of processes
+	  (node name)
+	- added tool 'vtconfig' to simplify determining the right compiler and
+	  linker flags
+
+5.1.7
+	- updated version of internal OTF to 1.2.13
+
+5.1.6
+	- updated version of internal OTF to 1.2.11
+	- fixed a bug: record the REAL buffer-length of a MPI non-blocking 
+	  receive operation
+	- added wrapper for MPI function 'MPI_Probe'
+	- added Open MPI support
+	- added a simple "configure" command
+	  (see INSTALL)
+
+5.1.5
+	- fixed a bug in elg_otfunify time synchronization
+
+5.1.4
+	- updated version of internal OTF to 1.1.9
+	- fixed a bug in elg_otfunify which occurred if compiled with PGI
+	  and used OMP parallelization
+	- enhanced progress display of elg_otfunify
+
+5.1.3
+	- fixed little bugs in build system which occurred if multiple
+	  mode building used (Makefile.32-64)
+	- added support for clusters of IBM Power3/4 machines
+	  and Linux PPC cluster with IBM compilers
+
+5.1.2
+	- updated version of internal OTF to 1.1.8
+
+5.1.1
+	- write list of filtered regions to file (*.x.filt)
+	- specified flags of 'ar' in Makefile.defs (AFLAG) will
+	  be assign to internal OTF configure script
+
+5.1.0
+	- counter event record will be wrote before leave event record
+	- added region filter and grouping managment
+
+5.0.6
+	- added creator informations of trace file (tracelib, version, date
+	  and time)
+	- reduced offset of process group token
+	- improved name of process groups
+
+5.0.5
+	- fixed a bug in elg_otfunify which occurred if the environment
+	  variable ELG_PFORM_DIR was set
+
+5.0.4
+	- fixed a bug which occurred on Opteron systems (faulty timestamps)
+	- made sure that the ids of process groups and processes are
+	  different (for analyzing trace files)
+
+5.0.3
+	- updated version of internal OTF to 1.1.5
+	- fixed a bug in GNU compiler interface which might have caused
+	  a segmentation fault during flushing the trace buffer
+
+5.0.2
+	- updated version of internal OTF to 1.1.4
+
+5.0.1
+	- updated version of internal OTF to 1.1.3
+
+5.0.0
+	- initial version

@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+setsToZonesEnv = globalEnv.Clone()
+
+# Path to source
+src = setsToZonesEnv['LIB_SRC']
+
+setsToZonesEnv.Append(CXXFLAGS = '')
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+setsToZonesEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = []
+
+setsToZonesEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+setsToZonesEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if setsToZonesEnv['WHICH_OS'] == "windows":
+  lib_link = []
+else:
+  lib_link = []
+  
+setsToZonesEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  setsToZones.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binsetsToZones = setsToZonesEnv.Program(target = 
+'setsToZones', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = setsToZonesEnv['BIN_PLATFORM_INSTALL']
+setsToZonesEnv.Alias('install', install_dir)
+setsToZonesEnv.Install(install_dir, binsetsToZones)

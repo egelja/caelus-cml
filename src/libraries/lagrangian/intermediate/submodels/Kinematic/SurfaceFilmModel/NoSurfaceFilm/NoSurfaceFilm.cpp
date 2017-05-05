@@ -1,0 +1,95 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2011 OpenFOAM Foundation
+-------------------------------------------------------------------------------
+License
+    This file is part of CAELUS.
+
+    CAELUS is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+
+\*---------------------------------------------------------------------------*/
+
+#include "NoSurfaceFilm.hpp"
+#include "addToRunTimeSelectionTable.hpp"
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::NoSurfaceFilm<CloudType>::NoSurfaceFilm
+(
+    const dictionary&,
+    CloudType& owner,
+    const dimensionedVector&
+)
+:
+    SurfaceFilmModel<CloudType>(owner)
+{}
+
+
+template<class CloudType>
+CML::NoSurfaceFilm<CloudType>::NoSurfaceFilm
+(
+    const NoSurfaceFilm<CloudType>& sfm
+)
+:
+    SurfaceFilmModel<CloudType>(sfm.owner_)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::NoSurfaceFilm<CloudType>::~NoSurfaceFilm()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+bool CML::NoSurfaceFilm<CloudType>::active() const
+{
+    return false;
+}
+
+
+template<class CloudType>
+bool CML::NoSurfaceFilm<CloudType>::transferParcel
+(
+    parcelType&,
+    const polyPatch&,
+    bool&
+)
+{
+    return false;
+}
+
+
+template<class CloudType>
+void CML::NoSurfaceFilm<CloudType>::setParcelProperties
+(
+    parcelType&,
+    const label
+)
+{
+    // do nothing
+}
+
+
+template<class CloudType>
+void CML::NoSurfaceFilm<CloudType>::info(Ostream&) const
+{
+    // do nothing
+}
+
+
+// ************************************************************************* //

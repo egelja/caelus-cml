@@ -1,0 +1,59 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+createBafflesEnv = globalEnv.Clone()
+
+# Path to source
+src = createBafflesEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+createBafflesEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicMesh/lnInclude']
+
+createBafflesEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+createBafflesEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if createBafflesEnv['WHICH_OS'] == "windows":
+  createBafflesEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libdynamicMesh', 'libgenericPatchFields']
+else:
+  lib_link = ['dynamicMesh', 'genericPatchFields']
+  
+createBafflesEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  createBaffles.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincreateBaffles = createBafflesEnv.Program(target = 
+'createBaffles', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = createBafflesEnv['BIN_PLATFORM_INSTALL']
+createBafflesEnv.Alias('install', install_dir)
+createBafflesEnv.Install(install_dir, bincreateBaffles)

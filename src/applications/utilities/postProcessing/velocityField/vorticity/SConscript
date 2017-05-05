@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+vorticityEnv = globalEnv.Clone()
+
+# Path to source
+src = vorticityEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+vorticityEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/postProcessing/postCalc']        
+vorticityEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+vorticityEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if vorticityEnv['WHICH_OS'] == "windows":
+  vorticityEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libcore','libgenericPatchFields']
+else:
+  lib_link = ['core','genericPatchFields']
+    
+vorticityEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files_postCalc = [vorticityEnv['LIB_PLATFORM_INSTALL'] + '/postCalc.o']
+
+src_files_exec = Split("""  
+  vorticity.cpp
+  """)
+
+src_files = src_files_postCalc + src_files_exec
+#===============================================================================
+# Build this executable
+#===============================================================================
+binvorticity = vorticityEnv.Program(target = 'vorticity',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = vorticityEnv['BIN_PLATFORM_INSTALL']
+vorticityEnv.Alias('install', install_dir)
+vorticityEnv.Install(install_dir, binvorticity)

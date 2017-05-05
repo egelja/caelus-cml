@@ -1,0 +1,69 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+simpleSolEnv = globalEnv.Clone()
+
+# Path to source
+src = simpleSolEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+simpleSolEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [simpleSolEnv['LIB_SRC'] +  '/turbulenceModels',
+src + '/turbulenceModels/incompressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/incompressible/RAS/RASModel', 
+src + '/turbulenceModels/incompressible/RAS/lnInclude',
+src + '/transportModels',
+src + '/transportModels/incompressible/singlePhaseTransportModel',
+src + '/transportModels/incompressible/lnInclude',
+src + '/fvOptions/lnInclude',
+src + '/sampling/lnInclude'
+]
+simpleSolEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+simpleSolEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if simpleSolEnv['WHICH_OS'] == "windows":
+  simpleSolEnv.Prepend(LINKFLAGS = ' -u incompressibleRASModelsLoad')
+  lib_link = ['libincompressibleTurbulenceModel', 'libincompressibleRASModels',
+  'libincompressibleTransportModels', 'libfvOptions', 'libsampling']
+else:
+  lib_link = ['incompressibleTurbulenceModel', 'incompressibleRASModels',
+  'incompressibleTransportModels', 'fvOptions', 'sampling']
+  
+simpleSolEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  simpleSolver.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binsimpleSol = simpleSolEnv.Program(target = 'simpleSolver',
+source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = simpleSolEnv['BIN_PLATFORM_INSTALL']
+simpleSolEnv.Alias('install', install_dir)
+simpleSolEnv.Install(install_dir, binsimpleSol)

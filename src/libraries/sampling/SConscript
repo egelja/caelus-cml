@@ -1,0 +1,118 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+sampEnv = globalEnv.Clone()
+
+# Path to source
+src = sampEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+sampEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/surfMesh/lnInclude',
+src + '/lagrangian/basic/lnInclude',
+src + '/conversion/lnInclude'
+] 
+sampEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+sampEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','surfMesh','lagrangian','conversion']
+sampEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  probes/probes.cpp
+  probes/patchProbes.cpp
+  probes/probesGrouping.cpp
+  probes/probesFunctionObject/probesFunctionObject.cpp
+  sampledSet/circle/circleSet.cpp
+  sampledSet/cloud/cloudSet.cpp
+  sampledSet/coordSet/coordSet.cpp
+  sampledSet/patchCloud/patchCloudSet.cpp
+  sampledSet/polyLine/polyLineSet.cpp
+  sampledSet/face/faceOnlySet.cpp
+  sampledSet/midPoint/midPointSet.cpp
+  sampledSet/midPointAndFace/midPointAndFaceSet.cpp
+  sampledSet/sampledSet/sampledSet.cpp
+  sampledSet/sampledSets/sampledSets.cpp
+  sampledSet/sampledSets/sampledSetsGrouping.cpp
+  sampledSet/sampledSetsFunctionObject/sampledSetsFunctionObject.cpp
+  sampledSet/triSurfaceMeshPointSet/triSurfaceMeshPointSet.cpp
+  sampledSet/uniform/uniformSet.cpp
+  sampledSet/array/arraySet.cpp
+  sampledSet/writers/writers.cpp
+  sampledSet/writers/gnuplot/gnuplotSetWriterRunTime.cpp
+  sampledSet/writers/jplot/jplotSetWriterRunTime.cpp
+  sampledSet/writers/raw/rawSetWriterRunTime.cpp
+  sampledSet/writers/vtk/vtkSetWriterRunTime.cpp
+  sampledSet/writers/xmgrace/xmgraceSetWriterRunTime.cpp
+  sampledSet/writers/csv/csvSetWriterRunTime.cpp
+  cuttingPlane/cuttingPlane.cpp
+  sampledSurface/sampledPatch/sampledPatch.cpp
+  sampledSurface/sampledPatchInternalField/sampledPatchInternalField.cpp
+  sampledSurface/sampledPlane/sampledPlane.cpp
+  sampledSurface/isoSurface/isoSurface.cpp
+  sampledSurface/isoSurface/sampledIsoSurface.cpp
+  sampledSurface/isoSurface/isoSurfaceCell.cpp
+  sampledSurface/isoSurface/sampledIsoSurfaceCell.cpp
+  sampledSurface/distanceSurface/distanceSurface.cpp
+  sampledSurface/sampledCuttingPlane/sampledCuttingPlane.cpp
+  sampledSurface/sampledSurface/sampledSurface.cpp
+  sampledSurface/sampledSurfaces/sampledSurfaces.cpp
+  sampledSurface/sampledSurfaces/sampledSurfacesGrouping.cpp
+  sampledSurface/sampledSurfacesFunctionObject/sampledSurfacesFunctionObject.cpp
+  sampledSurface/sampledTriSurfaceMesh/sampledTriSurfaceMesh.cpp
+  sampledSurface/thresholdCellFaces/thresholdCellFaces.cpp
+  sampledSurface/thresholdCellFaces/sampledThresholdCellFaces.cpp
+  sampledSurface/writers/surfaceWriter.cpp
+  sampledSurface/writers/dx/dxSurfaceWriter.cpp
+  sampledSurface/writers/ensight/ensightSurfaceWriter.cpp
+  sampledSurface/writers/caelusFile/caelusFileSurfaceWriter.cpp
+  sampledSurface/writers/proxy/proxySurfaceWriter.cpp
+  sampledSurface/writers/raw/rawSurfaceWriter.cpp
+  sampledSurface/writers/starcd/starcdSurfaceWriter.cpp
+  sampledSurface/writers/vtk/vtkSurfaceWriter.cpp
+  graphField/writePatchGraph.cpp
+  graphField/writeCellGraph.cpp
+  graphField/makeGraph.cpp
+  meshToMeshInterpolation/meshToMesh/meshToMesh.cpp
+  meshToMeshInterpolation/meshToMesh/calculateMeshToMeshAddressing.cpp
+  meshToMeshInterpolation/meshToMesh/calculateMeshToMeshWeights.cpp
+  meshToMeshInterpolation/meshToMeshNew/meshToMeshNew.cpp
+  meshToMeshInterpolation/meshToMeshNew//meshToMeshNewParallelOps.cpp
+  """) 
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libsampling = sampEnv.SharedLibrary(target = 'sampling', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = sampEnv['LIB_PLATFORM_INSTALL']
+sampEnv.Alias('install', install_dir)
+sampEnv.Install(install_dir, libsampling)
+
+if (sampEnv['WHICH_OS'] == "darwin"):
+
+  sampEnv.Append(SHLINKFLAGS ='-install_name @' + sampEnv['LIB_PLATFORM_INSTALL'] + '/libsampling.dylib')

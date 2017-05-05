@@ -1,0 +1,127 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winver.h>
+  
+#define VER_FILEVERSION 2,5,4,1
+#define VER_FILEVERSION_STR "2.5.4a"
+#define VER_FILELTVERSION_STR ""
+#define VER_LEGALCOPYRIGHT_STR "© 2004 Free Software Foundation <www.fsf.org>"
+//#define VER_COMMENT_STR  ""	 
+
+#define VER_FILEDESCRIPTION_STR "Flex: fast lexical analyzer generator"
+#define VER_INTERNALNAME_STR "flex"
+#define VER_ORIGINALFILENAME_STR "flex.exe"
+#define VER_WWW_STR "http://www.gnu.org/software/flex/flex.html"
+#define VER_COMPANYNAME_STR "GNU <www.gnu.org>"
+#define VER_LICENSE_STR "Copyright (c) 1990 The Regents of the University of California. All rights reserved. This code is derived from software contributed to Berkeley by Vern Paxson. The United States Government has rights in this work pursuant to contract no. DE-AC03-76SF00098 between the United States Department of Energy and the University of California. Redistribution and use in source and binary forms with or without modification are permitted provided that: (1) source distributions retain this entire copyright notice and comment, and (2) distributions including binaries display the following acknowledgement: This product includes software developed by the University of California, Berkeley and its contributors'' in the documentation or other materials provided with the distribution and in all advertising materials mentioning features or use of this software. Neither the name of the University nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. THIS SOFTWARE IS PROVIDED AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. "
+#define VER_LEGALTRADEMARKS_STR "GNU®, Flex®, flex®"
+
+#define VER_PRODUCTNAME_STR "Flex"
+#define VER_PRODUCTVERSION 2,5,4,1
+#define VER_PRODUCTVERSION_STR "2.5.4a"
+
+#undef OFFICIAL
+#define VER_PRIVATEBUILD_STR     "Patchlevel 1"
+#define PATCHED            1
+#define GNUWIN32_SPECIALBUILD_STR	"GNU for Win32 <gnuwin32.sourceforge.net>"
+
+#define VER_FILETYPE			VFT_APP
+#ifndef VER_FILETYPE
+#define VER_FILETYPE                VFT_APP
+#endif
+
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else /* DEBUG */
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+#ifndef PATCHED
+#define VER_PATCHED                   0
+#else /* PATCHED */
+#define VER_PATCHED                   VS_FF_PATCHED
+#endif
+
+#ifndef OFFICIAL
+#define VER_SPECIALBUILD            VS_FF_SPECIALBUILD
+#ifndef VER_SPECIALBUILD_STR
+#define VER_SPECIALBUILD_STR		GNUWIN32_SPECIALBUILD_STR
+#endif
+#else /* OFFICIAL */
+#define VER_SPECIALBUILD            0
+#endif /* OFFICIAL */
+
+#ifndef FINAL
+#define VER_PRIVATEBUILD            VS_FF_PRIVATEBUILD
+#ifndef VER_PRIVATEBUILD_STR
+#define VER_PRIVATEBUILD_STR		"Pre-release"
+#endif /* VER_PRIVATEBUILD_STR */
+#define VER_PRERELEASE              VS_FF_PRERELEASE
+#else /* FINAL */
+#define VER_PRIVATEBUILD            0
+#define VER_PRERELEASE              0
+#endif /* FINAL */
+
+#define VER_FILEFLAGSMASK           VS_FFI_FILEFLAGSMASK
+#define VER_FILEFLAGS               (VER_PRIVATEBUILD|VER_SPECIALBUILD|VER_PRERELEASE|VER_DEBUG|VER_PATCHED)
+
+#define VER_FILEOS                  VOS__WINDOWS32
+
+#ifdef RC_INVOKED
+
+VS_VERSION_INFO         VERSIONINFO
+FILEVERSION     	VER_FILEVERSION
+PRODUCTVERSION  	VER_PRODUCTVERSION
+FILEFLAGSMASK   	VER_FILEFLAGSMASK
+FILEFLAGS       	VER_FILEFLAGS
+FILEOS          	VER_FILEOS
+FILETYPE        	VER_FILETYPE
+FILESUBTYPE     	VER_FILESUBTYPE
+
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+	BLOCK "040904E4"
+    /* language ID = U.S. English, char set = Windows, Multilingual */
+	BEGIN
+#ifdef VER_COMMENT_STR
+	    VALUE "Comments",          VER_COMMENT_STR
+#endif
+	    VALUE "CompanyName",      VER_COMPANYNAME_STR
+	    VALUE "License",		  VER_LICENSE_STR
+	    VALUE "FileDescription",  VER_FILEDESCRIPTION_STR
+	    VALUE "FileVersion",      VER_FILEVERSION_STR
+#if !(VER_FILETYPE-VFT_DLL)
+	    VALUE "LibToolFileVersion",VER_FILELTVERSION_STR
+#endif
+		VALUE "InternalName",     VER_INTERNALNAME_STR
+#ifdef VER_LEGALCOPYRIGHT_STR
+		VALUE "LegalCopyright",   VER_LEGALCOPYRIGHT_STR
+#endif
+#ifdef VER_LEGALTRADEMARKS_STR
+	    VALUE "LegalTrademarks",  VER_LEGALTRADEMARKS_STR
+#endif
+	    VALUE "OriginalFilename", VER_ORIGINALFILENAME_STR
+	    VALUE "ProductName",      VER_PRODUCTNAME_STR
+	    VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+#ifdef VER_PATCHLEVEL_STR
+	    VALUE "Patch level",  VER_PATCHLEVEL_STR
+#endif
+#ifdef VER_PRIVATEBUILD_STR
+	    VALUE "PrivateBuild",  VER_PRIVATEBUILD_STR
+#endif
+#ifdef VER_SPECIALBUILD_STR
+	    VALUE "SpecialBuild",  VER_SPECIALBUILD_STR
+#endif
+END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+	VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif /*  RC_INVOKED */
+500 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "gnu.ico"

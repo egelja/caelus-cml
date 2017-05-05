@@ -1,0 +1,83 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+fvOptEnv = globalEnv.Clone()
+
+# Path to source
+src = fvOptEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+fvOptEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/core/lnInclude', src + '/sampling/lnInclude',
+  src + '/thermophysicalModels/solidThermo/lnInclude',
+  src + '/thermophysicalModels/basic/lnInclude',
+  src + '/thermophysicalModels/specie/lnInclude',
+  src + '/turbulenceModels/compressible/turbulenceModel/lnInclude',
+  src + '/turbulenceModels'] 
+fvOptEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+fvOptEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','sampling','compressibleTurbulenceModel'] 
+fvOptEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  fvOptions/fvOption.cpp
+  fvOptions/fvOptionIO.cpp
+  fvOptions/fvOptionList.cpp
+  fvOptions/fvIOoptionList.cpp
+  sources/general/semiImplicitSource/semiImplicitSource.cpp
+  sources/derived/actuationDiskSource/actuationDiskSource.cpp
+  sources/derived/explicitPorositySource/explicitPorositySource.cpp
+  sources/derived/MRFSource/MRFSource.cpp
+  sources/derived/pressureGradientExplicitSource/pressureGradientExplicitSource.cpp
+  sources/derived/pressureGradientExplicitSource/pressureGradientExplicitSourceIO.cpp
+  sources/derived/radialActuationDiskSource/radialActuationDiskSource.cpp
+  sources/derived/rotorDiskSource/rotorDiskSource.cpp
+  sources/derived/rotorDiskSource/bladeModel/bladeModel.cpp
+  sources/derived/rotorDiskSource/profileModel/profileModel.cpp
+  sources/derived/rotorDiskSource/profileModel/profileModelList.cpp
+  sources/derived/rotorDiskSource/profileModel/lookup/lookupProfile.cpp
+  sources/derived/rotorDiskSource/profileModel/series/seriesProfile.cpp
+  sources/derived/rotorDiskSource/trimModel/trimModel/trimModel.cpp
+  sources/derived/rotorDiskSource/trimModel/trimModel/trimModelNew.cpp
+  sources/derived/rotorDiskSource/trimModel/fixed/fixedTrim.cpp
+  sources/derived/rotorDiskSource/trimModel/targetCoeff/targetCoeffTrim.cpp
+  constraints/general/explicitSetValue/explicitSetValue.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libfvOptions = fvOptEnv.SharedLibrary(target = 
+'fvOptions', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = fvOptEnv['LIB_PLATFORM_INSTALL']
+fvOptEnv.Alias('install', install_dir)
+fvOptEnv.Install(install_dir, libfvOptions)
+
+if (fvOptEnv['WHICH_OS'] == "darwin"):
+
+  fvOptEnv.Append(SHLINKFLAGS ='-install_name @' + fvOptEnv['LIB_PLATFORM_INSTALL'] + '/libifvOptions.dylib')

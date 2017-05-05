@@ -1,0 +1,53 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+caelusMeshToFluentConvEnv = globalEnv.Clone()
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+caelusMeshToFluentConvEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = []
+
+caelusMeshToFluentConvEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+caelusMeshToFluentConvEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = []
+  
+caelusMeshToFluentConvEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  caelusMeshToFluent.cpp
+  fluentFvMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincaelusMeshToFluentConv = caelusMeshToFluentConvEnv.Program(target = 
+'caelusMeshToFluent', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = caelusMeshToFluentConvEnv['BIN_PLATFORM_INSTALL']
+caelusMeshToFluentConvEnv.Alias('install', install_dir)
+caelusMeshToFluentConvEnv.Install(install_dir, bincaelusMeshToFluentConv)

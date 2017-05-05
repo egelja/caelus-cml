@@ -1,0 +1,61 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+mapFieldsEnv = globalEnv.Clone()
+
+# Path to source
+src = mapFieldsEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+mapFieldsEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/sampling/lnInclude',
+src + '/lagrangian/basic/lnInclude'
+]        
+mapFieldsEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+mapFieldsEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if mapFieldsEnv['WHICH_OS'] == "windows":
+  mapFieldsEnv.Prepend(LINKFLAGS = ' -u genericPatchFieldsLoad')
+  lib_link = ['libgenericPatchFields','libsampling','liblagrangian']
+else:
+  lib_link = ['genericPatchFields','sampling','lagrangian']
+    
+mapFieldsEnv.Append(LIBS = lib_link)
+    
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""  
+  mapLagrangian.cpp
+  mapFields.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binmapFields = mapFieldsEnv.Program(target = 
+'mapFields', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = mapFieldsEnv['BIN_PLATFORM_INSTALL']
+mapFieldsEnv.Alias('install', install_dir)
+mapFieldsEnv.Install(install_dir, binmapFields)

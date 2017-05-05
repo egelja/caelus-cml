@@ -1,0 +1,66 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+buoyantSimpleSolverEnv = globalEnv.Clone()
+
+# Path to source
+src = buoyantSimpleSolverEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+buoyantSimpleSolverEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = ['../buoyantBoussinesqSimpleSolver',
+src + '/turbulenceModels',
+src + '/turbulenceModels/compressible/turbulenceModel',
+src + '/turbulenceModels/compressible/turbulenceModel/lnInclude', 
+src + '/turbulenceModels/compressible/RAS/lnInclude', 
+src + '/thermophysicalModels/basic/lnInclude',
+]
+buoyantSimpleSolverEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+buoyantSimpleSolverEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+if buoyantSimpleSolverEnv['WHICH_OS'] == "windows":
+  buoyantSimpleSolverEnv.Prepend(LINKFLAGS = ' -u compressibleRASModelsLoad')
+  lib_link = ['libcompressibleTurbulenceModel', 'libcompressibleRASModels',
+  'libbasicThermophysicalModels','libspecie']
+else:
+  lib_link = ['compressibleTurbulenceModel', 'compressibleRASModels',
+  'basicThermophysicalModels','specie']
+
+buoyantSimpleSolverEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  buoyantSimpleSolver.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binbuoyantSimpleSolver = buoyantSimpleSolverEnv.Program(target =
+'buoyantSimpleSolver', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = buoyantSimpleSolverEnv['BIN_PLATFORM_INSTALL']
+buoyantSimpleSolverEnv.Alias('install', install_dir)
+buoyantSimpleSolverEnv.Install(install_dir, binbuoyantSimpleSolver)

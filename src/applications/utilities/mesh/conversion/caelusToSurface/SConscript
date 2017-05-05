@@ -1,0 +1,55 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+caelusToSurfaceConvEnv = globalEnv.Clone()
+
+# Path to source
+src = caelusToSurfaceConvEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+caelusToSurfaceConvEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/surfMesh/lnInclude']
+
+caelusToSurfaceConvEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+caelusToSurfaceConvEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['surfMesh']
+  
+caelusToSurfaceConvEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  caelusToSurface.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+bincaelusToSurfaceConv = caelusToSurfaceConvEnv.Program(target = 
+'caelusToSurface', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = caelusToSurfaceConvEnv['BIN_PLATFORM_INSTALL']
+caelusToSurfaceConvEnv.Alias('install', install_dir)
+caelusToSurfaceConvEnv.Install(install_dir, bincaelusToSurfaceConv)

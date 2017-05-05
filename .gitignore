@@ -1,0 +1,73 @@
+# untracked configuration files
+caelus_conf.py
+caelus-environment.cmd
+caelus-bashrc
+
+# SCon database file
+.sconsign.dblite
+
+# ignore files generated during build
+global.cpp
+.build
+
+# build folders - anywhere
+dummySizes
+platforms/
+lnInclude/
+
+#Windows stuff
+*.dwf
+*.pdb
+*.exp
+*.dll
+*.exe
+
+#Mac and Linux stuff
+*.[oa]
+*.la
+*.so
+*.os
+*.jar
+*.obj
+*.lib
+*.dylib
+*.pyc
+
+# editor and misc backup files - anywhere
+*~
+.*~
+*.bak
+*.bak[0-9][0-9]
+*.orig
+*.orig[0-9][0-9]
+*.DS_store
+\#*\#
+
+# derived files
+lex.yy.c
+src/core/meshTools/triSurface/triSurface/interfaces/STL/posix/
+src/surfMesh/surfaceFormats/stl/posix/
+src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/posix/
+
+# file-browser settings - anywhere
+.directory
+
+# log file from testing
+*.log
+
+# source packages - anywhere
+*.tar.*
+*.tar
+*.tgz
+*.gtgz
+
+# Binaries from in source build
+#pisoSolver
+#simpleSolver
+#MRFSimpleSolver
+#SRFSimpleSolver
+#porousSimpleSolver
+#porousMRFSimpleSolver
+#buoyantSimpleSolver
+#buoyantBoussinesqSimpleSolver
+

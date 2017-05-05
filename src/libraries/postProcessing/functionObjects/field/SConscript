@@ -1,0 +1,83 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+funcObjFieldEnv = globalEnv.Clone()
+
+sl = funcObjFieldEnv['SLASH']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+funcObjFieldEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+funcObjFieldEnv['LIB_SRC'] + '/sampling/lnInclude',
+funcObjFieldEnv['LIB_SRC'] + '/lagrangian/basic/lnInclude'
+]
+funcObjFieldEnv.Prepend(CPPPATH = lib_inc)
+     
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+funcObjFieldEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core', 'lagrangian', 'sampling']
+funcObjFieldEnv.Append(LIBS = lib_link)
+            
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  fieldAverage/fieldAverage/fieldAverage.cpp
+  fieldAverage/fieldAverageItem/fieldAverageItem.cpp
+  fieldAverage/fieldAverageItem/fieldAverageItemIO.cpp
+  fieldAverage/fieldAverageFunctionObject/fieldAverageFunctionObject.cpp
+  fieldCoordinateSystemTransform/fieldCoordinateSystemTransform.cpp
+  fieldCoordinateSystemTransform/fieldCoordinateSystemTransformFunctionObject.cpp
+  fieldMinMax/fieldMinMax.cpp
+  fieldMinMax/fieldMinMaxFunctionObject.cpp
+  fieldValues/fieldValue/fieldValue.cpp
+  fieldValues/faceSource/faceSource.cpp
+  fieldValues/faceSource/faceSourceFunctionObject.cpp
+  fieldValues/cellSource/cellSource.cpp
+  fieldValues/cellSource/cellSourceFunctionObject.cpp
+  nearWallFields/nearWallFields.cpp
+  nearWallFields/nearWallFieldsFunctionObject.cpp
+  readFields/readFields.cpp
+  readFields/readFieldsFunctionObject.cpp
+  streamLine/streamLine.cpp
+  streamLine/streamLineParticle.cpp
+  streamLine/streamLineParticleCloud.cpp
+  streamLine/streamLineFunctionObject.cpp
+  surfaceInterpolateFields/surfaceInterpolateFields.cpp
+  surfaceInterpolateFields/surfaceInterpolateFieldsFunctionObject.cpp
+  regionSizeDistribution/regionSizeDistribution.cpp
+  regionSizeDistribution/regionSizeDistributionFunctionObject.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libfieldFunctionObjects = funcObjFieldEnv.SharedLibrary(target = 
+'fieldFunctionObjects', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = funcObjFieldEnv['LIB_PLATFORM_INSTALL']
+funcObjFieldEnv.Alias('install', install_dir)
+funcObjFieldEnv.Install(install_dir, libfieldFunctionObjects)
+
+if (funcObjFieldEnv['WHICH_OS'] == "darwin"):
+
+  funcObjFieldEnv.Append(SHLINKFLAGS ='-install_name @' + funcObjFieldEnv['LIB_PLATFORM_INSTALL'] + '/libfieldFunctionObjects.dylib')

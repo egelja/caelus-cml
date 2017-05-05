@@ -1,0 +1,64 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+LESDeltasEnv = globalEnv.Clone()
+
+# Path to source
+src = LESDeltasEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+LESDeltasEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/transportModels/incompressible/lnInclude',
+src + '/LESmodels/isoLESmodels/lnInclude',   
+]
+LESDeltasEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+LESDeltasEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core']
+LESDeltasEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  LESdelta/LESdelta.cpp
+  cubeRootVolDelta/cubeRootVolDelta.cpp
+  PrandtlDelta/PrandtlDelta.cpp
+  smoothDelta/smoothDelta.cpp
+  maxDeltaxyz/maxDeltaxyz.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libLESdeltas = LESDeltasEnv.SharedLibrary(target = 'LESdeltas', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = LESDeltasEnv['LIB_PLATFORM_INSTALL']
+LESDeltasEnv.Alias('install', install_dir)
+LESDeltasEnv.Install(install_dir, libLESdeltas)
+
+if (LESDeltasEnv['WHICH_OS'] == "darwin"):
+
+  LESDeltasEnv.Append(SHLINKFLAGS ='-install_name @' + LESDeltasEnv['LIB_PLATFORM_INSTALL'] + '/libLESdeltas.dylib')

@@ -1,0 +1,43 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+reconstructParMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = reconstructParMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = [src + '/dynamicMesh/lnInclude']
+
+reconstructParMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['libdynamicMesh']  
+reconstructParMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  reconstructParMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binreconstructParMesh = reconstructParMeshEnv.Program(target = 
+'reconstructParMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = reconstructParMeshEnv['BIN_PLATFORM_INSTALL']
+reconstructParMeshEnv.Alias('install', install_dir)
+reconstructParMeshEnv.Install(install_dir, binreconstructParMesh)

@@ -1,0 +1,75 @@
+﻿Build started 28/12/2012 8:09:53 AM.
+     1>Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "x64\ZlibDllRelease\Tmp\zlibvc.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         cd ..\..\masmx64
+         bld_ml64.bat
+         :VCEnd
+         Microsoft (R) Macro Assembler (x64) Version 10.00.30319.01
+         Copyright (C) Microsoft Corporation.  All rights reserved.
+         
+          Assembling: inffasx64.asm
+         Microsoft (R) Macro Assembler (x64) Version 10.00.30319.01
+         Copyright (C) Microsoft Corporation.  All rights reserved.
+         
+          Assembling: gvmat64.asm
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /I..\..\.. /I..\..\masmx86 /Zi /nologo /W3 /WX- /O2 /Ob1 /GL /D _CRT_NONSTDC_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_WARNINGS /D ZLIB_WINAPI /D ASMV /D ASMINF /D WIN64 /D _WINDLL /GF /Gm- /MD /GS- /Gy /fp:precise /Zc:wchar_t /Zc:forScope /FAcs /Fa"x64\ZlibDllRelease\Tmp\\" /Fo"x64\ZlibDllRelease\Tmp\\" /Fd"x64\ZlibDllRelease\vc100.pdb" /Gd /TC /errorReport:prompt ..\..\..\adler32.c ..\..\..\compress.c ..\..\..\crc32.c ..\..\..\deflate.c ..\..\..\gzclose.c ..\..\..\gzlib.c ..\..\..\gzread.c ..\..\..\gzwrite.c ..\..\..\infback.c ..\..\masmx64\inffas8664.c ..\..\..\inffast.c ..\..\..\inflate.c ..\..\..\inftrees.c ..\..\minizip\ioapi.c ..\..\minizip\iowin32.c ..\..\..\trees.c ..\..\..\uncompr.c ..\..\..\zutil.c
+         adler32.c
+         compress.c
+         crc32.c
+         deflate.c
+         gzclose.c
+         gzlib.c
+         gzread.c
+         gzwrite.c
+         infback.c
+         inffas8664.c
+         inffast.c
+         inflate.c
+         inftrees.c
+         ioapi.c
+         iowin32.c
+         trees.c
+         uncompr.c
+         zutil.c
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /I..\..\.. /I..\..\masmx86 /Zi /nologo /W3 /WX- /O2 /Ob1 /GL /D ZLIB_INTERNAL /D _CRT_NONSTDC_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_WARNINGS /D ZLIB_WINAPI /D ASMV /D ASMINF /D WIN64 /D _WINDLL /GF /Gm- /MD /GS- /Gy /fp:precise /Zc:wchar_t /Zc:forScope /FAcs /Fa"x64\ZlibDllRelease\Tmp\\" /Fo"x64\ZlibDllRelease\Tmp\\" /Fd"x64\ZlibDllRelease\vc100.pdb" /Gd /TC /errorReport:prompt ..\..\minizip\unzip.c ..\..\minizip\zip.c
+         unzip.c
+         zip.c
+       ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D NDEBUG /l"0x040c" /nologo /fo"x64\ZlibDllRelease\Tmp\zlib.res" zlib.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"x64\ZlibDllRelease\zlibwapi.dll" /INCREMENTAL:NO /NOLOGO ..\..\masmx64\gvmat64.obj ..\..\masmx64\inffasx64.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\zlibvc.def" /MANIFEST:NO /PDB:"x64\ZlibDllRelease\zlibwapi.pdb" /MAP:"x64\ZlibDllRelease\zlibwapi.map" /SUBSYSTEM:WINDOWS /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"x64\ZlibDllRelease\zlibwapi.lib" /MACHINE:X64 /DLL x64\ZlibDllRelease\Tmp\zlib.res
+         x64\ZlibDllRelease\Tmp\adler32.obj
+         x64\ZlibDllRelease\Tmp\compress.obj
+         x64\ZlibDllRelease\Tmp\crc32.obj
+         x64\ZlibDllRelease\Tmp\deflate.obj
+         x64\ZlibDllRelease\Tmp\gzclose.obj
+         x64\ZlibDllRelease\Tmp\gzlib.obj
+         x64\ZlibDllRelease\Tmp\gzread.obj
+         x64\ZlibDllRelease\Tmp\gzwrite.obj
+         x64\ZlibDllRelease\Tmp\infback.obj
+         x64\ZlibDllRelease\Tmp\inffas8664.obj
+         x64\ZlibDllRelease\Tmp\inffast.obj
+         x64\ZlibDllRelease\Tmp\inflate.obj
+         x64\ZlibDllRelease\Tmp\inftrees.obj
+         x64\ZlibDllRelease\Tmp\ioapi.obj
+         x64\ZlibDllRelease\Tmp\iowin32.obj
+         x64\ZlibDllRelease\Tmp\trees.obj
+         x64\ZlibDllRelease\Tmp\uncompr.obj
+         x64\ZlibDllRelease\Tmp\unzip.obj
+         x64\ZlibDllRelease\Tmp\zip.obj
+         x64\ZlibDllRelease\Tmp\zutil.obj
+            Creating library x64\ZlibDllRelease\zlibwapi.lib and object x64\ZlibDllRelease\zlibwapi.exp
+         Generating code
+         Finished generating code
+         zlibvc.vcxproj -> C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\x64\ZlibDllRelease\zlibwapi.dll
+       FinalizeBuildStatus:
+         Deleting file "x64\ZlibDllRelease\Tmp\zlibvc.unsuccessfulbuild".
+         Touching "x64\ZlibDllRelease\Tmp\zlibvc.lastbuildstate".
+     1>Done Building Project "C:\Users\Darrin\Downloads\zlib127\zlib-1.2.7\contrib\vstudio\vc10\zlibvc.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.32

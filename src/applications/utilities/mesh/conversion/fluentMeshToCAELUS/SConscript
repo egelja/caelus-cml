@@ -1,0 +1,72 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+fluentMeshConvEnv = globalEnv.Clone()
+
+# Path to source
+src = fluentMeshConvEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this executable
+#===============================================================================
+fluentMeshConvEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+if fluentMeshConvEnv['WHICH_OS'] == "windows":
+  lib_inc = [ fluentMeshConvEnv['FLEXXX_PATH'] + '/include',
+  src + '/dynamicMesh/lnInclude'
+]
+else:
+  lib_inc = [ src + '/dynamicMesh/lnInclude']
+
+fluentMeshConvEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this executable
+#===============================================================================
+lib_link_path = []
+fluentMeshConvEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['dynamicMesh']
+  
+fluentMeshConvEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# flex ++ - only for Linux and Mac
+#===============================================================================
+if fluentMeshConvEnv['WHICH_OS'] == "windows" :
+  src_from_flex = ['windows/fluentMeshToCAELUS.cpp']
+else :
+  src_to_flex = 'fluentMeshToCAELUS.ll'
+  flex_target = 'posix/fluentMeshToCAELUS.cpp'
+  fluentMeshConvEnv.CXXFile(target= flex_target, source = src_to_flex, LEXFLAGS = '-+')
+  src_from_flex = [flex_target]
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+extrudedTriangleCellShape.cpp
+extrudedQuadCellShape.cpp
+create3DCellShape.cpp
+""") + src_from_flex
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binfluentMeshConv = fluentMeshConvEnv.Program(target = 'fluentMeshToCAELUS', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = fluentMeshConvEnv['BIN_PLATFORM_INSTALL']
+fluentMeshConvEnv.Alias('install', install_dir)
+fluentMeshConvEnv.Install(install_dir, binfluentMeshConv)

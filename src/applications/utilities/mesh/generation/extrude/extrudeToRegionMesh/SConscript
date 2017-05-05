@@ -1,0 +1,44 @@
+#Copyright (C) 2013 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+extrudeToRegionMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = extrudeToRegionMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to include directories for this executable
+#===============================================================================
+lib_inc = ['../extrudeModel/lnInclude', src + '/dynamicMesh/lnInclude']
+extrudeToRegionMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link libraries for this executable
+#===============================================================================
+lib_link = ['libdynamicMesh','libextrudeModel']
+  
+extrudeToRegionMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this executable
+#===============================================================================
+src_files = Split("""
+  createShellMesh.cpp
+  extrudeToRegionMesh.cpp
+  """)
+
+#===============================================================================
+# Build this executable
+#===============================================================================
+binextrudeToRegionMesh = extrudeToRegionMeshEnv.Program(target = 
+'extrudeToRegionMesh', source = src_files)
+
+#===============================================================================
+# Install this executable
+#===============================================================================
+install_dir = extrudeToRegionMeshEnv['BIN_PLATFORM_INSTALL']
+extrudeToRegionMeshEnv.Alias('install', install_dir)
+extrudeToRegionMeshEnv.Install(install_dir, binextrudeToRegionMesh)

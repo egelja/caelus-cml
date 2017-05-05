@@ -1,0 +1,75 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+dynamicFvMeshEnv = globalEnv.Clone()
+
+# Path to source
+src = dynamicFvMeshEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+dynamicFvMeshEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude',
+src + '/dynamicMesh/lnInclude']
+dynamicFvMeshEnv.Prepend(CPPPATH = lib_inc)
+
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = []
+dynamicFvMeshEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core', 'dynamicMesh']
+dynamicFvMeshEnv.Append(LIBS = lib_link)
+
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  dynamicFvMesh/dynamicFvMesh.cpp
+  dynamicFvMesh/dynamicFvMeshNew.cpp
+  staticFvMesh/staticFvMesh.cpp
+  dynamicMotionSolverFvMesh/dynamicMotionSolverFvMesh.cpp
+  dynamicInkJetFvMesh/dynamicInkJetFvMesh.cpp
+  dynamicRefineFvMesh/dynamicRefineFvMesh.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFvMesh.cpp
+  solidBodyMotionFvMesh/multiSolidBodyMotionFvMesh.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/solidBodyMotionFunction/solidBodyMotionFunction.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/solidBodyMotionFunction/solidBodyMotionFunctionNew.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/SDA/SDA.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/tabulated6DoFMotion/tabulated6DoFMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/linearMotion/linearMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/rotatingMotion/rotatingMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/axisRotationMotion/axisRotationMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/multiMotion/multiMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/oscillatingLinearMotion/oscillatingLinearMotion.cpp
+  solidBodyMotionFvMesh/solidBodyMotionFunctions/oscillatingRotatingMotion/oscillatingRotatingMotion.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libdynamicFvMesh = dynamicFvMeshEnv.SharedLibrary(target = 'dynamicFvMesh', 
+source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = dynamicFvMeshEnv['LIB_PLATFORM_INSTALL']
+dynamicFvMeshEnv.Alias('install', install_dir)
+dynamicFvMeshEnv.Install(install_dir, libdynamicFvMesh)
+
+if (dynamicFvMeshEnv['WHICH_OS'] == "darwin"):
+
+  dynamicFvMeshEnv.Append(SHLINKFLAGS ='-install_name @' + dynamicFvMeshEnv['LIB_PLATFORM_INSTALL'] + '/libdynamicFvMesh.dylib')

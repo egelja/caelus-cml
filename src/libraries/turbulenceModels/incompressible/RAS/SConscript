@@ -1,0 +1,80 @@
+#Copyright (C) 2014 Applied CCM
+import subprocess
+Import('globalEnv')
+
+# Clone the global environment so changes made he are not pass onto subsequent 
+# libraries
+turbInRASEnv = globalEnv.Clone()
+
+# Path to source
+src = turbInRASEnv['LIB_SRC']
+
+#===============================================================================
+# Additions to compiler flags for this library
+#===============================================================================
+turbInRASEnv.Append(CCFLAGS = '')
+
+#===============================================================================
+# Additions to include directories for this library
+#===============================================================================
+lib_inc = ['lnInclude', src + '/transportModels', src + '/turbulenceModels'] 
+turbInRASEnv.Prepend(CPPPATH = lib_inc)
+      
+#===============================================================================
+# Additions to link library paths for this library
+#===============================================================================
+lib_link_path = [] 
+turbInRASEnv.Prepend(LIBPATH = lib_link_path)
+
+#===============================================================================
+# Additions to link libraries for this library
+#===============================================================================
+lib_link = ['core','incompressibleTurbulenceModel'] 
+turbInRASEnv.Append(LIBS = lib_link)
+   
+#===============================================================================
+# Sources for this library
+#===============================================================================
+src_files = Split("""
+  RASModel/RASModel.cpp
+  laminar/laminar.cpp
+  realizableKE/realizableKE.cpp
+  kOmegaSST/kOmegaSST.cpp
+  SpalartAllmaras/SpalartAllmaras.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkWallFunction/nutkWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkRoughWallFunction/nutkRoughWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutkAtmRoughWallFunction/nutkAtmRoughWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUWallFunction/nutUWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUSpaldingWallFunction/nutUSpaldingWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutUTabulatedWallFunction/nutUTabulatedWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutLowReWallFunction/nutLowReWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/nutWallFunctions/nutURoughWallFunction/nutURoughWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/epsilonWallFunctions/epsilonWallFunction/epsilonWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/omegaWallFunctions/omegaWallFunction/omegaWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
+  derivedFvPatchFields/wallFunctions/kappatWallFunctions/kappatJayatillekeWallFunction/kappatJayatillekeWallFunctionFvPatchScalarField.cpp
+  derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.cpp
+  derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.cpp
+  derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.cpp
+  derivedFvPatchFields/fixedShearStress/fixedShearStressFvPatchVectorField.cpp
+  derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.cpp
+  derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.cpp
+  """)
+
+#===============================================================================
+# Build this library
+#===============================================================================
+libincompressibleRASModels = turbInRASEnv.SharedLibrary(target = 
+'incompressibleRASModels', source = src_files)
+
+#===============================================================================
+# Install this library
+#===============================================================================
+install_dir = turbInRASEnv['LIB_PLATFORM_INSTALL']
+turbInRASEnv.Alias('install', install_dir)
+turbInRASEnv.Install(install_dir, libincompressibleRASModels)
+
+if (turbInRASEnv['WHICH_OS'] == "darwin"):
+
+  turbInRASEnv.Append(SHLINKFLAGS ='-install_name @' + turbInRASEnv['LIB_PLATFORM_INSTALL'] + '/libincompressibleRASModels.dylib')

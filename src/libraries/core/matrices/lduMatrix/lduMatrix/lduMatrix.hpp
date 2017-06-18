@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,6 +54,7 @@ SourceFiles
 #include "typeInfo.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -282,6 +284,7 @@ public:
             //- Convergence tolerance relative to the initial
             scalar relTol_;
 
+            profiling::Trigger profiling_;
 
         // Protected Member Functions
 

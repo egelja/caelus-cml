@@ -1,4 +1,5 @@
 /*---------------------------------------------------------------------------*\
+Copyright (C) 2016 OpenCFD Ltd
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
@@ -168,6 +169,10 @@ protected:
 
         //- Set the controls from the current controlDict
         void setControls();
+
+        //- Set file monitoring, profiling, etc
+        //  Optionally force profiling without inspecting the controlDict
+        void setMonitoring(const bool forceProfiling=false);
 
         //- Read the control dictionary and set the write controls etc.
         virtual void readDict();

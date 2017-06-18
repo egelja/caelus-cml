@@ -1,84 +1,102 @@
 /*---------------------------------------------------------------------------*\
-    Copyright            : (C) 2011 Symscape
-    Website              : www.symscape.com
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    clockTime
+    CML::profiling::SysInfo
 
 Description
-    Starts timing (using rtc) and returns elapsed time from start. Better
-    resolution (2uSec instead of ~20mSec) than cpuTime.
+    General system information
 
 SourceFiles
-    clockTime.C
+    profilingSysInfo.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef clockTime_H
-#define clockTime_H
+#ifndef profilingSysInfo_HPP
+#define profilingSysInfo_HPP
 
-#include <sys/types.h>
-#include <sys/time.h>
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
 
+// Forward declaration of classes
+class Ostream;
+
 /*---------------------------------------------------------------------------*\
-                           Class clockTime Declaration
+                     Class profiling::sysInfo Declaration
 \*---------------------------------------------------------------------------*/
 
-class clockTime
+class profiling::sysInfo
 {
-    // Private data
-
-        struct timeval startTime_;
-        mutable struct timeval lastTime_;
-        mutable struct timeval newTime_;
-
-        static void getTime(struct timeval& t);
-
-        static double timeDifference
-        (
-            const struct timeval& start,
-            const struct timeval& end
-        );
+    // Private Static Data Members
 
 
-public:
+    // Private Data Members
 
-    // Constructors
 
-        //- Construct from components
-        clockTime();
+    // Private Member Functions
+
+        //- Disallow default bitwise copy construct
+        sysInfo(const sysInfo&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const sysInfo&);
+
+
+protected:
+
+    // Friendship
+
+        friend class profiling;
 
 
     // Member Functions
 
-        // Access
+public:
 
-            //- Returns CPU time from start of run
-            double elapsedTime() const;
 
-            //- Returns CPU time from last call of clockTimeIncrement()
-            double timeIncrement() const;
+    // Constructors
+
+        //- Construct from components
+        sysInfo();
+
+
+    //- Destructor
+    ~sysInfo();
+
+
+    // Member Functions
+
+    // Access
+
+
+    // Edit
+
+        //- Update it with a new timing information
+        void update();
+
+        //- Write the profiling times, optionally with additional values
+        //  Use dictionary format.
+        Ostream& write(Ostream& os) const;
 };
 
 

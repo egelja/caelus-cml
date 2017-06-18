@@ -31,23 +31,26 @@ Description
 #include "RASModel.hpp"
 #include "simpleControl.hpp"
 #include "fvIOoptionList.hpp"
-
+#include "profiling.hpp"
 
 int main(int argc, char *argv[])
 {
     #include "setRootCase.hpp"
     #include "createTime.hpp"
+    addProfiling(init, "Initialisation");
     #include "createMesh.hpp"
     #include "createFields.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);
+    endProfiling(init);
 
     Info<< "\nStarting time loop\n" << endl;
 
     while (simple.loop())
     {
+        addProfiling(timeLoop, "Iteration");
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         // --- Pressure-velocity SIMPLE corrector

@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "MULES.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -32,6 +33,8 @@ void CML::MULES::explicitSolve
     const scalar psiMin
 )
 {
+    addProfiling(solve, "MULES::explicitSolve");
+
     explicitSolve
     (
         geometricOneField(),

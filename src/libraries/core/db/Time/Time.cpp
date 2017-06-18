@@ -1,4 +1,5 @@
 /*---------------------------------------------------------------------------*\
+Copyright (C) 2015-2016 OpenCFD Ltd
 Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -22,6 +23,7 @@ License
 #include "Time.hpp"
 #include "PstreamReduceOps.hpp"
 #include "argList.hpp"
+#include "profiling.hpp"
 
 #include <sstream>
 
@@ -276,6 +278,79 @@ void CML::Time::setControls()
 }
 
 
+void CML::Time::setMonitoring(bool forceProfiling)
+{
+    const dictionary* profilingDict = controlDict_.subDictPtr("profiling");
+
+    // initialize profiling on request
+    // otherwise rely on profiling entry within controlDict
+    // and skip if 'active' keyword is explicitly set to false
+    if (forceProfiling)
+    {
+        profiling::initialize
+        (
+            IOobject
+            (
+                "profiling",
+                timeName(),
+                "uniform",
+                *this,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this
+        );
+    }
+    else if
+    (
+        profilingDict
+     && profilingDict->lookupOrDefault<Switch>("active", true)
+    )
+    {
+        profiling::initialize
+        (
+            *profilingDict,
+            IOobject
+            (
+                "profiling",
+                timeName(),
+                "uniform",
+                *this,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this
+        );
+    }
+
+    // Time objects not registered so do like objectRegistry::checkIn ourselves.
+    if (runTimeModifiable_)
+    {
+        monitorPtr_.reset
+        (
+            new fileMonitor
+            (
+                regIOobject::fileModificationChecking == inotify
+             || regIOobject::fileModificationChecking == inotifyMaster
+            )
+        );
+
+        // File might not exist yet.
+        fileName f(controlDict_.filePath());
+
+        if (!f.size())
+        {
+            // We don't have this file but would like to re-read it.
+            // Possibly if in master-only reading mode. Use a non-existing
+            // file to keep fileMonitor synced.
+            f = controlDict_.objectPath();
+        }
+
+        controlDict_.watchIndex() = addWatch(f);
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::Time::Time
@@ -343,32 +418,7 @@ CML::Time::Time
     readOpt() = IOobject::MUST_READ_IF_MODIFIED;
 
     setControls();
-
-    // Time objects not registered so do like objectRegistry::checkIn ourselves.
-    if (runTimeModifiable_)
-    {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
-    }
+    setMonitoring();
 }
 
 
@@ -438,31 +488,8 @@ CML::Time::Time
 
     setControls();
 
-    // Time objects not registered so do like objectRegistry::checkIn ourselves.
-    if (runTimeModifiable_)
-    {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
-    }
+    // '-profiling' = force profiling, ignore controlDict entry
+    setMonitoring(args.optionFound("profiling"));
 }
 
 
@@ -536,32 +563,7 @@ CML::Time::Time
     controlDict_.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
 
     setControls();
-
-    // Time objects not registered so do like objectRegistry::checkIn ourselves.
-    if (runTimeModifiable_)
-    {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
-    }
+    setMonitoring();
 }
 
 
@@ -621,6 +623,7 @@ CML::Time::Time
     functionObjects_(*this, enableFunctionObjects)
 {
     libs_.open(controlDict_, "libs");
+    setMonitoring(); // for profiling etc
 }
 
 
@@ -635,6 +638,9 @@ CML::Time::~Time()
 
     // destroy function objects first
     functionObjects_.clear();
+
+    // cleanup profiling
+    profiling::stop(*this);
 }
 
 
@@ -834,8 +840,15 @@ bool CML::Time::run() const
         // ie, when exiting the control loop
         if (!running && timeIndex_ != startTimeIndex_)
         {
-            // Note, end() also calls an indirect start() as required
+            // Ensure functionObjects execute on last time step
+            // (and hence write uptodate functionObjectProperties)
+            addProfiling(foExec, "functionObjects.execute()");
+            functionObjects_.execute();
+            endProfiling(foExec);
+
+            addProfiling(foEnd, "functionObjects.end()");
             functionObjects_.end();
+            endProfiling(foEnd);
         }
     }
 
@@ -847,10 +860,12 @@ bool CML::Time::run() const
 
             if (timeIndex_ == startTimeIndex_)
             {
+                addProfiling(functionObjects, "functionObjects.start()");
                 functionObjects_.start();
             }
             else
             {
+                addProfiling(functionObjects, "functionObjects.execute()");
                 functionObjects_.execute();
             }
         }

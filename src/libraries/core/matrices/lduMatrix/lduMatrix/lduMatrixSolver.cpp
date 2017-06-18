@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -150,7 +151,8 @@ CML::lduMatrix::solver::solver
     interfaceBouCoeffs_(interfaceBouCoeffs),
     interfaceIntCoeffs_(interfaceIntCoeffs),
     interfaces_(interfaces),
-    controlDict_(solverControls)
+    controlDict_(solverControls),
+    profiling_("lduMatrix::solver." + fieldName)
 {
     readControls();
 

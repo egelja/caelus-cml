@@ -58,6 +58,8 @@ src_core = Split("""
     global/global.cpp
     global/argList/argList.cpp
     global/clock/clock.cpp
+    global/profiling/profiling.cpp
+    global/profiling/profilingSysInfo.cpp
     primitives/bools/bool/bool.cpp
     primitives/bools/bool/boolIO.cpp
     primitives/bools/Switch/Switch.cpp

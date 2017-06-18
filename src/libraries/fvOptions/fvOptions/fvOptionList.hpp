@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -35,6 +36,7 @@ SourceFile
 #include "GeometricField.hpp"
 #include "fvPatchField.hpp"
 #include "fvOption.hpp"
+#include "profiling.hpp"
 
 namespace CML
 {
@@ -230,6 +232,8 @@ void CML::fv::optionList::correct
 
         if (fieldI != -1)
         {
+            addProfiling(fvopt, "fvOption::correct." + source.name());
+
             source.setApplied(fieldI);
 
             if (source.isActive())
@@ -279,6 +283,8 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 
         if (fieldI != -1)
         {
+            addProfiling(fvopt, "fvOption()." + source.name());
+
             source.setApplied(fieldI);
 
             if (source.isActive())
@@ -332,6 +338,8 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 
         if (fieldI != -1)
         {
+            addProfiling(fvopt, "fvOption()." + source.name());
+
             source.setApplied(fieldI);
 
             if (source.isActive())
@@ -388,6 +396,8 @@ CML::tmp<CML::fvMatrix<Type> > CML::fv::optionList::operator()
 
         if (fieldI != -1)
         {
+            addProfiling(fvopt, "fvOption()." + source.name());
+
             source.setApplied(fieldI);
 
             if (source.isActive())
@@ -420,6 +430,8 @@ void CML::fv::optionList::constrain(fvMatrix<Type>& eqn)
 
         if (fieldI != -1)
         {
+            addProfiling(fvopt, "fvOption::constrain." + eqn.psi().name());
+
             source.setApplied(fieldI);
 
             if (source.isActive())

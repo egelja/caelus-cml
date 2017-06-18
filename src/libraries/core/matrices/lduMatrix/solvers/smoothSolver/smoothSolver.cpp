@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +22,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "smoothSolver.hpp"
+#include "profiling.hpp"
 
 namespace CML
 {
@@ -76,6 +78,8 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
     // If the nSweeps_ is negative do a fixed number of sweeps
     if (nSweeps_ < 0)
     {
+        addProfiling(solve, "lduMatrix::smoother." + fieldName_);
+
         autoPtr<lduMatrix::smoother> smootherPtr = lduMatrix::smoother::New
         (
             fieldName_,
@@ -131,6 +135,8 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
              )
            )
         {
+            addProfiling(solve, "lduMatrix::smoother." + fieldName_);
+
             autoPtr<lduMatrix::smoother> smootherPtr = lduMatrix::smoother::New
             (
                 fieldName_,

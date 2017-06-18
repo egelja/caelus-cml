@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2013-2016 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,6 +40,7 @@ SourceFiles
 #define IMULES_HPP
 
 #include "MULES.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -122,6 +124,8 @@ void CML::MULES::implicitSolve
     const scalar psiMin
 )
 {
+    addProfiling(solve, "MULES::implicitSolve");
+
     const fvMesh& mesh = psi.mesh();
 
     const dictionary& MULEScontrols = mesh.solverDict(psi.name());

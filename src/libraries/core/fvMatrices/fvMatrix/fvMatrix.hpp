@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2014 Applied CCM
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,6 +47,7 @@ SourceFiles
 #include "zero.hpp"
 #include "className.hpp"
 #include "fvc.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -3560,6 +3562,8 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
     const dictionary& solverControls
 )
 {
+    addProfiling(solve, "fvMatrix::solve." + psi_.name());
+
     if (debug)
     {
         Info<< "fvMatrix<Type>::solve(const dictionary& solverControls) : "

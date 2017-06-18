@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +22,7 @@ License
 
 #include "fvScalarMatrix.hpp"
 #include "zeroGradientFvPatchFields.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -55,6 +57,8 @@ CML::fvMatrix<CML::scalar>::solver
     const dictionary& solverControls
 )
 {
+    addProfiling(solve, "fvMatrix::solve." + psi_.name());
+
     if (debug)
     {
         Info<< "fvMatrix<scalar>::solver(const dictionary& solverControls) : "

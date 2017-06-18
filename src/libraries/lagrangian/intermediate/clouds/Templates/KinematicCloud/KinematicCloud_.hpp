@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -70,6 +71,8 @@ SourceFiles
 #include "DispersionModel.hpp"
 #include "PatchInteractionModel.hpp"
 #include "SurfaceFilmModel_.hpp"
+
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -1364,6 +1367,8 @@ template<class CloudType>
 template<class TrackData>
 void CML::KinematicCloud<CloudType>::solve(TrackData& td)
 {
+    addProfiling(prof, "cloud::solve");
+
     if (solution_.steadyState())
     {
         td.cloud().storeState();

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,6 +33,8 @@ void CML::MULES::implicitSolve
     const scalar psiMin
 )
 {
+    addProfiling(solve, "MULES::implicitSolve");
+
     implicitSolve
     (
         geometricOneField(),

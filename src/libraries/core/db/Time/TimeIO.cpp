@@ -1,4 +1,5 @@
 /*---------------------------------------------------------------------------*\
+Copyright (C) 2016 OpenCFD Ltd
 Copyright (C) 2011-2012 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -22,6 +23,7 @@ License
 #include "Time.hpp"
 #include "Pstream.hpp"
 #include "simpleObjectRegistry.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -364,6 +366,8 @@ bool CML::Time::writeObject
 {
     if (outputTime())
     {
+        addProfiling(writing, "objectRegistry::writeObject");
+
         const word tmName(timeName());
 
         IOdictionary timeDict

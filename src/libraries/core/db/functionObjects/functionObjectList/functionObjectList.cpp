@@ -1,5 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd
+
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +23,7 @@ License
 
 #include "functionObjectList.hpp"
 #include "Time.hpp"
+#include "profiling.hpp"
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
@@ -153,6 +156,12 @@ bool CML::functionObjectList::execute(const bool forceWrite)
 
         forAll(*this, objectI)
         {
+            addProfiling
+            (
+                fo,
+                "functionObject::" + operator[](objectI).name() + "::execute"
+            );
+
             ok = operator[](objectI).execute(forceWrite) && ok;
         }
     }
@@ -174,6 +183,12 @@ bool CML::functionObjectList::end()
 
         forAll(*this, objectI)
         {
+            addProfiling
+            (
+                fo,
+                "functionObject::" + operator[](objectI).name() + "::end"
+            );
+
             ok = operator[](objectI).end() && ok;
         }
     }
@@ -251,6 +266,8 @@ bool CML::functionObjectList::read()
 
         label nFunc = 0;
 
+        addProfiling(fo,"functionObjects::read");
+
         if (entryPtr->isDict())
         {
             // a dictionary of functionObjects
@@ -278,12 +295,24 @@ bool CML::functionObjectList::read()
                     // an existing functionObject, and dictionary changed
                     if (newDigs[nFunc] != digests_[oldIndex])
                     {
+                        addProfiling
+                        (
+                            fo2,
+                            "functionObject::" + objPtr->name() + "::read"
+                        );
+
                         ok = objPtr->read(dict) && ok;
                     }
                 }
                 else
                 {
-                    // new functionObject
+                    // New functionObject
+                    addProfiling
+                    (
+                        fo2,
+                        "functionObject::" + key + "::start"
+                    );
+
                     objPtr = functionObject::New(key, time_, dict).ptr();
                     ok = objPtr->start() && ok;
                 }

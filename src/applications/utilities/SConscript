@@ -103,9 +103,16 @@ subdirs = Split("""
     postProcessing/wall/wallShearStress
     postProcessing/wall/yPlusLES
     postProcessing/wall/yPlusRAS
+    postProcessing/waves/postProcessWaves
+    postProcessing/waves/surfaceElevation
     preProcessing/changeDictionary
     preProcessing/mapFields
     preProcessing/setFields
+    preProcessing/waves/faceSetToSTL
+    preProcessing/waves/relaxationZoneLayout
+    preProcessing/waves/setWaveField
+    preProcessing/waves/setWaveParameters
+    preProcessing/waves/waveGaugesNProbes
 """)
 
 for d in subdirs:

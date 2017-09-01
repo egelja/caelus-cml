@@ -20,6 +20,7 @@ import utils
 PROJECT_NAME     = "caelus"
 PROJECT_VERSION  = '7.04'
 METIS_VERSION    = '5.1.0'
+GSL_VERSION      = '2.3'
 SCOTCH_VERSION   = '6.0.4'
 MPI_VERSION      = '1.6.5'
 USERNAME         = getpass.getuser()
@@ -59,6 +60,7 @@ caelus_vars.AddVariables(
     # Additional dependencies
     BoolVariable('BUILD_SCOTCH', 'Build Scotch library', True),
     BoolVariable('BUILD_METIS', 'Build METIS library', True),
+    BoolVariable('BUILD_GSL', 'Build GSL library', True),
     BoolVariable('BUILD_SWAK', 'Build SWAK utilities', True),
     BoolVariable('BUILD_CFMESH', 'Build cfMesh utilities', True),
     PathVariable('METIS_PATH', 'Path to the METIS library',
@@ -99,6 +101,14 @@ caelus_vars.AddVariables(
     PathVariable('CFMESH_PATH', 'Path to cfMesh library',
                  os.path.join(PROJECT_EXT_DIR,
                               "cfmesh")),
+    PathVariable('GSL_PATH', 'Path to gsl library',
+                 os.path.join(PROJECT_EXT_DIR,
+                              "pgsl-%s"%GSL_VERSION)),
+    PathVariable('GSL_LIB_PATH', 'Path to the GSL lib files','CAELUS LIBRARY PATH',
+                 PathVariable.PathAccept),
+    PathVariable('GSL_INC_PATH', 'Path to the GSL headers',
+                 os.path.join(PROJECT_EXT_DIR,
+                              "pgsl-%s"%GSL_VERSION,'include')),
 )
 
 if ostype == "windows":

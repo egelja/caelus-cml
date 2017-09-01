@@ -1,0 +1,49 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 7.04                                   
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U.org;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    cyclic1_half0
+    {
+        type            cyclic;
+    }
+
+    cyclic1_half1
+    {
+        type            cyclic;
+    }
+
+
+    bottom
+    {
+        type            slip;
+    }
+    
+    atmosphere
+    {
+        type            zeroGradient;
+    }
+    
+    defaultFaces
+    {
+        type            empty;
+    }
+}
+
+
+// ************************************************************************* //

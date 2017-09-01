@@ -61,7 +61,8 @@ def clean_case(case='.'):
    case=os.path.abspath(case)
    patterns = ['[1-9]*', '-[1-9]*', 'log', 'log.*', 'log-*', 'log*.*',
          '*.log','processor*', 'probes*', 'forces*', 'VTK', '*.*~',
-         'surfaceSampling', 'sets', 'postProcessing','*.foam','States']
+         'surfaceSampling', 'sets', 'postProcessing','*.foam','States',
+         'postProcessedWaves','surfaceElevation*','waveGaugesNProbes']
    for nZeros in range(8):
        timeDir = '0.'+nZeros*'0'+'[1-9]*'
        for p in ['', '-']:

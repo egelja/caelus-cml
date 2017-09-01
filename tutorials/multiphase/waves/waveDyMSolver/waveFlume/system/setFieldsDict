@@ -1,0 +1,35 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+);
+
+regions
+(
+    boxToCell
+    {
+        box ( 0 -0.8 0 ) ( 18 0 0.1 );
+        fieldValues ( volScalarFieldValue p_rgh 3.92 );
+    }
+
+    boxToCell
+    {
+        box ( 0 0 0 ) ( 18 0.4 0.1 );
+        fieldValues ( volScalarFieldValue p_rgh 3.92 );
+    }
+);
+
+
+// ************************************************************************* //

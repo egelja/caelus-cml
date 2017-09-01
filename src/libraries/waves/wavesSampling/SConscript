@@ -1,0 +1,33 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'wavesSampling'
+
+sources = Split("""
+ surfaceElevation/sampledSurfaceElevation/sampledSurfaceElevation.cpp
+ surfaceElevation/sampledSurfaceElevationFunctionObject/sampledSurfaceElevationFunctionObject.cpp
+ overtopping/overtopping.cpp
+ overtopping/overtoppingFunctionObject.cpp
+""")
+
+caelus_inc = [
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude',
+'waves/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'sampling',
+'pgsl',
+'waves'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

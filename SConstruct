@@ -42,6 +42,14 @@ if env['BUILD_SCOTCH']:
 else:
     utils.ensure_scotch(env)
 
+if env['BUILD_GSL']:
+    from variables import GSL_VERSION
+    SConscript('external/pgsl-%s/SConscript'%GSL_VERSION,
+               exports=['env'],
+               src_dir=Dir("#").srcnode().abspath,
+               variant_dir=build_dir)
+else:
+    utils.ensure_gsl(env)
 
 ### Main Caelus entry points
 caelus_src = Split("""

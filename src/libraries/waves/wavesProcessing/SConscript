@@ -1,0 +1,83 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'wavesProcessing'
+
+sources = Split("""
+  preProcessing/setWaveProperties/setWaveProperties.cpp
+  preProcessing/setWaveProperties/current/potentialCurrentProperties/potentialCurrentProperties.cpp
+  preProcessing/setWaveProperties/solitary/solitaryFirstProperties/solitaryFirstProperties.cpp
+  preProcessing/setWaveProperties/regular/stokesFirstProperties/stokesFirstProperties.cpp
+  preProcessing/setWaveProperties/regular/stokesFirstStandingProperties/stokesFirstStandingProperties.cpp
+  preProcessing/setWaveProperties/regular/stokesSecondProperties/stokesSecondProperties.cpp
+  preProcessing/setWaveProperties/regular/stokesSecondModulationProperties/stokesSecondModulationProperties.cpp
+  preProcessing/setWaveProperties/regular/stokesFifthProperties/stokesFifthProperties.cpp
+  preProcessing/setWaveProperties/regular/cnoidalFirstProperties/cnoidalFirstProperties.cpp
+  preProcessing/setWaveProperties/irregular/bichromaticFirstProperties/bichromaticFirstProperties.cpp
+  preProcessing/setWaveProperties/irregular/bichromaticSecondProperties/bichromaticSecondProperties.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/waveSpectra.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/frequencyAxis/frequencyAxis.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/frequencyAxis/equidistantFrequencyAxis/equidistantFrequencyAxis.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/frequencyAxis/cosineStretchedFrequencyAxis/cosineStretchedFrequencyAxis.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/spectra/JONSWAP/JONSWAP.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/spectra/PiersonMoskowitz/PiersonMoskowitz.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/phases/phases.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/phases/randomPhase/randomPhase.cpp
+  preProcessing/setWaveProperties/irregular/waveSpectra/phases/focusingPhase/focusingPhase.cpp
+  preProcessing/setWaveProperties/irregular/irregularProperties/irregularProperties.cpp
+  preProcessing/setWaveProperties/mixedType/combinedWavesProperties/combinedWavesProperties.cpp
+  preProcessing/setWaveProperties/externalWaveForcing/externalSourceProperties/externalSourceProperties.cpp
+  preProcessing/probes/waveGauges/waveGauges.cpp
+  preProcessing/probes/probeGauges/probeGauges.cpp
+  preProcessing/probes/pointDistributions/pointDistributions.cpp
+  preProcessing/probes/pointDistributions/userDefinedDistribution/userDefinedDistribution.cpp
+  preProcessing/probes/pointDistributions/lineDistribution/lineDistribution.cpp
+  preProcessing/probes/pointDistributions/circularDistribution/circularDistribution.cpp
+  preProcessing/probes/pointDistributions/quadrilateralDistribution/quadrilateralDistribution.cpp
+  postProcessing/postProcessingWaves/postProcessingWaves.cpp
+  postProcessing/postProcessingWaves/writeRawData/rawSurfaceElevation/rawSurfaceElevation.cpp
+  postProcessing/postProcessingWaves/writeRawData/rawVelocityProbes/rawVelocityProbes.cpp
+  postProcessing/postProcessingWaves/writeRawData/rawForcesAndMoments/rawForcesAndMoments.cpp
+  postProcessing/postProcessingWaves/writeRawData/rawAlphaProbes/rawAlphaProbes.cpp
+  postProcessing/postProcessingWaves/writeRawData/rawOvertopping/rawOvertopping.cpp
+  postProcessing/postProcessingWaves/write2Ascii/write2Ascii.cpp
+  postProcessing/postProcessingWaves/writeIndexLocation/writeIndexLocation.cpp
+  postProcessing/postProcessingWaves/cleaningUtil/removeData/removeData.cpp
+  postProcessing/postProcessingWaves/cleaningUtil/removeSubDirs/removeSubDirs.cpp
+  postProcessing/postProcessingWaves/writeInterpolatedData/interpolateSurfaceElevation/interpolateSurfaceElevation.cpp
+  postProcessing/postProcessingWaves/writeInterpolatedData/interpolateVelocityProbes/interpolateVelocityProbes.cpp
+  postProcessing/postProcessingWaves/writeInterpolatedData/interpolateForcesAndMoments/interpolateForcesAndMoments.cpp
+  postProcessing/postProcessingWaves/writeInterpolatedData/interpolateAlphaProbes/interpolateAlphaProbes.cpp
+  postProcessing/postProcessingWaves/writeInterpolatedData/interpolateOvertopping/interpolateOvertopping.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/spectralMethods/complexExp.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/spectralMethods/spectralMethodsFFTBased.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/spectralMethods/spectralMethodsLeastSquaresBased.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/fftBasedMethods/powerSpectraFFT/powerSpectraFFT.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/fftBasedMethods/reflectionAnalysis2DFFT/reflectionAnalysis2DFFT.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/leastSquareBasedMethods/powerSpectraLS/powerSpectraLS.cpp
+  postProcessing/postProcessingWaves/spectralAnalysis/leastSquareBasedMethods/reflectionAnalysis2DLS/reflectionAnalysis2DLS.cpp
+  postProcessing/postProcessingWaves/miscOperations/ensembleAverage/ensembleAverage.cpp
+  postProcessing/postProcessingWaves/miscOperations/trapz/trapz.cpp
+  postProcessing/postProcessingWaves/miscOperations/cumTrapz/cumTrapz.cpp
+  postProcessing/postProcessingWaves/miscOperations/zeroCrossing/zeroCrossing.cpp
+""")
+
+caelus_inc = [
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'sampling',
+'pgsl'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

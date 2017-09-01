@@ -1,0 +1,32 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'postProcessWaves'
+
+sources = Split("""
+ postProcessWaves.cpp
+""")
+
+caelus_inc = [
+'waves/waves/lnInclude',
+'waves/wavesProcessing/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'waves',
+'pgsl',
+'wavesProcessing'
+]
+
+prepend_args = { 'CXXFLAGS' : ['-Dutil_EXPORTS'] }
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

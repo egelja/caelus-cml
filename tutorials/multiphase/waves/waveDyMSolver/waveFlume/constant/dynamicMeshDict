@@ -1,0 +1,86 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      motionProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh      dynamicMotionSolverFvMesh;
+
+motionSolverLibs   ("librigidBodyMeshMotionSolver.so" "libfvMotionSolvers.so");
+
+solver             rigidBodyMeshMotionSolver;
+
+rigidBodyMeshMotionSolverCoeffs
+{
+    report          on;
+
+    outputControl
+    {         
+        outputControl timeStep; // Possible options: timeStep, outputTime, adjustableTime, runTime, clockTime, cpuTime 
+        outputInterval       1; // Only used with timeStep, outputTime
+        writeInterval        1; // Only used with adjustableTime, runTime, clockTime, cpuTime
+    }
+
+    meshSolver
+    {
+        solver displacementLaplacian;
+
+        displacementLaplacianCoeffs
+        {
+            diffusivity inverseDistance (floatingObject);
+        }
+    }
+
+    solver
+    {
+        type Newmark;
+    }
+
+    accelerationRelaxation 0.2;
+
+    bodies
+    {
+        floatingObject
+        {
+            type            cuboid;
+            parent          root;
+            mass            5;
+            L               (0.25 0.25 0.1);
+            centreOfMass    (0 0 0);
+            transform       (1 0 0 0 1 0 0 0 1) (10.125 -0.075 0.05);
+
+            joint
+            {
+                type            composite;
+                joints
+                (
+                    {
+                        type Px;
+                    }
+                    {
+                        type Py;
+                    }
+
+                    {
+                        type Rz;
+                    }
+                );
+            }
+            
+            patches         (floatingObject);
+        }        
+    }
+    restraints
+    {
+    }
+}
+
+
+// ************************************************************************* //

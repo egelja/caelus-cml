@@ -81,6 +81,38 @@ def ensure_scotch(env):
                     os.path.join(scotch_path,'lib'))
 
 
+def ensure_gsl(env):
+    """Ensure that the environment is setup for GSL
+
+    If ``BUILD_GSL`` is set to False, then the code expects the following
+    variables to be setup:
+
+    - GSL_LIB_PATH: Path to gsl library files
+    - GSL_INC_PATH: Path to gsl include files
+
+    - GSL_PATH: Path to GSL files; automatically sets the include and lib
+      paths.
+
+    """
+    if env['BUILD_GSL']:
+        print ("GSL will be built; ignoring request to check GSL")
+        return
+
+    gsl_path = env['GSL_PATH']
+    lib_path = env['GSL_LIB_PATH']
+    inc_path = env['GSL_INC_PATH']
+
+    if lib_path:
+        assert os.path.exists(lib_path), "Cannot find GSL libraries. Check GSL_LIB_PATH settings"
+        assert os.path.exists(inc_path), "Cannot find GSL headers. Check GSL_INC_PATH"
+    else:
+        assert os.path.exists(gsl_path), "Cannot find GSL. Turn BUILD_GSL to True or provide paths to a valid GSL installation"
+        env.Replace('GSL_INC_PATH',
+                    os.path.join(metis_path,'include'))
+        env.Replace('GSL_LIB_PATH',
+                    os.path.join(metis_path,'lib'))
+
+
 def get_git_version(branch='HEAD'):
     """Return the SHA ID of the latest commit for the given branch
 

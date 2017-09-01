@@ -1,0 +1,37 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'surfaceElevation'
+
+sources = Split("""
+ surfaceElevation.cpp
+""")
+
+caelus_inc = [
+'waves/waves/lnInclude',
+'waves/wavesSampling/lnInclude',
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'waves',
+'pgsl',
+'wavesSampling',
+'sampling',
+'surfMesh',
+'lagrangian'
+]
+
+prepend_args = { 'CXXFLAGS' : ['-Dutil_EXPORTS'] }
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

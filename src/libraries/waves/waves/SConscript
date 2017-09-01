@@ -1,0 +1,75 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'waves'
+
+sources = Split("""
+convexPolyhedral/convexPolyhedral.cpp
+convexPolyhedral/localFace.cpp
+convexPolyhedral/localCell.cpp
+convexPolyhedral/localCellNeg.cpp
+waveTheories/waveTheory/waveTheory.cpp
+waveTheories/waveTheory/newWaveTheory.cpp
+waveTheories/current/potentialCurrent/potentialCurrent.cpp
+waveTheories/solitary/solitaryFirst/solitaryFirst.cpp
+waveTheories/regular/stokesFirst/stokesFirst.cpp
+waveTheories/regular/stokesFirstStanding/stokesFirstStanding.cpp
+waveTheories/regular/stokesSecond/stokesSecond.cpp
+waveTheories/regular/stokesSecondModulation/stokesSecondModulation.cpp
+waveTheories/regular/stokesFifth/stokesFifth.cpp
+waveTheories/regular/cnoidalFirst/cnoidalFirst.cpp
+waveTheories/regular/streamFunction/streamFunction.cpp
+waveTheories/irregular/irregular/irregular.cpp
+waveTheories/irregular/bichromaticFirst/bichromaticFirst.cpp
+waveTheories/irregular/bichromaticSecond/bichromaticSecond.cpp
+waveTheories/mixedType/combinedWaves/combinedWaves.cpp
+waveTheories/externalWaveForcing/externalSource.cpp
+waveTheories/externalWaveForcing/externalWaveForcing.cpp
+waveTheories/externalWaveForcing/emptyExternal/emptyExternal.cpp
+fvPatchFields/waveAlpha/waveAlphaFvPatchScalarField.cpp
+fvPatchFields/wavePressure/wavePressureFvPatchScalarField.cpp
+fvPatchFields/waveVelocity/waveVelocityFvPatchVectorField.cpp
+relaxationZone/relaxationShape/relaxationShape.cpp
+relaxationZone/relaxationShape/newRelaxationShape.cpp
+relaxationZone/relaxationShape/frozen/relaxationShapeFrozen.cpp
+relaxationZone/relaxationShape/rectangular/relaxationShapeRectangular.cpp
+relaxationZone/relaxationShape/cylindrical/relaxationShapeCylindrical.cpp
+relaxationZone/relaxationShape/semiCylindrical/relaxationShapeSemiCylindrical.cpp
+relaxationZone/relaxationShape/line/relaxationShapeLine.cpp
+relaxationZone/relaxationWeight/relaxationWeight.cpp
+relaxationZone/relaxationWeight/relaxationWeightCourantCorrection.cpp
+relaxationZone/relaxationWeight/exponential/relaxationWeightExponential.cpp
+relaxationZone/relaxationWeight/freePolynomial/relaxationWeightFreePolynomial.cpp
+relaxationZone/relaxationWeight/thirdOrderPolynomial/relaxationWeightThirdOrderPolynomial.cpp
+relaxationZone/relaxationScheme/relaxationScheme.cpp
+relaxationZone/relaxationScheme/newRelaxationScheme.cpp
+relaxationZone/relaxationScheme/empty/relaxationSchemeEmpty.cpp
+relaxationZone/relaxationScheme/spatial/relaxationSchemeSpatial.cpp
+relaxationZone/relaxationScheme/spatialInterpolation/relaxationSchemeSpatialInterpolation.cpp
+relaxationZone/relaxationScheme/spatialNoAlpha/relaxationSchemeSpatialNoAlpha.cpp
+relaxationZone/numericalBeach/numericalBeach.cpp
+relaxationZone/numericalBeach/newNumericalBeach.cpp
+relaxationZone/numericalBeach/empty/numericalBeachEmpty.cpp
+relaxationZone/relaxationZone.cpp
+setWaveField/setWaveField.cpp
+""")
+
+caelus_inc = [
+'sampling/lnInclude',
+'lagrangian/basic/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'sampling',
+'pgsl',
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

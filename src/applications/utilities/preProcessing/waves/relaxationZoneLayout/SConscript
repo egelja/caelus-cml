@@ -1,0 +1,30 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'relaxationZoneLayout'
+
+sources = Split("""
+ relaxationZoneLayout.cpp
+""")
+
+caelus_inc = [
+'waves/waves/lnInclude',
+env['GSL_INC_PATH']
+]
+
+caelus_libs = [
+'core',
+'waves',
+'pgsl'
+]
+
+prepend_args = { 'CXXFLAGS' : ['-Dutil_EXPORTS'] }
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

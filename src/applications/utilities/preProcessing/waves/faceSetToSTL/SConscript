@@ -1,0 +1,26 @@
+# -*- mode: python -*-
+
+from build import build_app
+Import('env')
+
+target = 'faceSetToSTL'
+
+sources = Split("""
+ faceSetToSTL.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+prepend_args = { 'CXXFLAGS' : ['-Dutil_EXPORTS'] }
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

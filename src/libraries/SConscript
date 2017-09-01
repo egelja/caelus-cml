@@ -87,6 +87,10 @@ subdirs = Split("""
     dynamicMesh/meshMotion/rigidBodyMeshMotion
     dynamicMesh/meshMotion/rigidBodyMeshMotionSolver
     fvOptions
+    waves/waves
+    waves/wavesPorosity
+    waves/wavesProcessing
+    waves/wavesSampling
 """)
 
 for d in subdirs:

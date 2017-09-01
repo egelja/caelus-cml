@@ -1,0 +1,30 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'wavesPorosity'
+
+sources = Split("""
+porosityModel/wavesPorosityModel.cpp
+porosityModel/jensenJacobsenChristensen2014/jensenJacobsenChristensen2014.cpp
+porosityModel/jensenJacobsenChristensen2014/jjc2014Zones.cpp
+porosityModel/jensenJacobsenChristensen2014/jjc2014Zone.cpp
+porosityCoefficients/porosityCoefficient.cpp
+porosityCoefficients/nativeCaelus/nativeCaelus.cpp
+porosityCoefficients/vanGent1995/vanGent1995.cpp
+porosityCoefficients/engelund1953/engelund1953.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

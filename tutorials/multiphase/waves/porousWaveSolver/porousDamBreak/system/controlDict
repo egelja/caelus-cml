@@ -1,0 +1,71 @@
+/*---------------------------------------------------------------------------*
+Caelus 7.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     porousWaveSolver;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         4;
+
+deltaT          0.001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.05;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.5;
+maxAlphaCo      0.5;
+
+maxDeltaT       1;
+
+functions
+{
+    surfaceElevation
+    {
+        type               surfaceElevation;
+        functionObjectLibs ( "libwavesSampling.so" );
+
+        outputControl      timeStep; // Alternative: outputTime
+        outputInterval     2;
+
+        setFormat          raw;
+        interpolationScheme cellPointFace;
+        fields (alpha1);
+
+        #includeIfPresent "../waveGaugesNProbes/surfaceElevation_sets";
+
+    }
+}
+
+// ************************************************************************* //

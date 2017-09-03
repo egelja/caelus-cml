@@ -791,6 +791,9 @@ src_core = Split("""
     fvMatrices/solvers/MULES/MULES.cpp
     fvMatrices/solvers/MULES/CMULES.cpp
     fvMatrices/solvers/MULES/IMULES.cpp
+    fvMatrices/solvers/isoAdvection/isoCutCell/isoCutCell.cpp
+    fvMatrices/solvers/isoAdvection/isoCutFace/isoCutFace.cpp
+    fvMatrices/solvers/isoAdvection/isoAdvection/isoAdvection.cpp
     fvMatrices/solvers/GAMGSymSolver/GAMGAgglomerations/faceAreaPairGAMGAgglomeration/faceAreaPairGAMGAgglomeration.cpp
     interpolation/interpolation/interpolation/interpolations.cpp
     interpolation/interpolation/interpolationCell/makeInterpolationCell.cpp

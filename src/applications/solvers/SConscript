@@ -25,6 +25,7 @@ subdirs = Split("""
    multiphase/waveSolver
    multiphase/waveSolver/waveDyMSolver
    multiphase/waveSolver/porousWaveSolver
+   multiphase/vof/isoVofSolver
 """)
 
 for d in subdirs:

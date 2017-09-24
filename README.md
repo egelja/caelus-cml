@@ -143,6 +143,10 @@ To make a local copy, clone the repository with git:
 ```Bash
  $> git clone git@bitbucket.org:appliedccm/caelus-contributors.git
 ```
+Some environment variables need to be set manually. These are set automatically by the installer with the packaged versions.
+Add to your PATH ./external/scons-local-2.3.4 and ./bin
+Set the variable PYTHONPATH to ./lib/python2.6
+
 To set up the development environment, copy the conf_template.py file in ./lib/python2.6/Caelus to conf.py in the same directory. Modify the conf.py to match the paths on your system. In particular the PROJECT_NAME, PROJECT_VER, PROJECT_DIR and the MPI vars. Once this is done, run:
 
 ```Bash

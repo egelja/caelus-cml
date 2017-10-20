@@ -14,16 +14,18 @@ caelus_inc = [
 'transportModels',
 'transportModels/incompressible/lnInclude',
 'turbulenceModels',
-'turbulenceModels/incompressible/turbulenceModel/lnInclude',  
-'turbulenceModels/incompressible/RAS/lnInclude',  
+'turbulenceModels/incompressible/turbulenceModel/lnInclude',
+'turbulenceModels/incompressible/RAS/lnInclude',
 'turbulenceModels/incompressible/LES/lnInclude',
-'turbulenceModels/compressible/turbulenceModel/lnInclude',  
-'turbulenceModels/compressible/RAS/lnInclude', 
-'turbulenceModels/compressible/LES/lnInclude',     
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'turbulenceModels/compressible/RAS/lnInclude',
+'turbulenceModels/compressible/LES/lnInclude',
 'turbulenceModels/LES/LESdeltas/lnInclude',
 'thermophysicalModels/basic/lnInclude',
 'fvOptions/lnInclude',
-'sampling/lnInclude'
+'sampling/lnInclude',
+'waves/waves/lnInclude',
+'waves/waves/include',
 ]
 
 caelus_libs = [
@@ -39,7 +41,10 @@ caelus_libs = [
 'compressibleLESModels',
 'genericPatchFields',
 'fvOptions',
-'sampling'
+'sampling',
+'waves',
+'wavesSampling',
+'pgsl',
 ]
 
 ostype = utils.ostype()

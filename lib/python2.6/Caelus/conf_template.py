@@ -18,6 +18,7 @@ FLEXXX = 'flex'
 #SCOTCH_PATH = 'C:\\Program Files\\caelus\\caelus-7.04\\external\\scotch-6.0.4'
 #ZLIB_PATH = 'C:\\Program Files\\caelus\\caelus-7.04\\external\\windows\\zlib-1.2.7'
 #FLEXXX_PATH = 'C:\\Program Files\\caelus\\caelus-7.04\\external\\windows\\flex-2.5.4a-1'
+#USER_DIR_PATH = 'C:\\Caelus\\Caelus-7.04'
 
 #Linux setup
 #PROJECT_DIR = '/opt/caelus'
@@ -27,6 +28,7 @@ FLEXXX = 'flex'
 #MPI_LIB_NAME = 'mpi'
 #SCOTCH_PATH = '/opt/caelus/caelus-7.04/external/scotch-6.0.4'
 #METIS_PATH = '/opt/caelus/caelus-7.04/external/metis-5.1.0'
+#USER_DIR_PATH = '~/Caelus/Caelus-7.04'
 
 #Mac setup
 #PROJECT_DIR = '/Applications/Caelus'
@@ -37,3 +39,4 @@ FLEXXX = 'flex'
 #MPI_LIB_NAME = 'mpi'
 #SCOTCH_PATH = '/Applications/Caelus/Caelus-7.04/external/scotch-6.0.4'
 #METIS_PATH = '/Applications/Caelus/Caelus-7.04/external/metis-5.1.0'
+#USER_DIR_PATH = '~/Caelus/Caelus-7.04'

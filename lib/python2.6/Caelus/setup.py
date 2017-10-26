@@ -45,9 +45,6 @@ def check_path(path):
 if VERBOSE:
    print("Setting up Caelus environment")
 
-# Determine default HOME dir
-USER_PATH = os.path.expanduser('~')
-
 # Determine operating system
 if os.name == 'nt':
    WHICH_OS = "windows"
@@ -140,6 +137,16 @@ except NameError:
    sys.exit(' PROJECT_DIR not specified')
 
 # Important but not required
+
+try:
+   USER_DIR_PATH
+   USER_DIR_PATH = os.path.expanduser(USER_DIR_PATH)
+except NameError:
+   USER_DIR_PATH = os.path.join(os.path.expanduser('~'), PROJECT_NAME, \
+                  PROJECT_NAME + '-' + PROJECT_VER)
+   if VERBOSE:
+      print " INFO: User directory path not specified, using %s" % USER_DIR_PATH
+                                 
 try:
    COMPILER
    os.environ['COMPILER'] = COMPILER
@@ -413,19 +420,15 @@ os.environ['CAELUS_JOB_DIR'] = os.path.join(PROJECT_DIR, PROJECT, \
                                 'jobControl')
 
 # User environment variables
-os.environ['CAELUS_USER_DIR'] = os.path.join(USER_PATH, PROJECT_NAME, \
-                                 PROJECT)
+os.environ['CAELUS_USER_DIR'] = USER_DIR_PATH
 
-os.environ['CAELUS_RUN'] = os.path.join(USER_PATH, PROJECT_NAME, \
-                            PROJECT, 'run')
+os.environ['CAELUS_RUN'] = os.path.join(USER_DIR_PATH, 'run')
 
-os.environ['CAELUS_USER_APPBIN'] = os.path.join(USER_PATH, PROJECT_NAME, \
-                                    PROJECT, 'platforms', BUILD_OPTION, \
-                                    'bin')
+os.environ['CAELUS_USER_APPBIN'] = os.path.join(USER_DIR_PATH, \
+                                 'platforms', BUILD_OPTION, 'bin')
 
-os.environ['CAELUS_USER_LIBBIN'] = os.path.join(USER_PATH, PROJECT_NAME, \
-                                    PROJECT, 'platforms', BUILD_OPTION, \
-                                    'lib')
+os.environ['CAELUS_USER_LIBBIN'] = os.path.join(USER_DIR_PATH, \
+                                 'platforms', BUILD_OPTION, 'lib')
 
 # Print all environment variables
 if DEBUG:

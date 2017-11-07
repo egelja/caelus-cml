@@ -130,6 +130,22 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
         )
     ),
     delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", true)),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
+    outputFr_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFr",
+            false
+        )
+    ),
     sigmaNut_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -276,7 +292,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -289,7 +305,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputFr_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1),
@@ -389,55 +405,6 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::R() const
             - nut()*twoSymm(fvc::grad(U_))
         )
     )*Fr_;
-}
-
-
-tmp<volSymmTensorField> SpalartAllmarasVLES::devReff() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "devRhoReff",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-           -nuEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
-        )
-    );
-}
-
-
-tmp<fvVectorMatrix> 
-SpalartAllmarasVLES::divDevReff(volVectorField& U) const
-{
-    volScalarField const nuEff_(nuEff());
-
-    return Fr_*
-    (
-      - fvm::laplacian(nuEff_, U)
-      - fvc::div(nuEff_*dev(T(fvc::grad(U))))
-    );
-}
-
-
-tmp<fvVectorMatrix> SpalartAllmarasVLES::divDevRhoReff
-(
-    volScalarField const& rho,
-    volVectorField& U
-) const
-{
-    volScalarField muEff("muEff", rho*nuEff());
-
-    return Fr_*
-    (
-      - fvm::laplacian(muEff, U)
-      - fvc::div(muEff*dev(T(fvc::grad(U))))
-    );
 }
 
 

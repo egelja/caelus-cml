@@ -186,6 +186,15 @@ public:
           + alpha().boundaryField()[patchI];
     }
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const = 0;
+
+    virtual tmp<volSymmTensorField> R() const;
+
+    virtual tmp<volSymmTensorField> devRhoReff() const;
+
+    virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
+
     virtual void correct();
 
     virtual bool read();

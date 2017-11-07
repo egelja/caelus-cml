@@ -104,6 +104,7 @@ protected:
 
         //- Curvature correction on/off flag
             Switch curvatureCorrection_;
+            Switch outputfr1_;
 
         // Model coefficients
 

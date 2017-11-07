@@ -55,6 +55,9 @@ protected:
     Switch delayed_;
     Switch damped_;
     Switch curvatureCorrection_;
+    Switch outputfr1_;
+    Switch outputFr_;
+    Switch outputFd_;
 
     dimensionedScalar alphaK1_;
     dimensionedScalar alphaK2_;
@@ -146,6 +149,12 @@ public:
 
     virtual ~VLESKOmegaSST() {}
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const
+    {
+        return Fr_;
+    }
+
     virtual tmp<volScalarField> mut() const
     {
         return mut_;
@@ -199,12 +208,6 @@ public:
             )
         );
     }
-
-    virtual tmp<volSymmTensorField> R() const;
-
-    virtual tmp<volSymmTensorField> devRhoReff() const;
-
-    virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
 
     virtual void correct();
 

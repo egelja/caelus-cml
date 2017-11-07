@@ -99,6 +99,30 @@ kOmegaSSTCSModelVLES::kOmegaSSTCSModelVLES
             false
         )
     ),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
+    outputFr_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFr",
+            false
+        )
+    ),
+    outputFd_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFd",
+            false
+        )
+    ),
     alphaK1_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -374,7 +398,7 @@ kOmegaSSTCSModelVLES::kOmegaSSTCSModelVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -387,7 +411,7 @@ kOmegaSSTCSModelVLES::kOmegaSSTCSModelVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputFr_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fr", dimless, 1),
@@ -401,7 +425,7 @@ kOmegaSSTCSModelVLES::kOmegaSSTCSModelVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputFd_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fd", dimless, 1),
@@ -450,56 +474,6 @@ kOmegaSSTCSModelVLES::kOmegaSSTCSModelVLES
     printCoeffs();
 }
 
-
-tmp<volSymmTensorField> kOmegaSSTCSModelVLES::R() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "R",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            ((2.0/3.0)*I)*k_ - (mut_/rho_)*twoSymm(fvc::grad(U_)),
-            k_.boundaryField().types()
-        )
-    )*Fr_;
-}
-
-
-tmp<volSymmTensorField> kOmegaSSTCSModelVLES::devRhoReff() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "devRhoReff",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
-        )
-    );
-}
-
-
-tmp<fvVectorMatrix> kOmegaSSTCSModelVLES::divDevRhoReff(volVectorField& U) const
-{
-    return Fr_*
-    (
-      - fvm::laplacian(muEff(), U)
-      - fvc::div(muEff()*dev2(T(fvc::grad(U))))
-    );
-}
 
 bool kOmegaSSTCSModelVLES::read()
 {

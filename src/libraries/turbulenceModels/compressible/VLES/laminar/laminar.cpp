@@ -43,6 +43,26 @@ laminar::laminar
 ) : VLESModel(modelName, rho, U, phi, thermoPhysicalModel, turbulenceModelName)
 {}
 
+tmp<volScalarField> laminar::Fr() const
+{
+    return tmp<volScalarField>
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "Fr",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedScalar("fr", dimless, 1)
+        )
+    );
+}
+
 tmp<volScalarField> laminar::mut() const
 {
     return tmp<volScalarField>
@@ -172,8 +192,8 @@ tmp<fvVectorMatrix> laminar::divDevRhoReff(volVectorField& U) const
 {
     return
     (
-      - fvm::laplacian(muEff(), U)
-      - fvc::div(muEff()*dev2(T(fvc::grad(U))))
+      - fvm::laplacian(mu(), U)
+      - fvc::div(mu()*dev2(T(fvc::grad(U))))
     );
 }
 

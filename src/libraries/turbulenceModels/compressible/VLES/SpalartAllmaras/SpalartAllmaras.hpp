@@ -65,6 +65,8 @@ protected:
     Switch curvatureCorrection_;
 
     Switch delayed_;
+    Switch outputfr1_;
+    Switch outputFr_;
             
     dimensionedScalar sigmaNut_;
     dimensionedScalar kappa_;
@@ -121,6 +123,12 @@ public:
 
     tmp<volScalarField> F1() const;
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const
+    {
+        return Fr_;
+    }
+
     virtual tmp<volScalarField> mut() const
     {
         return mut_;
@@ -138,10 +146,6 @@ public:
     virtual tmp<volScalarField> epsilon() const;
 
     virtual tmp<volSymmTensorField> R() const;
-
-    virtual tmp<volSymmTensorField> devRhoReff() const;
-
-    virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
 
     virtual void correct();
 

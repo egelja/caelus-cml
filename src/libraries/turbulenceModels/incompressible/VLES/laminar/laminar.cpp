@@ -42,6 +42,26 @@ laminar::laminar
 ) : VLESModel(modelName, U, phi, transport, turbulenceModelName)
 {}
 
+tmp<volScalarField> laminar::Fr() const
+{
+    return tmp<volScalarField>
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "Fr",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedScalar("fr", dimless, 1)
+        )
+    );
+}
+
 tmp<volScalarField> laminar::nut() const
 {
     return tmp<volScalarField>
@@ -151,8 +171,8 @@ tmp<fvVectorMatrix> laminar::divDevReff(volVectorField& U) const
 {
     return
     (
-      - fvm::laplacian(nuEff(), U)
-      - fvc::div(nuEff()*dev(T(fvc::grad(U))))
+      - fvm::laplacian(nu(), U)
+      - fvc::div(nu()*dev(T(fvc::grad(U))))
     );
 }
 
@@ -162,12 +182,12 @@ tmp<fvVectorMatrix> laminar::divDevRhoReff
     volVectorField& U
 ) const
 {
-    volScalarField muEff("muEff", rho*nuEff());
+    volScalarField mu("mu", rho*nu());
 
     return
     (
-      - fvm::laplacian(muEff, U)
-      - fvc::div(muEff*dev(T(fvc::grad(U))))
+      - fvm::laplacian(mu, U)
+      - fvc::div(mu*dev(T(fvc::grad(U))))
     );
 }
 

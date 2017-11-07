@@ -62,6 +62,8 @@ public:
     virtual ~laminar()
     {}
 
+    virtual tmp<volScalarField> Fr() const;
+
     virtual tmp<volScalarField> mut() const;
 
     virtual tmp<volScalarField> muEff() const

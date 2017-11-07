@@ -146,6 +146,14 @@ realizableVLESKE::realizableVLESKE
             true
         )
     ),
+    outputFr_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFr",
+            false
+        )
+    ),
     Cmu_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -291,7 +299,7 @@ realizableVLESKE::realizableVLESKE
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputFr_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fr", dimless, 1),
@@ -311,57 +319,6 @@ realizableVLESKE::realizableVLESKE
     alphat_.correctBoundaryConditions();
 
     printCoeffs();
-}
-
-
-tmp<volSymmTensorField> realizableVLESKE::R() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "R",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            ((2.0/3.0)*I)*k_ - mut_*twoSymm(fvc::grad(U_)),
-            k_.boundaryField().types()
-        )
-    )*Fr_;
-}
-
-
-tmp<volSymmTensorField> realizableVLESKE::devRhoReff() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "devRhoReff",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
-        )
-    );
-}
-
-
-tmp<fvVectorMatrix> realizableVLESKE::divDevRhoReff(volVectorField& U) const
-{
-    return Fr_*
-    (
-      - fvm::laplacian(muEff(), U)
-      - fvc::div(muEff()*dev2(T(fvc::grad(U))))
-    );
 }
 
 

@@ -19,6 +19,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
+
 #include "kOmegaSST.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
@@ -86,7 +87,23 @@ kOmegaSST::kOmegaSST
     (
         coeffDict_.lookupOrDefault<Switch>
         (
-            "damped", 
+            "damped",
+            false
+        )
+    ),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
+    outputFd_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFd",
             false
         )
     ),
@@ -281,7 +298,7 @@ kOmegaSST::kOmegaSST
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -294,7 +311,7 @@ kOmegaSST::kOmegaSST
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputFd_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fd", dimless, 1),
@@ -334,6 +351,7 @@ kOmegaSST::kOmegaSST
             )
         );
     }
+
     nut_.correctBoundaryConditions();
 
     if (curvatureCorrection_)
@@ -444,8 +462,6 @@ bool kOmegaSST::read()
 
 void kOmegaSST::correct()
 {
-    RASModel::correct();
-
     if (!turbulence_)
     {
         return;
@@ -455,6 +471,8 @@ void kOmegaSST::correct()
     {
         y_.correct();
     }
+
+    RASModel::correct();
 
     volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
     volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));

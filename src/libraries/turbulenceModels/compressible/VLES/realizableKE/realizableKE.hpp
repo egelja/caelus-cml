@@ -53,6 +53,7 @@ class realizableVLESKE : public VLESModel
 protected:
 
     Switch delayed_;
+    Switch outputFr_;
 
     dimensionedScalar Cmu_;
     dimensionedScalar A0_;
@@ -103,6 +104,12 @@ public:
 
     tmp<volScalarField> F1() const;
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const
+    {
+        return Fr_;
+    }
+
     virtual tmp<volScalarField> mut() const
     {
         return mut_;
@@ -138,12 +145,6 @@ public:
     {
         return epsilon_;
     }
-
-    virtual tmp<volSymmTensorField> R() const;
-
-    virtual tmp<volSymmTensorField> devRhoReff() const;
-
-    virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
 
     virtual void correct();
 

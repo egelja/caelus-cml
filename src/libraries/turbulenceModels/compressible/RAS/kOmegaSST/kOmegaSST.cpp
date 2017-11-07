@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 - 2016 Applied CCM 
+Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2014-2017 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -53,7 +54,6 @@ tmp<volScalarField> kOmegaSST::F1(volScalarField const& CDkOmega) const
     return tanh(pow4(arg1));
 }
 
-
 tmp<volScalarField> kOmegaSST::F2() const
 {
     tmp<volScalarField> arg2 = max
@@ -64,6 +64,7 @@ tmp<volScalarField> kOmegaSST::F2() const
 
     return tanh(sqr(arg2));
 }
+
 
 kOmegaSST::kOmegaSST
 (
@@ -77,7 +78,35 @@ kOmegaSST::kOmegaSST
     RASModel(modelName, rho, U, phi, thermophysicalModel, turbulenceModelName),
     curvatureCorrection_
     (
-        coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "curvatureCorrection",
+            false
+        )
+    ),
+    damped_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "damped",
+            false
+        )
+    ),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
+    outputFd_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFd",
+            false
+        )
     ),
     alphaK1_
     (
@@ -291,7 +320,7 @@ kOmegaSST::kOmegaSST
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -304,7 +333,7 @@ kOmegaSST::kOmegaSST
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            outputFd_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("fd", dimless, 1),
@@ -329,7 +358,7 @@ kOmegaSST::kOmegaSST
                 a1_*omega_,
                 F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
             )
-        );        
+        );
         mut_ *= Fd_;
     }
     else
@@ -357,6 +386,7 @@ kOmegaSST::kOmegaSST
 
     printCoeffs();
 }
+
 
 tmp<volSymmTensorField> kOmegaSST::R() const
 {
@@ -542,6 +572,8 @@ void kOmegaSST::correct()
     solve(kEqn);
     bound(k_, kMin_);
 
+
+    // Re-calculate viscosity
     if (damped_)
     {
         yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_*rho_/mu();

@@ -126,6 +126,22 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
         coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)
     ),
     delayed_(coeffDict_.lookupOrDefault<Switch>("delayed", true)),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
+    outputFr_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputFr",
+            false
+        )
+    ),
     sigmaNut_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -305,7 +321,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
@@ -318,7 +334,7 @@ SpalartAllmarasVLES::SpalartAllmarasVLES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputFr_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1),
@@ -399,39 +415,6 @@ tmp<volSymmTensorField> SpalartAllmarasVLES::R() const
             ((2.0/3.0)*I)*k() - (mut()/rho_)*twoSymm(fvc::grad(U_))
         )
     )*Fr_;
-}
-
-
-tmp<volSymmTensorField> SpalartAllmarasVLES::devRhoReff() const
-{
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
-        (
-            IOobject
-            (
-                "devRhoReff",
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-           -muEff()*dev(twoSymm(fvc::grad(U_)))*Fr_
-        )
-    );
-}
-
-
-tmp<fvVectorMatrix> 
-SpalartAllmarasVLES::divDevRhoReff(volVectorField& U) const
-{
-    const volScalarField muEff_(muEff());
-
-    return
-    (
-      - fvm::laplacian(muEff_, U)
-      - fvc::div(muEff_*dev2(T(fvc::grad(U))))*Fr_
-    );
 }
 
 

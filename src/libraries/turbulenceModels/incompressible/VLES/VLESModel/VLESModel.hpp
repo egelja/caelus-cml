@@ -164,6 +164,21 @@ public:
         );
     }
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const = 0;
+
+    virtual tmp<volSymmTensorField> R() const;
+
+    virtual tmp<volSymmTensorField> devReff() const;
+
+    virtual tmp<fvVectorMatrix> divDevReff(volVectorField& U) const;
+
+    virtual tmp<fvVectorMatrix> divDevRhoReff
+    (
+        volScalarField const& rho,
+        volVectorField& U
+    ) const;
+
     virtual void correct();
 
     virtual bool read();

@@ -75,6 +75,9 @@ protected:
     Switch delayed_;
     Switch damped_;
     Switch curvatureCorrection_;
+    Switch outputfr1_;
+    Switch outputFr_;
+    Switch outputFd_;
 
     // Model coefficients
     dimensionedScalar alphaK1_;
@@ -176,6 +179,12 @@ public:
 
     // Member Functions
 
+    //- Return the resolution function
+    virtual tmp<volScalarField> Fr() const
+    {
+        return Fr_;
+    }
+
     //- Return the turbulence viscosity
     virtual tmp<volScalarField> nut() const
     {
@@ -230,22 +239,6 @@ public:
             )
         );
     }
-
-    //- Return the Reynolds stress tensor
-    virtual tmp<volSymmTensorField> R() const;
-
-    //- Return the effective stress tensor including the laminar stress
-    virtual tmp<volSymmTensorField> devReff() const;
-
-    //- Return the source term for the momentum equation
-    virtual tmp<fvVectorMatrix> divDevReff(volVectorField& U) const;
-
-    //- Return the source term for the momentum equation
-    virtual tmp<fvVectorMatrix> divDevRhoReff
-    (
-        volScalarField const& rho,
-        volVectorField& U
-    ) const;
 
     //- Solve the turbulence equations and correct the turbulence viscosity
     virtual void correct();

@@ -98,6 +98,14 @@ SpalartAllmaras::SpalartAllmaras
 :
     RASModel(modelName, rho, U, phi, thermophysicalModel, turbulenceModelName),
     curvatureCorrection_(coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)),
+    outputfr1_
+    (
+        coeffDict_.lookupOrDefault<Switch>
+        (
+            "outputfr1",
+            false
+        )
+    ),
     sigmaNut_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -242,7 +250,7 @@ SpalartAllmaras::SpalartAllmaras
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            outputfr1_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)

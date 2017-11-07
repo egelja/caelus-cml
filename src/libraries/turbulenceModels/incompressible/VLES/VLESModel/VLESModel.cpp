@@ -133,10 +133,83 @@ autoPtr<VLESModel> VLESModel::New
     );
 }
 
+
+tmp<volSymmTensorField> VLESModel::R() const
+{
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
+        (
+            IOobject
+            (
+                "R",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            ((2.0/3.0)*I)*k() - nut()*twoSymm(fvc::grad(U_)),
+            k()().boundaryField().types()
+        )
+    )*Fr();
+}
+
+
+tmp<volSymmTensorField> VLESModel::devReff() const
+{
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
+        (
+            IOobject
+            (
+                "devRhoReff",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+           -(nu() + nut()*Fr())*dev(twoSymm(fvc::grad(U_)))
+        )
+    );
+}
+
+
+tmp<fvVectorMatrix> VLESModel::divDevReff(volVectorField& U) const
+{
+    return
+    (
+      - fvm::laplacian(nu(), U)
+      - fvc::div(nu()*dev(T(fvc::grad(U))))
+      - Fr()*(fvm::laplacian(nut(), U) + fvc::div(nut()*dev(T(fvc::grad(U)))))
+    );
+}
+
+
+tmp<fvVectorMatrix> VLESModel::divDevRhoReff
+(
+    volScalarField const& rho,
+    volVectorField& U
+) const
+{
+    volScalarField mu("mu", rho*nu());
+    volScalarField mut("mut", rho*nut());
+
+    return
+    (
+      - fvm::laplacian(mu, U)
+      - fvc::div(mu*dev(T(fvc::grad(U))))
+      - Fr()*fvm::laplacian(mut, U)
+      - Fr()*fvc::div(mut*dev(T(fvc::grad(U))))
+    );
+}
+
+
 void VLESModel::correct()
 {
     turbulenceModel::correct();
 }
+
 
 bool VLESModel::read()
 {

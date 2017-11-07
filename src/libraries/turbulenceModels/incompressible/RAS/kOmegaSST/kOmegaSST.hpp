@@ -121,6 +121,8 @@ protected:
 
     // Buffer layer damping switch
     Switch damped_;
+    Switch outputfr1_;
+    Switch outputFd_;
 
     // Model coefficients
     dimensionedScalar alphaK1_;

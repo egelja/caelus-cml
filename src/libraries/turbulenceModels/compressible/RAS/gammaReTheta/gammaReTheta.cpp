@@ -639,7 +639,7 @@ tmp<fvVectorMatrix> gammaReTheta::divDevRhoReff
     return
     (
       - fvm::laplacian(muEff(), U)
-      - fvc::div(muEff()*dev(T(fvc::grad(U))))
+      - fvc::div(muEff()*dev2(T(fvc::grad(U))))
     );
 }
 

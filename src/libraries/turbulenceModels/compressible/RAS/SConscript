@@ -13,6 +13,7 @@ kEpsilon/kEpsilon.cpp
 SpalartAllmaras/SpalartAllmaras.cpp
 kOmegaSST/kOmegaSST.cpp
 kOmegaSSTSAS/kOmegaSSTSAS.cpp
+gammaReTheta/gammaReTheta.cpp
 """)
 
 caelus_inc = [

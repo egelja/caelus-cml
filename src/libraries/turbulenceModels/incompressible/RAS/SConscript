@@ -10,9 +10,9 @@ RASModel/RASModel.cpp
 laminar/laminar.cpp
 realizableKE/realizableKE.cpp
 kEpsilon/kEpsilon.cpp
+SpalartAllmaras/SpalartAllmaras.cpp
 kOmegaSST/kOmegaSST.cpp
 kOmegaSSTSAS/kOmegaSSTSAS.cpp
-SpalartAllmaras/SpalartAllmaras.cpp
 gammaReTheta/gammaReTheta.cpp
 """)
 

@@ -150,11 +150,15 @@ except NameError:
 try:
    COMPILER
    os.environ['COMPILER'] = COMPILER
-except NameError:
-   COMPILER = 'System'
-   os.environ['COMPILER'] = COMPILER
+except NameError:   
    if VERBOSE:
       print " INFO: Compiler not specified, using system default"
+   if WHICH_OS == 'darwin':
+      COMPILER = 'clang++'
+      os.environ['COMPILER'] = COMPILER
+   else:
+      COMPILER = 'g++'
+      os.environ['COMPILER'] = COMPILER
 
 try:
    COLOUR_BUILD

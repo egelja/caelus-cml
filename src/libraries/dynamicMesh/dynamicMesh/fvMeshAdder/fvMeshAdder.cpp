@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,6 +24,14 @@ License
 #include "faceCoupleInfo.hpp"
 #include "fvMesh.hpp"
 
+/* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
+
+namespace CML
+{
+defineTypeNameAndDebug(fvMeshAdder, 0);
+}
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 //- Calculate map from new patch faces to old patch faces. -1 where
@@ -44,11 +52,11 @@ CML::labelList CML::fvMeshAdder::calcPatchMap
 
     for (label i = 0; i < oldSize; i++)
     {
-        label newFaceI = oldToNew[oldStart+i];
+        label newFacei = oldToNew[oldStart+i];
 
-        if (newFaceI >= newStart && newFaceI < newStart+newSize)
+        if (newFacei >= newStart && newFacei < newStart+newSize)
         {
-            newToOld[newFaceI-newStart] = i;
+            newToOld[newFacei-newStart] = i;
         }
     }
     return newToOld;
@@ -85,9 +93,9 @@ CML::autoPtr<CML::mapAddedPolyMesh> CML::fvMeshAdder::add
 
     fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh0.boundary());
     fvPatches.setSize(patches.size());
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        fvPatches.set(patchI, fvPatch::New(patches[patchI], fvPatches));
+        fvPatches.set(patchi, fvPatch::New(patches[patchi], fvPatches));
     }
 
     // Do the mapping of the stored fields
@@ -103,6 +111,12 @@ CML::autoPtr<CML::mapAddedPolyMesh> CML::fvMeshAdder::add
     fvMeshAdder::MapSurfaceFields<sphericalTensor>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapSurfaceFields<symmTensor>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapSurfaceFields<tensor>(mapPtr, mesh0, mesh1);
+
+    fvMeshAdder::MapDimFields<scalar>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapDimFields<vector>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapDimFields<sphericalTensor>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapDimFields<symmTensor>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapDimFields<tensor>(mapPtr, mesh0, mesh1);
 
     return mapPtr;
 }

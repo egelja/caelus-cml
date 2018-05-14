@@ -51,10 +51,10 @@ Description
     - find most unique face shape (e.g. triangle for prism)
     - walk (following either vertices in face or jumping from face to other
       face) to other faces and checking face sizes.
-    - if nessecary try other rotations of this face
-      (only nessecary for wedge, tet-wedge)
-    - if nessecary try other faces which most unique face shape
-      (never nessecary for hex degenerates)
+    - if necessary try other rotations of this face
+      (only necessary for wedge, tet-wedge)
+    - if necessary try other faces which most unique face shape
+      (never necessary for hex degenerates)
 
     The whole calculation is done such that no lists are allocated during
     cell checking. E.g. localFaces_ are always sized to hold max. number

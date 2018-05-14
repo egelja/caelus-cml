@@ -377,7 +377,7 @@ void CML::cellCuts::calcFaceCuts() const
         // string of connected cuts; we don't want to start somewhere in the
         // middle.
 
-        // Pass1: find first point cut not preceeded by a cut.
+        // Pass1: find first point cut not preceded by a cut.
         label startFp = -1;
 
         forAll(f, fp)
@@ -401,7 +401,7 @@ void CML::cellCuts::calcFaceCuts() const
             }
         }
 
-        // Pass2: first edge cut not preceeded by point cut
+        // Pass2: first edge cut not preceded by point cut
         if (startFp == -1)
         {
             forAll(f, fp)
@@ -951,7 +951,7 @@ bool CML::cellCuts::walkCell
             {
                 // Cut along existing edge. So is in fact on two faces.
                 // Get faces on both sides of the edge to make
-                // sure we dont fold back on to those.
+                // sure we don't fold back on to those.
 
                 label f0, f1;
                 meshTools::getEdgeFaces(mesh(), cellI, edgeI, f0, f1);
@@ -1467,7 +1467,7 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet1)
                     {
-                        // Second occurence of set1.
+                        // Second occurrence of set1.
                         WarningIn("CML::cellCuts::calcAnchors")
                             << "Invalid loop " << loop << " for cell " << cellI
                             << " since face " << f << " would be split into"
@@ -1484,7 +1484,7 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet2)
                     {
-                        // Second occurence of set1.
+                        // Second occurrence of set1.
                         WarningIn("CML::cellCuts::calcAnchors")
                             << "Invalid loop " << loop << " for cell " << cellI
                             << " since face " << f << " would be split into"
@@ -1522,7 +1522,7 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet1)
                     {
-                        // Second occurence of set1.
+                        // Second occurrence of set1.
                         WarningIn("CML::cellCuts::calcAnchors")
                             << "Invalid loop " << loop << " for cell " << cellI
                             << " since face " << f << " would be split into"
@@ -1539,7 +1539,7 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet2)
                     {
-                        // Second occurence of set1.
+                        // Second occurrence of set1.
                         WarningIn("CML::cellCuts::calcAnchors")
                             << "Invalid loop " << loop << " for cell " << cellI
                             << " since face " << f << " would be split into"
@@ -2720,7 +2720,7 @@ CML::cellCuts::cellCuts
 
     calcLoopsAndAddressing(cutCells);
 
-    // Calculate planes and flip cellLoops if nessecary
+    // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
 
     if (debug)
@@ -2765,7 +2765,7 @@ CML::cellCuts::cellCuts
 
     calcLoopsAndAddressing(identity(mesh.nCells()));
 
-    // Calculate planes and flip cellLoops if nessecary
+    // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
 
     if (debug)
@@ -2811,7 +2811,7 @@ CML::cellCuts::cellCuts
     // Makes sure cuts are consistent
     setFromCellLoops(cellLabels, cellLoops, cellEdgeWeights);
 
-    // Calculate planes and flip cellLoops if nessecary
+    // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
 
     if (debug)
@@ -2855,7 +2855,7 @@ CML::cellCuts::cellCuts
     // Makes sure cuts are consistent
     setFromCellCutter(cellCutter, refCells);
 
-    // Calculate planes and flip cellLoops if nessecary
+    // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
 
     if (debug)
@@ -2901,7 +2901,7 @@ CML::cellCuts::cellCuts
     // Makes sure cuts are consistent
     setFromCellCutter(cellCutter, cellLabels, cutPlanes);
 
-    // Calculate planes and flip cellLoops if nessecary
+    // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
 
     if (debug)

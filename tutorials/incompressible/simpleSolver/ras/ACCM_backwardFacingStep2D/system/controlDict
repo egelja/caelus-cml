@@ -1,0 +1,65 @@
+/*-------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+	version			2.0;
+	format			ascii;
+	class			dictionary;
+	location		"system";
+	object			controlDict;
+}
+			
+//--------------------------------------------------------------------------------
+
+application			simpleSolver;
+
+startFrom			startTime;
+
+startTime			0;
+
+stopAt				endTime;
+
+endTime				10000;
+
+deltaT				1.0;
+
+writeControl			runTime;
+
+writeInterval			500;
+
+purgeWrite			0;
+
+writeFormat			ascii;
+
+writePrecision			12;
+
+writeCompression 		true;
+
+timeFormat			general;
+
+timePrecision			12;
+
+runTimeModifiable		true;
+
+//-------------------------------------------------------------------------------
+
+// Function Objects to obtain forces
+
+/*functions
+{
+	forces
+	{
+		type		forces;
+
+        functionObjectLibs 	("libforces.so");
+        patches     		( wall );
+        CofR      		(0 0 0);
+        rhoName         	rhoInf;
+        rhoInf          	15.13009E-3;
+        outputControl   	timeStep;
+        outputInterval  	100;
+     }
+}

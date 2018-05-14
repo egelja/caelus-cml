@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -71,6 +71,12 @@ tmp<scalarField> stabilise(const tmp<scalarField>&, const scalar s);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+template<>
+scalar sumProd(const UList<scalar>& f1, const UList<scalar>& f2);
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, add)
 BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, subtract)
 
@@ -120,6 +126,10 @@ UNARY_FUNCTION(scalar, scalar, j1)
 UNARY_FUNCTION(scalar, scalar, y0)
 UNARY_FUNCTION(scalar, scalar, y1)
 
+UNARY_FUNCTION(scalar, scalar, degToRad)
+UNARY_FUNCTION(scalar, scalar, radToDeg)
+UNARY_FUNCTION(scalar, scalar, atmToPa)
+UNARY_FUNCTION(scalar, scalar, paToAtm)
 
 #define BesselFunc(func)                                            \
 void func(scalarField& Res, const int n, const UList<scalar>& sf);  \

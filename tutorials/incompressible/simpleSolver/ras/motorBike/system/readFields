@@ -1,0 +1,18 @@
+/*---------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+
+// Make sure all fields for functionObjects are loaded. Prevents any
+// problems running with execFlowFunctionObjects.
+readFields
+{
+    // Where to load it from (if not already in solver)
+    functionObjectLibs ("libfieldFunctionObjects.so");
+
+    type            readFields;
+    fields          (p U k);
+}
+
+
+// ************************************************************************* //

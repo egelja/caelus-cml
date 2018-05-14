@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 7.04</fullName>
-    <version>7.04</version>
+    <fullName>Caelus 8.04</fullName>
+    <version>8.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <wrapLicenseFileText>0</wrapLicenseFileText>
@@ -35,9 +35,6 @@
                         <distributionFile>
                             <origin>../README.md</origin>
                         </distributionFile>
-                        <distributionDirectory>
-                            <origin>../lib</origin>
-                        </distributionDirectory>
                         <distributionFile>
                             <origin>../scons_notes.md</origin>
                         </distributionFile>
@@ -84,12 +81,6 @@
                         <distributionDirectory>
                             <origin>../tutorials/combustion</origin>
                         </distributionDirectory>
-                        <distributionFile>
-                            <origin>../tutorials/CleanTutorials.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>../tutorials/RunTutorials.py</origin>
-                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -112,6 +103,9 @@
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/cfmesh</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../external/pgsl-2.3</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
@@ -138,7 +132,7 @@
                             <value>windows</value>
                         </compareText>
                     </shouldPackRuleList>
-                </folder>                
+                </folder>
             </folderList>
             <startMenuShortcutList>
                 <startMenuShortcut>
@@ -186,6 +180,95 @@
                     <value>"full"</value>
                 </compareText>
             </shouldPackRuleList>
+        </component>
+        <component>
+            <name>CPL</name>
+            <description>Caelus Python Library</description>
+            <canBeEdited>1</canBeEdited>
+            <detailedDescription>Python module for Caelus. For additional help run 'caelus -h' after installation</detailedDescription>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>CPL</description>
+                    <destination>${installdir}/${project.shortName}-${project.version}/platforms</destination>
+                    <name>cplfiles</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../platforms/windows64</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <postInstallationActionList>
+                <if>
+                    <actionList>
+                        <createDirectory>
+                            <path>${windows_folder_appdata}\Caelus</path>
+                        </createDirectory>
+                    </actionList>
+                    <conditionRuleList>
+                        <fileExists>
+                            <negate>1</negate>
+                            <path>${windows_folder_appdata}\Caelus</path>
+                        </fileExists>
+                    </conditionRuleList>
+                </if>
+                <if>
+                    <actionList>
+                        <createBackupFile>
+                            <destination></destination>
+                            <path>${windows_folder_appdata}\Caelus\caelus.yaml</path>
+                        </createBackupFile>
+                    </actionList>
+                    <conditionRuleList>
+                        <fileExists>
+                            <path>${windows_folder_appdata}\Caelus\caelus.yaml</path>
+                        </fileExists>
+                    </conditionRuleList>
+                </if>
+                <writeFile>
+                    <path>${windows_folder_appdata}\Caelus\caelus.yaml</path>
+                    <progressText>Writing Caelus Configuration file</progressText>
+                    <text># -*- mode: yaml
+
+caelus:
+  caelus_cml:
+    default: "8.04"
+
+    versions:
+      - version: "8.04"
+        path: ${installdir}\${product_shortName}-${product_version}
+        mpi_root: ${mpibinpath}\..
+        mpi_bin_path: ${mpibinpath}
+        mpi_lib_path: ${mpilibpath}
+</text>
+                </writeFile>
+                <writeFile>
+                    <path>${installdir}\${product_shortName}-${product_version}\platforms\install_cpl.bat</path>
+                    <text>call windows64\caelus-conda-v0.1.0-Windows-x86_64.exe /InstallationType=JustMe /RegisterPython=0 /S /D=${installdir}\conda</text>
+                </writeFile>
+                <showProgressDialog>
+                    <title>Installing Caelus Python Library</title>
+                    <actionList>
+                        <runProgram>
+                            <program>${installdir}\${product_shortName}-${product_version}\platforms\install_cpl.bat</program>
+                            <programArguments></programArguments>
+                            <progressText>Extracting to ${installdir}\conda ...</progressText>
+                        </runProgram>
+                    </actionList>
+                </showProgressDialog>
+                <addDirectoryToPath>
+                    <insertAt>beginning</insertAt>
+                    <path>${installdir}\conda\bin</path>
+                </addDirectoryToPath>
+            </postInstallationActionList>
+            <postUninstallationActionList>
+                <removeDirectoryFromPath>
+                    <path>${installdir}\conda\bin</path>
+                </removeDirectoryFromPath>
+            </postUninstallationActionList>
         </component>
         <component>
             <name>windowsdata</name>
@@ -420,8 +503,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
             </postInstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Caelus 7.04 Terminal</comment>
-                    <name>Caelus 7.04 Terminal</name>
+                    <comment>Caelus 8.04 Terminal</comment>
+                    <name>Caelus 8.04 Terminal</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>
@@ -496,68 +579,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
                 </platformTest>
             </ruleList>
         </setInstallerVariable>
-        <throwError>
-            <text>Python not found in your PATH. Please correct before installing.</text>
-            <ruleList>
-                <programTest>
-                    <condition>is_not_in_path</condition>
-                    <name>python</name>
-                </programTest>
-            </ruleList>
-        </throwError>
     </preInstallationActionList>
     <postInstallationActionList>
-        <if>
-            <actionList>
-                <setInstallerVariable>
-                    <name>new_pythonpath</name>
-                    <value>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6:${env(PYTHONPATH)}</value>
-                </setInstallerVariable>
-            </actionList>
-            <conditionRuleList>
-                <compareTextLength>
-                    <length>0</length>
-                    <logic>does_not_equal</logic>
-                    <text>${env(PYTHONPATH)}</text>
-                </compareTextLength>
-            </conditionRuleList>
-            <elseActionList>
-                <setInstallerVariable>
-                    <name>new_pythonpath</name>
-                    <value>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6</value>
-                </setInstallerVariable>
-            </elseActionList>
-        </if>
-        <setEnvironmentVariable>
-            <name>PYTHONPATH</name>
-            <value>${new_pythonpath}</value>
-        </setEnvironmentVariable>
-        <writeFile>
-            <path>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus/conf.py</path>
-            <progressText>Writing Caelus Configuration file</progressText>
-            <text>PROJECT_NAME = '${project.shortName}'
-PROJECT_VER = '${project.version}'
-PRECISION_OPTION = 'DP'
-COMPILER_ARCH = '64'
-BUILD_TYPE = 'Opt'
-INT_TYPE = '32'
-FLEXXX = 'flex'
-OMP='True'
-
-# Windows setup
-COMPILER = 'g++'
-PROJECT_DIR = "${installdir.escape_backslashes}"
-
-MPI_BIN = '${mpibinpath.escape_backslashes}'
-MPI_INC_PATH = '${mpiincpath.escape_backslashes}'
-MPI_LIB_PATH = '${mpilibpath.escape_backslashes}'
-MPI_LIB_NAME = '${mpilibname}'
-#SCOTCH_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scotch-6.0.4'
-#METIS_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\metis-5.1.0'
-#ZLIB_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\zlib-1.2.7'
-#FLEXXX_PATH = '${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\windows\\flex-2.5.4a-1'
-</text>
-        </writeFile>
         <writeFile>
             <path>${installdir}\\${product_shortName}-${product_version}\\build_config.py</path>
             <progressText>Writing Caelus Build Configuration file</progressText>
@@ -568,107 +591,20 @@ INT_TYPE = '32'
 FLEXXX = 'flex'
 OMP= 'True'
 CXX = 'g++'
+
 MPI_BIN = '${mpibinpath.escape_backslashes}'
 MPI_INC_PATH = '${mpiincpath.escape_backslashes}'
 MPI_LIB_PATH = '${mpilibpath.escape_backslashes}'
 MPI_LIB_NAME = '${mpilibname}'
 </text>
         </writeFile>
-        <writeFile>
-            <path>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py</path>
-            <progressText>Writing Caelus Configuration file</progressText>
-            <text>
-import sys
-import os
-
-sys.path.append('${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6')
-
-from Caelus.write_env import *
-</text>
-        </writeFile>
-        <addEnvironmentVariable>
-            <name>PYTHONPATH</name>
-            <scope>user</scope>
-            <value>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6;%PYTHONPATH%</value>
-        </addEnvironmentVariable>
-        <addEnvironmentVariable>
-            <name>SCONSFLAGS</name>
-            <scope>user</scope>
-            <value>--site-dir=${installdir}\\${product_shortName}-${product_version}\\site_scons</value>
-        </addEnvironmentVariable>
-        <addDirectoryToPath>
-            <insertAt>end</insertAt>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scons-local-2.3.4</path>
-        </addDirectoryToPath>
-        <addDirectoryToPath>
-            <insertAt>end</insertAt>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\bin</path>
-        </addDirectoryToPath>
-        <runProgram>
-            <program>python</program>
-            <programArguments>"${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py"</programArguments>
-        </runProgram>
         <setWindowsACL>
             <action>allow</action>
             <files>${installdir}</files>
             <recurseContainers>1</recurseContainers>
             <recurseObjects>1</recurseObjects>
         </setWindowsACL>
-        <deleteFile>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib\\python2.6\\Caelus\\dummy.py</path>
-        </deleteFile>
     </postInstallationActionList>
-    <preUninstallationActionList>
-        <setInstallerVariableFromRegEx>
-            <name>new_pythonpath</name>
-            <pattern>${installdir}\\${product_shortName}-${product_version}\\lib\\python2.6</pattern>
-            <substitution></substitution>
-            <text>${env(PYTHONPATH)}</text>
-        </setInstallerVariableFromRegEx>
-        <setInstallerVariableFromRegEx>
-            <name>new_pythonpath</name>
-            <pattern>^:</pattern>
-            <substitution></substitution>
-            <text>${new_pythonpath}</text>
-        </setInstallerVariableFromRegEx>
-        <setInstallerVariableFromRegEx>
-            <name>new_pythonpath</name>
-            <pattern>:$</pattern>
-            <substitution></substitution>
-            <text>${new_pythonpath}</text>
-        </setInstallerVariableFromRegEx>
-        <setInstallerVariableFromRegEx>
-            <name>new_pythonpath</name>
-            <pattern>::</pattern>
-            <substitution>:</substitution>
-            <text>${new_pythonpath}</text>
-        </setInstallerVariableFromRegEx>
-        <if>
-            <actionList>
-                <setEnvironmentVariable>
-                    <name>PYTHONPATH</name>
-                    <value>${new_pythonpath}</value>
-                </setEnvironmentVariable>
-            </actionList>
-            <conditionRuleList>
-                <compareTextLength>
-                    <length>0</length>
-                    <logic>does_not_equal</logic>
-                    <text>${new_pythonpath}</text>
-                </compareTextLength>
-            </conditionRuleList>
-            <elseActionList>
-                <deleteEnvironmentVariable>
-                    <name>PYTHONPATH</name>
-                    <scope>user</scope>
-                </deleteEnvironmentVariable>
-            </elseActionList>
-        </if>
-        <deleteEnvironmentVariable>
-            <name>SCONSFLAGS</name>
-            <scope>user</scope>
-        </deleteEnvironmentVariable>
-    </preUninstallationActionList>
     <postUninstallationActionList>
         <deleteFile>
             <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\src</path>
@@ -679,17 +615,8 @@ from Caelus.write_env import *
         <deleteFile>
             <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\etc</path>
         </deleteFile>
-        <removeDirectoryFromPath>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external\\scons-local-2.3.4</path>
-        </removeDirectoryFromPath>
-        <removeDirectoryFromPath>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\bin</path>
-        </removeDirectoryFromPath>
         <deleteFile>
             <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\external</path>
-        </deleteFile>
-        <deleteFile>
-            <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\lib</path>
         </deleteFile>
         <deleteFile>
             <path>${installdir.escape_backslashes}\\${product_shortName}-${product_version}\\platforms</path>
@@ -767,8 +694,8 @@ from Caelus.write_env import *
             <name>installdir</name>
             <description>Installer.Parameter.installdir.description</description>
             <explanation>Installer.Parameter.installdir.explanation</explanation>
-            <value>/opt/${project.shortName}/</value>
-            <default>/opt/${project.shortName}</default>
+            <value>${platform_install_prefix}/${project.shortName}/</value>
+            <default>${platform_install_prefix}/${project.shortName}</default>
             <allowEmptyValue>0</allowEmptyValue>
             <cliOptionName>prefix</cliOptionName>
             <mustBeWritable>1</mustBeWritable>

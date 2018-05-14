@@ -224,7 +224,7 @@ CML::fvMesh::fvMesh(const IOobject& io, const bool defectCorr, const scalar area
             << endl;
     }
 
-    // Check the existance of the cell volumes and read if present
+    // Check the existence of the cell volumes and read if present
     // and set the storage of V00
     if (isFile(time().timePath()/"V0"))
     {
@@ -245,7 +245,7 @@ CML::fvMesh::fvMesh(const IOobject& io, const bool defectCorr, const scalar area
         V00();
     }
 
-    // Check the existance of the mesh fluxes, read if present and set the
+    // Check the existence of the mesh fluxes, read if present and set the
     // mesh to be moving
     if (isFile(time().timePath()/"meshPhi"))
     {

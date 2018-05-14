@@ -21,12 +21,19 @@ License
 
 #include "radiationCoupledBase.hpp"
 #include "volFields.hpp"
-#include "basicSolidThermo.hpp"
-
+//#include "basicSolidThermo.hpp"
 #include "mappedPatchBase.hpp"
 #include "fvPatchFieldMapper.hpp"
+#include "radiationModel.hpp"
+#include "absorptionEmissionModel.hpp"
 
 // * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
+
+namespace CML
+{
+    defineTypeNameAndDebug(radiationCoupledBase, 0);
+}
+
 
 namespace CML
 {
@@ -65,6 +72,20 @@ CML::radiationCoupledBase::radiationCoupledBase
 CML::radiationCoupledBase::radiationCoupledBase
 (
     const fvPatch& patch,
+    const word& calculationType,
+    const scalarField& emissivity,
+    const fvPatchFieldMapper& mapper
+)
+:
+    patch_(patch),
+    method_(emissivityMethodTypeNames_[calculationType]),
+    emissivity_(emissivity, mapper)
+{}
+
+
+CML::radiationCoupledBase::radiationCoupledBase
+(
+    const fvPatch& patch,
     const dictionary& dict
 )
 :
@@ -97,7 +118,7 @@ CML::radiationCoupledBase::radiationCoupledBase
 
         case LOOKUP:
         {
-            if(!dict.found("emissivity"))
+            if (!dict.found("emissivity"))
             {
                 FatalIOErrorIn
                 (
@@ -121,6 +142,12 @@ CML::radiationCoupledBase::radiationCoupledBase
 }
 
 
+// * * * * * * * * * * * * * * * * Destructor    * * * * * * * * * * * * * * //
+
+CML::radiationCoupledBase::~radiationCoupledBase()
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::scalarField CML::radiationCoupledBase::emissivity() const
@@ -131,41 +158,33 @@ CML::scalarField CML::radiationCoupledBase::emissivity() const
         {
             // Get the coupling information from the mappedPatchBase
             const mappedPatchBase& mpp =
-                refCast<const mappedPatchBase>
-                (
-                    patch_.patch()
-                );
+                refCast<const mappedPatchBase>(patch_.patch());
 
             const polyMesh& nbrMesh = mpp.sampleMesh();
 
-            const fvPatch& nbrPatch = refCast<const fvMesh>
-            (
-                nbrMesh
-            ).boundary()[mpp.samplePolyPatch().index()];
-
-            if (nbrMesh.foundObject<volScalarField>("emissivity"))
-            {
-                tmp<scalarField> temissivity
+            const radiation::radiationModel& radiation =
+                nbrMesh.lookupObject<radiation::radiationModel>
                 (
-                    new scalarField
-                    (
-                        nbrPatch.lookupPatchField<volScalarField, scalar>
-                        (
-                            "emissivity"
-                        )
-                    )
+                    "radiationProperties"
                 );
 
-                scalarField emissivity(temissivity);
-                // Use direct map mapping to exchange data
-                mpp.distribute(emissivity);
-                //Pout << emissivity << endl;
-                return emissivity;
-            }
-            else
-            {
-                return scalarField(0);
-            }
+
+            const fvMesh& nbrFvMesh = refCast<const fvMesh>(nbrMesh);
+
+            const fvPatch& nbrPatch =
+                nbrFvMesh.boundary()[mpp.samplePolyPatch().index()];
+
+
+            scalarField emissivity
+            (
+                radiation.absorptionEmission().e()().boundaryField()
+                [
+                    nbrPatch.index()
+                ]
+            );
+            mpp.distribute(emissivity);
+
+            return emissivity;
 
         }
         break;
@@ -185,12 +204,34 @@ CML::scalarField CML::radiationCoupledBase::emissivity() const
                 << "Unimplemented method " << method_ << endl
                 << "Please set 'emissivity' to one of "
                 << emissivityMethodTypeNames_.toc()
-                << " and 'emissivityName' to the name of the volScalar"
                 << exit(FatalError);
         }
         break;
     }
+
     return scalarField(0);
+}
+
+
+void CML::radiationCoupledBase::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    emissivity_.autoMap(m);
+}
+
+
+void CML::radiationCoupledBase::rmap
+(
+    const fvPatchScalarField& ptf,
+    const labelList& addr
+)
+{
+    const radiationCoupledBase& mrptf =
+        refCast<const radiationCoupledBase>(ptf);
+
+    emissivity_.rmap(mrptf.emissivity_, addr);
 }
 
 

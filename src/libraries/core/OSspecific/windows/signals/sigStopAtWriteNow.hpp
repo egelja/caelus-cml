@@ -21,7 +21,7 @@ Class
     CML::sigStopAtWriteNow
 
 Description
-    Signal handler for interupt defined by
+    Signal handler for interrupt defined by
         OptimisationSwitches::stopAtWriteNowSignal
 
     Write and stop the job.

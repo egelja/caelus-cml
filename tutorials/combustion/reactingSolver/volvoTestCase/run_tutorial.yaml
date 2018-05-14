@@ -1,0 +1,24 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args: "-force"
+
+  - run_command:
+      cmd_name: reactingSolver
+      parallel: True
+
+  - run_command:
+      cmd_name: reconstructPar
+      cmd_args: "-latestTime"
+
+  - process_logs:
+      log_file: reactingSolver.log
+

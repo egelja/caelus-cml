@@ -24,7 +24,7 @@ Description
     Generic wrapper for calculating a quantity at each time.
 
     Split into four phases:
-        1. Intialise
+        1. Initialise
         2. Pre-time calculation loop
         3. Calculation loop
         4. Post-calculation loop

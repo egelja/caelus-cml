@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,11 +21,11 @@ License
 
 #include "primitiveMesh.hpp"
 #include "pyramidPointFaceRef.hpp"
-#include "tetPointRef.hpp"
 #include "ListOps.hpp"
 #include "unitConversion.hpp"
 #include "SortableList.hpp"
 #include "EdgeMap.hpp"
+#include "primitiveMeshTools.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -38,13 +38,18 @@ CML::scalar CML::primitiveMesh::planarCosAngle_   = 1.0e-6;
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-bool CML::primitiveMesh::checkClosedBoundary(const bool report) const
+bool CML::primitiveMesh::checkClosedBoundary
+(
+    const vectorField& areas,
+    const bool report,
+    const PackedBoolList& internalOrCoupledFaces
+) const
 {
     if (debug)
     {
         Info<< "bool primitiveMesh::checkClosedBoundary("
             << "const bool) const: "
-            << "checking whether the boundary is closed" << endl;
+            << "Checking whether the boundary is closed" << endl;
     }
 
     // Loop through all boundary faces and sum up the face area vectors.
@@ -53,12 +58,13 @@ bool CML::primitiveMesh::checkClosedBoundary(const bool report) const
     vector sumClosed(vector::zero);
     scalar sumMagClosedBoundary = 0;
 
-    const vectorField& areas = faceAreas();
-
     for (label faceI = nInternalFaces(); faceI < areas.size(); faceI++)
     {
-        sumClosed += areas[faceI];
-        sumMagClosedBoundary += mag(areas[faceI]);
+        if (!internalOrCoupledFaces.size() || !internalOrCoupledFaces[faceI])
+        {
+            sumClosed += areas[faceI];
+            sumMagClosedBoundary += mag(areas[faceI]);
+        }
     }
 
     reduce(sumClosed, sumOp<vector>());
@@ -92,6 +98,8 @@ bool CML::primitiveMesh::checkClosedBoundary(const bool report) const
 
 bool CML::primitiveMesh::checkClosedCells
 (
+    const vectorField& faceAreas,
+    const scalarField& cellVolumes,
     const bool report,
     labelHashSet* setPtr,
     labelHashSet* aspectSetPtr,
@@ -103,7 +111,7 @@ bool CML::primitiveMesh::checkClosedCells
         Info<< "bool primitiveMesh::checkClosedCells("
             << "const bool, labelHashSet*, labelHashSet*"
             << ", const Vector<label>&) const: "
-            << "checking whether cells are closed" << endl;
+            << "Checking whether cells are closed" << endl;
     }
 
     // Check that all cells labels are valid
@@ -137,66 +145,28 @@ bool CML::primitiveMesh::checkClosedCells
         return true;
     }
 
-    // Loop through cell faces and sum up the face area vectors for each cell.
-    // This should be zero in all vector components
 
-    vectorField sumClosed(nCells(), vector::zero);
-    vectorField sumMagClosed(nCells(), vector::zero);
-
-    const labelList& own = faceOwner();
-    const labelList& nei = faceNeighbour();
-    const vectorField& areas = faceAreas();
-
-    forAll(own, faceI)
-    {
-        // Add to owner
-        sumClosed[own[faceI]] += areas[faceI];
-        sumMagClosed[own[faceI]] += cmptMag(areas[faceI]);
-    }
-
-    forAll(nei, faceI)
-    {
-        // Subtract from neighbour
-        sumClosed[nei[faceI]] -= areas[faceI];
-        sumMagClosed[nei[faceI]] += cmptMag(areas[faceI]);
-    }
+    scalarField openness;
+    scalarField aspectRatio;
+    primitiveMeshTools::cellClosedness
+    (
+        *this,
+        meshD,
+        faceAreas,
+        cellVolumes,
+        openness,
+        aspectRatio
+    );
 
     label nOpen = 0;
-    scalar maxOpennessCell = 0;
-
+    scalar maxOpennessCell = max(openness);
     label nAspect = 0;
-    scalar maxAspectRatio = 0;
-
-    const scalarField& vols = cellVolumes();
-
-    label nDims = 0;
-    for (direction dir = 0; dir < vector::nComponents; dir++)
-    {
-        if (meshD[dir] == 1)
-        {
-            nDims++;
-        }
-    }
-
+    scalar maxAspectRatio = max(aspectRatio);
 
     // Check the sums
-    forAll(sumClosed, cellI)
+    forAll(openness, cellI)
     {
-        scalar maxOpenness = 0;
-
-        for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-        {
-            maxOpenness = max
-            (
-                maxOpenness,
-                mag(sumClosed[cellI][cmpt])
-               /(sumMagClosed[cellI][cmpt] + ROOTVSMALL)
-            );
-        }
-
-        maxOpennessCell = max(maxOpennessCell, maxOpenness);
-
-        if (maxOpenness > closedThreshold_)
+        if (openness[cellI] > closedThreshold_)
         {
             if (setPtr)
             {
@@ -206,32 +176,7 @@ bool CML::primitiveMesh::checkClosedCells
             nOpen++;
         }
 
-        // Calculate the aspect ration as the maximum of Cartesian component
-        // aspect ratio to the total area hydraulic area aspect ratio
-        scalar minCmpt = VGREAT;
-        scalar maxCmpt = -VGREAT;
-        for (direction dir = 0; dir < vector::nComponents; dir++)
-        {
-            if (meshD[dir] == 1)
-            {
-                minCmpt = min(minCmpt, sumMagClosed[cellI][dir]);
-                maxCmpt = max(maxCmpt, sumMagClosed[cellI][dir]);
-            }
-        }
-
-        scalar aspectRatio = maxCmpt/(minCmpt + ROOTVSMALL);
-        if (nDims == 3)
-        {
-            aspectRatio = max
-            (
-                aspectRatio,
-                1.0/6.0*cmptSum(sumMagClosed[cellI])/pow(vols[cellI], 2.0/3.0)
-            );
-        }
-
-        maxAspectRatio = max(maxAspectRatio, aspectRatio);
-
-        if (aspectRatio > aspectThreshold_)
+        if (aspectRatio[cellI] > aspectThreshold_)
         {
             if (aspectSetPtr)
             {
@@ -287,7 +232,9 @@ bool CML::primitiveMesh::checkClosedCells
 
 bool CML::primitiveMesh::checkFaceAreas
 (
+    const vectorField& faceAreas,
     const bool report,
+    const bool detailedReport,
     labelHashSet* setPtr
 ) const
 {
@@ -295,10 +242,10 @@ bool CML::primitiveMesh::checkFaceAreas
     {
         Info<< "bool primitiveMesh::checkFaceAreas("
             << "const bool, labelHashSet*) const: "
-            << "checking face area magnitudes" << endl;
+            << "Checking face area magnitudes" << endl;
     }
 
-    const scalarField magFaceAreas(mag(faceAreas()));
+    const scalarField magFaceAreas(mag(faceAreas));
 
     scalar minArea = GREAT;
     scalar maxArea = -GREAT;
@@ -310,6 +257,25 @@ bool CML::primitiveMesh::checkFaceAreas
             if (setPtr)
             {
                 setPtr->insert(faceI);
+            }
+            if (detailedReport)
+            {
+                if (isInternalFace(faceI))
+                {
+                    Pout<< "Zero or negative face area detected for "
+                        << "internal face "<< faceI << " between cells "
+                        << faceOwner()[faceI] << " and "
+                        << faceNeighbour()[faceI]
+                        << ".  Face area magnitude = " << magFaceAreas[faceI]
+                        << endl;
+                }
+                else
+                {
+                    Pout<< "Zero or negative face area detected for "
+                        << "boundary face " << faceI << " next to cell "
+                        << faceOwner()[faceI] << ".  Face area magnitude = "
+                        << magFaceAreas[faceI] << endl;
+                }
             }
         }
 
@@ -346,7 +312,9 @@ bool CML::primitiveMesh::checkFaceAreas
 
 bool CML::primitiveMesh::checkCellVolumes
 (
+    const scalarField& vols,
     const bool report,
+    const bool detailedReport,
     labelHashSet* setPtr
 ) const
 {
@@ -356,8 +324,6 @@ bool CML::primitiveMesh::checkCellVolumes
             << "const bool, labelHashSet*) const: "
             << "checking cell volumes" << endl;
     }
-
-    const scalarField& vols = cellVolumes();
 
     scalar minVolume = GREAT;
     scalar maxVolume = -GREAT;
@@ -371,6 +337,11 @@ bool CML::primitiveMesh::checkCellVolumes
             if (setPtr)
             {
                 setPtr->insert(cellI);
+            }
+            if (detailedReport)
+            {
+                Pout<< "Zero or negative cell volume detected for cell "
+                    << cellI << ".  Volume = " << vols[cellI] << endl;
             }
 
             nNegVolCells++;
@@ -413,6 +384,8 @@ bool CML::primitiveMesh::checkCellVolumes
 
 bool CML::primitiveMesh::checkFaceOrthogonality
 (
+    const vectorField& fAreas,
+    const vectorField& cellCtrs,
     const bool report,
     labelHashSet* setPtr
 ) const
@@ -424,35 +397,33 @@ bool CML::primitiveMesh::checkFaceOrthogonality
             << "checking mesh non-orthogonality" << endl;
     }
 
-    // for all internal faces check that the d dot S product is positive
-    const vectorField& centres = cellCentres();
-    const vectorField& areas = faceAreas();
 
-    const labelList& own = faceOwner();
-    const labelList& nei = faceNeighbour();
+    tmp<scalarField> tortho = primitiveMeshTools::faceOrthogonality
+    (
+        *this,
+        fAreas,
+        cellCtrs
+    );
+    const scalarField& ortho = tortho();
 
     // Severe nonorthogonality threshold
     const scalar severeNonorthogonalityThreshold =
         ::cos(degToRad(nonOrthThreshold_));
 
-    scalar minDDotS = GREAT;
+    scalar minDDotS = min(ortho);
 
-    scalar sumDDotS = 0;
+    scalar sumDDotS = sum(ortho);
 
     label severeNonOrth = 0;
 
     label errorNonOrth = 0;
 
-    forAll(nei, faceI)
+
+    forAll(ortho, faceI)
     {
-        vector d = centres[nei[faceI]] - centres[own[faceI]];
-        const vector& s = areas[faceI];
-
-        scalar dDotS = (d & s)/(mag(d)*mag(s) + ROOTVSMALL);
-
-        if (dDotS < severeNonorthogonalityThreshold)
+        if (ortho[faceI] < severeNonorthogonalityThreshold)
         {
-            if (dDotS > SMALL)
+            if (ortho[faceI] > SMALL)
             {
                 if (setPtr)
                 {
@@ -471,13 +442,6 @@ bool CML::primitiveMesh::checkFaceOrthogonality
                 errorNonOrth++;
             }
         }
-
-        if (dDotS < minDDotS)
-        {
-            minDDotS = dDotS;
-        }
-
-        sumDDotS += dDotS;
     }
 
     reduce(minDDotS, minOp<scalar>());
@@ -487,7 +451,7 @@ bool CML::primitiveMesh::checkFaceOrthogonality
 
     if (debug || report)
     {
-        label neiSize = nei.size();
+        label neiSize = ortho.size();
         reduce(neiSize, sumOp<label>());
 
         if (neiSize > 0)
@@ -532,7 +496,10 @@ bool CML::primitiveMesh::checkFaceOrthogonality
 
 bool CML::primitiveMesh::checkFacePyramids
 (
+    const pointField& points,
+    const vectorField& ctrs,
     const bool report,
+    const bool detailedReport,
     const scalar minPyrVol,
     labelHashSet* setPtr
 ) const
@@ -541,31 +508,44 @@ bool CML::primitiveMesh::checkFacePyramids
     {
         Info<< "bool primitiveMesh::checkFacePyramids("
             << "const bool, const scalar, labelHashSet*) const: "
-            << "checking face orientation" << endl;
+            << "Checking face orientation" << endl;
     }
-
-    // check whether face area vector points to the cell with higher label
-    const vectorField& ctrs = cellCentres();
 
     const labelList& own = faceOwner();
     const labelList& nei = faceNeighbour();
-
     const faceList& f = faces();
 
-    const pointField& p = points();
+
+    scalarField ownPyrVol;
+    scalarField neiPyrVol;
+    primitiveMeshTools::facePyramidVolume
+    (
+        *this,
+        points,
+        ctrs,
+        ownPyrVol,
+        neiPyrVol
+    );
+
 
     label nErrorPyrs = 0;
 
-    forAll(f, faceI)
+    forAll(ownPyrVol, faceI)
     {
-        // Create the owner pyramid - it will have negative volume
-        scalar pyrVol = pyramidPointFaceRef(f[faceI], ctrs[own[faceI]]).mag(p);
-
-        if (pyrVol > -minPyrVol)
+        if (ownPyrVol[faceI] < minPyrVol)
         {
             if (setPtr)
             {
                 setPtr->insert(faceI);
+            }
+            if (detailedReport)
+            {
+                Pout<< "Negative pyramid volume: " << ownPyrVol[faceI]
+                    << " for face " << faceI << " " << f[faceI]
+                    << "  and owner cell: " << own[faceI] << endl
+                    << "Owner cell vertex labels: "
+                    << cells()[own[faceI]].labels(faces())
+                    << endl;
             }
 
             nErrorPyrs++;
@@ -573,17 +553,21 @@ bool CML::primitiveMesh::checkFacePyramids
 
         if (isInternalFace(faceI))
         {
-            // Create the neighbour pyramid - it will have positive volume
-            scalar pyrVol =
-                pyramidPointFaceRef(f[faceI], ctrs[nei[faceI]]).mag(p);
-
-            if (pyrVol < minPyrVol)
+            if (neiPyrVol[faceI] < minPyrVol)
             {
                 if (setPtr)
                 {
                     setPtr->insert(faceI);
                 }
-
+                if (detailedReport)
+                {
+                    Pout<< "Negative pyramid volume: " << neiPyrVol[faceI]
+                        << " for face " << faceI << " " << f[faceI]
+                        << "  and neighbour cell: " << nei[faceI] << nl
+                        << "Neighbour cell vertex labels: "
+                        << cells()[nei[faceI]].labels(faces())
+                        << endl;
+                }
                 nErrorPyrs++;
             }
         }
@@ -616,6 +600,10 @@ bool CML::primitiveMesh::checkFacePyramids
 
 bool CML::primitiveMesh::checkFaceSkewness
 (
+    const pointField& points,
+    const vectorField& fCtrs,
+    const vectorField& fAreas,
+    const vectorField& cellCtrs,
     const bool report,
     labelHashSet* setPtr
 ) const
@@ -624,51 +612,31 @@ bool CML::primitiveMesh::checkFaceSkewness
     {
         Info<< "bool primitiveMesh::checkFaceSkewnesss("
             << "const bool, labelHashSet*) const: "
-            << "checking face skewness" << endl;
+            << "Checking face skewness" << endl;
     }
 
     // Warn if the skew correction vector is more than skewWarning times
     // larger than the face area vector
 
-    const pointField& p = points();
-    const faceList& fcs = faces();
-
-    const labelList& own = faceOwner();
-    const labelList& nei = faceNeighbour();
-    const vectorField& cellCtrs = cellCentres();
-    const vectorField& faceCtrs = faceCentres();
-    const vectorField& fAreas = faceAreas();
+    tmp<scalarField> tskewness = primitiveMeshTools::faceSkewness
+    (
+        *this,
+        points,
+        fCtrs,
+        fAreas,
+        cellCtrs
+    );
+    const scalarField& skewness = tskewness();
 
     scalar sumSkew = 0;
     scalar maxSkew = 0;
     label nWarnSkew = 0;
 
-    forAll(nei, faceI)
+    forAll(skewness, faceI)
     {
-        vector Cpf = faceCtrs[faceI] - cellCtrs[own[faceI]];
-        vector d = cellCtrs[nei[faceI]] - cellCtrs[own[faceI]];
-
-        // Skewness vector
-        vector sv =
-            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + ROOTVSMALL))*d;
-        vector svHat = sv/(mag(sv) + ROOTVSMALL);
-
-        // Normalisation distance calculated as the approximate distance
-        // from the face centre to the edge of the face in the direction of
-        // the skewness
-        scalar fd = 0.2*mag(d) + ROOTVSMALL;
-        const face& f = fcs[faceI];
-        forAll(f, pi)
-        {
-            fd = max(fd, mag(svHat & (p[f[pi]] - faceCtrs[faceI])));
-        }
-
-        // Normalised skewness
-        scalar skewness = mag(sv)/fd;
-
         // Check if the skewness vector is greater than the PN vector.
         // This does not cause trouble but is a good indication of a poor mesh.
-        if (skewness > skewThreshold_)
+        if (skewness[faceI] > skewThreshold_)
         {
             if (setPtr)
             {
@@ -677,64 +645,7 @@ bool CML::primitiveMesh::checkFaceSkewness
 
             nWarnSkew++;
         }
-
-        if (skewness > maxSkew)
-        {
-            maxSkew = skewness;
-        }
-
-        sumSkew += skewness;
-    }
-
-
-    // Boundary faces: consider them to have only skewness error.
-    // (i.e. treat as if mirror cell on other side)
-
-    for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
-    {
-        vector Cpf = faceCtrs[faceI] - cellCtrs[own[faceI]];
-
-        vector normal = fAreas[faceI];
-        normal /= mag(normal) + ROOTVSMALL;
-        vector d = normal*(normal & Cpf);
-
-
-        // Skewness vector
-        vector sv =
-            Cpf - ((fAreas[faceI] & Cpf)/((fAreas[faceI] & d) + ROOTVSMALL))*d;
-        vector svHat = sv/(mag(sv) + ROOTVSMALL);
-
-        // Normalisation distance calculated as the approximate distance
-        // from the face centre to the edge of the face in the direction of
-        // the skewness
-        scalar fd = 0.4*mag(d) + VSMALL;
-        const face& f = fcs[faceI];
-        forAll(f, pi)
-        {
-            fd = max(fd, mag(svHat & (p[f[pi]] - faceCtrs[faceI])));
-        }
-
-        // Normalised skewness
-        scalar skewness = mag(sv)/fd;
-
-        // Check if the skewness vector is greater than the PN vector.
-        // This does not cause trouble but is a good indication of a poor mesh.
-        if (skewness > skewThreshold_)
-        {
-            if (setPtr)
-            {
-                setPtr->insert(faceI);
-            }
-
-            nWarnSkew++;
-        }
-
-        if (skewness > maxSkew)
-        {
-            maxSkew = skewness;
-        }
-
-        sumSkew += skewness;
+        sumSkew += skewness[faceI];
     }
 
     reduce(sumSkew, sumOp<scalar>());
@@ -784,86 +695,10 @@ bool CML::primitiveMesh::checkFaceSkewness
 }
 
 
-bool CML::primitiveMesh::checkPoints
-(
-    const bool report,
-    labelHashSet* setPtr
-) const
-{
-    if (debug)
-    {
-        Info<< "bool primitiveMesh::checkPoints"
-            << "(const bool, labelHashSet*) const: "
-            << "checking points" << endl;
-    }
-
-    label nFaceErrors = 0;
-    label nCellErrors = 0;
-
-    const labelListList& pf = pointFaces();
-
-    forAll(pf, pointI)
-    {
-        if (pf[pointI].empty())
-        {
-            if (setPtr)
-            {
-                setPtr->insert(pointI);
-            }
-
-            nFaceErrors++;
-        }
-    }
-
-
-    forAll(pf, pointI)
-    {
-        const labelList& pc = pointCells(pointI);
-
-        if (pc.empty())
-        {
-            if (setPtr)
-            {
-                setPtr->insert(pointI);
-            }
-
-            nCellErrors++;
-        }
-    }
-
-    reduce(nFaceErrors, sumOp<label>());
-    reduce(nCellErrors, sumOp<label>());
-
-    if (nFaceErrors > 0 || nCellErrors > 0)
-    {
-        if (debug || report)
-        {
-            Info<< " ***Unused points found in the mesh, "
-                   "number unused by faces: " << nFaceErrors
-                << " number unused by cells: " << nCellErrors
-                << endl;
-        }
-
-        return true;
-    }
-    else
-    {
-        if (debug || report)
-        {
-            Info<< "    Point usage OK." << endl;
-        }
-
-        return false;
-    }
-}
-
-
-// Check convexity of angles in a face. Allow a slight non-convexity.
-// E.g. maxDeg = 10 allows for angles < 190 (or 10 degrees concavity)
-// (if truly concave and points not visible from face centre the face-pyramid
-//  check in checkMesh will fail)
 bool CML::primitiveMesh::checkFaceAngles
 (
+    const pointField& points,
+    const vectorField& faceAreas,
     const bool report,
     const scalar maxDeg,
     labelHashSet* setPtr
@@ -873,7 +708,7 @@ bool CML::primitiveMesh::checkFaceAngles
     {
         Info<< "bool primitiveMesh::checkFaceAngles"
             << "(const bool, const scalar, labelHashSet*) const: "
-            << "checking face angles" << endl;
+            << "Checking face angles" << endl;
     }
 
     if (maxDeg < -SMALL || maxDeg > 180+SMALL)
@@ -888,71 +723,30 @@ bool CML::primitiveMesh::checkFaceAngles
 
     const scalar maxSin = CML::sin(degToRad(maxDeg));
 
-    const pointField& p = points();
-    const faceList& fcs = faces();
-    vectorField faceNormals(faceAreas());
-    faceNormals /= mag(faceNormals) + VSMALL;
 
-    scalar maxEdgeSin = 0.0;
+    tmp<scalarField> tfaceAngles = primitiveMeshTools::faceConcavity
+    (
+        maxSin,
+        *this,
+        points,
+        faceAreas
+    );
+    const scalarField& faceAngles = tfaceAngles();
+
+    scalar maxEdgeSin = max(faceAngles);
 
     label nConcave = 0;
 
-    label errorFaceI = -1;
-
-    forAll(fcs, faceI)
+    forAll(faceAngles, faceI)
     {
-        const face& f = fcs[faceI];
-
-        // Get edge from f[0] to f[size-1];
-        vector ePrev(p[f.first()] - p[f.last()]);
-        scalar magEPrev = mag(ePrev);
-        ePrev /= magEPrev + ROOTVSMALL;
-
-        forAll(f, fp0)
+        if (faceAngles[faceI] > SMALL)
         {
-            // Get vertex after fp
-            label fp1 = f.fcIndex(fp0);
+            nConcave++;
 
-            // Normalized vector between two consecutive points
-            vector e10(p[f[fp1]] - p[f[fp0]]);
-            scalar magE10 = mag(e10);
-            e10 /= magE10 + ROOTVSMALL;
-
-            if (magEPrev > SMALL && magE10 > SMALL)
+            if (setPtr)
             {
-                vector edgeNormal = ePrev ^ e10;
-                scalar magEdgeNormal = mag(edgeNormal);
-
-                if (magEdgeNormal < maxSin)
-                {
-                    // Edges (almost) aligned -> face is ok.
-                }
-                else
-                {
-                    // Check normal
-                    edgeNormal /= magEdgeNormal;
-
-                    if ((edgeNormal & faceNormals[faceI]) < SMALL)
-                    {
-                        if (faceI != errorFaceI)
-                        {
-                            // Count only one error per face.
-                            errorFaceI = faceI;
-                            nConcave++;
-                        }
-
-                        if (setPtr)
-                        {
-                            setPtr->insert(faceI);
-                        }
-
-                        maxEdgeSin = max(maxEdgeSin, magEdgeNormal);
-                    }
-                }
+                setPtr->insert(faceI);
             }
-
-            ePrev = e10;
-            magEPrev = magE10;
         }
     }
 
@@ -991,6 +785,9 @@ bool CML::primitiveMesh::checkFaceAngles
 // is the average of the areas of the individual triangles).
 bool CML::primitiveMesh::checkFaceFlatness
 (
+    const pointField& points,
+    const vectorField& faceCentres,
+    const vectorField& faceAreas,
     const bool report,
     const scalar warnFlatness,
     labelHashSet* setPtr
@@ -1000,7 +797,7 @@ bool CML::primitiveMesh::checkFaceFlatness
     {
         Info<< "bool primitiveMesh::checkFaceFlatness"
             << "(const bool, const scalar, labelHashSet*) const: "
-            << "checking face flatness" << endl;
+            << "Checking face flatness" << endl;
     }
 
     if (warnFlatness < 0 || warnFlatness > 1)
@@ -1013,52 +810,34 @@ bool CML::primitiveMesh::checkFaceFlatness
             << exit(FatalError);
     }
 
-
-    const pointField& p = points();
     const faceList& fcs = faces();
-    const pointField& fctrs = faceCentres();
 
-    // Areas are calculated as the sum of areas. (see
-    // primitiveMeshFaceCentresAndAreas.C)
-    scalarField magAreas(mag(faceAreas()));
+    tmp<scalarField> tfaceFlatness = primitiveMeshTools::faceFlatness
+    (
+        *this,
+        points,
+        faceCentres,
+        faceAreas
+    );
+    const scalarField& faceFlatness = tfaceFlatness();
 
-    label nWarped = 0;
+    scalarField magAreas(mag(faceAreas));
 
     scalar minFlatness = GREAT;
     scalar sumFlatness = 0;
     label nSummed = 0;
+    label nWarped = 0;
 
-    forAll(fcs, faceI)
+    forAll(faceFlatness, faceI)
     {
-        const face& f = fcs[faceI];
-
-        if (f.size() > 3 && magAreas[faceI] > ROOTVSMALL)
+        if (fcs[faceI].size() > 3 && magAreas[faceI] > VSMALL)
         {
-            const point& fc = fctrs[faceI];
-
-            // Calculate the sum of magnitude of areas and compare to magnitude
-            // of sum of areas.
-
-            scalar sumA = 0.0;
-
-            forAll(f, fp)
-            {
-                const point& thisPoint = p[f[fp]];
-                const point& nextPoint = p[f.nextLabel(fp)];
-
-                // Triangle around fc.
-                vector n = 0.5*((nextPoint - thisPoint)^(fc - thisPoint));
-                sumA += mag(n);
-            }
-
-            scalar flatness = magAreas[faceI] / (sumA + ROOTVSMALL);
-
-            sumFlatness += flatness;
+            sumFlatness += faceFlatness[faceI];
             nSummed++;
 
-            minFlatness = min(minFlatness, flatness);
+            minFlatness = min(minFlatness, faceFlatness[faceI]);
 
-            if (flatness < warnFlatness)
+            if (faceFlatness[faceI] < warnFlatness)
             {
                 nWarped++;
 
@@ -1081,8 +860,9 @@ bool CML::primitiveMesh::checkFaceFlatness
     {
         if (nSummed > 0)
         {
-            Info<< "    Face flatness (1 = flat, 0 = butterfly) : average = "
-                << sumFlatness / nSummed << "  min = " << minFlatness << endl;
+            Info<< "    Face flatness (1 = flat, 0 = butterfly) : min = "
+                << minFlatness << "  average = " << sumFlatness / nSummed
+                << endl;
         }
     }
 
@@ -1113,131 +893,104 @@ bool CML::primitiveMesh::checkFaceFlatness
 }
 
 
-// Check 1D/2Dness of edges. Gets passed the non-empty directions and
-// checks all edges in the mesh whether they:
-// - have no component in a non-empty direction or
-// - are only in a singe non-empty direction.
-// Empty direction info is passed in as a vector of labels (synchronised)
-// which are 1 if the direction is non-empty, 0 if it is.
-bool CML::primitiveMesh::checkEdgeAlignment
+bool CML::primitiveMesh::checkConcaveCells
 (
+    const vectorField& fAreas,
+    const pointField& fCentres,
     const bool report,
-    const Vector<label>& directions,
     labelHashSet* setPtr
 ) const
 {
     if (debug)
     {
-        Info<< "bool primitiveMesh::checkEdgeAlignment("
-            << "const bool, const Vector<label>&, labelHashSet*) const: "
-            << "checking edge alignment" << endl;
+        Info<< "bool primitiveMesh::checkConcaveCells("
+            << "const vectorField&, const pointField&, "
+            << "const bool, labelHashSet*) const: "
+            << "Checking for concave cells" << endl;
     }
 
-    label nDirs = 0;
-    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
+    const cellList& c = cells();
+    const labelList& fOwner = faceOwner();
+
+    label nConcaveCells = 0;
+
+    forAll(c, celli)
     {
-        if (directions[cmpt] == 1)
+        const cell& cFaces = c[celli];
+
+        bool concave = false;
+
+        forAll(cFaces, i)
         {
-            nDirs++;
-        }
-        else if (directions[cmpt] != 0)
-        {
-            FatalErrorIn
-            (
-                "primitiveMesh::checkEdgeAlignment"
-                "(const bool, const Vector<label>&, labelHashSet*)"
-            )   << "directions should contain 0 or 1 but is now " << directions
-                << exit(FatalError);
-        }
-    }
-
-    if (nDirs == vector::nComponents)
-    {
-        return false;
-    }
-
-
-
-    const pointField& p = points();
-    const faceList& fcs = faces();
-
-    EdgeMap<label> edgesInError;
-
-    forAll(fcs, faceI)
-    {
-        const face& f = fcs[faceI];
-
-        forAll(f, fp)
-        {
-            label p0 = f[fp];
-            label p1 = f.nextLabel(fp);
-            if (p0 < p1)
+            if (concave)
             {
-                vector d(p[p1]-p[p0]);
-                scalar magD = mag(d);
+                break;
+            }
 
-                if (magD > ROOTVSMALL)
+            label fI = cFaces[i];
+
+            const point& fC = fCentres[fI];
+
+            vector fN = fAreas[fI];
+
+            fN /= max(mag(fN), VSMALL);
+
+            // Flip normal if required so that it is always pointing out of
+            // the cell
+            if (fOwner[fI] != celli)
+            {
+                fN *= -1;
+            }
+
+            // Is the centre of any other face of the cell on the
+            // wrong side of the plane of this face?
+
+            forAll(cFaces, j)
+            {
+                if (j != i)
                 {
-                    d /= magD;
+                    label fJ = cFaces[j];
 
-                    // Check how many empty directions are used by the edge.
-                    label nEmptyDirs = 0;
-                    label nNonEmptyDirs = 0;
-                    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-                    {
-                        if (mag(d[cmpt]) > 1e-6)
-                        {
-                            if (directions[cmpt] == 0)
-                            {
-                                nEmptyDirs++;
-                            }
-                            else
-                            {
-                                nNonEmptyDirs++;
-                            }
-                        }
-                    }
+                    const point& pt = fCentres[fJ];
 
-                    if (nEmptyDirs == 0)
+                    // If the cell is concave, the point will be on the
+                    // positive normal side of the plane of f, defined by
+                    // its centre and normal, and the angle between (pt -
+                    // fC) and fN will be less than 90 degrees, so the dot
+                    // product will be positive.
+
+                    vector pC = (pt - fC);
+
+                    pC /= max(mag(pC), VSMALL);
+
+                    if ((pC & fN) > -planarCosAngle_)
                     {
-                        // Purely in ok directions.
-                    }
-                    else if (nEmptyDirs == 1)
-                    {
-                        // Ok if purely in empty directions.
-                        if (nNonEmptyDirs > 0)
+                        // Concave or planar face
+
+                        concave = true;
+
+                        if (setPtr)
                         {
-                            edgesInError.insert(edge(p0, p1), faceI);
+                            setPtr->insert(celli);
                         }
-                    }
-                    else if (nEmptyDirs > 1)
-                    {
-                        // Always an error
-                        edgesInError.insert(edge(p0, p1), faceI);
+
+                        nConcaveCells++;
+
+                        break;
                     }
                 }
             }
         }
     }
 
-    label nErrorEdges = returnReduce(edgesInError.size(), sumOp<label>());
+    reduce(nConcaveCells, sumOp<label>());
 
-    if (nErrorEdges > 0)
+    if (nConcaveCells > 0)
     {
         if (debug || report)
         {
-            Info<< " ***Number of edges not aligned with or perpendicular to "
-                << "non-empty directions: " << nErrorEdges << endl;
-        }
-
-        if (setPtr)
-        {
-            setPtr->resize(2*edgesInError.size());
-            forAllConstIter(EdgeMap<label>, edgesInError, iter)
-            {
-                setPtr->insert(iter.key()[0]);
-                setPtr->insert(iter.key()[1]);
-            }
+            Info<< " ***Concave cells (using face planes) found,"
+                << " number of cells: " << nConcaveCells << endl;
         }
 
         return true;
@@ -1246,11 +999,13 @@ bool CML::primitiveMesh::checkEdgeAlignment
     {
         if (debug || report)
         {
-            Info<< "    All edges aligned with or perpendicular to "
-                << "non-empty directions." << endl;
+            Info<< "    Concave cell check OK." << endl;
         }
+
         return false;
     }
+
+    return false;
 }
 
 
@@ -1264,7 +1019,7 @@ bool CML::primitiveMesh::checkUpperTriangular
     {
         Info<< "bool primitiveMesh::checkUpperTriangular("
             << "const bool, labelHashSet*) const: "
-            << "checking face ordering" << endl;
+            << "Checking face ordering" << endl;
     }
 
     // Check whether internal faces are ordered in the upper triangular order
@@ -1429,7 +1184,7 @@ bool CML::primitiveMesh::checkCellsZipUp
     {
         Info<< "bool primitiveMesh::checkCellsZipUp("
             << "const bool, labelHashSet*) const: "
-            << "checking topological cell openness" << endl;
+            << "Checking topological cell openness" << endl;
     }
 
     label nOpenCells = 0;
@@ -1530,7 +1285,7 @@ bool CML::primitiveMesh::checkFaceVertices
     {
         Info<< "bool primitiveMesh::checkFaceVertices("
             << "const bool, labelHashSet*) const: "
-            << "checking face vertices" << endl;
+            << "Checking face vertices" << endl;
     }
 
     // Check that all vertex labels are valid
@@ -1595,10 +1350,83 @@ bool CML::primitiveMesh::checkFaceVertices
 }
 
 
-// Check if all points on face are shared between faces.
+bool CML::primitiveMesh::checkPoints
+(
+    const bool report,
+    labelHashSet* setPtr
+) const
+{
+    if (debug)
+    {
+        Info<< "bool CML::primitiveMesh::checkPoints"
+            << "const bool, labelHashSet*) const: "
+            << "Checking points" << endl;
+    }
+
+    label nFaceErrors = 0;
+    label nCellErrors = 0;
+
+    const labelListList& pf = pointFaces();
+
+    forAll(pf, pointi)
+    {
+        if (pf[pointi].empty())
+        {
+            if (setPtr)
+            {
+                setPtr->insert(pointi);
+            }
+
+            nFaceErrors++;
+        }
+    }
+
+
+    forAll(pf, pointi)
+    {
+        const labelList& pc = pointCells(pointi);
+
+        if (pc.empty())
+        {
+            if (setPtr)
+            {
+                setPtr->insert(pointi);
+            }
+
+            nCellErrors++;
+        }
+    }
+
+    reduce(nFaceErrors, sumOp<label>());
+    reduce(nCellErrors, sumOp<label>());
+
+    if (nFaceErrors > 0 || nCellErrors > 0)
+    {
+        if (debug || report)
+        {
+            Info<< " ***Unused points found in the mesh, "
+                   "number unused by faces: " << nFaceErrors
+                << " number unused by cells: " << nCellErrors
+                << endl;
+        }
+
+        return true;
+    }
+    else
+    {
+        if (debug || report)
+        {
+            Info<< "    Point usage OK." << endl;
+        }
+
+        return false;
+    }
+}
+
+
 bool CML::primitiveMesh::checkDuplicateFaces
 (
-    const label faceI,
+    const label facei,
     const Map<label>& nCommonPoints,
     label& nBaffleFaces,
     labelHashSet* setPtr
@@ -1608,11 +1436,11 @@ bool CML::primitiveMesh::checkDuplicateFaces
 
     forAllConstIter(Map<label>, nCommonPoints, iter)
     {
-        label nbFaceI = iter.key();
+        label nbFacei = iter.key();
         label nCommon = iter();
 
-        const face& curFace = faces()[faceI];
-        const face& nbFace = faces()[nbFaceI];
+        const face& curFace = faces()[facei];
+        const face& nbFace = faces()[nbFacei];
 
         if (nCommon == nbFace.size() || nCommon == curFace.size())
         {
@@ -1627,8 +1455,8 @@ bool CML::primitiveMesh::checkDuplicateFaces
 
             if (setPtr)
             {
-                setPtr->insert(faceI);
-                setPtr->insert(nbFaceI);
+                setPtr->insert(facei);
+                setPtr->insert(nbFacei);
             }
         }
     }
@@ -1810,7 +1638,7 @@ bool CML::primitiveMesh::checkFaceFaces
     if (debug)
     {
         Info<< "bool primitiveMesh::checkFaceFaces(const bool, labelHashSet*)"
-            << " const: " << "checking face-face connectivity" << endl;
+            << " const: " << "Checking face-face connectivity" << endl;
     }
 
     const labelListList& pf = pointFaces();
@@ -1912,168 +1740,153 @@ bool CML::primitiveMesh::checkFaceFaces
 }
 
 
-// Checks cells with 1 or less internal faces. Give numerical problems.
-bool CML::primitiveMesh::checkCellDeterminant
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool CML::primitiveMesh::checkClosedBoundary(const bool report) const
+{
+    return checkClosedBoundary(faceAreas(), report, PackedBoolList(0));
+}
+
+
+bool CML::primitiveMesh::checkClosedCells
 (
-    const bool report,    // report,
-    labelHashSet* setPtr, // setPtr
-    const Vector<label>& meshD
+    const bool report,
+    labelHashSet* setPtr,
+    labelHashSet* aspectSetPtr,
+     const Vector<label>& solutionD
 ) const
 {
-    if (debug)
-    {
-        Info<< "bool primitiveMesh::checkCellDeterminant(const bool"
-            << ", labelHashSet*) const: "
-            << "checking for under-determined cells" << endl;
-    }
-
-    // Determine number of dimensions and (for 2D) missing dimension
-    label nDims = 0;
-    label twoD = -1;
-    for (direction dir = 0; dir < vector::nComponents; dir++)
-    {
-        if (meshD[dir] == 1)
-        {
-            nDims++;
-        }
-        else
-        {
-            twoD = dir;
-        }
-    }
+    return checkClosedCells
+    (
+        faceAreas(),
+        cellVolumes(),
+        report,
+        setPtr,
+        aspectSetPtr,
+        solutionD
+    );
+}
 
 
-    const cellList& c = cells();
+bool CML::primitiveMesh::checkFaceAreas
+(
+    const bool report,
+    labelHashSet* setPtr
+) const
+{
+    return checkFaceAreas
+    (
+        faceAreas(),
+        report,
+        false,  // detailedReport,
+        setPtr
+    );
+}
 
-    label nErrorCells = 0;
 
-    scalar minDet = GREAT;
-    scalar sumDet = 0;
-    label nSummed = 0;
+bool CML::primitiveMesh::checkCellVolumes
+(
+    const bool report,
+    labelHashSet* setPtr
+) const
+{
+    return checkCellVolumes
+    (
+        cellVolumes(),
+        report,
+        false,  // detailedReport,
+        setPtr
+    );
+}
 
-    if (nDims == 1)
-    {
-        minDet = 1;
-        sumDet = c.size()*minDet;
-        nSummed = c.size();
-    }
-    else
-    {
-        forAll (c, cellI)
-        {
-            const labelList& curFaces = c[cellI];
 
-            // Calculate local normalization factor
-            scalar avgArea = 0;
+bool CML::primitiveMesh::checkFaceOrthogonality
+(
+    const bool report,
+    labelHashSet* setPtr
+) const
+{
+    return checkFaceOrthogonality
+    (
+        faceAreas(),
+        cellCentres(),
+        report,
+        setPtr
+    );
+}
 
-            label nInternalFaces = 0;
 
-            forAll(curFaces, i)
-            {
-                if (isInternalFace(curFaces[i]))
-                {
-                    avgArea += mag(faceAreas()[curFaces[i]]);
+bool CML::primitiveMesh::checkFacePyramids
+(
+    const bool report,
+    const scalar minPyrVol,
+    labelHashSet* setPtr
+) const
+{
+    return checkFacePyramids
+    (
+        points(),
+        cellCentres(),
+        report,
+        false,  // detailedReport,
+        minPyrVol,
+        setPtr
+    );
+}
 
-                    nInternalFaces++;
-                }
-            }
 
-            if (nInternalFaces == 0)
-            {
-                if (setPtr)
-                {
-                    setPtr->insert(cellI);
-                }
+bool CML::primitiveMesh::checkFaceSkewness
+(
+    const bool report,
+    labelHashSet* setPtr
+) const
+{
+    return checkFaceSkewness
+    (
+        points(),
+        faceCentres(),
+        faceAreas(),
+        cellCentres(),
+        report,
+        setPtr
+    );
+}
 
-                nErrorCells++;
-            }
-            else
-            {
-                avgArea /= nInternalFaces;
 
-                symmTensor areaTensor(symmTensor::zero);
+bool CML::primitiveMesh::checkFaceAngles
+(
+    const bool report,
+    const scalar maxDeg,
+    labelHashSet* setPtr
+) const
+{
+    return checkFaceAngles
+    (
+        points(),
+        faceAreas(),
+        report,
+        maxDeg,
+        setPtr
+    );
+}
 
-                forAll(curFaces, i)
-                {
-                    if (isInternalFace(curFaces[i]))
-                    {
-                        areaTensor += sqr(faceAreas()[curFaces[i]]/avgArea);
-                    }
-                }
 
-                if (nDims == 2)
-                {
-                    // Add the missing eigenvector (such that it does not
-                    // affect the determinant)
-                    if (twoD == 0)
-                    {
-                        areaTensor.xx() = 1;
-                    }
-                    else if (twoD == 1)
-                    {
-                        areaTensor.yy() = 1;
-                    }
-                    else
-                    {
-                        areaTensor.zz() = 1;
-                    }
-                }
-
-                scalar determinant = mag(det(areaTensor));
-
-                minDet = min(determinant, minDet);
-                sumDet += determinant;
-                nSummed++;
-
-                if (determinant < 1e-3)
-                {
-                    if (setPtr)
-                    {
-                        setPtr->insert(cellI);
-                    }
-
-                    nErrorCells++;
-                }
-            }
-        }
-    }
-
-    reduce(nErrorCells, sumOp<label>());
-    reduce(minDet, minOp<scalar>());
-    reduce(sumDet, sumOp<scalar>());
-    reduce(nSummed, sumOp<label>());
-
-    if (debug || report)
-    {
-        if (nSummed > 0)
-        {
-            Info<< "    Cell determinant (wellposedness) : minimum: " << minDet
-                << " average: " << sumDet/nSummed
-                << endl;
-        }
-    }
-
-    if (nErrorCells > 0)
-    {
-        if (debug || report)
-        {
-            Info<< " ***Cells with small determinant found, number of cells: "
-                << nErrorCells << endl;
-        }
-
-        return true;
-    }
-    else
-    {
-        if (debug || report)
-        {
-            Info<< "    Cell determinant check OK." << endl;
-        }
-
-        return false;
-    }
-
-    return false;
+bool CML::primitiveMesh::checkFaceFlatness
+(
+    const bool report,
+    const scalar warnFlatness,
+    labelHashSet* setPtr
+) const
+{
+    return checkFaceFlatness
+    (
+        points(),
+        faceCentres(),
+        faceAreas(),
+        report,
+        warnFlatness,
+        setPtr
+    );
 }
 
 
@@ -2083,116 +1896,15 @@ bool CML::primitiveMesh::checkConcaveCells
     labelHashSet* setPtr
 ) const
 {
-    if (debug)
-    {
-        Info<< "bool primitiveMesh::checkConcaveCells(const bool"
-            << ", labelHashSet*) const: "
-            << "checking for concave cells" << endl;
-    }
-
-    const cellList& c = cells();
-    const labelList& fOwner = faceOwner();
-    const vectorField& fAreas = faceAreas();
-    const pointField& fCentres = faceCentres();
-
-    label nConcaveCells = 0;
-
-    forAll(c, cellI)
-    {
-        const cell& cFaces = c[cellI];
-
-        bool concave = false;
-
-        forAll(cFaces, i)
-        {
-            if (concave)
-            {
-                break;
-            }
-
-            label fI = cFaces[i];
-
-            const point& fC = fCentres[fI];
-
-            vector fN = fAreas[fI];
-
-            fN /= max(mag(fN), VSMALL);
-
-            // Flip normal if required so that it is always pointing out of
-            // the cell
-            if (fOwner[fI] != cellI)
-            {
-                fN *= -1;
-            }
-
-            // Is the centre of any other face of the cell on the
-            // wrong side of the plane of this face?
-
-            forAll(cFaces, j)
-            {
-                if (j != i)
-                {
-                    label fJ = cFaces[j];
-
-                    const point& pt = fCentres[fJ];
-
-                    // If the cell is concave, the point will be on the
-                    // positive normal side of the plane of f, defined by
-                    // its centre and normal, and the angle between (pt -
-                    // fC) and fN will be less than 90 degrees, so the dot
-                    // product will be positive.
-
-                    vector pC = (pt - fC);
-
-                    pC /= max(mag(pC), VSMALL);
-
-                    if ((pC & fN) > -planarCosAngle_)
-                    {
-                        // Concave or planar face
-
-                        concave = true;
-
-                        if (setPtr)
-                        {
-                            setPtr->insert(cellI);
-                        }
-
-                        nConcaveCells++;
-
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    reduce(nConcaveCells, sumOp<label>());
-
-    if (nConcaveCells > 0)
-    {
-        if (debug || report)
-        {
-            Info<< " ***Concave cells (using face planes) found,"
-                << " number of cells: " << nConcaveCells << endl;
-        }
-
-        return true;
-    }
-    else
-    {
-        if (debug || report)
-        {
-            Info<< "    Concave cell check OK." << endl;
-        }
-
-        return false;
-    }
-
-    return false;
+    return checkConcaveCells
+    (
+        faceAreas(),
+        faceCentres(),
+        report,
+        setPtr
+    );
 }
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 bool CML::primitiveMesh::checkTopology(const bool report) const
 {
@@ -2203,7 +1915,6 @@ bool CML::primitiveMesh::checkTopology(const bool report) const
     if (checkCellsZipUp(report)) noFailedChecks++;
     if (checkFaceVertices(report)) noFailedChecks++;
     if (checkFaceFaces(report)) noFailedChecks++;
-    //if (checkCellDeterminant(report)) noFailedChecks++;
 
     if (noFailedChecks == 0)
     {
@@ -2265,7 +1976,7 @@ bool CML::primitiveMesh::checkMesh(const bool report) const
     if (debug)
     {
         Info<< "bool primitiveMesh::checkMesh(const bool report) const: "
-            << "checking primitiveMesh" << endl;
+            << "Checking primitiveMesh" << endl;
     }
 
     label noFailedChecks = checkTopology(report) + checkGeometry(report);

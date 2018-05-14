@@ -470,7 +470,7 @@ public:
 };
 
 
-// This function is added as a hack to enable simple backward compatability
+// This function is added as a hack to enable simple backward compatibility
 // with verions using referenceLevel in GeometicField
 template<class Type>
 const pointPatchField<Type>& operator+
@@ -931,7 +931,7 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
         }
     }
 
-    // Construct (but not necesarily returned)
+    // Construct (but not necessarily returned)
     autoPtr<pointPatchField<Type> > pfPtr(cstrIter()(p, iF, dict));
 
     if

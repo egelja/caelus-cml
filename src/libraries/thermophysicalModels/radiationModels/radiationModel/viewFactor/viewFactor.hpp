@@ -48,6 +48,7 @@ SourceFiles
 #include "scalarListIOList.hpp"
 #include "mapDistribute.hpp"
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
@@ -74,7 +75,7 @@ class viewFactor
         singleCellFvMesh coarseMesh_;
 
         //- Net radiative heat flux [W/m2]
-        volScalarField Qr_;
+        volScalarField qr_;
 
         //- View factor matrix
         autoPtr<scalarSquareMatrix> Fmatrix_;
@@ -103,11 +104,14 @@ class viewFactor
 
     // Private Member Functions
 
+        //- Initialise
+        void initialise();
+
         //- Insert view factors into main matrix
         void insertMatrixElements
         (
             const globalIndex& index,
-            const label fromProcI,
+            const label fromProci,
             const labelListList& globalFaceFaces,
             const scalarListList& viewFactors,
             scalarSquareMatrix& matrix
@@ -130,6 +134,9 @@ public:
 
         //- Construct from components
         viewFactor(const volScalarField& T);
+
+        //- Construct from components
+        viewFactor(const dictionary& dict, const volScalarField& T);
 
 
     //- Destructor
@@ -156,7 +163,7 @@ public:
     // Access
 
         //- Const access to total radiative heat flux field
-        inline const volScalarField& Qr() const;
+        inline const volScalarField& qr() const;
 };
 
 

@@ -1,3 +1,4 @@
+#include "PatchTools.hpp"
 #include "checkGeometry.hpp"
 #include "polyMesh.hpp"
 #include "cellSet.hpp"
@@ -7,7 +8,15 @@
 #include "wedgePolyPatch.hpp"
 #include "unitConversion.hpp"
 #include "polyMeshTetDecomposition.hpp"
+#include "surfaceWriter.hpp"
+#include "checkTools.hpp"
 
+#include "vtkSurfaceWriter.hpp"
+#include "writer.hpp"
+
+#include "checkTools.hpp"
+#include "cyclicAMIPolyPatch.hpp"
+#include "Time.hpp"
 
 // Find wedge with opposite orientation. Note: does not actually check that
 // it is opposite, only that it has opposite normal and same axis
@@ -19,33 +28,31 @@ CML::label CML::findOppositeWedge
 {
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    scalar wppCosAngle = wpp.centreNormal()&wpp.patchNormal();
+    scalar wppCosAngle = wpp.cosAngle();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
         if
         (
-            patchI != wpp.index()
-         && patches[patchI].size()
-         && isA<wedgePolyPatch>(patches[patchI])
+            patchi != wpp.index()
+         && patches[patchi].size()
+         && isA<wedgePolyPatch>(patches[patchi])
         )
         {
-            const wedgePolyPatch& pp = refCast<const wedgePolyPatch>
-            (
-                patches[patchI]
-            );
+            const wedgePolyPatch& pp =
+                refCast<const wedgePolyPatch>(patches[patchi]);
 
             // Calculate (cos of) angle to wpp (not pp!) centre normal
-            scalar ppCosAngle = wpp.centreNormal()&pp.patchNormal();
+            scalar ppCosAngle = wpp.centreNormal() & pp.patchNormal();
 
             if
             (
                 pp.size() == wpp.size()
-             && mag(pp.axis() & wpp.axis()) >= (1-1E-3)
-             && mag(ppCosAngle - wppCosAngle) >= 1E-3
+             && mag(pp.axis() & wpp.axis()) >= (1-1e-3)
+             && mag(ppCosAngle - wppCosAngle) >= 1e-3
             )
             {
-                return patchI;
+                return patchi;
             }
         }
     }
@@ -69,16 +76,14 @@ bool CML::checkWedges
 
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (patches[patchI].size() && isA<wedgePolyPatch>(patches[patchI]))
+        if (patches[patchi].size() && isA<wedgePolyPatch>(patches[patchi]))
         {
-            const wedgePolyPatch& pp = refCast<const wedgePolyPatch>
-            (
-                patches[patchI]
-            );
+            const wedgePolyPatch& pp =
+                refCast<const wedgePolyPatch>(patches[patchi]);
 
-            scalar wedgeAngle = acos(pp.centreNormal()&pp.patchNormal());
+            scalar wedgeAngle = acos(pp.cosAngle());
 
             if (report)
             {
@@ -88,9 +93,9 @@ bool CML::checkWedges
             }
 
             // Find opposite
-            label oppositePatchI = findOppositeWedge(mesh, pp);
+            label oppositePatchi = findOppositeWedge(mesh, pp);
 
-            if (oppositePatchI == -1)
+            if (oppositePatchi == -1)
             {
                 if (report)
                 {
@@ -100,13 +105,11 @@ bool CML::checkWedges
                 return true;
             }
 
-            const wedgePolyPatch& opp = refCast<const wedgePolyPatch>
-            (
-                patches[oppositePatchI]
-            );
+            const wedgePolyPatch& opp =
+                refCast<const wedgePolyPatch>(patches[oppositePatchi]);
 
 
-            if (mag(opp.axis() & pp.axis()) < (1-1E-3))
+            if (mag(opp.axis() & pp.axis()) < (1-1e-3))
             {
                 if (report)
                 {
@@ -140,15 +143,15 @@ bool CML::checkWedges
             forAll(pp.meshPoints(), i)
             {
                 const point& pt = p[pp.meshPoints()[i]];
-                scalar d = mag((pt-p0) & pp.patchNormal());
+                scalar d = mag((pt - p0) & pp.patchNormal());
 
-                if (d > sqrt(SMALL))
+                if (d > ROOTSMALL)
                 {
                     if (report)
                     {
                         Info<< " ***Wedge patch " << pp.name() << " not planar."
                             << " Point " << pt << " is not in patch plane by "
-                            << d << " meter."
+                            << d << " metre."
                             << endl;
                     }
                     return true;
@@ -162,9 +165,9 @@ bool CML::checkWedges
     // Check all non-wedge faces
     label nEdgesInError = 0;
 
-    forAll(fcs, faceI)
+    forAll(fcs, facei)
     {
-        const face& f = fcs[faceI];
+        const face& f = fcs[facei];
 
         forAll(f, fp)
         {
@@ -206,7 +209,7 @@ bool CML::checkWedges
                         // Ok if purely in empty directions.
                         if (nNonEmptyDirs > 0)
                         {
-                            if (edgesInError.insert(edge(p0, p1), faceI))
+                            if (edgesInError.insert(edge(p0, p1), facei))
                             {
                                 nEdgesInError++;
                             }
@@ -215,7 +218,7 @@ bool CML::checkWedges
                     else if (nEmptyDirs > 1)
                     {
                         // Always an error
-                        if (edgesInError.insert(edge(p0, p1), faceI))
+                        if (edgesInError.insert(edge(p0, p1), facei))
                         {
                             nEdgesInError++;
                         }
@@ -262,6 +265,74 @@ bool CML::checkWedges
 }
 
 
+namespace CML
+{
+    //- Default transformation behaviour for position
+    class transformPositionList
+    {
+    public:
+
+        //- Transform patch-based field
+        void operator()
+        (
+            const coupledPolyPatch& cpp,
+            List<pointField>& pts
+        ) const
+        {
+            // Each element of pts is all the points in the face. Convert into
+            // lists of size cpp to transform.
+
+            List<pointField> newPts(pts.size());
+            forAll(pts, facei)
+            {
+                newPts[facei].setSize(pts[facei].size());
+            }
+
+            label index = 0;
+            while (true)
+            {
+                label n = 0;
+
+                // Extract for every face the i'th position
+                pointField ptsAtIndex(pts.size(), Zero);
+                forAll(cpp, facei)
+                {
+                    const pointField& facePts = pts[facei];
+                    if (facePts.size() > index)
+                    {
+                        ptsAtIndex[facei] = facePts[index];
+                        n++;
+                    }
+                }
+
+                if (n == 0)
+                {
+                    break;
+                }
+
+                // Now ptsAtIndex will have for every face either zero or
+                // the position of the i'th vertex. Transform.
+                cpp.transformPosition(ptsAtIndex);
+
+                // Extract back from ptsAtIndex into newPts
+                forAll(cpp, facei)
+                {
+                    pointField& facePts = newPts[facei];
+                    if (facePts.size() > index)
+                    {
+                        facePts[index] = ptsAtIndex[facei];
+                    }
+                }
+
+                index++;
+            }
+
+            pts.transfer(newPts);
+        }
+    };
+}
+
+
 bool CML::checkCoupledPoints
 (
     const polyMesh& mesh,
@@ -274,41 +345,51 @@ bool CML::checkCoupledPoints
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
     // Zero'th point on coupled faces
-    pointField nbrZeroPoint(fcs.size()-mesh.nInternalFaces(), vector::max);
+    //pointField nbrZeroPoint(fcs.size()-mesh.nInternalFaces(), vector::max);
+    List<pointField> nbrPoints(fcs.size() - mesh.nInternalFaces());
 
     // Exchange zero point
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (patches[patchI].coupled())
+        if (patches[patchi].coupled())
         {
             const coupledPolyPatch& cpp = refCast<const coupledPolyPatch>
             (
-                patches[patchI]
+                patches[patchi]
             );
 
             forAll(cpp, i)
             {
-                label bFaceI = cpp.start()+i-mesh.nInternalFaces();
-                const point& p0 = p[cpp[i][0]];
-                nbrZeroPoint[bFaceI] = p0;
+                label bFacei = cpp.start() + i - mesh.nInternalFaces();
+                const face& f = cpp[i];
+                nbrPoints[bFacei].setSize(f.size());
+                forAll(f, fp)
+                {
+                    const point& p0 = p[f[fp]];
+                    nbrPoints[bFacei][fp] = p0;
+                }
             }
         }
     }
-    syncTools::swapBoundaryFacePositions(mesh, nbrZeroPoint);
+    syncTools::syncBoundaryFaceList
+    (
+        mesh,
+        nbrPoints,
+        eqOp<pointField>(),
+        transformPositionList()
+    );
 
     // Compare to local ones. Use same tolerance as for matching
     label nErrorFaces = 0;
     scalar avgMismatch = 0;
-    label nCoupledFaces = 0;
+    label nCoupledPoints = 0;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (patches[patchI].coupled())
+        if (patches[patchi].coupled())
         {
-            const coupledPolyPatch& cpp = refCast<const coupledPolyPatch>
-            (
-                patches[patchI]
-            );
+            const coupledPolyPatch& cpp =
+                refCast<const coupledPolyPatch>(patches[patchi]);
 
             if (cpp.owner())
             {
@@ -325,21 +406,42 @@ bool CML::checkCoupledPoints
 
                 forAll(cpp, i)
                 {
-                    label bFaceI = cpp.start()+i-mesh.nInternalFaces();
-                    const point& p0 = p[cpp[i][0]];
+                    label bFacei = cpp.start() + i - mesh.nInternalFaces();
+                    const face& f = cpp[i];
 
-                    scalar d = mag(p0 - nbrZeroPoint[bFaceI]);
-
-                    if (d > smallDist[i])
+                    if (f.size() != nbrPoints[bFacei].size())
                     {
-                        if (setPtr)
-                        {
-                            setPtr->insert(cpp.start()+i);
-                        }
-                        nErrorFaces++;
+                        FatalErrorIn
+                        (
+                            "bool CML::checkCoupledPoints(...)"
+                        )   << "Local face size : " << f.size()
+                            << " does not equal neighbour face size : "
+                            << nbrPoints[bFacei].size()
+                            << abort(FatalError);
                     }
-                    avgMismatch += d;
-                    nCoupledFaces++;
+
+                    label fp = 0;
+                    forAll(f, j)
+                    {
+                        const point& p0 = p[f[fp]];
+                        scalar d = mag(p0 - nbrPoints[bFacei][j]);
+
+                        if (d > smallDist[i])
+                        {
+                            if (setPtr)
+                            {
+                                setPtr->insert(cpp.start()+i);
+                            }
+                            nErrorFaces++;
+
+                            break;
+                        }
+
+                        avgMismatch += d;
+                        nCoupledPoints++;
+
+                        fp = f.rcIndex(fp);
+                    }
                 }
             }
         }
@@ -347,11 +449,11 @@ bool CML::checkCoupledPoints
 
     reduce(nErrorFaces, sumOp<label>());
     reduce(avgMismatch, maxOp<scalar>());
-    reduce(nCoupledFaces, sumOp<label>());
+    reduce(nCoupledPoints, sumOp<label>());
 
-    if (nCoupledFaces > 0)
+    if (nCoupledPoints > 0)
     {
-        avgMismatch /= nCoupledFaces;
+        avgMismatch /= nCoupledPoints;
     }
 
     if (nErrorFaces > 0)
@@ -360,7 +462,7 @@ bool CML::checkCoupledPoints
         {
             Info<< "  **Error in coupled point location: "
                 << nErrorFaces
-                << " faces have their 0th vertex not opposite"
+                << " faces have their 0th or consecutive vertex not opposite"
                 << " their coupled equivalent. Average mismatch "
                 << avgMismatch << "."
                 << endl;
@@ -381,7 +483,13 @@ bool CML::checkCoupledPoints
 }
 
 
-CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
+CML::label CML::checkGeometry
+(
+    const polyMesh& mesh,
+    const bool allGeometry,
+    const autoPtr<surfaceWriter>& surfWriter,
+    const autoPtr<writer<scalar> >& setWriter
+)
 {
     label noFailedChecks = 0;
 
@@ -397,12 +505,15 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
     // Min length
     scalar minDistSqr = magSqr(1e-6 * globalBb.span());
 
-    // Non-empty directions
+    // Geometric directions
     const Vector<label> validDirs = (mesh.geometricD() + Vector<label>::one)/2;
-    Info<< "    Mesh (non-empty, non-wedge) directions " << validDirs << endl;
+    Info<< "    Mesh has " << mesh.nGeometricD()
+        << " geometric (non-empty/wedge) directions " << validDirs << endl;
 
+    // Solution directions
     const Vector<label> solDirs = (mesh.solutionD() + Vector<label>::one)/2;
-    Info<< "    Mesh (non-empty) directions " << solDirs << endl;
+    Info<< "    Mesh has " << mesh.nSolutionD()
+        << " solution (non-empty) directions " << solDirs << endl;
 
     if (mesh.nGeometricD() < 3)
     {
@@ -434,6 +545,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << nonAlignedPoints.name() << endl;
                 nonAlignedPoints.instance() = mesh.pointsInstance();
                 nonAlignedPoints.write();
+                if (setWriter.valid())
+                {
+                    mergeAndWrite(setWriter, nonAlignedPoints);
+                }
             }
         }
     }
@@ -464,6 +579,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " non closed cells to set " << cells.name() << endl;
                 cells.instance() = mesh.pointsInstance();
                 cells.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), cells);
+                }
             }
         }
 
@@ -476,6 +595,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                 << aspectCells.name() << endl;
             aspectCells.instance() = mesh.pointsInstance();
             aspectCells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), aspectCells);
+            }
         }
     }
 
@@ -493,6 +616,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " zero area faces to set " << faces.name() << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), faces);
+                }
             }
         }
     }
@@ -511,6 +638,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " zero volume cells to set " << cells.name() << endl;
                 cells.instance() = mesh.pointsInstance();
                 cells.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), cells);
+                }
             }
         }
     }
@@ -530,6 +661,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                 << " non-orthogonal faces to set " << faces.name() << endl;
             faces.instance() = mesh.pointsInstance();
             faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
         }
     }
 
@@ -548,6 +683,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << faces.name() << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), faces);
+                }
             }
         }
     }
@@ -566,6 +705,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " skew faces to set " << faces.name() << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), faces);
+                }
             }
         }
     }
@@ -581,7 +724,8 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
             if (nFaces > 0)
             {
                 Info<< "  <<Writing " << nFaces
-                    << " faces with incorrectly matched 0th vertex to set "
+                    << " faces with incorrectly matched 0th (or consecutive)"
+                    << " vertex to set "
                     << faces.name() << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
@@ -635,6 +779,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << endl;
                 points.instance() = mesh.pointsInstance();
                 points.write();
+                if (setWriter.valid())
+                {
+                    mergeAndWrite(setWriter, points);
+                }
             }
         }
 
@@ -654,6 +802,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " apart) points to set " << nearPoints.name() << endl;
                 nearPoints.instance() = mesh.pointsInstance();
                 nearPoints.write();
+                if (setWriter.valid())
+                {
+                    mergeAndWrite(setWriter, nearPoints);
+                }
             }
         }
     }
@@ -674,6 +826,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), faces);
+                }
             }
         }
     }
@@ -693,6 +849,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                     << " warped faces to set " << faces.name() << endl;
                 faces.instance() = mesh.pointsInstance();
                 faces.write();
+                if (surfWriter.valid())
+                {
+                    mergeAndWrite(surfWriter(), faces);
+                }
             }
         }
     }
@@ -700,7 +860,7 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
     if (allGeometry)
     {
         cellSet cells(mesh, "underdeterminedCells", mesh.nCells()/100);
-        if (mesh.checkCellDeterminant(true, &cells, mesh.geometricD()))
+        if (mesh.checkCellDeterminant(true, &cells))
         {
             noFailedChecks++;
 
@@ -710,6 +870,10 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                 << " under-determined cells to set " << cells.name() << endl;
             cells.instance() = mesh.pointsInstance();
             cells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), cells);
+            }
         }
     }
 
@@ -726,6 +890,184 @@ CML::label CML::checkGeometry(const polyMesh& mesh, const bool allGeometry)
                 << " concave cells to set " << cells.name() << endl;
             cells.instance() = mesh.pointsInstance();
             cells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), cells);
+            }
+        }
+    }
+
+    if (allGeometry)
+    {
+        faceSet faces(mesh, "lowWeightFaces", mesh.nFaces()/100);
+        if (mesh.checkFaceWeight(true, 0.05, &faces))
+        {
+            noFailedChecks++;
+
+            label nFaces = returnReduce(faces.size(), sumOp<label>());
+
+            Info<< "  <<Writing " << nFaces
+                << " faces with low interpolation weights to set "
+                << faces.name() << endl;
+            faces.instance() = mesh.pointsInstance();
+            faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
+        }
+    }
+
+    if (allGeometry)
+    {
+        faceSet faces(mesh, "lowVolRatioFaces", mesh.nFaces()/100);
+        if (mesh.checkVolRatio(true, 0.01, &faces))
+        {
+            noFailedChecks++;
+
+            label nFaces = returnReduce(faces.size(), sumOp<label>());
+
+            Info<< "  <<Writing " << nFaces
+                << " faces with low volume ratio cells to set "
+                << faces.name() << endl;
+            faces.instance() = mesh.pointsInstance();
+            faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
+        }
+    }
+
+    if (allGeometry)
+    {
+        const polyBoundaryMesh& pbm = mesh.boundaryMesh();
+
+        const word tmName(mesh.time().timeName());
+        const word procAndTime(CML::name(Pstream::myProcNo()) + "_" + tmName);
+
+        autoPtr<surfaceWriter> patchWriter;
+        if (!surfWriter.valid())
+        {
+            patchWriter.reset(new vtkSurfaceWriter());
+        }
+        const surfaceWriter& wr =
+        (
+            surfWriter.valid()
+          ? surfWriter()
+          : patchWriter()
+        );
+
+        forAll(pbm, patchi)
+        {
+            if (isA<cyclicAMIPolyPatch>(pbm[patchi]))
+            {
+                const cyclicAMIPolyPatch& cpp =
+                    refCast<const cyclicAMIPolyPatch>(pbm[patchi]);
+
+                if (cpp.owner())
+                {
+                    Info<< "Calculating AMI weights between owner patch: "
+                        << cpp.name() << " and neighbour patch: "
+                        << cpp.neighbPatch().name() << endl;
+
+                    const AMIPatchToPatchInterpolation& ami =
+                        cpp.AMI();
+
+                    {
+                        // Collect geometry
+                        labelList pointToGlobal;
+                        labelList uniqueMeshPointLabels;
+                        autoPtr<globalIndex> globalPoints;
+                        autoPtr<globalIndex> globalFaces;
+                        faceList mergedFaces;
+                        pointField mergedPoints;
+                        CML::PatchTools::gatherAndMerge
+                        (
+                            mesh,
+                            cpp.localFaces(),
+                            cpp.meshPoints(),
+                            cpp.meshPointMap(),
+
+                            pointToGlobal,
+                            uniqueMeshPointLabels,
+                            globalPoints,
+                            globalFaces,
+
+                            mergedFaces,
+                            mergedPoints
+                        );
+                        // Collect field
+                        scalarField mergedWeights;
+                        globalFaces().gather
+                        (
+                            labelList(UPstream::procIDs()),
+                            ami.srcWeightsSum(),
+                            mergedWeights
+                        );
+
+                        if (Pstream::master())
+                        {
+                            wr.write
+                            (
+                                "postProcessing",
+                                "src_" + tmName,
+                                mergedPoints,
+                                mergedFaces,
+                                "weightsSum",
+                                mergedWeights,
+                                false
+                            );
+                        }
+                    }
+                    {
+                        // Collect geometry
+                        labelList pointToGlobal;
+                        labelList uniqueMeshPointLabels;
+                        autoPtr<globalIndex> globalPoints;
+                        autoPtr<globalIndex> globalFaces;
+                        faceList mergedFaces;
+                        pointField mergedPoints;
+                        CML::PatchTools::gatherAndMerge
+                        (
+                            mesh,
+                            cpp.neighbPatch().localFaces(),
+                            cpp.neighbPatch().meshPoints(),
+                            cpp.neighbPatch().meshPointMap(),
+
+                            pointToGlobal,
+                            uniqueMeshPointLabels,
+                            globalPoints,
+                            globalFaces,
+
+                            mergedFaces,
+                            mergedPoints
+                        );
+                        // Collect field
+                        scalarField mergedWeights;
+                        globalFaces().gather
+                        (
+                            labelList(UPstream::procIDs()),
+                            ami.tgtWeightsSum(),
+                            mergedWeights
+                        );
+
+                        if (Pstream::master())
+                        {
+                            wr.write
+                            (
+                                "postProcessing",
+                                "tgt_" + tmName,
+                                mergedPoints,
+                                mergedFaces,
+                                "weightsSum",
+                                mergedWeights,
+                                false
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -123,7 +123,10 @@ public:
             (
                 const labelUList& internalData
             ) const = 0;
-
+    
+            //- Inherit initInternalFieldTransfer from lduInterface
+            using lduInterface::initInternalFieldTransfer;
+    
             //- Initialise neighbour field transfer
             virtual void initInternalFieldTransfer
             (

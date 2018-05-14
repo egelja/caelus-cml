@@ -21,7 +21,7 @@ Class
     CML::SprayParcel
 
 Description
-    Reacing spray parcel, with added functionality for atomization and breakup
+    Reacting spray parcel, with added functionality for atomization and breakup
 
 \*---------------------------------------------------------------------------*/
 
@@ -792,7 +792,7 @@ void CML::SprayParcel<ParcelType>::calcAtomization
     const vector& pos = this->position();
     const vector& injectionPos = this->position0();
 
-    // Disregard the continous phase when calculating the relative velocity
+    // Disregard the continuous phase when calculating the relative velocity
     // (in line with the deactivated coupled assumption)
     scalar Urel = mag(this->U());
 

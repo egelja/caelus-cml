@@ -40,6 +40,32 @@ CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
 
 CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
 (
+    const fvPatch& p,
+    const DimensionedField<scalar, volMesh>& iF,
+    const dictionary& dict
+)
+:
+    fixedGradientFvPatchScalarField(p, iF),
+    curTimeIndex_(-1)
+{
+    if (dict.found("value") && dict.found("gradient"))
+    {
+        fvPatchField<scalar>::operator=
+        (
+            scalarField("value", dict, p.size())
+        );
+        gradient() = scalarField("gradient", dict, p.size());
+    }
+    else
+    {
+        fvPatchField<scalar>::operator=(patchInternalField());
+        gradient() = 0.0;
+    }
+}
+
+
+CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
+(
     const fixedFluxPressureFvPatchScalarField& ptf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -66,31 +92,11 @@ CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
             patchInternalField() + gradient()*(patch().nf() & patch().delta())
         );
     }
-}
-
-
-CML::fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
-(
-    const fvPatch& p,
-    const DimensionedField<scalar, volMesh>& iF,
-    const dictionary& dict
-)
-:
-    fixedGradientFvPatchScalarField(p, iF),
-    curTimeIndex_(-1)
-{
-    if (dict.found("value") && dict.found("gradient"))
-    {
-        fvPatchField<scalar>::operator=
-        (
-            scalarField("value", dict, p.size())
-        );
-        gradient() = scalarField("gradient", dict, p.size());
-    }
     else
     {
-        fvPatchField<scalar>::operator=(patchInternalField());
-        gradient() = 0.0;
+        // Enforce mapping of values so we have a valid starting value. This
+        // constructor is used when reconstructing fields
+        this->map(ptf, mapper);
     }
 }
 
@@ -169,5 +175,6 @@ namespace CML
         fixedFluxPressureFvPatchScalarField
     );
 }
+
 
 // ************************************************************************* //

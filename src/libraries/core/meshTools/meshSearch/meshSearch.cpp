@@ -188,7 +188,7 @@ CML::label CML::meshSearch::findNearestFaceTree(const point& location) const
 
     if (!info.hit())
     {
-        // Search with desparate span
+        // Search with disparate span
         info = tree.findNearest(location, CML::sqr(GREAT));
     }
 

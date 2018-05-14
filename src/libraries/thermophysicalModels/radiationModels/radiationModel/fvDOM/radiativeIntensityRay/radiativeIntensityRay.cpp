@@ -28,7 +28,10 @@ using namespace CML::constant;
 
 
 const CML::word
-CML::radiation::radiativeIntensityRay::intensityPrefix("ILambda");
+CML::radiation::radiativeIntensityRay::intensityPrefix
+(
+    "ILambda"
+);
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -64,44 +67,44 @@ CML::radiation::radiativeIntensityRay::radiativeIntensityRay
         mesh_,
         dimensionedScalar("I", dimMass/pow3(dimTime), 0.0)
     ),
-    Qr_
+    qr_
     (
         IOobject
         (
-            "Qr" + name(rayId),
+            "qr" + name(rayId),
             mesh_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("Qr", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
     ),
-    Qin_
+    qin_
     (
         IOobject
         (
-            "Qin" + name(rayId),
+            "qin" + name(rayId),
             mesh_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("Qin", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar("qin", dimMass/pow3(dimTime), 0.0)
     ),
-    Qem_
+    qem_
     (
         IOobject
         (
-            "Qem" + name(rayId),
+            "qem" + name(rayId),
             mesh_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("Qem", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar("qem", dimMass/pow3(dimTime), 0.0)
     ),
     d_(vector::zero),
     dAve_(vector::zero),
@@ -109,7 +112,8 @@ CML::radiation::radiativeIntensityRay::radiativeIntensityRay
     phi_(phi),
     omega_(0.0),
     nLambda_(nLambda),
-    ILambda_(nLambda)
+    ILambda_(nLambda),
+    myRayId_(rayId)
 {
     scalar sinTheta = CML::sin(theta);
     scalar cosTheta = CML::cos(theta);
@@ -131,6 +135,41 @@ CML::radiation::radiativeIntensityRay::radiativeIntensityRay
         0.5*deltaPhi*CML::sin(2.0*theta)*CML::sin(deltaTheta)
     );
 
+    // Transform directions so that they fall inside the bounds of reduced
+    // dimension cases
+    if (mesh_.nSolutionD() == 2)
+    {
+        vector meshDir(vector::zero);
+        for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
+        {
+            if (mesh_.geometricD()[cmpt] == -1)
+            {
+                meshDir[cmpt] = 1;
+            }
+        }
+        const vector normal(vector(0, 0, 1));
+
+        const tensor coordRot = rotationTensor(normal, meshDir);
+
+        dAve_ = coordRot & dAve_;
+        d_ = coordRot & d_;
+    }
+    else if (mesh_.nSolutionD() == 1)
+    {
+        vector meshDir(vector::zero);
+        for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
+        {
+            if (mesh_.geometricD()[cmpt] == 1)
+            {
+                meshDir[cmpt] = 1;
+            }
+        }
+        const vector normal(vector(1, 0, 0));
+
+        dAve_ = (dAve_ & normal)*meshDir;
+        d_ = (d_ & normal)*meshDir;
+    }
+
 
     autoPtr<volScalarField> IDefaultPtr;
 
@@ -145,7 +184,7 @@ CML::radiation::radiativeIntensityRay::radiativeIntensityRay
             IOobject::AUTO_WRITE
         );
 
-        // check if field exists and can be read
+        // Check if field exists and can be read
         if (IHeader.headerOk())
         {
             ILambda_.set
@@ -200,26 +239,29 @@ CML::radiation::radiativeIntensityRay::~radiativeIntensityRay()
 
 CML::scalar CML::radiation::radiativeIntensityRay::correct()
 {
-    // reset boundary heat flux to zero
-    Qr_.boundaryField() = 0.0;
+    // Reset boundary heat flux to zero
+    qr_.boundaryField() = 0.0;
 
     scalar maxResidual = -GREAT;
+
+    const surfaceScalarField Ji(dAve_ & mesh_.Sf());
 
     forAll(ILambda_, lambdaI)
     {
         const volScalarField& k = dom_.aLambda(lambdaI);
 
-        const surfaceScalarField Ji(dAve_ & mesh_.Sf());
-
         fvScalarMatrix IiEq
         (
             fvm::div(Ji, ILambda_[lambdaI], "div(Ji,Ii_h)")
           + fvm::Sp(k*omega_, ILambda_[lambdaI])
-         ==
+        ==
             1.0/constant::mathematical::pi*omega_
            *(
-                k*blackBody_.bLambda(lambdaI)
-              + absorptionEmission_.ECont(lambdaI)/4
+                // Remove aDisp from k
+                (k - absorptionEmission_.aDisp(lambdaI))
+               *blackBody_.bLambda(lambdaI)
+
+              + absorptionEmission_.E(lambdaI)/4
             )
         );
 
@@ -231,7 +273,9 @@ CML::scalar CML::radiation::radiativeIntensityRay::correct()
             mesh_.solver("Ii")
         ).initialResidual();
 
-        maxResidual = max(eqnResidual, maxResidual);
+        const scalar initialRes = eqnResidual*omega_/dom_.omegaMax();
+
+        maxResidual = max(initialRes, maxResidual);
     }
 
     return maxResidual;

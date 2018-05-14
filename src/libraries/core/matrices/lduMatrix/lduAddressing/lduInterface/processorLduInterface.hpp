@@ -83,7 +83,7 @@ public:
             //- Return processor number
             virtual int myProcNo() const = 0;
 
-            //- Return neigbour processor number
+            //- Return neighbour processor number
             virtual int neighbProcNo() const = 0;
 
             //- Return face transformation tensor

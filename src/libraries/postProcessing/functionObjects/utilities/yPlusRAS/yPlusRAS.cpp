@@ -23,9 +23,9 @@ License
 #include "volFields.hpp"
 
 #include "incompressible/RAS/RASModel/RASModel.hpp"
-#include "nutWallFunction/nutWallFunctionFvPatchScalarField.hpp"
+#include "nutWF/nutWFFvPatchScalarField.hpp"
 #include "compressible/RAS/RASModel/RASModel.hpp"
-#include "mutkWallFunction/mutkWallFunctionFvPatchScalarField.hpp"
+#include "mutkWF/mutkWFFvPatchScalarField.hpp"
 #include "wallDist.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //

@@ -1,0 +1,32 @@
+/*------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+	version				2.0;
+	format				ascii;
+	class				dictionary;
+	location			"constant";
+	object				transportProperties;
+}
+
+//--------------------------------------------------------------------------------
+
+transportModel				Newtonian;
+
+// Laminar viscosity
+nu					nu [0 2 -1 0 0 0 0] 3.4e-4;
+
+// Thermal expansion coefficient
+beta					beta [0 0 0 -1 0 0 0] 3.5677e-5;
+
+// Reference temperature
+TRef         				TRef [0 0 0 1 0 0 0] 0;
+
+// Laminar Prandtl number
+Pr          				Pr [0 0 0 0 0 0 0] 0.7;
+
+// Turbulent Prandtl number
+Prt           				Prt [0 0 0 0 0 0 0] 0.7;

@@ -83,11 +83,14 @@ public:
             const scalar dt,
             const label cellI,
             const scalar Re,
+            const scalar Pr,
             const scalar d,
             const scalar nu,
             const scalar T,
             const scalar Ts,
             const scalar pc,
+            const scalar Tc,
+            const scalarField& Yl,
             scalarField& dMassPC
         ) const;
 };
@@ -147,6 +150,9 @@ void CML::NoPhaseChange<CloudType>::calculate
     const scalar,
     const scalar,
     const scalar,
+    const scalar,
+    const scalar,
+    const scalarField&,
     scalarField&
 ) const
 {

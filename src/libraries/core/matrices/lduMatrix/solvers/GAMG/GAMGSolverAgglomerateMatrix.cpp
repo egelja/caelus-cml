@@ -122,7 +122,7 @@ void CML::GAMGSolver::agglomerateMatrix(const label fineLevelIndex)
     }
 
 
-    // Check if matrix is assymetric and if so agglomerate both upper and lower
+    // Check if matrix is asymmetric and if so agglomerate both upper and lower
     // coefficients ...
     if (fineMatrix.hasLower())
     {

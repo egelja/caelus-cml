@@ -24,8 +24,8 @@ Description
     Common functions to emissivity. It gets supplied from lookup into a
     dictionary or calculated by the solidThermo:
 
-    - 'lookup' : lookup volScalarField with name
-    - 'solidThermo' : use basicSolidThermo emissivity()
+    - 'lookup' : Read the patch emissivity field from the dictionary
+    - 'solidThermo' : Use the emissivity field mapped from the adjacent solid
 
 SourceFiles
     radiationCoupledBase.cpp
@@ -38,6 +38,7 @@ SourceFiles
 #include "scalarField.hpp"
 #include "NamedEnum.hpp"
 #include "fvPatch.hpp"
+#include "fvPatchFieldMapper.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +52,14 @@ namespace CML
 class radiationCoupledBase
 {
 public:
-        //- Type of supplied emissivity
-        enum emissivityMethodType
-        {
-            SOLIDTHERMO,
-            LOOKUP
-        };
+
+    //- Type of supplied emissivity
+    enum emissivityMethodType
+    {
+        SOLIDTHERMO,
+        LOOKUP
+    };
+
 
 private:
 
@@ -68,6 +71,7 @@ private:
         //- Underlying patch
         const fvPatch& patch_;
 
+
 protected:
 
     // Protected data
@@ -75,12 +79,16 @@ protected:
         //- How to get emissivity
         const emissivityMethodType method_;
 
-         //- Emissivity
-         // Cached locally when is read from dictionary (lookup mode)
+        //- Emissivity
+        // Cached locally when is read from dictionary (lookup mode)
         scalarField emissivity_;
 
 
 public:
+
+     //- Runtime type information
+    TypeName("radiationCoupledBase");
+
 
     // Constructors
 
@@ -92,6 +100,15 @@ public:
             const scalarField& emissivity
         );
 
+        //- Construct from patch, emissivity mode and emissivity and mapper
+        radiationCoupledBase
+        (
+            const fvPatch& patch,
+            const word& calculationMethod,
+            const scalarField& emissivity,
+            const fvPatchFieldMapper& mapper
+        );
+
         //- Construct from patch and dictionary
         radiationCoupledBase
         (
@@ -100,17 +117,40 @@ public:
         );
 
 
+    //- Destructor
+        virtual ~radiationCoupledBase();
+
+
     // Member functions
 
-        //- Method to obtain emissivity
-        word emissivityMethod() const
-        {
-            return emissivityMethodTypeNames_[method_];
-        }
+        // Access
+
+            //- Method to obtain emissivity
+            word emissivityMethod() const
+            {
+                return emissivityMethodTypeNames_[method_];
+            }
 
 
-        //- Calculate corresponding emissivity field
-        scalarField emissivity() const;
+            //- Calculate corresponding emissivity field
+            scalarField emissivity() const;
+
+
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            virtual void autoMap
+            (
+                const fvPatchFieldMapper&
+            );
+
+            //- Reverse map the given fvPatchField onto this fvPatchField
+            virtual void rmap
+            (
+                const fvPatchScalarField&,
+                const labelList&
+            );
+
 
         //- Write
         void write(Ostream&) const;

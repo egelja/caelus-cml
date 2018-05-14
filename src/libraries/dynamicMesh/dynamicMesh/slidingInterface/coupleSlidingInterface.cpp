@@ -364,7 +364,7 @@ void CML::slidingInterface::coupleInterface(polyTopoChange& ref) const
     // slave edge.
     // For the edge selection algorithm, see, comment in
     // slidingInterfaceProjectPoints.cpp.
-    // Edge cutting algoritm:
+    // Edge cutting algorithm:
     // As the master patch defines the cutting surface, the newly
     // inserted point needs to be on the master edge.  Also, in 3-D
     // the pair of edges generally misses each other rather than

@@ -67,6 +67,9 @@ private:
             pointIndexHit& info
         ) const;
 
+        //- Inherit findNearest from searchableSurface
+        using searchableSurface::findNearest;
+    
         //- Returns miss or hit with face (0..5)
         pointIndexHit findNearest
         (

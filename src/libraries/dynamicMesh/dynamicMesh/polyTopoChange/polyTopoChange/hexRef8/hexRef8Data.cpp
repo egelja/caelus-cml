@@ -276,7 +276,7 @@ void CML::hexRef8Data::sync(const IOobject& io)
     if (hasLevel0Edge)
     {
         // Get master length
-        scalar masterLen = (Pstream::master() ? level0EdgePtr_().value() : 0);
+        scalar masterLen = level0EdgePtr_().value();
         Pstream::scatter(masterLen);
         if (!level0EdgePtr_.valid())
         {
@@ -301,6 +301,29 @@ void CML::hexRef8Data::sync(const IOobject& io)
         rio.rename("refinementHistory");
         rio.readOpt() = IOobject::NO_READ;
         refHistoryPtr_.reset(new refinementHistory(rio, mesh.nCells(), true));
+    }
+}
+
+
+void CML::hexRef8Data::updateMesh(const mapPolyMesh& map)
+{
+    if (cellLevelPtr_.valid())
+    {
+        cellLevelPtr_() = labelList(cellLevelPtr_(), map.cellMap());
+        cellLevelPtr_().instance() = map.mesh().facesInstance();
+    }
+    if (pointLevelPtr_.valid())
+    {
+        pointLevelPtr_() = labelList(pointLevelPtr_(), map.pointMap());
+        pointLevelPtr_().instance() = map.mesh().facesInstance();
+    }
+
+    // No need to distribute the level0Edge
+
+    if (refHistoryPtr_.valid() && refHistoryPtr_().active())
+    {
+        refHistoryPtr_().updateMesh(map);
+        refHistoryPtr_().instance() = map.mesh().facesInstance();
     }
 }
 

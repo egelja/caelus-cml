@@ -36,7 +36,7 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
 :
     fixedValueFvPatchScalarField(p, iF),
     radiationCoupledBase(patch(), "undefined", scalarField::null()),
-    Qro_(p.size(), 0.0)
+    qro_(p.size(), 0.0)
 {}
 
 
@@ -56,7 +56,7 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
         ptf.emissivityMethod(),
         ptf.emissivity_
     ),
-    Qro_(ptf.Qro_)
+    qro_(ptf.qro_)
 {}
 
 
@@ -70,7 +70,7 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
 :
     fixedValueFvPatchScalarField(p, iF),
     radiationCoupledBase(p, dict),
-    Qro_("Qro", dict, p.size())
+    qro_("qro", dict, p.size())
 {
     if (dict.found("value"))
     {
@@ -100,7 +100,7 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
         ptf.emissivityMethod(),
         ptf.emissivity_
     ),
-    Qro_(ptf.Qro_)
+    qro_(ptf.qro_)
 {}
 
 
@@ -118,7 +118,7 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
         ptf.emissivityMethod(),
         ptf.emissivity_
     ),
-    Qro_(ptf.Qro_)
+    qro_(ptf.qro_)
 {}
 
 
@@ -128,7 +128,10 @@ greyDiffusiveViewFactorFixedValueFvPatchScalarField
 void CML::radiation::greyDiffusiveViewFactorFixedValueFvPatchScalarField::
 updateCoeffs()
 {
-    //Do nothing
+    if (this->updated())
+    {
+        return;
+    }
 
     if (debug)
     {
@@ -137,7 +140,7 @@ updateCoeffs()
         Info<< patch().boundaryMesh().mesh().name() << ':'
             << patch().name() << ':'
             << this->dimensionedInternalField().name() << " <- "
-            << " heat[W]:" << Q
+            << " heat transfer rate:" << Q
             << " wall radiative heat flux "
             << " min:" << gMin(*this)
             << " max:" << gMax(*this)
@@ -145,6 +148,7 @@ updateCoeffs()
             << endl;
     }
 
+    fixedValueFvPatchScalarField::updateCoeffs();
 }
 
 
@@ -156,7 +160,7 @@ write
 {
     fixedValueFvPatchScalarField::write(os);
     radiationCoupledBase::write(os);
-    Qro_.writeEntry("Qro", os);
+    qro_.writeEntry("qro", os);
 }
 
 

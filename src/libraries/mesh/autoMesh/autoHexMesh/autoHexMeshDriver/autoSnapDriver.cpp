@@ -1388,7 +1388,7 @@ void CML::autoSnapDriver::doSnap
 
             if (!meshOk)
             {
-                Info<< "Did not succesfully snap mesh. Giving up."
+                Info<< "Did not successfully snap mesh. Giving up."
                     << nl << endl;
 
                 // Use current mesh as base mesh

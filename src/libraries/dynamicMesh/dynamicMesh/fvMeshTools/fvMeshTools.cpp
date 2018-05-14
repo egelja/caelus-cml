@@ -350,6 +350,69 @@ void CML::fvMeshTools::reorderPatches
 }
 
 
+CML::labelList CML::fvMeshTools::removeEmptyPatches
+(
+    fvMesh& mesh,
+    const bool validBoundary
+)
+{
+    const polyBoundaryMesh& pbm = mesh.boundaryMesh();
+
+    labelList newToOld(pbm.size());
+    labelList oldToNew(pbm.size(), -1);
+    label newI = 0;
+
+
+    // Assumes all non-coupled boundaries are on all processors!
+    forAll(pbm, patchI)
+    {
+        const polyPatch& pp = pbm[patchI];
+
+        if (!isA<processorPolyPatch>(pp))
+        {
+            label nFaces = pp.size();
+            if (validBoundary)
+            {
+                reduce(nFaces, sumOp<label>());
+            }
+
+            if (nFaces > 0)
+            {
+                newToOld[newI] = patchI;
+                oldToNew[patchI] = newI++;
+            }
+        }
+    }
+
+    // Same for processor patches (but need no reduction)
+    forAll(pbm, patchI)
+    {
+        const polyPatch& pp = pbm[patchI];
+
+        if (isA<processorPolyPatch>(pp) && pp.size())
+        {
+            newToOld[newI] = patchI;
+            oldToNew[patchI] = newI++;
+        }
+    }
+
+    newToOld.setSize(newI);
+
+    // Move all deleteable patches to the end
+    forAll(oldToNew, patchI)
+    {
+        if (oldToNew[patchI] == -1)
+        {
+            oldToNew[patchI] = newI++;
+        }
+    }
+
+    reorderPatches(mesh, oldToNew, newToOld.size(), validBoundary);
+
+    return newToOld;
+}
+
+
 CML::autoPtr<CML::fvMesh> CML::fvMeshTools::newMesh
 (
     const IOobject& io,
@@ -378,7 +441,6 @@ CML::autoPtr<CML::fvMesh> CML::fvMeshTools::newMesh
     // Read and scatter master patches (without reading master mesh!)
 
     PtrList<entry> patchEntries;
-
     if (Pstream::master())
     {
         facesInstance = io.time().findInstance
@@ -434,6 +496,7 @@ CML::autoPtr<CML::fvMesh> CML::fvMeshTools::newMesh
     {
         haveMesh = false;
     }
+
 
     // Set up to read-if-present. Note: does not search for mesh so set
     // instance explicitly
@@ -538,13 +601,14 @@ CML::autoPtr<CML::fvMesh> CML::fvMeshTools::newMesh
         mesh.addFvPatches(newPatches);
     }
 
-//    forAll(mesh.boundary(), patchI)
-//    {
-//        Pout<< "    type" << mesh.boundary()[patchI].type()
-//            << " size:" << mesh.boundary()[patchI].size()
-//            << " start:" << mesh.boundary()[patchI].start() << endl;
-//    }
-//    Pout<< endl;
+    //Pout<< "patches:" << endl;
+    //forAll(mesh.boundary(), patchI)
+    //{
+    //    Pout<< "    type" << mesh.boundary()[patchI].type()
+    //        << " size:" << mesh.boundary()[patchI].size()
+    //        << " start:" << mesh.boundary()[patchI].start() << endl;
+    //}
+    //Pout<< endl;
 
 
     // Determine zones

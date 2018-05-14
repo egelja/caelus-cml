@@ -857,7 +857,7 @@ void CML::FaceCellWave<Type, TrackingData>::offset
 }
 
 
-// Tranfer all the information to/from neighbouring processors
+// Transfer all the information to/from neighbouring processors
 template <class Type, class TrackingData>
 void CML::FaceCellWave<Type, TrackingData>::handleProcPatches()
 {

@@ -107,7 +107,10 @@ public:
             // ptscotch does not know about proc boundaries
             return true;
         }
-
+    
+        //- Inherit decompose from decompositionMethod
+        using decompositionMethod::decompose;
+    
         //- Return for every coordinate the wanted processor number. Use the
         //  mesh connectivity (if needed). See note on weights in scotchDecomp.H
         virtual labelList decompose

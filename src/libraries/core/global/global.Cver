@@ -949,7 +949,7 @@ CML::token::compound& CML::token::transferCompoundToken(const Istream& is)
             (
                 "token::transferCompoundToken(const Istream& is)",
                 is
-            )   << "compound has already been transfered from token\n    "
+            )   << "compound has already been transferred from token\n    "
                 << info() << abort(FatalIOError);
         }
         else
@@ -1253,7 +1253,7 @@ CML::regIOobject::regIOobject(const regIOobject& rio)
 }
 
 
-// Construct as copy, and transfering objectRegistry registration to copy
+// Construct as copy, and transferring objectRegistry registration to copy
 // if registerCopy is true
 CML::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
 :

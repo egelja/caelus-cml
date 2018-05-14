@@ -1,0 +1,28 @@
+/*---------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      MRFProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+MRF1
+{
+    cellZone        rotor;
+    active          true;
+
+    nonRotatingPatches ();
+
+    origin      (0 0 0);
+    axis        (0 0 1);
+    omega       104.72;
+}
+
+
+// ************************************************************************* //

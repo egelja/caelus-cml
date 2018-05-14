@@ -142,7 +142,7 @@ public:
                 return procInterface_.myProcNo();
             }
 
-            //- Return neigbour processor number
+            //- Return neighbour processor number
             virtual int neighbProcNo() const
             {
                 return procInterface_.neighbProcNo();

@@ -86,7 +86,7 @@ class PointEdgeWave
   // Private static data
 
         //- Relative tolerance. Stop propagation if relative changes
-        //  less than this tolerance (responsability for checking this is
+        //  less than this tolerance (responsibility for checking this is
         //  up to Type implementation)
         static scalar propagationTol_;
 
@@ -1125,7 +1125,7 @@ CML::label CML::PointEdgeWave<Type, TrackingData>::edgeToPoint()
             FatalErrorIn("PointEdgeWave<Type, TrackingData>::edgeToPoint()")
                 << "edge " << edgeI
                 << " not marked as having been changed" << nl
-                << "This might be caused by multiple occurences of the same"
+                << "This might be caused by multiple occurrences of the same"
                 << " seed point." << abort(FatalError);
         }
 
@@ -1203,7 +1203,7 @@ CML::label CML::PointEdgeWave<Type, TrackingData>::pointToEdge()
             FatalErrorIn("PointEdgeWave<Type, TrackingData>::pointToEdge()")
                 << "Point " << pointI
                 << " not marked as having been changed" << nl
-                << "This might be caused by multiple occurences of the same"
+                << "This might be caused by multiple occurrences of the same"
                 << " seed point." << abort(FatalError);
         }
 

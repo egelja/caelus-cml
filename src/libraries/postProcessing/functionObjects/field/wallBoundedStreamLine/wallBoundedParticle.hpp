@@ -583,9 +583,9 @@ CML::scalar CML::wallBoundedParticle::trackToEdge
                 }
                 else if (ti.facePtA() == f.rcIndex(fp0))
                 {
-                    //Note: should not happen since boundary face so owner
+                    //Note: should not happened since boundary face so owner
                     //Pout<< "Real edge." << endl;
-                    FatalErrorIn("shold not happend") << info()
+                    FatalErrorIn("shold not happened") << info()
                         << abort(FatalError);
 
                     diagEdge_ = -1;
@@ -629,9 +629,9 @@ CML::scalar CML::wallBoundedParticle::trackToEdge
                 }
                 else if (ti.facePtB() == f.fcIndex(fp0))
                 {
-                    //Note: should not happen since boundary face so owner
+                    //Note: should not happened since boundary face so owner
                     //Pout<< "Real edge." << endl;
-                    FatalErrorIn("shold not happend") << info()
+                    FatalErrorIn("shold not happened") << info()
                         << abort(FatalError);
 
                     diagEdge_ = -1;

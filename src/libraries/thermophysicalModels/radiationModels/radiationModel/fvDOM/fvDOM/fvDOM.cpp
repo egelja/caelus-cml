@@ -36,98 +36,17 @@ namespace CML
     namespace radiation
     {
         defineTypeNameAndDebug(fvDOM, 0);
-
-        addToRunTimeSelectionTable
-        (
-            radiationModel,
-            fvDOM,
-            dictionary
-        );
+        addToRadiationRunTimeSelectionTables(fvDOM);
     }
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-CML::radiation::fvDOM::fvDOM(const volScalarField& T)
-:
-    radiationModel(typeName, T),
-    G_
-    (
-        IOobject
-        (
-            "G",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("G", dimMass/pow3(dimTime), 0.0)
-    ),
-    Qr_
-    (
-        IOobject
-        (
-            "Qr",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("Qr", dimMass/pow3(dimTime), 0.0)
-    ),
-    Qem_
-    (
-        IOobject
-        (
-            "Qem",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("Qem", dimMass/pow3(dimTime), 0.0)
-    ),
-    Qin_
-    (
-        IOobject
-        (
-            "Qin",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("Qin", dimMass/pow3(dimTime), 0.0)
-    ),
-    a_
-    (
-        IOobject
-        (
-            "a",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("a", dimless/dimLength, 0.0)
-    ),
-    nTheta_(readLabel(coeffs_.lookup("nTheta"))),
-    nPhi_(readLabel(coeffs_.lookup("nPhi"))),
-    nRay_(0),
-    nLambda_(absorptionEmission_->nBands()),
-    aLambda_(nLambda_),
-    blackBody_(nLambda_, T),
-    IRay_(0),
-    convergence_(coeffs_.lookupOrDefault<scalar>("convergence", 0.0)),
-    maxIter_(coeffs_.lookupOrDefault<label>("maxIter", 50))
+void CML::radiation::fvDOM::initialise()
 {
-    if (mesh_.nSolutionD() == 3)    //3D
+    // 3D
+    if (mesh_.nSolutionD() == 3)
     {
         nRay_ = 4*nPhi_*nTheta_;
         IRay_.setSize(nRay_);
@@ -161,69 +80,68 @@ CML::radiation::fvDOM::fvDOM(const volScalarField& T)
             }
         }
     }
+    // 2D
+    else if (mesh_.nSolutionD() == 2)
+    {
+        scalar thetai = piByTwo;
+        scalar deltaTheta = pi;
+        nRay_ = 4*nPhi_;
+        IRay_.setSize(nRay_);
+        scalar deltaPhi = pi/(2.0*nPhi_);
+        label i = 0;
+        for (label m = 1; m <= 4*nPhi_; m++)
+        {
+            scalar phii = (2.0*m - 1.0)*deltaPhi/2.0;
+            IRay_.set
+            (
+                i,
+                new radiativeIntensityRay
+                (
+                    *this,
+                    mesh_,
+                    phii,
+                    thetai,
+                    deltaPhi,
+                    deltaTheta,
+                    nLambda_,
+                    absorptionEmission_,
+                    blackBody_,
+                    i
+                )
+            );
+            i++;
+        }
+    }
+    // 1D
     else
     {
-        if (mesh_.nSolutionD() == 2)    //2D (X & Y)
+        scalar thetai = piByTwo;
+        scalar deltaTheta = pi;
+        nRay_ = 2;
+        IRay_.setSize(nRay_);
+        scalar deltaPhi = pi;
+        label i = 0;
+        for (label m = 1; m <= 2; m++)
         {
-            scalar thetai = piByTwo;
-            scalar deltaTheta = pi;
-            nRay_ = 4*nPhi_;
-            IRay_.setSize(nRay_);
-            scalar deltaPhi = pi/(2.0*nPhi_);
-            label i = 0;
-            for (label m = 1; m <= 4*nPhi_; m++)
-            {
-                scalar phii = (2.0*m - 1.0)*deltaPhi/2.0;
-                IRay_.set
+            scalar phii = (2.0*m - 1.0)*deltaPhi/2.0;
+            IRay_.set
+            (
+                i,
+                new radiativeIntensityRay
                 (
-                    i,
-                    new radiativeIntensityRay
-                    (
-                        *this,
-                        mesh_,
-                        phii,
-                        thetai,
-                        deltaPhi,
-                        deltaTheta,
-                        nLambda_,
-                        absorptionEmission_,
-                        blackBody_,
-                        i
-                    )
-                );
-                i++;
-            }
-        }
-        else    //1D (X)
-        {
-            scalar thetai = piByTwo;
-            scalar deltaTheta = pi;
-            nRay_ = 2;
-            IRay_.setSize(nRay_);
-            scalar deltaPhi = pi;
-            label i = 0;
-            for (label m = 1; m <= 2; m++)
-            {
-                scalar phii = (2.0*m - 1.0)*deltaPhi/2.0;
-                IRay_.set
-                (
-                    i,
-                    new radiativeIntensityRay
-                    (
-                        *this,
-                        mesh_,
-                        phii,
-                        thetai,
-                        deltaPhi,
-                        deltaTheta,
-                        nLambda_,
-                        absorptionEmission_,
-                        blackBody_,
-                        i
-                    )
-                );
-                i++;
-            }
+                    *this,
+                    mesh_,
+                    phii,
+                    thetai,
+                    deltaPhi,
+                    deltaTheta,
+                    nLambda_,
+                    absorptionEmission_,
+                    blackBody_,
+                    i
+                )
+            );
+            i++;
         }
     }
 
@@ -249,14 +167,210 @@ CML::radiation::fvDOM::fvDOM(const volScalarField& T)
         );
     }
 
-    Info<< "fvDOM : Allocated " << IRay_.size()
-        << " rays with average orientation:" << nl;
-    forAll(IRay_, i)
+
+    // Calculate the maximum solid angle
+    forAll(IRay_, rayId)
     {
-        Info<< '\t' << IRay_[i].I().name()
-            << '\t' << IRay_[i].dAve() << nl;
+        if (omegaMax_ <  IRay_[rayId].omega())
+        {
+            omegaMax_ = IRay_[rayId].omega();
+        }
     }
-    Info<< endl;
+
+
+    Info<< typeName << ": Created " << IRay_.size() << " rays with average "
+        << "directions (dAve) and solid angles (omega)" << endl;
+    Info<< incrIndent;
+    forAll(IRay_, rayId)
+    {
+        Info<< indent
+            << "Ray " << IRay_[rayId].I().name() << ": "
+            << "dAve = " << IRay_[rayId].dAve() << ", "
+            << "omega = " << IRay_[rayId].omega() << endl;
+    }
+    Info<< decrIndent << endl;
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+CML::radiation::fvDOM::fvDOM(const volScalarField& T)
+:
+    radiationModel(typeName, T),
+    G_
+    (
+        IOobject
+        (
+            "G",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("G", dimMass/pow3(dimTime), 0.0)
+    ),
+    qr_
+    (
+        IOobject
+        (
+            "qr",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
+    ),
+    qem_
+    (
+        IOobject
+        (
+            "qem",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qem", dimMass/pow3(dimTime), 0.0)
+    ),
+    qin_
+    (
+        IOobject
+        (
+            "qin",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qin", dimMass/pow3(dimTime), 0.0)
+    ),
+    a_
+    (
+        IOobject
+        (
+            "a",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("a", dimless/dimLength, 0.0)
+    ),
+    nTheta_(readLabel(coeffs_.lookup("nTheta"))),
+    nPhi_(readLabel(coeffs_.lookup("nPhi"))),
+    nRay_(0),
+    nLambda_(absorptionEmission_->nBands()),
+    aLambda_(nLambda_),
+    blackBody_(nLambda_, T),
+    IRay_(0),
+    tolerance_
+    (
+        coeffs_.found("convergence")
+      ? readScalar(coeffs_.lookup("convergence"))
+      : coeffs_.lookupOrDefault<scalar>("tolerance", 0.0)
+    ),
+    maxIter_(coeffs_.lookupOrDefault<label>("maxIter", 50)),
+    omegaMax_(0)
+{
+    initialise();
+}
+
+
+CML::radiation::fvDOM::fvDOM
+(
+    const dictionary& dict,
+    const volScalarField& T
+)
+:
+    radiationModel(typeName, dict, T),
+    G_
+    (
+        IOobject
+        (
+            "G",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("G", dimMass/pow3(dimTime), 0.0)
+    ),
+    qr_
+    (
+        IOobject
+        (
+            "qr",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
+    ),
+    qem_
+    (
+        IOobject
+        (
+            "qem",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qem", dimMass/pow3(dimTime), 0.0)
+    ),
+    qin_
+    (
+        IOobject
+        (
+            "qin",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qin", dimMass/pow3(dimTime), 0.0)
+    ),
+    a_
+    (
+        IOobject
+        (
+            "a",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("a", dimless/dimLength, 0.0)
+    ),
+    nTheta_(readLabel(coeffs_.lookup("nTheta"))),
+    nPhi_(readLabel(coeffs_.lookup("nPhi"))),
+    nRay_(0),
+    nLambda_(absorptionEmission_->nBands()),
+    aLambda_(nLambda_),
+    blackBody_(nLambda_, T),
+    IRay_(0),
+    tolerance_
+    (
+        coeffs_.found("convergence")
+      ? readScalar(coeffs_.lookup("convergence"))
+      : coeffs_.lookupOrDefault<scalar>("tolerance", 0.0)
+    ),
+    maxIter_(coeffs_.lookupOrDefault<label>("maxIter", 50)),
+    omegaMax_(0)
+{
+    initialise();
 }
 
 
@@ -274,7 +388,11 @@ bool CML::radiation::fvDOM::read()
     {
         // Only reading solution parameters - not changing ray geometry
 
-        coeffs_.readIfPresent("convergence", convergence_);
+        // For backward-compatibility
+        coeffs_.readIfPresent("convergence", tolerance_);
+
+        coeffs_.readIfPresent("tolerance", tolerance_);
+
         coeffs_.readIfPresent("maxIter", maxIter_);
 
         return true;
@@ -292,21 +410,32 @@ void CML::radiation::fvDOM::calculate()
 
     updateBlackBodyEmission();
 
+    // Set rays converged false
+    List<bool> rayIdConv(nRay_, false);
+
     scalar maxResidual = 0.0;
     label radIter = 0;
     do
     {
-        radIter++;
-        forAll(IRay_, rayI)
-        {
-            maxResidual = 0.0;
-            scalar maxBandResidual = IRay_[rayI].correct();
-            maxResidual = max(maxBandResidual, maxResidual);
-        }
-
         Info<< "Radiation solver iter: " << radIter << endl;
 
-    } while (maxResidual > convergence_ && radIter < maxIter_);
+        radIter++;
+        maxResidual = 0.0;
+        forAll(IRay_, rayI)
+        {
+            if (!rayIdConv[rayI])
+            {
+                scalar maxBandResidual = IRay_[rayI].correct();
+                maxResidual = max(maxBandResidual, maxResidual);
+
+                if (maxBandResidual < tolerance_)
+                {
+                    rayIdConv[rayI] = true;
+                }
+            }
+        }
+
+    } while (maxResidual > tolerance_ && radIter < maxIter_);
 
     updateG();
 }
@@ -327,7 +456,8 @@ CML::tmp<CML::volScalarField> CML::radiation::fvDOM::Rp() const
                 IOobject::NO_WRITE,
                 false
             ),
-            4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
+            // Only include continuous phase emission
+            4*absorptionEmission_->aCont()*physicoChemical::sigma
         )
     );
 }
@@ -339,12 +469,15 @@ CML::radiation::fvDOM::Ru() const
 
     const DimensionedField<scalar, volMesh>& G =
         G_.dimensionedInternalField();
+
     const DimensionedField<scalar, volMesh> E =
         absorptionEmission_->ECont()().dimensionedInternalField();
-    const DimensionedField<scalar, volMesh> a =
-        a_.dimensionedInternalField(); //absorptionEmission_->aCont()()
 
-    return  a*G - E;
+    // Only include continuous phase absorption
+    const DimensionedField<scalar, volMesh> a =
+        absorptionEmission_->aCont()();
+
+    return a*G - E;
 }
 
 
@@ -360,17 +493,17 @@ void CML::radiation::fvDOM::updateBlackBodyEmission()
 void CML::radiation::fvDOM::updateG()
 {
     G_ = dimensionedScalar("zero",dimMass/pow3(dimTime), 0.0);
-    Qr_ = dimensionedScalar("zero",dimMass/pow3(dimTime), 0.0);
-    Qem_ = dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0);
-    Qin_ = dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0);
+    qr_ = dimensionedScalar("zero",dimMass/pow3(dimTime), 0.0);
+    qem_ = dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0);
+    qin_ = dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0);
 
     forAll(IRay_, rayI)
     {
         IRay_[rayI].addIntensity();
         G_ += IRay_[rayI].I()*IRay_[rayI].omega();
-        Qr_.boundaryField() += IRay_[rayI].Qr().boundaryField();
-        Qem_.boundaryField() += IRay_[rayI].Qem().boundaryField();
-        Qin_.boundaryField() += IRay_[rayI].Qin().boundaryField();
+        qr_.boundaryField() += IRay_[rayI].qr().boundaryField();
+        qem_.boundaryField() += IRay_[rayI].qem().boundaryField();
+        qin_.boundaryField() += IRay_[rayI].qin().boundaryField();
     }
 }
 

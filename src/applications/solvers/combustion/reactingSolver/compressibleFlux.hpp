@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,6 +25,6 @@ Author
 
 \*---------------------------------------------------------------------------*/
 
-phiHat = fvc::interpolate(psi)*(fvc::interpolate(U) & mesh.Sf());
+phiHat = fvc::interpolate(psi)*(fvc::interpolate(HbyA) & mesh.Sf());
 
-
+MRF.makeRelative(fvc::interpolate(psi), phiHat);

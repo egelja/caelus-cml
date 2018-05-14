@@ -130,6 +130,12 @@ public:
                 return true;
             }
 
+            //- Return false: this patch field is not altered by assignment
+            virtual bool assignable() const
+            {
+                return false;
+            }
+
 
         // Evaluation functions
 

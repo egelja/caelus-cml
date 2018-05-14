@@ -4,6 +4,7 @@ import os
 import utils
 from variables import caelus_vars, init_dependent_vars
 from compiler import update_compiler_settings
+from environment import dump_environment
 
 ### Initialize toolsets based on operating system
 ostype = utils.ostype()
@@ -18,6 +19,7 @@ env = Environment(variables = caelus_vars,
 Help(caelus_vars.GenerateHelpText(env))
 init_dependent_vars(env)
 update_compiler_settings(env)
+dump_environment(env)
 
 ### Isolate build environments based on build options
 build_dir = os.path.join(

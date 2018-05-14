@@ -72,7 +72,7 @@ CML::UIPstream::UIPstream
         }
 
 
-        // If the buffer size is not specified, probe the incomming message
+        // If the buffer size is not specified, probe the incoming message
         // and set it
         if (!wantedSize)
         {
@@ -160,7 +160,7 @@ CML::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
                 << CML::endl;
         }
 
-        // If the buffer size is not specified, probe the incomming message
+        // If the buffer size is not specified, probe the incoming message
         // and set it
         if (!wantedSize)
         {
@@ -240,7 +240,7 @@ CML::label CML::UIPstream::read
             (
                 "UIPstream::read"
                 "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-            )   << "MPI_Recv cannot receive incomming message"
+            )   << "MPI_Recv cannot receive incoming message"
                 << CML::abort(FatalError);
 
             return 0;
@@ -267,7 +267,7 @@ CML::label CML::UIPstream::read
                 "UIPstream::read"
                 "(const int fromProcNo, char* buf, std::streamsize bufSize)"
             )   << "buffer (" << label(bufSize)
-                << ") not large enough for incomming message ("
+                << ") not large enough for incoming message ("
                 << messageSize << ')'
                 << CML::abort(FatalError);
         }

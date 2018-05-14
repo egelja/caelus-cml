@@ -1,0 +1,38 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    symm
+    {
+        type            symmetryPlane;
+    }
+    wall-1
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+    wall-2
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+}
+
+
+// ************************************************************************* //

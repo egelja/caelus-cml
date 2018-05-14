@@ -41,7 +41,7 @@ greyDiffusiveRadiationMixedFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, "undefined", scalarField::null()),
-    TName_("undefinedT")
+    TName_("T")
 {
     refValue() = 0.0;
     refGrad() = 0.0;
@@ -79,7 +79,7 @@ greyDiffusiveRadiationMixedFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, dict),
-    TName_(dict.lookup("T"))
+    TName_(dict.lookupOrDefault<word>("T", "T"))
 {
     if (dict.found("refValue"))
     {
@@ -93,15 +93,7 @@ greyDiffusiveRadiationMixedFvPatchScalarField
     }
     else
     {
-        // No value given. Restart as fixedValue b.c.
-
-        const scalarField& Tp =
-            patch().lookupPatchField<volScalarField, scalar>(TName_);
-
-        //NOTE: Assumes emissivity = 1 as the solidThermo might
-        // not be constructed yet
-        refValue() =
-            4.0*physicoChemical::sigma.value()*pow4(Tp)/pi;
+        refValue() = 0.0;
         refGrad() = 0.0;
         valueFraction() = 1.0;
 
@@ -172,7 +164,7 @@ updateCoeffs()
     label lambdaId = -1;
     dom.setRayIdLambdaId(dimensionedInternalField().name(), rayId, lambdaId);
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     if (dom.nLambda() != 1)
     {
@@ -192,50 +184,50 @@ updateCoeffs()
 
     const scalarField nAve(n & ray.dAve());
 
-    ray.Qr().boundaryField()[patchI] += Iw*nAve;
+    ray.qr().boundaryField()[patchi] += Iw*nAve;
 
     const scalarField temissivity = emissivity();
 
-    scalarField& Qem = ray.Qem().boundaryField()[patchI];
-    scalarField& Qin = ray.Qin().boundaryField()[patchI];
+    scalarField& qem = ray.qem().boundaryField()[patchi];
+    scalarField& qin = ray.qin().boundaryField()[patchi];
 
-    const vector& myRayId = dom.IRay(rayId).d();
+    const vector& myRayId = dom.IRay(rayId).dAve();
 
     // Use updated Ir while iterating over rays
-    // avoids to used lagged Qin
-    scalarField Ir = dom.IRay(0).Qin().boundaryField()[patchI];
+    // avoids to used lagged qin
+    scalarField Ir = dom.IRay(0).qin().boundaryField()[patchi];
 
     for (label rayI=1; rayI < dom.nRay(); rayI++)
     {
-        Ir += dom.IRay(rayI).Qin().boundaryField()[patchI];
+        Ir += dom.IRay(rayI).qin().boundaryField()[patchi];
     }
 
-    forAll(Iw, faceI)
+    forAll(Iw, facei)
     {
-        if ((-n[faceI] & myRayId) > 0.0)
+        if ((-n[facei] & myRayId) > 0.0)
         {
             // direction out of the wall
-            refGrad()[faceI] = 0.0;
-            valueFraction()[faceI] = 1.0;
-            refValue()[faceI] =
+            refGrad()[facei] = 0.0;
+            valueFraction()[facei] = 1.0;
+            refValue()[facei] =
                 (
-                    Ir[faceI]*(scalar(1.0) - temissivity[faceI])
-                  + temissivity[faceI]*physicoChemical::sigma.value()
-                  * pow4(Tp[faceI])
+                    Ir[facei]*(scalar(1) - temissivity[facei])
+                  + temissivity[facei]*physicoChemical::sigma.value()
+                  * pow4(Tp[facei])
                 )/pi;
 
-            // Emmited heat flux from this ray direction
-            Qem[faceI] = refValue()[faceI]*nAve[faceI];
+            // Emitted heat flux from this ray direction
+            qem[facei] = refValue()[facei]*nAve[facei];
         }
         else
         {
             // direction into the wall
-            valueFraction()[faceI] = 0.0;
-            refGrad()[faceI] = 0.0;
-            refValue()[faceI] = 0.0; //not used
+            valueFraction()[facei] = 0.0;
+            refGrad()[facei] = 0.0;
+            refValue()[facei] = 0.0; //not used
 
             // Incident heat flux on this ray direction
-            Qin[faceI] = Iw[faceI]*nAve[faceI];
+            qin[facei] = Iw[facei]*nAve[facei];
         }
     }
 
@@ -253,7 +245,7 @@ void CML::radiation::greyDiffusiveRadiationMixedFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     radiationCoupledBase::write(os);
-    os.writeKeyword("T") << TName_ << token::END_STATEMENT << nl;
+    writeEntryIfDifferent<word>(os, "T", "T", TName_);
 }
 
 

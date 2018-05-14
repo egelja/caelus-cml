@@ -1,0 +1,119 @@
+/*---------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver           GAMG;
+        tolerance        1e-6;
+        relTol           0.1;
+
+        smoother         SSGS;
+        nPreSweeps       0;
+        nPostSweeps      2;
+
+        cacheAgglomeration true;
+
+        nCellsInCoarsestLevel 50;//10;
+        agglomerator     algebraicPair;
+        mergeLevels      1;
+    };
+
+    pFinal
+    {
+        solver           GAMG;
+        tolerance        1e-6;
+        relTol           0;
+
+        smoother         SSGS;
+        nPreSweeps       0;
+        nPostSweeps      2;
+
+        cacheAgglomeration true;
+
+        nCellsInCoarsestLevel 50;//10;
+        agglomerator     algebraicPair;
+        mergeLevels      1;
+    };
+
+    U
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-08;
+        relTol           0;
+    };
+
+    UFinal
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-08;
+        relTol           0;
+    };
+
+    k
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-07;
+        relTol           0;
+    };
+
+    kFinal
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-07;
+        relTol           0;
+    };
+
+    nuTilda
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-07;
+        relTol           0;
+    };
+
+    nuTildaFinal
+    {
+        solver           PBiCGStab;
+        preconditioner   USGS;
+        tolerance        1e-07;
+        relTol           0;
+    };
+}
+
+PISO
+{
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 1;
+}
+
+PIMPLE
+{
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 1;
+}
+
+relaxationFactors
+{
+    "U.*"           1;
+    k               1;
+    nuTilda         1;
+}
+
+
+// ************************************************************************* //

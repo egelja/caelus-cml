@@ -19,8 +19,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.hpp"
 #include "radiationModel.hpp"
+#include "volFields.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -30,22 +30,56 @@ CML::radiation::radiationModel::New
     const volScalarField& T
 )
 {
-    // get model name, but do not register the dictionary
-    const word modelType
+    IOobject radIO
     (
-        IOdictionary
-        (
-            IOobject
-            (
-                "radiationProperties",
-                T.time().constant(),
-                T.mesh(),
-                IOobject::MUST_READ_IF_MODIFIED,
-                IOobject::NO_WRITE,
-                false
-            )
-        ).lookup("radiationModel")
+        "radiationProperties",
+        T.time().constant(),
+        T.mesh(),
+        IOobject::MUST_READ_IF_MODIFIED,
+        IOobject::NO_WRITE,
+        false
     );
+
+    word modelType("none");
+    if (radIO.headerOk())
+    {
+        IOdictionary(radIO).lookup("radiationModel") >> modelType;
+    }
+    else
+    {
+        Info<< "Radiation model not active: radiationProperties not found"
+            << endl;
+    }
+
+    Info<< "Selecting radiationModel " << modelType << endl;
+
+    TConstructorTable::iterator cstrIter =
+        TConstructorTablePtr_->find(modelType);
+
+    if (cstrIter == TConstructorTablePtr_->end())
+    {
+        FatalErrorIn
+        (
+            "radiationModel::New(const volScalarField&)"
+        )   << "Unknown radiationModel type "
+            << modelType << nl << nl
+            << "Valid radiationModel types are:" << nl
+            << TConstructorTablePtr_->sortedToc()
+            << exit(FatalError);
+    }
+
+    return autoPtr<radiationModel>(cstrIter()(T));
+}
+
+
+CML::autoPtr<CML::radiation::radiationModel>
+CML::radiation::radiationModel::New
+(
+    const dictionary& dict,
+    const volScalarField& T
+)
+{
+    const word modelType(dict.lookup("radiationModel"));
 
     Info<< "Selecting radiationModel " << modelType << endl;
 
@@ -64,7 +98,7 @@ CML::radiation::radiationModel::New
             << exit(FatalError);
     }
 
-    return autoPtr<radiationModel>(cstrIter()(T));
+    return autoPtr<radiationModel>(cstrIter()(dict, T));
 }
 
 

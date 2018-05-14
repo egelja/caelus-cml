@@ -101,7 +101,7 @@ public:
             order_ = readScalar(schemeData);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, Istream& is)", schemeData)
+                FatalIOErrorIn("linearUpwindMDBJ(fvMesh const&, Istream& is)", schemeData)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);
@@ -137,7 +137,7 @@ public:
             order_ = readScalar(schemeData);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, surfaceScalarField const& faceFlux, Istream& is)", schemeData)
+                FatalIOErrorIn("linearUpwindMDBJ(fvMesh const&, surfaceScalarField const& faceFlux, Istream& is)", schemeData)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

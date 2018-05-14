@@ -170,14 +170,14 @@ CML::wordList CML::coordinateSystems::toc() const
 }
 
 
-bool CML::coordinateSystems::writeData(Ostream& os, bool subDict) const
+bool CML::coordinateSystems::writeData(Ostream& os) const
 {
     os << nl << size() << nl << token::BEGIN_LIST;
 
     forAll(*this, i)
     {
         os << nl;
-        operator[](i).writeDict(os, subDict);
+        operator[](i).writeDict(os, true);
     }
 
     os << token::END_LIST << nl;

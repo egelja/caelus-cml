@@ -27,7 +27,11 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-int CML::solution::debug(::CML::debug::debugSwitch("solution", 0));
+
+namespace CML
+{
+    defineDebugSwitch(solution, 0);
+}
 
 // List of sub-dictionaries to rewrite
 //! \cond localScope

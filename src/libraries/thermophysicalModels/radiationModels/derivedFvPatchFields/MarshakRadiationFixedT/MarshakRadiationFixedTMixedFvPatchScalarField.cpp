@@ -23,15 +23,13 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-
-#include "fvc.hpp"
 #include "radiationModel.hpp"
 #include "physicoChemicalConstants.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::MarshakRadiationFixedTMixedFvPatchScalarField::
-MarshakRadiationFixedTMixedFvPatchScalarField
+CML::MarshakRadiationFixedTemperatureFvPatchScalarField::
+MarshakRadiationFixedTemperatureFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF
@@ -47,10 +45,10 @@ MarshakRadiationFixedTMixedFvPatchScalarField
 }
 
 
-CML::MarshakRadiationFixedTMixedFvPatchScalarField::
-MarshakRadiationFixedTMixedFvPatchScalarField
+CML::MarshakRadiationFixedTemperatureFvPatchScalarField::
+MarshakRadiationFixedTemperatureFvPatchScalarField
 (
-    const MarshakRadiationFixedTMixedFvPatchScalarField& ptf,
+    const MarshakRadiationFixedTemperatureFvPatchScalarField& ptf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
@@ -61,14 +59,15 @@ MarshakRadiationFixedTMixedFvPatchScalarField
     (
         p,
         ptf.emissivityMethod(),
-        ptf.emissivity_
+        ptf.emissivity_,
+        mapper
     ),
     Trad_(ptf.Trad_, mapper)
 {}
 
 
-CML::MarshakRadiationFixedTMixedFvPatchScalarField::
-MarshakRadiationFixedTMixedFvPatchScalarField
+CML::MarshakRadiationFixedTemperatureFvPatchScalarField::
+MarshakRadiationFixedTemperatureFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -91,10 +90,10 @@ MarshakRadiationFixedTMixedFvPatchScalarField
 }
 
 
-CML::MarshakRadiationFixedTMixedFvPatchScalarField::
-MarshakRadiationFixedTMixedFvPatchScalarField
+CML::MarshakRadiationFixedTemperatureFvPatchScalarField::
+MarshakRadiationFixedTemperatureFvPatchScalarField
 (
-    const MarshakRadiationFixedTMixedFvPatchScalarField& ptf
+    const MarshakRadiationFixedTemperatureFvPatchScalarField& ptf
 )
 :
     mixedFvPatchScalarField(ptf),
@@ -108,10 +107,10 @@ MarshakRadiationFixedTMixedFvPatchScalarField
 {}
 
 
-CML::MarshakRadiationFixedTMixedFvPatchScalarField::
-MarshakRadiationFixedTMixedFvPatchScalarField
+CML::MarshakRadiationFixedTemperatureFvPatchScalarField::
+MarshakRadiationFixedTemperatureFvPatchScalarField
 (
-    const MarshakRadiationFixedTMixedFvPatchScalarField& ptf,
+    const MarshakRadiationFixedTemperatureFvPatchScalarField& ptf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
@@ -128,32 +127,33 @@ MarshakRadiationFixedTMixedFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void CML::MarshakRadiationFixedTMixedFvPatchScalarField::autoMap
+void CML::MarshakRadiationFixedTemperatureFvPatchScalarField::autoMap
 (
     const fvPatchFieldMapper& m
 )
 {
     mixedFvPatchScalarField::autoMap(m);
+    radiationCoupledBase::autoMap(m);
     Trad_.autoMap(m);
 }
 
 
-void CML::MarshakRadiationFixedTMixedFvPatchScalarField::rmap
+void CML::MarshakRadiationFixedTemperatureFvPatchScalarField::rmap
 (
     const fvPatchScalarField& ptf,
     const labelList& addr
 )
 {
     mixedFvPatchScalarField::rmap(ptf, addr);
-
-    const MarshakRadiationFixedTMixedFvPatchScalarField& mrptf =
-        refCast<const MarshakRadiationFixedTMixedFvPatchScalarField>(ptf);
+    radiationCoupledBase::rmap(ptf, addr);
+    const MarshakRadiationFixedTemperatureFvPatchScalarField& mrptf =
+        refCast<const MarshakRadiationFixedTemperatureFvPatchScalarField>(ptf);
 
     Trad_.rmap(mrptf.Trad_, addr);
 }
 
 
-void CML::MarshakRadiationFixedTMixedFvPatchScalarField::updateCoeffs()
+void CML::MarshakRadiationFixedTemperatureFvPatchScalarField::updateCoeffs()
 {
     if (this->updated())
     {
@@ -174,7 +174,7 @@ void CML::MarshakRadiationFixedTMixedFvPatchScalarField::updateCoeffs()
 
     const scalarField temissivity = emissivity();
 
-    const scalarField Ep(temissivity/(2.0*(scalar(2.0) - temissivity)));
+    const scalarField Ep(temissivity/(2*(2 - temissivity)));
 
     // Set value fraction
     valueFraction() = 1.0/(1.0 + gamma*patch().deltaCoeffs()/Ep);
@@ -186,7 +186,7 @@ void CML::MarshakRadiationFixedTMixedFvPatchScalarField::updateCoeffs()
 }
 
 
-void CML::MarshakRadiationFixedTMixedFvPatchScalarField::write
+void CML::MarshakRadiationFixedTemperatureFvPatchScalarField::write
 (
     Ostream& os
 ) const
@@ -204,7 +204,7 @@ namespace CML
     makePatchTypeField
     (
         fvPatchScalarField,
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
     );
 }
 

@@ -1233,7 +1233,7 @@ CML::surfaceLocation CML::triSurfaceTools::visitFaces
     if (nearest.triangle() == -1)
     {
         // Did not move from edge. Give warning? Return something special?
-        // For now responsability of caller to make sure that nothing has
+        // For now responsibility of caller to make sure that nothing has
         // moved.
     }
 
@@ -1697,7 +1697,7 @@ CML::triSurface CML::triSurfaceTools::collapseEdges
     //    {
     //        if (surf[neighbours[0]].region() != surf[neighbours[1]].region())
     //        {
-    //            // Neighbours on different regions. For now dont allow
+    //            // Neighbours on different regions. For now don't allow
     //            // any collapse.
     //            //Pout<< "protecting face " << neighbours[0]
     //            //    << ' ' << neighbours[1] << endl;

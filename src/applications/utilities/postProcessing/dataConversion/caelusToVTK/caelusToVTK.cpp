@@ -597,7 +597,7 @@ int main(int argc, char *argv[])
               + vtf.size();
 
 
-        // Construct pointMesh only if nessecary since constructs edge
+        // Construct pointMesh only if necessary since constructs edge
         // addressing (expensive on polyhedral meshes)
         if (noPointValues)
         {

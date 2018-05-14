@@ -25,11 +25,9 @@ License
 #include "polyMesh.hpp"
 #include "demandDrivenData.hpp"
 #include "OFstream.hpp"
-#include "patchZones.hpp"
 #include "matchPoints.hpp"
 #include "EdgeMap.hpp"
 #include "Time.hpp"
-#include "diagTensor.hpp"
 #include "transformField.hpp"
 #include "SubField.hpp"
 #include "unitConversion.hpp"
@@ -56,14 +54,14 @@ CML::label CML::cyclicPolyPatch::findMaxArea
     label maxI = -1;
     scalar maxAreaSqr = -GREAT;
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        scalar areaSqr = magSqr(faces[faceI].normal(points));
+        scalar areaSqr = magSqr(faces[facei].normal(points));
 
         if (areaSqr > maxAreaSqr)
         {
             maxAreaSqr = areaSqr;
-            maxI = faceI;
+            maxI = facei;
         }
     }
     return maxI;
@@ -460,20 +458,20 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
                 const tensor revT(E1.T() & E0);
 
                 // Rotation
-                forAll(half0Ctrs, faceI)
+                forAll(half0Ctrs, facei)
                 {
-                    half0Ctrs[faceI] =
+                    half0Ctrs[facei] =
                         CML::transform
                         (
                             revT,
-                            half0Ctrs[faceI] - rotationCentre_
+                            half0Ctrs[facei] - rotationCentre_
                         )
                       + rotationCentre_;
-                    anchors0[faceI] =
+                    anchors0[facei] =
                         CML::transform
                         (
                             revT,
-                            anchors0[faceI] - rotationCentre_
+                            anchors0[facei] - rotationCentre_
                         )
                       + rotationCentre_;
                 }
@@ -528,17 +526,17 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
                     const tensor revT(rotationTensor(n0, -n1));
 
                     // Rotation
-                    forAll(half0Ctrs, faceI)
+                    forAll(half0Ctrs, facei)
                     {
-                        half0Ctrs[faceI] = CML::transform
+                        half0Ctrs[facei] = CML::transform
                         (
                             revT,
-                            half0Ctrs[faceI]
+                            half0Ctrs[facei]
                         );
-                        anchors0[faceI] = CML::transform
+                        anchors0[facei] = CML::transform
                         (
                             revT,
-                            anchors0[faceI]
+                            anchors0[facei]
                         );
                     }
                 }
@@ -582,18 +580,18 @@ CML::vector CML::cyclicPolyPatch::findFaceMaxRadius
 
     const scalarField magRadSqr(magSqr(n));
 
-    label faceI = findMax(magRadSqr);
+    label facei = findMax(magRadSqr);
 
     if (debug)
     {
         Info<< "findFaceMaxRadius(const pointField&) : patch: " << name() << nl
-            << "    rotFace  = " << faceI << nl
-            << "    point    = " << faceCentres[faceI] << nl
-            << "    distance = " << CML::sqrt(magRadSqr[faceI])
+            << "    rotFace  = " << facei << nl
+            << "    point    = " << faceCentres[facei] << nl
+            << "    distance = " << CML::sqrt(magRadSqr[facei])
             << endl;
     }
 
-    return n[faceI];
+    return n[facei];
 }
 
 
@@ -613,9 +611,9 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     coupledPolyPatch(name, size, start, index, bm, patchType, transform),
     neighbPatchName_(word::null),
     neighbPatchID_(-1),
-    rotationAxis_(vector::zero),
-    rotationCentre_(point::zero),
-    separationVector_(vector::zero),
+    rotationAxis_(Zero),
+    rotationCentre_(Zero),
+    separationVector_(Zero),
     coupledPointsPtr_(NULL),
     coupledEdgesPtr_(NULL)
 {
@@ -664,9 +662,9 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     coupledPolyPatch(name, dict, index, bm, patchType),
     neighbPatchName_(dict.lookupOrDefault("neighbourPatch", word::null)),
     neighbPatchID_(-1),
-    rotationAxis_(vector::zero),
-    rotationCentre_(point::zero),
-    separationVector_(vector::zero),
+    rotationAxis_(Zero),
+    rotationCentre_(Zero),
+    separationVector_(Zero),
     coupledPointsPtr_(NULL),
     coupledEdgesPtr_(NULL)
 {
@@ -1021,10 +1019,10 @@ const CML::edgeList& CML::cyclicPolyPatch::coupledPoints() const
         // From local point to nbrPatch or -1.
         labelList coupledPoint(nPoints(), -1);
 
-        forAll(*this, patchFaceI)
+        forAll(*this, patchFacei)
         {
-            const face& fA = localFaces()[patchFaceI];
-            const face& fB = nbrLocalFaces[patchFaceI];
+            const face& fA = localFaces()[patchFacei];
+            const face& fB = nbrLocalFaces[patchFacei];
 
             forAll(fA, indexA)
             {
@@ -1107,9 +1105,9 @@ const CML::edgeList& CML::cyclicPolyPatch::coupledEdges() const
         // Map from edge on A to points (in B indices)
         EdgeMap<label> edgeMap(nEdges());
 
-        forAll(*this, patchFaceI)
+        forAll(*this, patchFacei)
         {
-            const labelList& fEdges = faceEdges()[patchFaceI];
+            const labelList& fEdges = faceEdges()[patchFacei];
 
             forAll(fEdges, i)
             {
@@ -1142,9 +1140,9 @@ const CML::edgeList& CML::cyclicPolyPatch::coupledEdges() const
         edgeList& coupledEdges = *coupledEdgesPtr_;
         label coupleI = 0;
 
-        forAll(neighbPatch, patchFaceI)
+        forAll(neighbPatch, patchFacei)
         {
-            const labelList& fEdges = neighbPatch.faceEdges()[patchFaceI];
+            const labelList& fEdges = neighbPatch.faceEdges()[patchFacei];
 
             forAll(fEdges, i)
             {
@@ -1280,9 +1278,9 @@ bool CML::cyclicPolyPatch::order
     {
         // Do nothing (i.e. identical mapping, zero rotation).
         // See comment at top.
-        forAll(faceMap, patchFaceI)
+        forAll(faceMap, patchFacei)
         {
-            faceMap[patchFaceI] = patchFaceI;
+            faceMap[patchFacei] = patchFacei;
         }
 
         return false;
@@ -1391,25 +1389,25 @@ bool CML::cyclicPolyPatch::order
 
 
         // Set rotation.
-        forAll(faceMap, oldFaceI)
+        forAll(faceMap, oldFacei)
         {
-            // The face f will be at newFaceI (after morphing) and we want its
+            // The face f will be at newFacei (after morphing) and we want its
             // anchorPoint (= f[0]) to align with the anchorpoint for the
             // corresponding face on the other side.
 
-            label newFaceI = faceMap[oldFaceI];
+            label newFacei = faceMap[oldFacei];
 
-            const point& wantedAnchor = anchors0[newFaceI];
+            const point& wantedAnchor = anchors0[newFacei];
 
-            rotation[newFaceI] = getRotation
+            rotation[newFacei] = getRotation
             (
                 pp.points(),
-                pp[oldFaceI],
+                pp[oldFacei],
                 wantedAnchor,
-                tols[oldFaceI]
+                tols[oldFacei]
             );
 
-            if (rotation[newFaceI] == -1)
+            if (rotation[newFacei] == -1)
             {
                 SeriousErrorIn
                 (
@@ -1417,9 +1415,9 @@ bool CML::cyclicPolyPatch::order
                     ", labelList&, labelList&) const"
                 )   << "in patch " << name()
                     << " : "
-                    << "Cannot find point on face " << pp[oldFaceI]
+                    << "Cannot find point on face " << pp[oldFacei]
                     << " with vertices "
-                    << IndirectList<point>(pp.points(), pp[oldFaceI])()
+                    << IndirectList<point>(pp.points(), pp[oldFacei])()
                     << " that matches point " << wantedAnchor
                     << " when matching the halves of processor patch " << name()
                     << "Continuing with incorrect face ordering from now on!"
@@ -1431,11 +1429,11 @@ bool CML::cyclicPolyPatch::order
 
         ownerPatchPtr_.clear();
 
-        // Return false if no change neccesary, true otherwise.
+        // Return false if no change necessary, true otherwise.
 
-        forAll(faceMap, faceI)
+        forAll(faceMap, facei)
         {
-            if (faceMap[faceI] != faceI || rotation[faceI] != 0)
+            if (faceMap[facei] != facei || rotation[facei] != 0)
             {
                 return true;
             }

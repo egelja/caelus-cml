@@ -128,8 +128,9 @@ public:
         //- Return the table of contents (list of all keywords)
         wordList toc() const;
 
-        //- write data
-        bool writeData(Ostream&, bool subDict=true) const;
+        //- write data    
+        bool writeData(Ostream&) const;
+    
 };
 
 

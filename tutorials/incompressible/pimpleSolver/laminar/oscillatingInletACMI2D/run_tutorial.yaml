@@ -1,0 +1,32 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: yes
+      preserve: [ "0.org", "README" ]
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: topoSet
+      cmd_args: "-constant"
+
+  - run_command:
+      cmd_name: createBaffles
+      cmd_args: "-overwrite"
+
+  - run_command:
+      cmd_name: createPatch
+      cmd_args: "-overwrite"
+
+  - copy_tree:
+      src: "0.org"
+      dest: "0"
+
+  - run_command:
+      cmd_name: pimpleSolver
+
+  - process_logs:
+      log_file: pimpleSolver.log
+

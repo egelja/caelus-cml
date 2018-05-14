@@ -41,6 +41,9 @@ SourceFiles
 namespace CML
 {
 
+namespace DataEntryTypes
+{
+
 template<class Type>
 class swakDataEntry;
 
@@ -128,16 +131,10 @@ public:
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::swakDataEntry<Type>::swakDataEntry(const word& entryName, const dictionary& dict)
+swakDataEntry<Type>::swakDataEntry(const word& entryName, const dictionary& dict)
 :
     DataEntry<Type>(entryName)
 {
@@ -155,7 +152,7 @@ CML::swakDataEntry<Type>::swakDataEntry(const word& entryName, const dictionary&
 
 
 template<class Type>
-CML::swakDataEntry<Type>::swakDataEntry(const swakDataEntry<Type>& cnst)
+swakDataEntry<Type>::swakDataEntry(const swakDataEntry<Type>& cnst)
 :
     DataEntry<Type>(cnst),
     data_(cnst.data_),
@@ -168,14 +165,14 @@ CML::swakDataEntry<Type>::swakDataEntry(const swakDataEntry<Type>& cnst)
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::swakDataEntry<Type>::~swakDataEntry()
+swakDataEntry<Type>::~swakDataEntry()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-CML::CommonValueExpressionDriver &CML::swakDataEntry<Type>::driver()
+CommonValueExpressionDriver &swakDataEntry<Type>::driver()
 {
     if(!driver_.valid()) {
         driver_=CommonValueExpressionDriver::New(
@@ -187,7 +184,7 @@ CML::CommonValueExpressionDriver &CML::swakDataEntry<Type>::driver()
 }
 
 template<class Type>
-Type CML::swakDataEntry<Type>::value(const scalar x) const
+Type swakDataEntry<Type>::value(const scalar x) const
 {
     CommonValueExpressionDriver &theDriver=const_cast<swakDataEntry<Type> &>(
         *this
@@ -203,7 +200,7 @@ Type CML::swakDataEntry<Type>::value(const scalar x) const
 }
 
 template<class Type>
-Type CML::swakDataEntry<Type>::integrate(const scalar x1,const scalar x2) const
+Type swakDataEntry<Type>::integrate(const scalar x1,const scalar x2) const
 {
     CommonValueExpressionDriver &theDriver=const_cast<swakDataEntry<Type> &>(
         *this
@@ -240,7 +237,7 @@ Type CML::swakDataEntry<Type>::integrate(const scalar x1,const scalar x2) const
 
 
 template<class Type>
-CML::Ostream& CML::operator<<
+Ostream& operator<<
 (
     Ostream& os,
     const swakDataEntry<Type>& cnst
@@ -267,7 +264,7 @@ CML::Ostream& CML::operator<<
 }
 
 template<class Type>
-void CML::swakDataEntry<Type>::writeData(Ostream& os) const
+void swakDataEntry<Type>::writeData(Ostream& os) const
 {
     DataEntry<Type>::writeData(os);
 
@@ -276,6 +273,8 @@ void CML::swakDataEntry<Type>::writeData(Ostream& os) const
     os  << token::END_STATEMENT << nl;
 }
 
+} // End namespace DataEntryTypes
+} // End namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

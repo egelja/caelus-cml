@@ -12,8 +12,12 @@
 #include "uniformDimensionedFields.hpp"
 #include "calculatedFvPatchFields.hpp"
 #include "fixedValueFvPatchFields.hpp"
+#include "fixedFluxPressureFvPatchScalarField.hpp"
+#include "constrainHbyA.hpp"
+#include "constrainPressure.hpp"
 #include "adjustPhi.hpp"
 #include "findRefCell.hpp"
+#include "IOMRFZoneList.hpp"
 #include "constants.hpp"
 
 #include "OSspecific.hpp"

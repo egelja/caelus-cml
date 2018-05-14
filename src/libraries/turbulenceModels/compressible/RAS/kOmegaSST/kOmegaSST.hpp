@@ -22,7 +22,7 @@ Description
     flows (SST-2003).
     
     This form of the SST model have several relatively minor variations from
-    the orginal SST version.
+    the original SST version.
 
     References:
     \verbatim
@@ -60,7 +60,7 @@ Description
         Applying the Spalart-Shur Correction Term"
         P.E. Smirnov,
         F.R. Menter
-        ASME Jorunal of Turbomachinery, Vol. 131, 2009.
+        ASME Journal of Turbomachinery, Vol. 131, 2009.
 
     \endverbatim
 

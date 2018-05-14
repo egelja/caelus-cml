@@ -242,7 +242,7 @@ void CML::sampledSurfaces::read(const dictionary& dict)
 
         forAll(*this, surfI)
         {
-            Pout<< "  " << operator[](surfI) << endl;
+            Pout<< "  " << operator[](surfI).name() << endl;
         }
         Pout<< ")" << endl;
     }

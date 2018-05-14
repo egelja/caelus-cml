@@ -1,6 +1,10 @@
-    Info << "\nReading waveProperties" << endl;
+autoPtr<CML::waveTheories::externalWaveForcing> externalWave;
 
-    autoPtr<CML::waveTheories::externalWaveForcing> externalWave =
+if (waves)
+{
+    Info << "\nCreating externalWaveForcing" << endl;
+
+    externalWave =
         CML::waveTheories::externalWaveForcing::New
         (
             IOobject
@@ -14,3 +18,4 @@
             runTime,
             mesh
         );
+}

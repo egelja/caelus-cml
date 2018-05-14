@@ -63,7 +63,7 @@ SourceFiles
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-//- check it a timeout has occured
+//- check it a timeout has occurred
 //  keep setjmp in same stack frame so no function calls
 #define timedOut(x) \
     (((x).newTimeOut_ > 0) ? setjmp(CML::timer::envAlarm) : false)

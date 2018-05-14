@@ -40,7 +40,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class cyclicFvPatch Declaration
+                        Class cyclicFvPatch Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -163,7 +163,26 @@ public:
             ) const;
 
 
-        // Cyclic coupled interface functions
+        // Block coupled interface functionality
+
+            //- Update result field based on interface functionality
+            virtual void updateInterfaceMatrix
+            (
+                Field<Type>&,
+                const Field<Type>&,
+                const BlockLduMatrix<Type>&,
+                const CoeffField<Type>&,
+                const Pstream::commsTypes commsType
+            ) const
+            {
+                notImplemented
+                (
+                    "cyclicFvPatchField<Type>::"
+                    "updateInterfaceMatrix for block matrices"
+                );
+            }
+  
+         // Cyclic coupled interface functions
 
             //- Does the patch field perform the transformation
             virtual bool doTransform() const

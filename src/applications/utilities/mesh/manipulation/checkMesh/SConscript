@@ -7,16 +7,23 @@ target = 'checkMesh'
 
 sources = Split("""
 checkMesh.cpp
+checkMeshQuality.cpp
 checkGeometry.cpp
 checkTopology.cpp
-printMeshStats.cpp
+checkTools.cpp
+writeFields.cpp
 """)
 
 caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude',
+'surfMesh/lnInclude',
+'sampling/lnInclude'
 ]
 
 caelus_libs = [
-'core'
+'core',
+'dynamicMesh',
+'sampling'
 ]
 
 build_app(env,

@@ -1,19 +1,23 @@
-tmp<fvVectorMatrix> UEqn
+MRF.correctBoundaryVelocity(U);
+
+tmp<fvVectorMatrix> tUEqn
 (
-    fvm::ddt(rho, U)
-  + fvm::div(phi, U)
+    fvm::ddt(rho, U) + fvm::div(phi, U)
+  + MRF.DDt(rho, U)
   + turbulence->divDevRhoReff(U)
  ==
     fvOptions(rho,U)
 );
 
-UEqn().relax();
+fvVectorMatrix& UEqn = tUEqn();
 
-fvOptions.constrain(UEqn());
+UEqn.relax();
+
+fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {
-    solve(UEqn() == -fvc::grad(p));
+    solve(UEqn == -fvc::grad(p));
 }
 
 fvOptions.correct(U);

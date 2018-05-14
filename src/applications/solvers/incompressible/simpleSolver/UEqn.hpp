@@ -1,17 +1,19 @@
-    // Momentum predictor
+// Momentum predictor
+MRF.correctBoundaryVelocity(U);
 
-    tmp<fvVectorMatrix> UEqn
-    (
-        fvm::div(phi, U)
-      + turbulence->divDevReff(U)
-      ==
-        fvOptions(U)
-    );
+tmp<fvVectorMatrix> UEqn
+(
+    fvm::div(phi, U)
+  + MRF.DDt(U)
+  + turbulence->divDevReff(U)
+  ==
+    fvOptions(U)
+);
 
-    UEqn().relax();
+UEqn().relax();
 
-    fvOptions.constrain(UEqn());
+fvOptions.constrain(UEqn());
 
-    solve(UEqn() == -fvc::grad(p));
+solve(UEqn() == -fvc::grad(p));
 
-    fvOptions.correct(U);
+fvOptions.correct(U);

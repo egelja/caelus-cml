@@ -75,6 +75,7 @@ caelus_inc = [
 'sampling/lnInclude',
 'surfMesh/lnInclude',
 'lagrangian/basic/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [

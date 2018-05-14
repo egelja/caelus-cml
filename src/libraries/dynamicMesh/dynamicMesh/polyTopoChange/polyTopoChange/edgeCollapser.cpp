@@ -252,7 +252,7 @@ void CML::edgeCollapser::collapseEdges(const labelList& edgeLabels)
                 }
                 else
                 {
-                    // Dont know
+                    // Don't know
                     collapseEdge(edgeI, e[0]);
                 }
             }

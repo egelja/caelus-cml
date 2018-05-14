@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,6 +37,7 @@ SourceFiles
 
 #include "SubList.hpp"
 #include "Field.hpp"
+#include "VectorSpace.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -107,6 +108,13 @@ public:
 
         //- Assignment via UList operator. Takes linear time.
         inline void operator=(const SubField<Type>&);
+
+        //- Assignment via UList operator. Takes linear time.
+        inline void operator=(const Field<Type>&);
+
+        //- Assignment via UList operator. Takes linear time.
+        template<class Form, direction Ncmpts>
+        inline void operator=(const VectorSpace<Form, Type, Ncmpts>&);
 
         //- Allow cast to a const Field\<Type\>&
         inline operator const Field<Type>&() const;

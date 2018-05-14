@@ -34,8 +34,8 @@ Description
         Ustar is the frictional velocity
         K is karman's constant
         z is the verical coordinate
-        z0 is the surface roughness lenght
-        zGround minium vlaue in z direction
+        z0 is the surface roughness length
+        zGround minimum vlaue in z direction
 
 
     and:
@@ -92,7 +92,7 @@ class atmBoundaryLayerInletEpsilonFvPatchScalarField
         //- Reference velocity
         const scalar Uref_;
 
-        //- Reference hight
+        //- Reference height
         const scalar Href_;
 
         //- Surface roughness length

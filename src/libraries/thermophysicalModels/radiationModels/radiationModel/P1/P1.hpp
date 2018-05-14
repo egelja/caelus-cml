@@ -60,7 +60,7 @@ class P1
         volScalarField G_;
 
         //- Total radiative heat flux [W/m2]
-        volScalarField Qr_;
+        volScalarField qr_;
 
         //- Absorption coefficient
         volScalarField a_;
@@ -91,6 +91,9 @@ public:
 
         //- Construct from components
         P1(const volScalarField& T);
+
+        //- Construct from components
+        P1(const dictionary& dict, const volScalarField& T);
 
 
     //- Destructor

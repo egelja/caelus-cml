@@ -9,22 +9,17 @@ subdirs = Split("""
    heatTransfer/buoyantSimpleSolver
    incompressible/simpleSolver
    incompressible/simpleSolver/SRFSimpleSolver
-   incompressible/pisoSolver
    incompressible/pimpleSolver
    incompressible/pimpleSolver/SRFPimpleSolver
-   incompressible/pimpleSolver/pimpleDyMSolver
    compressible/PBNS/cpbnsLTS
    compressible/PBNS/cpbnsPIMPLE
    compressible/DBNS/explicitDBNSSolver
    compressible/DBNS/explicitDBNSSRFSolver
    combustion/reactingSolver
    multiphase/vof/vofSolver
-   multiphase/vof/vofSolver/vofDyMSolver
+   multiphase/vof/vofSolver/porousWaveSolver
    multiphase/vof/vofLPTSolver
    multiphase/lagrangian/pimpleParcelSolver
-   multiphase/waveSolver
-   multiphase/waveSolver/waveDyMSolver
-   multiphase/waveSolver/porousWaveSolver
    multiphase/vof/isoVofSolver
 """)
 

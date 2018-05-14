@@ -477,7 +477,7 @@ void CML::removePoints::updateMesh(const mapPolyMesh& map)
                     (
                         "removePoints::updateMesh(const mapPolyMesh&)"
                     )   << "Old face " << savedFaceLabels_[localI]
-                        << " seems to have dissapeared."
+                        << " seems to have dissappeared."
                         << abort(FatalError);
                 }
                 savedFaceLabels_[localI] = newFaceI;
@@ -505,7 +505,7 @@ void CML::removePoints::updateMesh(const mapPolyMesh& map)
                         (
                             "removePoints::updateMesh(const mapPolyMesh&)"
                         )   << "Old point " << pointI
-                            << " seems to have dissapeared."
+                            << " seems to have dissappeared."
                             << abort(FatalError);
                     }
                 }

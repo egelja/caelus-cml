@@ -22,7 +22,7 @@ Class
     CML::GaussSeidelSmoother
 
 Description
-    Forward Gauss-Seidel smoother. Implements the follwoing equation:
+    Forward Gauss-Seidel smoother. Implements the following equation:
     xNew = inv(L)*(b-U*xOld)
 
 SourceFiles

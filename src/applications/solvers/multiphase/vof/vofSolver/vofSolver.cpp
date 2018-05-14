@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,11 +18,13 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    vofSolver
+    waveDyMSolver
 
 Description
     Solver for 2 incompressible, isothermal immiscible fluids using a VOF
-    (volume of fluid) phase-fraction based interface capturing approach.
+    (volume of fluid) phase-fraction based interface capturing approach,
+    with optional mesh motion and mesh topology changes including adaptive
+    re-meshing.
 
     The momentum and other fluid properties are of the "mixture" and a single
     momentum equation is solved.
@@ -31,6 +33,7 @@ Description
 ---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
+#include "dynamicFvMesh.hpp"
 #include "CMULES.hpp"
 #include "EulerDdtScheme.hpp"
 #include "localEulerDdtScheme.hpp"
@@ -42,8 +45,11 @@ Description
 #include "interpolationTable.hpp"
 #include "pimpleControl.hpp"
 #include "fvIOoptionList.hpp"
-#include "fixedFluxPressureFvPatchScalarField.hpp"
+#include "CorrectPhi_.hpp"
 #include "fvcSmooth.hpp"
+
+#include "relaxationZone.hpp"
+#include "externalWaveForcing.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,14 +57,17 @@ int main(int argc, char *argv[])
 {
     #include "setRootCase.hpp"
     #include "createTime.hpp"
-    #include "createMesh.hpp"
+    #include "createDynamicFvMesh.hpp"
 
     pimpleControl pimple(mesh);
 
-    #include "createTimeControls.hpp"
     #include "initContinuityErrs.hpp"
+    #include "createDyMControls.hpp"
     #include "createFields.hpp"
-    #include "correctPhi.hpp"
+    #include "createMRF.hpp"
+    #include "createFvOptions.hpp"
+    #include "initCorrectPhi.hpp"
+    #include "createUfIfPresent.hpp"
 
     if (!LTS)
     {
@@ -73,7 +82,7 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-        #include "readTimeControls.hpp"
+        #include "readDyMControls.hpp"
 
         if (LTS)
         {
@@ -90,14 +99,66 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
+        if (waves)
+        {
+            externalWave->step();
+        }
+
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
+            if (pimple.firstIter() || moveMeshOuterCorrectors)
+            {
+                scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
+
+                mesh.update();
+
+                if (mesh.changing())
+                {
+                    Info<< "Execution time for mesh.update() = "
+                        << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
+                        << " s" << endl;
+
+                    // Do not apply previous time-step mesh compression flux
+                    // if the mesh topology changed
+                    if (mesh.topoChanging())
+                    {
+                        talphaPhiCorr0.clear();
+                    }
+
+                    gh = g & mesh.C();
+                    ghf = g & mesh.Cf();
+
+                    if (correctPhi)
+                    {
+                        // Calculate absolute flux
+                        // from the mapped surface velocity
+                        phi = mesh.Sf() & UfPtr();
+
+                        #include "correctPhi.hpp"
+
+                        // Make the flux relative to the mesh motion
+                        fvc::makeRelative(phi, U);
+
+                        mixture.correct();
+                    }
+
+                    if (checkMeshCourantNo)
+                    {
+                        #include "meshCourantNo.hpp"
+                    }
+                }
+            }
+
             #include "alphaControls.hpp"
             #include "alphaEqnSubCycle.hpp"
 
+            if (waves)
+            {
+                relaxing->correct();
+            }
+
             mixture.correct();
-            interface.correct();
 
             #include "UEqn.hpp"
 
@@ -116,6 +177,12 @@ int main(int argc, char *argv[])
         runTime.write();
 
         #include "reportTimeStats.hpp" 
+    }
+
+    if (waves)
+    {
+        // Close down the external wave forcing in a nice manner
+        externalWave->close();
     }
 
     Info<< "End\n" << endl;

@@ -38,7 +38,7 @@ CML::MarshakRadiationFvPatchScalarField::MarshakRadiationFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, "undefined", scalarField::null()),
-    TName_("undefined")
+    TName_("T")
 {
     refValue() = 0.0;
     refGrad() = 0.0;
@@ -74,7 +74,7 @@ CML::MarshakRadiationFvPatchScalarField::MarshakRadiationFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, dict),
-    TName_(dict.lookup("T"))
+    TName_(dict.lookupOrDefault<word>("T", "T"))
 {
     if (dict.found("value"))
     {

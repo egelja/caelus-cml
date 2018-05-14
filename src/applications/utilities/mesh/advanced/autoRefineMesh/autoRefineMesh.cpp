@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
 #   include "createTime.hpp"
 #   include "createPolyMesh.hpp"
 
-    // If nessecary add oldInternalFaces patch
+    // If necessary add oldInternalFaces patch
     label newPatchI = addPatch(mesh, "oldInternalFaces");
 
 

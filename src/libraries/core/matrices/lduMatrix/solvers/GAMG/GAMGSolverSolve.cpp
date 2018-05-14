@@ -155,7 +155,7 @@ void CML::GAMGSolver::Vcycle
     for (label leveli = 0; leveli < coarsestLevel; leveli++)
     {
         // If the optional pre-smoothing sweeps are selected
-        // smooth the coarse-grid field for the restriced source
+        // smooth the coarse-grid field for the restricted source
         if (nPreSweeps_)
         {
             coarseCorrFields[leveli] = 0.0;

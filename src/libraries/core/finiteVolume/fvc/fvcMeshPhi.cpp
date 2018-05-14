@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -210,6 +210,43 @@ CML::tmp<CML::surfaceScalarField> CML::fvc::absolute
     else
     {
         return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+void CML::fvc::correctUf
+(
+    autoPtr<surfaceVectorField>& UfPtr,
+    const volVectorField& U,
+    const surfaceScalarField& phi
+)
+{
+    const fvMesh& mesh = U.mesh();
+
+    if (mesh.dynamic())
+    {
+        UfPtr() = fvc::interpolate(U);
+        surfaceVectorField n(mesh.Sf()/mesh.magSf());
+        UfPtr() += n*(phi/mesh.magSf() - (n & UfPtr()));
+    }
+}
+
+
+void CML::fvc::correctRhoUf
+(
+    autoPtr<surfaceVectorField>& rhoUfPtr,
+    const volScalarField& rho,
+    const volVectorField& U,
+    const surfaceScalarField& phi
+)
+{
+    const fvMesh& mesh = U.mesh();
+
+    if (mesh.dynamic())
+    {
+        rhoUfPtr() = fvc::interpolate(rho*U);
+        surfaceVectorField n(mesh.Sf()/mesh.magSf());
+        rhoUfPtr() += n*(fvc::absolute(phi, rho, U)/mesh.magSf() - (n & rhoUfPtr()));
     }
 }
 

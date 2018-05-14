@@ -1,0 +1,55 @@
+/*-------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+	version				2.0;
+	format				ascii;
+	class				dictionary;
+	location			"system";
+	object				fvSolution;
+}
+
+//--------------------------------------------------------------------------------
+
+solvers
+{
+	p
+	{
+		solver			PCG;
+		preconditioner		SSGS;
+		tolerance		1e-6;
+		relTol			0.05;
+	}
+	pFinal
+	{
+		solver			PCG;
+		preconditioner		SSGS;
+		tolerance		1e-7;
+		relTol			0;
+	}
+	UFinal
+	{
+		solver			PBiCGStab;
+		preconditioner		USGS;
+		tolerance		1e-6;
+		relTol			0;
+	}
+	U
+	{
+		solver			PBiCGStab;
+		preconditioner		USGS;
+		tolerance		1e-6;
+		relTol			0;
+	}
+}
+
+PIMPLE
+{
+	nCorrectors                     2;
+	nNonOrthogonalCorrectors	1;
+	pRefCell			0;
+	pRefValue			0;
+}

@@ -1,34 +1,36 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::CSV
+    CML::DataEntryTypes::CSV
 
 Description
-    Templated CSV container data entry.  Reference column is always a scalar,
-    e.g. time
+    Templated CSV function.
 
+    Reference column is always a scalar, e.g. time.
+
+    Usage:
     \verbatim
         <entryName> csvFile;
         <entryName>Coeffs
         {
-            nHeaderLine         4;
+            nHeaderLine         4;          // number of header lines
             refColumn           0;          // reference column index
             componentColumns    (1 2 3);    // component column indices
             separator           ",";        // optional (defaults to ",")
@@ -39,13 +41,11 @@ Description
         }
     \endverbatim
 
-SourceFiles
-    CSV.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef CSV_H
-#define CSV_H
+#ifndef CSV_HPP
+#define CSV_HPP
 
 #include "DataEntry.hpp"
 #include "TableBase.hpp"
@@ -53,20 +53,15 @@ SourceFiles
 #include "labelList.hpp"
 #include "ISstream.hpp"
 
+#include "DynamicList.hpp"
+#include "IFstream.hpp"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
-
-template<class Type>
-class CSV;
-
-template<class Type>
-Ostream& operator<<
-(
-    Ostream&,
-    const CSV<Type>&
-);
+namespace DataEntryTypes
+{
 
 /*---------------------------------------------------------------------------*\
                            Class CSV Declaration
@@ -75,13 +70,9 @@ Ostream& operator<<
 template<class Type>
 class CSV
 :
-    public DataEntry<Type>,
     public TableBase<Type>
 {
     // Private data
-
-        //- Coefficients dictionary (for convenience on reading)
-        dictionary coeffs_;
 
         //- Number header lines
         label nHeaderLine_;
@@ -126,8 +117,7 @@ public:
         CSV
         (
             const word& entryName,
-            const dictionary& dict,
-            const word& ext = "Coeffs"
+            const dictionary& dict
         );
 
         //- Copy constructor
@@ -146,134 +136,90 @@ public:
 
     // Member Functions
 
-        // Manipulation
-
-            //- Convert time
-            virtual void convertTimeBase(const Time& t)
-            {
-                TableBase<Type>::convertTimeBase(t);
-            }
-
-
-        // Access
-
-            //- Return const access to the file name
-            virtual const fileName& fName() const;
-
-
-        // Evaluation
-
-            //- Return Table value
-            virtual Type value(const scalar x) const
-            {
-                return TableBase<Type>::value(x);
-            }
-
-            //- Integrate between two (scalar) values
-            virtual Type integrate(const scalar x1, const scalar x2) const
-            {
-                return TableBase<Type>::integrate(x1, x2);
-            }
-
-            //- Return dimensioned constant value
-            virtual dimensioned<Type> dimValue(const scalar x) const
-            {
-                return TableBase<Type>::dimValue(x);
-            }
-
-            //- Integrate between two values and return dimensioned type
-            virtual dimensioned<Type> dimIntegrate
-            (
-                const scalar x1,
-                const scalar x2
-            ) const
-            {
-                return TableBase<Type>::dimIntegrate(x1, x2);
-            }
-
-
-    // I/O
-
-        //- Ostream Operator
-        friend Ostream& operator<< <Type>
-        (
-            Ostream& os,
-            const CSV<Type>& cnst
-        );
+        //- Return const access to the file name
+        virtual const fileName& fName() const;
 
         //- Write in dictionary format
         virtual void writeData(Ostream& os) const;
 };
 
 
+template<>
+label CSV<label>::readValue(const List<string>& splitted);
+
+template<>
+CML::scalar CSV<scalar>::readValue(const List<string>& splitted);
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace DataEntryTypes
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "DynamicList.hpp"
-#include "IFstream.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-namespace CML
+template<>
+CML::label CML::DataEntryTypes::CSV<CML::label>::readValue
+(
+    const List<string>& splitted
+)
 {
-    template<>
-    label CSV<label>::readValue(const List<string>& splitted)
+    if (componentColumns_[0] >= splitted.size())
     {
-        if (componentColumns_[0] >= splitted.size())
-        {
-            FatalErrorIn("CSV<label>::readValue(const List<string>&)")
-                << "No column " << componentColumns_[0] << " in "
-                << splitted << endl
-                << exit(FatalError);
-        }
-
-        return readLabel(IStringStream(splitted[componentColumns_[0]])());
+        FatalErrorIn("DataEntryTypes::CSV<label>::readValue(const List<string>&)")
+            << "No column " << componentColumns_[0] << " in "
+            << splitted << endl
+            << exit(FatalError);
     }
 
-    template<>
-    scalar CSV<scalar>::readValue(const List<string>& splitted)
-    {
-        if (componentColumns_[0] >= splitted.size())
-        {
-            FatalErrorIn("CSV<scalar>::readValue(const List<string>&)")
-                << "No column " << componentColumns_[0] << " in "
-                << splitted << endl
-                << exit(FatalError);
-        }
+    return readLabel(IStringStream(splitted[componentColumns_[0]])());
+}
 
-        return readScalar(IStringStream(splitted[componentColumns_[0]])());
+
+template<>
+CML::scalar CML::DataEntryTypes::CSV<CML::scalar>::readValue
+(
+    const List<string>& splitted
+)
+{
+    if (componentColumns_[0] >= splitted.size())
+    {
+        FatalErrorIn("DataEntryTypes::CSV<label>::readValue(const List<string>&)")
+            << "No column " << componentColumns_[0] << " in "
+            << splitted << endl
+            << exit(FatalError);
     }
 
-
-    template<class Type>
-    Type CSV<Type>::readValue(const List<string>& splitted)
-    {
-        Type result;
-
-        for (label i = 0; i < pTraits<Type>::nComponents; i++)
-        {
-            if (componentColumns_[i] >= splitted.size())
-            {
-                FatalErrorIn("CSV<Type>::readValue(const List<string>&)")
-                    << "No column " << componentColumns_[i] << " in "
-                    << splitted << endl
-                    << exit(FatalError);
-            }
-
-            result[i] =
-                readScalar(IStringStream(splitted[componentColumns_[i]])());
-        }
-
-        return result;
-    }
+    return readScalar(IStringStream(splitted[componentColumns_[0]])());
 }
 
 
 template<class Type>
-void CML::CSV<Type>::read()
+Type CML::DataEntryTypes::CSV<Type>::readValue(const List<string>& splitted)
+{
+    Type result;
+
+    for (label i = 0; i < pTraits<Type>::nComponents; i++)
+    {
+        if (componentColumns_[i] >= splitted.size())
+        {
+            FatalErrorIn("CSV<scalar>::readValue(const List<string>&)")
+            << "No column " << componentColumns_[i] << " in "
+                << splitted << endl
+                << exit(FatalError);
+        }
+
+        result[i] =
+        readScalar(IStringStream(splitted[componentColumns_[i]])());
+    }
+
+    return result;
+}
+
+
+template<class Type>
+void CML::DataEntryTypes::CSV<Type>::read()
 {
     fileName expandedFile(fName_);
     IFstream is(expandedFile.expand());
@@ -384,26 +330,23 @@ void CML::CSV<Type>::read()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::CSV<Type>::CSV
+CML::DataEntryTypes::CSV<Type>::CSV
 (
     const word& entryName,
-    const dictionary& dict,
-    const word& ext
+    const dictionary& dict
 )
 :
-    DataEntry<Type>(entryName),
-    TableBase<Type>(entryName, dict.subDict(entryName + ext)),
-    coeffs_(dict.subDict(entryName + ext)),
-    nHeaderLine_(readLabel(coeffs_.lookup("nHeaderLine"))),
-    refColumn_(readLabel(coeffs_.lookup("refColumn"))),
-    componentColumns_(coeffs_.lookup("componentColumns")),
-    separator_(coeffs_.lookupOrDefault<string>("separator", string(","))[0]),
-    mergeSeparators_(readBool(coeffs_.lookup("mergeSeparators"))),
-    fName_(coeffs_.lookup("fileName"))
+    TableBase<Type>(entryName, dict),
+    nHeaderLine_(readLabel(dict.lookup("nHeaderLine"))),
+    refColumn_(readLabel(dict.lookup("refColumn"))),
+    componentColumns_(dict.lookup("componentColumns")),
+    separator_(dict.lookupOrDefault<string>("separator", string(","))[0]),
+    mergeSeparators_(readBool(dict.lookup("mergeSeparators"))),
+    fName_(dict.lookup("file"))
 {
     if (componentColumns_.size() != pTraits<Type>::nComponents)
     {
-        FatalErrorIn("CML::CSV<Type>::CSV(const word&, Istream&)")
+        FatalErrorIn("CML::DataEntryTypes::CSV<Type>::CSV(const word&, Istream&)")
             << componentColumns_ << " does not have the expected length of "
             << pTraits<Type>::nComponents << endl
             << exit(FatalError);
@@ -416,9 +359,8 @@ CML::CSV<Type>::CSV
 
 
 template<class Type>
-CML::CSV<Type>::CSV(const CSV<Type>& tbl)
+CML::DataEntryTypes::CSV<Type>::CSV(const CSV<Type>& tbl)
 :
-    DataEntry<Type>(tbl),
     TableBase<Type>(tbl),
     nHeaderLine_(tbl.nHeaderLine_),
     refColumn_(tbl.refColumn_),
@@ -432,56 +374,21 @@ CML::CSV<Type>::CSV(const CSV<Type>& tbl)
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::CSV<Type>::~CSV()
+CML::DataEntryTypes::CSV<Type>::~CSV()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-const CML::fileName& CML::CSV<Type>::fName() const
+const CML::fileName& CML::DataEntryTypes::CSV<Type>::fName() const
 {
     return fName_;
 }
 
 
-// * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
-
-#include "DataEntry.hpp"
-
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
-
 template<class Type>
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const CSV<Type>& tbl
-)
-{
-    if (os.format() == IOstream::ASCII)
-    {
-        os  << static_cast<const DataEntry<Type>& >(tbl)
-            << token::SPACE << tbl.nHeaderLine_
-            << token::SPACE << tbl.timeColumn_
-            << token::SPACE << tbl.componentColumns_
-            << token::SPACE << tbl.separator_
-            << token::SPACE << tbl.mergeSeparators_
-            << token::SPACE << tbl.fileName_;
-    }
-    else
-    {
-        os  << static_cast<const DataEntry<Type>& >(tbl);
-    }
-
-    // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const CSV<Type>&)");
-
-    return os;
-}
-
-
-template<class Type>
-void CML::CSV<Type>::writeData(Ostream& os) const
+void CML::DataEntryTypes::CSV<Type>::writeData(Ostream& os) const
 {
     DataEntry<Type>::writeData(os);
     os  << token::END_STATEMENT << nl;
@@ -514,13 +421,10 @@ void CML::CSV<Type>::writeData(Ostream& os) const
         << token::END_STATEMENT << nl;
     os.writeKeyword("mergeSeparators") << mergeSeparators_
         << token::END_STATEMENT << nl;
-    os.writeKeyword("fileName") << fName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("file") << fName_ << token::END_STATEMENT << nl;
     os  << decrIndent << indent << token::END_BLOCK << endl;
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

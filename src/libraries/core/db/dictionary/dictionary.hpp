@@ -316,7 +316,19 @@ public:
             ) const;
 
             //- Find and return a T,
-            //  if not found return the given default value
+            //  if not found throw a fatal error.
+            //  If recursive, search parent dictionaries.
+            //  If patternMatch, use regular expressions.
+            template<class T>
+            T lookupType
+            (
+                const word&,
+                bool recursive=false,
+                bool patternMatch=true
+            ) const;
+
+            //- Find and return a T,
+            //  if not found return the given default value.
             //  If recursive, search parent dictionaries.
             //  If patternMatch, use regular expressions.
             template<class T>
@@ -550,6 +562,31 @@ dictionary operator|(const dictionary& dict1, const dictionary& dict2);
 #include "primitiveEntry.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class T>
+T CML::dictionary::lookupType
+(
+    const word& keyword,
+    bool recursive,
+    bool patternMatch
+) const
+{
+    const entry* entryPtr = lookupEntryPtr(keyword, recursive, patternMatch);
+
+    if (entryPtr == NULL)
+    {
+        FatalIOErrorIn
+        (
+           "CML::dictionary::lookupType(const word&, bool, bool) const",
+            *this
+        )   << "keyword " << keyword << " is undefined in dictionary "
+            << name()
+            << exit(FatalIOError);
+    }
+
+    return pTraits<T>(entryPtr->stream());
+}
+
 
 template<class T>
 T CML::dictionary::lookupOrDefault

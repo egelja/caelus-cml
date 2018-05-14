@@ -34,7 +34,7 @@ CML::dimensionSet::dimensionSet(Istream& is)
 
 CML::Istream& CML::operator>>(Istream& is, dimensionSet& dset)
 {
-    // Read begining of dimensionSet
+    // Read beginning of dimensionSet
     if (token(is) != token::BEGIN_SQR)
     {
         Info<< "expected a " << token::BEGIN_SQR << " in dimensionSet"

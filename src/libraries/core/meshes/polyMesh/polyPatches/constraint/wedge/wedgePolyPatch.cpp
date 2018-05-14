@@ -54,19 +54,19 @@ void CML::wedgePolyPatch::initTransforms()
             );
         centreNormal_ /= mag(centreNormal_);
 
-        if
-        (
-            mag(centreNormal_.x() + centreNormal_.y() + centreNormal_.z())
-            < (1 - SMALL)
-        )
+        cosAngle_ = centreNormal_ & patchNormal_;
+
+        const scalar cnCmptSum =
+            centreNormal_.x() + centreNormal_.y() + centreNormal_.z();
+
+        if (mag(cnCmptSum) < (1 - SMALL))
         {
             FatalErrorIn
             (
                 "wedgePolyPatch::initTransforms()"
             )   << "wedge " << name()
                 << " centre plane does not align with a coordinate plane by "
-                << 1
-                 - mag(centreNormal_.x()+centreNormal_.y()+centreNormal_.z())
+                << 1 - mag(cnCmptSum)
                 << exit(FatalError);
         }
 
@@ -84,7 +84,7 @@ void CML::wedgePolyPatch::initTransforms()
                    " with the coordinate plane" << nl
                 << "    and the the pair of wedge planes should be symmetric"
                 << " about the coordinate plane." << nl
-                << "    Normal of face " << 0 << " is " << patchNormal_
+                << "    Normal of wedge plane is " << patchNormal_
                 << " , implied coordinate plane direction is " << centreNormal_
                 << exit(FatalError);
         }

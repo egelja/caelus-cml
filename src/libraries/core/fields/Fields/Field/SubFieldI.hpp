@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -108,14 +108,35 @@ inline CML::tmp<CML::Field<Type> > CML::SubField<Type>::T() const
 template<class Type>
 inline void CML::SubField<Type>::operator=(const SubField<Type>& rhs)
 {
-    UList<Type>::operator=(rhs);
+    SubList<Type>::operator=(rhs);
+}
+
+
+template<class Type>
+inline void CML::SubField<Type>::operator=(const Field<Type>& rhs)
+{
+    SubList<Type>::operator=(rhs);
+}
+
+
+template<class Type>
+template<class Form, CML::direction Ncmpts>
+inline void CML::SubField<Type>::operator=
+(
+    const VectorSpace<Form, Type, Ncmpts>& rhs
+)
+{
+    forAll(rhs, i)
+    {
+        this->operator[](i) = rhs[i];
+    }
 }
 
 
 template<class Type>
 inline CML::SubField<Type>::operator const CML::Field<Type>&() const
 {
-    return *reinterpret_cast< const Field<Type>* >(this);
+    return *reinterpret_cast<const Field<Type>* >(this);
 }
 
 

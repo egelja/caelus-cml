@@ -248,7 +248,7 @@ public:
             return myProcNo_;
         }
 
-        //- Return neigbour processor number
+        //- Return neighbour processor number
         int neighbProcNo() const
         {
             return neighbProcNo_;

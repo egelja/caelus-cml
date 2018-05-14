@@ -18,7 +18,7 @@ License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::regionProperties
+    CML::regionProperties
 
 Description
     Simple class to hold region information for coupled region simulations.

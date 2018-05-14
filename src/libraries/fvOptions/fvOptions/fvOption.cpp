@@ -596,45 +596,76 @@ void CML::fv::option::setValue(fvMatrix<tensor>& eqn, const label fieldI)
 }
 
 
-void CML::fv::option::makeRelative(surfaceScalarField& phi) const
+void CML::fv::option::writeHeader(Ostream& os) const
 {
-    // do nothing
+    os  << indent << name_ << nl
+        << indent << token::BEGIN_BLOCK << incrIndent << nl;
 }
 
 
-void CML::fv::option::makeRelative
-(
-    FieldField<fvsPatchField, scalar>& phi
-) const
+void CML::fv::option::writeFooter(Ostream& os) const
 {
-    // do nothing
+    os  << decrIndent << indent << token::END_BLOCK << endl;
 }
 
 
-void CML::fv::option::makeRelative
-(
-    const surfaceScalarField& rho,
-    surfaceScalarField& phi
-) const
+void CML::fv::option::writeData(Ostream& os) const
 {
-    // do nothing
+    os.writeKeyword("active") << active_ << token::END_STATEMENT << nl;
+    os.writeKeyword("timeStart") << timeStart_ << token::END_STATEMENT << nl;
+    os.writeKeyword("duration") << duration_ << token::END_STATEMENT << nl;
+    os.writeKeyword("selectionMode")
+        << selectionModeTypeNames_[selectionMode_] << nl;
+
+    switch (selectionMode_)
+    {
+        case smPoints:
+        {
+            os.writeKeyword("points") << points_
+                << token::END_STATEMENT << nl;
+            break;
+        }
+        case smCellSet:
+        {
+            os.writeKeyword("cellSet") << cellSetName_
+                << token::END_STATEMENT << nl;
+            break;
+        }
+        case smCellZone:
+        {
+            os.writeKeyword("cellZone") << cellSetName_
+                << token::END_STATEMENT << nl;
+            break;
+        }
+        case smAll:
+        {
+            break;
+        }
+        case smMapRegion:
+        {
+            break;
+        }
+        default:
+        {
+            FatalErrorIn("option::writeData(Ostream&) const")
+                << "Unknown selectionMode "
+                << selectionMode_
+                << abort(FatalError);
+        }
+    }
 }
 
 
-void CML::fv::option::makeAbsolute(surfaceScalarField& phi) const
+bool CML::fv::option::read(const dictionary& dict)
 {
-    // do nothing
+    active_ = readBool(dict.lookup("active"));
+
+    if (dict.readIfPresent("timeStart", timeStart_))
+    {
+        dict.lookup("duration") >> duration_;
+    }
+
+    coeffs_ = dict.subDict(modelType_ + "Coeffs");
+
+    return true;
 }
-
-
-void CML::fv::option::makeAbsolute
-(
-    const surfaceScalarField& rho,
-    surfaceScalarField& phi
-) const
-{
-    // do nothing
-}
-
-
-

@@ -23,6 +23,7 @@ License
 #include "absorptionEmissionModel.hpp"
 #include "scatterModel.hpp"
 #include "fvmSup.hpp"
+#include "basicThermo.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -31,7 +32,53 @@ namespace CML
     namespace radiation
     {
         defineTypeNameAndDebug(radiationModel, 0);
+        defineRunTimeSelectionTable(radiationModel, T);
         defineRunTimeSelectionTable(radiationModel, dictionary);
+    }
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+CML::IOobject CML::radiation::radiationModel::createIOobject
+(
+    const fvMesh& mesh
+) const
+{
+    IOobject io
+    (
+        "radiationProperties",
+        mesh.time().constant(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE
+    );
+
+    if (io.headerOk())
+    {
+        io.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
+        return io;
+    }
+    else
+    {
+        io.readOpt() = IOobject::NO_READ;
+        return io;
+    }
+}
+
+
+void CML::radiation::radiationModel::initialise()
+{
+    if (radiation_)
+    {
+        solverFreq_ = max(1, lookupOrDefault<label>("solverFreq", 1));
+
+        absorptionEmission_.reset
+        (
+            absorptionEmissionModel::New(*this, mesh_).ptr()
+        );
+
+        scatter_.reset(scatterModel::New(*this, mesh_).ptr());
     }
 }
 
@@ -47,7 +94,7 @@ CML::radiation::radiationModel::radiationModel(const volScalarField& T)
             "radiationProperties",
             T.time().constant(),
             T.mesh(),
-            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_READ,
             IOobject::NO_WRITE
         )
     ),
@@ -69,6 +116,33 @@ CML::radiation::radiationModel::radiationModel
     const volScalarField& T
 )
 :
+    IOdictionary(createIOobject(T.mesh())),
+    mesh_(T.mesh()),
+    time_(T.time()),
+    T_(T),
+    radiation_(lookupOrDefault("radiation", true)),
+    coeffs_(subOrEmptyDict(type + "Coeffs")),
+    solverFreq_(1),
+    firstIter_(true),
+    absorptionEmission_(NULL),
+    scatter_(NULL)
+{
+    if (readOpt() == IOobject::NO_READ)
+    {
+        radiation_ = false;
+    }
+
+    initialise();
+}
+
+
+CML::radiation::radiationModel::radiationModel
+(
+    const word& type,
+    const dictionary& dict,
+    const volScalarField& T
+)
+:
     IOdictionary
     (
         IOobject
@@ -76,21 +150,22 @@ CML::radiation::radiationModel::radiationModel
             "radiationProperties",
             T.time().constant(),
             T.mesh(),
-            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_READ,
             IOobject::NO_WRITE
-        )
+        ),
+        dict
     ),
     mesh_(T.mesh()),
     time_(T.time()),
     T_(T),
-    radiation_(lookup("radiation")),
-    coeffs_(subDict(type + "Coeffs")),
-    solverFreq_(readLabel(lookup("solverFreq"))),
+    radiation_(lookupOrDefault("radiation", true)),
+    coeffs_(subOrEmptyDict(type + "Coeffs")),
+    solverFreq_(1),
     firstIter_(true),
-    absorptionEmission_(absorptionEmissionModel::New(*this, mesh_)),
-    scatter_(scatterModel::New(*this, mesh_))
+    absorptionEmission_(NULL),
+    scatter_(NULL)
 {
-    solverFreq_ = max(1, solverFreq_);
+    initialise();
 }
 
 
@@ -107,9 +182,9 @@ bool CML::radiation::radiationModel::read()
     if (regIOobject::read())
     {
         lookup("radiation") >> radiation_;
-        coeffs_ = subDict(type() + "Coeffs");
+        coeffs_ = subOrEmptyDict(type() + "Coeffs");
 
-        lookup("solverFreq") >> solverFreq_,
+        solverFreq_ = lookupOrDefault<label>("solverFreq", 1);
         solverFreq_ = max(1, solverFreq_);
 
         return true;
@@ -169,6 +244,34 @@ CML::tmp<CML::fvScalarMatrix> CML::radiation::radiationModel::Shs
       - fvm::Sp(4.0*Rp()*T3/Cp, hs)
       - Rp()*T3*(T_ - 4.0*hs/Cp)
     );
+}
+
+
+CML::tmp<CML::fvScalarMatrix> CML::radiation::radiationModel::ST
+(
+    const dimensionedScalar& rhoCp,
+    volScalarField& T
+) const
+{
+    return
+    (
+        Ru()/rhoCp
+      - fvm::Sp(Rp()*pow3(T)/rhoCp, T)
+    );
+}
+
+
+const CML::radiation::absorptionEmissionModel&
+CML::radiation::radiationModel::absorptionEmission() const
+{
+    if (!absorptionEmission_.valid())
+    {
+        FatalErrorIn("radiation::radiationModel::absorptionEmission() const")
+            << "Requested radiation absorptionEmission model, but model is "
+            << "not activate" << abort(FatalError);
+    }
+
+    return absorptionEmission_();
 }
 
 

@@ -2,17 +2,18 @@
     volScalarField rAU("rAU", 1.0/UEqn.A());
     surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
 
-    volVectorField HbyA("HbyA", U);
-    HbyA = rAU*UEqn.H();
+    volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p_rgh)); 
 
     surfaceScalarField phiHbyA
     (
         "phiHbyA",
         (fvc::interpolate(HbyA) & mesh.Sf())
-      + fvc::ddtPhiCorr(rAU, rho, U, phi)
+      + fvc::interpolate(rho*rAU)*fvc::ddtCorr(U, phi)
     );
+
+    MRF.makeRelative(phiHbyA);
+
     adjustPhi(phiHbyA, U, p_rgh);
-    fvOptions.makeRelative(phiHbyA);
 
     surfaceScalarField phig
     (
@@ -25,14 +26,7 @@
     phiHbyA += phig;
 
     // Update the fixedFluxPressure BCs to ensure flux consistency
-    setSnGrad<fixedFluxPressureFvPatchScalarField>
-    (
-        p_rgh.boundaryField(),
-        (
-            phiHbyA.boundaryField()
-          - fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
-        )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
-    );
+    constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
 
     while (pimple.correctNonOrthogonal())
     {

@@ -35,7 +35,7 @@ Description
       - procSchedule()[procI] gives per procI
 
     Does not care whether 'talking' is first send, second receive or maybe
-    full swap. This is all responsability of caller. See ProcessorTopology
+    full swap. This is all responsibility of caller. See ProcessorTopology
     class for use in scheduling processor boundary swaps.
 
 SourceFiles

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,19 +19,19 @@ boundaryField
 {
     floor
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           uniform 1e5;
     }
 
     ceiling
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           uniform 1e5;
     }
 
     fixedWalls
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           uniform 1e5;
     }
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2016 Applied CCM
+Copyright (C) 2016-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
 
     #include "createTimeControls.hpp"
     #include "createFields.hpp"
+    #include "createMRF.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 

@@ -55,7 +55,7 @@ Description
       - midPoint           one point per cell, inbetween two face intersections
       - midPointAndFace    combination of face and midPoint
 
-      - curve              specified points, not nessecary on line, uses
+      - curve              specified points, not necessary on line, uses
                            tracking
       - cloud              specified points, uses findCell
 

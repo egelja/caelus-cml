@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -11,9 +11,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-//dynamicFvMeshLib   "libtopoChangerFvMesh.so";
 dynamicFvMesh      dynamicRefineFvMesh;
-//staticFvMesh;
 
 mixerFvMeshCoeffs
 {
@@ -37,37 +35,58 @@ mixerFvMeshCoeffs
 // Refinement
 dynamicRefineFvMeshCoeffs
 {
-    // Refine every refineInterval timesteps
-    refineInterval 3;
+    // Refinement mode - Options: timeStepInterval or timeInterval
+    refineMode timeStepInterval;
 
-    // Maximum refinement level (starts from 0)
-    maxRefinement 2;
+    // How often to refine in timestepInterval mode
+    refineInterval  10;
 
-    // Maximum cell limit (approximate)
-    maxCells 1000000;
+    // How often to refine in timeInterval mode
+    refineTimeInterval 0.0001;
 
-    // volScalarField to base refinement on
-    field gamma;
+    // Number of steps remaining before timestep can be changed
+    // (default = 5)
+    nStepsToStartTimeChange 5;
 
-    // Which cells to un/refine: based on point values (simple averaging).
-    // - refine pointCells of point value inbetween minLevel..maxLevel
-    // - unrefine pointCells that are within nBufferLayers of points marked
-    //   for refinement.
-    minLevel 0.01;
-    maxLevel 0.99;
-    nBufferLayers 1;
+    // Field to be refinement on
+    field           alpha1;
 
-    // Newly introduced patch points optionally get projected onto a surface
-    //projectSurfaces ("fixedWalls4.stl");
-    //projectPatches (fixedWalls);
-    // Maximum project distance
-    //projectDistance 1;
+    // Refine field inbetween lower..upper
+    lowerRefineLevel 0.001;
+    upperRefineLevel 0.999;
 
-    // Fluxes to adapt. For newly created faces or split faces the flux
-    // gets estimated from an interpolated volVectorField ('velocity')
-    // First is name of the flux to adapt, second is velocity that will
-    // be interpolated and inner-producted with the face area vector.
-    correctFluxes ((phi U));
+    // Allow unrefinement (optional, default = true) 
+    allowUnrefinement true;
+
+    // If value < unrefineLevel (default=GREAT) unrefine
+    unrefineLevel   10;
+
+    // Have slower than 2:1 refinement
+    nBufferLayers   1;
+
+    // Refine cells only up to maxRefinement levels
+    maxRefinement   2;
+
+    // Stop refinement if maxCells reached
+    maxCells        200000;
+
+    // Flux field and corresponding velocity field. Fluxes on changed
+    // faces get recalculated by interpolating the velocity. Use 'none'
+    // on surfaceScalarFields that do not need to be reinterpolated, use
+    // NaN to detect use of mapped variable
+    correctFluxes
+    (
+        (phi none)  //NaN)   //none)
+        (nHatf none)   //none)
+        (rho*phi none)   //none)
+        (ghf none)  //NaN)   //none)
+    );
+
+    // Minimum cell volume 
+    minimumVolume 1.25e-10;
+        
+    // Write the refinement level and protected cells as a volScalarField
+    dumpLevel       true;
 }
 
 // ************************************************************************* //

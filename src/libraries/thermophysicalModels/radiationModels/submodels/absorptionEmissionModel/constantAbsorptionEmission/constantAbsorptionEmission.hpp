@@ -73,18 +73,14 @@ public:
     // Constructors
 
         //- Construct from components
-        constantAbsorptionEmission
-        (
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+        constantAbsorptionEmission(const dictionary& dict, const fvMesh& mesh);
 
 
     //- Destructor
     virtual ~constantAbsorptionEmission();
 
 
-    // Member Operators
+    // Member Functions
 
         // Access
 

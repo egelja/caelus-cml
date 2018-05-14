@@ -1,0 +1,25 @@
+/*---------------------------------------------------------------------------*\
+ Caelus 8.04                                   
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+
+Checking geometry...
+    Overall domain bounding box (0 0 -0.072111) (4 6 0.072111)
+    Mesh (non-empty, non-wedge) directions (1 1 0)
+    Mesh (non-empty) directions (1 1 0)
+    All edges aligned with or perpendicular to non-empty directions.
+    Boundary openness (1.07982e-18 -2.28423e-18 1.37054e-18) OK.
+    Max cell openness = 1.98307e-16 OK.
+    Max aspect ratio = 2.65996 OK.
+    Minimum face area = 0.00127855. Maximum face area = 0.0131236.  Face area magnitudes OK.
+    Min volume = 0.000184395. Max volume = 0.00119416.  Total volume = 1.298.  Cell volumes OK.
+    Mesh non-orthogonality Max: 0.00224404 average: 0.000335877
+    Non-orthogonality check OK.
+    Face pyramids OK.
+    Mesh skewness Max: 2.64853e-05 average: 1.09754e-06 OK.
+    Coupled point location match (average 0) OK.
+
+Mesh OK.
+
+End
+

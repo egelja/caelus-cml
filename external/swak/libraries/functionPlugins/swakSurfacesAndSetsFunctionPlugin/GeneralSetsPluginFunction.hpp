@@ -66,7 +66,13 @@ protected:
     inline const word &name() const {return name_; }
 
     const sampledSet &theSet() const;
-
+    
+    virtual void setArgument(
+        label index,
+        const string &content,
+        const CommonValueExpressionDriver &driver
+    ){};
+    
 public:
     GeneralSetsPluginFunction(
         const FieldValueExpressionDriver &parentDriver,
@@ -83,6 +89,7 @@ public:
         label index,
         const word &content
     );
+    
 
 };
 

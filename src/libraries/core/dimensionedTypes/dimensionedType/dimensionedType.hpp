@@ -61,7 +61,7 @@ class dictionary;
 template <class Type>
 class dimensioned
 {
-    // private data
+    // Private data
 
         //- Variable name
         word name_;
@@ -71,6 +71,13 @@ class dimensioned
 
         //- The data value
         Type value_;
+
+
+    // Private member functions
+
+        //- Initialize from Istream
+        //  Helper-function for constructors
+        void initialize(Istream& is);
 
 
 public:
@@ -104,8 +111,14 @@ public:
         //- Construct from an Istream with a given name and dimensions
         dimensioned(const word&, const dimensionSet&, Istream&);
 
+        //- Construct from dictionary lookup with a given name and dimensions
+        dimensioned(const word&, const dimensionSet&, const dictionary&);
+
         //- Null constructor
         dimensioned();
+
+
+    // Static member functions
 
         //- Construct from dictionary, with default value.
         static dimensioned<Type> lookupOrDefault
@@ -155,6 +168,9 @@ public:
 
         //- Return transpose.
         dimensioned<Type> T() const;
+
+        //- Update the value of dimensioned<Type>
+        void read(const dictionary&);
 
         //- Update the value of dimensioned<Type> if found in the dictionary.
         bool readIfPresent(const dictionary&);
@@ -299,33 +315,42 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 namespace CML
 {
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template <class Type>
-dimensioned<Type> dimensioned<Type>::lookupOrDefault
-(
-    const word& name,
-    const dictionary& dict,
-    const Type& defaultValue,
-    const dimensionSet& dims
-)
+template<class Type>
+void dimensioned<Type>::initialize(Istream& is)
 {
-    Type value = dict.lookupOrDefault<Type>(name, defaultValue);
-    return dimensioned<Type>(name, dims, value);
-}
+    token nextToken(is);
+    is.putBack(nextToken);
 
+    // Check if the original format is used in which the name is provided
+    // and reset the name to that read
+    if (nextToken.isWord())
+    {
+        is >> name_;
+        is >> nextToken;
+        is.putBack(nextToken);
+    }
 
-template <class Type>
-dimensioned<Type> dimensioned<Type>::lookupOrAddToDict
-(
-    const word& name,
-    dictionary& dict,
-    const Type& defaultValue,
-    const dimensionSet& dims
-)
-{
-    Type value = dict.lookupOrAddDefault<Type>(name, defaultValue);
-    return dimensioned<Type>(name, dims, value);
+    // If the dimensions are provided compare with the argument
+    if (nextToken == token::BEGIN_SQR)
+    {
+        dimensionSet dims(is);
+
+        if (dims != dimensions_)
+        {
+            FatalIOErrorIn
+            (
+                "dimensioned<Type>::initialize(Istream&)",
+                is
+            ) << "The dimensions " << dims
+              << " provided do not match the required dimensions "
+              << dimensions_
+              << abort(FatalIOError);
+        }
+    }
+
+    is >> value_;
 }
 
 
@@ -395,37 +420,23 @@ dimensioned<Type>::dimensioned
     dimensions_(dimSet),
     value_(pTraits<Type>::zero)
 {
-    token nextToken(is);
-    is.putBack(nextToken);
+    initialize(is);
+}
 
-    // Check if the original format is used in which the name is provided
-    // and reset the name to that read
-    if (nextToken.isWord())
-    {
-        is >> name_;
-        is >> nextToken;
-        is.putBack(nextToken);
-    }
 
-    // If the dimensions are provided compare with the argument
-    if (nextToken == token::BEGIN_SQR)
-    {
-        dimensionSet dims(is);
-
-        if (dims != dimensions_)
-        {
-            FatalErrorIn
-            (
-                "dimensioned<Type>::dimensioned"
-                "(const word&, const dimensionSet&, Istream&)"
-            ) << "The dimensions " << dims
-              << " provided do not match the required dimensions "
-              << dimensions_
-              << abort(FatalError);
-        }
-    }
-
-    is >> value_;
+template<class Type>
+dimensioned<Type>::dimensioned
+(
+    const word& name,
+    const dimensionSet& dimSet,
+    const dictionary& dict
+)
+:
+    name_(name),
+    dimensions_(dimSet),
+    value_(pTraits<Type>::zero)
+{
+    initialize(dict.lookup(name));
 }
 
 
@@ -437,6 +448,42 @@ dimensioned<Type>::dimensioned
     dimensions_(dimless),
     value_(pTraits<Type>::zero)
 {}
+
+
+// * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
+
+template <class Type>
+dimensioned<Type> dimensioned<Type>::lookupOrDefault
+(
+    const word& name,
+    const dictionary& dict,
+    const Type& defaultValue,
+    const dimensionSet& dims
+)
+{
+    if (dict.found(name))
+    {
+        return dimensioned<Type>(name, dims, dict.lookup(name));
+    }
+    else
+    {
+        return dimensioned<Type>(name, dims, defaultValue);
+    }
+}
+
+
+template <class Type>
+dimensioned<Type> dimensioned<Type>::lookupOrAddToDict
+(
+    const word& name,
+    dictionary& dict,
+    const Type& defaultValue,
+    const dimensionSet& dims
+)
+{
+    Type value = dict.lookupOrAddDefault<Type>(name, defaultValue);
+    return dimensioned<Type>(name, dims, value);
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -504,6 +551,13 @@ void dimensioned<Type>::replace
 {
     dimensions_ = dc.dimensions();
     value_.replace(d, dc.value());
+}
+
+
+template <class Type>
+void dimensioned<Type>::read(const dictionary& dict)
+{
+    dict.lookup(name_) >> value_;
 }
 
 
@@ -581,6 +635,7 @@ pow(const dimensioned<Type>& dt, typename powProduct<Type, r>::type)
         pow(dt.value(), 2)
     );
 }
+
 
 template<class Type>
 dimensioned<typename outerProduct<Type, Type>::type>
@@ -730,7 +785,7 @@ Istream& operator>>(Istream& is, dimensioned<Type>& dt)
 template <class Type>
 Ostream& operator<<(Ostream& os, const dimensioned<Type>& dt)
 {
-    // do a stream write op for a dimensions()et
+    // Do a stream write op for a dimensionSet
     os  << dt.name() << token::SPACE
         << dt.dimensions() << token::SPACE
         << dt.value();

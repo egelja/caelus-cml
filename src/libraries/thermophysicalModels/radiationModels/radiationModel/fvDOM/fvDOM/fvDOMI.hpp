@@ -82,26 +82,32 @@ inline const CML::volScalarField& CML::radiation::fvDOM::G() const
 }
 
 
-inline const CML::volScalarField& CML::radiation::fvDOM::Qr() const
+inline const CML::volScalarField& CML::radiation::fvDOM::qr() const
 {
-    return Qr_;
+    return qr_;
 }
 
-inline const CML::volScalarField& CML::radiation::fvDOM::Qin() const
+inline const CML::volScalarField& CML::radiation::fvDOM::qin() const
 {
-    return Qin_;
+    return qin_;
 }
 
 
-inline const CML::volScalarField& CML::radiation::fvDOM::Qem() const
+inline const CML::volScalarField& CML::radiation::fvDOM::qem() const
 {
-    return Qem_;
+    return qem_;
 }
 
 inline const CML::radiation::blackBodyEmission&
 CML::radiation::fvDOM::blackBody() const
 {
     return blackBody_;
+}
+
+
+inline CML::scalar CML::radiation::fvDOM::omegaMax() const
+{
+    return omegaMax_;
 }
 
 

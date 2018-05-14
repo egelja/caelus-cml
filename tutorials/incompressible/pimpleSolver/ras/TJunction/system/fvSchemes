@@ -1,0 +1,69 @@
+/*---------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss skewCorrected linear;
+    grad(p)         Gauss skewCorrected linear;
+    grad(U)         Gauss skewCorrected linear;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      Gauss  skewCorrected linearUpwindBJ grad(U);
+    div(phi,k)      Gauss  skewCorrected linearUpwindBJ grad(k);
+    div(phi,epsilon) Gauss skewCorrected linearUpwindBJ grad(epsilon);
+    div(phi,R)      Gauss  skewCorrected linearUpwindBJ grad(R);
+    div(R)          Gauss  skewCorrected linear;
+    div(phi,nuTilda) Gauss skewCorrected linearUpwindBJ grad(nuTilda);
+    div((nuEff*dev(T(grad(U))))) Gauss skewCorrected linear;
+}
+
+laplacianSchemes
+{
+    default         none;
+    laplacian(nuEff,U) Gauss skewCorrected linear corrected;
+    laplacian(rAUf,p) Gauss skewCorrected linear corrected;
+    laplacian((1|A(U)),p) Gauss skewCorrected linear corrected;
+    laplacian(DkEff,k) Gauss skewCorrected linear corrected;
+    laplacian(DepsilonEff,epsilon) Gauss skewCorrected linear corrected;
+    laplacian(DREff,R) Gauss skewCorrected linear corrected;
+    laplacian(DnuTildaEff,nuTilda) Gauss skewCorrected linear corrected;
+}
+
+interpolationSchemes
+{
+    default         skewCorrected linear;
+    interpolate(U)  skewCorrected linear;
+}
+
+snGradSchemes
+{
+    default         skewCorrected corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+
+// ************************************************************************* //

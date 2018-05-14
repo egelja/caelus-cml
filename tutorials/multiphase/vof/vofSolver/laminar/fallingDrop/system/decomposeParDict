@@ -1,0 +1,23 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      decomposeParDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+numberOfSubdomains 4;
+
+method          scotch;
+
+simpleCoeffs
+{
+    n       ( 1 2 2 );
+    delta   0.001;
+}

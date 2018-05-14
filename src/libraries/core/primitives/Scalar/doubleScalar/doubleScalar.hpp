@@ -55,7 +55,7 @@ static const doubleScalar doubleScalarROOTSMALL = 3.0e-8;
 static const doubleScalar doubleScalarVSMALL = 1.0e-300;
 static const doubleScalar doubleScalarROOTVSMALL = 1.0e-150;
 
-//- Read whole of buf as a scalar. Return true if succesful.
+//- Read whole of buf as a scalar. Return true if successful.
 inline bool readScalar(const char* buf, doubleScalar& s)
 {
     char* endPtr;

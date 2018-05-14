@@ -69,11 +69,11 @@ CML::solidBodyMotionFunctions::oscillatingLinearMotion::transformation() const
     scalar oldTime = time_.value() - time_.deltaT().value();
     scalar curTime = time_.value();
 
-    vector displacement = amplitude_*sin(omega_*curTime);
+    vector displacement = amplitude_*sin(omega_*curTime + phase_) + offset_;
 
     if (incremental_)
     {  
-        displacement -= amplitude_*sin(omega_*oldTime);
+        displacement -= amplitude_*sin(omega_*oldTime + phase_);
     }
     
     quaternion R(1);
@@ -96,6 +96,8 @@ bool CML::solidBodyMotionFunctions::oscillatingLinearMotion::read
 
     SBMFCoeffs_.lookup("amplitude") >> amplitude_;
     SBMFCoeffs_.lookup("omega") >> omega_;
+    phase_ = SBMFCoeffs_.lookupOrDefault<scalar>("phase", scalar(0.0));
+    offset_ = SBMFCoeffs_.lookupOrDefault<vector>("offset", vector::zero);
 
     return true;
 }

@@ -76,6 +76,9 @@ private:
         //- Calculate normal direction from span
         static direction calcNormal(const point&);
 
+        //- Inherit findNearest from searchableSurface
+        using searchableSurface::findNearest;
+    
         pointIndexHit findNearest
         (
             const point& sample,

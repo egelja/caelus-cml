@@ -125,7 +125,7 @@ public:
             //- Pressure corrector loop
             inline bool correct();
 
-            //- Helper function to identify when to store the intial residuals
+            //- Helper function to identify when to store the initial residuals
             inline bool storeInitialResiduals() const;
 
             //- Helper function to identify first PIMPLE (outer) iteration

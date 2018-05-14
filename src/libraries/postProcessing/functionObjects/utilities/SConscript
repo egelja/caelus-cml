@@ -44,8 +44,8 @@ caelus_inc = [
 'transportModels/',
 'turbulenceModels/',
 'turbulenceModels/lnInclude',
-'turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWallFunctions',
-'turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWallFunctions',
+'turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWFs',
+'turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWFs',
 'turbulenceModels/LES/LESdeltas/lnInclude',
 'thermophysicalModels/basic/lnInclude'
 ]

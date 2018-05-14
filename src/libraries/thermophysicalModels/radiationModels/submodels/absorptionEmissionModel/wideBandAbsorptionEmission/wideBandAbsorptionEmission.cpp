@@ -251,14 +251,36 @@ CML::radiation::wideBandAbsorptionEmission::ECont(const label bandI) const
         )
     );
 
-    if (mesh().foundObject<volScalarField>("hrr"))
+    if (mesh().foundObject<volScalarField>("Qdot"))
     {
-        const volScalarField& hrr = mesh().lookupObject<volScalarField>("hrr");
-        E().internalField() =
-            iEhrrCoeffs_[bandI]
-           *hrr.internalField()
-           *(iBands_[bandI][1] - iBands_[bandI][0])
-           /totalWaveLength_;
+        const volScalarField& Qdot = mesh().lookupObject<volScalarField>("Qdot");
+
+        if (Qdot.dimensions() == dimEnergy/dimTime)
+        {
+            E().internalField() =
+                iEhrrCoeffs_[bandI]
+               *Qdot.internalField()
+               *(iBands_[bandI][1] - iBands_[bandI][0])
+               /totalWaveLength_
+               /mesh_.V();
+        }
+        else if (Qdot.dimensions() == dimEnergy/dimTime/dimVolume)
+        {
+            E().internalField() =
+                iEhrrCoeffs_[bandI]
+               *Qdot.internalField()
+               *(iBands_[bandI][1] - iBands_[bandI][0])
+               /totalWaveLength_;
+        }
+        else
+        {
+            WarningIn
+            (
+                "radiation::wideBandAbsorptionEmission::ECont"
+                "(const label bandI) const"
+            )
+                << "Incompatible dimensions for Qdot field" << endl;
+        }
     }
 
     return E;
@@ -276,9 +298,8 @@ void CML::radiation::wideBandAbsorptionEmission::correct
 
     for (label j=0; j<nBands_; j++)
     {
-        Info<< "Calculating absorption in band: " << j << endl;
         aLambda[j].internalField() = this->a(j);
-        Info<< "Calculated absorption in band: " << j << endl;
+
         a.internalField() +=
             aLambda[j].internalField()
            *(iBands_[j][1] - iBands_[j][0])

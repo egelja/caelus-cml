@@ -19,7 +19,6 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'genericPatchFields',
 'lagrangian',
 'reconstruct',
 'regionModels',

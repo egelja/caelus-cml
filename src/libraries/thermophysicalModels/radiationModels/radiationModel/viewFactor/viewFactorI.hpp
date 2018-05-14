@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,11 +19,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-inline const CML::volScalarField& CML::radiation::viewFactor::Qr() const
+inline const CML::volScalarField& CML::radiation::viewFactor::qr() const
 {
-    return Qr_;
+    return qr_;
 }
-
 
 
 // ************************************************************************* //

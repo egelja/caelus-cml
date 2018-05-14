@@ -1,0 +1,16 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: explicitDBNSSolver
+      parallel: False
+
+  - process_logs:
+      log_file: explicitDBNSSolver.log
+

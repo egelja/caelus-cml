@@ -21,6 +21,7 @@ License
 
 #include "MRFZoneList.hpp"
 #include "volFields.hpp"
+#include "fixedValueFvsPatchFields.hpp"
 
 CML::MRFZoneList::MRFZoneList
 (
@@ -115,7 +116,7 @@ bool CML::MRFZoneList::writeData(Ostream& os) const
 }
 
 
-void CML::MRFZoneList::addCoriolis
+void CML::MRFZoneList::addAcceleration
 (
     const volVectorField& U,
     volVectorField& ddtU
@@ -128,7 +129,7 @@ void CML::MRFZoneList::addCoriolis
 }
 
 
-void CML::MRFZoneList::addCoriolis(fvVectorMatrix& UEqn) const
+void CML::MRFZoneList::addAcceleration(fvVectorMatrix& UEqn) const
 {
     forAll(*this, i)
     {
@@ -137,7 +138,7 @@ void CML::MRFZoneList::addCoriolis(fvVectorMatrix& UEqn) const
 }
 
 
-void CML::MRFZoneList::addCoriolis
+void CML::MRFZoneList::addAcceleration
 (
     const volScalarField& rho,
     fvVectorMatrix& UEqn
@@ -150,10 +151,10 @@ void CML::MRFZoneList::addCoriolis
 }
 
 
-CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
+CML::tmp<CML::volVectorField> CML::MRFZoneList::DDt
 (
     const volVectorField& U
-)
+) const
 {
     tmp<volVectorField> tacceleration
     (
@@ -166,7 +167,7 @@ CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
                 U.mesh()
             ),
             U.mesh(),
-            dimensionedVector("0", U.dimensions()/dimTime, vector::zero)
+            dimensionedVector("0", U.dimensions()/dimTime, Zero)
         )
     );
     volVectorField& acceleration = tacceleration();
@@ -180,13 +181,13 @@ CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
 }
 
 
-CML::tmp<CML::volVectorField> CML::MRFZoneList::operator()
+CML::tmp<CML::volVectorField> CML::MRFZoneList::DDt
 (
     const volScalarField& rho,
     const volVectorField& U
-)
+) const
 {
-    return rho*operator()(U);
+    return rho*DDt(U);
 }
 
 
@@ -208,20 +209,95 @@ void CML::MRFZoneList::makeRelative(surfaceScalarField& phi) const
 }
 
 
+CML::tmp<CML::surfaceScalarField> CML::MRFZoneList::relative
+(
+    const tmp<surfaceScalarField>& tphi
+) const
+{
+    if (size())
+    {
+        tmp<surfaceScalarField> rphi
+        (
+            reuseTmpGeometricField<scalar, scalar, fvsPatchField, surfaceMesh>
+            ::New
+            (
+                tphi,
+                "relative(" + tphi().name() + ')',
+                tphi().dimensions()
+            )
+        );
+
+        makeRelative(rphi());
+
+        reuseTmpGeometricField<scalar, scalar, fvsPatchField, surfaceMesh>
+        ::clear(tphi);
+
+        return rphi;
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
 CML::tmp<CML::FieldField<CML::fvsPatchField, CML::scalar> >
 CML::MRFZoneList::relative
 (
-    const tmp<FieldField<fvsPatchField, scalar> >& phi
+    const tmp<FieldField<fvsPatchField, scalar> >& tphi
 ) const
 {
-    tmp<FieldField<fvsPatchField, scalar> > rphi(phi.ptr());
-
-    forAll(*this, i)
+    if (size())
     {
-        operator[](i).makeRelative(rphi());
-    }
+        tmp<FieldField<fvsPatchField, scalar> > rphi
+        (
+            reuseTmpFieldField<fvsPatchField, scalar, scalar>::New(tphi)
+        );
 
-    return rphi;
+        forAll(*this, i)
+        {
+            operator[](i).makeRelative(rphi());
+        }
+
+        reuseTmpFieldField<fvsPatchField, scalar, scalar>::clear(tphi);
+
+        return rphi;
+    }
+    else
+    {
+        return tmp<FieldField<fvsPatchField, scalar> >(tphi, true);
+    }
+}
+
+
+CML::tmp<CML::Field<CML::scalar> >
+CML::MRFZoneList::relative
+(
+    const tmp<Field<scalar> >& tphi,
+    const label patchi
+) const
+{
+    if (size())
+    {
+        tmp<Field<scalar> > rphi
+        (
+            reuseTmp<scalar, scalar>
+            ::New(tphi)
+        );
+
+        forAll(*this, i)
+        {
+            operator[](i).makeRelative(rphi(), patchi);
+        }
+
+        tphi.clear();
+
+        return rphi;
+    }
+    else
+    {
+        return tmp<Field<scalar> >(tphi, true);
+    }
 }
 
 
@@ -256,6 +332,37 @@ void CML::MRFZoneList::makeAbsolute(surfaceScalarField& phi) const
 }
 
 
+CML::tmp<CML::surfaceScalarField> CML::MRFZoneList::absolute
+(
+    const tmp<surfaceScalarField>& tphi
+) const
+{
+    if (size())
+    {
+        tmp<surfaceScalarField> rphi      (
+            reuseTmpGeometricField<scalar, scalar, fvsPatchField, surfaceMesh>
+            ::New
+            (
+                tphi,
+                "absolute(" + tphi().name() + ')',
+                tphi().dimensions()
+            )
+        );
+
+        makeAbsolute(rphi());
+
+        reuseTmpGeometricField<scalar, scalar, fvsPatchField, surfaceMesh>
+        ::clear(tphi);
+
+        return rphi;
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
 void CML::MRFZoneList::makeAbsolute
 (
     const surfaceScalarField& rho,
@@ -274,6 +381,45 @@ void CML::MRFZoneList::correctBoundaryVelocity(volVectorField& U) const
     forAll(*this, i)
     {
         operator[](i).correctBoundaryVelocity(U);
+    }
+}
+
+
+void CML::MRFZoneList::correctBoundaryFlux
+(
+    const volVectorField& U,
+    surfaceScalarField& phi
+) const
+{
+    FieldField<fvsPatchField, scalar> Uf
+    (
+        relative(mesh_.Sf().boundaryField() & U.boundaryField())
+    );
+
+
+    surfaceScalarField::GeometricBoundaryField& phibf = phi.boundaryField();
+
+    forAll(mesh_.boundary(), patchi)
+    {
+        if
+        (
+            isA<fixedValueFvsPatchScalarField>(phibf[patchi])
+        )
+        {
+            phibf[patchi] == Uf[patchi];
+        }
+    }
+}
+
+
+void CML::MRFZoneList::update()
+{
+    if (mesh_.topoChanging())
+    {
+        forAll(*this, i)
+        {
+            operator[](i).update();
+        }
     }
 }
 

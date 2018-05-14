@@ -1,3 +1,4 @@
+#include "readGravitationalAcceleration.hpp"
 #include "createRDeltaT.hpp"
 
 Info<< "Reading field p_rgh\n" << endl;
@@ -76,14 +77,11 @@ surfaceScalarField rhoPhi
 // Construct interface from alpha1 distribution
 interfaceProperties interface(U, phi, alpha1, mixture);
 
-
 // Construct incompressible turbulence model
 autoPtr<incompressible::turbulenceModel> turbulence
 (
     incompressible::turbulenceModel::New(U, phi, mixture)
 );
-
-#include "readGravitationalAcceleration.hpp"
 
 
 Info<< "Calculating field g.h\n" << endl;
@@ -174,6 +172,3 @@ volVectorField Ud
     dimensionedVector("0", dimVelocity, vector(0,0,0))
 );
 
-
-
-fv::IOoptionList fvOptions(mesh);

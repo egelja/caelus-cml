@@ -1,40 +1,40 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::TableFile
+    CML::DataEntryTypes::TableFile
 
 Description
     Templated table container data entry where data is read from file.
 
+    Usage:
     \verbatim
         <entryName> tableFile;
         <entryName>Coeffs
         {
-            dimensions          [0 0 1 0 0]; // optional dimensions
             fileName            dataFile;    // name of data file
             outOfBounds         clamp;       // optional out-of-bounds handling
             interpolationScheme linear;      // optional interpolation method
         }
     \endverbatim
 
-    Items are stored in a list of Tuple2's. First column is always stored as
+    Data is stored as a list of Tuple2's. First column is always stored as
     scalar entries.  Data is read in the form, e.g. for an entry \<entryName\>
     that is (scalar, vector):
     \verbatim
@@ -47,8 +47,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef TableFile_H
-#define TableFile_H
+#ifndef TableFile_HPP
+#define TableFile_HPP
 
 #include "DataEntry.hpp"
 #include "Tuple2.hpp"
@@ -57,16 +57,8 @@ Description
 
 namespace CML
 {
-
-template<class Type>
-class TableFile;
-
-template<class Type>
-Ostream& operator<<
-(
-    Ostream&,
-    const TableFile<Type>&
-);
+namespace DataEntryTypes
+{
 
 /*---------------------------------------------------------------------------*\
                            Class TableFile Declaration
@@ -75,7 +67,6 @@ Ostream& operator<<
 template<class Type>
 class TableFile
 :
-    public DataEntry<Type>,
     public TableBase<Type>
 {
     // Private data
@@ -115,56 +106,7 @@ public:
     virtual ~TableFile();
 
 
-    // Member Functions
-
-        // Manipulation
-
-            //- Convert time
-            virtual void convertTimeBase(const Time& t)
-            {
-                TableBase<Type>::convertTimeBase(t);
-            }
-
-
-        // Evaluation
-
-            //- Return TableFile value
-            virtual Type value(const scalar x) const
-            {
-                return TableBase<Type>::value(x);
-            }
-
-            //- Integrate between two (scalar) values
-            virtual Type integrate(const scalar x1, const scalar x2) const
-            {
-                return TableBase<Type>::integrate(x1, x2);
-            }
-
-            //- Return dimensioned constant value
-            virtual dimensioned<Type> dimValue(const scalar x) const
-            {
-                return TableBase<Type>::dimValue(x);
-            }
-
-            //- Integrate between two values and return dimensioned type
-            virtual dimensioned<Type> dimIntegrate
-            (
-                const scalar x1,
-                const scalar x2
-            )
-            {
-                return TableBase<Type>::dimIntegrate(x1, x2);
-            }
-
-
     // I/O
-
-        //- Ostream Operator
-        friend Ostream& operator<< <Type>
-        (
-            Ostream& os,
-            const TableFile<Type>& tbl
-        );
 
         //- Write in dictionary format
         virtual void writeData(Ostream& os) const;
@@ -173,26 +115,23 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace DataEntryTypes
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::TableFile<Type>::TableFile(const word& entryName, const dictionary& dict)
+CML::DataEntryTypes::TableFile<Type>::TableFile
+(
+    const word& entryName,
+    const dictionary& dict
+)
 :
-    DataEntry<Type>(entryName),
-    TableBase<Type>(entryName, dict.subDict(entryName + "Coeffs")),
+    TableBase<Type>(entryName, dict),
     fName_("none")
 {
-    const dictionary coeffs(dict.subDict(entryName + "Coeffs"));
-    coeffs.lookup("fileName") >> fName_;
-
-    if (coeffs.found("dimensions"))
-    {
-        coeffs.lookup("dimensions") >> this->dimensions_;
-    }
+    dict.lookup("file") >> fName_;
 
     fileName expandedFile(fName_);
     IFstream is(expandedFile.expand());
@@ -201,7 +140,7 @@ CML::TableFile<Type>::TableFile(const word& entryName, const dictionary& dict)
     {
         FatalIOErrorIn
         (
-            "TableFile<Type>::TableFile(const word&, const dictionary&)",
+            "DataEntryTypes::TableFile<Type>::TableFile(const word&, const dictionary&)",
             is
         )   << "Cannot open file." << exit(FatalIOError);
     }
@@ -213,9 +152,8 @@ CML::TableFile<Type>::TableFile(const word& entryName, const dictionary& dict)
 
 
 template<class Type>
-CML::TableFile<Type>::TableFile(const TableFile<Type>& tbl)
+CML::DataEntryTypes::TableFile<Type>::TableFile(const TableFile<Type>& tbl)
 :
-    DataEntry<Type>(tbl),
     TableBase<Type>(tbl),
     fName_(tbl.fName_)
 {}
@@ -224,36 +162,14 @@ CML::TableFile<Type>::TableFile(const TableFile<Type>& tbl)
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::TableFile<Type>::~TableFile()
+CML::DataEntryTypes::TableFile<Type>::~TableFile()
 {}
 
 
-// * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
-
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const TableFile<Type>& tbl
-)
-{
-    os  << static_cast<const DataEntry<Type>&>(tbl)
-        << static_cast<const TableBase<Type>&>(tbl);
-
-    // Check state of Ostream
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const TableFile<Type>&)"
-    );
-
-    return os;
-}
-
-
-template<class Type>
-void CML::TableFile<Type>::writeData(Ostream& os) const
+void CML::DataEntryTypes::TableFile<Type>::writeData(Ostream& os) const
 {
     DataEntry<Type>::writeData(os);
 
@@ -265,12 +181,10 @@ void CML::TableFile<Type>::writeData(Ostream& os) const
     // the values themselves
     TableBase<Type>::writeEntries(os);
 
-    os.writeKeyword("fileName")<< fName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("file")<< fName_ << token::END_STATEMENT << nl;
     os  << decrIndent << indent << token::END_BLOCK << endl;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

@@ -1,0 +1,73 @@
+
+tasks:
+    - task_set:
+        name: motorBikeSS
+        case_dir: ./motorBikeSS
+        tasks:
+        - clean_case:
+            remove_zero: yes
+            remove_mesh: no
+            preserve: [ "0.org" ]
+
+        - copy_tree:
+            src: "0.org"
+            dest: "0"
+
+        - run_command:
+            cmd_name: decomposePar
+            cmd_args: "-force"
+
+        - run_command:
+            cmd_name: potentialSolver
+            cmd_args: "-initialiseUBCs -noFunctionObjects"
+            parallel: True
+
+        - run_command:
+            cmd_name: simpleSolver
+            parallel: True
+
+        - run_command:
+            cmd_name: reconstructPar
+            cmd_args: "-latestTime"
+
+        - process_logs:
+            log_file: simpleSolver.log
+
+
+    - task_set:
+        name: motorBikeLES
+        case_dir: ./motorBikeLES
+        tasks:
+        - clean_case:
+            remove_zero: no
+            remove_mesh: yes
+            remove_extra:
+            - 0/U.gz
+            - 0/p.gz
+            - 0/phi.gz
+            - 0/nut.gz
+            - 0/nuTilda.gz
+
+        - copy_tree:
+            src: "../motorBikeSS/constant/polyMesh"
+            dest: "constant/polyMesh"
+
+        - copy_files:
+            src: "../motorBikeSS/500/*.gz"
+            dest: "0"
+
+        - run_command:
+            cmd_name: decomposePar
+            cmd_args: "-force"
+
+        - run_command:
+            cmd_name: pimpleSolver
+            parallel: True
+
+        - run_command:
+            cmd_name: reconstructPar
+            cmd_args: "-latestTime"
+
+        - process_logs:
+            log_file: pimpleSolver.log
+

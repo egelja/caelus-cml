@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -37,7 +37,7 @@ boundaryField
     {
         type            inletOutlet;
         inletValue      uniform ( 0 0 0 );
-        value           uniform ( 0 0 0 );
+        value           uniform ( 0.1 0 0 );
     }
     fixedWalls
     {

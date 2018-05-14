@@ -148,6 +148,10 @@ public:
         if (schemeData.eof())
         {
             beta_ = scalar(0.75);
+        }
+        else
+        {
+            beta_ = readScalar(schemeData);
             if (beta_ < 0 || beta_ > 1)
             {
 	        FatalIOErrorIn("blendedDL(fvMesh&, surfaceScalarField const&, Istream& is)", schemeData)
@@ -156,10 +160,6 @@ public:
                     << exit(FatalIOError);
             }
 
-        }
-        else
-        {
-            beta_ = readScalar(schemeData);
 	}
     }
 

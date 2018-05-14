@@ -21,10 +21,7 @@ Class
     CML::scalarTransport
 
 Description
-    This function object evolves a passive scalar transport equation.  The
-    field in ininitially zero, to which sources are added.  The field name
-    is assigned the name of the function object.  Boundary conditions are
-    automatically applied, based on the velocity boundary conditions.
+    Evolves a passive scalar transport equation.
 
     - the field can be zeroed on start-up using the resetOnStartUp flag
     - to employ the same numerical schemes as the flow velocity, use the
@@ -65,8 +62,8 @@ class scalarTransport
 {
     // Private data
 
-        //- Name of this set of scalarTransport objects
-        word name_;
+        //- Name of field to process
+        word fieldName_;
 
         //- Reference to the mesh database
         const fvMesh& mesh_;
@@ -77,41 +74,38 @@ class scalarTransport
         //- Name of flux field (optional)
         word phiName_;
 
-        //- Name of velocity field (optional)
-        word UName_;
-
         //- Name of density field (optional)
         word rhoName_;
 
         //- Diffusion coefficient (optional)
-        scalar DT_;
+        scalar D_;
 
-        //- Flag to indicate whether user DT_ is used
-        bool userDT_;
+        //- Flag to indicate whether a constant, uniform D_ is specified
+        bool constantD_;
 
-        //- Flag to reset scalar field on start-up
-        bool resetOnStartUp_;
+        //- Laminar diffusion coefficient (optional)
+        scalar alphaD_;
+
+        //- Turbulent diffusion coefficient (optional)
+        scalar alphaDt_;
 
         //- Number of corrector iterations (optional)
         label nCorr_;
 
-        //- Flag to employ schemes for velocity for scalar transport
-        bool autoSchemes_;
+        //- Name of field whose schemes are used (optional)
+        word schemesField_;
 
         //- Run-time selectable finite volume options, e.g. sources, constraints
         fv::optionList fvOptions_;
 
         //- The scalar field
-        volScalarField T_;
+        volScalarField s_;
 
 
     // Private Member Functions
 
-        //- Return the boundary types for the scalar field
-        wordList boundaryTypes() const;
-
         //- Return the diffusivity field
-        tmp<volScalarField> DT(const surfaceScalarField& phi) const;
+        tmp<volScalarField> D(const surfaceScalarField& phi) const;
 
         //- Disallow default bitwise copy construct
         scalarTransport(const scalarTransport&);
@@ -128,8 +122,7 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct for given objectRegistry and dictionary
         scalarTransport
         (
             const word& name,
@@ -144,12 +137,6 @@ public:
 
 
     // Member Functions
-
-        //- Return name of the set of scalarTransport
-        virtual const word& name() const
-        {
-            return name_;
-        }
 
         //- Read the scalarTransport data
         virtual void read(const dictionary&);

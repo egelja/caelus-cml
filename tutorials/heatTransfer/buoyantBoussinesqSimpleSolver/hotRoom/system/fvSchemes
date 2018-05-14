@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -35,6 +35,7 @@ divSchemes
 laplacianSchemes
 {
     default         none;
+    laplacian(rAUf,p_rgh) Gauss linear corrected;
     laplacian(nuEff,U) Gauss linear corrected;
     laplacian((1|A(U)),p_rgh) Gauss linear corrected;
     laplacian(alphaEff,T) Gauss linear corrected;

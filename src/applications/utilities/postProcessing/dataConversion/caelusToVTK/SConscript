@@ -21,13 +21,14 @@ vtkTopo.cpp
 """)
 
 caelus_inc = [
-'lagrangian/basic/lnInclude'
+'lagrangian/basic/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'genericPatchFields',
-'lagrangian'
+'lagrangian',
+'dynamicMesh'
 ]
 
 ostype = utils.ostype()

@@ -123,7 +123,10 @@ public:
 
 
     // Member functions
-
+    
+        //- Inherit read from ITstream
+        using ITstream::read;
+    
         //- Return the dictionary name
         const fileName& name() const
         {
@@ -160,7 +163,7 @@ public:
         dictionary& dict();
 
         //- Read tokens from the given stream
-        bool read(const dictionary&, Istream&);
+        virtual bool read(const dictionary&, Istream&);
 
         //- Write
         void write(Ostream&) const;

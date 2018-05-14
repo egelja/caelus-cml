@@ -83,13 +83,13 @@ class solution
 
 public:
 
+    // Static data members
+    ClassName("solution");
+
     //- Update from older solver controls syntax
     //  Usually verbose, since we want to know about the changes
     //  Returns the number of settings changed
     static label upgradeSolverDict(dictionary& dict, const bool verbose=true);
-
-    //- Debug switch
-    static int debug;
 
 
     // Constructors

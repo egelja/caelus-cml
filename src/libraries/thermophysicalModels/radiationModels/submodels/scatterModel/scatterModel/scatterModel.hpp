@@ -41,7 +41,7 @@ namespace radiation
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class scatterModel Declaration
+                        Class scatterModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class scatterModel
@@ -77,11 +77,7 @@ public:
     // Constructors
 
         //- Construct from components
-        scatterModel
-        (
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+        scatterModel(const dictionary& dict, const fvMesh& mesh);
 
 
     // Selector
@@ -99,10 +95,8 @@ public:
 
     // Member Functions
 
-        // Access
-
-            //- Return scatter coefficient
-            virtual tmp<volScalarField> sigmaEff() const = 0;
+        //- Return scatter coefficient
+        virtual tmp<volScalarField> sigmaEff() const = 0;
 };
 
 
@@ -116,4 +110,3 @@ public:
 #endif
 
 // ************************************************************************* //
-

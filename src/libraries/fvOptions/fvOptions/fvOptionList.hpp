@@ -166,36 +166,6 @@ public:
             template<class Type>
             void constrain(fvMatrix<Type>& eqn);
 
-
-        // Flux manipulations
-
-            //- Make the given absolute flux relative
-            void makeRelative(surfaceScalarField& phi) const;
-
-            //- Make the given absolute mass-flux relative
-            void makeRelative
-            (
-                const surfaceScalarField& rho,
-                surfaceScalarField& phi
-            ) const;
-
-            //- Return the given absolute boundary flux relative
-            tmp<FieldField<fvsPatchField, scalar> > relative
-            (
-                const tmp<FieldField<fvsPatchField, scalar> >& tphi
-            ) const;
-
-            //- Make the given relative flux absolute
-            void makeAbsolute(surfaceScalarField& phi) const;
-
-            //- Make the given relative mass-flux absolute
-            void makeAbsolute
-            (
-                const surfaceScalarField& rho,
-                surfaceScalarField& phi
-            ) const;
-
-
         // I-O
 
             //- Read dictionary

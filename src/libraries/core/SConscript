@@ -107,8 +107,12 @@ src_core = Split("""
     primitives/quaternion/quaternion.cpp
     primitives/septernion/septernion.cpp
     primitives/functions/DataEntry/makeDataEntries.cpp
-    primitives/functions/DataEntry/polynomial/polynomial.cpp
-    primitives/functions/DataEntry/polynomial/polynomialIO.cpp
+    primitives/functions/DataEntry/ramp/ramp.cpp
+    primitives/functions/DataEntry/linearRamp/linearRamp.cpp
+    primitives/functions/DataEntry/quadraticRamp/quadraticRamp.cpp
+    primitives/functions/DataEntry/quarterSineRamp/quarterSineRamp.cpp
+    primitives/functions/DataEntry/quarterCosineRamp/quarterCosineRamp.cpp
+    primitives/functions/DataEntry/halfCosineRamp/halfCosineRamp.cpp
     primitives/functions/Polynomial/polynomialFunction.cpp
     primitives/strings/string/string.cpp
     primitives/strings/string/stringIO.cpp
@@ -333,6 +337,8 @@ src_core = Split("""
     meshes/polyMesh/polyMeshInitMesh.cpp
     meshes/polyMesh/polyMeshClear.cpp
     meshes/polyMesh/polyMeshUpdate.cpp
+    meshes/polyMesh/polyMeshCheck/polyMeshCheck.cpp
+    meshes/polyMesh/polyMeshCheck/polyMeshTools.cpp
     meshes/primitiveMesh/primitiveMesh.cpp
     meshes/primitiveMesh/primitiveMeshCellCells.cpp
     meshes/primitiveMesh/primitiveMeshCellCentresAndVols.cpp
@@ -350,9 +356,9 @@ src_core = Split("""
     meshes/primitiveMesh/primitiveMeshCellPoints.cpp
     meshes/primitiveMesh/primitiveMeshCalcCellShapes.cpp
     meshes/primitiveMesh/primitiveMeshCheck/primitiveMeshCheck.cpp
-    meshes/primitiveMesh/primitiveMeshCheck/primitiveMeshCheckMotion.cpp
     meshes/primitiveMesh/primitiveMeshCheck/primitiveMeshCheckPointNearness.cpp
     meshes/primitiveMesh/primitiveMeshCheck/primitiveMeshCheckEdgeLength.cpp
+    meshes/primitiveMesh/primitiveMeshCheck/primitiveMeshTools.cpp
     meshes/primitiveMesh/primitivePatch/patchZones.cpp
     meshes/primitiveMesh/primitivePatch/walkPatch.cpp
     meshes/meshShapes/cellMatcher/cellMatcher.cpp
@@ -426,6 +432,7 @@ src_core = Split("""
     fields/pointPatchFields/basic/coupled/coupledPointPatchFields.cpp
     fields/pointPatchFields/basic/value/valuePointPatchFields.cpp
     fields/pointPatchFields/basic/fixedValue/fixedValuePointPatchFields.cpp
+    fields/pointPatchFields/basic/generic/genericPointPatchFields.cpp
     fields/pointPatchFields/basic/zeroGradient/zeroGradientPointPatchFields.cpp
     fields/pointPatchFields/basic/mixed/mixedPointPatchFields.cpp
     fields/pointPatchFields/constraint/cyclic/cyclicPointPatchFields.cpp
@@ -653,7 +660,6 @@ src_core = Split("""
     fvMesh/fvMeshGeometry.cpp
     fvMesh/fvMesh.cpp
     fvMesh/singleCellFvMesh/singleCellFvMesh.cpp
-    fvMesh/fvMeshSubset/fvMeshSubset.cpp
     fvMesh/fvBoundaryMesh/fvBoundaryMesh.cpp
     fvMesh/fvPatches/fvPatch/fvPatch.cpp
     fvMesh/fvPatches/fvPatch/fvPatchNew.cpp
@@ -714,6 +720,7 @@ src_core = Split("""
     fields/fvPatchFields/basic/directionMixed/directionMixedFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedGradient/fixedGradientFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedValue/fixedValueFvPatchFields.cpp
+    fields/fvPatchFields/basic/generic/genericFvPatchFields.cpp
     fields/fvPatchFields/basic/mixed/mixedFvPatchFields.cpp
     fields/fvPatchFields/basic/sliced/slicedFvPatchFields.cpp
     fields/fvPatchFields/basic/transform/transformFvPatchFields.cpp
@@ -741,6 +748,7 @@ src_core = Split("""
     fields/fvPatchFields/derived/mappedFlowRate/mappedFlowRateFvPatchVectorField.cpp
     fields/fvPatchFields/derived/buoyantPressure/buoyantPressureFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedFluxPressure/fixedFluxPressureFvPatchScalarField.cpp
+    fields/fvPatchFields/derived/fixedFluxExtrapolatedPressure/fixedFluxExtrapolatedPressureFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedInternalValueFvPatchField/fixedInternalValueFvPatchFields.cpp
     fields/fvPatchFields/derived/fixedNormalSlip/fixedNormalSlipFvPatchFields.cpp
     fields/fvPatchFields/derived/freestream/freestreamFvPatchFields.cpp
@@ -822,7 +830,6 @@ src_core = Split("""
     interpolation/surfaceInterpolation/limitedSchemes/limitedSurfaceInterpolationScheme/limitedSurfaceInterpolationSchemes.cpp
     interpolation/surfaceInterpolation/limitedSchemes/upwind/upwind.cpp
     interpolation/surfaceInterpolation/limitedSchemes/blended/blended.cpp
-    interpolation/surfaceInterpolation/limitedSchemes/OSPRE/OSPRE.cpp
     interpolation/surfaceInterpolation/limitedSchemes/limitedLinear/limitedLinear.cpp
     interpolation/surfaceInterpolation/limitedSchemes/Phi/Phi.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindMinmod/linearUpwindMinmod.cpp
@@ -834,7 +841,9 @@ src_core = Split("""
     interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindUMIST/linearUpwindUMIST.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindVanAlbada/linearUpwindVanAlbada.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindBJ/linearUpwindBJ.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/linearUpwind/linearUpwindOSPRE/linearUpwindOSPRE.cpp
     interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearBJ/multivariateLinearBJ.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearOSPRE/multivariateLinearOSPRE.cpp
     interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearMinmod/multivariateLinearMinmod.cpp
     interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearVanLeer/multivariateLinearVanLeer.cpp
     interpolation/surfaceInterpolation/TVD/implicit/multivariate/multivariateLinearSuperbee/multivariateLinearSuperbee.cpp
@@ -852,6 +861,7 @@ src_core = Split("""
     interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindBJ/dcLinearUpwindBJ.cpp
     interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindDL/dcLinearUpwindDL.cpp
     interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindMG/dcLinearUpwindMG.cpp
+    interpolation/surfaceInterpolation/TVD/deferredCorrection/dcLinearUpwindOSPRE/dcLinearUpwindOSPRE.cpp
     interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDBJ/linearUpwindMDBJ.cpp
     interpolation/surfaceInterpolation/TVD/mdLimitedSchemes/implicit/linearUpwindMDDL/linearUpwindMDDL.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linear/linearKoren/linearKoren.cpp
@@ -863,6 +873,9 @@ src_core = Split("""
     interpolation/surfaceInterpolation/TVD/implicit/linear/linearMG/linearMG.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linear/linearUMIST/linearUMIST.cpp
     interpolation/surfaceInterpolation/TVD/implicit/linear/linearVanAlbada/linearVanAlbada.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/linear/linearOSPRE/linearOSPRE.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/linear/linearPDL/linearPDL.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/linear/linearVSL/linearVSL.cpp
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralBJ/limitedCentralBJ.cpp
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralDL/limitedCentralDL.cpp
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralMG/limitedCentralMG.cpp
@@ -872,6 +885,7 @@ src_core = Split("""
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralKoren/limitedCentralKoren.cpp
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralSuperbee/limitedCentralSuperbee.cpp
     interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralUMIST/limitedCentralUMIST.cpp
+    interpolation/surfaceInterpolation/TVD/implicit/limitedCentral/limitedCentralOSPRE/limitedCentralOSPRE.cpp
     interpolation/surfaceInterpolation/TVD/implicit/blended/blendedBJ/blendedBJ.cpp
     interpolation/surfaceInterpolation/TVD/implicit/blended/blendedDL/blendedDL.cpp
     interpolation/surfaceInterpolation/TVD/implicit/blended/blendedMG/blendedMG.cpp
@@ -931,9 +945,10 @@ src_core = Split("""
     cfdTools/general/findRefCell/findRefCell.cpp
     cfdTools/general/adjustPhi/adjustPhi.cpp
     cfdTools/general/bound/bound.cpp
+    cfdTools/general/constrainHbyA/constrainHbyA.cpp
+    cfdTools/general/CorrectPhi/correctUphiBCs.cpp
     cfdTools/general/solutionControl/solutionControl/solutionControl.cpp
     cfdTools/general/solutionControl/simpleControl/simpleControl.cpp
-    cfdTools/general/solutionControl/simplecControl/simplecControl.cpp
     cfdTools/general/solutionControl/pimpleControl/pimpleControl.cpp
     cfdTools/general/MRF/MRFZone.cpp
     cfdTools/general/MRF/MRFZoneList.cpp
@@ -950,6 +965,56 @@ src_core = Split("""
     cfdTools/general/porosityModel/DarcyForchheimer/DarcyForchheimer.cpp
     cfdTools/general/porosityModel/fixedCoeff/fixedCoeff.cpp
     cfdTools/general/porosityModel/powerLaw/powerLaw.cpp
+    blockCoupled/primitives/hyperVector/hyperVectorLists.cpp
+    blockCoupled/fields/hyperVectorFields/hyperVectorFields.cpp
+    blockCoupled/fields/hyperVectorFields/hyperTensorFields.cpp
+    blockCoupled/fields/hyperVectorFields/expandContract/ExpandHyperTensorField.cpp
+    blockCoupled/primitives/BlockCoeff/blockCoeffBase.cpp
+    blockCoupled/primitives/BlockCoeff/scalarBlockCoeff.cpp
+    blockCoupled/primitives/BlockCoeff/sphericalTensorBlockCoeff.cpp
+    blockCoupled/primitives/BlockCoeff/symmTensorBlockCoeff.cpp
+    blockCoupled/primitives/BlockCoeff/tensorBlockCoeff.cpp
+    blockCoupled/primitives/BlockCoeff/BlockCoeffNorm/BlockCoeffNorm/blockCoeffNorms.cpp
+    blockCoupled/dimensionedHyperVectorTensor/dimensionedHyperVectorTensor.cpp
+    blockCoupled/fields/expandContract/expandTensorField.cpp
+    blockCoupled/fields/CoeffField/scalarCoeffField.cpp
+    blockCoupled/fields/CoeffField/sphericalTensorCoeffField.cpp
+    blockCoupled/fields/CoeffField/symmTensorCoeffField.cpp
+    blockCoupled/fields/CoeffField/tensorCoeffField.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduMatrix/blockLduMatrixName.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduMatrix/BlockConstraint/scalarBlockConstraint.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduMatrix/BlockLduInterfaceFields/BlockLduInterfaceField/BlockLduInterfaceFields.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduMatrix/BlockLduInterfaceFields/ProcessorBlockLduInterfaceField/ProcessorBlockLduInterfaceFields.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduPrecons/BlockLduPrecon/blockLduPrecons.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduSmoothers/BlockLduSmoother/blockLduSmoothers.cpp
+    blockCoupled/matrices/blockLduMatrix/BlockLduSolvers/BlockLduSolver/blockLduSolvers.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/fvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/calculatedFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/cyclicFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/coupledFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/emptyFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/genericFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/processorFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/transformFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvPatchHyperVectorFields/wedgeFvPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/fvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/calculatedFvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/emptyFvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/wedgeFvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/coupledFvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/fvsPatchHyperVectorFields/processorFvsPatchHyperVectorFields.cpp
+    blockCoupled/fields/surfaceHyperVectorFields/surfaceHyperVectorFields.cpp
+    blockCoupled/fields/volHyperVectorFields/volHyperVectorFields.cpp
+    blockCoupled/finiteVolume/blockDivSchemes/blockDivScheme/blockDivSchemes.cpp
+    blockCoupled/finiteVolume/blockDivSchemes/blockGaussDivScheme/blockGaussDivSchemes.cpp
+    blockCoupled/finiteVolume/blockDivSchemes/blockGaussDivScheme/vectorBlockGaussDivScheme.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/blockGradScheme/blockGradSchemes.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/blockGaussGrad/blockGaussGrads.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/blockGaussGrad/scalarBlockGaussGrad.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/limitedBlockGradSchemes/faceLimitedBlockGrad/faceLimitedBlockGrads.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/limitedBlockGradSchemes/cellLimitedBlockGrad/cellLimitedBlockGrads.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/blockLeastSquaresGrad/blockLeastSquaresGrads.cpp
+    blockCoupled/finiteVolume/blockGradSchemes/blockLeastSquaresGrad/scalarBlockLeastSquaresGrad.cpp
 """)
 
 target = 'core'

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -83,6 +83,12 @@ namespace fvc
     );
 
     template<class Type>
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > ddt
+    (
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
+    );
+
+    template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > ddt
     (
         const one&,
@@ -115,51 +121,6 @@ namespace fvc
             surfaceMesh
         >
     >
-    ddtPhiCorr
-    (
-        const volScalarField& rA,
-        const GeometricField<Type, fvPatchField, volMesh>& U,
-        const GeometricField
-        <
-            typename CML::flux<Type>::type,
-            fvsPatchField,
-            surfaceMesh
-        >& phi
-    );
-
-    template<class Type>
-    tmp
-    <
-        GeometricField
-        <
-            typename CML::flux<Type>::type,
-            fvsPatchField,
-            surfaceMesh
-        >
-    >
-    ddtPhiCorr
-    (
-        const volScalarField& rA,
-        const volScalarField& rho,
-        const GeometricField<Type, fvPatchField, volMesh>& U,
-        const GeometricField
-        <
-            typename CML::flux<Type>::type,
-            fvsPatchField,
-            surfaceMesh
-        >& phi
-    );
-
-    template<class Type>
-    tmp
-    <
-        GeometricField
-        <
-            typename CML::flux<Type>::type,
-            fvsPatchField,
-            surfaceMesh
-        >
-    >
     ddtCorr
     (
         const GeometricField<Type, fvPatchField, volMesh>& U,
@@ -199,6 +160,28 @@ namespace fvc
     >
     ddtCorr
     (
+        const GeometricField<Type, fvPatchField, volMesh>& U,
+        const GeometricField
+        <
+            typename CML::flux<Type>::type,
+            fvsPatchField,
+            surfaceMesh
+        >& phi,
+        const autoPtr<GeometricField<Type, fvsPatchField, surfaceMesh> >& UfPtr
+    );
+
+    template<class Type>
+    tmp
+    <
+        GeometricField
+        <
+            typename CML::flux<Type>::type,
+            fvsPatchField,
+            surfaceMesh
+        >
+    >
+    ddtCorr
+    (
         const volScalarField& rho,
         const GeometricField<Type, fvPatchField, volMesh>& U,
         const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
@@ -224,6 +207,29 @@ namespace fvc
             fvsPatchField,
             surfaceMesh
         >& phi
+    );
+
+    template<class Type>
+    tmp
+    <
+        GeometricField
+        <
+            typename CML::flux<Type>::type,
+            fvsPatchField,
+            surfaceMesh
+        >
+    >
+    ddtCorr
+    (
+        const volScalarField& rho,
+        const GeometricField<Type, fvPatchField, volMesh>& U,
+        const GeometricField
+        <
+            typename CML::flux<Type>::type,
+            fvsPatchField,
+            surfaceMesh
+        >& phi,
+        const autoPtr<GeometricField<Type, fvsPatchField, surfaceMesh> >& UfPtr
     );
 }
 
@@ -336,6 +342,21 @@ ddt
 
 
 template<class Type>
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+ddt
+(
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& sf
+)
+{
+    return fv::ddtScheme<Type>::New
+    (
+        sf.mesh(),
+        sf.mesh().ddtScheme("ddt(" + sf.name() + ')')
+    )().fvcDdt(sf);
+}
+
+
+template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 ddt
 (
@@ -358,50 +379,6 @@ ddt
     return ddt(vf);
 }
 
-
-template<class Type>
-tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
-ddtPhiCorr
-(
-    const volScalarField& rA,
-    const GeometricField<Type, fvPatchField, volMesh>& U,
-    const GeometricField
-    <
-        typename flux<Type>::type,
-        fvsPatchField,
-        surfaceMesh
-    >& phi
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        U.mesh(),
-        U.mesh().ddtScheme("ddt(" + U.name() + ')')
-    )().fvcDdtPhiCorr(rA, U, phi);
-}
-
-
-template<class Type>
-tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
-ddtPhiCorr
-(
-    const volScalarField& rA,
-    const volScalarField& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& U,
-    const GeometricField
-    <
-        typename flux<Type>::type,
-        fvsPatchField,
-        surfaceMesh
-    >& phi
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        U.mesh(),
-        U.mesh().ddtScheme("ddt(" + rho.name() + ',' + U.name() + ')')
-    )().fvcDdtPhiCorr(rA, rho, U, phi);
-}
 
 template<class Type>
 tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
@@ -444,6 +421,31 @@ template<class Type>
 tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
 ddtCorr
 (
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField
+    <
+        typename flux<Type>::type,
+        fvsPatchField,
+        surfaceMesh
+    >& phi,
+    const autoPtr<GeometricField<Type, fvsPatchField, surfaceMesh> >& UfPtr
+)
+{
+    if (U.mesh().dynamic())
+    {
+        return ddtCorr(U, UfPtr());
+    }
+    else
+    {
+        return ddtCorr(U, phi);
+    }
+}
+
+
+template<class Type>
+tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
+ddtCorr
+(
     const volScalarField& rho,
     const GeometricField<Type, fvPatchField, volMesh>& U,
     const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
@@ -476,6 +478,32 @@ ddtCorr
         U.mesh(),
         U.mesh().ddtScheme("ddt(" + rho.name() + ',' + U.name() + ')')
     )().fvcDdtPhiCorr(rho, U, phi);
+}
+
+
+template<class Type>
+tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
+ddtCorr
+(
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField
+    <
+        typename flux<Type>::type,
+        fvsPatchField,
+        surfaceMesh
+    >& phi,
+    const autoPtr<GeometricField<Type, fvsPatchField, surfaceMesh> >& UfPtr
+)
+{
+    if (U.mesh().dynamic())
+    {
+        return ddtCorr(rho, U, UfPtr());
+    }
+    else
+    {
+        return ddtCorr(rho, U, phi);
+    }
 }
 
 

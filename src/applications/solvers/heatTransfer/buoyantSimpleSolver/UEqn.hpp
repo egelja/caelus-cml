@@ -1,25 +1,35 @@
-    // Solve the Momentum equation
+// Solve the Momentum equation
+MRF.correctBoundaryVelocity(U);
 
-    tmp<fvVectorMatrix> UEqn
+tmp<fvVectorMatrix> tUEqn
+(
+    fvm::div(phi, U)
+  + MRF.DDt(rho, U)
+  + turbulence->divDevRhoReff(U)
+ ==
+    fvOptions(rho, U)
+);
+
+fvVectorMatrix& UEqn = tUEqn();
+ 
+UEqn.relax();
+
+fvOptions.constrain(UEqn);
+
+if (simple.momentumPredictor())
+{
+    solve
     (
-        fvm::div(phi, U)
-      + turbulence->divDevRhoReff(U)
+        UEqn
+     ==
+        fvc::reconstruct
+        (
+            (
+              - ghf*fvc::snGrad(rho)
+              - fvc::snGrad(p_rgh)
+            )*mesh.magSf()
+        )
     );
 
-    UEqn().relax();
-
-    if (simple.momentumPredictor())
-    {
-        solve
-        (
-            UEqn()
-         ==
-            fvc::reconstruct
-            (
-                (
-                  - ghf*fvc::snGrad(rho)
-                  - fvc::snGrad(p_rgh)
-                )*mesh.magSf()
-            )
-        );
-    }
+    fvOptions.correct(U);
+}

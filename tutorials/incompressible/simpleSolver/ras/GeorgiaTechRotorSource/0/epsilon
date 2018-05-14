@@ -1,0 +1,51 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      epsilon;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -3 0 0 0 0];
+
+internalField   uniform 0.0005;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0.0005;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.0005;
+        value           uniform 0.0005;
+    }
+    wall-body
+    {
+        type            epsilonWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        value           uniform 0.0005;
+    }
+    wall-tunnel
+    {
+        type            epsilonWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        value           uniform 0.0005;
+    }
+}
+
+
+// ************************************************************************* //

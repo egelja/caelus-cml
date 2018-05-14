@@ -803,7 +803,7 @@ void correctCoupledBoundaryConditions(fvMesh& mesh)
         else
         {
             FatalErrorIn("correctCoupledBoundaryConditions()")
-                << "Unsuported communications type "
+                << "Unsupported communications type "
                 << Pstream::commsTypeNames[Pstream::defaultCommsType]
                 << exit(FatalError);
         }
@@ -853,7 +853,7 @@ autoPtr<mapDistributePolyMesh> redistributeAndWrite
     {
         // Create 0 sized mesh to do all the generation of zero sized
         // fields on processors that have zero sized meshes. Note that this is
-        // only nessecary on master but since polyMesh construction with
+        // only necessary on master but since polyMesh construction with
         // Pstream::parRun does parallel comms we have to do it on all
         // processors
         autoPtr<fvMeshSubset> subsetterPtr;

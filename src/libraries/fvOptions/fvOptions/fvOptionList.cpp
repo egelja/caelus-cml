@@ -128,67 +128,6 @@ void CML::fv::optionList::reset(const dictionary& dict)
 }
 
 
-void CML::fv::optionList::makeRelative(surfaceScalarField& phi) const
-{
-    forAll(*this, i)
-    {
-        this->operator[](i).makeRelative(phi);
-    }
-}
-
-
-void CML::fv::optionList::makeRelative
-(
-    const surfaceScalarField& rho,
-    surfaceScalarField& phi
-) const
-{
-    forAll(*this, i)
-    {
-        this->operator[](i).makeRelative(rho, phi);
-    }
-}
-
-
-CML::tmp<CML::FieldField<CML::fvsPatchField, CML::scalar> >
-CML::fv::optionList::relative
-(
-    const tmp<FieldField<fvsPatchField, scalar> >& phi
-) const
-{
-    tmp<FieldField<fvsPatchField, scalar> > rphi(phi.ptr());
-
-    forAll(*this, i)
-    {
-        operator[](i).makeRelative(rphi());
-    }
-
-    return rphi;
-}
-
-
-void CML::fv::optionList::makeAbsolute(surfaceScalarField& phi) const
-{
-    forAll(*this, i)
-    {
-        this->operator[](i).makeAbsolute(phi);
-    }
-}
-
-
-void CML::fv::optionList::makeAbsolute
-(
-    const surfaceScalarField& rho,
-    surfaceScalarField& phi
-) const
-{
-    forAll(*this, i)
-    {
-        this->operator[](i).makeAbsolute(rho, phi);
-    }
-}
-
-
 bool CML::fv::optionList::read(const dictionary& dict)
 {
     return readOptions(optionsDict(dict));

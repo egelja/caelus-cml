@@ -2,32 +2,27 @@
 
 ## License
 
-Caelus was forked from OpenFOAM and contains modified OpenFOAM source code. It is currently compatible with OpenFOAM.
+Caelus is a derivative of OpenFOAM and contains modified source code from the OpenFOAM Foundation <https://www.openfoam.org>, OpenCFD <https://www.openfoam.com>, and foam-extend <https://sourceforge.net/projects/foam-extend/>. The mesh and field data formats are compatible with OpenFOAM.
 
 It is released under the GPL: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
-## Contact
-- Aleks Jemcov: a.jemcov@appliedccm.com
-- Chris Sideroff: c.sideroff@appliedccm.ca
-- Darrin Stephens: d.stephens@appliedccm.com.au
+## Contributors
+see CONTRIBUTORS.md
 
-## COPYRIGHT Applied CCM 2014-2017
+## COPYRIGHT Applied CCM 2014-2018
 
-Current version: Caelus 7.04
+Current version: Caelus 8.04
 
 ## Solvers
 ### basic:
 - **`potenialSolver`**: potential flow solver provided by the OpenFOAM Foundation
 ### incompressible:
 - **`simpleSolver`**: SIMPLE-based incompressible steady-state solver
-- **`pCorrSimpleSolver`**: SIMPLE-based incompressible steady-state solver using pressure correction approach
 - **`SRFSimpleSolver`**: SIMPLE-based incompressible steady-state solver in a single rotating rotating reference frame
-- **`pimpleSolver`**: PIMPLE-based incompressible transient solver provided
-- **`pimpleDyMSolver`**: PIMPLE-based incompressible transient dynamic mesh solver
+- **`pimpleSolver`**: PIMPLE-based incompressible transient solver with static and dynamic meshes
 - **`SRFPimpleSolver`**: PIMPLE-based incompressible transient solver in a single rotating reference frame
-- **`pisoSolver`**: PISO-based incompressible transient solver
 ### compressible:
 - **`explicitDBNSSolver`**: density-based explicit compressible solver
 - **`explicitDBNSSRFSolver`**: density-based explicit compressible solver in single rotating reference frame using the absolute velocity formulation
@@ -37,8 +32,9 @@ Current version: Caelus 7.04
 - **`buoyantBoussinesqSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force based on Boussinesq approximation
 - **`buoyantSimpleSolver`**: SIMPLE-based incompressible steady-state solver with buoyant body-force
 ### multiphase:
-- **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids
-- **`vofDyMSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids with dynamic mesh solver
+- **`vofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids with static
+- **`porousWaveSolver`**: `vofSolver` with **waves2Foam** functionality enabled (see below)
+- **`isoVofSolver`**: Volume of Fluid (VOF) phase-fraction based solver for two incompressible, isothermal immiscible fluids using the iso-advector phase-fraction based interface capturing approach of Roenby et al.
 - **`vofLPTSolver`**: Volume of Fluid (VOF) phase-fraction based solver with Lagrangian particle tracking
 - **`pimpleParcelSolver`**: PIMPLE-based incompressible transient solver with Lagrangian particle tracking
 
@@ -69,34 +65,28 @@ Current version: Caelus 7.04
 - Smagorinsky
 - dynamic sub-grid scale kinetic energy
 - coherent structure
+- WALE
 #### Wall Damping:
 - van Driest
+
+## *waves* library
+The *waves* library is a port of Niels Gjoel Jacobsen's waves2Foam to Caelus. It is a suite of wave generation and absorption solvers and libraries. More information about waves2Foam is available at:
+
+<http://openfoamwiki.net/index.php/Contrib/waves2Foam>
+
+This functionality is enabled through the `porousWaveSolver`. Refer to the `waves` tutorial cases for usage examples of the waves2Foam utilities and solvers.
 
 ## Installation
 Installers available for download at <http://www.caelus-cml.com/download/>.
 
-## Execution Environment
-Caelus provides an execution environment based on Python and does not require the sourcing or calling an environment file for every new shell. This environment operates in nearly identical manner to the previous except every command needs is prepended with caelus.py. For parallel, it simplifies usage of utilities and solver. For example, using pCorrSimpleSolver:
-
-**Previous**
-```Bash
- $> mpiexec -n 4 pCorrSimpleSolver -parallel &> pCorrSimpleSolver.log &
-```
-**New**:
-```Bash
- $> caelus.py -l pCorrSimpleSolver -parallel
-```
-Type `caelus.py --help` for the complete list of options.
-
 ### Windows
 - The Windows installer is not digitally signed and may cause some browsers to flag the installer as containing a virus. If this occurs, accept the download or try a different browser.
-- Install the prerequisites first, starting with Python. The prerequisites package is an archive that contains four installation packages.
-- During the Python installation choose to add Python to the PATH system environment variable. Otherwise the Python bin directory needs to be added to the PATH variable manually.
 - For Windows 8, the MPICH2 software requires .NET 2.050727 to be installed. This is provided in the prerequisites package.
 - For MPICH2 installation see below.
 - To install Caelus, double click the .exe and follow the on screen prompts.
-    * If you use the new method to run Caelus you do not need to do anything further to set up Caelus other than double clicking the icon on the desktop.
-    * If you want use the previous method to run Caelus then you need to execute ‘call {Caelus install path}/etc/caelus-environment.cmd’ from a command prompt to configure the run environment.
+- There are two ways to setup the Caelus environment:
+    * If you use the Caelus Python Library (CPL) to run Caelus you do not need to do anything further to set up Caelus other than double clicking the icon on the desktop.
+    * If you to want use the previous method to run Caelus then execute ‘call {Caelus install path}\etc\caelus-environment.cmd’ from a command prompt to configure the environment.
     
 #### MPICH2 on Windows
 - During the installation select MPICH2 to be installed for Everyone
@@ -107,6 +97,7 @@ Type `caelus.py --help` for the complete list of options.
     * mpiexec -register (note you should use your username and password as user and not administrator)
     * mpiexec -validate (should return success)
     * smpd -status (should return ‘smpd running on {hostname}’)
+
 ### Linux
 - For Ubuntu 14.04/16.04 the following prerequisites are required (install using apt-get):
     * build-essential
@@ -117,8 +108,12 @@ Type `caelus.py --help` for the complete list of options.
     * groupinstall “Development Tools”
 - To install Caelus, change installer permissions to executable (chmod +x) and execute the .run package.
 - There are two ways to setup the Caelus environment:
-    * New method (RECOMMENDED): The installer adds paths to the PATH and PYTHONPATH environment and sets them in the users .bashrc file
-    * Previous method: Source the environment file created by the installer. For users of the Bash shell, the caelus-bashrc from the etc directory is provided (source etc/caelus-bashrc). For users of the C shell, the caelus-cshrc from the etc directory is provided (source etc/caelus-cshrc). For users of other shells, use the existing shell files as a template to create an appropriate environment file.
+    * If you use the CPL to run Caelus you do not need to do anything further to set up Caelus. The installer adds the CPL exe path to the system PATH
+    * If you to want use the previous method to run Caelus then type
+    ```
+     source etc/caelus-bashrc
+    ```
+from a command prompt to configure the run environment. For users of the C shell, the caelus-cshrc from the etc directory is provided. For users of other shells, use the existing shell files as a template to create an appropriate environment file.
 - The installer can be run in text mode by issuing the following the installation command with “–mode text” (without quotes).
 
 ### Mac OS X
@@ -130,10 +125,128 @@ Type `caelus.py --help` for the complete list of options.
     * click ‘Install’ in the pop-up dialogue to install the developer tools
     * Note: Xcode is not necessary to compile Caelus
 - There are two ways to setup the Caelus environment:
-    * New method (RECOMMENDED): The installer adds paths to the PATH and PYTHONPATH environment and sets them in the users .bashrc file
-    * Previous method: Source the environment file created by the installer. For users of the Bash shell, the caelus-bashrc from the etc directory is provided (source etc/caelus-bashrc). For users of the C shell, the caelus-cshrc from the etc directory is provided (source etc/caelus-cshrc). For users of other shells, use the existing shell files as a template to create an appropriate environment file.
+    * If you use the CPL to run Caelus you do not need to do anything further to set up Caelus. The installer adds the CPL exe path to the system PATH
+    * If you to want use the previous method to run Caelus then type
+    ```
+     source etc/caelus-bashrc
+    ```
+from a command prompt to configure the run environment. For users of the C shell, the caelus-cshrc from the etc directory is provided. For users of other shells, use the existing shell files as a template to create an appropriate environment file.
+- The installer can be run in text mode by issuing the following the installation command with “–mode text” (without quotes).
     
-### Contributors Repository Set Up
+## Caelus Python Library
+A powerful new Python library, called the Caelus Python Library or CPL, has been developed that replaces the original Python environment. CPL provides a mechanism that does not require sourcing or calling an environment file to run applications. The CPL  documentation can be found at <http://caelus.readthedocs.io>. CPL is included in the Caelus installers or can be obtained from the public repository.
+
+### Usage
+Running an application:
+
+_previous_
+```Bash
+ $> mpiexec -n 4 simpleSolver -parallel &> simpleSolver.log &
+```
+_new_:
+```Bash
+ $> caelus run -p simpleSolver
+```
+Type `caelus -h` for the complete list of subcommands, `caelus <subcommand> -h` for the subcommand's options, or refer to documentation.
+
+### Workflows
+Previously complex Python scripts were required to run Caelus workflows. With CPL, workflows are more straightforward with YAML-based task files. For example, constrast workflow set up for the pitzDailyExptInlet tutorial.
+
+**previous**:
+
+Python `Allrun.py` script:
+```Python
+#!/usr/bin/python
+
+# Importing the required modules for Python
+import subprocess
+import sys
+import os
+import glob
+import shutil
+import Caelus
+
+# Code name and version
+code = 'Caelus'
+version = Caelus.PROJECT_VER
+
+# Starting up the meshing and solving
+print "**********************************"
+print "Starting %s %s simulation" % (code, version)
+print "**********************************"
+
+if sys.platform == 'win32':
+   pltfrm = True
+else:
+   pltfrm = False
+
+# Cleaning up the case
+os.system('caelus-cleanCase.py')
+os.system('caelus-clearPolyMesh.py')
+
+# Executing BlockMesh utility
+print "Executing blockMesh"
+run = subprocess.Popen(['caelus.py', '-l', 'blockMesh'], shell=pltfrm)
+run.wait()
+run = None
+
+#Executing decomposePar -force
+print "Executing decomposePar -force"
+run = subprocess.Popen(['caelus.py', '-l', 'decomposePar', '-force'], shell=pltfrm)
+run.wait()
+run = None
+
+# Executing simpleSolver in parallel
+print "Executing simpleSolver in parallel"
+
+run = subprocess.Popen(['caelus.py', '-l', 'simpleSolver', '-parallel'], shell=pltfrm)
+run.wait()
+run = None
+
+# Executing reconstructPar -latestTime
+print "Executing reconstructPar -latestTime"
+run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], shell=pltfrm)
+run.wait()
+run = None
+
+# Create stub file for paraview
+open('pitzDailyExpInlet.foam', 'a').close()
+```
+
+**new**:
+
+YAML-based `run_tutorial.yaml` task file:
+
+```Yaml
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args "-force"
+
+  - run_command:
+      cmd_name: simpleSolver
+      parallel: True
+
+  - run_command:
+      cmd_name: reconstructPar
+      cmd_args "-latestTime"
+
+  - process_logs:
+      log_file: simpleSolver.log
+```
+Task files are run by:
+
+```Bash
+ $> caelus tasks -f run_case.py
+```
+## Contributors Repository Set Up
 There is a public git repository for the Caelus source code that tracks with the current release.
 
 <https://bitbucket.org/appliedccm/caelus-contributors>
@@ -143,32 +256,62 @@ To make a local copy, clone the repository with git:
 ```Bash
  $> git clone git@bitbucket.org:appliedccm/caelus-contributors.git
 ```
-Some environment variables need to be set manually. These are set automatically by the installer with the packaged versions.
-Add to your PATH ./external/scons-local-2.3.4 and ./bin
-Set the variable PYTHONPATH to ./lib/python2.6
+Environment variables are not required to compile Caelus. However, adding the SCons directory to the system PATH, ${CAELUS_PROJECT_DIR}/external/scons-local-2.3.4, enables easier building.
 
-To set up the development environment, copy the conf_template.py file in ./lib/python2.6/Caelus to conf.py in the same directory. Modify the conf.py to match the paths on your system. In particular the PROJECT_NAME, PROJECT_VER, PROJECT_DIR and the MPI vars. Once this is done, run:
+Create and modify a build_config.py in the top-level directory where the Caelus repository was cloned. A basic build_config.py on Linux, which uses a system MPI, would take the following form:
 
-```Bash
- $> python -s lib/python2.6/Caelus/write_env.py
+```Python
+"""
+Caelus configuration file
+"""
+
+PROJECT_NAME = "Caelus"
+PROJECT_VERSION = "8.04"
+
+CC = "gcc"
+CXX = "g++"
+OMP = True
+BUILD_TYPE = "Opt"
+BUILD_ARCH = "64"
+PRECISION = "DP"
+
+MPI_LIB_NAME = 'mpi'
+MPI_LIB_PATH = '/usr/lib/openmpi/lib'
+MPI_INC_PATH = '/usr/lib/openmpi/include
 ```
-to rebuild the environment scripts. This only needs to be done once. This manual step is required because the scripts are automatically generated by the installer with the packaged versions. Note: Caelus currently requires a python 2.x. You will also need to set the PYTHONPATH variable to ./lib/python2.6 before executing the write_env.py script.
-
-Then source the appropriate script: 
-
-#### Linux/Mac
-```Bash
- $> . etc/caelus-bashrc
-```
-#### Windows
-```Bash
- $> call etc\caelus-environment.cmd
-```
-
-Finally, use SCons to build Caelus:
+To compile scons, in the Caelus repository directory, type:
 
 ```Bash
  $> scons.py install
 ```
 
-Provide the -h to get a full list of build options or refer to the scons_notes.md for further details about the build system.
+Parallel compilation can be invoked with the `-j [nProcs]` option.
+
+Upon successful compilation, run Caelus per the above platform-specific instructions. To compile applications and libraries outside the Caelus repository directory, provide scons with the location of the site_scons directory. For example,
+
+```Bash
+ $> scons.py --site-dir="/home/username/Caelus/Caelus-8.04/site_scons" install
+```
+Run `scons.py -h` to see the full list of build options or refer to the scons_notes.md for further details about the build system.
+
+## CPL Repository Setup
+For convenience, a submodule within the Caelus repository is provided to clone the CPL repository into the ./tools/cpl directory. To clone the submodule, from the Caelus repository directory, type:
+
+```Bash
+ $> git submodule init
+```
+and
+```Bash
+ $> git submodule update
+```
+If using the submodule is not desirable, for example when working with multiple versions of Caelus, refer to the public git repository for CPL.
+
+<https://bitbucket.org/appliedccm/cpl>
+
+To make a local copy, clone the repository with git:
+
+```Bash
+ $> git clone git@bitbucket.org:appliedccm/cpl.git
+```
+
+A Python environment and configuration file is required to work with the CPL source code. Refer to the CPL <a href="http://caelus.readthedocs.io/en/latest/user/installation.html">installation</a> and <a href="http://caelus.readthedocs.io/en/latest/user/configuration.html">configuration</a> documentation.

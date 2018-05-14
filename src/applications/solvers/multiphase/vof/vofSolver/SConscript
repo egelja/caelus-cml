@@ -1,5 +1,6 @@
 # -*- mode: python -*-
 
+import os
 import utils
 from build import build_app
 Import('env')
@@ -11,6 +12,7 @@ vofSolver.cpp
 """)
 
 caelus_inc = [
+'core/lnInclude',
 'turbulenceModels/',
 'turbulenceModels/incompressible/turbulenceModel/lnInclude',
 'transportModels',
@@ -18,7 +20,12 @@ caelus_inc = [
 'transportModels/incompressible/lnInclude',
 'transportModels/interfaceProperties/lnInclude',
 'fvOptions/lnInclude',
-'sampling/lnInclude'
+'sampling/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude',
+'dynamicMesh/dynamicFvMesh/lnInclude',
+'waves/waves/lnInclude',
+'waves/wavesSampling/lnInclude',
+env['GSL_INC_PATH']
 ]
 
 caelus_libs = [
@@ -32,8 +39,16 @@ caelus_libs = [
 'interfaceProperties',
 'twoPhaseInterfaceProperties',
 'fvOptions',
-'sampling'
+'sampling',
+'dynamicMesh',
+'dynamicFvMesh',
+'topoChangerFvMesh',
+'waves',
+'wavesSampling',
+'pgsl'
 ]
+
+append_args = {}
 
 ostype = utils.ostype()
 prepend_args = {}
@@ -47,4 +62,5 @@ build_app(env,
           sources=sources,
           caelus_inc=caelus_inc,
           caelus_libs=caelus_libs,
-          prepend_args=prepend_args)
+          prepend_args=prepend_args,
+          append_args=append_args)

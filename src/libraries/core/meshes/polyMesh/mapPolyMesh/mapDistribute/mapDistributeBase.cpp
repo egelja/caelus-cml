@@ -33,7 +33,7 @@ defineTypeNameAndDebug(mapDistributeBase, 0);
 }
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 CML::List<CML::labelPair> CML::mapDistributeBase::schedule
 (
@@ -49,19 +49,19 @@ CML::List<CML::labelPair> CML::mapDistributeBase::schedule
         HashSet<labelPair, labelPair::Hash<> > commsSet(Pstream::nProcs());
 
         // Find what communication is required
-        forAll(subMap, procI)
+        forAll(subMap, proci)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
-                if (subMap[procI].size())
+                if (subMap[proci].size())
                 {
-                    // I need to send to procI
-                    commsSet.insert(labelPair(Pstream::myProcNo(), procI));
+                    // I need to send to proci
+                    commsSet.insert(labelPair(Pstream::myProcNo(), proci));
                 }
-                if (constructMap[procI].size())
+                if (constructMap[proci].size())
                 {
-                    // I need to receive from procI
-                    commsSet.insert(labelPair(procI, Pstream::myProcNo()));
+                    // I need to receive from proci
+                    commsSet.insert(labelPair(proci, Pstream::myProcNo()));
                 }
             }
         }
@@ -108,7 +108,13 @@ CML::List<CML::labelPair> CML::mapDistributeBase::schedule
     else
     {
         {
-            OPstream toMaster(Pstream::scheduled, Pstream::masterNo(), 0, tag);
+            OPstream toMaster
+            (
+                Pstream::scheduled,
+                Pstream::masterNo(),
+                0,
+                tag
+            );
             toMaster << allComms;
         }
         {
@@ -179,7 +185,7 @@ const CML::List<CML::labelPair>& CML::mapDistributeBase::schedule() const
 
 void CML::mapDistributeBase::checkReceivedSize
 (
-    const label procI,
+    const label proci,
     const label expectedSize,
     const label receivedSize
 )
@@ -198,7 +204,7 @@ void CML::mapDistributeBase::checkReceivedSize
             "    const labelListList& constructMap,\n"
             "    List<T>& field\n"
             ")\n"
-        )   << "Expected from processor " << procI
+        )   << "Expected from processor " << proci
             << " " << expectedSize << " but received "
             << receivedSize << " elements."
             << abort(FatalError);
@@ -211,16 +217,16 @@ void CML::mapDistributeBase::printLayout(Ostream& os) const
     // Determine offsets of remote data.
     labelList minIndex(Pstream::nProcs(), labelMax);
     labelList maxIndex(Pstream::nProcs(), labelMin);
-    forAll(constructMap_, procI)
+    forAll(constructMap_, proci)
     {
-        const labelList& construct = constructMap_[procI];
+        const labelList& construct = constructMap_[proci];
         if (constructHasFlip_)
         {
             forAll(construct, i)
             {
                 label index = mag(construct[i])-1;
-                minIndex[procI] = min(minIndex[procI], index);
-                maxIndex[procI] = max(maxIndex[procI], index);
+                minIndex[proci] = min(minIndex[proci], index);
+                maxIndex[proci] = max(maxIndex[proci], index);
             }
         }
         else
@@ -228,8 +234,8 @@ void CML::mapDistributeBase::printLayout(Ostream& os) const
             forAll(construct, i)
             {
                 label index = construct[i];
-                minIndex[procI] = min(minIndex[procI], index);
-                maxIndex[procI] = max(maxIndex[procI], index);
+                minIndex[proci] = min(minIndex[proci], index);
+                maxIndex[proci] = max(maxIndex[proci], index);
             }
         }
     }
@@ -253,23 +259,23 @@ void CML::mapDistributeBase::printLayout(Ostream& os) const
         << "    size  : " << localSize << endl;
 
     label offset = localSize;
-    forAll(minIndex, procI)
+    forAll(minIndex, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            if (constructMap_[procI].size() > 0)
+            if (constructMap_[proci].size() > 0)
             {
-                if (minIndex[procI] != offset)
+                if (minIndex[proci] != offset)
                 {
                     FatalErrorIn("mapDistributeBase::printLayout(..)")
                         << "offset:" << offset
-                        << " procI:" << procI
-                        << " minIndex:" << minIndex[procI]
+                        << " proci:" << proci
+                        << " minIndex:" << minIndex[proci]
                         << abort(FatalError);
                 }
 
-                label size = maxIndex[procI]-minIndex[procI]+1;
-                os  << "processor " << procI << ':' << endl
+                label size = maxIndex[proci]-minIndex[proci]+1;
+                os  << "processor " << proci << ':' << endl
                     << "    start : " << offset << endl
                     << "    size  : " << size << endl;
 
@@ -301,17 +307,17 @@ void CML::mapDistributeBase::calcCompactAddressing
 
         if (globalIndex != -1 && !globalNumbering.isLocal(globalIndex))
         {
-            label procI = globalNumbering.whichProcID(globalIndex);
-            nNonLocal[procI]++;
+            label proci = globalNumbering.whichProcID(globalIndex);
+            nNonLocal[proci]++;
         }
     }
 
-    forAll(compactMap, procI)
+    forAll(compactMap, proci)
     {
-        compactMap[procI].clear();
-        if (procI != Pstream::myProcNo())
+        compactMap[proci].clear();
+        if (proci != Pstream::myProcNo())
         {
-            compactMap[procI].resize(2*nNonLocal[procI]);
+            compactMap[proci].resize(2*nNonLocal[proci]);
         }
     }
 
@@ -323,10 +329,10 @@ void CML::mapDistributeBase::calcCompactAddressing
 
         if (globalIndex != -1 && !globalNumbering.isLocal(globalIndex))
         {
-            label procI = globalNumbering.whichProcID(globalIndex);
-            label index = globalNumbering.toLocal(procI, globalIndex);
-            label nCompact = compactMap[procI].size();
-            compactMap[procI].insert(index, nCompact);
+            label proci = globalNumbering.whichProcID(globalIndex);
+            label index = globalNumbering.toLocal(proci, globalIndex);
+            label nCompact = compactMap[proci].size();
+            compactMap[proci].insert(index, nCompact);
         }
     }
 }
@@ -354,18 +360,18 @@ void CML::mapDistributeBase::calcCompactAddressing
 
             if (globalIndex != -1 && !globalNumbering.isLocal(globalIndex))
             {
-                label procI = globalNumbering.whichProcID(globalIndex);
-                nNonLocal[procI]++;
+                label proci = globalNumbering.whichProcID(globalIndex);
+                nNonLocal[proci]++;
             }
         }
     }
 
-    forAll(compactMap, procI)
+    forAll(compactMap, proci)
     {
-        compactMap[procI].clear();
-        if (procI != Pstream::myProcNo())
+        compactMap[proci].clear();
+        if (proci != Pstream::myProcNo())
         {
-            compactMap[procI].resize(2*nNonLocal[procI]);
+            compactMap[proci].resize(2*nNonLocal[proci]);
         }
     }
 
@@ -381,10 +387,10 @@ void CML::mapDistributeBase::calcCompactAddressing
 
             if (globalIndex != -1 && !globalNumbering.isLocal(globalIndex))
             {
-                label procI = globalNumbering.whichProcID(globalIndex);
-                label index = globalNumbering.toLocal(procI, globalIndex);
-                label nCompact = compactMap[procI].size();
-                compactMap[procI].insert(index, nCompact);
+                label proci = globalNumbering.whichProcID(globalIndex);
+                label index = globalNumbering.toLocal(proci, globalIndex);
+                label nCompact = compactMap[proci].size();
+                compactMap[proci].insert(index, nCompact);
             }
         }
     }
@@ -407,12 +413,12 @@ void CML::mapDistributeBase::exchangeAddressing
     compactStart.setSize(Pstream::nProcs());
     compactStart[Pstream::myProcNo()] = 0;
     constructSize_ = globalNumbering.localSize();
-    forAll(compactStart, procI)
+    forAll(compactStart, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            compactStart[procI] = constructSize_;
-            constructSize_ += compactMap[procI].size();
+            compactStart[proci] = constructSize_;
+            constructSize_ += compactMap[proci].size();
         }
     }
 
@@ -424,26 +430,26 @@ void CML::mapDistributeBase::exchangeAddressing
     labelListList wantedRemoteElements(Pstream::nProcs());
     // Compact addressing for received data
     constructMap_.setSize(Pstream::nProcs());
-    forAll(compactMap, procI)
+    forAll(compactMap, proci)
     {
-        if (procI == Pstream::myProcNo())
+        if (proci == Pstream::myProcNo())
         {
             // All my own elements are used
             label nLocal = globalNumbering.localSize();
-            wantedRemoteElements[procI] = identity(nLocal);
-            constructMap_[procI] = identity(nLocal);
+            wantedRemoteElements[proci] = identity(nLocal);
+            constructMap_[proci] = identity(nLocal);
         }
         else
         {
-            // Remote elements wanted from processor procI
-            labelList& remoteElem = wantedRemoteElements[procI];
-            labelList& localElem = constructMap_[procI];
-            remoteElem.setSize(compactMap[procI].size());
-            localElem.setSize(compactMap[procI].size());
+            // Remote elements wanted from processor proci
+            labelList& remoteElem = wantedRemoteElements[proci];
+            labelList& localElem = constructMap_[proci];
+            remoteElem.setSize(compactMap[proci].size());
+            localElem.setSize(compactMap[proci].size());
             label i = 0;
-            forAllIter(Map<label>, compactMap[procI], iter)
+            forAllIter(Map<label>, compactMap[proci], iter)
             {
-                const label compactI = compactStart[procI] + iter();
+                const label compactI = compactStart[proci] + iter();
                 remoteElem[i] = iter.key();
                 localElem[i]  = compactI;
                 iter() = compactI;
@@ -486,12 +492,12 @@ void CML::mapDistributeBase::exchangeAddressing
     compactStart.setSize(Pstream::nProcs());
     compactStart[Pstream::myProcNo()] = 0;
     constructSize_ = globalNumbering.localSize();
-    forAll(compactStart, procI)
+    forAll(compactStart, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            compactStart[procI] = constructSize_;
-            constructSize_ += compactMap[procI].size();
+            compactStart[proci] = constructSize_;
+            constructSize_ += compactMap[proci].size();
         }
     }
 
@@ -503,26 +509,26 @@ void CML::mapDistributeBase::exchangeAddressing
     labelListList wantedRemoteElements(Pstream::nProcs());
     // Compact addressing for received data
     constructMap_.setSize(Pstream::nProcs());
-    forAll(compactMap, procI)
+    forAll(compactMap, proci)
     {
-        if (procI == Pstream::myProcNo())
+        if (proci == Pstream::myProcNo())
         {
             // All my own elements are used
             label nLocal = globalNumbering.localSize();
-            wantedRemoteElements[procI] = identity(nLocal);
-            constructMap_[procI] = identity(nLocal);
+            wantedRemoteElements[proci] = identity(nLocal);
+            constructMap_[proci] = identity(nLocal);
         }
         else
         {
-            // Remote elements wanted from processor procI
-            labelList& remoteElem = wantedRemoteElements[procI];
-            labelList& localElem = constructMap_[procI];
-            remoteElem.setSize(compactMap[procI].size());
-            localElem.setSize(compactMap[procI].size());
+            // Remote elements wanted from processor proci
+            labelList& remoteElem = wantedRemoteElements[proci];
+            labelList& localElem = constructMap_[proci];
+            remoteElem.setSize(compactMap[proci].size());
+            localElem.setSize(compactMap[proci].size());
             label i = 0;
-            forAllIter(Map<label>, compactMap[procI], iter)
+            forAllIter(Map<label>, compactMap[proci], iter)
             {
-                const label compactI = compactStart[procI] + iter();
+                const label compactI = compactStart[proci] + iter();
                 remoteElem[i] = iter.key();
                 localElem[i]  = compactI;
                 iter() = compactI;
@@ -633,10 +639,10 @@ CML::mapDistributeBase::mapDistributeBase
 
     subMap_.setSize(Pstream::nProcs());
     constructMap_.setSize(Pstream::nProcs());
-    forAll(nSend, procI)
+    forAll(nSend, proci)
     {
-        subMap_[procI].setSize(nSend[procI]);
-        constructMap_[procI].setSize(nRecv[procI]);
+        subMap_[proci].setSize(nSend[proci]);
+        constructMap_[proci].setSize(nRecv[proci]);
     }
     nSend = 0;
     nRecv = 0;
@@ -686,11 +692,11 @@ CML::mapDistributeBase::mapDistributeBase
     );
 
     //// Sort remote elements needed (not really necessary)
-    //forAll(compactMap, procI)
+    //forAll(compactMap, proci)
     //{
-    //    if (procI != Pstream::myProcNo())
+    //    if (proci != Pstream::myProcNo())
     //    {
-    //        Map<label>& globalMap = compactMap[procI];
+    //        Map<label>& globalMap = compactMap[proci];
     //
     //        SortableList<label> sorted(globalMap.toc().xfer());
     //
@@ -746,11 +752,11 @@ CML::mapDistributeBase::mapDistributeBase
     );
 
     //// Sort remote elements needed (not really necessary)
-    //forAll(compactMap, procI)
+    //forAll(compactMap, proci)
     //{
-    //    if (procI != Pstream::myProcNo())
+    //    if (proci != Pstream::myProcNo())
     //    {
-    //        Map<label>& globalMap = compactMap[procI];
+    //        Map<label>& globalMap = compactMap[proci];
     //
     //        SortableList<label> sorted(globalMap.toc().xfer());
     //
@@ -846,9 +852,9 @@ CML::label CML::mapDistributeBase::renumber
     }
     else
     {
-        label procI = globalNumbering.whichProcID(globalI);
-        label index = globalNumbering.toLocal(procI, globalI);
-        return compactMap[procI][index];
+        label proci = globalNumbering.whichProcID(globalI);
+        label index = globalNumbering.toLocal(proci, globalI);
+        return compactMap[proci][index];
     }
 }
 

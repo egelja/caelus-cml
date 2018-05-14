@@ -420,7 +420,7 @@ void CML::polyDualMesh::collectPatchInternalFace
         {
             featEdgeIndices2[i] = dualFace2.size() -1 - featEdgeIndices2[i];
         }
-        // Reverse indices (might not be nessecary but do anyway)
+        // Reverse indices (might not be necessary but do anyway)
         reverse(featEdgeIndices2);
     }
 }

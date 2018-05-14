@@ -86,9 +86,6 @@ public:
 
     // Constructors
 
-        //- Construct from Istream
-        absorptionCoeffs(Istream&);
-
         // Null constructor
         absorptionCoeffs()
         {}
@@ -105,9 +102,6 @@ public:
 
         // Initialise from a dictionary
         void initialise(const dictionary&);
-
-        // Initialise from an Istream
-        void initialise(Istream&);
 
 
     // Access Functions

@@ -30,7 +30,8 @@ Description
 #ifndef coupledFvPatchField_H
 #define coupledFvPatchField_H
 
-#include "lduInterfaceField.hpp"
+#include "BlockLduInterfaceField.hpp"
+#include "CoeffField.hpp"
 #include "fvPatchField.hpp"
 #include "coupledFvPatch.hpp"
 
@@ -40,13 +41,13 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class coupledFvPatch Declaration
+                       Class coupledFvPatch Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
 class coupledFvPatchField
 :
-    public lduInterfaceField,
+    public BlockLduInterfaceField<Type>,
     public fvPatchField<Type>
 {
 
@@ -208,6 +209,32 @@ public:
                 const Pstream::commsTypes commsType
             ) const = 0;
 
+        // Block coupled interface functionality
+
+            //- Initialise neighbour matrix update
+            virtual void initInterfaceMatrixUpdate
+            (
+                Field<Type>&,
+                const Field<Type>&,
+                const BlockLduMatrix<Type>&,
+                const CoeffField<Type>&,
+                const Pstream::commsTypes commsType
+            ) const
+            {}
+
+            //- Update result field based on interface functionality
+            virtual void updateInterfaceMatrix
+            (
+                Field<Type>&,
+                const Field<Type>&,
+                const BlockLduMatrix<Type>&,
+                const CoeffField<Type>&,
+                const Pstream::commsTypes commsType
+            ) const
+            {
+                notImplemented("coupledFvPatchField<Type>::updateInterfaceMatrix for block matrices")
+            }
+
         //- Write
         virtual void write(Ostream&) const;
 };
@@ -226,7 +253,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const DimensionedField<Type, volMesh>& iF
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(p)),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF)
 {}
 
@@ -239,7 +266,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const Field<Type>& f
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(p)),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF, f)
 {}
 
@@ -253,7 +280,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const fvPatchFieldMapper& mapper
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(p)),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(p)),
     fvPatchField<Type>(ptf, p, iF, mapper)
 {}
 
@@ -266,7 +293,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const dictionary& dict
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(p)),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF, dict)
 {}
 
@@ -277,7 +304,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const coupledFvPatchField<Type>& ptf
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(ptf.patch())),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(ptf.patch())),
     fvPatchField<Type>(ptf)
 {}
 
@@ -289,7 +316,7 @@ CML::coupledFvPatchField<Type>::coupledFvPatchField
     const DimensionedField<Type, volMesh>& iF
 )
 :
-    lduInterfaceField(refCast<const lduInterface>(ptf.patch())),
+    BlockLduInterfaceField<Type>(refCast<const lduInterface>(ptf.patch())),
     fvPatchField<Type>(ptf, iF)
 {}
 

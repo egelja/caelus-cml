@@ -185,9 +185,9 @@ enum {
   XF_RF_DATA_WALL_GRID_VELOCITY = 181 ,
 
 
-  XF_RF_DATA_SV_T_AUX = 190 ,                /* auxilliary temperature
+  XF_RF_DATA_SV_T_AUX = 190 ,                /* auxiliary temperature
 for particles */
-  XF_RF_DATA_SV_T_AP_AUX = 191 ,             /* auxilliary ap
+  XF_RF_DATA_SV_T_AP_AUX = 191 ,             /* auxiliary ap
 coefficient for particles */
   XF_RF_DATA_TOTAL_PRESSURE=192,
   XF_RF_DATA_TOTAL_TEMPERATURE=193,

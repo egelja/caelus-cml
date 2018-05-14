@@ -566,7 +566,7 @@ inline CML::vector CML::quaternion::rotVector(const quaternion& q) const
     }
     else
     {
-        // Return arbitary unit vector
+        // Return arbitrary unit vector
         return vector(1,0,0);
     }
 }

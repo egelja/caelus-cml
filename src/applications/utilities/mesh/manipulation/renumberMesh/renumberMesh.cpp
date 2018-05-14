@@ -479,6 +479,32 @@ int main(int argc, char *argv[])
         labelList(0)
     );
 
+    // Read cellLevel and pointLevel maps from refinement
+    labelIOList cellLevel
+    (
+        IOobject
+        (
+            "cellLevel",
+            mesh.facesInstance(),
+            polyMesh::meshSubDir,
+            mesh,
+            IOobject::READ_IF_PRESENT
+        ),
+        labelList(0)
+    );
+
+    labelIOList pointLevel
+    (
+        IOobject
+        (
+            "pointLevel",
+            mesh.pointsInstance(),
+            polyMesh::meshSubDir,
+            mesh,
+            IOobject::READ_IF_PRESENT
+        ),
+        labelList(0)
+    );
 
     // Read objects in time directory
     IOobjectList objects(mesh, runTime.timeName());
@@ -690,6 +716,37 @@ int main(int argc, char *argv[])
     }
 
 
+    // Update level maps
+    if
+    (
+        cellLevel.headerOk()
+     && cellLevel.size() == mesh.nCells()
+    )
+    {
+        Info<< "Renumbering cellLevel map "
+            << cellLevel.name() << endl;
+
+        cellLevel = labelList
+        (
+            UIndirectList<label>(cellLevel, map().cellMap())
+        );
+    }
+    if
+    (
+        pointLevel.headerOk()
+     && pointLevel.size() == mesh.nPoints()
+    )
+    {
+        Info<< "Renumbering pointLevel map "
+            << pointLevel.name() << endl;
+
+        pointLevel = labelList
+        (
+            UIndirectList<label>(pointLevel, map().pointMap())
+        );
+    }
+
+
     // Move mesh (since morphing might not do this)
     if (map().hasMotionPoints())
     {
@@ -802,6 +859,26 @@ int main(int argc, char *argv[])
     {
         boundaryProcAddressing.instance() = mesh.facesInstance();
         boundaryProcAddressing.write();
+    }
+
+    // Write level
+    if
+    (
+        cellLevel.headerOk()
+     && cellLevel.size() == mesh.nCells()
+    )
+    {
+        cellLevel.instance() = mesh.facesInstance();
+        cellLevel.write();
+    }
+    if
+    (
+        pointLevel.headerOk()
+     && pointLevel.size() == mesh.nPoints()
+    )
+    {
+        pointLevel.instance() = mesh.facesInstance();
+        pointLevel.write();
     }
 
 

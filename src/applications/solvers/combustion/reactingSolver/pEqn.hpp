@@ -3,11 +3,11 @@ rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 T = thermo.T();
 
-U = rAU*UEqn().H();
+volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p));
 
 #include "compressibleFlux.hpp"
 
-if (pimple.nCorrPISO() <= 1) UEqn.clear();
+if (pimple.nCorrPISO() <= 1) tUEqn.clear();
 
 #include "compressibleFlux.hpp"
 
@@ -42,8 +42,9 @@ T.relax();
 Info<< "rho max/min : " << max(rho).value()
     << " " << min(rho).value() << endl;
 
-U -= rAU*fvc::grad(p);
+U = HbyA - rAU*fvc::grad(p);
 U.correctBoundaryConditions();
+fvOptions.correct(U);
 
 dpdt = fvc::ddt(p);
 

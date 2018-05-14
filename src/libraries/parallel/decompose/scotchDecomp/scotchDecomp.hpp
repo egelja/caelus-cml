@@ -100,6 +100,9 @@ public:
             // Knows about coupled boundaries
             return true;
         }
+    
+        //- Inherit decompose from decompositionMethod
+        using decompositionMethod::decompose;
 
         //- Return for every coordinate the wanted processor number. Use the
         //  mesh connectivity (if needed)

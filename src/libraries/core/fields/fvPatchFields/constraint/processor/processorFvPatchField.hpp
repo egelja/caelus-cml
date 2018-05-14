@@ -188,6 +188,28 @@ public:
                 const Pstream::commsTypes commsType
             ) const;
 
+        // Block coupled interface functionality
+
+            //- Initialise neighbour matrix update
+            virtual void initInterfaceMatrixUpdate
+            (
+                Field<Type>&,
+                const Field<Type>&,
+                const BlockLduMatrix<Type>&,
+                const CoeffField<Type>&,
+                const Pstream::commsTypes commsType
+            ) const;
+
+            //- Update result field based on interface functionality
+            virtual void updateInterfaceMatrix
+            (
+                Field<Type>&,
+                const Field<Type>&,
+                const BlockLduMatrix<Type>&,
+                const CoeffField<Type>&,
+                const Pstream::commsTypes commsType
+            ) const;
+
         //- Processor coupled interface functions
 
             //- Return processor number
@@ -196,7 +218,7 @@ public:
                 return procPatch_.myProcNo();
             }
 
-            //- Return neigbour processor number
+            //- Return neighbour processor number
             virtual int neighbProcNo() const
             {
                 return procPatch_.neighbProcNo();
@@ -231,6 +253,7 @@ public:
 #include "processorFvPatch.hpp"
 #include "demandDrivenData.hpp"
 #include "transformField.hpp"
+#include "coeffFields.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
 
@@ -456,6 +479,51 @@ void CML::processorFvPatchField<Type>::updateInterfaceMatrix
     }
 }
 
+
+template<class Type>
+void CML::processorFvPatchField<Type>::initInterfaceMatrixUpdate
+(
+    Field<Type>&,
+    const Field<Type>& psiInternal,
+    const BlockLduMatrix<Type>&,
+    const CoeffField<Type>&,
+    const Pstream::commsTypes commsType
+) const
+{
+    procPatch_.compressedSend
+    (
+        commsType,
+        this->patch().patchInternalField(psiInternal)()
+    );
+}
+
+
+template<class Type>
+void CML::processorFvPatchField<Type>::updateInterfaceMatrix
+(
+    Field<Type>& result,
+    const Field<Type>& psiInternal,
+    const BlockLduMatrix<Type>&,
+    const CoeffField<Type>& coeffs,
+    const Pstream::commsTypes commsType
+) const
+{
+    const labelUList& faceCells = this->patch().faceCells();
+
+    Field<Type> pnf
+    (
+        procPatch_.compressedReceive<Type>(commsType, this->size())()
+    );
+
+    // Multiply neighbour field with coeffs and re-use pnf for result
+    // of multiplication
+    multiply(pnf, coeffs, pnf);
+
+    forAll(faceCells, elemI)
+    {
+        result[faceCells[elemI]] -= pnf[elemI];
+    }
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

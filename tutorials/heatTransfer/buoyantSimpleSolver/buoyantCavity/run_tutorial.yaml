@@ -1,0 +1,20 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      preserve: [ "validation", "README" ]
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: buoyantSimpleSolver
+
+  - run_command:
+      cmd_name: sample
+      cmd_args: "-latestTime"
+
+  - process_logs:
+      log_file: buoyantSimpleSolver.log
+

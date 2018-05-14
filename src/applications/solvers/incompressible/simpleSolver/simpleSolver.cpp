@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 - 2016 Applied CCM
+Copyright (C) 2014 - 2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,10 +19,32 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
+
     simpleFoam
 
 Description
-    Steady-state solver for incompressible, turbulent flow
+
+    Steady-state solver for incompressible, turbulent flow with option to use 
+    either SIMPLE in primitive or correction pressure form or SIMPLEC 
+    algorithm in primitive form.
+
+References:
+
+    [1] "Numerical Heat Transfer and Fluid Flow", S.V. Patankar, Hemisphere
+        Publishing Corporation, 1980, USA
+
+    [2] "Computational Methods for FLuid Dynamics", J.H. Ferziger, M. Peric,
+        Springler-Verlag, 2002
+
+
+    [3] "Enhancements of the SIMPLE Method for Predicting Incompressible Fluid 
+        Flows", Van Doormal, J. P. and Raithby, G. D., Numerical Heat Transfer 
+        Vol. 7, Iss. 2, p. 147-163, 1984
+
+Author(s)
+
+    Aleksandar Jemcov
+    Darrin Stephens
 
 \*---------------------------------------------------------------------------*/
 
@@ -31,6 +53,7 @@ Description
 #include "RASModel.hpp"
 #include "simpleControl.hpp"
 #include "fvIOoptionList.hpp"
+#include "orthogonalSnGrad.hpp"
 #include "profiling.hpp"
 
 int main(int argc, char *argv[])
@@ -39,12 +62,28 @@ int main(int argc, char *argv[])
     #include "createTime.hpp"
     addProfiling(init, "Initialisation");
     #include "createMesh.hpp"
+
+    simpleControl simple(mesh);    
+    
     #include "createFields.hpp"
+    #include "createMRF.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
-    simpleControl simple(mesh);
     endProfiling(init);
+
+    Info<< "Solver variable formulation: ";
+    simple.correctionForm() ?
+        Info<< "correction form\n"
+        :
+        Info<< "primitive form\n"
+            << endl;
+    Info<< "Algorithm formulation: ";
+    simple.consistent() ?
+        Info<< "SIMPLEC\n"
+        :
+        Info<< "SIMPLE\n"
+            << endl;
 
     Info<< "\nStarting time loop\n" << endl;
 
@@ -52,6 +91,12 @@ int main(int argc, char *argv[])
     {
         addProfiling(timeLoop, "Iteration");
         Info<< "Time = " << runTime.timeName() << nl << endl;
+
+        if (simple.correctionForm())
+        {
+            phi.storePrevIter();
+            Uf.storePrevIter();
+        }
 
         // --- Pressure-velocity SIMPLE corrector
         {

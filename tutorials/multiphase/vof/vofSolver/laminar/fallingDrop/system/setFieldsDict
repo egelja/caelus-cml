@@ -1,0 +1,40 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Pressure inside the droplets is set higher due to the surface tension
+// and radius (dP = sigma/r in 2D)
+defaultFieldValues
+(
+    volScalarFieldValue alpha1 0
+    volVectorFieldValue U (0 0 0)
+    volScalarFieldValue p_rgh 100000
+);
+
+regions
+(
+    // Set droplet
+    sphereToCell
+    {
+        centre (0 0.003 0.005);
+        radius 0.0005; //1 mm diameter
+        fieldValues
+        (
+            volScalarFieldValue alpha1 1
+            volVectorFieldValue U (0 0 -1)
+            volScalarFieldValue p_rgh 100140
+        );
+
+    }
+
+
+);

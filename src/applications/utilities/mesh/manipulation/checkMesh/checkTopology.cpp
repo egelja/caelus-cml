@@ -1,3 +1,25 @@
+/*---------------------------------------------------------------------------*\
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2017 OpenCFD Ltd.
+-------------------------------------------------------------------------------
+License
+    This file is part of Caelus.
+
+    Caelus is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
+
+\*---------------------------------------------------------------------------*/
+
 #include "checkTopology.hpp"
 #include "polyMesh.hpp"
 #include "Time.hpp"
@@ -7,12 +29,17 @@
 #include "pointSet.hpp"
 #include "IOmanip.hpp"
 #include "emptyPolyPatch.hpp"
+#include "processorPolyPatch.hpp"
+#include "surfaceWriter.hpp"
+#include "checkTools.hpp"
 
 CML::label CML::checkTopology
 (
     const polyMesh& mesh,
     const bool allTopology,
-    const bool allGeometry
+    const bool allGeometry,
+    const autoPtr<surfaceWriter>& surfWriter,
+    const autoPtr<writer<scalar> >& setWriter
 )
 {
     label noFailedChecks = 0;
@@ -25,11 +52,11 @@ CML::label CML::checkTopology
     // Check that empty patches cover all sides of the mesh
     {
         label nEmpty = 0;
-        forAll(mesh.boundaryMesh(), patchI)
+        forAll(mesh.boundaryMesh(), patchi)
         {
-            if (isA<emptyPolyPatch>(mesh.boundaryMesh()[patchI]))
+            if (isA<emptyPolyPatch>(mesh.boundaryMesh()[patchi]))
             {
-                nEmpty += mesh.boundaryMesh()[patchI].size();
+                nEmpty += mesh.boundaryMesh()[patchi].size();
             }
         }
         reduce(nEmpty, sumOp<label>());
@@ -69,20 +96,20 @@ CML::label CML::checkTopology
     {
         cellSet cells(mesh, "illegalCells", mesh.nCells()/100);
 
-        forAll(mesh.cells(), cellI)
+        forAll(mesh.cells(), celli)
         {
-            const cell& cFaces = mesh.cells()[cellI];
+            const cell& cFaces = mesh.cells()[celli];
 
             if (cFaces.size() <= 3)
             {
-                cells.insert(cellI);
+                cells.insert(celli);
             }
             forAll(cFaces, i)
             {
                 if (cFaces[i] < 0 || cFaces[i] >= mesh.nFaces())
                 {
-                    cells.insert(cellI);
-                    break;  
+                    cells.insert(celli);
+                    break;
                 }
             }
         }
@@ -98,6 +125,11 @@ CML::label CML::checkTopology
                 << " illegal cells to set " << cells.name() << endl;
             cells.instance() = mesh.pointsInstance();
             cells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), cells);
+            }
+
         }
         else
         {
@@ -118,6 +150,10 @@ CML::label CML::checkTopology
                 << " unused points to set " << points.name() << endl;
             points.instance() = mesh.pointsInstance();
             points.write();
+            if (setWriter.valid())
+            {
+                mergeAndWrite(setWriter, points);
+            }
         }
     }
 
@@ -136,6 +172,10 @@ CML::label CML::checkTopology
                 << " unordered faces to set " << faces.name() << endl;
             faces.instance() = mesh.pointsInstance();
             faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
         }
     }
 
@@ -152,6 +192,10 @@ CML::label CML::checkTopology
                 << faces.name() << endl;
             faces.instance() = mesh.pointsInstance();
             faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
         }
     }
 
@@ -169,6 +213,11 @@ CML::label CML::checkTopology
                 << endl;
             cells.instance() = mesh.pointsInstance();
             cells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), cells);
+            }
+
         }
     }
 
@@ -188,6 +237,10 @@ CML::label CML::checkTopology
                 << faces.name() << endl;
             faces.instance() = mesh.pointsInstance();
             faces.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), faces);
+            }
         }
     }
 
@@ -195,17 +248,17 @@ CML::label CML::checkTopology
     {
         labelList nInternalFaces(mesh.nCells(), 0);
 
-        for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
+        for (label facei = 0; facei < mesh.nInternalFaces(); facei++)
         {
-            nInternalFaces[mesh.faceOwner()[faceI]]++;
-            nInternalFaces[mesh.faceNeighbour()[faceI]]++;
+            nInternalFaces[mesh.faceOwner()[facei]]++;
+            nInternalFaces[mesh.faceNeighbour()[facei]]++;
         }
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            if (patches[patchI].coupled())
+            if (patches[patchi].coupled())
             {
-                const labelUList& owners = patches[patchI].faceCells();
+                const labelUList& owners = patches[patchi].faceCells();
 
                 forAll(owners, i)
                 {
@@ -217,15 +270,15 @@ CML::label CML::checkTopology
         cellSet oneCells(mesh, "oneInternalFaceCells", mesh.nCells()/100);
         cellSet twoCells(mesh, "twoInternalFacesCells", mesh.nCells()/100);
 
-        forAll(nInternalFaces, cellI)
+        forAll(nInternalFaces, celli)
         {
-            if (nInternalFaces[cellI] <= 1)
+            if (nInternalFaces[celli] <= 1)
             {
-                oneCells.insert(cellI);
+                oneCells.insert(celli);
             }
-            else if (nInternalFaces[cellI] == 2)
+            else if (nInternalFaces[celli] == 2)
             {
-                twoCells.insert(cellI);
+                twoCells.insert(celli);
             }
         }
 
@@ -234,11 +287,15 @@ CML::label CML::checkTopology
         if (nOneCells > 0)
         {
             Info<< "  <<Writing " << nOneCells
-                << " cells with with zero or one non-boundary face to set "
+                << " cells with zero or one non-boundary face to set "
                 << oneCells.name()
                 << endl;
             oneCells.instance() = mesh.pointsInstance();
             oneCells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), oneCells);
+            }
         }
 
         label nTwoCells = returnReduce(twoCells.size(), sumOp<label>());
@@ -246,11 +303,15 @@ CML::label CML::checkTopology
         if (nTwoCells > 0)
         {
             Info<< "  <<Writing " << nTwoCells
-                << " cells with with two non-boundary faces to set "
+                << " cells with two non-boundary faces to set "
                 << twoCells.name()
                 << endl;
             twoCells.instance() = mesh.pointsInstance();
             twoCells.write();
+            if (surfWriter.valid())
+            {
+                mergeAndWrite(surfWriter(), twoCells);
+            }
         }
     }
 
@@ -288,6 +349,61 @@ CML::label CML::checkTopology
             ctr.write();
 
 
+            // Points in multiple regions
+            pointSet points
+            (
+                mesh,
+                "multiRegionPoints",
+                mesh.nPoints()/1000
+            );
+
+            // Is region disconnected
+            boolList regionDisconnected(rs.nRegions(), true);
+            if (allTopology)
+            {
+                // -1   : not assigned
+                // -2   : multiple regions
+                // >= 0 : single region
+                labelList pointToRegion(mesh.nPoints(), -1);
+
+                for
+                (
+                    label facei = mesh.nInternalFaces();
+                    facei < mesh.nFaces();
+                    facei++
+                )
+                {
+                    label regioni = rs[mesh.faceOwner()[facei]];
+                    const face& f = mesh.faces()[facei];
+                    forAll(f, fp)
+                    {
+                        label& pRegion = pointToRegion[f[fp]];
+                        if (pRegion == -1)
+                        {
+                            pRegion = regioni;
+                        }
+                        else if (pRegion == -2)
+                        {
+                            // Already marked
+                            regionDisconnected[regioni] = false;
+                        }
+                        else if (pRegion != regioni)
+                        {
+                            // Multiple regions
+                            regionDisconnected[regioni] = false;
+                            regionDisconnected[pRegion] = false;
+                            pRegion = -2;
+                            points.insert(f[fp]);
+                        }
+                    }
+                }
+
+                Pstream::listCombineGather(regionDisconnected, andEqOp<bool>());
+                Pstream::listCombineScatter(regionDisconnected);
+            }
+
+
+
             // write cellSet for each region
             PtrList<cellSet> cellRegions(rs.nRegions());
             for (label i = 0; i < rs.nRegions(); i++)
@@ -311,19 +427,52 @@ CML::label CML::checkTopology
 
             for (label i = 0; i < rs.nRegions(); i++)
             {
-                Info<< "  <<Writing region " << i << " with "
+                Info<< "  <<Writing region " << i;
+                if (allTopology)
+                {
+                    if (regionDisconnected[i])
+                    {
+                        Info<< " (fully disconnected)";
+                    }
+                    else
+                    {
+                        Info<< " (point connected)";
+                    }
+                }
+                Info<< " with "
                     << returnReduce(cellRegions[i].size(), sumOp<scalar>())
                     << " cells to cellSet " << cellRegions[i].name() << endl;
 
                 cellRegions[i].write();
             }
+
+            label nPoints = returnReduce(points.size(), sumOp<label>());
+            if (nPoints)
+            {
+                Info<< "  <<Writing " << nPoints
+                    << " points that are in multiple regions to set "
+                    << points.name() << endl;
+                points.write();
+                if (setWriter.valid())
+                {
+                    mergeAndWrite(setWriter, points);
+                }
+            }
         }
     }
 
-    if (!Pstream::parRun())
+
     {
-        Pout<< "\nChecking patch topology for multiply connected surfaces ..."
-            << endl;
+        if (!Pstream::parRun())
+        {
+            Info<< "\nChecking patch topology for multiply connected"
+                << " surfaces..." << endl;
+        }
+        else
+        {
+            Info<< "\nChecking basic patch addressing..." << endl;
+        }
+
 
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
@@ -332,90 +481,93 @@ CML::label CML::checkTopology
         (
             mesh,
             "nonManifoldPoints",
-            mesh.nPoints()/100
+            mesh.nPoints()/1000
         );
 
         Pout.setf(ios_base::left);
 
-        Pout<< "    "
+        Info<< "    "
             << setw(20) << "Patch"
             << setw(9) << "Faces"
-            << setw(9) << "Points"
-            << setw(34) << "Surface topology";
+            << setw(9) << "Points";
+        if (!Pstream::parRun())
+        {
+            Info<< setw(34) << "Surface topology";
+        }
         if (allGeometry)
         {
-            Pout<< " Bounding box";
+            Info<< " Bounding box";
         }
-        Pout<< endl;
+        Info<< endl;
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            const polyPatch& pp = patches[patchI];
+            const polyPatch& pp = patches[patchi];
 
-                Pout<< "    "
+            if (!isA<processorPolyPatch>(pp))
+            {
+                Info<< "    "
                     << setw(20) << pp.name()
-                    << setw(9) << pp.size()
-                    << setw(9) << pp.nPoints();
+                    << setw(9) << returnReduce(pp.size(), sumOp<label>())
+                    << setw(9) << returnReduce(pp.nPoints(), sumOp<label>());
 
-
-            primitivePatch::surfaceTopo pTyp = pp.surfaceType();
-
-            if (pp.empty())
-            {
-                Pout<< setw(34) << "ok (empty)";
-            }
-            else if (pTyp == primitivePatch::MANIFOLD)
-            {
-                if (pp.checkPointManifold(true, &points))
+                if (!Pstream::parRun())
                 {
-                    Pout<< setw(34) << "multiply connected (shared point)";
-                }
-                else
-                {
-                    Pout<< setw(34) << "ok (closed singly connected)";
-                }
+                    primitivePatch::surfaceTopo pTyp = pp.surfaceType();
 
-                // Add points on non-manifold edges to make set complete
-                pp.checkTopology(false, &points);
-            }
-            else
-            {
-                pp.checkTopology(false, &points);
-
-                if (pTyp == primitivePatch::OPEN)
-                {
-                    Pout<< setw(34) << "ok (non-closed singly connected)";
-                }
-                else
-                {
-                    Pout<< setw(34) << "multiply connected (shared edge)";
-                }
-            }
-
-            if (allGeometry)
-            {
-                const pointField& pts = pp.points();
-                const labelList& mp = pp.meshPoints();
-
-                if (returnReduce(mp.size(), sumOp<label>()) > 0)
-                {
-                    boundBox bb(point::max, point::min);
-                    forAll (mp, i)
+                    if (pp.empty())
                     {
-                        bb.min() = min(bb.min(), pts[mp[i]]);
-                        bb.max() = max(bb.max(), pts[mp[i]]);
+                        Info<< setw(34) << "ok (empty)";
                     }
-                    reduce(bb.min(), minOp<vector>());
-                    reduce(bb.max(), maxOp<vector>());
-                    Pout<< ' ' << bb;
+                    else if (pTyp == primitivePatch::MANIFOLD)
+                    {
+                        if (pp.checkPointManifold(true, &points))
+                        {
+                            Info<< setw(34)
+                                << "multiply connected (shared point)";
+                        }
+                        else
+                        {
+                            Info<< setw(34) << "ok (closed singly connected)";
+                        }
+
+                        // Add points on non-manifold edges to make set complete
+                        pp.checkTopology(false, &points);
+                    }
+                    else
+                    {
+                        pp.checkTopology(false, &points);
+
+                        if (pTyp == primitivePatch::OPEN)
+                        {
+                            Info<< setw(34)
+                                << "ok (non-closed singly connected)";
+                        }
+                        else
+                        {
+                            Info<< setw(34)
+                                << "multiply connected (shared edge)";
+                        }
+                    }
                 }
+
+                if (allGeometry)
+                {
+                    const labelList& mp = pp.meshPoints();
+
+                    if (returnReduce(mp.size(), sumOp<label>()) > 0)
+                    {
+                        boundBox bb(pp.points(), mp, true); // reduce
+                        Info<< ' ' << bb;
+                    }
+                }
+                Info<< endl;
             }
-            Pout<< endl;
         }
 
         if (points.size())
         {
-            Pout<< "  <<Writing " << points.size()
+            Info<< "  <<Writing " << returnReduce(points.size(), sumOp<label>())
                 << " conflicting points to set "
                 << points.name() << endl;
 
@@ -423,7 +575,7 @@ CML::label CML::checkTopology
             points.write();
         }
 
-        //Pout.setf(ios_base::right);
+        //Info.setf(ios_base::right);
     }
 
     // Force creation of all addressing if requested.

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -30,7 +30,7 @@ gradSchemes
 laplacianSchemes
 {
     default         none;
-    laplacian(K,T) Gauss linear uncorrected;
+    laplacian(K,T)  Gauss linear uncorrected;
 }
 
 

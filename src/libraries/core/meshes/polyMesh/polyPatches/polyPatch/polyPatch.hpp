@@ -87,7 +87,10 @@ class polyPatch
 protected:
 
     // Protected Member Functions
-
+    
+        //- Inherit movePoints from primitivePatch
+        using primitivePatch::movePoints;
+    
         // The polyPatch geometry initialisation is called by polyBoundaryMesh
         friend class polyBoundaryMesh;
 

@@ -1,54 +1,49 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::Constant
+    CML::DataEntryTypes::Constant
 
 Description
-    Templated basic entry that holds a constant value.
+    Templated basic entry that returns a constant value.
 
-    Usage - for entry \<entryName\> having the value <value>:
+    Usage - for entry \<entryName\> returning the value <value>:
     \verbatim
         <entryName>    constant  <value>
     \endverbatim
 
 SourceFiles
-    Constant.cpp
+    Constant.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Constant_H
-#define Constant_H
+#ifndef Constant_HPP
+#define Constant_HPP
 
 #include "DataEntry.hpp"
-#include "dimensionSet.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
-
-template<class Type>
-class Constant;
-
-template<class Type>
-Ostream& operator<<(Ostream&, const Constant<Type>&);
+namespace DataEntryTypes
+{
 
 /*---------------------------------------------------------------------------*\
                            Class Constant Declaration
@@ -63,9 +58,6 @@ class Constant
 
         //- Constant value
         Type value_;
-
-        //- The dimension set
-        dimensionSet dimensions_;
 
 
     // Private Member Functions
@@ -82,8 +74,16 @@ public:
 
     // Constructors
 
-        //- Construct from entry name and Istream
+        //- Construct from entry name and value
+        Constant(const word& entryName, const Type& val);
+
+        //- Construct from entry name and dictionary
         Constant(const word& entryName, const dictionary& dict);
+
+        //- Construct from entry name and Istream
+        //  Reads the constant value without the DataEntry type
+        //  for backward compatibility
+        Constant(const word& entryName, Istream& is);
 
         //- Copy constructor
         Constant(const Constant<Type>& cnst);
@@ -107,26 +107,6 @@ public:
         //- Integrate between two values
         Type integrate(const scalar x1, const scalar x2) const;
 
-        //- Return dimensioned constant value
-        dimensioned<Type> dimValue(const scalar) const;
-
-        //- Integrate between two values and return dimensioned type
-        dimensioned<Type> dimIntegrate
-        (
-            const scalar x1,
-            const scalar x2
-        ) const;
-
-
-    // I/O
-
-        //- Ostream Operator
-        friend Ostream& operator<< <Type>
-        (
-            Ostream& os,
-            const Constant<Type>& cnst
-        );
-
         //- Write in dictionary format
         virtual void writeData(Ostream& os) const;
 };
@@ -134,126 +114,89 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace DataEntryTypes
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::Constant<Type>::Constant(const word& entryName, const dictionary& dict)
+CML::DataEntryTypes::Constant<Type>::Constant
+(
+    const word& entryName,
+    const Type& val
+)
 :
     DataEntry<Type>(entryName),
-    value_(pTraits<Type>::zero),
-    dimensions_(dimless)
+    value_(val)
+{}
+
+
+template<class Type>
+CML::DataEntryTypes::Constant<Type>::Constant
+(
+    const word& entryName,
+    const dictionary& dict
+)
+:
+    DataEntry<Type>(entryName),
+    value_(Zero)
 {
     Istream& is(dict.lookup(entryName));
     word entryType(is);
-    token firstToken(is);
-    if (firstToken.isWord())
-    {
-        token nextToken(is);
-        if (nextToken == token::BEGIN_SQR)
-        {
-            is.putBack(nextToken);
-            is >> dimensions_;
-            is >> value_;
-        }
-    }
-    else
-    {
-        is.putBack(firstToken);
-        is  >> value_;
-    }
+    is  >> value_;
 }
 
 
 template<class Type>
-CML::Constant<Type>::Constant(const Constant<Type>& cnst)
+CML::DataEntryTypes::Constant<Type>::Constant
+(
+    const word& entryName,
+    Istream& is
+)
+:
+    DataEntry<Type>(entryName),
+    value_(pTraits<Type>(is))
+{}
+
+
+template<class Type>
+CML::DataEntryTypes::Constant<Type>::Constant(const Constant<Type>& cnst)
 :
     DataEntry<Type>(cnst),
-    value_(cnst.value_),
-    dimensions_(cnst.dimensions_)
+    value_(cnst.value_)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::Constant<Type>::~Constant()
+CML::DataEntryTypes::Constant<Type>::~Constant()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-Type CML::Constant<Type>::value(const scalar x) const
+Type CML::DataEntryTypes::Constant<Type>::value(const scalar x) const
 {
     return value_;
 }
 
 
 template<class Type>
-Type CML::Constant<Type>::integrate(const scalar x1, const scalar x2) const
+Type CML::DataEntryTypes::Constant<Type>::integrate
+(
+    const scalar x1,
+    const scalar x2
+) const
 {
     return (x2 - x1)*value_;
 }
 
 
 template<class Type>
-CML::dimensioned<Type> CML::Constant<Type>::dimValue(const scalar x) const
-{
-    return dimensioned<Type>("dimensionedValue", dimensions_, value_);
-}
-
-
-template<class Type>
-CML::dimensioned<Type> CML::Constant<Type>::dimIntegrate
-(
-    const scalar x1, const scalar x2
-) const
-{
-    return dimensioned<Type>("dimensionedValue", dimensions_, (x2-x1)*value_);
-}
-
-// * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
-
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
-
-template<class Type>
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const Constant<Type>& cnst
-)
-{
-    if (os.format() == IOstream::ASCII)
-    {
-        os  << static_cast<const DataEntry<Type>& >(cnst)
-            << token::SPACE << cnst.value_;
-    }
-    else
-    {
-        os  << static_cast<const DataEntry<Type>& >(cnst);
-        os.write
-        (
-            reinterpret_cast<const char*>(&cnst.value_),
-            sizeof(cnst.value_)
-        );
-    }
-
-    // Check state of Ostream
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const Constant<Type>&)"
-    );
-
-    return os;
-}
-
-
-template<class Type>
-void CML::Constant<Type>::writeData(Ostream& os) const
+void CML::DataEntryTypes::Constant<Type>::writeData(Ostream& os) const
 {
     DataEntry<Type>::writeData(os);
 
@@ -261,8 +204,79 @@ void CML::Constant<Type>::writeData(Ostream& os) const
 }
 
 
+template<class Type>
+CML::autoPtr<CML::DataEntry<Type> > CML::DataEntry<Type>::New
+(
+    const word& entryName,
+    const dictionary& dict
+)
+{
+    if (dict.isDict(entryName))
+    {
+        const dictionary& coeffsDict(dict.subDict(entryName));
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+        const word DataEntryType(coeffsDict.lookup("type"));
+
+        typename dictionaryConstructorTable::iterator cstrIter =
+            dictionaryConstructorTablePtr_->find(DataEntryType);
+
+        if (cstrIter == dictionaryConstructorTablePtr_->end())
+        {
+            FatalErrorIn("DataEntry<Type>::New(const word&,const dictionary&)")
+                << "Unknown DataEntry type "
+                << DataEntryType << " for DataEntry "
+                << entryName << nl << nl
+                << "Valid DataEntry types are:" << nl
+                << dictionaryConstructorTablePtr_->sortedToc() << nl
+                << exit(FatalError);
+        }
+
+        return cstrIter()(entryName, coeffsDict);
+    }
+    else
+    {
+        Istream& is(dict.lookup(entryName, false));
+
+        token firstToken(is);
+        word DataEntryType;
+
+        if (!firstToken.isWord())
+        {
+            is.putBack(firstToken);
+            return autoPtr<DataEntry<Type> >
+            (
+                new DataEntryTypes::Constant<Type>(entryName, is)
+            );
+        }
+        else
+        {
+            DataEntryType = firstToken.wordToken();
+        }
+
+        typename dictionaryConstructorTable::iterator cstrIter =
+            dictionaryConstructorTablePtr_->find(DataEntryType);
+
+        if (cstrIter == dictionaryConstructorTablePtr_->end())
+        {
+            FatalErrorIn("DataEntry<Type>::New(const word&,const dictionary&)")
+                << "Unknown DataEntry type "
+                << DataEntryType << " for DataEntry "
+                << entryName << nl << nl
+                << "Valid DataEntry types are:" << nl
+                << dictionaryConstructorTablePtr_->sortedToc() << nl
+                << exit(FatalError);
+        }
+
+        return cstrIter()
+        (
+            entryName,
+            dict.found(entryName + "Coeffs")
+          ? dict.subDict(entryName + "Coeffs")
+          : dict
+        );
+    }
+}
+
 
 #endif
 

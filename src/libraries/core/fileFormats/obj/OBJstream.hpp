@@ -96,6 +96,9 @@ public:
 
 
         // Ostream implementation
+    
+            //- Inherit write from Ostream
+            using Ostream::write;
 
             //- Write character
             virtual Ostream& write(const char);

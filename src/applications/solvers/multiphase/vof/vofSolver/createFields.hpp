@@ -1,4 +1,7 @@
+#include "readGravitationalAcceleration.hpp"
 #include "createRDeltaT.hpp"
+#include "readWaveProperties.hpp"
+#include "createExternalWaveForcing.hpp"
 
 Info<< "Reading field p_rgh\n" << endl;
 volScalarField p_rgh
@@ -76,14 +79,11 @@ surfaceScalarField rhoPhi
 // Construct interface from alpha1 distribution
 interfaceProperties interface(U, phi, alpha1, mixture);
 
-
 // Construct incompressible turbulence model
 autoPtr<incompressible::turbulenceModel> turbulence
 (
     incompressible::turbulenceModel::New(U, phi, mixture)
 );
-
-#include "readGravitationalAcceleration.hpp"
 
 
 Info<< "Calculating field g.h\n" << endl;
@@ -142,4 +142,9 @@ surfaceScalarField alphaPhi
 // MULES Correction
 tmp<surfaceScalarField> talphaPhiCorr0;
 
-fv::IOoptionList fvOptions(mesh);
+autoPtr<CML::relaxationZone> relaxing;
+
+if (waves)
+{
+    relaxing = new relaxationZone(mesh, U, alpha1);
+}

@@ -21,13 +21,8 @@ License
 
 #include "scalarTransport.hpp"
 #include "surfaceFields.hpp"
-#include "dictionary.hpp"
-#include "fixedValueFvPatchFields.hpp"
-#include "zeroGradientFvPatchFields.hpp"
-#include "fvScalarMatrix.hpp"
 #include "fvmDdt.hpp"
 #include "fvmDiv.hpp"
-#include "fvcDiv.hpp"
 #include "fvmLaplacian.hpp"
 #include "fvmSup.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
@@ -43,30 +38,7 @@ namespace CML
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-CML::wordList CML::scalarTransport::boundaryTypes() const
-{
-    const volVectorField& U = mesh_.lookupObject<volVectorField>(UName_);
-
-    wordList bTypes(U.boundaryField().size());
-
-    forAll(bTypes, patchI)
-    {
-        const fvPatchField<vector>& pf = U.boundaryField()[patchI];
-        if (isA<fixedValueFvPatchVectorField>(pf))
-        {
-            bTypes[patchI] = fixedValueFvPatchScalarField::typeName;
-        }
-        else
-        {
-            bTypes[patchI] = zeroGradientFvPatchScalarField::typeName;
-        }
-    }
-
-    return bTypes;
-}
-
-
-CML::tmp<CML::volScalarField> CML::scalarTransport::DT
+CML::tmp<CML::volScalarField> CML::scalarTransport::D
 (
     const surfaceScalarField& phi
 ) const
@@ -74,7 +46,9 @@ CML::tmp<CML::volScalarField> CML::scalarTransport::DT
     typedef incompressible::turbulenceModel icoModel;
     typedef compressible::turbulenceModel cmpModel;
 
-    if (userDT_)
+    word Dname("D" + s_.name());
+
+    if (constantD_)
     {
         return tmp<volScalarField>
         (
@@ -82,14 +56,14 @@ CML::tmp<CML::volScalarField> CML::scalarTransport::DT
             (
                 IOobject
                 (
-                    "DT",
+                    Dname,
                     mesh_.time().timeName(),
                     mesh_.time(),
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
                 mesh_,
-                dimensionedScalar("DT", phi.dimensions()/dimLength, DT_)
+                dimensionedScalar(Dname, phi.dimensions()/dimLength, D_)
             )
         );
     }
@@ -97,13 +71,13 @@ CML::tmp<CML::volScalarField> CML::scalarTransport::DT
     {
         const icoModel& model = mesh_.lookupObject<icoModel>("turbulenceModel");
 
-        return model.nuEff();
+        return alphaD_*model.nu() + alphaDt_*model.nut();
     }
     else if (mesh_.foundObject<cmpModel>("turbulenceModel"))
     {
         const cmpModel& model = mesh_.lookupObject<cmpModel>("turbulenceModel");
 
-        return model.muEff();
+        return alphaD_*model.mu() + alphaDt_*model.mut();
     }
     else
     {
@@ -113,14 +87,14 @@ CML::tmp<CML::volScalarField> CML::scalarTransport::DT
             (
                 IOobject
                 (
-                    "DT",
+                    Dname,
                     mesh_.time().timeName(),
                     mesh_.time(),
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
                 mesh_,
-                dimensionedScalar("DT", phi.dimensions()/dimLength, 0.0)
+                dimensionedScalar(Dname, phi.dimensions()/dimLength, 0.0)
             )
         );
     }
@@ -137,39 +111,26 @@ CML::scalarTransport::scalarTransport
     const bool loadFromFiles
 )
 :
-    name_(name),
+    fieldName_(dict.lookupOrDefault<word>("field", "s")),
     mesh_(refCast<const fvMesh>(obr)),
     active_(true),
-    phiName_("phi"),
-    UName_("U"),
-    rhoName_("rho"),
-    DT_(0.0),
-    userDT_(false),
-    resetOnStartUp_(false),
+    D_(0),
     nCorr_(0),
-    autoSchemes_(false),
     fvOptions_(mesh_),
-    T_
+    s_
     (
         IOobject
         (
-            name,
+            fieldName_,
             mesh_.time().timeName(),
             mesh_,
-            IOobject::READ_IF_PRESENT,
+            IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh_,
-        dimensionedScalar("zero", dimless, 0.0),
-        boundaryTypes()
+        mesh_
     )
 {
     read(dict);
-
-    if (resetOnStartUp_)
-    {
-        T_ == dimensionedScalar("zero", dimless, 0.0);
-    }
 }
 
 
@@ -188,22 +149,19 @@ void CML::scalarTransport::read(const dictionary& dict)
         Info<< type() << ":" << nl;
 
         phiName_ = dict.lookupOrDefault<word>("phiName", "phi");
-        UName_ = dict.lookupOrDefault<word>("UName", "U");
         rhoName_ = dict.lookupOrDefault<word>("rhoName", "rho");
+        schemesField_ = dict.lookupOrDefault<word>("schemesField", fieldName_);
 
-        userDT_ = false;
-        if (dict.readIfPresent("DT", DT_))
-        {
-            userDT_ = true;
-        }
-
-        dict.lookup("resetOnStartUp") >> resetOnStartUp_;
+        constantD_ = dict.readIfPresent("D", D_);
+        alphaD_ = dict.lookupOrDefault("alphaD", 1.0);
+        alphaDt_ = dict.lookupOrDefault("alphaDt", 1.0);
 
         dict.readIfPresent("nCorr", nCorr_);
 
-        dict.lookup("autoSchemes") >> autoSchemes_;
-
-        fvOptions_.reset(dict.subDict("fvOptions"));
+        if (dict.found("fvOptions"))
+        {
+            fvOptions_.reset(dict.subDict("fvOptions"));
+        }
     }
 }
 
@@ -212,29 +170,22 @@ void CML::scalarTransport::execute()
 {
     if (active_)
     {
-        Info<< type() << " output:" << endl;
+        Info<< type() << " write:" << endl;
 
         const surfaceScalarField& phi =
             mesh_.lookupObject<surfaceScalarField>(phiName_);
 
-        // calculate the diffusivity
-        volScalarField DT(this->DT(phi));
+        // Calculate the diffusivity
+        volScalarField D(this->D(phi));
 
-        // set schemes
-        word schemeVar = T_.name();
-        if (autoSchemes_)
-        {
-            schemeVar = UName_;
-        }
+        word divScheme("div(phi," + schemesField_ + ")");
+        word laplacianScheme("laplacian(" + D.name() + "," + schemesField_ + ")");
 
-        word divScheme("div(phi," + schemeVar + ")");
-        word laplacianScheme("laplacian(" + DT.name() + "," + schemeVar + ")");
-
-        // set under-relaxation coeff
+        // Set under-relaxation coeff
         scalar relaxCoeff = 0.0;
-        if (mesh_.relaxEquation(schemeVar))
+        if (mesh_.relaxEquation(schemesField_))
         {
-            relaxCoeff = mesh_.equationRelaxationFactor(schemeVar);
+            relaxCoeff = mesh_.equationRelaxationFactor(schemesField_);
         }
 
         if (phi.dimensions() == dimMass/dimTime)
@@ -242,44 +193,42 @@ void CML::scalarTransport::execute()
             const volScalarField& rho =
                 mesh_.lookupObject<volScalarField>(rhoName_);
 
-            // solve
             for (label i = 0; i <= nCorr_; i++)
             {
-                fvScalarMatrix TEqn
+                fvScalarMatrix sEqn
                 (
-                    fvm::ddt(rho, T_)
-                  + fvm::div(phi, T_, divScheme)
-                  - fvm::laplacian(DT, T_, laplacianScheme)
+                    fvm::ddt(rho, s_)
+                  + fvm::div(phi, s_, divScheme)
+                  - fvm::laplacian(D, s_, laplacianScheme)
                  ==
-                    fvOptions_(rho, T_)
+                    fvOptions_(rho, s_)
                 );
 
-                TEqn.relax(relaxCoeff);
+                sEqn.relax(relaxCoeff);
 
-                fvOptions_.constrain(TEqn);
+                fvOptions_.constrain(sEqn);
 
-                TEqn.solve(mesh_.solverDict(schemeVar));
+                sEqn.solve(mesh_.solverDict(schemesField_));
             }
         }
         else if (phi.dimensions() == dimVolume/dimTime)
         {
-            // solve
             for (label i = 0; i <= nCorr_; i++)
             {
-                fvScalarMatrix TEqn
+                fvScalarMatrix sEqn
                 (
-                    fvm::ddt(T_)
-                  + fvm::div(phi, T_, divScheme)
-                  - fvm::laplacian(DT, T_, laplacianScheme)
+                    fvm::ddt(s_)
+                  + fvm::div(phi, s_, divScheme)
+                  - fvm::laplacian(D, s_, laplacianScheme)
                  ==
-                    fvOptions_(T_)
+                    fvOptions_(s_)
                 );
 
-                TEqn.relax(relaxCoeff);
+                sEqn.relax(relaxCoeff);
 
-                fvOptions_.constrain(TEqn);
+                fvOptions_.constrain(sEqn);
 
-                TEqn.solve(mesh_.solverDict(schemeVar));
+                sEqn.solve(mesh_.solverDict(schemesField_));
             }
         }
         else
@@ -288,9 +237,9 @@ void CML::scalarTransport::execute()
                 << "Incompatible dimensions for phi: " << phi.dimensions() << nl
                 << "Dimensions should be " << dimMass/dimTime << " or "
                 << dimVolume/dimTime << endl;
-        }
+    }
 
-        Info<< endl;
+    Info<< endl;
     }
 }
 

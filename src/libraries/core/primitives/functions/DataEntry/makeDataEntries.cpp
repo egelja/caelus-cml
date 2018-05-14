@@ -1,81 +1,64 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
-#include "CompatibilityConstant.hpp"
 #include "Constant.hpp"
+#include "Uniform.hpp"
+#include "ZeroConstant.hpp"
+#include "OneConstant.hpp"
+#include "PolynomialEntry.hpp"
+#include "Sine.hpp"
+#include "Square.hpp"
 #include "CSV.hpp"
-#include "DataEntry.hpp"
 #include "Table.hpp"
 #include "TableFile.hpp"
+#include "Scale.hpp"
 
-#include "label.hpp"
-#include "scalar.hpp"
-#include "vector.hpp"
-#include "sphericalTensor.hpp"
-#include "symmTensor.hpp"
-#include "tensor.hpp"
+#include "fieldTypes.hpp"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#define makeDataEntrys(Type)                                                   \
+    makeDataEntry(Type);                                                       \
+    makeDataEntryType(Constant, Type);                                         \
+    makeDataEntryType(Uniform, Type);                                          \
+    makeDataEntryType(ZeroConstant, Type);                                     \
+    makeDataEntryType(OneConstant, Type);                                      \
+    makeDataEntryType(Polynomial, Type);                                       \
+    makeDataEntryType(Sine, Type);                                             \
+    makeDataEntryType(Square, Type);                                           \
+    makeDataEntryType(CSV, Type);                                              \
+    makeDataEntryType(Table, Type);                                            \
+    makeDataEntryType(TableFile, Type);                                        \
+    makeDataEntryType(Scale, Type);
 
 namespace CML
 {
     makeDataEntry(label);
-    makeDataEntryType(CompatibilityConstant, label);
     makeDataEntryType(Constant, label);
-//    makeDataEntryType(CSV, label);
-    makeDataEntryType(Table, label);
-    makeDataEntryType(TableFile, label);
 
-    makeDataEntry(scalar);
-    makeDataEntryType(CompatibilityConstant, scalar);
-    makeDataEntryType(Constant, scalar);
-    makeDataEntryType(CSV, scalar);
-    makeDataEntryType(Table, scalar);
-    makeDataEntryType(TableFile, scalar);
-
-    makeDataEntry(vector);
-    makeDataEntryType(CompatibilityConstant, vector);
-    makeDataEntryType(Constant, vector);
-    makeDataEntryType(CSV, vector);
-    makeDataEntryType(Table, vector);
-    makeDataEntryType(TableFile, vector);
-
-    makeDataEntry(sphericalTensor);
-    makeDataEntryType(CompatibilityConstant, sphericalTensor);
-    makeDataEntryType(Constant, sphericalTensor);
-    makeDataEntryType(CSV, sphericalTensor);
-    makeDataEntryType(Table, sphericalTensor);
-    makeDataEntryType(TableFile, sphericalTensor);
-
-    makeDataEntry(symmTensor);
-    makeDataEntryType(CompatibilityConstant, symmTensor);
-    makeDataEntryType(Constant, symmTensor);
-    makeDataEntryType(CSV, symmTensor);
-    makeDataEntryType(Table, symmTensor);
-    makeDataEntryType(TableFile, symmTensor);
-
-    makeDataEntry(tensor);
-    makeDataEntryType(CompatibilityConstant, tensor);
-    makeDataEntryType(Constant, tensor);
-    makeDataEntryType(CSV, tensor);
-    makeDataEntryType(Table, tensor);
-    makeDataEntryType(TableFile, tensor);
+    makeDataEntrys(scalar);
+    makeDataEntrys(vector);
+    makeDataEntrys(sphericalTensor);
+    makeDataEntrys(symmTensor);
+    makeDataEntrys(tensor);
 }
 
 

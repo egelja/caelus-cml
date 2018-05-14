@@ -544,7 +544,7 @@ void CML::mappedPatchBase::distribute
                 lst,
                 cop,
                 flipOp(),
-                pTraits<Type>::zero
+                Type(Zero)
             );
         }
     }
@@ -603,7 +603,7 @@ void CML::mappedPatchBase::reverseDistribute
                 lst,
                 cop,
                 flipOp(),
-                pTraits<Type>::zero
+                Type(Zero)
             );
             break;
         }

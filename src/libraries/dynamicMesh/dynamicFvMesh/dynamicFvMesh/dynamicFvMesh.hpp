@@ -33,8 +33,6 @@ SourceFiles
 #define dynamicFvMesh_H
 
 #include "fvMesh.hpp"
-#include "autoPtr.hpp"
-#include "runTimeSelectionTables.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -107,7 +105,9 @@ public:
 
     // Selectors
 
-        //- Select null constructed
+        //- Select, construct and return the dynamicFvMesh
+        //  If the constant/dynamicMeshDict does not exist
+        //  a staticFvMesh is returned
         static autoPtr<dynamicFvMesh> New(const IOobject& io);
 
 
@@ -117,6 +117,12 @@ public:
 
     // Member Functions
 
+        //- Is mesh dynamic
+        virtual bool dynamic() const
+        {
+            return true;
+        }
+
         //- Update the mesh for both mesh motion and topology change
         virtual bool update() = 0;
 
@@ -124,7 +130,6 @@ public:
         virtual void adjustDeltaT()
         {};
 };
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

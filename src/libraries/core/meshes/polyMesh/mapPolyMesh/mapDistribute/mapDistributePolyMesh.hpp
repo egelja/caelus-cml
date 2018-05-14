@@ -48,8 +48,17 @@ namespace CML
 class mapPolyMesh;
 class polyMesh;
 
+
+// Forward declaration of friend functions and operators
+
+class mapDistributePolyMesh;
+
+Istream& operator>>(Istream&, mapDistributePolyMesh&);
+Ostream& operator<<(Ostream&, const mapDistributePolyMesh&);
+
+
 /*---------------------------------------------------------------------------*\
-                           Class mapDistributePolyMesh Declaration
+                     Class mapDistributePolyMesh Declaration
 \*---------------------------------------------------------------------------*/
 
 class mapDistributePolyMesh
@@ -229,28 +238,28 @@ public:
             //- Transfer contents to the Xfer container
             Xfer<mapDistributePolyMesh> xfer();
 
-            //- distribute list of point data
+            //- Distribute list of point data
             template<class T>
             void distributePointData(List<T>& lst) const
             {
                 pointMap_.distribute(lst);
             }
 
-            //- distribute list of face data
+            //- Distribute list of face data
             template<class T>
             void distributeFaceData(List<T>& lst) const
             {
                 faceMap_.distribute(lst);
             }
 
-            //- distribute list of cell data
+            //- Distribute list of cell data
             template<class T>
             void distributeCellData(List<T>& lst) const
             {
                 cellMap_.distribute(lst);
             }
 
-            //- distribute list of patch data
+            //- Distribute list of patch data
             template<class T>
             void distributePatchData(List<T>& lst) const
             {
@@ -258,7 +267,7 @@ public:
             }
 
 
-            //- distribute list of point/face/cell/patch indices.
+            //- Distribute list of point/face/cell/patch indices.
             //  (Converts to boolList, distributes boolList and reconstructs)
             void distributePointIndices(labelList& pointIDs) const;
 

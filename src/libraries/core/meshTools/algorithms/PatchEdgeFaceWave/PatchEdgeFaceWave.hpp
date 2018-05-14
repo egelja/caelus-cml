@@ -70,7 +70,7 @@ class PatchEdgeFaceWave
   // Private static data
 
         //- Relative tolerance. Stop propagation if relative changes
-        //  less than this tolerance (responsability for checking this is
+        //  less than this tolerance (responsibility for checking this is
         //  up to Type implementation)
         static scalar propagationTol_;
 
@@ -843,7 +843,7 @@ faceToEdge()
             FatalErrorIn("PatchEdgeFaceWave<Type, TrackingData>::faceToEdge()")
                 << "face " << faceI
                 << " not marked as having been changed" << nl
-                << "This might be caused by multiple occurences of the same"
+                << "This might be caused by multiple occurrences of the same"
                 << " seed edge." << abort(FatalError);
         }
 
@@ -908,7 +908,7 @@ edgeToFace()
             FatalErrorIn("PatchEdgeFaceWave<Type, TrackingData>::edgeToFace()")
                 << "edge " << edgeI
                 << " not marked as having been changed" << nl
-                << "This might be caused by multiple occurences of the same"
+                << "This might be caused by multiple occurrences of the same"
                 << " seed edge." << abort(FatalError);
         }
 

@@ -49,7 +49,6 @@ SourceFiles
 
 #include "Field.hpp"
 #include "fvMeshSubset.hpp"
-#include "mapPolyMesh.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -106,20 +105,6 @@ class fvMeshDistribute
             //- Find patch to put exposed faces into.
             label findNonEmptyPatch() const;
 
-            //- Appends polyPatch. Returns patchID.
-            label addPatch(polyPatch*);
-
-            //- Add patch field
-            template<class GeoField>
-            void addPatchFields(const word& patchFieldType);
-
-            //- Deletes last patch.
-            void deleteTrailingPatch();
-
-            // Delete trailing patch fields
-            template<class GeoField>
-            void deleteTrailingPatchFields();
-
             //- Save boundary fields
             template<class T, class Mesh>
             void saveBoundaryFields
@@ -135,6 +120,18 @@ class fvMeshDistribute
                 const PtrList<FieldField<fvsPatchField, T> >& oldBflds
             );
 
+            //- Save internal fields of surfaceFields
+            template<class T>
+            void saveInternalFields(PtrList<Field<T> >& iflds) const;
+
+            //- Set value of patch faces resulting from internal faces
+            template<class T>
+            void mapExposedFaces
+            (
+                const mapPolyMesh& map,
+                const PtrList<Field<T> >& oldFlds
+            );
+
             //- Init patch fields of certain type
             template<class GeoField, class PatchFieldType>
             void initPatchFields
@@ -147,8 +144,8 @@ class fvMeshDistribute
             void correctBoundaryConditions();
 
             //- Delete all processor patches. Move any processor faces into
-            //  patchI.
-            autoPtr<mapPolyMesh> deleteProcPatches(const label patchI);
+            //  patchi.
+            autoPtr<mapPolyMesh> deleteProcPatches(const label patchi);
 
             //- Repatch the mesh. This is only necessary for the proc
             //  boundary faces. newPatchID is over all boundary faces: -1 or
@@ -237,11 +234,11 @@ class fvMeshDistribute
 
         // Other
 
-            //- Remove cells. Add all exposed faces to patch oldInternalPatchI
+            //- Remove cells. Add all exposed faces to patch oldInternalPatchi
             autoPtr<mapPolyMesh> doRemoveCells
             (
                 const labelList& cellsToRemove,
-                const label oldInternalPatchI
+                const label oldInternalPatchi
             );
 
             //- Add processor patches. Changes mesh and returns per neighbour
@@ -362,6 +359,7 @@ public:
 
 } // End namespace CML
 
+#include "mapPolyMesh.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -381,76 +379,26 @@ void CML::fvMeshDistribute::printFieldInfo(const fvMesh& mesh)
             //<< " value:" << fld
             << endl;
 
-        forAll(fld.boundaryField(), patchI)
+        forAll(fld.boundaryField(), patchi)
         {
-            Pout<< "    " << patchI
-                << ' ' << fld.boundaryField()[patchI].patch().name()
-                << ' ' << fld.boundaryField()[patchI].type()
-                << ' ' << fld.boundaryField()[patchI].size()
+            Pout<< "    " << patchi
+                << ' ' << fld.boundaryField()[patchi].patch().name()
+                << ' ' << fld.boundaryField()[patchi].type()
+                << ' ' << fld.boundaryField()[patchi].size()
                 << endl;
         }
     }
 }
 
 
-template<class GeoField>
-void CML::fvMeshDistribute::addPatchFields(const word& patchFieldType)
-{
-    HashTable<GeoField*> flds
-    (
-        mesh_.objectRegistry::lookupClass<GeoField>()
-    );
-
-    forAllConstIter(typename HashTable<GeoField*>, flds, iter)
-    {
-        GeoField& fld = *iter();
-
-        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
-
-        label sz = bfld.size();
-        bfld.setSize(sz + 1);
-        bfld.set
-        (
-            sz,
-            GeoField::PatchFieldType::New
-            (
-                patchFieldType,
-                mesh_.boundary()[sz],
-                fld.dimensionedInternalField()
-            )
-        );
-    }
-}
-
-
-// Delete trailing patch fields
-template<class GeoField>
-void CML::fvMeshDistribute::deleteTrailingPatchFields()
-{
-    HashTable<GeoField*> flds
-    (
-        mesh_.objectRegistry::lookupClass<GeoField>()
-    );
-
-    forAllIter(typename HashTable<GeoField*>, flds, iter)
-    {
-        GeoField& fld = *iter();
-
-        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
-
-        // Shrink patchFields
-        bfld.setSize(bfld.size() - 1);
-    }
-}
-
-
-// Save whole boundary field
 template <class T, class Mesh>
 void CML::fvMeshDistribute::saveBoundaryFields
 (
     PtrList<FieldField<fvsPatchField, T> >& bflds
 ) const
 {
+    // Save whole boundary field
+
     typedef GeometricField<T, fvsPatchField, Mesh> fldType;
 
     HashTable<const fldType*> flds
@@ -473,7 +421,6 @@ void CML::fvMeshDistribute::saveBoundaryFields
 }
 
 
-// Map boundary field
 template <class T, class Mesh>
 void CML::fvMeshDistribute::mapBoundaryFields
 (
@@ -481,6 +428,8 @@ void CML::fvMeshDistribute::mapBoundaryFields
     const PtrList<FieldField<fvsPatchField, T> >& oldBflds
 )
 {
+    // Map boundary field
+
     const labelList& oldPatchStarts = map.oldPatchStarts();
     const labelList& faceMap = map.faceMap();
 
@@ -497,36 +446,34 @@ void CML::fvMeshDistribute::mapBoundaryFields
             << abort(FatalError);
     }
 
-
-    label fieldI = 0;
+    label fieldi = 0;
 
     forAllIter(typename HashTable<fldType*>, flds, iter)
     {
         fldType& fld = *iter();
         typename fldType::GeometricBoundaryField& bfld = fld.boundaryField();
 
-
-        const FieldField<fvsPatchField, T>& oldBfld = oldBflds[fieldI++];
+        const FieldField<fvsPatchField, T>& oldBfld = oldBflds[fieldi++];
 
         // Pull from old boundary field into bfld.
 
-        forAll(bfld, patchI)
+        forAll(bfld, patchi)
         {
-            fvsPatchField<T>& patchFld = bfld[patchI];
-            label faceI = patchFld.patch().start();
+            fvsPatchField<T>& patchFld = bfld[patchi];
+            label facei = patchFld.patch().start();
 
             forAll(patchFld, i)
             {
-                label oldFaceI = faceMap[faceI++];
+                label oldFacei = faceMap[facei++];
 
-                // Find patch and local patch face oldFaceI was in.
-                forAll(oldPatchStarts, oldPatchI)
+                // Find patch and local patch face oldFacei was in.
+                forAll(oldPatchStarts, oldPatchi)
                 {
-                    label oldLocalI = oldFaceI - oldPatchStarts[oldPatchI];
+                    label oldLocalI = oldFacei - oldPatchStarts[oldPatchi];
 
-                    if (oldLocalI >= 0 && oldLocalI < oldBfld[oldPatchI].size())
+                    if (oldLocalI >= 0 && oldLocalI < oldBfld[oldPatchi].size())
                     {
-                        patchFld[i] = oldBfld[oldPatchI][oldLocalI];
+                        patchFld[i] = oldBfld[oldPatchi][oldLocalI];
                     }
                 }
             }
@@ -535,13 +482,103 @@ void CML::fvMeshDistribute::mapBoundaryFields
 }
 
 
-// Init patch fields of certain type
+template<class T>
+void CML::fvMeshDistribute::saveInternalFields
+(
+    PtrList<Field<T> >& iflds
+) const
+{
+    typedef GeometricField<T, fvsPatchField, surfaceMesh> fldType;
+
+    HashTable<const fldType*> flds
+    (
+        static_cast<const fvMesh&>(mesh_).objectRegistry::lookupClass<fldType>()
+    );
+
+    iflds.setSize(flds.size());
+
+    label i = 0;
+
+    forAllConstIter(typename HashTable<const fldType*>, flds, iter)
+    {
+        const fldType& fld = *iter();
+
+        iflds.set(i, fld.internalField().clone());
+
+        i++;
+    }
+}
+
+
+template<class T>
+void CML::fvMeshDistribute::mapExposedFaces
+(
+    const mapPolyMesh& map,
+    const PtrList<Field<T> >& oldFlds
+)
+{
+    // Set boundary values of exposed internal faces
+
+    const labelList& faceMap = map.faceMap();
+
+    typedef GeometricField<T, fvsPatchField, surfaceMesh> fldType;
+
+    HashTable<fldType*> flds
+    (
+        mesh_.objectRegistry::lookupClass<fldType>()
+    );
+
+    if (flds.size() != oldFlds.size())
+    {
+        FatalErrorIn("fvMeshDistribute::mapExposedFaces(..)") << "problem"
+            << abort(FatalError);
+    }
+
+
+    label fieldI = 0;
+
+    forAllIter(typename HashTable<fldType*>, flds, iter)
+    {
+        fldType& fld = *iter();
+        typename fldType::GeometricBoundaryField& bfld = fld.boundaryField();
+
+        const Field<T>& oldInternal = oldFlds[fieldI++];
+
+        // Pull from old internal field into bfld.
+
+        forAll(bfld, patchi)
+        {
+            fvsPatchField<T>& patchFld = bfld[patchi];
+
+            forAll(patchFld, i)
+            {
+                const label faceI = patchFld.patch().start()+i;
+
+                label oldFaceI = faceMap[faceI];
+
+                if (oldFaceI < oldInternal.size())
+                {
+                    patchFld[i] = oldInternal[oldFaceI];
+
+                    if (map.flipFaceFlux().found(faceI))
+                    {
+                        patchFld[i] = flipOp()(patchFld[i]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 template<class GeoField, class PatchFieldType>
 void CML::fvMeshDistribute::initPatchFields
 (
     const typename GeoField::value_type& initVal
 )
 {
+    // Init patch fields of certain type
+
     HashTable<GeoField*> flds
     (
         mesh_.objectRegistry::lookupClass<GeoField>()
@@ -554,21 +591,22 @@ void CML::fvMeshDistribute::initPatchFields
         typename GeoField::GeometricBoundaryField& bfld =
             fld.boundaryField();
 
-        forAll(bfld, patchI)
+        forAll(bfld, patchi)
         {
-            if (isA<PatchFieldType>(bfld[patchI]))
+            if (isA<PatchFieldType>(bfld[patchi]))
             {
-                bfld[patchI] == initVal;
+                bfld[patchi] == initVal;
             }
         }
     }
 }
 
 
-// correctBoundaryConditions patch fields of certain type
 template<class GeoField>
 void CML::fvMeshDistribute::correctBoundaryConditions()
 {
+    // correctBoundaryConditions patch fields of certain type
+
     HashTable<GeoField*> flds
     (
         mesh_.objectRegistry::lookupClass<GeoField>()
@@ -582,24 +620,6 @@ void CML::fvMeshDistribute::correctBoundaryConditions()
 }
 
 
-// Send fields. Note order supplied so we can receive in exactly the same order.
-// Note that field gets written as entry in dictionary so we
-// can construct from subdictionary.
-// (since otherwise the reading as-a-dictionary mixes up entries from
-// consecutive fields)
-// The dictionary constructed is:
-//  volScalarField
-//  {
-//      p {internalField ..; boundaryField ..;}
-//      k {internalField ..; boundaryField ..;}
-//  }
-//  volVectorField
-//  {
-//      U {internalField ...  }
-//  }
-
-// volVectorField {U {internalField ..; boundaryField ..;}}
-//
 template<class GeoField>
 void CML::fvMeshDistribute::sendFields
 (
@@ -609,6 +629,25 @@ void CML::fvMeshDistribute::sendFields
     UOPstream& toNbr
 )
 {
+    // Send fields. Note order supplied so we can receive in exactly the same
+    // order.
+    // Note that field gets written as entry in dictionary so we
+    // can construct from subdictionary.
+    // (since otherwise the reading as-a-dictionary mixes up entries from
+    // consecutive fields)
+    // The dictionary constructed is:
+    //  volScalarField
+    //  {
+    //      p {internalField ..; boundaryField ..;}
+    //      k {internalField ..; boundaryField ..;}
+    //  }
+    //  volVectorField
+    //  {
+    //      U {internalField ...  }
+    //  }
+
+    // volVectorField {U {internalField ..; boundaryField ..;}}
+
     toNbr << GeoField::typeName << token::NL << token::BEGIN_BLOCK << token::NL;
     forAll(fieldNames, i)
     {
@@ -621,7 +660,7 @@ void CML::fvMeshDistribute::sendFields
         // Send all fieldNames. This has to be exactly the same set as is
         // being received!
         const GeoField& fld =
-            subsetter.baseMesh().objectRegistry::lookupObject<GeoField>(fieldNames[i]);
+            subsetter.baseMesh().lookupObject<GeoField>(fieldNames[i]);
 
         tmp<GeoField> tsubfld = subsetter.interpolate(fld);
 
@@ -634,7 +673,6 @@ void CML::fvMeshDistribute::sendFields
 }
 
 
-// Opposite of sendFields
 template<class GeoField>
 void CML::fvMeshDistribute::receiveFields
 (

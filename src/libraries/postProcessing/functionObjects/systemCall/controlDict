@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -65,7 +65,7 @@ functions
             "echo \*\*\* done \*\*\*"
         );
 
-        // called every ouput time
+        // called every output time
         writeCalls
         (
             "echo \*\*\* writing data \*\*\*"

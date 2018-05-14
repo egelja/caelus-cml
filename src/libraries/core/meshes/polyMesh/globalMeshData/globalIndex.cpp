@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,10 +34,10 @@ CML::globalIndex::globalIndex(const label localSize, const int tag)
 
     label offset = 0;
     offsets_[0] = 0;
-    for (label procI = 0; procI < Pstream::nProcs(); procI++)
+    for (label proci = 0; proci < Pstream::nProcs(); proci++)
     {
         label oldOffset = offset;
-        offset += localSizes[procI];
+        offset += localSizes[proci];
 
         if (offset < oldOffset)
         {
@@ -47,7 +47,7 @@ CML::globalIndex::globalIndex(const label localSize, const int tag)
                 << "). Please recompile with larger datatype for label."
                 << exit(FatalError);
         }
-        offsets_[procI+1] = offset;
+        offsets_[proci+1] = offset;
     }
 }
 

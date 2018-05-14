@@ -1,0 +1,33 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: yes
+      preserve: [ "0.org" ]
+
+  - copy_tree:
+      src: "0.org"
+      dest: "0"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args: "-force"
+
+  - run_command:
+      cmd_name: setFields
+      parallel: True
+
+  - run_command:
+      cmd_name: explicitDBNSSolver
+      parallel: True
+
+  - run_command:
+      cmd_name: reconstructPar
+      cmd_args: "-latestTime"
+
+  - process_logs:
+      log_file: explicitDBNSSolver.log
+

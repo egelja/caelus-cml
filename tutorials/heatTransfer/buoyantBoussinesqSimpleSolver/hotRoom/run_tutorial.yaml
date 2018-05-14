@@ -1,0 +1,24 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      remove_extra:
+      - 0/T.gz
+
+  - copy_files:
+      src: "0/T.org"
+      dest: "0/T"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: setFields
+
+  - run_command:
+      cmd_name: buoyantBoussinesqSimpleSolver 
+
+  - process_logs:
+      log_file: buoyantBoussinesqSimpleSolver.log
+

@@ -18,7 +18,6 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'genericPatchFields',
 'sampling',
 'surfMesh',
 'lagrangian']

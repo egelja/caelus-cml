@@ -75,13 +75,13 @@ private:
         volScalarField I_;
 
         //- Total radiative heat flux on boundary
-        volScalarField Qr_;
+        volScalarField qr_;
 
         //- Incident radiative heat flux on boundary
-        volScalarField Qin_;
+        volScalarField qin_;
 
         //- Emitted radiative heat flux on boundary
-        volScalarField Qem_;
+        volScalarField qem_;
 
         //- Direction
         vector d_;
@@ -106,6 +106,9 @@ private:
 
         //- Global ray id - incremented in constructor
         static label rayId;
+
+        //- My ray Id
+        label myRayId_;
 
 
     // Private Member Functions
@@ -168,22 +171,22 @@ public:
             inline const volScalarField& I() const;
 
             //- Return const access to the boundary heat flux
-            inline const volScalarField& Qr() const;
+            inline const volScalarField& qr() const;
 
             //- Return non-const access to the boundary heat flux
-            inline volScalarField& Qr();
+            inline volScalarField& qr();
 
             //- Return non-const access to the boundary incident heat flux
-            inline volScalarField& Qin();
+            inline volScalarField& qin();
 
-            //- Return non-const access to the boundary emmited heat flux
-            inline volScalarField& Qem();
+            //- Return non-const access to the boundary emitted heat flux
+            inline volScalarField& qem();
 
             //- Return const access to the boundary incident heat flux
-            inline const volScalarField& Qin() const;
+            inline const volScalarField& qin() const;
 
-            //- Return const access to the boundary emmited heat flux
-            inline const volScalarField& Qem() const;
+            //- Return const access to the boundary emitted heat flux
+            inline const volScalarField& qem() const;
 
             //- Return direction
             inline const vector& d() const;
@@ -205,6 +208,7 @@ public:
 
             //- Return the radiative intensity for a given wavelength
             inline const volScalarField& ILambda(const label lambdaI) const;
+
 };
 
 

@@ -105,6 +105,12 @@ public:
 
     // Member Functions
 
+        //- Return number of interfaces
+        virtual label nPatches() const
+        {
+            return patchAddr_.size();
+        }
+
         //- Return lower addressing (i.e. lower label = upper triangle)
         const labelUList& lowerAddr() const
         {
@@ -119,6 +125,11 @@ public:
 
         //- Return patch addressing
         const labelUList& patchAddr(const label i) const
+        {
+            return *patchAddr_[i];
+        }
+
+        const labelUList& getPatchAddr(const label i) const
         {
             return *patchAddr_[i];
         }

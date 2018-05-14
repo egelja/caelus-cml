@@ -854,7 +854,7 @@ fileNameList readDir
         {
             const fileName & fName = dirIt.next();
 
-            // ignore files begining with ., i.e. '.', '..' and '.*'
+            // ignore files beginning with ., i.e. '.', '..' and '.*'
             if (fName.size() > 0 && fName[size_t(0)] != '.')
             {
                 word fileNameExt = fName.ext();
@@ -1016,7 +1016,7 @@ bool cp(const fileName& src, const fileName& dest)
 bool ln(const fileName& src, const fileName& dest)
 {
     // Seems that prior to Vista softlinking was poorly supported.
-    // Vista does a better job, but requires adminstrator privileges.
+    // Vista does a better job, but requires administrator privileges.
     // Skip for now.
 
     if (Windows::debug)
@@ -1209,7 +1209,7 @@ bool ping
     const label timeOut
 )
 {
-    // Appears that socket calls require adminstrator privileges.
+    // Appears that socket calls require administrator privileges.
     // Skip for now.
 
     if (Windows::debug)

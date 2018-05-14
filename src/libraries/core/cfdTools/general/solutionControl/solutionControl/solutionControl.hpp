@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014 - 2017 Applied CCM
 Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
@@ -57,64 +57,75 @@ protected:
 
     // Protected data
 
-        //- Reference to the mesh database
-        fvMesh& mesh_;
+    //- Reference to the mesh database
+    fvMesh& mesh_;
 
-        //- List of residual data per field
-        List<fieldData> residualControl_;
+    //- List of residual data per field
+    List<fieldData> residualControl_;
 
-        //- The dictionary name, e.g. SIMPLE, PIMPLE
-        const word algorithmName_;
-
-
-        // Solution controls
-
-            //- Maximum number of non-orthogonal correctors
-            label nNonOrthCorr_;
-
-            //- Flag to indicate to solve for momentum
-            bool momentumPredictor_;
-
-            //- Flag to indicate to solve using transonic algorithm
-            bool transonic_;
+    //- The dictionary name, e.g. SIMPLE, PIMPLE
+    const word algorithmName_;
 
 
-        // Evolution
+    // Solution controls
 
-            //- Current corrector loop index
-            label corr_;
+    //- Maximum number of non-orthogonal correctors
+    label nNonOrthCorr_;
 
-            //- Current non-orthogonal corrector loop index
-            label corrNonOrtho_;
+    //- Flag to indicate to solve for momentum
+    bool momentumPredictor_;
+
+    //- Flag to indicate to solve using transonic algorithm
+    bool transonic_;
+
+    //- Flag to indicate to relax pressure using the
+    //  "consistent" approach of SIMPLEC
+    bool consistent_;
+
+    //- Flag to indicate that the correction form of pressure
+    //  equation is used.
+    bool correctionForm_;
+
+
+    // Evolution
+
+    //- Current corrector loop index
+    label corr_;
+
+    //- Current non-orthogonal corrector loop index
+    label corrNonOrtho_;
 
 
     // Protected Member Functions
 
-        //- Read controls from fvSolution dictionary
-        virtual void read(const bool absTolOnly);
+    //- Read controls from fvSolution dictionary
+    virtual void read(const bool absTolOnly);
 
-        //- Return index of field in residualControl_ if present
-        virtual label applyToField
-        (
-            const word& fieldName,
-            const bool useRegEx = true
-        ) const;
+    //- Read controls from fvSolution dictionary
+    virtual void read();
 
-        //- Return true if all convergence checks are satisfied
-        virtual bool criteriaSatisfied() = 0;
+    //- Return index of field in residualControl_ if present
+    virtual label applyToField
+    (
+        const word& fieldName,
+        const bool useRegEx = true
+    ) const;
 
-        //- Store previous iteration fields
-        virtual void storePrevIterFields() const;
+    //- Return true if all convergence checks are satisfied
+    virtual bool criteriaSatisfied() = 0;
 
-        //- Store previous iteration field for vol<Type>Fields
-        template<class Type>
-        void storePrevIter() const;
+    //- Store previous iteration fields
+    virtual void storePrevIterFields() const;
 
-        //- Disallow default bitwise copy construct
-        solutionControl(const solutionControl&);
+    //- Store previous iteration field for vol<Type>Fields
+    template<class Type>
+    void storePrevIter() const;
 
-        //- Disallow default bitwise assignment
-        void operator=(const solutionControl&);
+    //- Disallow default bitwise copy construct
+    solutionControl(const solutionControl&);
+
+    //- Disallow default bitwise assignment
+    void operator=(const solutionControl&);
 
 
 public:
@@ -122,14 +133,14 @@ public:
 
     // Static Data Members
 
-        //- Run-time type information
-        TypeName("solutionControl");
+    //- Run-time type information
+    TypeName("solutionControl");
 
 
     // Constructors
 
-        //- Construct from mesh
-        solutionControl(fvMesh& mesh, const word& algorithmName);
+    //- Construct from mesh
+    solutionControl(fvMesh& mesh, const word& algorithmName);
 
 
     //- Destructor
@@ -138,40 +149,46 @@ public:
 
     // Member Functions
 
-        // Access
+    // Access
 
-            //- Return the solution dictionary
-            inline const dictionary& dict() const;
+    //- Return the solution dictionary
+    inline const dictionary& dict() const;
 
-            //- Current corrector loop index
-            inline label corr() const;
+    //- Current corrector loop index
+    inline label corr() const;
 
-            //- Current non-orthogonal corrector index
-            inline label corrNonOrtho() const;
-
-
-        // Solution control
-
-            //- Maximum number of non-orthogonal correctors
-            inline label nNonOrthCorr() const;
-
-            //- Helper function to identify final non-orthogonal iteration
-            inline bool finalNonOrthogonalIter() const;
-
-            //- Flag to indicate to solve for momentum
-            inline bool momentumPredictor() const;
-
-            //- Flag to indicate to solve using transonic algorithm
-            inline bool transonic() const;
+    //- Current non-orthogonal corrector index
+    inline label corrNonOrtho() const;
 
 
-        // Evolution
+    // Solution control
 
-            //- Main control loop
-            virtual bool loop() = 0;
+    //- Maximum number of non-orthogonal correctors
+    inline label nNonOrthCorr() const;
 
-            //- Non-orthogonal corrector loop
-            inline bool correctNonOrthogonal();
+    //- Helper function to identify final non-orthogonal iteration
+    inline bool finalNonOrthogonalIter() const;
+
+    //- Flag to indicate to solve for momentum
+    inline bool momentumPredictor() const;
+
+    //- Flag to indicate to solve using transonic algorithm
+    inline bool transonic() const;
+
+    //- Flag to indicate to relax pressure using the
+    //  "consistent" approach of SIMPLEC
+    inline bool consistent() const;
+
+    inline bool correctionForm() const;
+
+
+    // Evolution
+
+    //- Main control loop
+    virtual bool loop() = 0;
+
+    //- Non-orthogonal corrector loop
+    inline bool correctNonOrthogonal();
 };
 
 
@@ -262,6 +279,16 @@ inline bool CML::solutionControl::transonic() const
     return transonic_;
 }
 
+
+inline bool CML::solutionControl::consistent() const
+{
+    return consistent_;
+}
+
+inline bool CML::solutionControl::correctionForm() const
+{
+    return correctionForm_;
+}
 
 inline bool CML::solutionControl::correctNonOrthogonal()
 {

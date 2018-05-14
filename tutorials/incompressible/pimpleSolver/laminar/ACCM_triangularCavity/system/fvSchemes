@@ -1,0 +1,61 @@
+/*-------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+	version				2.0;
+	format				ascii;
+	class				dictionary;
+	object				fvSchemes;
+}
+
+//--------------------------------------------------------------------------------
+
+ddtSchemes
+{
+	default				Euler;
+}
+
+gradSchemes
+{
+	default				Gauss	linear;
+	grad(p)				Gauss	linear;
+	grad(U)				Gauss	linear;
+}
+
+divSchemes
+{
+	default				none;
+	div(phi,U)			Gauss	linearUpwindBJ grad(U);
+	div((nuEff*dev(T(grad(U)))))	Gauss   linear;
+}
+
+laplacianSchemes
+{
+	default				none;
+	laplacian(nu,U)			Gauss 	linear 	corrected;
+	laplacian(nuEff,U)		Gauss 	linear 	corrected;
+	laplacian(p)			Gauss 	linear 	corrected;
+	laplacian((1|A(U)),p)           Gauss   linear  corrected;
+	laplacian(rAUf,p)		Gauss 	linear 	corrected;
+
+}
+
+interpolationSchemes
+{
+	default				linear;
+	interpolate(HbyA)		linear;
+}
+
+snGradschemes
+{
+	default				corrected;
+}
+
+fluxRequired
+{
+	default				no;
+	p				;
+}

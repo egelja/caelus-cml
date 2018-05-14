@@ -356,7 +356,7 @@ public:
         //- Construct as a copy
         particle(const particle& p);
 
-        //- Construct as a copy with refernce to a new mesh
+        //- Construct as a copy with reference to a new mesh
         particle(const particle& p, const polyMesh& mesh);
 
         //- Construct a clone

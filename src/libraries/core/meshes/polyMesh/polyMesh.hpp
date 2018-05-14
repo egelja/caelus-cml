@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014-16 Applied CCM
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2014-2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,6 +31,7 @@ SourceFiles
     polyMeshFromShapeMesh.cpp
     polyMeshIO.cpp
     polyMeshUpdate.cpp
+    polyMeshCheck.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -130,11 +131,11 @@ private:
             //  Created from points on construction, updated when the mesh moves
             boundBox bounds_;
 
-            //- vector of non-constrained directions in mesh
+            //- Vector of non-constrained directions in mesh
             //  defined according to the presence of empty and wedge patches
             mutable Vector<label> geometricD_;
 
-            //- vector of valid directions in mesh
+            //- Vector of valid directions in mesh
             //  defined according to the presence of empty patches
             mutable Vector<label> solutionD_;
 
@@ -223,6 +224,63 @@ private:
             );
 
 
+        // Geometry checks
+
+            //- Check non-orthogonality
+            bool checkFaceOrthogonality
+            (
+                const vectorField& fAreas,
+                const vectorField& cellCtrs,
+                const bool report,
+                const bool detailedReport,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check face skewness
+            bool checkFaceSkewness
+            (
+                const pointField& points,
+                const vectorField& fCtrs,
+                const vectorField& fAreas,
+                const vectorField& cellCtrs,
+                const bool report,
+                const bool detailedReport,
+                labelHashSet* setPtr
+            ) const;
+
+            bool checkEdgeAlignment
+            (
+                const pointField& p,
+                const bool report,
+                const Vector<label>& directions,
+                labelHashSet* setPtr
+            ) const;
+
+            bool checkCellDeterminant
+            (
+                const vectorField& faceAreas,
+                const bool report,
+                labelHashSet* setPtr,
+                const Vector<label>& meshD
+            ) const;
+
+            bool checkFaceWeight
+            (
+                const vectorField& fCtrs,
+                const vectorField& fAreas,
+                const vectorField& cellCtrs,
+                const bool report,
+                const scalar minWeight,
+                labelHashSet* setPtr
+            ) const;
+
+            bool checkVolRatio
+            (
+                const scalarField& cellVols,
+                const bool report,
+                const scalar minRatio,
+                labelHashSet* setPtr
+            ) const;
 
 public:
 
@@ -424,6 +482,12 @@ public:
 
         // Mesh motion
 
+            //- Is mesh dynamic
+            virtual bool dynamic() const
+            {
+                return false;
+            }
+
             //- Is mesh moving
             bool moving() const
             {
@@ -552,7 +616,62 @@ public:
             void removeFiles() const;
 
 
-        // Helper functions
+        // Geometric checks. Selectively override primitiveMesh functionality.
+
+            //- Check non-orthogonality
+            virtual bool checkFaceOrthogonality
+            (
+                const bool report = false,
+                labelHashSet* setPtr = NULL
+            ) const;
+
+            //- Check face skewness
+            virtual bool checkFaceSkewness
+            (
+                const bool report = false,
+                labelHashSet* setPtr = NULL
+            ) const;
+
+            //- Check edge alignment for 1D/2D cases
+            virtual bool checkEdgeAlignment
+            (
+                const bool report,
+                const Vector<label>& directions,
+                labelHashSet* setPtr
+            ) const;
+
+            virtual bool checkCellDeterminant
+            (
+                const bool report,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check mesh motion for correctness given motion points
+            virtual bool checkMeshMotion
+            (
+                const pointField& newPoints,
+                const bool report = false,
+                const bool detailedReport = false
+            ) const;
+
+            //- Check for face weights
+            virtual bool checkFaceWeight
+            (
+                const bool report,
+                const scalar minWeight = 0.05,
+                labelHashSet* setPtr = NULL
+            ) const;
+
+            //- Check for neighbouring cell volumes
+            virtual bool checkVolRatio
+            (
+                const bool report,
+                const scalar minRatio = 0.01,
+                labelHashSet* setPtr = NULL
+            ) const;
+
+
+        // Position search functions
 
             //- Find the cell, tetFaceI and tetPtI for the given position
             void findCellFacePt

@@ -164,6 +164,11 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         ) = 0;
 
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > fvcDdt
+        (
+            const GeometricField<Type, fvsPatchField, surfaceMesh>&
+        );
+
         virtual tmp<fvMatrix<Type> > fvmDdt
         (
             const GeometricField<Type, fvPatchField, volMesh>&
@@ -216,7 +221,6 @@ public:
 
         virtual tmp<fluxFieldType> fvcDdtPhiCorr
         (
-            const volScalarField& rA,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
         ) = 0;
@@ -228,16 +232,8 @@ public:
             const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
         ) = 0;
 
-        tmp<surfaceScalarField> fvcDdtPhiCoeff
-        (
-            const volScalarField& rho,
-            const GeometricField<Type, fvPatchField, volMesh>& rhoU,
-            const fluxFieldType& phi
-        );
-
         virtual tmp<fluxFieldType> fvcDdtPhiCorr
         (
-            const volScalarField& rA,
             const volScalarField& rho,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
@@ -301,7 +297,6 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
 template<>                                                                     \
 tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 (                                                                              \
-    const volScalarField& rA,                                                  \
     const volScalarField& U,                                                   \
     const surfaceScalarField& phi                                              \
 )                                                                              \
@@ -325,7 +320,6 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
 template<>                                                                     \
 tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
 (                                                                              \
-    const volScalarField& rA,                                                  \
     const volScalarField& rho,                                                 \
     const volScalarField& U,                                                   \
     const surfaceScalarField& phi                                              \
@@ -422,7 +416,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > ddtScheme<Type>::fvcDdt
     const GeometricField<Type, fvPatchField, volMesh>& vf
 )
 {
-    notImplemented("fvmDdt(alpha, rho, psi");
+    notImplemented("fvcDdt(alpha, rho, psi)");
 
     return tmp<GeometricField<Type, fvPatchField, volMesh> >
     (
@@ -439,7 +433,7 @@ tmp<fvMatrix<Type> > ddtScheme<Type>::fvmDdt
     const GeometricField<Type, fvPatchField, volMesh>& vf
 )
 {
-    notImplemented("fvmDdt(alpha, rho, psi");
+    notImplemented("fvmDdt(alpha, rho, psi)");
 
     return tmp<fvMatrix<Type> >
     (
@@ -451,6 +445,22 @@ tmp<fvMatrix<Type> > ddtScheme<Type>::fvmDdt
         )
     );
 }
+
+
+template<class Type>
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > ddtScheme<Type>::fvcDdt
+(
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& sf
+)
+{
+    notImplemented("fvcDdt(psi)");
+
+    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+    (
+        GeometricField<Type, fvsPatchField, surfaceMesh>::null()
+    );
+}
+
 
 
 template<class Type>
@@ -521,55 +531,6 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
         if
         (
             U.boundaryField()[patchi].fixesValue()
-         || isA<cyclicAMIFvPatch>(mesh().boundary()[patchi])
-        )
-        {
-            ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
-        }
-    }
-
-    if (debug > 1)
-    {
-        Info<< "ddtCouplingCoeff mean max min = "
-            << gAverage(ddtCouplingCoeff.internalField())
-            << " " << gMax(ddtCouplingCoeff.internalField())
-            << " " << gMin(ddtCouplingCoeff.internalField())
-            << endl;
-    }
-
-    return tddtCouplingCoeff;
-}
-
-
-template<class Type>
-tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
-(
-    const volScalarField& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& rhoU,
-    const fluxFieldType& phi
-)
-{
-    dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
-
-    tmp<surfaceScalarField> tddtCouplingCoeff = scalar(1)
-      - min
-        (
-            mag(phi - (mesh().Sf() & fvc::interpolate(rhoU)))
-           /(
-                mag(phi) + dimensionedScalar("small", phi.dimensions(), VSMALL)
-                //fvc::interpolate(rho)*rDeltaT
-                //*mesh().magSf()/mesh().deltaCoeffs()
-            ),
-            scalar(1)
-        );
-
-    surfaceScalarField& ddtCouplingCoeff = tddtCouplingCoeff();
-
-    forAll(rhoU.boundaryField(), patchi)
-    {
-        if
-        (
-            rhoU.boundaryField()[patchi].fixesValue()
          || isA<cyclicAMIFvPatch>(mesh().boundary()[patchi])
         )
         {

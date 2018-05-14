@@ -934,7 +934,12 @@ void CML::Field<Type>::autoMap
             distMap.distribute(fCpy, noOp());
         }
 
-        if ((mapper.direct() && notNull(mapper.directAddressing())) || !mapper.direct())
+        if
+        (
+            (mapper.direct()
+         && notNull(mapper.directAddressing()))
+         || !mapper.direct()
+        )
         {
             this->map(fCpy, mapper);
         }
@@ -1218,25 +1223,25 @@ void CML::Field<Type>::operator=(const VectorSpace<Form,Cmpt,nCmpt>& vs)
 }
 
 
-#define COMPUTED_ASSIGNMENT(TYPE, op)                                         \
-                                                                              \
-template<class Type>                                                          \
-void CML::Field<Type>::operator op(const UList<TYPE>& f)                     \
-{                                                                             \
-    TFOR_ALL_F_OP_F(Type, *this, op, TYPE, f)                                 \
-}                                                                             \
-                                                                              \
-template<class Type>                                                          \
-void CML::Field<Type>::operator op(const tmp<Field<TYPE> >& tf)              \
-{                                                                             \
-    operator op(tf());                                                        \
-    tf.clear();                                                               \
-}                                                                             \
-                                                                              \
-template<class Type>                                                          \
-void CML::Field<Type>::operator op(const TYPE& t)                            \
-{                                                                             \
-    TFOR_ALL_F_OP_S(Type, *this, op, TYPE, t)                                 \
+#define COMPUTED_ASSIGNMENT(TYPE, op)                                          \
+                                                                               \
+template<class Type>                                                           \
+void CML::Field<Type>::operator op(const UList<TYPE>& f)                       \
+{                                                                              \
+    TFOR_ALL_F_OP_F(Type, *this, op, TYPE, f)                                  \
+}                                                                              \
+                                                                               \
+template<class Type>                                                           \
+void CML::Field<Type>::operator op(const tmp<Field<TYPE> >& tf)                \
+{                                                                              \
+    operator op(tf());                                                         \
+    tf.clear();                                                                \
+}                                                                              \
+                                                                               \
+template<class Type>                                                           \
+void CML::Field<Type>::operator op(const TYPE& t)                              \
+{                                                                              \
+    TFOR_ALL_F_OP_S(Type, *this, op, TYPE, t)                                  \
 }
 
 COMPUTED_ASSIGNMENT(Type, +=)
@@ -1983,7 +1988,7 @@ scalar sumProd(const UList<Type>& f1, const UList<Type>& f2)
     if (f1.size() && (f1.size() == f2.size()))
     {
         scalar SumProd = 0.0;
-        TFOR_ALL_S_OP_F_OP_F(scalar, SumProd, +=, Type, f1, *, Type, f2)
+        TFOR_ALL_S_OP_F_OP_F(scalar, SumProd, +=, Type, f1, &&, Type, f2)
         return SumProd;
     }
     else
@@ -2113,15 +2118,23 @@ G_UNARY_FUNCTION(Type, gSumCmptMag, sumCmptMag, sum)
 #undef G_UNARY_FUNCTION
 
 template<class Type>
-scalar gSumProd(const UList<Type>& f1, const UList<Type>& f2)
+scalar gSumProd
+(
+    const UList<Type>& f1,
+    const UList<Type>& f2
+)
 {
     scalar SumProd = sumProd(f1, f2);
-    reduce(SumProd, sumOp<Type>());
+    reduce(SumProd, sumOp<scalar>());
     return SumProd;
 }
 
 template<class Type>
-Type gSumCmptProd(const UList<Type>& f1, const UList<Type>& f2)
+Type gSumCmptProd
+(
+    const UList<Type>& f1,
+    const UList<Type>& f2
+)
 {
     Type SumProd = sumCmptProd(f1, f2);
     reduce(SumProd, sumOp<Type>());
@@ -2129,7 +2142,10 @@ Type gSumCmptProd(const UList<Type>& f1, const UList<Type>& f2)
 }
 
 template<class Type>
-Type gAverage(const UList<Type>& f)
+Type gAverage
+(
+    const UList<Type>& f
+)
 {
     label n = f.size();
     reduce(n, sumOp<label>());
@@ -2332,11 +2348,6 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "undefFieldFunctionsM.hpp"
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
 // ************************************************************************* //

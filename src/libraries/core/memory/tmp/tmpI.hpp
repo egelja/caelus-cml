@@ -265,6 +265,37 @@ inline const T* CML::tmp<T>::operator->() const
 
 
 template<class T>
+inline void CML::tmp<T>::operator=(T* tPtr)
+{
+    if (isTmp_ && ptr_)
+    {
+        if (ptr_->okToDelete())
+        {
+            delete ptr_;
+            ptr_ = 0;
+        }
+        else
+        {
+            ptr_->operator--();
+        }
+    }
+
+    isTmp_ = true;
+
+    if (!tPtr)
+    {
+        FatalErrorIn("CML::tmp<T>::operator=(T*)")
+            << "Attempted copy of a deallocated temporary"
+            << " of type " << typeid(T).name()
+            << abort(FatalError);
+    }
+
+    ptr_ = tPtr;
+    ptr_->resetRefCount();
+}
+
+
+template<class T>
 inline void CML::tmp<T>::operator=(const tmp<T>& t)
 {
     if (isTmp_ && ptr_)

@@ -33,7 +33,7 @@ SourceFiles
 Author
     Aleksandar Jemcov
 
-Refrences
+References
 
     [1] "A Robust upwind discretization method for advection, diffusion
         and source terms" ,Numerical Methods for Advection-Diffusion 

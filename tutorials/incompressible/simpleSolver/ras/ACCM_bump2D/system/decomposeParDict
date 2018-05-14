@@ -1,0 +1,25 @@
+/*-------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     		2.0;
+    format      		ascii;
+    class       		dictionary;
+    object      		decomposeParDict;
+}
+//--------------------------------------------------------------------------------
+
+numberOfSubdomains 		4; // It is suggested that the numberOfSubdomains be increased based on available resources for validation cases and to reduce the computation time.
+
+
+method          		simple;
+
+simpleCoeffs
+{
+	n			(4 1 1);
+	delta 			0.001;
+}
+

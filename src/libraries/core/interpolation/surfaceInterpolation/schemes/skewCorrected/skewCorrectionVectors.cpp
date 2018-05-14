@@ -182,7 +182,7 @@ const CML::surfaceVectorField& CML::skewCorrectionVectors::operator()() const
 }
 
 
-// Do what is neccessary if the mesh has moved
+// Do what is necessary if the mesh has moved
 bool CML::skewCorrectionVectors::movePoints()
 {
     skew_ = true;

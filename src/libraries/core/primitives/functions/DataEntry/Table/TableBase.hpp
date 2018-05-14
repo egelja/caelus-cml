@@ -1,56 +1,48 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::TableBase
+    CML::DataEntryTypes::TableBase
 
 Description
     Base class for table with bounds handling, interpolation and integration
 
-SourceFiles
-    TableBase.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef TableBase_H
-#define TableBase_H
+#ifndef TableBase_HPP
+#define TableBase_HPP
 
 #include "DataEntry.hpp"
 #include "Tuple2.hpp"
-#include "dimensionSet.hpp"
+#include "Time.hpp"
+#include "interpolationWeights.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
 
-template<class Type>
-class TableBase;
-
-template<class Type>
-Ostream& operator<<
-(
-    Ostream&,
-    const TableBase<Type>&
-);
-
 class interpolationWeights;
+
+namespace DataEntryTypes
+{
 
 /*---------------------------------------------------------------------------*\
                         Class TableBase Declaration
@@ -58,6 +50,8 @@ class interpolationWeights;
 
 template<class Type>
 class TableBase
+:
+    public DataEntry<Type>
 {
 public:
 
@@ -66,10 +60,10 @@ public:
         //- Enumeration for handling out-of-bound values
         enum boundsHandling
         {
-            ERROR,          /*!< Exit with a FatalError */
-            WARN,           /*!< Issue warning and clamp value (default) */
-            CLAMP,          /*!< Clamp value to the start/end value */
-            REPEAT          /*!< Treat as a repeating list */
+            ERROR,          //!< Exit with a FatalError
+            WARN,           //!< Issue warning and clamp value (default)
+            CLAMP,          //!< Clamp value to the start/end value
+            REPEAT          //!< Treat as a repeating list
         };
 
 
@@ -89,9 +83,6 @@ protected:
         //- Table data
         List<Tuple2<scalar, Type> > table_;
 
-        //- The dimension set
-        dimensionSet dimensions_;
-
         //- Extracted values
         mutable autoPtr<scalarField> tableSamplesPtr_;
 
@@ -106,9 +97,11 @@ protected:
 
     // Protected Member Functions
 
-
         //- Return (demand driven) interpolator
         const interpolationWeights& interpolator() const;
+
+
+private:
 
         //- Disallow default bitwise assignment
         void operator=(const TableBase<Type>&);
@@ -158,31 +151,11 @@ public:
         //- Integrate between two (scalar) values
         virtual Type integrate(const scalar x1, const scalar x2) const;
 
-        //- Return dimensioned constant value
-        virtual dimensioned<Type> dimValue(const scalar x) const;
-
-        //- Integrate between two values and return dimensioned type
-        virtual dimensioned<Type> dimIntegrate
-        (
-            const scalar x1,
-            const scalar x2
-        ) const;
-
         //- Return the reference values
         virtual tmp<scalarField> x() const;
 
         //- Return the dependent values
         virtual tmp<Field<Type> > y() const;
-
-
-    // I/O
-
-        //- Ostream Operator
-        friend Ostream& operator<< <Type>
-        (
-            Ostream& os,
-            const TableBase<Type>& tbl
-        );
 
         //- Write all table data in dictionary format
         virtual void writeData(Ostream& os) const;
@@ -195,17 +168,15 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace DataEntryTypes
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "Time.hpp"
-#include "interpolationWeights.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class Type>
-const CML::interpolationWeights& CML::TableBase<Type>::interpolator() const
+const CML::interpolationWeights&
+CML::DataEntryTypes::TableBase<Type>::interpolator() const
 {
     if (interpolatorPtr_.empty())
     {
@@ -230,8 +201,13 @@ const CML::interpolationWeights& CML::TableBase<Type>::interpolator() const
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::TableBase<Type>::TableBase(const word& name, const dictionary& dict)
+CML::DataEntryTypes::TableBase<Type>::TableBase
+(
+    const word& name,
+    const dictionary& dict
+)
 :
+    DataEntry<Type>(name),
     name_(name),
     boundsHandling_
     (
@@ -244,19 +220,18 @@ CML::TableBase<Type>::TableBase(const word& name, const dictionary& dict)
     (
         dict.lookupOrDefault<word>("interpolationScheme", "linear")
     ),
-    table_(),
-    dimensions_(dimless)
+    table_()
 {}
 
 
 template<class Type>
-CML::TableBase<Type>::TableBase(const TableBase<Type>& tbl)
+CML::DataEntryTypes::TableBase<Type>::TableBase(const TableBase<Type>& tbl)
 :
+    DataEntry<Type>(tbl),
     name_(tbl.name_),
     boundsHandling_(tbl.boundsHandling_),
     interpolationScheme_(tbl.interpolationScheme_),
     table_(tbl.table_),
-    dimensions_(tbl.dimensions_),
     tableSamplesPtr_(tbl.tableSamplesPtr_),
     interpolatorPtr_(tbl.interpolatorPtr_)
 {}
@@ -265,14 +240,14 @@ CML::TableBase<Type>::TableBase(const TableBase<Type>& tbl)
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class Type>
-CML::TableBase<Type>::~TableBase()
+CML::DataEntryTypes::TableBase<Type>::~TableBase()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-CML::word CML::TableBase<Type>::boundsHandlingToWord
+CML::word CML::DataEntryTypes::TableBase<Type>::boundsHandlingToWord
 (
      const boundsHandling& bound
 ) const
@@ -308,8 +283,8 @@ CML::word CML::TableBase<Type>::boundsHandlingToWord
 
 
 template<class Type>
-typename CML::TableBase<Type>::boundsHandling
-CML::TableBase<Type>::wordToBoundsHandling
+typename CML::DataEntryTypes::TableBase<Type>::boundsHandling
+CML::DataEntryTypes::TableBase<Type>::wordToBoundsHandling
 (
     const word& bound
 ) const
@@ -332,7 +307,7 @@ CML::TableBase<Type>::wordToBoundsHandling
     }
     else
     {
-        WarningIn("CML::TableBase<Type>::wordToBoundsHandling(const word&)")
+        WarningIn("CML::DataEntryTypes::TableBase<Type>::wordToBoundsHandling(const word&)")
             << "bad outOfBounds specifier " << bound << " using 'warn'"
             << endl;
 
@@ -342,8 +317,8 @@ CML::TableBase<Type>::wordToBoundsHandling
 
 
 template<class Type>
-typename CML::TableBase<Type>::boundsHandling
-CML::TableBase<Type>::outOfBounds
+typename CML::DataEntryTypes::TableBase<Type>::boundsHandling
+CML::DataEntryTypes::TableBase<Type>::outOfBounds
 (
     const boundsHandling& bound
 )
@@ -356,11 +331,14 @@ CML::TableBase<Type>::outOfBounds
 
 
 template<class Type>
-void CML::TableBase<Type>::check() const
+void CML::DataEntryTypes::TableBase<Type>::check() const
 {
     if (!table_.size())
     {
-        FatalErrorIn("CML::TableBase<Type>::check() const")
+        FatalErrorIn
+        (
+            "bool CML::DataEntryTypes::TableBase<Type>::check()"
+        ) 
             << "Table for entry " << this->name_ << " is invalid (empty)"
             << nl << exit(FatalError);
     }
@@ -385,7 +363,7 @@ void CML::TableBase<Type>::check() const
 
 
 template<class Type>
-bool CML::TableBase<Type>::checkMinBounds
+bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds
 (
     const scalar x,
     scalar& xDash
@@ -399,12 +377,13 @@ bool CML::TableBase<Type>::checkMinBounds
             {
                 FatalErrorIn
                 (
-                    "bool CML::TableBase<Type>::checkMinBounds"
+                    "bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds"
                     "("
                         "const scalar, "
                         "scalar&"
                     ") const"
-                )   << "value (" << x << ") underflow"
+                ) 
+                    << "value (" << x << ") underflow"
                     << exit(FatalError);
                 break;
             }
@@ -412,12 +391,13 @@ bool CML::TableBase<Type>::checkMinBounds
             {
                 WarningIn
                 (
-                    "bool CML::TableBase<Type>::checkMinBounds"
+                    "bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds"
                     "("
                         "const scalar, "
                         "scalar&"
                     ") const"
-                )   << "value (" << x << ") underflow" << nl
+                )
+                    << "value (" << x << ") underflow" << nl
                     << endl;
 
                 // fall-through to 'CLAMP'
@@ -447,7 +427,7 @@ bool CML::TableBase<Type>::checkMinBounds
 
 
 template<class Type>
-bool CML::TableBase<Type>::checkMaxBounds
+bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds
 (
     const scalar x,
     scalar& xDash
@@ -461,12 +441,13 @@ bool CML::TableBase<Type>::checkMaxBounds
             {
                 FatalErrorIn
                 (
-                    "bool CML::TableBase<Type>::checkMaxBounds"
+                    "bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds"
                     "("
                         "const scalar, "
                         "scalar&"
                     ") const"
-                )   << "value (" << x << ") overflow"
+                )
+                    << "value (" << x << ") overflow"
                     << exit(FatalError);
                 break;
             }
@@ -474,12 +455,13 @@ bool CML::TableBase<Type>::checkMaxBounds
             {
                 WarningIn
                 (
-                    "bool CML::TableBase<Type>::checkMaxBounds"
+                    "bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds"
                     "("
                         "const scalar, "
                         "scalar&"
                     ") const"
-                )   << "value (" << x << ") overflow" << nl
+                ) 
+                    << "value (" << x << ") overflow" << nl
                     << endl;
 
                 // fall-through to 'CLAMP'
@@ -509,7 +491,7 @@ bool CML::TableBase<Type>::checkMaxBounds
 
 
 template<class Type>
-void CML::TableBase<Type>::convertTimeBase(const Time& t)
+void CML::DataEntryTypes::TableBase<Type>::convertTimeBase(const Time& t)
 {
     forAll(table_, i)
     {
@@ -523,7 +505,7 @@ void CML::TableBase<Type>::convertTimeBase(const Time& t)
 
 
 template<class Type>
-Type CML::TableBase<Type>::value(const scalar x) const
+Type CML::DataEntryTypes::TableBase<Type>::value(const scalar x) const
 {
     scalar xDash = x;
 
@@ -551,7 +533,11 @@ Type CML::TableBase<Type>::value(const scalar x) const
 
 
 template<class Type>
-Type CML::TableBase<Type>::integrate(const scalar x1, const scalar x2) const
+Type CML::DataEntryTypes::TableBase<Type>::integrate
+(
+    const scalar x1,
+    const scalar x2
+) const
 {
     // Use interpolator
     interpolator().integrationWeights(x1, x2, currentIndices_, currentWeights_);
@@ -567,30 +553,7 @@ Type CML::TableBase<Type>::integrate(const scalar x1, const scalar x2) const
 
 
 template<class Type>
-CML::dimensioned<Type> CML::TableBase<Type>::
-dimValue(const scalar x) const
-{
-    return dimensioned<Type>("dimensionedValue", dimensions_, this->value(x));
-}
-
-
-template<class Type>
-CML::dimensioned<Type> CML::TableBase<Type>::dimIntegrate
-(
-    const scalar x1, const scalar x2
-) const
-{
-    return dimensioned<Type>
-    (
-        "dimensionedValue",
-        dimensions_,
-        this->integrate(x2, x1)
-    );
-}
-
-
-template<class Type>
-CML::tmp<CML::scalarField> CML::TableBase<Type>::x() const
+CML::tmp<CML::scalarField> CML::DataEntryTypes::TableBase<Type>::x() const
 {
     tmp<scalarField> tfld(new scalarField(table_.size(), 0.0));
     scalarField& fld = tfld();
@@ -605,9 +568,9 @@ CML::tmp<CML::scalarField> CML::TableBase<Type>::x() const
 
 
 template<class Type>
-CML::tmp<CML::Field<Type> > CML::TableBase<Type>::y() const
+CML::tmp<CML::Field<Type> > CML::DataEntryTypes::TableBase<Type>::y() const
 {
-    tmp<Field<Type> > tfld(new Field<Type>(table_.size(), pTraits<Type>::zero));
+    tmp<Field<Type> > tfld(new Field<Type>(table_.size(), Zero));
     Field<Type>& fld = tfld();
 
     forAll(table_, i)
@@ -618,52 +581,9 @@ CML::tmp<CML::Field<Type> > CML::TableBase<Type>::y() const
     return tfld;
 }
 
-// * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
-
-#include "DataEntry.hpp"
-
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 template<class Type>
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const TableBase<Type>& tbl
-)
-{
-    if (os.format() == IOstream::ASCII)
-    {
-         os << token::SPACE << tbl.table_;
-    }
-    else
-    {
-        os.write
-        (
-            reinterpret_cast<const char*>(&tbl.table_),
-            tbl.table_.byteSize()
-        );
-    }
-
-    // Check state of Ostream
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const TableBase<Type>&, const bool)"
-    );
-
-    return os;
-}
-
-
-template<class Type>
-void CML::TableBase<Type>::writeData(Ostream& os) const
-{
-    os  << nl << indent << table_ << token::END_STATEMENT << nl;
-    writeEntries(os);
-}
-
-
-template<class Type>
-void CML::TableBase<Type>::writeEntries(Ostream& os) const
+void CML::DataEntryTypes::TableBase<Type>::writeEntries(Ostream& os) const
 {
     if (boundsHandling_ != CLAMP)
     {
@@ -678,9 +598,14 @@ void CML::TableBase<Type>::writeEntries(Ostream& os) const
 }
 
 
+template<class Type>
+void CML::DataEntryTypes::TableBase<Type>::writeData(Ostream& os) const
+{
+    DataEntry<Type>::writeData(os);
+    os  << nl << indent << table_ << token::END_STATEMENT << nl;
+    writeEntries(os);
+}
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

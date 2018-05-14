@@ -71,6 +71,9 @@ public:
 
     // Member Functions
 
+        //- Inherit interpolate from interpolation
+        using interpolation<Type>::interpolate;
+    
         //- Interpolate field for the given cellPointWeight
         inline Type interpolate(const pointMVCWeight& cpw) const;
 

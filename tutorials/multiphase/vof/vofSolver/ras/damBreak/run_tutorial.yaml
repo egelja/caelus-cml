@@ -1,0 +1,25 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      remove_extra:
+      - 0/alpha1
+
+  - copy_files:
+      src: "0/alpha1.org"
+      dest: "0/alpha1"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: funkySetFields
+      cmd_args: "-latestTime"
+
+  - run_command:
+      cmd_name: vofSolver
+
+  - process_logs:
+      log_file: vofSolver.log
+

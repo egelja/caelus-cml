@@ -122,6 +122,16 @@ public:
                 new slipFvPatchField<Type>(*this, iF)
             );
         }
+
+    // Member functions
+
+        // Attributes
+
+            //- Return false: this patch field is not altered by assignment
+            virtual bool assignable() const
+            {
+                return false;
+            }
 };
 
 

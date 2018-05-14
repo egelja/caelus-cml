@@ -61,8 +61,7 @@ class lduPrimitiveMesh
         lduInterfacePtrsList interfaces_;
 
         //- Patch field evaluation schedule.
-        //  Note this does not need to be held as a copy because it is invariant
-        const lduSchedule& patchSchedule_;
+        lduSchedule patchSchedule_;
 
 
     // Private Member Functions
@@ -77,6 +76,46 @@ class lduPrimitiveMesh
 public:
 
     // Constructors
+
+        //- Construct from components but without interfaces. Add interfaces
+        //  separately using addInterfaces
+        lduPrimitiveMesh
+        (
+            const label nCells,
+            labelList& l,
+            labelList& u,
+            bool reUse
+        )
+        :
+            lduAddressing(nCells),
+            lowerAddr_(l, reUse),
+            upperAddr_(u, reUse)
+        {}
+
+        //- Add interfaces to a mesh constructed without
+        void addInterfaces
+        (
+            const lduInterfacePtrsList& interfaces,
+            const labelListList& pa,
+            const lduSchedule& ps
+        )
+        {
+            interfaces_ = interfaces;
+            patchAddr_ = pa;
+            patchSchedule_ = ps;
+        }
+
+        //- Clear interfaces
+        void clearInterfaces()
+        {
+            forAll (interfaces_, i)
+            {
+                if (interfaces_.set(i))
+                {
+                    delete interfaces_(i);
+                }
+            }
+        }
 
         //- Construct from components as copies
         lduPrimitiveMesh
@@ -126,6 +165,12 @@ public:
 
     // Member Functions
 
+            //- Return number of interfaces
+            virtual label nPatches() const
+            {
+                return interfaces_.size();
+            }
+
         // Access
 
             //- Return ldu addressing
@@ -157,6 +202,11 @@ public:
             virtual const labelUList& patchAddr(const label i) const
             {
                 return patchAddr_[i];
+            }
+
+            virtual const labelUList& getPatchAddr(const label i) const
+            {
+	            return patchAddr_[i];
             }
 
             //- Return patch evaluation schedule

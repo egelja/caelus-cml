@@ -69,7 +69,7 @@ void CML::IOdictionary::readFile(const bool masterOnly)
         );
 
         // Master reads headerclassname from file. Make sure this gets
-        // transfered as well as contents.
+        // transferred as well as contents.
         Pstream::scatter
         (
             comms,

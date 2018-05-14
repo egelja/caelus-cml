@@ -87,7 +87,7 @@ public:
             return procPolyPatch_.myProcNo();
         }
 
-        //- Return neigbour processor number
+        //- Return neighbour processor number
         int neighbProcNo() const
         {
             return procPolyPatch_.neighbProcNo();
@@ -150,7 +150,10 @@ public:
             (
                 const labelUList& internalData
             ) const;
-
+    
+            //- Inherit initInternalFieldTransfer from coupledFvPatch
+            using coupledFvPatch::initInternalFieldTransfer;
+    
             //- Initialise neighbour field transfer
             virtual void initInternalFieldTransfer
             (

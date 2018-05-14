@@ -1,0 +1,46 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      remove_extra:
+      - constant/waveProperties
+      - 0/U
+      - 0/p_rgh
+      - 0/alpha1
+
+  - copy_files:
+      src: "0/U.org"
+      dest: "0/U"
+
+  - copy_files:
+      src: "0/p_rgh.org"
+      dest: "0/p_rgh"
+
+  - copy_files:
+      src: "0/alpha1.org"
+      dest: "0/alpha1"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: topoSet
+
+  - run_command:
+      cmd_name: subsetMesh
+      cmd_args: "-overwrite c0 -patch floatingObject"
+
+  - run_command:
+      cmd_name: setWaveParameters
+
+  - run_command:
+      cmd_name: setWaveField
+      cmd_args: "-latestTime"
+
+  - run_command:
+      cmd_name: vofSolver
+
+  - process_logs:
+      log_file: vofSolver.log
+

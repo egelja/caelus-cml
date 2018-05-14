@@ -11,6 +11,7 @@ def build_lib(baseenv, target, sources,
               caelus_inc, caelus_libs,
               prepend_args=None,
               append_args=None,
+              install_dir=None,
               lib_type="shared"):
     """Build a shared library
 
@@ -46,7 +47,7 @@ def build_lib(baseenv, target, sources,
         exe = libenv.StaticLibrary(target=target, source=sources)
     elif lib_type == "object":
         exe = libenv.Object(target=target, source=sources)
-    install_dir = libenv['LIB_PLATFORM_INSTALL']
+    install_dir = install_dir or libenv['LIB_PLATFORM_INSTALL']
     libenv.Alias('install', install_dir)
     libenv.Install(install_dir, exe)
 
@@ -60,7 +61,8 @@ def build_lib(baseenv, target, sources,
 def build_app(baseenv, target, sources,
               caelus_inc, caelus_libs,
               prepend_args=None,
-              append_args=None):
+              append_args=None,
+              install_dir=None):
     """Build an executable application
 
     Args:
@@ -83,7 +85,7 @@ def build_app(baseenv, target, sources,
                   appenv['LIBPATH_COMMON'] + appenv['LIBPATH_APPS'])
 
     exe = appenv.Program(target=target, source=sources)
-    install_dir = appenv['BIN_PLATFORM_INSTALL']
+    install_dir = install_dir or appenv['BIN_PLATFORM_INSTALL']
     appenv.Alias('install', install_dir)
     appenv.Install(install_dir, exe)
 
@@ -92,6 +94,69 @@ def build_app(baseenv, target, sources,
     if append_args is not None:
         appenv.Append(**append_args)
 
+    return appenv
+
+def build_user_lib(baseenv, target, sources,
+                   caelus_inc, caelus_libs,
+                   user_inc=None, user_libs=None,
+                   prepend_args=None,
+                   append_args=None,
+                   lib_type="shared"):
+    """Build a shared user library
+
+    Args:
+        baseenv (env): Caelus SCons build environment
+        target (str): Name of the build target
+        sources (list): List of sources for this target
+        caelus_inc (list): List of Caelus include paths
+        caelus_libs (list): List of libraries to be linked
+        user_inc (list): List of user include paths
+        user_libs (list): List of user libraries to be linked
+
+        prepend_args (dict): Set of (key, value) pairs to be prepended
+        append_args (dict): Set of (key, value) pairs to be appended
+    """
+    install_dir = baseenv['CAELUS_USER_LIBBIN']
+    libenv = build_lib(baseenv, target, sources, caelus_inc,
+                       caelus_libs, prepend_args, append_args,
+                       install_dir, lib_type)
+    user_src = libenv['CAELUS_USER_LIB_SRC']
+    if user_inc:
+        inc_dirs = [os.path.join(user_src, d) for d in user_inc]
+        libenv.Prepend(CPPPATH=inc_dirs)
+    if user_libs:
+        libenv.Append(LIBS=user_libs)
+    return libenv
+
+def build_user_app(baseenv, target, sources,
+                   caelus_inc, caelus_libs,
+                   user_inc=None, user_libs=None,
+                   prepend_args=None,
+                   append_args=None):
+    """Build an user executable application
+
+    Args:
+        baseenv (env): Caelus SCons build environment
+        target (str): Name of the build target
+        sources (list): List of sources for this target
+        caelus_inc (list): List of Caelus include paths
+        caelus_libs (list): List of libraries to be linked
+        user_inc (list): List of user include paths
+        user_libs (list): List of user libraries to be linked
+
+        prepend_args (dict): Set of (key, value) pairs to be prepended
+        append_args (dict): Set of (key, value) pairs to be appended
+    """
+    install_dir = baseenv['CAELUS_USER_APPBIN']
+    appenv = build_app(baseenv, target, sources, caelus_inc,
+                       caelus_libs, prepend_args, append_args,
+                       install_dir)
+    user_src = appenv['CAELUS_USER_LIB_SRC']
+    if user_inc:
+        inc_dirs = [os.path.join(user_src, d) for d in user_inc]
+        appenv.Prepend(CPPPATH=inc_dirs)
+    if user_libs:
+        appenv.Append(LIBS=user_libs)
     return appenv
 
 def process_lninclude(env, basedir,

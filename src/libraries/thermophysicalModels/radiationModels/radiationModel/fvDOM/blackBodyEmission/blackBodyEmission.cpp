@@ -169,9 +169,9 @@ CML::radiation::blackBodyEmission::blackBodyEmission
                     IOobject::NO_WRITE
                 ),
                 physicoChemical::sigma*pow4(T)
+
             )
         );
-
     }
 }
 
@@ -189,7 +189,7 @@ CML::scalar CML::radiation::blackBodyEmission::fLambdaT
     const scalar lambdaT
 ) const
 {
-    return  table_(lambdaT*1.0e6);
+    return table_(1e6*lambdaT);
 }
 
 
@@ -223,18 +223,36 @@ CML::radiation::blackBodyEmission::EbDeltaLambdaT
     }
     else
     {
+        scalarField& Ebif = Eb().dimensionedInternalField();
+
         forAll(T, i)
         {
-            scalar T1 = fLambdaT(band[1]*T[i]);
-            scalar T2 = fLambdaT(band[0]*T[i]);
-            dimensionedScalar fLambdaDelta
-            (
-                "fLambdaDelta",
-                dimless,
-                T1 - T2
-            );
-            Eb()[i] = Eb()[i]*fLambdaDelta.value();
+            const scalar T1 = fLambdaT(band[1]*T[i]);
+            const scalar T2 = fLambdaT(band[0]*T[i]);
+
+            Ebif[i] *= T1 - T2;
         }
+
+        volScalarField::GeometricBoundaryField& EbBf = Eb().boundaryField();
+
+        forAll(EbBf, patchi)
+        {
+            fvPatchScalarField& EbPf = EbBf[patchi];
+
+            if (!EbPf.coupled())
+            {
+                const scalarField& Tpf = T.boundaryField()[patchi];
+
+                forAll(EbPf, facei)
+                {
+                    const scalar T1 = fLambdaT(band[1]*Tpf[facei]);
+                    const scalar T2 = fLambdaT(band[0]*Tpf[facei]);
+
+                    EbPf[facei] *= T1 - T2;
+                }
+            }
+        }
+
         return Eb;
     }
 }

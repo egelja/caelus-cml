@@ -21,7 +21,27 @@ Class
     CML::wideBandDiffusiveRadiationMixedFvPatchScalarField
 
 Description
-    Radiation temperature specified
+    This boundary condition provides a wide-band, diffusive radiation
+    condition, where the patch temperature is specified.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        T            | temperature field name  | no          | T
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            wideBandDiffusiveRadiation;
+        value           uniform 0;
+    }
+    \endverbatim
+
+See also
+    CML::mixedFvPatchScalarField
+    CML::radiationCoupledBase
 
 SourceFiles
     wideBandDiffusiveRadiationMixedFvPatchScalarField.cpp

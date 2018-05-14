@@ -39,7 +39,6 @@ caelus_libs = [
 'specie',
 'compressibleRASModels',
 'compressibleLESModels',
-'genericPatchFields',
 'fvOptions',
 'sampling',
 'waves',

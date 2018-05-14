@@ -125,6 +125,9 @@ public:
         //- Return const object pointer
         inline const T* operator->() const;
 
+        //- Assignment to pointer changing this tmp to a temporary T
+        inline void operator=(T*);
+
         //- Assignment operator
         inline void operator=(const tmp<T>&);
 };

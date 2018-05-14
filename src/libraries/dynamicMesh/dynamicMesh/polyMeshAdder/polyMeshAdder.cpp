@@ -709,7 +709,7 @@ void CML::polyMeshAdder::mergePrimitives
         }
 
         // Copy cut face (since cutPoints are copied first no renumbering
-        // nessecary)
+        // necessary)
         allFaces[allFaceI] = cutFaces[i];
         allOwner[allFaceI] = mesh0.faceOwner()[mesh0FaceI];
         allNeighbour[allFaceI] = mesh1.faceOwner()[mesh1FaceI] + mesh0.nCells();

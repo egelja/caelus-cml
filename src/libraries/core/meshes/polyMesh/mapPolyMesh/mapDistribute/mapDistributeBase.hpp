@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2015-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -45,7 +45,7 @@ Note:
     followed by used-only elements of proc0, proc2, proc3.
     The constructed mapDistributeBase sends the local elements from and
     receives the remote elements into their compact position.
-    compactMap[procI] is the position of elements from procI in the compact
+    compactMap[proci] is the position of elements from proci in the compact
     map. compactMap[myProcNo()] is empty since trivial addressing.
 
     It rewrites the input global indices into indices into the constructed
@@ -81,6 +81,15 @@ class mapPolyMesh;
 class globalIndex;
 class PstreamBuffers;
 
+
+// Forward declaration of friend functions and operators
+
+class mapDistributeBase;
+
+Istream& operator>>(Istream&, mapDistributeBase&);
+Ostream& operator<<(Ostream&, const mapDistributeBase&);
+
+
 /*---------------------------------------------------------------------------*\
                            Class mapDistributeBase Declaration
 \*---------------------------------------------------------------------------*/
@@ -115,17 +124,21 @@ protected:
 
         static void checkReceivedSize
         (
-            const label procI,
+            const label proci,
             const label expectedSize,
             const label receivedSize
         );
 
+        //- Construct per processor compact addressing of the global elements
+        //  needed. The ones from the local processor are not included since
+        //  these are always all needed.
         void calcCompactAddressing
         (
             const globalIndex& globalNumbering,
             const labelList& elements,
             List<Map<label> >& compactMap
         ) const;
+
         void calcCompactAddressing
         (
             const globalIndex& globalNumbering,
@@ -347,8 +360,9 @@ public:
                 const int tag = UPstream::msgType()
             );
 
-            //- Distribute data. Note:schedule only used for Pstream::scheduled
-            //  for now, all others just use send-to-all, receive-from-all.
+            //- Distribute data. Note:schedule only used for
+            //  Pstream::scheduled for now, all others just use
+            //  send-to-all, receive-from-all.
             template<class T, class negateOp>
             static void distribute
             (
@@ -733,7 +747,13 @@ void CML::mapDistributeBase::distribute
             {
                 // I am send first, receive next
                 {
-                    OPstream toNbr(Pstream::scheduled, recvProc, 0, tag);
+                    OPstream toNbr
+                    (
+                        Pstream::scheduled,
+                        recvProc,
+                        0,
+                        tag
+                    );
 
                     const labelList& map = subMap[recvProc];
                     List<T> subField(map.size());
@@ -750,7 +770,13 @@ void CML::mapDistributeBase::distribute
                     toNbr << subField;
                 }
                 {
-                    IPstream fromNbr(Pstream::scheduled, recvProc, 0, tag);
+                    IPstream fromNbr
+                    (
+                        Pstream::scheduled,
+                        recvProc,
+                        0,
+                        tag
+                    );
                     List<T> subField(fromNbr);
 
                     const labelList& map = constructMap[recvProc];
@@ -772,7 +798,13 @@ void CML::mapDistributeBase::distribute
             {
                 // I am receive first, send next
                 {
-                    IPstream fromNbr(Pstream::scheduled, sendProc, 0, tag);
+                    IPstream fromNbr
+                    (
+                        Pstream::scheduled,
+                        sendProc,
+                        0,
+                        tag
+                    );
                     List<T> subField(fromNbr);
 
                     const labelList& map = constructMap[sendProc];
@@ -790,7 +822,13 @@ void CML::mapDistributeBase::distribute
                     );
                 }
                 {
-                    OPstream toNbr(Pstream::scheduled, sendProc, 0, tag);
+                    OPstream toNbr
+                    (
+                        Pstream::scheduled,
+                        sendProc,
+                        0,
+                        tag
+                    );
 
                     const labelList& map = subMap[sendProc];
                     List<T> subField(map.size());
@@ -1039,7 +1077,7 @@ void CML::mapDistributeBase::distribute
     else
     {
         FatalErrorIn("mapDistributeBase::distribute(..)")
-            << "Unknown communication schedule " << commsType
+            << "Unknown communication schedule " << int(commsType)
             << abort(FatalError);
     }
 }
@@ -1207,7 +1245,13 @@ void CML::mapDistributeBase::distribute
             {
                 // I am send first, receive next
                 {
-                    OPstream toNbr(Pstream::scheduled, recvProc, 0, tag);
+                    OPstream toNbr
+                    (
+                        Pstream::scheduled,
+                        recvProc,
+                        0,
+                        tag
+                    );
 
                     const labelList& map = subMap[recvProc];
 
@@ -1225,7 +1269,13 @@ void CML::mapDistributeBase::distribute
                     toNbr << subField;
                 }
                 {
-                    IPstream fromNbr(Pstream::scheduled, recvProc, 0, tag);
+                    IPstream fromNbr
+                    (
+                        Pstream::scheduled,
+                        recvProc,
+                        0,
+                        tag
+                    );
                     List<T> subField(fromNbr);
                     const labelList& map = constructMap[recvProc];
 
@@ -1246,7 +1296,13 @@ void CML::mapDistributeBase::distribute
             {
                 // I am receive first, send next
                 {
-                    IPstream fromNbr(Pstream::scheduled, sendProc, 0, tag);
+                    IPstream fromNbr
+                    (
+                        Pstream::scheduled,
+                        sendProc,
+                        0,
+                        tag
+                    );
                     List<T> subField(fromNbr);
                     const labelList& map = constructMap[sendProc];
 
@@ -1263,7 +1319,13 @@ void CML::mapDistributeBase::distribute
                     );
                 }
                 {
-                    OPstream toNbr(Pstream::scheduled, sendProc, 0, tag);
+                    OPstream toNbr
+                    (
+                        Pstream::scheduled,
+                        sendProc,
+                        0,
+                        tag
+                    );
 
                     const labelList& map = subMap[sendProc];
 

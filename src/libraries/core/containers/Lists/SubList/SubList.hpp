@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM 
 -------------------------------------------------------------------------------
 License
@@ -82,6 +82,9 @@ public:
         //- Allow cast to a const List<T>&
         inline operator const CML::List<T>&() const;
 
+        //- Assignment of all entries to the given list
+        inline void operator=(const UList<T>&);
+
         //- Assignment of all entries to the given value
         inline void operator=(const T&);
 };
@@ -153,6 +156,13 @@ template<class T>
 inline CML::SubList<T>::operator const CML::List<T>&() const
 {
     return *reinterpret_cast< const List<T>* >(this);
+}
+
+
+template<class T>
+inline void CML::SubList<T>::operator=(const UList<T>& l)
+{
+    UList<T>::assign(l);
 }
 
 

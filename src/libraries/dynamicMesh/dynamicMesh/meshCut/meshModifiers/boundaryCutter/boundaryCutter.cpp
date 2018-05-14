@@ -254,7 +254,7 @@ bool CML::boundaryCutter::splitFace
     else if (nSplitEdges + nModPoints == 1)
     {
         // single or multiple cuts on a single edge or single modified point
-        // Dont cut and let caller handle this.
+        // Don't cut and let caller handle this.
         Warning << "Face " << faceI << " has only one edge cut " << endl;
         return false;
     }
@@ -756,7 +756,7 @@ void CML::boundaryCutter::setRefinement
                 // Is external face so split
                 if (splitFace(faceI, pointToPos, edgeToAddedPoints, meshMod))
                 {
-                    // Successfull split
+                    // Successful split
                     faceUptodate[faceI] = true;
                 }
             }

@@ -18,7 +18,7 @@ import utils
 
 ### General Variables
 PROJECT_NAME     = "caelus"
-PROJECT_VERSION  = '7.04'
+PROJECT_VERSION  = '8.04'
 METIS_VERSION    = '5.1.0'
 GSL_VERSION      = '2.3'
 SCOTCH_VERSION   = '6.0.4'
@@ -143,6 +143,14 @@ def init_dependent_vars(env):
     PROJECT_INC_DIR = os.path.join(LIB_SRC,'core','lnInclude')
     EXTERNAL_DIR = os.path.join(prj_dir,'external')
     EXTERNAL_WINDOWS_DIR = os.path.join(EXTERNAL_DIR,'windows')
+
+    user_dir = env['USER_DIR']
+    CAELUS_USER_LIB_SRC = os.path.join(user_dir, 'src', 'libraries')
+    CAELUS_USER_APP_SRC = os.path.join(user_dir, 'src', 'libraries')
+    CAELUS_USER_APPBIN = os.path.join(user_dir, 'platforms',
+                                      BUILD_OPTION, 'bin')
+    CAELUS_USER_LIBBIN = os.path.join(user_dir, 'platforms',
+                                      BUILD_OPTION, 'lib')
     env.Append(
         BUILD_OPTION = BUILD_OPTION,
         BIN_PLATFORM_INSTALL = BIN_PLATFORM_INSTALL,
@@ -151,6 +159,10 @@ def init_dependent_vars(env):
         PROJECT_INC_DIR = PROJECT_INC_DIR,
         EXTERNAL_DIR = EXTERNAL_DIR,
         EXTERNAL_WINDOWS_DIR = EXTERNAL_WINDOWS_DIR,
+        CAELUS_USER_LIBBIN = CAELUS_USER_LIBBIN,
+        CAELUS_USER_APPBIN = CAELUS_USER_APPBIN,
+        CAELUS_USER_LIB_SRC = CAELUS_USER_LIB_SRC,
+        CAELUS_USER_APP_SRC = CAELUS_USER_APP_SRC,
     )
 
     if env['BUILD_METIS']:

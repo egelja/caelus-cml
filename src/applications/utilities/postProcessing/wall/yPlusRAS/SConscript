@@ -14,10 +14,10 @@ caelus_inc = [
 'turbulenceModels',
 'turbulenceModels/incompressible/turbulenceModel/lnInclude',
 'turbulenceModels/incompressible/RAS/lnInclude',
-'turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWallFunctions',
+'turbulenceModels/incompressible/turbulenceModel/derivedFvPatchFields/wallFunctions/nutWFs',
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'turbulenceModels/compressible/RAS/lnInclude',
-'turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWallFunctions',
+'turbulenceModels/compressible/turbulenceModel/derivedFvPatchFields/wallFunctions/mutWFs',
 'transportModels',
 'transportModels/incompressible/lnInclude',
 'thermophysicalModels/basic/lnInclude'
@@ -25,7 +25,6 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'genericPatchFields',
 'compressibleRASModels',
 'specie',
 'basicThermophysicalModels',

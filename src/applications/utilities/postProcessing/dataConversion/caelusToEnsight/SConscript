@@ -15,12 +15,13 @@ caelusToEnsight.cpp
 
 caelus_inc = [
 'lagrangian/basic/lnInclude',
-'sampling/lnInclude'
+'sampling/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'genericPatchFields',
+'dynamicMesh',
 'lagrangian',
 'sampling']
 

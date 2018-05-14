@@ -36,13 +36,7 @@ namespace CML
     namespace radiation
     {
         defineTypeNameAndDebug(P1, 0);
-
-        addToRunTimeSelectionTable
-        (
-            radiationModel,
-            P1,
-            dictionary
-        );
+        addToRadiationRunTimeSelectionTables(P1);
     }
 }
 
@@ -64,18 +58,88 @@ CML::radiation::P1::P1(const volScalarField& T)
         ),
         mesh_
     ),
-    Qr_
+    qr_
     (
         IOobject
         (
-            "Qr",
+            "qr",
             mesh_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_,
-        dimensionedScalar("Qr", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
+    ),
+    a_
+    (
+        IOobject
+        (
+            "a",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("a", dimless/dimLength, 0.0)
+    ),
+    e_
+    (
+        IOobject
+        (
+            "e",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("a", dimless/dimLength, 0.0)
+    ),
+    E_
+    (
+        IOobject
+        (
+            "E",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("E", dimMass/dimLength/pow3(dimTime), 0.0)
+    )
+{}
+
+
+CML::radiation::P1::P1(const dictionary& dict, const volScalarField& T)
+:
+    radiationModel(typeName, dict, T),
+    G_
+    (
+        IOobject
+        (
+            "G",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+    qr_
+    (
+        IOobject
+        (
+            "qr",
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
     ),
     a_
     (
@@ -171,14 +235,20 @@ void CML::radiation::P1::calculate()
         fvm::laplacian(gamma, G_)
       - fvm::Sp(a_, G_)
      ==
-      - 4.0*(e_*physicoChemical::sigma*pow4(T_) + E_)
+      - 4.0*(e_*physicoChemical::sigma*pow4(T_) ) - E_
     );
 
+    volScalarField::GeometricBoundaryField& qrBf = qr_.boundaryField();
+
     // Calculate radiative heat flux on boundaries.
-    forAll(mesh_.boundaryMesh(), patchI)
+    forAll(mesh_.boundaryMesh(), patchi)
     {
-        Qr_.boundaryField()[patchI] =
-            -gamma.boundaryField()[patchI]*G_.boundaryField()[patchI].snGrad();
+        if (!G_.boundaryField()[patchi].coupled())
+        {
+            qrBf[patchi] =
+                -gamma.boundaryField()[patchi]
+                *G_.boundaryField()[patchi].snGrad();
+        }
     }
 }
 
@@ -214,7 +284,7 @@ CML::radiation::P1::Ru() const
     const DimensionedField<scalar, volMesh> a =
         absorptionEmission_->aCont()().dimensionedInternalField();
 
-    return  a*G - 4.0*E;
+    return a*G - E;
 }
 
 

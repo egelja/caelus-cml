@@ -148,11 +148,11 @@ protected:
 
         // Sub-models
 
-            //- Heat transfer coefficient bewteen film surface and primary
+            //- Heat transfer coefficient between film surface and primary
             //  region [W/m2/K]
             autoPtr<heatTransferModel> htcs_;
 
-            //- Heat transfer coefficient bewteen wall and film [W/m2/K]
+            //- Heat transfer coefficient between wall and film [W/m2/K]
             autoPtr<heatTransferModel> htcw_;
 
             //- Phase change

@@ -59,10 +59,13 @@ public:
         //- Store object pointer
         inline explicit autoPtr(T* = 0);
 
-        //- Construct as copy by transfering pointer to this autoPtr and
+        //- Construct as copy by transferring pointer to this autoPtr and
         //  setting the arguments pointer to NULL
         inline autoPtr(const autoPtr<T>&);
 
+        //- Construct either by transferring pointer or cloning.
+        //  Should only be called with type that supports cloning
+        inline autoPtr(const autoPtr<T>&, const bool reuse);
 
     //- Destructor, delete object if pointer is not NULL
     inline ~autoPtr();
@@ -112,6 +115,9 @@ public:
 
             //- Return const object pointer
             inline const T* operator->() const;
+
+            //- Take over the object pointer from parameter
+            inline void operator=(T*);
 
             //- Take over the object pointer from parameter
             inline void operator=(const autoPtr<T>&);

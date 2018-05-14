@@ -40,6 +40,25 @@ inline CML::autoPtr<T>::autoPtr(const autoPtr<T>& ap)
 
 
 template<class T>
+inline CML::autoPtr<T>::autoPtr(const autoPtr<T>& ap, const bool reuse)
+{
+    if (reuse)
+    {
+        ptr_ = ap.ptr_;
+        ap.ptr_ = 0;
+    }
+    else if (ap.valid())
+    {
+        ptr_ = ap().clone().ptr();
+    }
+    else
+    {
+        ptr_ = 0;
+    }
+}
+
+
+template<class T>
 inline CML::autoPtr<T>::~autoPtr()
 {
     clear();
@@ -159,6 +178,13 @@ template<class T>
 inline const T* CML::autoPtr<T>::operator->() const
 {
     return const_cast<autoPtr<T>&>(*this).operator->();
+}
+
+
+template<class T>
+inline void CML::autoPtr<T>::operator=(T* p)
+{
+    reset(p);
 }
 
 

@@ -27,24 +27,55 @@ License
 #include "processorFvsPatchField.hpp"
 #include "processorCyclicPolyPatch.hpp"
 #include "processorCyclicFvPatchField.hpp"
-#include "processorCyclicFvsPatchField.hpp"
 #include "polyTopoChange.hpp"
 #include "removeCells.hpp"
 #include "polyModifyFace.hpp"
 #include "polyRemovePoint.hpp"
-#include "mergePoints.hpp"
 #include "mapDistributePolyMesh.hpp"
 #include "surfaceFields.hpp"
 #include "syncTools.hpp"
 #include "CompactListList.hpp"
+#include "fvMeshTools.hpp"
 #include "ListOps.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-
 namespace CML
 {
     defineTypeNameAndDebug(fvMeshDistribute, 0);
+
+//- Less function class that can be used for sorting processor patches
+class lessProcPatches
+{
+    const labelList& nbrProc_;
+    const labelList& referPatchID_;
+
+public:
+
+    lessProcPatches( const labelList& nbrProc, const labelList& referPatchID)
+    :
+        nbrProc_(nbrProc),
+        referPatchID_(referPatchID)
+    {}
+
+    bool operator()(const label a, const label b)
+    {
+        if (nbrProc_[a] < nbrProc_[b])
+        {
+            return true;
+        }
+        else if (nbrProc_[a] > nbrProc_[b])
+        {
+            return false;
+        }
+        else
+        {
+            // Equal neighbour processor
+            return referPatchID_[a] < referPatchID_[b];
+        }
+    }
+};
+
 }
 
 
@@ -171,14 +202,14 @@ void CML::fvMeshDistribute::checkEqualWordList
     Pstream::gatherList(allNames);
     Pstream::scatterList(allNames);
 
-    for (label procI = 1; procI < Pstream::nProcs(); procI++)
+    for (label proci = 1; proci < Pstream::nProcs(); proci++)
     {
-        if (allNames[procI] != allNames[0])
+        if (allNames[proci] != allNames[0])
         {
             FatalErrorIn("fvMeshDistribute::checkEqualWordList(..)")
                 << "When checking for equal " << msg.c_str() << " :" << endl
                 << "processor0 has:" << allNames[0] << endl
-                << "processor" << procI << " has:" << allNames[procI] << endl
+                << "processor" << proci << " has:" << allNames[proci] << endl
                 << msg.c_str() << " need to be synchronised on all processors."
                 << exit(FatalError);
         }
@@ -194,11 +225,11 @@ CML::wordList CML::fvMeshDistribute::mergeWordList(const wordList& procNames)
     Pstream::scatterList(allNames);
 
     HashSet<word> mergedNames;
-    forAll(allNames, procI)
+    forAll(allNames, proci)
     {
-        forAll(allNames[procI], i)
+        forAll(allNames[proci], i)
         {
-            mergedNames.insert(allNames[procI][i]);
+            mergedNames.insert(allNames[proci][i]);
         }
     }
     return mergedNames.toc();
@@ -218,11 +249,11 @@ void CML::fvMeshDistribute::printMeshInfo(const fvMesh& mesh)
     const fvBoundaryMesh& patches = mesh.boundary();
 
     Pout<< "Patches:" << endl;
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI].patch();
+        const polyPatch& pp = patches[patchi].patch();
 
-        Pout<< "    " << patchI << " name:" << pp.name()
+        Pout<< "    " << patchi << " name:" << pp.name()
             << " size:" << pp.size()
             << " start:" << pp.start()
             << " type:" << pp.type()
@@ -278,15 +309,15 @@ void CML::fvMeshDistribute::printCoupleInfo
         << "Current coupling info:"
         << endl;
 
-    forAll(sourceFace, bFaceI)
+    forAll(sourceFace, bFacei)
     {
-        label meshFaceI = mesh.nInternalFaces() + bFaceI;
+        label meshFacei = mesh.nInternalFaces() + bFacei;
 
-        Pout<< "    meshFace:" << meshFaceI
-            << " fc:" << mesh.faceCentres()[meshFaceI]
-            << " connects to proc:" << sourceProc[bFaceI]
-            << "/face:" << sourceFace[bFaceI]
-            << " which will move to proc:" << sourceNewNbrProc[bFaceI]
+        Pout<< "    meshFace:" << meshFacei
+            << " fc:" << mesh.faceCentres()[meshFacei]
+            << " connects to proc:" << sourceProc[bFacei]
+            << "/face:" << sourceFace[bFacei]
+            << " which will move to proc:" << sourceNewNbrProc[bFacei]
             << endl;
     }
 }
@@ -297,20 +328,20 @@ CML::label CML::fvMeshDistribute::findNonEmptyPatch() const
 {
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    label nonEmptyPatchI = -1;
+    label nonEmptyPatchi = -1;
 
-    forAllReverse(patches, patchI)
+    forAllReverse(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if (!isA<emptyPolyPatch>(pp) && !pp.coupled())
         {
-            nonEmptyPatchI = patchI;
+            nonEmptyPatchi = patchi;
             break;
         }
     }
 
-    if (nonEmptyPatchI == -1)
+    if (nonEmptyPatchi == -1)
     {
         FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
             << "Cannot find a patch which is neither of type empty nor"
@@ -321,186 +352,36 @@ CML::label CML::fvMeshDistribute::findNonEmptyPatch() const
 
     if (debug)
     {
-        Pout<< "findNonEmptyPatch : using patch " << nonEmptyPatchI
-            << " name:" << patches[nonEmptyPatchI].name()
-            << " type:" << patches[nonEmptyPatchI].type()
+        Pout<< "findNonEmptyPatch : using patch " << nonEmptyPatchi
+            << " name:" << patches[nonEmptyPatchi].name()
+            << " type:" << patches[nonEmptyPatchi].type()
             << " to put exposed faces into." << endl;
     }
 
 
     // Do additional test for processor patches intermingled with non-proc
     // patches.
-    label procPatchI = -1;
+    label procPatchi = -1;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<processorPolyPatch>(patches[patchI]))
+        if (isA<processorPolyPatch>(patches[patchi]))
         {
-            procPatchI = patchI;
+            procPatchi = patchi;
         }
-        else if (procPatchI != -1)
+        else if (procPatchi != -1)
         {
             FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
                 << "Processor patches should be at end of patch list."
                 << endl
-                << "Have processor patch " << procPatchI
-                << " followed by non-processor patch " << patchI
+                << "Have processor patch " << procPatchi
+                << " followed by non-processor patch " << patchi
                 << " in patches " << patches.names()
                 << abort(FatalError);
         }
     }
 
-    return nonEmptyPatchI;
-}
-
-
-//// Appends processorPolyPatch. Returns patchID.
-//CML::label CML::fvMeshDistribute::addProcPatch
-//(
-//    const word& patchName,
-//    const label nbrProc
-//)
-//{
-//    // Clear local fields and e.g. polyMesh globalMeshData.
-//    mesh_.clearOut();
-//
-//
-//    polyBoundaryMesh& polyPatches =
-//        const_cast<polyBoundaryMesh&>(mesh_.boundaryMesh());
-//    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh_.boundary());
-//
-//    if (polyPatches.findPatchID(patchName) != -1)
-//    {
-//        FatalErrorIn
-//        (
-//            "fvMeshDistribute::addProcPatch(const word&, const label)"
-//        )
-//            << "Cannot create patch " << patchName << " since already exists."
-//            << nl
-//            << "Current patch names:" << polyPatches.names()
-//            << exit(FatalError);
-//    }
-//
-//
-//
-//    // Add the patch
-//    // ~~~~~~~~~~~~~
-//
-//    label sz = polyPatches.size();
-//
-//    // Add polyPatch
-//    polyPatches.setSize(sz+1);
-//    polyPatches.set
-//    (
-//        sz,
-//        new processorPolyPatch
-//        (
-//            patchName,
-//            0,              // size
-//            mesh_.nFaces(),
-//            sz,
-//            mesh_.boundaryMesh(),
-//            Pstream::myProcNo(),
-//            nbrProc
-//        )
-//    );
-//    fvPatches.setSize(sz+1);
-//    fvPatches.set
-//    (
-//        sz,
-//        fvPatch::New
-//        (
-//            polyPatches[sz],  // point to newly added polyPatch
-//            mesh_.boundary()
-//        )
-//    );
-//
-//    return sz;
-//}
-
-
-// Appends polyPatch. Returns patchID.
-CML::label CML::fvMeshDistribute::addPatch(polyPatch* patchPtr)
-{
-    // Clear local fields and e.g. polyMesh globalMeshData.
-    mesh_.clearOut();
-
-    polyBoundaryMesh& polyPatches =
-        const_cast<polyBoundaryMesh&>(mesh_.boundaryMesh());
-    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh_.boundary());
-
-    if (polyPatches.findPatchID(patchPtr->name()) != -1)
-    {
-        FatalErrorIn("fvMeshDistribute::addPatch(polyPatch*)")
-            << "Cannot create patch " << patchPtr->name()
-            << " since already exists." << nl
-            << "Current patch names:" << polyPatches.names()
-            << exit(FatalError);
-    }
-
-
-    // Add the patch
-    // ~~~~~~~~~~~~~
-
-    label sz = polyPatches.size();
-
-    // Add polyPatch
-    polyPatches.setSize(sz+1);
-    polyPatches.set(sz, patchPtr);
-    fvPatches.setSize(sz+1);
-    fvPatches.set
-    (
-        sz,
-        fvPatch::New
-        (
-            polyPatches[sz],  // point to newly added polyPatch
-            mesh_.boundary()
-        )
-    );
-
-    return sz;
-}
-
-
-// Deletes last patch
-void CML::fvMeshDistribute::deleteTrailingPatch()
-{
-    // Clear local fields and e.g. polyMesh globalMeshData.
-    mesh_.clearOut();
-
-    polyBoundaryMesh& polyPatches =
-        const_cast<polyBoundaryMesh&>(mesh_.boundaryMesh());
-    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh_.boundary());
-
-    if (polyPatches.empty())
-    {
-        FatalErrorIn("fvMeshDistribute::deleteTrailingPatch(fvMesh&)")
-            << "No patches in mesh"
-            << abort(FatalError);
-    }
-
-    label sz = polyPatches.size();
-
-    label nFaces = polyPatches[sz-1].size();
-
-    // Remove last polyPatch
-    if (debug)
-    {
-        Pout<< "deleteTrailingPatch : Removing patch " << sz-1
-            << " : " << polyPatches[sz-1].name() << " size:" << nFaces << endl;
-    }
-
-    if (nFaces)
-    {
-        FatalErrorIn("fvMeshDistribute::deleteTrailingPatch()")
-            << "There are still " << nFaces << " faces in patch to be deleted "
-            << sz-1 << ' ' << polyPatches[sz-1].name()
-            << abort(FatalError);
-    }
-
-    // Remove actual patch
-    polyPatches.setSize(sz-1);
-    fvPatches.setSize(sz-1);
+    return nonEmptyPatchi;
 }
 
 
@@ -517,9 +398,9 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::deleteProcPatches
 
     label nProcPatches = 0;
 
-    forAll(mesh_.boundaryMesh(), patchI)
+    forAll(mesh_.boundaryMesh(), patchi)
     {
-        const polyPatch& pp = mesh_.boundaryMesh()[patchI];
+        const polyPatch& pp = mesh_.boundaryMesh()[patchi];
 
         if (isA<processorPolyPatch>(pp))
         {
@@ -549,25 +430,28 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::deleteProcPatches
 
 
     // Delete (now empty) processor patches.
-    forAllReverse(mesh_.boundaryMesh(), patchI)
     {
-        const polyPatch& pp = mesh_.boundaryMesh()[patchI];
-
-        if (isA<processorPolyPatch>(pp))
+        labelList oldToNew(identity(mesh_.boundaryMesh().size()));
+        label newI = 0;
+        // Non processor patches first
+        forAll(mesh_.boundaryMesh(), patchi)
         {
-            deleteTrailingPatch();
-            deleteTrailingPatchFields<volScalarField>();
-            deleteTrailingPatchFields<volVectorField>();
-            deleteTrailingPatchFields<volSphericalTensorField>();
-            deleteTrailingPatchFields<volSymmTensorField>();
-            deleteTrailingPatchFields<volTensorField>();
-
-            deleteTrailingPatchFields<surfaceScalarField>();
-            deleteTrailingPatchFields<surfaceVectorField>();
-            deleteTrailingPatchFields<surfaceSphericalTensorField>();
-            deleteTrailingPatchFields<surfaceSymmTensorField>();
-            deleteTrailingPatchFields<surfaceTensorField>();
+            if (!isA<processorPolyPatch>(mesh_.boundaryMesh()[patchi]))
+            {
+                oldToNew[patchi] = newI++;
+            }
         }
+        label nNonProcPatches = newI;
+
+        // Processor patches as last
+        forAll(mesh_.boundaryMesh(), patchi)
+        {
+            if (isA<processorPolyPatch>(mesh_.boundaryMesh()[patchi]))
+            {
+                oldToNew[patchi] = newI++;
+            }
+        }
+        fvMeshTools::reorderPatches(mesh_, oldToNew, nNonProcPatches, false);
     }
 
     return map;
@@ -583,31 +467,31 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::repatch
 {
     polyTopoChange meshMod(mesh_);
 
-    forAll(newPatchID, bFaceI)
+    forAll(newPatchID, bFacei)
     {
-        if (newPatchID[bFaceI] != -1)
+        if (newPatchID[bFacei] != -1)
         {
-            label faceI = mesh_.nInternalFaces() + bFaceI;
+            label facei = mesh_.nInternalFaces() + bFacei;
 
-            label zoneID = mesh_.faceZones().whichZone(faceI);
+            label zoneID = mesh_.faceZones().whichZone(facei);
             bool zoneFlip = false;
 
             if (zoneID >= 0)
             {
                 const faceZone& fZone = mesh_.faceZones()[zoneID];
-                zoneFlip = fZone.flipMap()[fZone.whichFace(faceI)];
+                zoneFlip = fZone.flipMap()[fZone.whichFace(facei)];
             }
 
             meshMod.setAction
             (
                 polyModifyFace
                 (
-                    mesh_.faces()[faceI],       // modified face
-                    faceI,                      // label of face
-                    mesh_.faceOwner()[faceI],   // owner
+                    mesh_.faces()[facei],       // modified face
+                    facei,                      // label of face
+                    mesh_.faceOwner()[facei],   // owner
                     -1,                         // neighbour
                     false,                      // face flip
-                    newPatchID[bFaceI],         // patch for face
+                    newPatchID[bFacei],         // patch for face
                     false,                      // remove from zone
                     zoneID,                     // zone for face
                     zoneFlip                    // face flip in zone
@@ -677,16 +561,17 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::repatch
         }
     }
 
-    forAll(constructFaceMap, procI)
+    forAll(constructFaceMap, proci)
     {
         inplaceRenumberWithFlip
         (
             map().reverseFaceMap(),
             false,
             true,
-            constructFaceMap[procI]
+            constructFaceMap[proci]
         );
     }
+
 
     return map;
 }
@@ -729,29 +614,29 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::mergeSharedPoints
     mesh_.updateMesh(map);
 
     // Adapt constructMaps for merged points.
-    forAll(constructPointMap, procI)
+    forAll(constructPointMap, proci)
     {
-        labelList& constructMap = constructPointMap[procI];
+        labelList& constructMap = constructPointMap[proci];
 
         forAll(constructMap, i)
         {
-            label oldPointI = constructMap[i];
+            label oldPointi = constructMap[i];
 
-            label newPointI = map().reversePointMap()[oldPointI];
+            label newPointi = map().reversePointMap()[oldPointi];
 
-            if (newPointI < -1)
+            if (newPointi < -1)
             {
-                constructMap[i] = -newPointI-2;
+                constructMap[i] = -newPointi-2;
             }
-            else if (newPointI >= 0)
+            else if (newPointi >= 0)
             {
-                constructMap[i] = newPointI;
+                constructMap[i] = newPointi;
             }
             else
             {
                 FatalErrorIn("fvMeshDistribute::mergeSharedPoints()")
-                    << "Problem. oldPointI:" << oldPointI
-                    << " newPointI:" << newPointI << abort(FatalError);
+                    << "Problem. oldPointi:" << oldPointi
+                    << " newPointi:" << newPointi << abort(FatalError);
             }
         }
     }
@@ -781,9 +666,9 @@ void CML::fvMeshDistribute::getNeighbourData
     labelList nbrFaces(nBnd, -1);
     labelList nbrNewNbrProc(nBnd, -1);
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if (pp.coupled())
         {
@@ -810,9 +695,9 @@ void CML::fvMeshDistribute::getNeighbourData
     syncTools::swapBoundaryFaceList(mesh_, nbrNewNbrProc);
 
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
         label offset = pp.start() - mesh_.nInternalFaces();
 
         if (isA<processorPolyPatch>(pp))
@@ -846,10 +731,10 @@ void CML::fvMeshDistribute::getNeighbourData
             }
 
 
-            label patchI = -1;
+            label patchi = -1;
             if (isA<processorCyclicPolyPatch>(pp))
             {
-                patchI = refCast<const processorCyclicPolyPatch>
+                patchi = refCast<const processorCyclicPolyPatch>
                 (
                     pp
                 ).referPatchID();
@@ -858,7 +743,7 @@ void CML::fvMeshDistribute::getNeighbourData
             forAll(pp, i)
             {
                 label bndI = offset + i;
-                sourcePatch[bndI] = patchI;
+                sourcePatch[bndI] = patchi;
             }
         }
         else if (isA<cyclicPolyPatch>(pp))
@@ -872,7 +757,7 @@ void CML::fvMeshDistribute::getNeighbourData
                     label bndI = offset + i;
                     sourceFace[bndI] = pp.start()+i;
                     sourceProc[bndI] = Pstream::myProcNo();
-                    sourcePatch[bndI] = patchI;
+                    sourcePatch[bndI] = patchi;
                     sourceNewNbrProc[bndI] = nbrNewNbrProc[bndI];
                 }
             }
@@ -883,7 +768,7 @@ void CML::fvMeshDistribute::getNeighbourData
                     label bndI = offset + i;
                     sourceFace[bndI] = nbrFaces[bndI];
                     sourceProc[bndI] = Pstream::myProcNo();
-                    sourcePatch[bndI] = patchI;
+                    sourcePatch[bndI] = patchi;
                     sourceNewNbrProc[bndI] = nbrNewNbrProc[bndI];
                 }
             }
@@ -896,7 +781,7 @@ void CML::fvMeshDistribute::getNeighbourData
                 label bndI = offset + i;
                 sourceFace[bndI] = -1;
                 sourceProc[bndI] = -1;
-                sourcePatch[bndI] = patchI;
+                sourcePatch[bndI] = patchi;
                 sourceNewNbrProc[bndI] = -1;
             }
         }
@@ -932,42 +817,42 @@ void CML::fvMeshDistribute::subsetBoundaryData
     subPatch.setSize(mesh.nFaces() - mesh.nInternalFaces());
     subNewNbrProc.setSize(mesh.nFaces() - mesh.nInternalFaces());
 
-    forAll(subFace, newBFaceI)
+    forAll(subFace, newBFacei)
     {
-        label newFaceI = newBFaceI + mesh.nInternalFaces();
+        label newFacei = newBFacei + mesh.nInternalFaces();
 
-        label oldFaceI = faceMap[newFaceI];
+        label oldFacei = faceMap[newFacei];
 
-        // Was oldFaceI internal face? If so which side did we get.
-        if (oldFaceI < oldInternalFaces)
+        // Was oldFacei internal face? If so which side did we get.
+        if (oldFacei < oldInternalFaces)
         {
-            subFace[newBFaceI] = oldFaceI;
-            subProc[newBFaceI] = Pstream::myProcNo();
-            subPatch[newBFaceI] = -1;
+            subFace[newBFacei] = oldFacei;
+            subProc[newBFacei] = Pstream::myProcNo();
+            subPatch[newBFacei] = -1;
 
-            label oldOwn = oldFaceOwner[oldFaceI];
-            label oldNei = oldFaceNeighbour[oldFaceI];
+            label oldOwn = oldFaceOwner[oldFacei];
+            label oldNei = oldFaceNeighbour[oldFacei];
 
-            if (oldOwn == cellMap[mesh.faceOwner()[newFaceI]])
+            if (oldOwn == cellMap[mesh.faceOwner()[newFacei]])
             {
                 // We kept the owner side. Where does the neighbour move to?
-                subNewNbrProc[newBFaceI] = oldDistribution[oldNei];
+                subNewNbrProc[newBFacei] = oldDistribution[oldNei];
             }
             else
             {
                 // We kept the neighbour side.
-                subNewNbrProc[newBFaceI] = oldDistribution[oldOwn];
+                subNewNbrProc[newBFacei] = oldDistribution[oldOwn];
             }
         }
         else
         {
             // Was boundary face. Take over boundary information
-            label oldBFaceI = oldFaceI - oldInternalFaces;
+            label oldBFacei = oldFacei - oldInternalFaces;
 
-            subFace[newBFaceI] = sourceFace[oldBFaceI];
-            subProc[newBFaceI] = sourceProc[oldBFaceI];
-            subPatch[newBFaceI] = sourcePatch[oldBFaceI];
-            subNewNbrProc[newBFaceI] = sourceNewNbrProc[oldBFaceI];
+            subFace[newBFacei] = sourceFace[oldBFacei];
+            subProc[newBFacei] = sourceProc[oldBFacei];
+            subPatch[newBFacei] = sourcePatch[oldBFacei];
+            subNewNbrProc[newBFacei] = sourceNewNbrProc[oldBFacei];
         }
     }
 }
@@ -996,14 +881,14 @@ void CML::fvMeshDistribute::findCouples
     // with same face+proc.
     HashTable<label, labelPair, labelPair::Hash<> > map(domainFace.size());
 
-    forAll(domainProc, bFaceI)
+    forAll(domainProc, bFacei)
     {
-        if (domainProc[bFaceI] != -1 && domainPatch[bFaceI] == -1)
+        if (domainProc[bFacei] != -1 && domainPatch[bFacei] == -1)
         {
             map.insert
             (
-                labelPair(domainFace[bFaceI], domainProc[bFaceI]),
-                bFaceI
+                labelPair(domainFace[bFacei], domainProc[bFacei]),
+                bFacei
             );
         }
     }
@@ -1015,23 +900,23 @@ void CML::fvMeshDistribute::findCouples
     slaveCoupledFaces.setSize(domainFace.size());
     label coupledI = 0;
 
-    forAll(sourceFace, bFaceI)
+    forAll(sourceFace, bFacei)
     {
-        if (sourceProc[bFaceI] != -1 && sourcePatch[bFaceI] == -1)
+        if (sourceProc[bFacei] != -1 && sourcePatch[bFacei] == -1)
         {
-            labelPair myData(sourceFace[bFaceI], sourceProc[bFaceI]);
+            labelPair myData(sourceFace[bFacei], sourceProc[bFacei]);
 
             HashTable<label, labelPair, labelPair::Hash<> >::const_iterator
                 iter = map.find(myData);
 
             if (iter != map.end())
             {
-                label nbrBFaceI = iter();
+                label nbrBFacei = iter();
 
-                masterCoupledFaces[coupledI] = mesh.nInternalFaces() + bFaceI;
+                masterCoupledFaces[coupledI] = mesh.nInternalFaces() + bFacei;
                 slaveCoupledFaces[coupledI] =
                     domainMesh.nInternalFaces()
-                  + nbrBFaceI;
+                  + nbrBFacei;
 
                 coupledI++;
             }
@@ -1061,26 +946,26 @@ CML::labelList CML::fvMeshDistribute::mapBoundaryData
 {
     labelList newBoundaryData(mesh.nFaces() - mesh.nInternalFaces());
 
-    forAll(boundaryData0, oldBFaceI)
+    forAll(boundaryData0, oldBFacei)
     {
-        label newFaceI = map.oldFaceMap()[oldBFaceI + map.nOldInternalFaces()];
+        label newFacei = map.oldFaceMap()[oldBFacei + map.nOldInternalFaces()];
 
         // Face still exists (is necessary?) and still boundary face
-        if (newFaceI >= 0 && newFaceI >= mesh.nInternalFaces())
+        if (newFacei >= 0 && newFacei >= mesh.nInternalFaces())
         {
-            newBoundaryData[newFaceI - mesh.nInternalFaces()] =
-                boundaryData0[oldBFaceI];
+            newBoundaryData[newFacei - mesh.nInternalFaces()] =
+                boundaryData0[oldBFacei];
         }
     }
 
-    forAll(boundaryData1, addedBFaceI)
+    forAll(boundaryData1, addedBFacei)
     {
-        label newFaceI = map.addedFaceMap()[addedBFaceI + nInternalFaces1];
+        label newFacei = map.addedFaceMap()[addedBFacei + nInternalFaces1];
 
-        if (newFaceI >= 0 && newFaceI >= mesh.nInternalFaces())
+        if (newFacei >= 0 && newFacei >= mesh.nInternalFaces())
         {
-            newBoundaryData[newFaceI - mesh.nInternalFaces()] =
-                boundaryData1[addedBFaceI];
+            newBoundaryData[newFacei - mesh.nInternalFaces()] =
+                boundaryData1[addedBFacei];
         }
     }
 
@@ -1088,11 +973,11 @@ CML::labelList CML::fvMeshDistribute::mapBoundaryData
 }
 
 
-// Remove cells. Add all exposed faces to patch oldInternalPatchI
+// Remove cells. Add all exposed faces to patch oldInternalPatchi
 CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::doRemoveCells
 (
     const labelList& cellsToRemove,
-    const label oldInternalPatchI
+    const label oldInternalPatchi
 )
 {
     // Mesh change engine
@@ -1110,16 +995,49 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::doRemoveCells
     (
         cellsToRemove,
         exposedFaces,
-        labelList(exposedFaces.size(), oldInternalPatchI),  // patch for exposed
+        labelList(exposedFaces.size(), oldInternalPatchi),  // patch for exposed
                                                             // faces.
         meshMod
     );
+
+
+    //// Generate test field
+    //tmp<surfaceScalarField> sfld(generateTestField(mesh_));
+
+    // Save internal fields (note: not as DimensionedFields since would
+    // get mapped)
+    PtrList<Field<scalar> > sFlds;
+    saveInternalFields(sFlds);
+    PtrList<Field<vector> > vFlds;
+    saveInternalFields(vFlds);
+    PtrList<Field<sphericalTensor> > sptFlds;
+    saveInternalFields(sptFlds);
+    PtrList<Field<symmTensor> > sytFlds;
+    saveInternalFields(sytFlds);
+    PtrList<Field<tensor> > tFlds;
+    saveInternalFields(tFlds);
 
     // Change the mesh. No inflation. Note: no parallel comms allowed.
     autoPtr<mapPolyMesh> map = meshMod.changeMesh(mesh_, false, false);
 
     // Update fields
     mesh_.updateMesh(map);
+
+
+    // Any exposed faces in a surfaceField will not be mapped. Map the value
+    // of these separately (until there is support in all PatchFields for
+    // mapping from internal faces ...)
+
+    mapExposedFaces(map(), sFlds);
+    mapExposedFaces(map(), vFlds);
+    mapExposedFaces(map(), sptFlds);
+    mapExposedFaces(map(), sytFlds);
+    mapExposedFaces(map(), tFlds);
+
+
+    //// Test test field
+    //testField(sfld);
+
 
     // Move mesh (since morphing does not do this)
     if (map().hasMotionPoints())
@@ -1144,20 +1062,28 @@ void CML::fvMeshDistribute::addProcPatches
     // contain for all current boundary faces the global patchID (for non-proc
     // patch) or the processor.
 
+    // Determine a visit order such that the processor patches get added
+    // in order of increasing neighbour processor (and for same neighbour
+    // processor (in case of processor cyclics) in order of increasing
+    // 'refer' patch)
+    labelList indices;
+    sortedOrder(nbrProc, indices, lessProcPatches(nbrProc, referPatchID));
+
     procPatchID.setSize(Pstream::nProcs());
 
-    forAll(nbrProc, bFaceI)
+    forAll(indices, i)
     {
-        label procI = nbrProc[bFaceI];
+        label bFacei = indices[i];
+        label proci = nbrProc[bFacei];
 
-        if (procI != -1 && procI != Pstream::myProcNo())
+        if (proci != -1 && proci != Pstream::myProcNo())
         {
-            if (!procPatchID[procI].found(referPatchID[bFaceI]))
+            if (!procPatchID[proci].found(referPatchID[bFacei]))
             {
                 // No patch for neighbour yet. Is either a normal processor
                 // patch or a processorCyclic patch.
 
-                if (referPatchID[bFaceI] == -1)
+                if (referPatchID[bFacei] == -1)
                 {
                     // Ordinary processor boundary
 
@@ -1165,143 +1091,75 @@ void CML::fvMeshDistribute::addProcPatches
                         "procBoundary"
                       + name(Pstream::myProcNo())
                       + "to"
-                      + name(procI);
+                      + name(proci);
 
-                    procPatchID[procI].insert
+                    processorPolyPatch pp
                     (
-                        referPatchID[bFaceI],
-                        addPatch
+                        patchName,
+                        0,              // size
+                        mesh_.nFaces(),
+                        mesh_.boundaryMesh().size(),
+                        mesh_.boundaryMesh(),
+                        Pstream::myProcNo(),
+                        proci
+                    );
+
+                    procPatchID[proci].insert
+                    (
+                        referPatchID[bFacei],
+                        fvMeshTools::addPatch
                         (
-                            new processorPolyPatch
-                            (
-                                patchName,
-                                0,              // size
-                                mesh_.nFaces(),
-                                mesh_.boundaryMesh().size(),
-                                mesh_.boundaryMesh(),
-                                Pstream::myProcNo(),
-                                nbrProc[bFaceI]
-                            )
+                            mesh_,
+                            pp,
+                            dictionary(),   // optional per field patchField
+                            processorFvPatchField<scalar>::typeName,
+                            false           // not parallel sync
                         )
-                    );
-
-                    addPatchFields<volScalarField>
-                    (
-                        processorFvPatchField<scalar>::typeName
-                    );
-                    addPatchFields<volVectorField>
-                    (
-                        processorFvPatchField<vector>::typeName
-                    );
-                    addPatchFields<volSphericalTensorField>
-                    (
-                        processorFvPatchField<sphericalTensor>::typeName
-                    );
-                    addPatchFields<volSymmTensorField>
-                    (
-                        processorFvPatchField<symmTensor>::typeName
-                    );
-                    addPatchFields<volTensorField>
-                    (
-                        processorFvPatchField<tensor>::typeName
-                    );
-
-                    addPatchFields<surfaceScalarField>
-                    (
-                        processorFvPatchField<scalar>::typeName
-                    );
-                    addPatchFields<surfaceVectorField>
-                    (
-                        processorFvPatchField<vector>::typeName
-                    );
-                    addPatchFields<surfaceSphericalTensorField>
-                    (
-                        processorFvPatchField<sphericalTensor>::typeName
-                    );
-                    addPatchFields<surfaceSymmTensorField>
-                    (
-                        processorFvPatchField<symmTensor>::typeName
-                    );
-                    addPatchFields<surfaceTensorField>
-                    (
-                        processorFvPatchField<tensor>::typeName
                     );
                 }
                 else
                 {
+                    const coupledPolyPatch& pcPatch
+                        = refCast<const coupledPolyPatch>
+                          (
+                              mesh_.boundaryMesh()[referPatchID[bFacei]]
+                          );
+
                     // Processor boundary originating from cyclic
-                    const word& cycName = mesh_.boundaryMesh()
-                    [
-                        referPatchID[bFaceI]
-                    ].name();
+                    const word& cycName = pcPatch.name();
 
                     const word patchName =
                         "procBoundary"
                       + name(Pstream::myProcNo())
                       + "to"
-                      + name(procI)
+                      + name(proci)
                       + "through"
                       + cycName;
 
-                    procPatchID[procI].insert
+                    processorCyclicPolyPatch pp
                     (
-                        referPatchID[bFaceI],
-                        addPatch
+                        patchName,
+                        0,              // size
+                        mesh_.nFaces(),
+                        mesh_.boundaryMesh().size(),
+                        mesh_.boundaryMesh(),
+                        Pstream::myProcNo(),
+                        proci,
+                        cycName,
+                        pcPatch.transform()
+                    );
+
+                    procPatchID[proci].insert
+                    (
+                        referPatchID[bFacei],
+                        fvMeshTools::addPatch
                         (
-                            new processorCyclicPolyPatch
-                            (
-                                patchName,
-                                0,              // size
-                                mesh_.nFaces(),
-                                mesh_.boundaryMesh().size(),
-                                mesh_.boundaryMesh(),
-                                Pstream::myProcNo(),
-                                nbrProc[bFaceI],
-                                cycName
-                            )
+                            mesh_,
+                            pp,
+                            dictionary(),   // optional per field patchField
+                            processorCyclicFvPatchField<scalar>::typeName,
+                            false           // not parallel sync
                         )
-                    );
-
-                    addPatchFields<volScalarField>
-                    (
-                        processorCyclicFvPatchField<scalar>::typeName
-                    );
-                    addPatchFields<volVectorField>
-                    (
-                        processorCyclicFvPatchField<vector>::typeName
-                    );
-                    addPatchFields<volSphericalTensorField>
-                    (
-                        processorCyclicFvPatchField<sphericalTensor>::typeName
-                    );
-                    addPatchFields<volSymmTensorField>
-                    (
-                        processorCyclicFvPatchField<symmTensor>::typeName
-                    );
-                    addPatchFields<volTensorField>
-                    (
-                        processorCyclicFvPatchField<tensor>::typeName
-                    );
-
-                    addPatchFields<surfaceScalarField>
-                    (
-                        processorCyclicFvPatchField<scalar>::typeName
-                    );
-                    addPatchFields<surfaceVectorField>
-                    (
-                        processorCyclicFvPatchField<vector>::typeName
-                    );
-                    addPatchFields<surfaceSphericalTensorField>
-                    (
-                        processorCyclicFvPatchField<sphericalTensor>::typeName
-                    );
-                    addPatchFields<surfaceSymmTensorField>
-                    (
-                        processorCyclicFvPatchField<symmTensor>::typeName
-                    );
-                    addPatchFields<surfaceTensorField>
-                    (
-                        processorCyclicFvPatchField<tensor>::typeName
                     );
                 }
             }
@@ -1320,21 +1178,21 @@ CML::labelList CML::fvMeshDistribute::getBoundaryPatch
 {
     labelList patchIDs(nbrProc);
 
-    forAll(nbrProc, bFaceI)
+    forAll(nbrProc, bFacei)
     {
-        if (nbrProc[bFaceI] == Pstream::myProcNo())
+        if (nbrProc[bFacei] == Pstream::myProcNo())
         {
-            label origPatchI = referPatchID[bFaceI];
-            patchIDs[bFaceI] = origPatchI;
+            label origPatchi = referPatchID[bFacei];
+            patchIDs[bFacei] = origPatchi;
         }
-        else if (nbrProc[bFaceI] != -1)
+        else if (nbrProc[bFacei] != -1)
         {
-            label origPatchI = referPatchID[bFaceI];
-            patchIDs[bFaceI] = procPatchID[nbrProc[bFaceI]][origPatchI];
+            label origPatchi = referPatchID[bFacei];
+            patchIDs[bFacei] = procPatchID[nbrProc[bFacei]][origPatchi];
         }
         else
         {
-            patchIDs[bFaceI] = -1;
+            patchIDs[bFacei] = -1;
         }
     }
     return patchIDs;
@@ -1557,13 +1415,13 @@ CML::autoPtr<CML::fvMesh> CML::fvMeshDistribute::receiveMesh
 
     List<polyPatch*> patches(patchEntries.size());
 
-    forAll(patchEntries, patchI)
+    forAll(patchEntries, patchi)
     {
-        patches[patchI] = polyPatch::New
+        patches[patchi] = polyPatch::New
         (
-            patchEntries[patchI].keyword(),
-            patchEntries[patchI].dict(),
-            patchI,
+            patchEntries[patchi].keyword(),
+            patchEntries[patchi].dict(),
+            patchi,
             domainMesh.boundaryMesh()
         ).ptr();
     }
@@ -1631,16 +1489,16 @@ CML::labelList CML::fvMeshDistribute::countCells
 )
 {
     labelList nCells(Pstream::nProcs(), 0);
-    forAll(distribution, cellI)
+    forAll(distribution, celli)
     {
-        label newProc = distribution[cellI];
+        label newProc = distribution[celli];
 
         if (newProc < 0 || newProc >= Pstream::nProcs())
         {
             FatalErrorIn("fvMeshDistribute::distribute(const labelList&)")
                 << "Distribution should be in range 0.." << Pstream::nProcs()-1
                 << endl
-                << "At index " << cellI << " distribution:" << newProc
+                << "At index " << celli << " distribution:" << newProc
                 << abort(FatalError);
         }
         nCells[newProc]++;
@@ -1684,10 +1542,10 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
     const label nOldCells(mesh_.nCells());
     labelList oldPatchStarts(patches.size());
     labelList oldPatchNMeshPoints(patches.size());
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        oldPatchStarts[patchI] = patches[patchI].start();
-        oldPatchNMeshPoints[patchI] = patches[patchI].nPoints();
+        oldPatchStarts[patchi] = patches[patchi].start();
+        oldPatchNMeshPoints[patchi] = patches[patchi].nPoints();
     }
 
 
@@ -1851,15 +1709,15 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
 
 
     // Find patch to temporarily put exposed and processor faces into.
-    label oldInternalPatchI = findNonEmptyPatch();
+    label oldInternalPatchi = findNonEmptyPatch();
 
 
 
     // Delete processor patches, starting from the back. Move all faces into
-    // oldInternalPatchI.
+    // oldInternalPatchi.
     labelList repatchFaceMap;
     {
-        autoPtr<mapPolyMesh> repatchMap = deleteProcPatches(oldInternalPatchI);
+        autoPtr<mapPolyMesh> repatchMap = deleteProcPatches(oldInternalPatchi);
 
         // Store face map (only face ordering that changed)
         repatchFaceMap = repatchMap().faceMap();
@@ -1968,7 +1826,7 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
             (
                 distribution,
                 recvProc,
-                oldInternalPatchI,  // oldInternalFaces patch
+                oldInternalPatchi,  // oldInternalFaces patch
                 false               // no parallel sync
             );
 
@@ -2150,7 +2008,7 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
             doRemoveCells
             (
                 select(false, distribution, Pstream::myProcNo()),
-                oldInternalPatchI
+                oldInternalPatchi
             )
         );
 
@@ -2584,21 +2442,21 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
             const labelList& oldPatchMap = map().oldPatchMap();
 
             //Note: old mesh faces never flipped!
-            forAll(constructPatchMap, procI)
+            forAll(constructPatchMap, proci)
             {
-                if (procI != sendProc && constructPatchMap[procI].size())
+                if (proci != sendProc && constructPatchMap[proci].size())
                 {
                     // Processor already in mesh (either myProcNo or received)
-                    inplaceRenumber(oldCellMap, constructCellMap[procI]);
+                    inplaceRenumber(oldCellMap, constructCellMap[proci]);
                     inplaceRenumberWithFlip
                     (
                         oldFaceMap,
                         false,
                         true,
-                        constructFaceMap[procI]
+                        constructFaceMap[proci]
                     );
-                    inplaceRenumber(oldPointMap, constructPointMap[procI]);
-                    inplaceRenumber(oldPatchMap, constructPatchMap[procI]);
+                    inplaceRenumber(oldPointMap, constructPointMap[proci]);
+                    inplaceRenumber(oldPatchMap, constructPatchMap[proci]);
                 }
             }
 
@@ -2732,11 +2590,11 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
     // from nothing so explicitly reset.
     initPatchFields<volScalarField, processorFvPatchField<scalar> >
     (
-        pTraits<scalar>::zero
+        Zero
     );
     initPatchFields<volVectorField, processorFvPatchField<vector> >
     (
-        pTraits<vector>::zero
+        Zero
     );
     initPatchFields
     <
@@ -2744,15 +2602,15 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
         processorFvPatchField<sphericalTensor>
     >
     (
-        pTraits<sphericalTensor>::zero
+        Zero
     );
     initPatchFields<volSymmTensorField, processorFvPatchField<symmTensor> >
     (
-        pTraits<symmTensor>::zero
+        Zero
     );
     initPatchFields<volTensorField, processorFvPatchField<tensor> >
     (
-        pTraits<tensor>::zero
+        Zero
     );
 
 

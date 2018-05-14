@@ -1,0 +1,88 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh   dynamicRefineBalancedFvMesh;
+
+refinementControls
+{
+    enableRefinementControl  true;
+    
+    gradients
+    (
+        alpha1    (1000.0 10)
+    );
+    
+    regions
+    (
+        boxToCell
+        {
+            minLevel 1;
+            
+            box (-1 0.001 0.002) (1 0.005 0.003);
+        }
+        
+    );
+}
+
+dynamicRefineFvMeshCoeffs
+{
+    enableBalancing true;
+    allowableImbalance 0.1;
+    dumpCellDist true;
+    
+    // How often to refine
+    refineInterval  1;
+    
+    // Field to be refinement on
+    field           internalRefinementField;
+    
+    // Refine field inbetween lower..upper
+    lowerRefineLevel 0.3;
+    upperRefineLevel 1e200;
+    
+    // If value < unrefineLevel unrefine
+    unrefineLevel   0.05;
+    
+    // Have slower than 2:1 refinement
+    nBufferLayers   1;
+    
+    // Refine cells only up to maxRefinement levels
+    maxRefinement   2;
+    
+    // Stop refinement if maxCells reached
+    maxCells        200000;
+    
+    // Flux field and corresponding velocity field. Fluxes on changed
+    // faces get recalculated by interpolating the velocity. Use 'none'
+    // on surfaceScalarFields that do not need to be reinterpolated.
+    correctFluxes
+    (
+        (phi none)
+        (phi_0 none)
+        (phiAbs none)
+        (phiAbs_0 none)
+        (phic none)
+        (nHatf none)
+        (rhoPhi none)
+        (ghf none)
+        (cAlphaf none)
+        (alphaPhi none)
+    );
+    
+    // Write the refinement level as a volScalarField
+    dumpLevel       true;
+}
+
+
+// ************************************************************************* //

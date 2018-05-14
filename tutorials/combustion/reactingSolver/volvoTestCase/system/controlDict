@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -38,7 +38,7 @@ writeCompression on;
 
 timeFormat      general;
 
-timePrecision   16;
+timePrecision   8;
 
 runTimeModifiable true;
 

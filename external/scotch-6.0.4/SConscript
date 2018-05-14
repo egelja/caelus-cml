@@ -17,13 +17,13 @@ cflags_map = dict(
 
     linux=(
         "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD "
-        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD "
+        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME "
         "-DSCOTCH_PTSCOTCH "
     ),
 
     darwin=(
         "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD "
-        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD "
+        "-DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME "
         "-DCOMMON_PTHREAD_BARRIER -DCOMMON_TIMING_OLD "
         "-DSCOTCH_PTSCOTCH "
         "-Wno-switch -Wno-implicit-int -Wno-empty-body -Wno-format-security "

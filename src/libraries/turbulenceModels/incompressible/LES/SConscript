@@ -19,6 +19,7 @@ SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
 SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
 dynOneEqEddy/dynOneEqEddy.cpp
 Smagorinsky/Smagorinsky.cpp
+WALE/WALE.cpp
 oneEqEddy/oneEqEddy.cpp
 coherentStructureModel/coherentStructureModel.cpp
 """)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2015 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -27,6 +27,9 @@ Description
     The rotation of the MRF region is defined by an origin and axis of
     rotation and an angular speed.
 
+SourceFiles
+    MRFZone.cpp
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef MRFZone_HPP
@@ -49,6 +52,10 @@ namespace CML
 
 // Forward declaration of classes
 class fvMesh;
+
+/*---------------------------------------------------------------------------*\
+                           Class MRFZone Declaration
+\*---------------------------------------------------------------------------*/
 
 class MRFZone
 {
@@ -116,6 +123,15 @@ class MRFZone
             FieldField<fvsPatchField, scalar>& phi
         ) const;
 
+        //- Make the given absolute mass/vol flux relative within the MRF region
+        template<class RhoFieldType>
+        void makeRelativeRhoFlux
+        (
+            const RhoFieldType& rho,
+            Field<scalar>& phi,
+            const label patchi
+        ) const;
+
         //- Make the given relative mass/vol flux absolute within the MRF region
         template<class RhoFieldType>
         void makeAbsoluteRhoFlux
@@ -158,83 +174,85 @@ public:
 
     // Member Functions
 
-        // Access
+        //- Return const access to the MRF region name
+        inline const word& name() const;
 
-            //- Return const access to the MRF region name
-            inline const word& name() const;
+        //- Return const access to the MRF active flag
+        inline bool active() const;
 
-            //- Return const access to the MRF active flag
-            inline bool active() const;
+        //- Return the current Omega vector
+        vector Omega() const;
 
-            //- Return the current Omega vector
-            vector Omega() const;
+        //- Update the mesh corresponding to given map
+        void updateMesh(const mapPolyMesh& mpm)
+        {
+            // Only updates face addressing
+            setMRFFaces();
+        }
 
+        //- Add the Coriolis force contribution to the acceleration field
+        void addCoriolis
+        (
+            const volVectorField& U,
+            volVectorField& ddtU
+        ) const;
 
-        // Evaluation
+        //- Add the Coriolis force contribution to the momentum equation
+        //  Adds to the lhs of the equation; optionally add to rhs
+        void addCoriolis
+        (
+            fvVectorMatrix& UEqn,
+            const bool rhs = false
+        ) const;
 
-            //- Update the mesh corresponding to given map
-            void updateMesh(const mapPolyMesh& mpm)
-            {
-                // Only updates face addressing
-                setMRFFaces();
-            }
+        //- Add the Coriolis force contribution to the momentum equation
+        //  Adds to the lhs of the equation; optionally add to rhs
+        void addCoriolis
+        (
+            const volScalarField& rho,
+            fvVectorMatrix& UEqn,
+            const bool rhs = false
+        ) const;
 
-            //- Add the Coriolis force contribution to the acceleration field
-            void addCoriolis
-            (
-                const volVectorField& U,
-                volVectorField& ddtU
-            ) const;
+        //- Make the given absolute velocity relative within the MRF region
+        void makeRelative(volVectorField& U) const;
 
-            //- Add the Coriolis force contribution to the momentum equation
-            //  Adds to the lhs of the equation; optionally add to rhs
-            void addCoriolis
-            (
-                fvVectorMatrix& UEqn,
-                const bool rhs = false
-            ) const;
+        //- Make the given absolute flux relative within the MRF region
+        void makeRelative(surfaceScalarField& phi) const;
 
-            //- Add the Coriolis force contribution to the momentum equation
-            //  Adds to the lhs of the equation; optionally add to rhs
-            void addCoriolis
-            (
-                const volScalarField& rho,
-                fvVectorMatrix& UEqn,
-                const bool rhs = false
-            ) const;
+        //- Make the given absolute boundary flux relative
+        //  within the MRF region
+        void makeRelative(FieldField<fvsPatchField, scalar>& phi) const;
 
-            //- Make the given absolute velocity relative within the MRF region
-            void makeRelative(volVectorField& U) const;
+        //- Make the given absolute patch flux relative
+        //  within the MRF region
+        void makeRelative(Field<scalar>& phi, const label patchi) const;
 
-            //- Make the given absolute flux relative within the MRF region
-            void makeRelative(surfaceScalarField& phi) const;
+        //- Make the given absolute mass-flux relative within the MRF region
+        void makeRelative
+        (
+            const surfaceScalarField& rho,
+            surfaceScalarField& phi
+        ) const;
 
-            //- Make the given absolute boundary flux relative
-            //  within the MRF region
-            void makeRelative(FieldField<fvsPatchField, scalar>& phi) const;
+        //- Make the given relative velocity absolute within the MRF region
+        void makeAbsolute(volVectorField& U) const;
 
-            //- Make the given absolute mass-flux relative within the MRF region
-            void makeRelative
-            (
-                const surfaceScalarField& rho,
-                surfaceScalarField& phi
-            ) const;
+        //- Make the given relative flux absolute within the MRF region
+        void makeAbsolute(surfaceScalarField& phi) const;
 
-            //- Make the given relative velocity absolute within the MRF region
-            void makeAbsolute(volVectorField& U) const;
+        //- Make the given relative mass-flux absolute within the MRF region
+        void makeAbsolute
+        (
+            const surfaceScalarField& rho,
+            surfaceScalarField& phi
+        ) const;
 
-            //- Make the given relative flux absolute within the MRF region
-            void makeAbsolute(surfaceScalarField& phi) const;
+        //- Correct the boundary velocity for the rotation of the MRF region
+        void correctBoundaryVelocity(volVectorField& U) const;
 
-            //- Make the given relative mass-flux absolute within the MRF region
-            void makeAbsolute
-            (
-                const surfaceScalarField& rho,
-                surfaceScalarField& phi
-            ) const;
-
-            //- Correct the boundary velocity for the roation of the MRF region
-            void correctBoundaryVelocity(volVectorField& U) const;
+        //- Update MRFZone faces if the mesh topology changes
+        void update();
 
 
     // I-O
@@ -261,6 +279,11 @@ void CML::MRFZone::makeRelativeRhoFlux
     surfaceScalarField& phi
 ) const
 {
+    if (!active_)
+    {
+        return;
+    }
+
     const surfaceVectorField& Cf = mesh_.Cf();
     const surfaceVectorField& Sf = mesh_.Sf();
 
@@ -288,6 +311,11 @@ void CML::MRFZone::makeRelativeRhoFlux
     FieldField<fvsPatchField, scalar>& phi
 ) const
 {
+    if (!active_)
+    {
+        return;
+    }
+
     const surfaceVectorField& Cf = mesh_.Cf();
     const surfaceVectorField& Sf = mesh_.Sf();
 
@@ -321,12 +349,56 @@ void CML::MRFZone::makeRelativeRhoFlux
 
 
 template<class RhoFieldType>
+void CML::MRFZone::makeRelativeRhoFlux
+(
+    const RhoFieldType& rho,
+    Field<scalar>& phi,
+    const label patchi
+) const
+{
+    if (!active_)
+    {
+        return;
+    }
+
+    const surfaceVectorField& Cf = mesh_.Cf();
+    const surfaceVectorField& Sf = mesh_.Sf();
+
+    const vector Omega = omega_->value(mesh_.time().timeOutputValue())*axis_;
+
+    // Included patches
+    forAll(includedFaces_[patchi], i)
+    {
+        label patchFacei = includedFaces_[patchi][i];
+
+        phi[patchFacei] = 0.0;
+    }
+
+    // Excluded patches
+    forAll(excludedFaces_[patchi], i)
+    {
+        label patchFacei = excludedFaces_[patchi][i];
+
+        phi[patchFacei] -=
+            rho[patchFacei]
+          * (Omega ^ (Cf.boundaryField()[patchi][patchFacei] - origin_))
+          & Sf.boundaryField()[patchi][patchFacei];
+    }
+}
+
+
+template<class RhoFieldType>
 void CML::MRFZone::makeAbsoluteRhoFlux
 (
     const RhoFieldType& rho,
     surfaceScalarField& phi
 ) const
 {
+    if (!active_)
+    {
+        return;
+    }
+
     const surfaceVectorField& Cf = mesh_.Cf();
     const surfaceVectorField& Sf = mesh_.Sf();
 
@@ -343,6 +415,9 @@ void CML::MRFZone::makeAbsoluteRhoFlux
         phii[facei] += rho[facei]*(Omega ^ (Cfi[facei] - origin_)) & Sfi[facei];
     }
 
+    surfaceScalarField::GeometricBoundaryField& phibf = phi.boundaryField();
+
+
     // Included patches
     forAll(includedFaces_, patchi)
     {
@@ -350,7 +425,7 @@ void CML::MRFZone::makeAbsoluteRhoFlux
         {
             label patchFacei = includedFaces_[patchi][i];
 
-            phi.boundaryField()[patchi][patchFacei] +=
+            phibf[patchi][patchFacei] +=
                 rho.boundaryField()[patchi][patchFacei]
               * (Omega ^ (Cf.boundaryField()[patchi][patchFacei] - origin_))
               & Sf.boundaryField()[patchi][patchFacei];
@@ -364,7 +439,7 @@ void CML::MRFZone::makeAbsoluteRhoFlux
         {
             label patchFacei = excludedFaces_[patchi][i];
 
-            phi.boundaryField()[patchi][patchFacei] +=
+            phibf[patchi][patchFacei] +=
                 rho.boundaryField()[patchi][patchFacei]
               * (Omega ^ (Cf.boundaryField()[patchi][patchFacei] - origin_))
               & Sf.boundaryField()[patchi][patchFacei];

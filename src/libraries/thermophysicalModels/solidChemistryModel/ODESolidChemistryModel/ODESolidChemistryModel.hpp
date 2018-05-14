@@ -592,7 +592,7 @@ ODESolidChemistryModel
                     Y0Default
                 )
             );
-        // Calculate inital values of Ysi0 = rho*delta*Yi
+        // Calculate initial values of Ysi0 = rho*delta*Yi
             Ys0_[fieldI].internalField() =
                 this->solidThermo().rho()
                *max(Ys_[fieldI], scalar(0.001))*mesh.V();

@@ -21,7 +21,7 @@ Class
     CML::calcTypes::magGrad
 
 Description
-    Writes scalar fields corresponding to the magnitude ot the gradient
+    Writes scalar fields corresponding to the magnitude of the gradient
     of the supplied field (name) for each time.
 
 SourceFiles

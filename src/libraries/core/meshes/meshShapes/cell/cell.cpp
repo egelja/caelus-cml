@@ -186,7 +186,7 @@ CML::point CML::cell::centre
     // relationship, which is not available on this level. Thus, all the
     // pyramids are believed to be positive with no checking.
 
-    // first calculate the aproximate cell centre as the average of all
+    // first calculate the approximate cell centre as the average of all
     // face centres
     vector cEst = vector::zero;
     scalar sumArea = 0;
@@ -245,7 +245,7 @@ CML::scalar CML::cell::mag
 
     // WARNING! See cell::centre
 
-    // first calculate the aproximate cell centre as the average of all
+    // first calculate the approximate cell centre as the average of all
     // face centres
     vector cEst = vector::zero;
     scalar nCellFaces = 0;

@@ -131,6 +131,14 @@ public:
 
     // Member functions
 
+        // Attributes
+
+            //- Return true: this patch field is altered by assignment
+            virtual bool assignable() const
+            {
+                return true;
+            }
+
         // Access
 
             //- Return the name of phi

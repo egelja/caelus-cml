@@ -156,7 +156,10 @@ public:
 
 
         // Evaluation functions
-
+    
+            //- Inherit updateCoeffs from fixedValueFvPatchScalarField
+            using fixedValueFvPatchScalarField::updateCoeffs;
+    
             //- Update the coefficients associated with the patch field
             //  using the given patch velocity field
             virtual void updateCoeffs(vectorField const& Up);

@@ -208,6 +208,7 @@ public:
         {
             //- Reference to the mesh database
             const fvMesh& mesh_;
+
             const word& name_;
 
         public:
@@ -248,7 +249,6 @@ public:
 
     //- Destructor
     virtual ~option();
-
 
 
     // Member Functions
@@ -508,35 +508,6 @@ public:
                     fvMatrix<tensor>& eqn,
                     const label fieldI
                 );
-
-
-            // Flux manipulations
-
-                //- Make the given absolute flux relative
-                virtual void makeRelative(surfaceScalarField& phi) const;
-
-                //- Make the given absolute boundary flux relative
-                virtual void makeRelative
-                (
-                    FieldField<fvsPatchField, scalar>& phi
-                ) const;
-
-                //- Make the given absolute mass-flux relative
-                virtual void makeRelative
-                (
-                    const surfaceScalarField& rho,
-                    surfaceScalarField& phi
-                ) const;
-
-                //- Make the given relative flux absolute
-                virtual void makeAbsolute(surfaceScalarField& phi) const;
-
-                //- Make the given relative mass-flux absolute
-                virtual void makeAbsolute
-                (
-                    const surfaceScalarField& rho,
-                    surfaceScalarField& phi
-                ) const;
 
 
         // I-O

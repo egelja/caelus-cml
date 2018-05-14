@@ -177,11 +177,7 @@ public:
     // Constructors
 
         //- Construct from components
-        wideBandAbsorptionEmission
-        (
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+        wideBandAbsorptionEmission(const dictionary& dict, const fvMesh& mesh);
 
 
     //- Destructor

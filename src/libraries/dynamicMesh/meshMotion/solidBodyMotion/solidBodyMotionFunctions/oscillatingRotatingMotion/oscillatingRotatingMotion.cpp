@@ -74,11 +74,11 @@ transformation() const
     scalar oldTime = time_.value() - time_.deltaT().value();
     scalar curTime = time_.value();
 
-    vector eulerAngles = amplitude_*sin(omega_*curTime);
+    vector eulerAngles = amplitude_*sin(omega_*curTime + phase_) + offset_;
 
     if (incremental_)
     {  
-        eulerAngles -= amplitude_*sin(omega_*oldTime);
+        eulerAngles -= amplitude_*sin(omega_*oldTime + phase_);
     }
 
     // Convert the rotational motion from deg to rad
@@ -105,6 +105,8 @@ bool CML::solidBodyMotionFunctions::oscillatingRotatingMotion::read
     SBMFCoeffs_.lookup("origin") >> origin_;
     SBMFCoeffs_.lookup("amplitude") >> amplitude_;
     SBMFCoeffs_.lookup("omega") >> omega_;
+    phase_ = SBMFCoeffs_.lookupOrDefault<scalar>("phase", scalar(0.0));
+    offset_ = SBMFCoeffs_.lookupOrDefault<vector>("offset", vector::zero);
 
     return true;
 }

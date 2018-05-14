@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +21,32 @@ Class
     CML::greyDiffusiveViewFactorFixedValueFvPatchScalarField
 
 Description
-    Radiation temperature specified
+    This boundary condition provides a grey-diffuse condition for radiative
+    heat flux, \c qr, for use with the view factor model
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        qro          | external radiative heat flux | yes    |
+        emissivityMode | emissivity mode: solidRadiation or lookup | yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            greyDiffusiveRadiationViewFactor;
+        qro             uniform 0;
+        emissivityMode  solidRadiation;
+        value           uniform 0;
+    }
+    \endverbatim
+
+See also
+    CML::radiationCoupledBase
+    CML::radiation::radiationModel
+    CML::radiation::viewFactor
+    CML::fixedValueFvPatchField
 
 SourceFiles
     greyDiffusiveViewFactorFixedValueFvPatchScalarField.cpp
@@ -40,6 +65,7 @@ namespace CML
 {
 namespace radiation
 {
+
 /*---------------------------------------------------------------------------*\
       Class greyDiffusiveViewFactorFixedValueFvPatchScalarField declaration
 \*---------------------------------------------------------------------------*/
@@ -52,7 +78,7 @@ class greyDiffusiveViewFactorFixedValueFvPatchScalarField
     // Private data
 
         //- External radiative heat flux
-        scalarField Qro_;
+        scalarField qro_;
 
 
 public:
@@ -132,9 +158,9 @@ public:
         // Access
 
             //- Return external radiative heat flux
-            const scalarList& Qro()
+            const scalarList& qro()
             {
-                return Qro_;
+                return qro_;
             }
 
 

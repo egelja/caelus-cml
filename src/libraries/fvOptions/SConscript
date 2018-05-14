@@ -7,15 +7,13 @@ target = 'fvOptions'
 
 sources = Split("""
 fvOptions/fvOption.cpp
-fvOptions/fvOptionIO.cpp
 fvOptions/fvOptionList.cpp
 fvOptions/fvIOoptionList.cpp
 sources/general/semiImplicitSource/semiImplicitSource.cpp
 sources/derived/actuationDiskSource/actuationDiskSource.cpp
 sources/derived/explicitPorositySource/explicitPorositySource.cpp
-sources/derived/MRFSource/MRFSource.cpp
-sources/derived/pressureGradientExplicitSource/pressureGradientExplicitSource.cpp
-sources/derived/pressureGradientExplicitSource/pressureGradientExplicitSourceIO.cpp
+sources/derived/meanVelocityForce/meanVelocityForce.cpp
+sources/derived/meanVelocityForce/patchMeanVelocityForce/patchMeanVelocityForce.cpp
 sources/derived/radialActuationDiskSource/radialActuationDiskSource.cpp
 sources/derived/rotorDiskSource/rotorDiskSource.cpp
 sources/derived/rotorDiskSource/bladeModel/bladeModel.cpp
@@ -28,6 +26,7 @@ sources/derived/rotorDiskSource/trimModel/trimModel/trimModelNew.cpp
 sources/derived/rotorDiskSource/trimModel/fixed/fixedTrim.cpp
 sources/derived/rotorDiskSource/trimModel/targetCoeff/targetCoeffTrim.cpp
 constraints/general/explicitSetValue/explicitSetValue.cpp
+corrections/limitVelocity/limitVelocity.cpp
 """)
 
 caelus_inc = [

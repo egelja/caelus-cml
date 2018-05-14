@@ -59,7 +59,6 @@ Description
 #include "interpolationTable.hpp"
 #include "pimpleControl.hpp"
 #include "fvIOoptionList.hpp"
-#include "fixedFluxPressureFvPatchScalarField.hpp"
 #include "fvcSmooth.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -75,6 +74,7 @@ int main(int argc, char *argv[])
     #include "createTimeControls.hpp"
     #include "initContinuityErrs.hpp"
     #include "createFields.hpp"
+    #include "createMRF.hpp"
     #include "correctPhi.hpp"
 
     if (!LTS)

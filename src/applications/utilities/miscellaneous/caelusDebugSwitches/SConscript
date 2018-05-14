@@ -36,7 +36,6 @@ caelus_libs = [
 'CAELUSCalcFunctions',
 'forces',
 'fvMotionSolvers',
-'genericPatchFields',
 'incompressibleLESModels',
 'incompressibleRASModels',
 'incompressibleTransportModels',

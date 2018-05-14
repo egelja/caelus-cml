@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,6 +23,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "scalarField.hpp"
+#include "unitConversion.hpp"
 
 #define TEMPLATE
 #include "FieldFunctionsM.hxx"
@@ -84,6 +85,24 @@ tmp<scalarField> stabilise(const tmp<scalarField>& tsf, const scalar s)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+template<>
+scalar sumProd(const UList<scalar>& f1, const UList<scalar>& f2)
+{
+    if (f1.size() && (f1.size() == f2.size()))
+    {
+        scalar SumProd = 0.0;
+        TFOR_ALL_S_OP_F_OP_F(scalar, SumProd, +=, scalar, f1, *, scalar, f2)
+        return SumProd;
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, add)
 BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, subtract)
 
@@ -131,6 +150,11 @@ UNARY_FUNCTION(scalar, scalar, j0)
 UNARY_FUNCTION(scalar, scalar, j1)
 UNARY_FUNCTION(scalar, scalar, y0)
 UNARY_FUNCTION(scalar, scalar, y1)
+
+UNARY_FUNCTION(scalar, scalar, degToRad)
+UNARY_FUNCTION(scalar, scalar, radToDeg)
+UNARY_FUNCTION(scalar, scalar, atmToPa)
+UNARY_FUNCTION(scalar, scalar, paToAtm)
 
 
 #define BesselFunc(func)                                                      \

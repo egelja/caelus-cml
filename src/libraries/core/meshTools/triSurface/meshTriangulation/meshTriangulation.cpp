@@ -447,7 +447,7 @@ CML::meshTriangulation::meshTriangulation
         }
     }
 
-    // Shrink if nessecary (because of invalid triangulations)
+    // Shrink if necessary (because of invalid triangulations)
     triangles.setSize(triI);
     faceMap_.setSize(triI);
 

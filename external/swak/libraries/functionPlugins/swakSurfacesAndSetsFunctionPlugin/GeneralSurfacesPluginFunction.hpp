@@ -68,7 +68,13 @@ protected:
     const sampledSurface &theSurface() const;
 
     const labelList &meshCells() ;
-
+    
+    virtual void setArgument(
+        label index,
+        const string &content,
+        const CommonValueExpressionDriver &driver
+    ){};
+    
 public:
     GeneralSurfacesPluginFunction(
         const FieldValueExpressionDriver &parentDriver,

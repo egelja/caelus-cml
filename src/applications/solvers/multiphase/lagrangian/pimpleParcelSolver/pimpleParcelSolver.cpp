@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------- 
 
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2017 Applied CCM
+Copyright (C) 2017-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -39,8 +39,6 @@ Author(s)
 #include "basicKinematicCloud.hpp"
 #include "pimpleControl.hpp"
 #include "fvIOoptionList.hpp"
-#include "IOporosityModelList.hpp"
-#include "IOMRFZoneList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,6 +57,7 @@ int main(int argc, char *argv[])
     #include "createTimeControls.hpp"
     #include "readGravitationalAcceleration.hpp"
     #include "createFields.hpp"
+    #include "createMRF.hpp"
     #include "createClouds.hpp"
     #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"

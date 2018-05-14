@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2015-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,11 +23,11 @@ License
 #include "dynamicRefineFvMesh.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "surfaceInterpolate.hpp"
-#include "volFields.hpp"
 #include "polyTopoChange.hpp"
 #include "surfaceFields.hpp"
 #include "syncTools.hpp"
 #include "pointFields.hpp"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,6 +36,20 @@ namespace CML
     defineTypeNameAndDebug(dynamicRefineFvMesh, 0);
     addToRunTimeSelectionTable(dynamicFvMesh, dynamicRefineFvMesh, IOobject);
 }
+
+namespace CML
+{
+    template<>
+    const char* NamedEnum<dynamicRefineFvMesh::refineModes, 2>::
+    names[] =
+    {
+        "timeStepInterval",
+        "timeInterval"
+    };
+}
+
+const CML::NamedEnum<CML::dynamicRefineFvMesh::refineModes, 2>
+    CML::dynamicRefineFvMesh::refineModeNames_;
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -61,7 +76,6 @@ CML::label CML::dynamicRefineFvMesh::count
             Info<< "n=" << n << endl;
         }
     }
-
     return n;
 }
 
@@ -84,9 +98,9 @@ void CML::dynamicRefineFvMesh::calculateProtectedCells
     // Get neighbouring cell level
     labelList neiLevel(nFaces()-nInternalFaces());
 
-    for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+    for (label facei = nInternalFaces(); facei < nFaces(); facei++)
     {
-        neiLevel[faceI-nInternalFaces()] = cellLevel[faceOwner()[faceI]];
+        neiLevel[facei-nInternalFaces()] = cellLevel[faceOwner()[facei]];
     }
     syncTools::swapBoundaryFaceList(*this, neiLevel);
 
@@ -96,33 +110,33 @@ void CML::dynamicRefineFvMesh::calculateProtectedCells
         // Pick up faces on border of protected cells
         boolList seedFace(nFaces(), false);
 
-        forAll(faceNeighbour(), faceI)
+        forAll(faceNeighbour(), facei)
         {
-            label own = faceOwner()[faceI];
+            label own = faceOwner()[facei];
             bool ownProtected = unrefineableCell.get(own);
-            label nei = faceNeighbour()[faceI];
+            label nei = faceNeighbour()[facei];
             bool neiProtected = unrefineableCell.get(nei);
 
             if (ownProtected && (cellLevel[nei] > cellLevel[own]))
             {
-                seedFace[faceI] = true;
+                seedFace[facei] = true;
             }
             else if (neiProtected && (cellLevel[own] > cellLevel[nei]))
             {
-                seedFace[faceI] = true;
+                seedFace[facei] = true;
             }
         }
-        for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+        for (label facei = nInternalFaces(); facei < nFaces(); facei++)
         {
-            label own = faceOwner()[faceI];
+            label own = faceOwner()[facei];
             bool ownProtected = unrefineableCell.get(own);
             if
             (
                 ownProtected
-             && (neiLevel[faceI-nInternalFaces()] > cellLevel[own])
+             && (neiLevel[facei-nInternalFaces()] > cellLevel[own])
             )
             {
-                seedFace[faceI] = true;
+                seedFace[facei] = true;
             }
         }
 
@@ -132,18 +146,18 @@ void CML::dynamicRefineFvMesh::calculateProtectedCells
         // Extend unrefineableCell
         bool hasExtended = false;
 
-        for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+        for (label facei = 0; facei < nInternalFaces(); facei++)
         {
-            if (seedFace[faceI])
+            if (seedFace[facei])
             {
-                label own = faceOwner()[faceI];
+                label own = faceOwner()[facei];
                 if (unrefineableCell.get(own) == 0)
                 {
                     unrefineableCell.set(own, 1);
                     hasExtended = true;
                 }
 
-                label nei = faceNeighbour()[faceI];
+                label nei = faceNeighbour()[facei];
                 if (unrefineableCell.get(nei) == 0)
                 {
                     unrefineableCell.set(nei, 1);
@@ -151,11 +165,11 @@ void CML::dynamicRefineFvMesh::calculateProtectedCells
                 }
             }
         }
-        for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+        for (label facei = nInternalFaces(); facei < nFaces(); facei++)
         {
-            if (seedFace[faceI])
+            if (seedFace[facei])
             {
-                label own = faceOwner()[faceI];
+                label own = faceOwner()[facei];
                 if (unrefineableCell.get(own) == 0)
                 {
                     unrefineableCell.set(own, 1);
@@ -178,7 +192,7 @@ void CML::dynamicRefineFvMesh::readDict()
     (
         IOdictionary
         (
-			IOobject
+            IOobject
             (
                 "dynamicMeshDict",
                 time().constant(),
@@ -202,6 +216,18 @@ void CML::dynamicRefineFvMesh::readDict()
     }
 
     dumpLevel_ = Switch(refineDict.lookup("dumpLevel"));
+    minVolume_ = refineDict.lookupOrDefault<scalar>("minimumVolume", ROOTVSMALL);
+
+    // Initialise values
+    refineMode_ = rmIteration;
+    refineInterval_ = 0;
+    refineTimeIndex_ = 0;
+    refineTimeInterval_ = -1;
+    nStepsToStartTimeChange_ = 5;
+    deltaTchanged_ = false;
+    deltaTSave_ = 0.0;
+    allowUnrefinement_ = true;
+
 }
 
 
@@ -229,16 +255,16 @@ CML::dynamicRefineFvMesh::refine
     if (debug)
     {
         // Check map.
-        for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+        for (label facei = 0; facei < nInternalFaces(); facei++)
         {
-            label oldFaceI = map().faceMap()[faceI];
+            label oldFacei = map().faceMap()[facei];
 
-            if (oldFaceI >= nInternalFaces())
+            if (oldFacei >= nInternalFaces())
             {
                 FatalErrorIn("dynamicRefineFvMesh::refine(const labelList&)")
-                    << "New internal face:" << faceI
-                    << " fc:" << faceCentres()[faceI]
-                    << " originates from boundary oldFace:" << oldFaceI
+                    << "New internal face:" << facei
+                    << " fc:" << faceCentres()[facei]
+                    << " originates from boundary oldFace:" << oldFacei
                     << abort(FatalError);
             }
         }
@@ -273,33 +299,32 @@ CML::dynamicRefineFvMesh::refine
         // master face gets modified and three faces get added from the master)
         labelHashSet masterFaces(4*cellsToRefine.size());
 
-        forAll(faceMap, faceI)
+        forAll(faceMap, facei)
         {
-            label oldFaceI = faceMap[faceI];
+            label oldFacei = faceMap[facei];
 
-            if (oldFaceI >= 0)
+            if (oldFacei >= 0)
             {
-                label masterFaceI = reverseFaceMap[oldFaceI];
+                label masterFacei = reverseFaceMap[oldFacei];
 
-                if (masterFaceI < 0)
+                if (masterFacei < 0)
                 {
                     FatalErrorIn
                     (
                         "dynamicRefineFvMesh::refine(const labelList&)"
                     )   << "Problem: should not have removed faces"
                         << " when refining."
-                        << nl << "face:" << faceI << abort(FatalError);
+                        << nl << "face:" << facei << abort(FatalError);
                 }
-                else if (masterFaceI != faceI)
+                else if (masterFacei != facei)
                 {
-                    masterFaces.insert(masterFaceI);
+                    masterFaces.insert(masterFacei);
                 }
             }
         }
         if (debug)
         {
-            Info<< "Found " << returnReduce(masterFaces.size(), sumOp<label>())
-                << " split faces " << endl;
+            Pout<< "Found " << masterFaces.size() << " split faces " << endl;
         }
 
         HashTable<surfaceScalarField*> fluxes
@@ -331,7 +356,7 @@ CML::dynamicRefineFvMesh::refine
 
             if (debug)
             {
-                Info<< "Mapping flux " << iter.key()
+                Pout<< "Mapping flux " << iter.key()
                     << " using interpolated flux " << UName
                     << endl;
             }
@@ -347,77 +372,76 @@ CML::dynamicRefineFvMesh::refine
             );
 
             // Recalculate new internal faces.
-            for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+            for (label facei = 0; facei < nInternalFaces(); facei++)
             {
-                label oldFaceI = faceMap[faceI];
+                label oldFacei = faceMap[facei];
 
-                if (oldFaceI == -1)
+                if (oldFacei == -1)
                 {
                     // Inflated/appended
-                    phi[faceI] = phiU[faceI];
+                    phi[facei] = phiU[facei];
                 }
-                else if (reverseFaceMap[oldFaceI] != faceI)
+                else if (reverseFaceMap[oldFacei] != facei)
                 {
                     // face-from-masterface
-                    phi[faceI] = phiU[faceI];
+                    phi[facei] = phiU[facei];
                 }
             }
 
             // Recalculate new boundary faces.
-            surfaceScalarField::GeometricBoundaryField& bphi =
+            surfaceScalarField::GeometricBoundaryField& phiBf =
                 phi.boundaryField();
-            forAll(bphi, patchI)
+            forAll(phiBf, patchi)
             {
-                fvsPatchScalarField& patchPhi = bphi[patchI];
+                fvsPatchScalarField& patchPhi = phiBf[patchi];
                 const fvsPatchScalarField& patchPhiU =
-                    phiU.boundaryField()[patchI];
+                    phiU.boundaryField()[patchi];
 
-                label faceI = patchPhi.patch().start();
+                label facei = patchPhi.patch().start();
 
                 forAll(patchPhi, i)
                 {
-                    label oldFaceI = faceMap[faceI];
+                    label oldFacei = faceMap[facei];
 
-                    if (oldFaceI == -1)
+                    if (oldFacei == -1)
                     {
                         // Inflated/appended
                         patchPhi[i] = patchPhiU[i];
                     }
-                    else if (reverseFaceMap[oldFaceI] != faceI)
+                    else if (reverseFaceMap[oldFacei] != facei)
                     {
                         // face-from-masterface
                         patchPhi[i] = patchPhiU[i];
                     }
 
-                    faceI++;
+                    facei++;
                 }
             }
 
             // Update master faces
             forAllConstIter(labelHashSet, masterFaces, iter)
             {
-                label faceI = iter.key();
+                label facei = iter.key();
 
-                if (isInternalFace(faceI))
+                if (isInternalFace(facei))
                 {
-                    phi[faceI] = phiU[faceI];
+                    phi[facei] = phiU[facei];
                 }
                 else
                 {
-                    label patchI = boundaryMesh().whichPatch(faceI);
-                    label i = faceI - boundaryMesh()[patchI].start();
+                    label patchi = boundaryMesh().whichPatch(facei);
+                    label i = facei - boundaryMesh()[patchi].start();
 
                     const fvsPatchScalarField& patchPhiU =
-                        phiU.boundaryField()[patchI];
+                        phiU.boundaryField()[patchi];
 
-                    fvsPatchScalarField& patchPhi = bphi[patchI];
+                    fvsPatchScalarField& patchPhi = phiBf[patchi];
 
                     patchPhi[i] = patchPhiU[i];
                 }
             }
         }
     }
-
 
 
     // Update numbering of cells/vertices.
@@ -428,10 +452,10 @@ CML::dynamicRefineFvMesh::refine
     {
         PackedBoolList newProtectedCell(nCells());
 
-        forAll(newProtectedCell, cellI)
+        forAll(newProtectedCell, celli)
         {
-            label oldCellI = map().cellMap()[cellI];
-            newProtectedCell.set(cellI, protectedCell_.get(oldCellI));
+            label oldCelli = map().cellMap()[celli];
+            newProtectedCell.set(celli, protectedCell_.get(oldCelli));
         }
         protectedCell_.transfer(newProtectedCell);
     }
@@ -468,19 +492,19 @@ CML::dynamicRefineFvMesh::unrefine
     {
         forAll(splitPoints, i)
         {
-            label pointI = splitPoints[i];
+            label pointi = splitPoints[i];
 
-            const labelList& pEdges = pointEdges()[pointI];
+            const labelList& pEdges = pointEdges()[pointi];
 
             forAll(pEdges, j)
             {
-                label otherPointI = edges()[pEdges[j]].otherVertex(pointI);
+                label otherPointi = edges()[pEdges[j]].otherVertex(pointi);
 
-                const labelList& pFaces = pointFaces()[otherPointI];
+                const labelList& pFaces = pointFaces()[otherPointi];
 
-                forAll(pFaces, pFaceI)
+                forAll(pFaces, pFacei)
                 {
-                    faceToSplitPoint.insert(pFaces[pFaceI], otherPointI);
+                    faceToSplitPoint.insert(pFaces[pFacei], otherPointi);
                 }
             }
         }
@@ -554,7 +578,7 @@ CML::dynamicRefineFvMesh::unrefine
             }
 
             surfaceScalarField& phi = *iter();
-            surfaceScalarField::GeometricBoundaryField& bphi =
+            surfaceScalarField::GeometricBoundaryField& phiBf =
                 phi.boundaryField();
 
             const surfaceScalarField phiU
@@ -569,28 +593,28 @@ CML::dynamicRefineFvMesh::unrefine
 
             forAllConstIter(Map<label>, faceToSplitPoint, iter)
             {
-                label oldFaceI = iter.key();
-                label oldPointI = iter();
+                label oldFacei = iter.key();
+                label oldPointi = iter();
 
-                if (reversePointMap[oldPointI] < 0)
+                if (reversePointMap[oldPointi] < 0)
                 {
                     // midpoint was removed. See if face still exists.
-                    label faceI = reverseFaceMap[oldFaceI];
+                    label facei = reverseFaceMap[oldFacei];
 
-                    if (faceI >= 0)
+                    if (facei >= 0)
                     {
-                        if (isInternalFace(faceI))
+                        if (isInternalFace(facei))
                         {
-                            phi[faceI] = phiU[faceI];
+                            phi[facei] = phiU[facei];
                         }
                         else
                         {
-                            label patchI = boundaryMesh().whichPatch(faceI);
-                            label i = faceI - boundaryMesh()[patchI].start();
+                            label patchi = boundaryMesh().whichPatch(facei);
+                            label i = facei - boundaryMesh()[patchi].start();
 
                             const fvsPatchScalarField& patchPhiU =
-                                phiU.boundaryField()[patchI];
-                            fvsPatchScalarField& patchPhi = bphi[patchI];
+                                phiU.boundaryField()[patchi];
+                            fvsPatchScalarField& patchPhi = phiBf[patchi];
                             patchPhi[i] = patchPhiU[i];
                         }
                     }
@@ -608,12 +632,12 @@ CML::dynamicRefineFvMesh::unrefine
     {
         PackedBoolList newProtectedCell(nCells());
 
-        forAll(newProtectedCell, cellI)
+        forAll(newProtectedCell, celli)
         {
-            label oldCellI = map().cellMap()[cellI];
-            if (oldCellI >= 0)
+            label oldCelli = map().cellMap()[celli];
+            if (oldCelli >= 0)
             {
-                newProtectedCell.set(cellI, protectedCell_.get(oldCellI));
+                newProtectedCell.set(celli, protectedCell_.get(oldCelli));
             }
         }
         protectedCell_.transfer(newProtectedCell);
@@ -632,13 +656,13 @@ CML::dynamicRefineFvMesh::maxPointField(const scalarField& pFld) const
 {
     scalarField vFld(nCells(), -GREAT);
 
-    forAll(pointCells(), pointI)
+    forAll(pointCells(), pointi)
     {
-        const labelList& pCells = pointCells()[pointI];
+        const labelList& pCells = pointCells()[pointi];
 
         forAll(pCells, i)
         {
-            vFld[pCells[i]] = max(vFld[pCells[i]], pFld[pointI]);
+            vFld[pCells[i]] = max(vFld[pCells[i]], pFld[pointi]);
         }
     }
     return vFld;
@@ -651,13 +675,13 @@ CML::dynamicRefineFvMesh::maxCellField(const volScalarField& vFld) const
 {
     scalarField pFld(nPoints(), -GREAT);
 
-    forAll(pointCells(), pointI)
+    forAll(pointCells(), pointi)
     {
-        const labelList& pCells = pointCells()[pointI];
+        const labelList& pCells = pointCells()[pointi];
 
         forAll(pCells, i)
         {
-            pFld[pointI] = max(pFld[pointI], vFld[pCells[i]]);
+            pFld[pointi] = max(pFld[pointi], vFld[pCells[i]]);
         }
     }
     return pFld;
@@ -670,16 +694,16 @@ CML::dynamicRefineFvMesh::cellToPoint(const scalarField& vFld) const
 {
     scalarField pFld(nPoints());
 
-    forAll(pointCells(), pointI)
+    forAll(pointCells(), pointi)
     {
-        const labelList& pCells = pointCells()[pointI];
+        const labelList& pCells = pointCells()[pointi];
 
         scalar sum = 0.0;
         forAll(pCells, i)
         {
             sum += vFld[pCells[i]];
         }
-        pFld[pointI] = sum/pCells.size();
+        pFld[pointi] = sum/pCells.size();
     }
     return pFld;
 }
@@ -732,11 +756,11 @@ void CML::dynamicRefineFvMesh::selectRefineCandidates
     );
 
     // Mark cells that are candidates for refinement.
-    forAll(cellError, cellI)
+    forAll(cellError, celli)
     {
-        if (cellError[cellI] > 0)
+        if (cellError[celli] > 0)
         {
-            candidateCell.set(cellI, 1);
+            candidateCell.set(celli, 1);
         }
     }
 }
@@ -768,19 +792,20 @@ CML::labelList CML::dynamicRefineFvMesh::selectRefineCells
 
     if (nCandidates < nTotToRefine)
     {
-        forAll(candidateCell, cellI)
+        forAll(candidateCell, celli)
         {
             if
             (
-                cellLevel[cellI] < maxRefinement
-             && candidateCell.get(cellI)
+                cellLevel[celli] < maxRefinement
+             && (V()[celli]/scalar(8)) > minVolume_
+             && candidateCell.get(celli)
              && (
                     unrefineableCell.empty()
-                 || !unrefineableCell.get(cellI)
+                 || !unrefineableCell.get(celli)
                 )
             )
             {
-                candidates.append(cellI);
+                candidates.append(celli);
             }
         }
     }
@@ -789,19 +814,19 @@ CML::labelList CML::dynamicRefineFvMesh::selectRefineCells
         // Sort by error? For now just truncate.
         for (label level = 0; level < maxRefinement; level++)
         {
-            forAll(candidateCell, cellI)
+            forAll(candidateCell, celli)
             {
                 if
                 (
-                    cellLevel[cellI] == level
-                 && candidateCell.get(cellI)
+                    cellLevel[celli] == level
+                 && candidateCell.get(celli)
                  && (
                         unrefineableCell.empty()
-                     || !unrefineableCell.get(cellI)
+                     || !unrefineableCell.get(celli)
                     )
                 )
                 {
-                    candidates.append(cellI);
+                    candidates.append(celli);
                 }
             }
 
@@ -844,18 +869,18 @@ CML::labelList CML::dynamicRefineFvMesh::selectUnrefinePoints
 
     forAll(splitPoints, i)
     {
-        label pointI = splitPoints[i];
+        label pointi = splitPoints[i];
 
-        if (pFld[pointI] < unrefineLevel)
+        if (pFld[pointi] < unrefineLevel)
         {
             // Check that all cells are not marked
-            const labelList& pCells = pointCells()[pointI];
+            const labelList& pCells = pointCells()[pointi];
 
             bool hasMarked = false;
 
-            forAll(pCells, pCellI)
+            forAll(pCells, pCelli)
             {
-                if (markedCell.get(pCells[pCellI]))
+                if (markedCell.get(pCells[pCelli]))
                 {
                     hasMarked = true;
                     break;
@@ -864,7 +889,7 @@ CML::labelList CML::dynamicRefineFvMesh::selectUnrefinePoints
 
             if (!hasMarked)
             {
-                newSplitPoints.append(pointI);
+                newSplitPoints.append(pointi);
             }
         }
     }
@@ -898,11 +923,11 @@ void CML::dynamicRefineFvMesh::extendMarkedCells
     // Mark faces using any marked cell
     boolList markedFace(nFaces(), false);
 
-    forAll(markedCell, cellI)
+    forAll(markedCell, celli)
     {
-        if (markedCell.get(cellI))
+        if (markedCell.get(celli))
         {
-            const cell& cFaces = cells()[cellI];
+            const cell& cFaces = cells()[celli];
 
             forAll(cFaces, i)
             {
@@ -914,19 +939,69 @@ void CML::dynamicRefineFvMesh::extendMarkedCells
     syncTools::syncFaceList(*this, markedFace, orEqOp<bool>());
 
     // Update cells using any markedFace
-    for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+    for (label facei = 0; facei < nInternalFaces(); facei++)
     {
-        if (markedFace[faceI])
+        if (markedFace[facei])
         {
-            markedCell.set(faceOwner()[faceI], 1);
-            markedCell.set(faceNeighbour()[faceI], 1);
+            markedCell.set(faceOwner()[facei], 1);
+            markedCell.set(faceNeighbour()[facei], 1);
         }
     }
-    for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+    for (label facei = nInternalFaces(); facei < nFaces(); facei++)
     {
-        if (markedFace[faceI])
+        if (markedFace[facei])
         {
-            markedCell.set(faceOwner()[faceI], 1);
+            markedCell.set(faceOwner()[facei], 1);
+        }
+    }
+}
+
+
+void CML::dynamicRefineFvMesh::checkEightAnchorPoints
+(
+    PackedBoolList& protectedCell,
+    label& nProtected
+) const
+{
+    const labelList& cellLevel = meshCutter_.cellLevel();
+    const labelList& pointLevel = meshCutter_.pointLevel();
+
+    labelList nAnchorPoints(nCells(), 0);
+
+    forAll(pointLevel, pointi)
+    {
+        const labelList& pCells = pointCells(pointi);
+
+        forAll(pCells, pCelli)
+        {
+            label celli = pCells[pCelli];
+
+            if (pointLevel[pointi] <= cellLevel[celli])
+            {
+                // Check if cell has already 8 anchor points -> protect cell
+                if (nAnchorPoints[celli] == 8)
+                {
+                    if (protectedCell.set(celli, true))
+                    {
+                        nProtected++;
+                    }
+                }
+
+                if (!protectedCell[celli])
+                {
+                    nAnchorPoints[celli]++;
+                }
+            }
+        }
+    }
+
+
+    forAll(protectedCell, celli)
+    {
+        if (!protectedCell[celli] && nAnchorPoints[celli] != 8)
+        {
+            protectedCell.set(celli, true);
+            nProtected++;
         }
     }
 }
@@ -961,23 +1036,23 @@ CML::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
 
     label nProtected = 0;
 
-    forAll(pointCells(), pointI)
+    forAll(pointCells(), pointi)
     {
-        const labelList& pCells = pointCells()[pointI];
+        const labelList& pCells = pointCells()[pointi];
 
         forAll(pCells, i)
         {
-            label cellI = pCells[i];
+            label celli = pCells[i];
 
-            if (!protectedCell_.get(cellI))
+            if (!protectedCell_.get(celli))
             {
-                if (pointLevel[pointI] <= cellLevel[cellI])
+                if (pointLevel[pointi] <= cellLevel[celli])
                 {
-                    nAnchors[cellI]++;
+                    nAnchors[celli]++;
 
-                    if (nAnchors[cellI] > 8)
+                    if (nAnchors[celli] > 8)
                     {
-                        protectedCell_.set(cellI, 1);
+                        protectedCell_.set(celli, 1);
                         nProtected++;
                     }
                 }
@@ -994,28 +1069,28 @@ CML::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
     {
         labelList neiLevel(nFaces());
 
-        for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+        for (label facei = 0; facei < nInternalFaces(); facei++)
         {
-            neiLevel[faceI] = cellLevel[faceNeighbour()[faceI]];
+            neiLevel[facei] = cellLevel[faceNeighbour()[facei]];
         }
-        for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+        for (label facei = nInternalFaces(); facei < nFaces(); facei++)
         {
-            neiLevel[faceI] = cellLevel[faceOwner()[faceI]];
+            neiLevel[facei] = cellLevel[faceOwner()[facei]];
         }
         syncTools::swapFaceList(*this, neiLevel);
 
 
         boolList protectedFace(nFaces(), false);
 
-        forAll(faceOwner(), faceI)
+        forAll(faceOwner(), facei)
         {
             label faceLevel = max
             (
-                cellLevel[faceOwner()[faceI]],
-                neiLevel[faceI]
+                cellLevel[faceOwner()[facei]],
+                neiLevel[facei]
             );
 
-            const face& f = faces()[faceI];
+            const face& f = faces()[facei];
 
             label nAnchors = 0;
 
@@ -1027,7 +1102,7 @@ CML::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
 
                     if (nAnchors > 4)
                     {
-                        protectedFace[faceI] = true;
+                        protectedFace[facei] = true;
                         break;
                     }
                 }
@@ -1036,29 +1111,80 @@ CML::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
 
         syncTools::syncFaceList(*this, protectedFace, orEqOp<bool>());
 
-        for (label faceI = 0; faceI < nInternalFaces(); faceI++)
+        for (label facei = 0; facei < nInternalFaces(); facei++)
         {
-            if (protectedFace[faceI])
+            if (protectedFace[facei])
             {
-                protectedCell_.set(faceOwner()[faceI], 1);
+                protectedCell_.set(faceOwner()[facei], 1);
                 nProtected++;
-                protectedCell_.set(faceNeighbour()[faceI], 1);
+                protectedCell_.set(faceNeighbour()[facei], 1);
                 nProtected++;
             }
         }
-        for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+        for (label facei = nInternalFaces(); facei < nFaces(); facei++)
         {
-            if (protectedFace[faceI])
+            if (protectedFace[facei])
             {
-                protectedCell_.set(faceOwner()[faceI], 1);
+                protectedCell_.set(faceOwner()[facei], 1);
                 nProtected++;
             }
         }
+
+        // Also protect any cells that are less than hex
+        forAll(cells(), celli)
+        {
+            const cell& cFaces = cells()[celli];
+
+            if (cFaces.size() < 6)
+            {
+                if (protectedCell_.set(celli, 1))
+                {
+                    nProtected++;
+                }
+            }
+            else
+            {
+                forAll(cFaces, cFacei)
+                {
+                    if (faces()[cFaces[cFacei]].size() < 4)
+                    {
+                        if (protectedCell_.set(celli, 1))
+                        {
+                            nProtected++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Check cells for 8 corner points
+        checkEightAnchorPoints(protectedCell_, nProtected);
     }
 
     if (returnReduce(nProtected, sumOp<label>()) == 0)
     {
         protectedCell_.clear();
+    }
+    else
+    {
+
+        cellSet protectedCells(*this, "protectedCells", nProtected);
+        forAll(protectedCell_, celli)
+        {
+            if (protectedCell_[celli])
+            {
+                protectedCells.insert(celli);
+            }
+        }
+
+        Info<< "Detected " << returnReduce(nProtected, sumOp<label>())
+            << " cells that are protected from refinement."
+            << " Writing these to cellSet "
+            << protectedCells.name()
+            << "." << endl;
+
+        protectedCells.write();
     }
 }
 
@@ -1073,14 +1199,14 @@ CML::dynamicRefineFvMesh::~dynamicRefineFvMesh()
 
 bool CML::dynamicRefineFvMesh::update()
 {
-    // Re-read dictionary. Choosen since usually -small so trivial amount
+    // Re-read dictionary. Chosen since usually -small so trivial amount
     // of time compared to actual refinement. Also very useful to be able
     // to modify on-the-fly.
     dictionary refineDict
     (
         IOdictionary
         (
-			IOobject
+            IOobject
             (
                 "dynamicMeshDict",
                 time().constant(),
@@ -1092,32 +1218,91 @@ bool CML::dynamicRefineFvMesh::update()
         ).subDict(typeName + "Coeffs")
     );
 
-    label refineInterval = readLabel(refineDict.lookup("refineInterval"));
-
     bool hasChanged = false;
+    bool doRefine = false;
+    allowUnrefinement_ = refineDict.lookupOrDefault("allowUnrefinement", true);
 
-    if (refineInterval == 0)
+    if (refineDict.found("refineMode"))
     {
-        topoChanging(hasChanged);
-
-        return false;
+        refineMode_ = refineModeNames_.read(refineDict.lookup("refineMode"));
     }
-    else if (refineInterval < 0)
+    else
     {
-        FatalErrorIn("dynamicRefineFvMesh::update()")
-            << "Illegal refineInterval " << refineInterval << nl
-            << "The refineInterval setting in the dynamicMeshDict should"
-            << " be >= 1." << nl
-            << exit(FatalError);
+        refineMode_ = rmIteration;
+        Info<< "Refinement mode not set using timeStepInterval" <<endl; 
     }
 
+    switch (refineMode_)
+    {
+        case rmIteration:
+        {
+            refineInterval_ = readLabel(refineDict.lookup("refineInterval"));
 
+            if (refineInterval_ == 0)
+            {
+                topoChanging(hasChanged);
+                doRefine = false;
+                break;
+            }
+            else if (refineInterval_ < 0)
+            {
+                FatalErrorIn("dynamicRefineFvMesh::update()")
+                    << "Illegal refineInterval " << refineInterval_ << nl
+                    << "The refineInterval setting in the dynamicMeshDict should"
+                    << " be >= 1." << nl
+                    << exit(FatalError);
+            }
+            doRefine = (time().timeIndex() > 0 && time().timeIndex() % refineInterval_ == 0);
+            break;
+        }
+
+        case rmTime:
+        {
+            refineTimeInterval_ = readScalar(refineDict.lookup("refineTimeInterval"));
+            refineDict.readIfPresent("nStepsToStartTimeChange", nStepsToStartTimeChange_);
+
+            if (refineTimeInterval_ <= 0.0)
+            {
+                FatalErrorIn("dynamicRefineFvMesh::update()")
+                    << "Illegal refineTimeInterval " << refineTimeInterval_ << nl
+                    << "The refineTimeInterval setting in the dynamicMeshDict should"
+                    << " be > 0." << nl
+                    << exit(FatalError);
+            }
+
+            label refineIndex = label
+            (
+                (
+                    (time().value() - time().startTime().value())
+                  + 0.5*time().deltaTValue()
+                )
+                / refineTimeInterval_
+            );
+
+            if (refineIndex > refineTimeIndex_)
+            {
+                refineTimeIndex_ = refineIndex;
+                doRefine = true;
+            }
+            break;
+        }
+
+        default:
+        {
+            // This error should not actually be possible
+            FatalErrorIn("CML::dynamicRefineFvMesh::update()")
+                << "Undefined refine mode: "
+                << refineModeNames_[refineMode_] << nl
+                << abort(FatalError);
+            break;
+        }
+    }
 
 
     // Note: cannot refine at time 0 since no V0 present since mesh not
     //       moved yet.
 
-    if (time().timeIndex() > 0 && time().timeIndex() % refineInterval == 0)
+    if (doRefine)
     {
         label maxCells = readLabel(refineDict.lookup("maxCells"));
 
@@ -1201,21 +1386,21 @@ bool CML::dynamicRefineFvMesh::update()
 
                     PackedBoolList newRefineCell(cellMap.size());
 
-                    forAll(cellMap, cellI)
+                    forAll(cellMap, celli)
                     {
-                        label oldCellI = cellMap[cellI];
+                        label oldCelli = cellMap[celli];
 
-                        if (oldCellI < 0)
+                        if (oldCelli < 0)
                         {
-                            newRefineCell.set(cellI, 1);
+                            newRefineCell.set(celli, 1);
                         }
-                        else if (reverseCellMap[oldCellI] != cellI)
+                        else if (reverseCellMap[oldCelli] != celli)
                         {
-                            newRefineCell.set(cellI, 1);
+                            newRefineCell.set(celli, 1);
                         }
                         else
                         {
-                            newRefineCell.set(cellI, refineCell.get(oldCellI));
+                            newRefineCell.set(celli, refineCell.get(oldCelli));
                         }
                     }
                     refineCell.transfer(newRefineCell);
@@ -1232,7 +1417,8 @@ bool CML::dynamicRefineFvMesh::update()
             }
         }
 
-
+        // Unrefine mesh if allow by user
+        if(allowUnrefinement_)
         {
             // Select unrefineable points that are not marked in refineCell
             labelList pointsToUnrefine
@@ -1263,7 +1449,7 @@ bool CML::dynamicRefineFvMesh::update()
 
         if ((nRefinementIterations_ % 10) == 0)
         {
-            // Compact refinement history occassionally (how often?).
+            // Compact refinement history occasionally (how often?).
             // Unrefinement causes holes in the refinementHistory.
             const_cast<refinementHistory&>(meshCutter().history()).compact();
         }
@@ -1302,7 +1488,7 @@ bool CML::dynamicRefineFvMesh::writeObject
     {
         volScalarField scalarCellLevel
         (
-	    CML::IOobject
+            CML::IOobject
             (
                 "cellLevel",
                 time().timeName(),
@@ -1317,15 +1503,102 @@ bool CML::dynamicRefineFvMesh::writeObject
 
         const labelList& cellLevel = meshCutter_.cellLevel();
 
-        forAll(cellLevel, cellI)
+        forAll(cellLevel, celli)
         {
-            scalarCellLevel[cellI] = cellLevel[cellI];
+            scalarCellLevel[celli] = cellLevel[celli];
         }
 
-        writeOk = writeOk && scalarCellLevel.write();
+       volScalarField protectedCellLevel
+        (
+            IOobject
+            (
+                "protectedCell",
+                time().timeName(),
+                *this,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            *this,
+            dimensionedScalar("level", dimless, 0)
+        );
+
+
+        forAll(protectedCell_, celli)
+        {
+            if (protectedCell_[celli])
+            {
+                protectedCellLevel[celli] = scalar(1);
+            }
+
+        }
+
+
+        writeOk = writeOk && scalarCellLevel.write() && protectedCellLevel.write();
     }
 
     return writeOk;
+}
+
+
+void CML::dynamicRefineFvMesh::adjustDeltaT()
+{
+
+    if (refineMode_ == rmTime)
+    {
+        scalar timeToNextRefine = max
+        (
+            0.0,
+            (refineTimeIndex_ + 1)*refineTimeInterval_ - (time().value() - time().startTime().value())
+        );
+
+        scalar deltaT;
+
+        if (deltaTchanged_)
+        {
+            // Get previous timestep value
+            deltaT = time().deltaTValue();
+
+            if (deltaT > deltaTSave_)
+            {
+                deltaT = deltaTSave_;
+            }
+        }
+        else
+        {
+            deltaT = time().deltaTValue();
+        }
+
+        scalar nSteps = timeToNextRefine/deltaT - scalar(1e-6);
+
+        if (nSteps < nStepsToStartTimeChange_)
+        {
+          // For tiny deltaT the label can overflow!
+          if (nSteps < labelMax)
+          {
+              label nStepsToNextRefine = label(nSteps) + 1;
+              scalar newDeltaT = timeToNextRefine/nStepsToNextRefine;
+
+              // adjust time step
+              if (newDeltaT <= deltaT*scalar(1.01))
+              {
+                  deltaT = max(newDeltaT, 0.2*deltaT);
+                  const_cast<Time&>(time()).setDeltaT(deltaT, false);
+                  deltaTchanged_ = true;
+                  deltaTSave_ = deltaT;
+              }
+              else
+              {
+                  deltaTchanged_ = false;
+              }
+          }
+        }
+        else
+        {
+            deltaTchanged_ = false;
+        }  
+        Info<< "refineMesh adjusted deltaT = " <<  time().deltaTValue() << endl;
+    }
 }
 
 

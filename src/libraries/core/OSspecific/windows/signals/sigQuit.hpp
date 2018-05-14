@@ -21,7 +21,7 @@ Class
     sigQuit
 
 Description
-    Signal handler for QUIT interupt.  The standard interupt handler is
+    Signal handler for QUIT interrupt.  The standard interrupt handler is
     overridden to ensure that the runningJob file is removed.
 
 SourceFiles

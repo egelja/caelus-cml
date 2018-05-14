@@ -12,6 +12,44 @@
         mesh
     );
 
+    volScalarField::GeometricBoundaryField const& pGBF = p.boundaryField();
+    wordList const pBT = pGBF.types();
+        
+    volScalarField pCorr
+    (
+        IOobject
+        (
+            "pCorr",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("zero", p.dimensions(), 0.0),
+        pBT
+    );
+
+    forAll(pCorr.boundaryField(), patchi)
+    {
+        if
+        (
+            isType<fixedValueFvPatchScalarField>
+            (
+                pCorr.boundaryField()[patchi]
+            )
+        )
+        {
+            fixedValueFvPatchScalarField& pCorrB =
+                refCast<fixedValueFvPatchScalarField>
+                (
+                    pCorr.boundaryField()[patchi]
+                );
+        
+            pCorrB == scalarField(pCorrB.size(),scalar(0.0));
+        }
+    }
+
     Info<< "Reading field U\n" << endl;
     volVectorField U
     (
@@ -28,11 +66,28 @@
 
     #include "createPhi.hpp"
 
+    surfaceVectorField Uf = (fvc::interpolate(U))();
 
     label pRefCell = 0;
     scalar pRefValue = 0.0;
-    setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
+    if (simple.correctionForm())
+    {
+        // Read values from dicitionary
+        setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
 
+        // Handle a non-zero pRefValue
+        if (p.needReference())
+        {
+            p += dimensionedScalar("p", p.dimensions(), pRefValue - getRefCellValue(p, pRefCell));
+        }
+
+        // Change pRefValue to zero for correctionForm
+        pRefValue = 0.0;
+    }
+    else
+    {
+        setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
+    }
     singlePhaseTransportModel laminarTransport(U, phi);
 
     autoPtr<incompressible::RASModel> turbulence
@@ -77,4 +132,19 @@
         ),
         mesh,
         dimensionedScalar("right", dimless, -1.0)
+    );
+
+    volScalarField rAU
+    (
+        IOobject
+        (
+            "rAU",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        runTime.deltaT(),
+        zeroGradientFvPatchScalarField::typeName
     );

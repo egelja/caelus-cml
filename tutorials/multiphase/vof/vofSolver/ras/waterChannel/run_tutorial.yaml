@@ -1,0 +1,41 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      remove_extra:
+      - system/extrudeMeshDict
+      - 0/alpha1.gz
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - copy_files:
+      src: "system/extrudeMeshDict.0"
+      dest: "system/extrudeMeshDict"
+
+  - run_command:
+      cmd_name: extrudeMesh
+      log_file: extrudeMesh.0.log
+
+  - copy_files:
+      src: "system/extrudeMeshDict.1"
+      dest: "system/extrudeMeshDict"
+
+  - run_command:
+      cmd_name: extrudeMesh
+      log_file: extrudeMesh.1.log
+
+  - copy_files:
+      src: "0/alpha1.org"
+      dest: "0/alpha1"
+
+  - run_command:
+      cmd_name: setFields
+
+  - run_command:
+      cmd_name: vofSolver
+
+  - process_logs:
+      log_file: vofSolver.log
+

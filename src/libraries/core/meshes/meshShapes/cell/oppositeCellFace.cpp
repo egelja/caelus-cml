@@ -64,7 +64,7 @@ CML::label CML::cell::opposingFaceLabel
         {
             bool sharedPoint = false;
 
-            // Compare every vertex of the current face agains the
+            // Compare every vertex of the current face against the
             // vertices of the master face
             forAll(curFace, pointI)
             {

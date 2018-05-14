@@ -1,0 +1,15 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: no
+
+  - run_command:
+      cmd_name: cpbnsLTS
+
+  - run_command:
+      cmd_name: Mach
+
+  - process_logs:
+      log_file: cpbnsLTS.log
+

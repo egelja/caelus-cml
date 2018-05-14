@@ -1,0 +1,55 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+6
+(
+    inlet
+    {
+        type            patch;
+        nFaces          96;
+        startFace       48800;
+    }
+    left
+    {
+        type            empty;
+        nFaces          24576;
+        startFace       48896;
+    }
+    outlet
+    {
+        type            patch;
+        nFaces          96;
+        startFace       73472;
+    }
+    right
+    {
+        type            empty;
+        nFaces          24576;
+        startFace       73568;
+    }
+    top
+    {
+        type            wall;
+        nFaces          256;
+        startFace       98144;
+    }
+    wall
+    {
+        type            wall;
+        nFaces          256;
+        startFace       98400;
+    }
+)
+
+// ************************************************************************* //

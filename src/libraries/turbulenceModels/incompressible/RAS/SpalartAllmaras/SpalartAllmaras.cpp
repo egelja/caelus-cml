@@ -262,7 +262,19 @@ tmp<volScalarField> SpalartAllmaras::k() const
                 runTime_.timeName(),
                 mesh_
             ),
-            scalar(0.5)*tr(R())
+            (
+                sqrt
+                (
+                    epsilon()*nut_/0.09
+                    +
+                    dimensionedScalar
+                    (
+                        "sk",
+                        dimensionSet(0,4,-4,0,0,0,0),
+                        scalar(VSMALL)
+                    )
+                )
+            )
         )
     );
 }

@@ -1,0 +1,54 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 5207.65;
+
+boundaryField
+{
+    bottom
+    {
+        type            symmetryPlane;
+    }
+    inflow
+    {
+        type            fixedValue;
+        value           uniform 5207.65;
+    }
+    left
+    {
+        type            empty;
+    }
+    outflow
+    {
+        type            zeroGradient;
+    }
+    right
+    {
+        type            empty;
+    }
+    top
+    {
+        type            symmetryPlane;
+    }
+    wall
+    {
+        type            omegaWallFunction;
+        value           uniform 1;
+    }
+}
+
+
+// ************************************************************************* //

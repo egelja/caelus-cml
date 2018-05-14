@@ -27,40 +27,40 @@ CML::radiation::radiativeIntensityRay::I() const
 
 
 inline const CML::volScalarField&
-CML::radiation::radiativeIntensityRay::Qr() const
+CML::radiation::radiativeIntensityRay::qr() const
 {
-    return Qr_;
+    return qr_;
 }
 
 
-inline CML::volScalarField& CML::radiation::radiativeIntensityRay::Qr()
+inline CML::volScalarField& CML::radiation::radiativeIntensityRay::qr()
 {
-    return Qr_;
+    return qr_;
 }
 
 inline const CML::volScalarField& CML::radiation::
-radiativeIntensityRay::Qin() const
+radiativeIntensityRay::qin() const
 {
-    return Qin_;
+    return qin_;
 }
 
 
-inline CML::volScalarField& CML::radiation::radiativeIntensityRay::Qin()
+inline CML::volScalarField& CML::radiation::radiativeIntensityRay::qin()
 {
-    return Qin_;
+    return qin_;
 }
 
 
 inline const CML::volScalarField& CML::radiation::
-radiativeIntensityRay::Qem() const
+radiativeIntensityRay::qem() const
 {
-    return Qem_;
+    return qem_;
 }
 
 
-inline CML::volScalarField& CML::radiation::radiativeIntensityRay::Qem()
+inline CML::volScalarField& CML::radiation::radiativeIntensityRay::qem()
 {
-    return Qem_;
+    return qem_;
 }
 
 

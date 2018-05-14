@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     #include "createMesh.hpp"
     #include "readControls.hpp"
     #include "createFields.hpp"
+    #include "createMRF.hpp"
     #include "createFvOptions.hpp"
 
     Info<< nl << "Calculating potential flow" << endl;
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
     // function objects so do it ourselves
     runTime.functionObjects().start();
 
-    fvOptions.makeRelative(phi);
+    MRF.makeRelative(phi);
 
     adjustPhi(phi, U, p);
 
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    fvOptions.makeAbsolute(phi);
+    MRF.makeAbsolute(phi);
 
     Info<< "continuity error = "
         << mag(fvc::div(phi))().weightedAverage(mesh.V()).value()

@@ -533,7 +533,7 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     nTrackingRescues_ = 0;
 
 
-    // List of lists of particles to be transfered for all of the
+    // List of lists of particles to be transferred for all of the
     // neighbour processors
     List<IDLList<ParticleType> > particleTransferLists
     (
@@ -638,7 +638,7 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
 
         pBufs.finishedSends(allNTrans);
 
-        bool transfered = false;
+        bool transferred = false;
 
         forAll(allNTrans, i)
         {
@@ -646,14 +646,14 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             {
                 if (allNTrans[i][j])
                 {
-                    transfered = true;
+                    transferred = true;
                     break;
                 }
             }
         }
-        reduce(transfered, orOp<bool>());
+        reduce(transferred, orOp<bool>());
 
-        if (!transfered)
+        if (!transferred)
         {
             break;
         }

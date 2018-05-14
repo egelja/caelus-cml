@@ -317,7 +317,10 @@ public:
             (
                 const labelHashSet& include
             ) const;
-
+    
+            //- Inherit reset from MeshedSurface<Face>
+            using MeshedSurface<Face>::reset;
+    
             //- Transfer components (points, faces, zone ids).
             virtual void reset
             (

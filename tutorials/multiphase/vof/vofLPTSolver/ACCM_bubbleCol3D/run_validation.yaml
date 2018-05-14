@@ -1,0 +1,35 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+
+  - copy_files:
+      src: "0/alpha1.org"
+      dest: "0/alpha1"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: setSet
+      cmd_args: "-batch system/makeFaceSet.setSet"
+
+  - run_command:
+      cmd_name: createPatch
+      cmd_args: "-overwrite"
+
+  - run_command:
+      cmd_name: setFields 
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args: "-force"
+
+  - run_command:
+      cmd_name: vofLPTSolver
+      parallel: True
+
+  - process_logs:
+      log_file: vofLPTSolver.log
+

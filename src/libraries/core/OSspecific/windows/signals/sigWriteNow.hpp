@@ -21,7 +21,7 @@ Class
     CML::sigWriteNow
 
 Description
-    Signal handler for interupt defined by OptimisationSwitches::writeNowSignal
+    Signal handler for interrupt defined by OptimisationSwitches::writeNowSignal
 
     Write once and continue.
 

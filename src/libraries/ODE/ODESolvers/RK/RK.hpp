@@ -81,7 +81,10 @@ public:
 
 
     // Member Functions
-
+    
+        //- Inherit solve from ODESolver
+        using ODESolver::solve;
+    
         void solve
         (
             const ODE& ode,

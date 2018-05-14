@@ -250,7 +250,7 @@ public:
         ThermoSurfaceFilm(const ThermoSurfaceFilm<CloudType>& sfm);
 
         //- Construct and return a clone using supplied owner cloud
-        virtual autoPtr<SurfaceFilmModel<CloudType> > clone()
+        virtual autoPtr<SurfaceFilmModel<CloudType> > clone() const
         {
             return autoPtr<SurfaceFilmModel<CloudType> >
             (

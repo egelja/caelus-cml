@@ -18,19 +18,42 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::MarshakRadiationFixedTMixedFvPatchScalarField
+    CML::MarshakRadiationFixedTemperaturFvPatchScalarField
 
 Description
-    Marshak boundary for radiation G field
-    - radiation temperature specified
+    A 'mixed' boundary condition that implements a Marshak condition for the
+    incident radiation field (usually written as G)
+
+    The radiation temperature field across the patch is supplied by the user
+    using the \c Trad entry.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        T            | temperature field name  | no          | T
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            MarshakRadiationFixedTemperature;
+        Trad            uniform 1000;       // radiation temperature field
+        value           uniform 0;          // place holder
+    }
+    \endverbatim
+
+See also
+    CML::radiationCoupledBase
+    CML::mixedFvPatchField
 
 SourceFiles
     MarshakRadiationFixedTMixedFvPatchScalarField.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef MarshakRadiationFixedTMixedFvPatchField_H
-#define MarshakRadiationFixedTMixedFvPatchField_H
+#ifndef MarshakRadiationFixedTemperatureFvPatchScalarField_HPP
+#define MarshakRadiationFixedTemperatureFvPatchScalarField_HPP
 
 #include "mixedFvPatchFields.hpp"
 #include "radiationCoupledBase.hpp"
@@ -41,10 +64,10 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-        Class MarshakRadiationFixedTMixedFvPatchScalarField Declaration
+     Class MarshakRadiationFixedTemperatureFvPatchScalarField Declaration
 \*---------------------------------------------------------------------------*/
 
-class MarshakRadiationFixedTMixedFvPatchScalarField
+class MarshakRadiationFixedTemperatureFvPatchScalarField
 :
     public mixedFvPatchScalarField,
     public radiationCoupledBase
@@ -59,20 +82,20 @@ class MarshakRadiationFixedTMixedFvPatchScalarField
 public:
 
     //- Runtime type information
-    TypeName("MarshakRadiationFixedT");
+    TypeName("MarshakRadiationFixedTemperature");
 
 
     // Constructors
 
         //- Construct from patch and internal field
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
@@ -81,18 +104,18 @@ public:
 
         //- Construct by mapping given MarshakRadiationFvPatchField onto a new
         //  patch
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
         (
-            const MarshakRadiationFixedTMixedFvPatchScalarField&,
+            const MarshakRadiationFixedTemperatureFvPatchScalarField&,
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
         //- Construct as copy
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
         (
-            const MarshakRadiationFixedTMixedFvPatchScalarField&
+            const MarshakRadiationFixedTemperatureFvPatchScalarField&
         );
 
         //- Construct and return a clone
@@ -100,14 +123,14 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new MarshakRadiationFixedTMixedFvPatchScalarField(*this)
+                new MarshakRadiationFixedTemperatureFvPatchScalarField(*this)
             );
         }
 
         //- Construct as copy setting internal field reference
-        MarshakRadiationFixedTMixedFvPatchScalarField
+        MarshakRadiationFixedTemperatureFvPatchScalarField
         (
-            const MarshakRadiationFixedTMixedFvPatchScalarField&,
+            const MarshakRadiationFixedTemperatureFvPatchScalarField&,
             const DimensionedField<scalar, volMesh>&
         );
 
@@ -119,7 +142,11 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new MarshakRadiationFixedTMixedFvPatchScalarField(*this, iF)
+                new MarshakRadiationFixedTemperatureFvPatchScalarField
+                (
+                    *this,
+                    iF
+                )
             );
         }
 

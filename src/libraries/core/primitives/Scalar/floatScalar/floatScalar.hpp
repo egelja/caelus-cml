@@ -55,7 +55,7 @@ static const floatScalar floatScalarROOTSMALL = 1.0e-3;
 static const floatScalar floatScalarVSMALL = 1.0e-37;
 static const floatScalar floatScalarROOTVSMALL = 1.0e-18;
 
-//- Read whole of buf as a scalar. Return true if succesful.
+//- Read whole of buf as a scalar. Return true if successful.
 inline bool readScalar(const char* buf, floatScalar& s)
 {
     char* endPtr;

@@ -1,0 +1,16 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: no
+
+  - run_command:
+      cmd_name: explicitDBNSSolver
+      parallel: False
+
+  - run_command:
+      cmd_name: Mach
+
+  - process_logs:
+      log_file: explicitDBNSSolver.log
+

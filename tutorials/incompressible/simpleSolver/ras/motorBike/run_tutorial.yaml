@@ -1,0 +1,33 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: no
+      preserve: [ "0.org" ]
+
+  - copy_tree:
+      src: "0.org"
+      dest: "0"
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args: "-force"
+
+  - run_command:
+      cmd_name: potentialSolver
+      cmd_args: "-initialiseUBCs -noFunctionObjects -writep"
+      parallel: True
+
+  - run_command:
+      cmd_name: simpleSolver
+      parallel: True
+
+  - run_command:
+      cmd_name: reconstructPar
+      cmd_args: "-latestTime"
+
+  - process_logs:
+      log_file: simpleSolver.log
+      plot_residuals: True
+      plot_continuity_errors: True
+      residuals_fields: [Ux,Uy,Uz,k,omega]

@@ -28,9 +28,8 @@ License
 
 namespace CML
 {
-    defineTypeNameAndDebug(mapDistribute, 0);
+defineTypeNameAndDebug(mapDistribute, 0);
 }
-
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -271,12 +270,12 @@ CML::mapDistribute::mapDistribute
     forAll(transformedElements, i)
     {
         labelPair elem = transformedElements[i];
-        label procI = globalIndexAndTransform::processor(elem);
-        if (procI != Pstream::myProcNo())
+        label proci = globalIndexAndTransform::processor(elem);
+        if (proci != Pstream::myProcNo())
         {
             label index = globalIndexAndTransform::index(elem);
-            label nCompact = compactMap[procI].size();
-            compactMap[procI].insert(index, nCompact);
+            label nCompact = compactMap[proci].size();
+            compactMap[proci].insert(index, nCompact);
         }
     }
 
@@ -322,16 +321,16 @@ CML::mapDistribute::mapDistribute
     forAll(transformedElements, i)
     {
         labelPair elem = transformedElements[i];
-        label procI = globalIndexAndTransform::processor(elem);
+        label proci = globalIndexAndTransform::processor(elem);
         label index = globalIndexAndTransform::index(elem);
         label trafoI = globalIndexAndTransform::transformIndex(elem);
 
         // Get compact index for untransformed element
         label rawElemI =
         (
-            procI == Pstream::myProcNo()
+            proci == Pstream::myProcNo()
           ? index
-          : compactMap[procI][index]
+          : compactMap[proci][index]
         );
 
         label& n = nPerTransform[trafoI];
@@ -373,18 +372,18 @@ CML::mapDistribute::mapDistribute
     );
 
     // Add all (non-local) transformed elements needed.
-    forAll(transformedElements, cellI)
+    forAll(transformedElements, celli)
     {
-        const labelPairList& elems = transformedElements[cellI];
+        const labelPairList& elems = transformedElements[celli];
 
         forAll(elems, i)
         {
-            label procI = globalIndexAndTransform::processor(elems[i]);
-            if (procI != Pstream::myProcNo())
+            label proci = globalIndexAndTransform::processor(elems[i]);
+            if (proci != Pstream::myProcNo())
             {
                 label index = globalIndexAndTransform::index(elems[i]);
-                label nCompact = compactMap[procI].size();
-                compactMap[procI].insert(index, nCompact);
+                label nCompact = compactMap[proci].size();
+                compactMap[proci].insert(index, nCompact);
             }
         }
     }
@@ -408,9 +407,9 @@ CML::mapDistribute::mapDistribute
     // Count per transformIndex
     label nTrafo = globalTransforms.transformPermutations().size();
     labelList nPerTransform(nTrafo, 0);
-    forAll(transformedElements, cellI)
+    forAll(transformedElements, celli)
     {
-        const labelPairList& elems = transformedElements[cellI];
+        const labelPairList& elems = transformedElements[celli];
 
         forAll(elems, i)
         {
@@ -432,30 +431,30 @@ CML::mapDistribute::mapDistribute
     nPerTransform = 0;
 
     transformedIndices.setSize(transformedElements.size());
-    forAll(transformedElements, cellI)
+    forAll(transformedElements, celli)
     {
-        const labelPairList& elems = transformedElements[cellI];
-        transformedIndices[cellI].setSize(elems.size());
+        const labelPairList& elems = transformedElements[celli];
+        transformedIndices[celli].setSize(elems.size());
 
         forAll(elems, i)
         {
-            label procI = globalIndexAndTransform::processor(elems[i]);
+            label proci = globalIndexAndTransform::processor(elems[i]);
             label index = globalIndexAndTransform::index(elems[i]);
             label trafoI = globalIndexAndTransform::transformIndex(elems[i]);
 
             // Get compact index for untransformed element
             label rawElemI =
             (
-                procI == Pstream::myProcNo()
+                proci == Pstream::myProcNo()
               ? index
-              : compactMap[procI][index]
+              : compactMap[proci][index]
             );
 
             label& n = nPerTransform[trafoI];
             // index of element to transform
             transformElements_[trafoI][n] = rawElemI;
             // destination of transformed element
-            transformedIndices[cellI][i] = transformStart_[trafoI]+n;
+            transformedIndices[celli][i] = transformStart_[trafoI]+n;
             n++;
         }
     }
@@ -496,9 +495,16 @@ CML::mapDistribute::mapDistribute(Istream& is)
 }
 
 
+CML::autoPtr<CML::mapDistribute> CML::mapDistribute::clone() const
+{
+    return autoPtr<mapDistribute>(new mapDistribute(*this));
+}
+
+
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-CML::label CML::mapDistribute::whichTransform(const label index) const
+CML::label CML::mapDistribute::whichTransform(const label index)
+const
 {
     return findLower(transformStart_, index+1);
 }
@@ -556,7 +562,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const mapDistribute& map)
 {
     os  << static_cast<const mapDistributeBase&>(map) << token::NL
         << map.transformElements_ << token::NL
-        << map.transformStart_ << token::NL;
+        << map.transformStart_;
 
     return os;
 }

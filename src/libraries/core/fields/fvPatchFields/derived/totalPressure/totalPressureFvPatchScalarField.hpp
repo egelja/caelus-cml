@@ -147,7 +147,7 @@ class totalPressureFvPatchScalarField
         word phiName_;
 
         //- Name of the density field used to normalise the mass flux
-        //  if neccessary
+        //  if necessary
         word rhoName_;
 
         //- Name of the compressibility field used to calculate the wave speed
@@ -326,7 +326,10 @@ public:
 
 
         // Evaluation functions
-
+    
+            //- Inherit updateCoeffs from fixedValueFvPatchScalarField
+            using fixedValueFvPatchScalarField::updateCoeffs;
+    
             //- Update the coefficients associated with the patch field
             //  using the given patch total pressure and velocity fields
             virtual void updateCoeffs

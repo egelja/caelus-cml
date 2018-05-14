@@ -474,8 +474,9 @@ void kOmegaSST::correct()
 
     RASModel::correct();
 
-    volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
-    volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));
+    tmp<volTensorField> tgradU = fvc::grad(U_);
+    volScalarField const S2(2*magSqr(symm(tgradU())));
+    volScalarField const Omega(2*magSqr(skew(tgradU())));
     volScalarField G(GName(), nut_*S2);
 
     // Update omega and G at the wall
@@ -524,7 +525,7 @@ void kOmegaSST::correct()
      ==
         gamma(F1)* min(fr1_*G, c1_*betaStar_*k_*omega_)/(nut_ + nutMin)
       - fvm::Sp(beta(F1)*omega_, omega_)
-      + 2*(1-F1)*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
+      + (1-F1)*CDkOmega
     );
 
     omegaEqn().relax();
@@ -563,7 +564,7 @@ void kOmegaSST::correct()
             * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
         Fd_.correctBoundaryConditions();
         nut_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
-        nut_ *= nut_;
+        nut_ *= Fd_;
     }
     else
     {

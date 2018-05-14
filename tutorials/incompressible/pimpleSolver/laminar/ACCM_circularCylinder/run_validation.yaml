@@ -1,0 +1,12 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: no
+
+  - run_command:
+      cmd_name: pimpleSolver
+
+  - process_logs:
+      log_file: pimpleSolver.log
+

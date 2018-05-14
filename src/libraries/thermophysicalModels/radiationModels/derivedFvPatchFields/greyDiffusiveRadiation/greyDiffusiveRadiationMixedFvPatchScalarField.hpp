@@ -21,7 +21,34 @@ Class
     CML::greyDiffusiveRadiationMixedFvPatchScalarField
 
 Description
-    Radiation temperature specified
+    This boundary condition provides a grey-diffuse condition for radiation
+    intensity, \c I, for use with the finite-volume discrete-ordinates model
+    (fvDOM), in which the radiation temperature is retrieved from the
+    temperature field boundary condition.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        T            | temperature field name  | no          | T
+        emissivityMode | emissivity mode: solidRadiation or lookup | yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            greyDiffusiveRadiation;
+        T               T;
+        emissivityMode  solidRadiation;
+        value           uniform 0;
+    }
+    \endverbatim
+
+See also
+    CML::radiationCoupledBase
+    CML::radiation::radiationModel
+    CML::radiation::fvDOM
+    CML::mixedFvPatchField
 
 SourceFiles
     greyDiffusiveRadiationMixedFvPatchScalarField.cpp
@@ -156,8 +183,8 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace radiation
 } // End namespace CML
-}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -139,6 +139,12 @@ CML::Ostream& CML::ensightFile::write
 }
 
 
+CML::Ostream& CML::ensightFile::write(const char* value)
+{
+    return write(string(value));
+}
+
+
 CML::Ostream& CML::ensightFile::write(const string& value)
 {
     char buf[80];
@@ -266,7 +272,7 @@ CML::Ostream& CML::ensightFile::writeKeyword(const string& key)
 {
     if (allowUndef_)
     {
-        write(key + " undef");
+        write(string(key + " undef"));
         newline();
         write(undefValue_);
         newline();

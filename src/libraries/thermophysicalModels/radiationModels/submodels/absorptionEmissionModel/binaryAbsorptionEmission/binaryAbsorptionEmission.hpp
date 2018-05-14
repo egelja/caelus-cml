@@ -69,18 +69,14 @@ public:
     // Constructors
 
         //- Construct from components
-        binaryAbsorptionEmission
-        (
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+        binaryAbsorptionEmission(const dictionary& dict, const fvMesh& mesh);
 
 
     //- Destructor
     virtual ~binaryAbsorptionEmission();
 
 
-    // Member Operators
+    // Member Functions
 
         // Access
 

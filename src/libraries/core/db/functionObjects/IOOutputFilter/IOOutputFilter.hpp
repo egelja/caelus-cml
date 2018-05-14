@@ -112,9 +112,15 @@ public:
         {
             return IOdictionary::name();
         }
+    
+        //- Inherit read from OutputFilter
+        using OutputFilter::read;
 
         //- Read output filter properties
         virtual bool read();
+    
+        //- Inherit write from regIOobject
+        using regIOobject::write;
 
         //- Sample and write
         virtual void write();

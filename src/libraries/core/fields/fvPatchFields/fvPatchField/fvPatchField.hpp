@@ -297,6 +297,38 @@ public:
 
     // Member functions
 
+        // Attributes
+
+            //- Return the type of the calculated for of fvPatchField
+            static const word& calculatedType();
+
+            //- Return true if the value of the patch field
+            //  is altered by assignment (the default)
+            virtual bool assignable() const
+            {
+                return true;
+            }
+
+            //- Return true if this patch field fixes a value.
+            //  Needed to check if a level has to be specified while solving
+            //  Poissons equations.
+            virtual bool fixesValue() const
+            {
+                return false;
+            }
+
+            //- Return true if this patch field is coupled
+            virtual bool coupled() const
+            {
+                return false;
+            }
+
+            //- Return true if this patch field fixes the gradient value
+            virtual bool fixesGradient() const
+            {
+                return false;
+            }
+
         // Access
 
             //- Return local objectRegistry
@@ -332,30 +364,6 @@ public:
             {
                 return patchType_;
             }
-
-            //- Return the type of the calculated for of fvPatchField
-            static const word& calculatedType();
-
-            //- Return true if this patch field fixes a value.
-            //  Needed to check if a level has to be specified while solving
-            //  Poissons equations.
-            virtual bool fixesValue() const
-            {
-                return false;
-            }
-
-            //- Return true if this patch field is coupled
-            virtual bool coupled() const
-            {
-                return false;
-            }
-
-            //- Return true if this patch field fixes the gradient value
-            virtual bool fixesGradient() const
-            {
-                return false;
-            }
-
 
             //- Return true if the boundary condition has already been updated
             bool updated() const

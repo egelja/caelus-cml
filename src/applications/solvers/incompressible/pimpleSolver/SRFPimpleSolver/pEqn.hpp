@@ -7,7 +7,7 @@ if (pimple.nCorrPISO() <= 1)
 }
 
 phi = (fvc::interpolate(Urel) & mesh.Sf())
-    + fvc::ddtPhiCorr(rAUrel, Urel, phi);
+    + fvc::interpolate(rAUrel)*fvc::ddtCorr(Urel, phi);
 
 adjustPhi(phi, Urel, p);
 

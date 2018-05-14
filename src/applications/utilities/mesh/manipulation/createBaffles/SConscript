@@ -20,8 +20,7 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'dynamicMesh',
-'genericPatchFields'
+'dynamicMesh'
 ]
 
 local_dir = env.Dir(".").srcnode().abspath

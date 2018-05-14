@@ -65,8 +65,16 @@ def linux_flags(env):
     """Linux specific compiler flags"""
     if env['INT_TYPE'] == '64':
         env.Append(CXXFLAGS = '-DCAELUS_LABEL64')
-    env.Append(LIBPATH_COMMON = [env['MPI_LIB_PATH']],
-               CPPPATH = [env['MPI_INC_PATH']])
+    env.Append(
+        LIBPATH_COMMON = [
+            env['MPI_LIB_PATH'],
+            os.path.join(env['ZLIB_PATH'],'lib'),
+        ],
+        CPPPATH = [
+            env['MPI_INC_PATH'],
+            os.path.join(env['ZLIB_PATH'],'include'),
+        ]
+    )
 
     env.Prepend(LINKFLAGS = '-Xlinker --add-needed')
     env.Prepend(LINKFLAGS = '-Xlinker --no-as-needed')
@@ -114,7 +122,8 @@ def update_compiler_settings(env):
     env.Append(LIBPATH_COMMON = [env['LIB_PLATFORM_INSTALL']],
                LIBPATH_APPS = [], LIBPATH_LIBS = [])
     env.Append(RPATH = [env['LIB_PLATFORM_INSTALL']])
-
+    if not ostype == "windows":
+        env.Append(LIBS = [env['MPI_LIB_NAME'], 'z'])
     # Global include directory
     env.Append(CPPPATH = [env['PROJECT_INC_DIR']])
 

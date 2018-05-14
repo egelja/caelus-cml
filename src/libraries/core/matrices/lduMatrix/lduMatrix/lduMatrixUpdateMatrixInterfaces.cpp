@@ -84,7 +84,7 @@ void CML::lduMatrix::initMatrixInterfaces
     else
     {
         FatalErrorIn("lduMatrix::initMatrixInterfaces")
-            << "Unsuported communications type "
+            << "Unsupported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
     }
@@ -196,7 +196,7 @@ void CML::lduMatrix::updateMatrixInterfaces
     else
     {
         FatalErrorIn("lduMatrix::updateMatrixInterfaces")
-            << "Unsuported communications type "
+            << "Unsupported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
     }

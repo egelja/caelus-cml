@@ -160,7 +160,8 @@ public:
                 const polyMesh&,
                 UList<T>&,
                 const CombineOp& cop,
-                const TransformOp& top
+                const TransformOp& top,
+                const bool parRun = Pstream::parRun()
             );
 
 
@@ -552,7 +553,8 @@ public:
             (
                 const polyMesh& mesh,
                 PackedList<nBits>& faceValues,
-                const CombineOp& cop
+                const CombineOp& cop,
+                const bool parRun = Pstream::parRun()
             );
 
             template<unsigned nBits>
@@ -696,10 +698,10 @@ void CML::syncTools::syncPointMap
         // Fill my entries in the shared points
         forAll(sharedPtLabels, i)
         {
-            label meshPointI = sharedPtLabels[i];
+            label meshPointi = sharedPtLabels[i];
 
             typename Map<T>::const_iterator fnd =
-                pointValues.find(meshPointI);
+                pointValues.find(meshPointi);
 
             if (fnd != pointValues.end())
             {
@@ -721,16 +723,16 @@ void CML::syncTools::syncPointMap
 
         // Send
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nPoints() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nPoints() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 // Get data per patchPoint in neighbouring point numbers.
 
@@ -761,16 +763,16 @@ void CML::syncTools::syncPointMap
 
         // Receive and combine.
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nPoints() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nPoints() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 UIPstream fromNb(procPatch.neighbProcNo(), pBufs);
                 Map<T> nbrPatchInfo(fromNb);
@@ -796,12 +798,12 @@ void CML::syncTools::syncPointMap
     }
 
     // Do the cyclics.
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
+        if (isA<cyclicPolyPatch>(patches[patchi]))
         {
             const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
+                refCast<const cyclicPolyPatch>(patches[patchi]);
 
             if (cycPatch.owner())
             {
@@ -931,7 +933,11 @@ void CML::syncTools::syncPointMap
             {
                 // Slave: send to master
                 {
-                    OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
+                    OPstream toMaster
+                    (
+                        Pstream::scheduled,
+                        Pstream::masterNo()
+                    );
                     toMaster << sharedPointValues;
                 }
                 // Receive merged values
@@ -997,16 +1003,16 @@ void CML::syncTools::syncEdgeMap
 
         // Send
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nEdges() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nEdges() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
 
                 // Get data per patch edge in neighbouring edge.
@@ -1041,16 +1047,16 @@ void CML::syncTools::syncEdgeMap
 
         // Receive and combine.
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nEdges() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nEdges() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 EdgeMap<T> nbrPatchInfo;
                 {
@@ -1086,12 +1092,12 @@ void CML::syncTools::syncEdgeMap
     // Swap cyclic info
     // ~~~~~~~~~~~~~~~~
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
+        if (isA<cyclicPolyPatch>(patches[patchi]))
         {
             const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
+                refCast<const cyclicPolyPatch>(patches[patchi]);
 
             if (cycPatch.owner())
             {
@@ -1212,9 +1218,9 @@ void CML::syncTools::syncEdgeMap
     // on the outside of the mesh. (though might not be on coupled patch
     // if is single edge and not on coupled face)
     // Store value (if any) on sharedEdgeValues
-    for (label faceI = mesh.nInternalFaces(); faceI < mesh.nFaces(); faceI++)
+    for (label facei = mesh.nInternalFaces(); facei < mesh.nFaces(); facei++)
     {
-        const face& f = mesh.faces()[faceI];
+        const face& f = mesh.faces()[facei];
 
         forAll(f, fp)
         {
@@ -1308,12 +1314,20 @@ void CML::syncTools::syncEdgeMap
         {
             // Send to master
             {
-                OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
+                OPstream toMaster
+                (
+                    Pstream::scheduled,
+                    Pstream::masterNo()
+                );
                 toMaster << sharedEdgeValues;
             }
             // Receive merged values
             {
-                IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+                IPstream fromMaster
+                (
+                    Pstream::scheduled,
+                    Pstream::masterNo()
+                );
                 fromMaster >> sharedEdgeValues;
             }
         }
@@ -1383,9 +1397,9 @@ void CML::syncTools::syncEdgeMap
 //
 //        forAll(pd.sharedPointLabels(), i)
 //        {
-//            label meshPointI = pd.sharedPointLabels()[i];
+//            label meshPointi = pd.sharedPointLabels()[i];
 //            // Fill my entries in the shared points
-//            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointI];
+//            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointi];
 //        }
 //    }
 //
@@ -1395,16 +1409,16 @@ void CML::syncTools::syncEdgeMap
 //
 //        // Send
 //
-//        forAll(patches, patchI)
+//        forAll(patches, patchi)
 //        {
 //            if
 //            (
-//                isA<processorPolyPatch>(patches[patchI])
-//             && patches[patchI].nPoints() > 0
+//                isA<processorPolyPatch>(patches[patchi])
+//             && patches[patchi].nPoints() > 0
 //            )
 //            {
 //                const processorPolyPatch& procPatch =
-//                    refCast<const processorPolyPatch>(patches[patchI]);
+//                    refCast<const processorPolyPatch>(patches[patchi]);
 //
 //                // Get data per patchPoint in neighbouring point numbers.
 //                Field<T> patchInfo(procPatch.nPoints());
@@ -1412,10 +1426,10 @@ void CML::syncTools::syncEdgeMap
 //                const labelList& meshPts = procPatch.meshPoints();
 //                const labelList& nbrPts = procPatch.neighbPoints();
 //
-//                forAll(nbrPts, pointI)
+//                forAll(nbrPts, pointi)
 //                {
-//                    label nbrPointI = nbrPts[pointI];
-//                    patchInfo[nbrPointI] = pointValues[meshPts[pointI]];
+//                    label nbrPointi = nbrPts[pointi];
+//                    patchInfo[nbrPointi] = pointValues[meshPts[pointi]];
 //                }
 //
 //                UOPstream toNbr(procPatch.neighbProcNo(), pBufs);
@@ -1427,16 +1441,16 @@ void CML::syncTools::syncEdgeMap
 //
 //        // Receive and combine.
 //
-//        forAll(patches, patchI)
+//        forAll(patches, patchi)
 //        {
 //            if
 //            (
-//                isA<processorPolyPatch>(patches[patchI])
-//             && patches[patchI].nPoints() > 0
+//                isA<processorPolyPatch>(patches[patchi])
+//             && patches[patchi].nPoints() > 0
 //            )
 //            {
 //                const processorPolyPatch& procPatch =
-//                    refCast<const processorPolyPatch>(patches[patchI]);
+//                    refCast<const processorPolyPatch>(patches[patchi]);
 //
 //                Field<T> nbrPatchInfo(procPatch.nPoints());
 //                {
@@ -1449,22 +1463,22 @@ void CML::syncTools::syncEdgeMap
 //
 //                const labelList& meshPts = procPatch.meshPoints();
 //
-//                forAll(meshPts, pointI)
+//                forAll(meshPts, pointi)
 //                {
-//                    label meshPointI = meshPts[pointI];
-//                    cop(pointValues[meshPointI], nbrPatchInfo[pointI]);
+//                    label meshPointi = meshPts[pointi];
+//                    cop(pointValues[meshPointi], nbrPatchInfo[pointi]);
 //                }
 //            }
 //        }
 //    }
 //
 //    // Do the cyclics.
-//    forAll(patches, patchI)
+//    forAll(patches, patchi)
 //    {
-//        if (isA<cyclicPolyPatch>(patches[patchI]))
+//        if (isA<cyclicPolyPatch>(patches[patchi]))
 //        {
 //            const cyclicPolyPatch& cycPatch =
-//                refCast<const cyclicPolyPatch>(patches[patchI]);
+//                refCast<const cyclicPolyPatch>(patches[patchi]);
 //
 //            if (cycPatch.owner())
 //            {
@@ -1516,8 +1530,8 @@ void CML::syncTools::syncEdgeMap
 //        // my local information.
 //        forAll(pd.sharedPointLabels(), i)
 //        {
-//            label meshPointI = pd.sharedPointLabels()[i];
-//            pointValues[meshPointI] = sharedPts[pd.sharedPointAddr()[i]];
+//            label meshPointi = pd.sharedPointLabels()[i];
+//            pointValues[meshPointi] = sharedPts[pd.sharedPointAddr()[i]];
 //        }
 //    }
 //}
@@ -1652,8 +1666,8 @@ void CML::syncTools::syncPointList
 
     forAll(meshPoints, i)
     {
-        label pointI = meshPoints[i];
-        Map<label>::const_iterator iter = mpm.find(pointI);
+        label pointi = meshPoints[i];
+        Map<label>::const_iterator iter = mpm.find(pointi);
         if (iter != mpm.end())
         {
             cppFld[iter()] = pointValues[i];
@@ -1673,8 +1687,8 @@ void CML::syncTools::syncPointList
 
     forAll(meshPoints, i)
     {
-        label pointI = meshPoints[i];
-        Map<label>::const_iterator iter = mpm.find(pointI);
+        label pointi = meshPoints[i];
+        Map<label>::const_iterator iter = mpm.find(pointi);
         if (iter != mpm.end())
         {
             pointValues[i] = cppFld[iter()];
@@ -1711,8 +1725,8 @@ void CML::syncTools::syncPointList
 //
 //    forAll(meshPoints, i)
 //    {
-//        label pointI = meshPoints[i];
-//        Map<label>::const_iterator iter = mpm.find(pointI);
+//        label pointi = meshPoints[i];
+//        Map<label>::const_iterator iter = mpm.find(pointi);
 //        if (iter != mpm.end())
 //        {
 //            cppFld[iter()] = pointValues[i];
@@ -1733,8 +1747,8 @@ void CML::syncTools::syncPointList
 //
 //    forAll(meshPoints, i)
 //    {
-//        label pointI = meshPoints[i];
-//        Map<label>::const_iterator iter = mpm.find(pointI);
+//        label pointi = meshPoints[i];
+//        Map<label>::const_iterator iter = mpm.find(pointi);
 //        if (iter != mpm.end())
 //        {
 //            pointValues[i] = cppFld[iter()];
@@ -1902,7 +1916,8 @@ void CML::syncTools::syncBoundaryFaceList
     const polyMesh& mesh,
     UList<T>& faceValues,
     const CombineOp& cop,
-    const TransformOp& top
+    const TransformOp& top,
+    const bool parRun
 )
 {
     const label nBFaces = mesh.nFaces() - mesh.nInternalFaces();
@@ -1921,22 +1936,22 @@ void CML::syncTools::syncBoundaryFaceList
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    if (Pstream::parRun())
+    if (parRun)
     {
         PstreamBuffers pBufs(Pstream::nonBlocking);
 
         // Send
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].size() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].size() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 label patchStart = procPatch.start()-mesh.nInternalFaces();
 
@@ -1951,16 +1966,16 @@ void CML::syncTools::syncBoundaryFaceList
 
         // Receive and combine.
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].size() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].size() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 Field<T> nbrPatchInfo(procPatch.size());
 
@@ -1969,23 +1984,23 @@ void CML::syncTools::syncBoundaryFaceList
 
                 top(procPatch, nbrPatchInfo);
 
-                label bFaceI = procPatch.start()-mesh.nInternalFaces();
+                label bFacei = procPatch.start()-mesh.nInternalFaces();
 
                 forAll(nbrPatchInfo, i)
                 {
-                    cop(faceValues[bFaceI++], nbrPatchInfo[i]);
+                    cop(faceValues[bFacei++], nbrPatchInfo[i]);
                 }
             }
         }
     }
 
     // Do the cyclics.
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
+        if (isA<cyclicPolyPatch>(patches[patchi]))
         {
             const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
+                refCast<const cyclicPolyPatch>(patches[patchi]);
 
             if (cycPatch.owner())
             {
@@ -2027,7 +2042,8 @@ void CML::syncTools::syncFaceList
 (
     const polyMesh& mesh,
     PackedList<nBits>& faceValues,
-    const CombineOp& cop
+    const CombineOp& cop,
+    const bool parRun
 )
 {
     if (faceValues.size() != mesh.nFaces())
@@ -2043,22 +2059,22 @@ void CML::syncTools::syncFaceList
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    if (Pstream::parRun())
+    if (parRun)
     {
         PstreamBuffers pBufs(Pstream::nonBlocking);
 
         // Send
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].size() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].size() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 List<unsigned int> patchInfo(procPatch.size());
                 forAll(procPatch, i)
@@ -2076,16 +2092,16 @@ void CML::syncTools::syncFaceList
 
         // Receive and combine.
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].size() > 0
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].size() > 0
             )
             {
                 const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 List<unsigned int> patchInfo(procPatch.size());
                 {
@@ -2097,22 +2113,22 @@ void CML::syncTools::syncFaceList
                 forAll(procPatch, i)
                 {
                     unsigned int patchVal = patchInfo[i];
-                    label meshFaceI = procPatch.start()+i;
-                    unsigned int faceVal = faceValues[meshFaceI];
+                    label meshFacei = procPatch.start()+i;
+                    unsigned int faceVal = faceValues[meshFacei];
                     cop(faceVal, patchVal);
-                    faceValues[meshFaceI] = faceVal;
+                    faceValues[meshFacei] = faceVal;
                 }
             }
         }
     }
 
     // Do the cyclics.
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
+        if (isA<cyclicPolyPatch>(patches[patchi]))
         {
             const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
+                refCast<const cyclicPolyPatch>(patches[patchi]);
 
             if (cycPatch.owner())
             {
@@ -2164,14 +2180,14 @@ void CML::syncTools::swapBoundaryCellList
 
     neighbourCellData.setSize(nBnd);
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
         const labelUList& faceCells = pp.faceCells();
         forAll(faceCells, i)
         {
-            label bFaceI = pp.start()+i-mesh.nInternalFaces();
-            neighbourCellData[bFaceI] = cellData[faceCells[i]];
+            label bFacei = pp.start()+i-mesh.nInternalFaces();
+            neighbourCellData[bFacei] = cellData[faceCells[i]];
         }
     }
     syncTools::swapBoundaryFaceList(mesh, neighbourCellData);

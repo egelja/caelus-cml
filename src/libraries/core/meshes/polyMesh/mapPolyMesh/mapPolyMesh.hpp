@@ -44,7 +44,7 @@ Description
         cell out of face, edge or point.
     - can be appended: added 'out of nothing'.
 
-    All this information is nessecary to correctly map fields.
+    All this information is necessary to correctly map fields.
 
     \par points
 

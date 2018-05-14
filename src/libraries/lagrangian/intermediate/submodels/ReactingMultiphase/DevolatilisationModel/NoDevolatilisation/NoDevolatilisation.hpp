@@ -89,7 +89,7 @@ public:
             const scalarField& YGasEff,
             const scalarField& YLiquidEff,
             const scalarField& YSolidEff,
-            bool& canCombust,
+            label& canCombust,
             scalarField& dMassDV
         ) const;
 };
@@ -149,7 +149,7 @@ void CML::NoDevolatilisation<CloudType>::calculate
     const scalarField&,
     const scalarField&,
     const scalarField&,
-    bool& canCombust,
+    label& canCombust,
     scalarField&
 ) const
 {

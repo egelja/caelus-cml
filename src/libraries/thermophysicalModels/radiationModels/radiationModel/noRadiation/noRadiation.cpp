@@ -30,13 +30,7 @@ namespace CML
     namespace radiation
     {
         defineTypeNameAndDebug(noRadiation, 0);
-
-        addToRunTimeSelectionTable
-        (
-            radiationModel,
-            noRadiation,
-            dictionary
-        );
+        addToRadiationRunTimeSelectionTables(noRadiation);
     }
 }
 
@@ -44,6 +38,16 @@ namespace CML
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::radiation::noRadiation::noRadiation(const volScalarField& T)
+:
+    radiationModel(T)
+{}
+
+
+CML::radiation::noRadiation::noRadiation
+(
+    const dictionary& dict,
+    const volScalarField& T
+)
 :
     radiationModel(T)
 {}
@@ -64,9 +68,7 @@ bool CML::radiation::noRadiation::read()
 
 
 void CML::radiation::noRadiation::calculate()
-{
-    // Do nothing
-}
+{}
 
 
 CML::tmp<CML::volScalarField> CML::radiation::noRadiation::Rp() const

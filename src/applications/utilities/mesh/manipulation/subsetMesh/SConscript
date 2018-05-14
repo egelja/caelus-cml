@@ -11,11 +11,12 @@ subsetMesh.cpp
 """)
 
 caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'genericPatchFields'
+'dynamicMesh'
 ]
 
 ostype = utils.ostype()

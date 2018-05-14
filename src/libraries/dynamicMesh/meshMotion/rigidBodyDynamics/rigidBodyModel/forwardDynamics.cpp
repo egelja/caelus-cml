@@ -38,7 +38,7 @@ void CML::RBD::rigidBodyModel::applyRestraints
 
     forAll(restraints_, ri)
     {
-        DebugInfo << "Restraint " << restraints_[ri].name();
+        DebugInfo << "Restraint " << restraints_[ri].name()<<endl;
 
         // Accumulate the restraint forces
         restraints_[ri].restrain(tau, fx);

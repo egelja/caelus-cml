@@ -22,7 +22,9 @@ caelus_inc = [
 'regionModels/regionModel/lnInclude',
 'regionModels/surfaceFilmModels/lnInclude',
 'fvOptions/lnInclude',
-'sampling/lnInclude'
+'sampling/lnInclude',
+'dynamicMesh/dynamicFvMesh/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
@@ -40,7 +42,10 @@ caelus_libs = [
 'lagrangian',
 'lagrangianIntermediate',
 'regionModels',
-'surfaceFilmModels'
+'surfaceFilmModels',
+'dynamicMesh',
+'dynamicFvMesh',
+'topoChangerFvMesh'
 ]
 
 append_args = dict(

@@ -22,7 +22,6 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'genericPatchFields',
 'compressibleRASModels',
 'reactionThermophysicalModels',
 'specie',

@@ -73,6 +73,7 @@ polyTopoChange/repatchPolyTopoChanger/repatchPolyTopoChanger.cpp
 fvMeshAdder/fvMeshAdder.cpp
 fvMeshDistribute/fvMeshDistribute.cpp
 fvMeshDistribute/IOmapDistributePolyMesh.cpp
+fvMeshSubset/fvMeshSubset.cpp
 polyMeshAdder/faceCoupleInfo.cpp
 polyMeshAdder/polyMeshAdder.cpp
 fvMeshTools/fvMeshTools.cpp

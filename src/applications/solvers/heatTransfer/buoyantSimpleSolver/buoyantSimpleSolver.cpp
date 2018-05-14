@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,6 +30,7 @@ Description
 #include "basicPsiThermo.hpp"
 #include "RASModel.hpp"
 #include "fixedGradientFvPatchFields.hpp"
+#include "fvIOoptionList.hpp"
 #include "simpleControl.hpp"
 
 int main(int argc, char *argv[])
@@ -39,6 +40,8 @@ int main(int argc, char *argv[])
     #include "createMesh.hpp"
     #include "readGravitationalAcceleration.hpp"
     #include "createFields.hpp"
+    #include "createMRF.hpp"
+    #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);

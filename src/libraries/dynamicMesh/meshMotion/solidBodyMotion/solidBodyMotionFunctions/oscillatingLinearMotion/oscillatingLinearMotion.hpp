@@ -58,6 +58,12 @@ class oscillatingLinearMotion
         //- Radial velocity
         scalar omega_;
 
+        //- Phase angle
+        scalar phase_;
+
+        //- Initial offset
+        vector offset_;
+
 
     // Private Member Functions
 

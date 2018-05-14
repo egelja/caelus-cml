@@ -73,6 +73,12 @@ public:
 
     // Member Functions
 
+        //- Is mesh dynamic
+        bool dynamic() const
+        {
+            return false;
+        }
+
         //- Dummy update function which does not change the mesh
         virtual bool update();
 };

@@ -27,7 +27,7 @@ Description
 
     A centre() member function which returns the Vector for which it is called
     is defined so that point which is a typedef to Vector\<scalar\> behaves as
-    other shapes in the shape hierachy.
+    other shapes in the shape hierarchy.
 
 SourceFiles
     VectorI.hpp
@@ -102,6 +102,19 @@ public:
             inline Cmpt& x();
             inline Cmpt& y();
             inline Cmpt& z();
+
+            //- Return i-th component.  Consistency with hyperVector
+            inline const Cmpt& operator()
+            (
+                const direction i
+            ) const;
+
+            //- Return i-th component.  Consistency with hyperVector
+            inline  Cmpt& operator()
+            (
+                const direction i
+            );
+
 
         //- Return *this (used for point which is a typedef to Vector<scalar>.
         inline const Vector<Cmpt>& centre

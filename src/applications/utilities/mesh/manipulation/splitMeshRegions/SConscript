@@ -16,8 +16,7 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'dynamicMesh',
-'genericPatchFields'
+'dynamicMesh'
 ]
 
 ostype = utils.ostype()

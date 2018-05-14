@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 Copyright (C) 2015-16 Applied CCM
+Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -1134,7 +1135,7 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
     if (debug)
     {
         // Check mesh motion
-        if (primitiveMesh::checkMeshMotion(points_, true))
+        if (checkMeshMotion(points_, true))
         {
             Info<< "tmp<scalarField> polyMesh::movePoints"
                 << "(const pointField&) : "

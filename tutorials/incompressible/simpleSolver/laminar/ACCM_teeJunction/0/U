@@ -1,0 +1,46 @@
+/*------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*-----------------------------------------------------------------------------*/
+FoamFile
+{
+	version				2.0;
+	format				ascii;
+	class				volVectorField;
+	object				U;
+}
+
+//-------------------------------------------------------------------------------
+
+dimensions				[0 1 -1 0 0 0 0];
+
+internalField				uniform (0 0 0);
+
+boundaryField
+{
+	wall
+	{
+		type			fixedValue;
+		value			uniform (0 0 0);
+	}
+	inlet           
+   	{
+		type			groovyBC;
+		variables		"Vmax=1.0;xp=pts().x;minX=min(xp);maxX=max(xp);para=-(maxX-pos().x)*(pos().x-minX)/(0.25*pow(maxX-minX,2))*normal();";
+		valueExpression		"Vmax*para";
+		value			uniform (0 1 0);
+   	}	
+	outlet-1
+	{
+		type			zeroGradient;
+	}
+	outlet-2
+	{
+		type			zeroGradient;
+	}
+	symm-left-right
+	{
+		type			empty;
+	}
+}
+

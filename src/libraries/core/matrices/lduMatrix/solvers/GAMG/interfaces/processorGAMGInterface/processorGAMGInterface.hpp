@@ -115,7 +115,7 @@ public:
                 return fineProcInterface_.myProcNo();
             }
 
-            //- Return neigbour processor number
+            //- Return neighbour processor number
             virtual int neighbProcNo() const
             {
                 return fineProcInterface_.neighbProcNo();

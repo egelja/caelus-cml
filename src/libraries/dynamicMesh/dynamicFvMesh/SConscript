@@ -12,19 +12,23 @@ staticFvMesh/staticFvMesh.cpp
 dynamicMotionSolverFvMesh/dynamicMotionSolverFvMesh.cpp
 dynamicInkJetFvMesh/dynamicInkJetFvMesh.cpp
 dynamicRefineFvMesh/dynamicRefineFvMesh.cpp
+dynamicRefineBalancedFvMesh/dynamicRefineBalancedFvMesh.cpp
 solidBodyMotionFvMesh/solidBodyMotionFvMesh.cpp
 solidBodyMotionFvMesh/multiSolidBodyMotionFvMesh.cpp
 """)
 
 caelus_inc = [
 'dynamicMesh/dynamicMesh/lnInclude',
-'dynamicMesh/meshMotion/solidBodyMotion/solidBodyMotionFunctions/lnInclude'
+'dynamicMesh/meshMotion/solidBodyMotion/solidBodyMotionFunctions/lnInclude',
+'parallel/decompose/decompositionMethods/lnInclude'
 ]
 
 caelus_libs = [
 'core',
 'dynamicMesh',
-'solidBodyMotionFunctions'
+'solidBodyMotionFunctions',
+'decompositionMethods',
+'ptscotchDecomp'
 ]
 
 build_lib(env,

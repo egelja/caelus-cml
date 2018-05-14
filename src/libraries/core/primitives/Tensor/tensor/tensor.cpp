@@ -103,7 +103,7 @@ CML::vector CML::eigenValues(const tensor& t, bool sort)
           - t.xy()*t.yz()*t.zx() - t.xz()*t.zy()*t.yx()
           + t.xx()*t.yz()*t.zy() + t.yy()*t.zx()*t.xz() + t.zz()*t.xy()*t.yx();
 
-        // Auxillary variables
+        // Auxiliary variables
         scalar aBy3 = a/3;
 
         scalar P = (a*a - 3*b)/9; // == -p_wikipedia/3

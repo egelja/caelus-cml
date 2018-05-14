@@ -1,0 +1,3 @@
+[submodule "tools/cpl"]
+	path = tools/cpl
+	url = git@bitbucket.org:appliedccm/cpl.git

@@ -36,7 +36,7 @@ ostype = utils.ostype()
 prepend_args = {}
 if ostype == 'windows':
    prepend_args = {'LINKFLAGS' :
-            '-u turbulenceDerivedFvPatchFieldsLoad -u incompressibleRASModelsLoad -u turbulenceDerivedFvPatchFieldsLoad'
+            '-u turbulenceDerivedFvPatchFieldsLoad -u incompressibleRASModelsLoad'
 }
 
 build_app(env,

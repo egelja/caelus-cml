@@ -115,7 +115,10 @@ public:
 
 
     // Output
-
+    
+        //- Inherit write from Ostream
+        using Ostream::write;
+    
         //- binary write
         virtual Ostream& write(const char* buf, std::streamsize count);
 
@@ -127,7 +130,10 @@ public:
 
         //- write undef value
         Ostream& writeUndef();
-
+    
+        //- Write C-string as "%80s" or as binary
+        Ostream& write(const char* value);
+    
         //- write string as "%80s" or as binary
         Ostream& write(const string& value);
 

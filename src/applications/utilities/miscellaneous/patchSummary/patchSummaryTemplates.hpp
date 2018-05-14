@@ -70,7 +70,6 @@ void CML::addToFieldList
     const typename GeoField::Mesh& mesh
 )
 {
-    typedef GeoField fieldType;
 
     if (obj.headerClassName() == GeoField::typeName)
     {

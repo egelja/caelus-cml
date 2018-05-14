@@ -104,13 +104,13 @@ public:
             (
                 parcelType& p,
                 const label filmCellI
-            );
+             ) const;
 
 
         // I-O
 
             //- Write surface film info to stream
-            virtual void info(Ostream& os) const;
+            virtual void info(Ostream& os);
 };
 
 
@@ -175,14 +175,14 @@ void CML::NoSurfaceFilm<CloudType>::setParcelProperties
 (
     parcelType&,
     const label
-)
+) const
 {
     // do nothing
 }
 
 
 template<class CloudType>
-void CML::NoSurfaceFilm<CloudType>::info(Ostream&) const
+void CML::NoSurfaceFilm<CloudType>::info(Ostream&)
 {
     // do nothing
 }

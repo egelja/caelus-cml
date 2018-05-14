@@ -1,0 +1,50 @@
+/*------------------------------------------------------------------------------*
+Caelus 8.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    location        "system";
+    object          controlDict;
+}
+//-------------------------------------------------------------------------------
+
+application         buoyantBoussinesqSimpleSolver;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             2000;
+
+deltaT              1.0;
+
+writeControl        runTime;
+
+writeInterval       10;
+
+purgeWrite          5;
+
+writeFormat         ascii;
+
+writePrecision      12;
+
+writeCompression    uncompressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   true;
+
+
+libs (
+      "libsimpleSwakFunctionObjects.so"
+      "libswakFunctionObjects.so"
+      "libgroovyBC.so"
+     );

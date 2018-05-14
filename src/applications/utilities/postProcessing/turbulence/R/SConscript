@@ -24,7 +24,6 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'genericPatchFields',
 'incompressibleRASModels',
 'incompressibleTurbulenceModel',
 'incompressibleTransportModels',

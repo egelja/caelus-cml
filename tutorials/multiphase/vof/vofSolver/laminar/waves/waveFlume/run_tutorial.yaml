@@ -1,0 +1,35 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: yes
+      remove_extra:
+      - constant/waveProperties
+      preserve: [ "0.org" ]
+
+  - copy_tree:
+      src: "0.org"
+      dest: "0"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: waveGaugesNProbes
+
+  - run_command:
+      cmd_name: setWaveParameters
+
+  - run_command:
+      cmd_name: setWaveField
+      cmd_args: "-latestTime"
+
+  - run_command:
+      cmd_name: vofSolver
+
+  - run_command:
+      cmd_name: postProcessWaves
+
+  - process_logs:
+      log_file: vofSolver.log
+

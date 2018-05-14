@@ -49,7 +49,7 @@ class extendedCentredCellToFaceStencil
 {
     // Private data
 
-        //- Swap map for getting neigbouring data
+        //- Swap map for getting neighbouring data
         autoPtr<mapDistribute> mapPtr_;
 
         //- Per face the stencil.

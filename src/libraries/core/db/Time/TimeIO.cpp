@@ -33,7 +33,7 @@ void CML::Time::readDict()
     if (controlDict_.readIfPresent("application", application))
     {
         // Do not override if already set so external application can override
-        setEnv("FOAM_APPLICATION", application, false);
+        setEnv("CAELUS_APPLICATION", application, false);
     }
 
 
@@ -294,6 +294,20 @@ void CML::Time::readDict()
         (
             controlDict_.lookup("writeCompression")
         );
+
+        if
+        (
+            writeFormat_ == IOstream::BINARY
+         && writeCompression_ == IOstream::COMPRESSED
+        )
+        {
+            IOWarningIn("Time::readDict()", controlDict_)
+                << "Selecting compressed binary is inefficient and ineffective"
+                << ", resetting to uncompressed binary"
+                << endl;
+
+            writeCompression_ = IOstream::UNCOMPRESSED;
+        }
     }
 
     controlDict_.readIfPresent("graphFormat", graphFormat_);

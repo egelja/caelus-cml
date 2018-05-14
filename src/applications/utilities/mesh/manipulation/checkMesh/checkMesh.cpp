@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2015-2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +22,36 @@ Application
     checkMesh
 
 Description
-    Checks validity of a mesh
+    Checks validity of a mesh.
+
+Usage
+    \b checkMesh [OPTION]
+
+    Options:
+      - \par -allGeometry
+        Checks all (including non finite-volume specific) geometry
+
+      - \par -allTopology
+        Checks all (including non finite-volume specific) addressing
+
+      - \par -meshQuality
+        Checks against user defined (in \a system/meshQualityDict) quality
+        settings
+
+      - \par -region \<name\>
+        Specify an alternative mesh region.
+
+      - \par -writeSets \<surfaceFormat\>
+        Reconstruct all cellSets and faceSets geometry and write to
+        postProcessing directory according to surfaceFormat
+        (e.g. vtk or ensight). Additionally reconstructs all pointSets and
+        writes as vtk format.
+
+      - \par -writeAllFields \n
+        Writes all mesh quality measures as fields.
+
+      - \par -writeFields '(\<fieldName\>)' \n
+        Writes selected mesh quality measures as fields.
 
 \*---------------------------------------------------------------------------*/
 
@@ -29,12 +59,16 @@ Description
 #include "timeSelector.hpp"
 #include "Time.hpp"
 
-#include "polyMesh.hpp"
+#include "fvMesh.hpp"
 #include "globalMeshData.hpp"
+#include "surfaceWriter.hpp"
+#include "vtkSetWriter.hpp"
 
-#include "printMeshStats.hpp"
+#include "checkTools.hpp"
 #include "checkTopology.hpp"
 #include "checkGeometry.hpp"
+#include "checkMeshQuality.hpp"
+#include "writeFields.hpp"
 
 using namespace CML;
 
@@ -43,7 +77,7 @@ using namespace CML;
 int main(int argc, char *argv[])
 {
     timeSelector::addOptions();
-#   include "addRegionOption.hpp"
+    #include "addRegionOption.hpp"
     argList::addBoolOption
     (
         "noTopology",
@@ -59,13 +93,38 @@ int main(int argc, char *argv[])
         "allTopology",
         "include extra topology checks"
     );
-
+    argList::addBoolOption
+    (
+        "writeAllFields",
+        "write volFields with mesh quality parameters"
+    );
+    argList::addOption
+    (
+        "writeFields",
+        "wordList",
+        "write volFields with selected mesh quality parameters"
+    );
+    argList::addBoolOption
+    (
+        "meshQuality",
+        "read user-defined mesh quality criterions from system/meshQualityDict"
+    );
+    argList::addOption
+    (
+        "writeSets",
+        "surfaceFormat",
+        "reconstruct and write all faceSets and cellSets in selected format"
+    );
+    argList::addBoolOption
+    (
+        "meshBandwidth",
+        "calculate resulting matrix bandwidth"
+    );
     argList::addBoolOption
     (
         "defectCorrection",
         "include deffect correction"
     );
-
     argList::addOption
     (
         "areaSwitch",
@@ -74,8 +133,9 @@ int main(int argc, char *argv[])
     );
 
 
-#   include "setRootCase.hpp"
-#   include "createTime.hpp"
+
+    #include "setRootCase.hpp"
+    #include "createTime.hpp"
     instantList timeDirs = timeSelector::select0(runTime, args);
     const bool defectCorrection = args.optionFound("defectCorrection");
 
@@ -91,7 +151,7 @@ int main(int argc, char *argv[])
     }
 
 //
-// createNamedPolyMesh.H
+// createNamedMesh.hpp
 // ~~~~~~~~~~~~~~~~~~~~~
 
     CML::word regionName;
@@ -99,18 +159,18 @@ int main(int argc, char *argv[])
     if (args.optionReadIfPresent("region", regionName))
     {
         CML::Info
-            << "Create polyMesh " << regionName << " for time = "
+            << "Create mesh " << regionName << " for time = "
             << runTime.timeName() << CML::nl << CML::endl;
     }
     else
     {
-        regionName = CML::polyMesh::defaultRegion;
+        regionName = CML::fvMesh::defaultRegion;
         CML::Info
-            << "Create polyMesh for time = "
+            << "Create mesh for time = "
             << runTime.timeName() << CML::nl << CML::endl;
     }
 
-    CML::polyMesh mesh
+    CML::fvMesh mesh
     (
         CML::IOobject
         (
@@ -126,6 +186,92 @@ int main(int argc, char *argv[])
     const bool noTopology  = args.optionFound("noTopology");
     const bool allGeometry = args.optionFound("allGeometry");
     const bool allTopology = args.optionFound("allTopology");
+    const bool meshQuality = args.optionFound("meshQuality");
+    const bool meshBandwidth = args.optionFound("meshBandwidth");
+
+    word surfaceFormat;
+    const bool writeSets = args.optionReadIfPresent("writeSets", surfaceFormat);
+    HashSet<word> selectedFields;
+    bool writeFields = args.optionReadIfPresent
+    (
+        "writeFields",
+        selectedFields
+    );
+    if (!writeFields && args.optionFound("writeAllFields"))
+    {
+        selectedFields.insert("nonOrthoAngle");
+        selectedFields.insert("faceWeight");
+        selectedFields.insert("skewness");
+        selectedFields.insert("cellDeterminant");
+        selectedFields.insert("aspectRatio");
+        selectedFields.insert("cellShapes");
+        selectedFields.insert("cellVolume");
+        selectedFields.insert("cellVolumeRatio");
+    }
+
+
+    if (noTopology)
+    {
+        Info<< "Disabling all topology checks." << nl << endl;
+    }
+    if (allTopology)
+    {
+        Info<< "Enabling all (cell, face, edge, point) topology checks."
+            << nl << endl;
+    }
+    if (allGeometry)
+    {
+        Info<< "Enabling all geometry checks." << nl << endl;
+    }
+    if (meshQuality)
+    {
+        Info<< "Enabling user-defined geometry checks." << nl << endl;
+    }
+    if (meshBandwidth)
+    {
+        Info<< "Enabling calculation of matrix bandwidth." << nl << endl;
+    }
+    if (writeSets)
+    {
+        Info<< "Reconstructing and writing " << surfaceFormat
+            << " representation"
+            << " of all faceSets and cellSets." << nl << endl;
+    }
+    if (selectedFields.size())
+    {
+        Info<< "Writing mesh quality as fields " << selectedFields << nl
+            << endl;
+    }
+
+
+    autoPtr<IOdictionary> qualDict;
+    if (meshQuality)
+    {
+        qualDict.reset
+        (
+            new IOdictionary
+            (
+                IOobject
+                (
+                    "meshQualityDict",
+                    mesh.time().system(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                )
+           )
+        );
+    }
+
+
+    autoPtr<surfaceWriter> surfWriter;
+    autoPtr<writer<scalar> > setWriter;
+    if (writeSets)
+    {
+        surfWriter = surfaceWriter::New(surfaceFormat);
+        setWriter = writer<scalar>::New(vtkSetWriter<scalar>::typeName);
+    }
+
 
     forAll(timeDirs, timeI)
     {
@@ -148,35 +294,70 @@ int main(int argc, char *argv[])
             // Reconstruct globalMeshData
             mesh.globalData();
 
-            printMeshStats(mesh, allTopology);
+            printMeshStats(mesh, allTopology, meshBandwidth);
 
-            label noFailedChecks = 0;
+            label nFailedChecks = 0;
 
             if (!noTopology)
             {
-                noFailedChecks += checkTopology(mesh, allTopology, allGeometry);
+                nFailedChecks += checkTopology
+                (
+                    mesh,
+                    allTopology,
+                    allGeometry,
+                    surfWriter,
+                    setWriter
+                );
             }
 
-            noFailedChecks += checkGeometry(mesh, allGeometry);
+            nFailedChecks += checkGeometry
+            (
+                mesh,
+                allGeometry,
+                surfWriter,
+                setWriter
+            );
 
-            // Note: no reduction in noFailedChecks necessary since is
+            if (meshQuality)
+            {
+                nFailedChecks += checkMeshQuality(mesh, qualDict(), surfWriter);
+            }
+
+
+            // Note: no reduction in nFailedChecks necessary since is
             //       counter of checks, not counter of failed cells,faces etc.
 
-            if (noFailedChecks == 0)
+            if (nFailedChecks == 0)
             {
                 Info<< "\nMesh OK.\n" << endl;
             }
             else
             {
-                Info<< "\nFailed " << noFailedChecks << " mesh checks.\n"
+                Info<< "\nFailed " << nFailedChecks << " mesh checks.\n"
                     << endl;
             }
+
+
+            // Write selected fields
+            CML::writeFields(mesh, selectedFields);
         }
         else if (state == polyMesh::POINTS_MOVED)
         {
             Info<< "Time = " << runTime.timeName() << nl << endl;
 
-            label nFailedChecks = checkGeometry(mesh, allGeometry);
+            label nFailedChecks = checkGeometry
+            (
+                mesh,
+                allGeometry,
+                surfWriter,
+                setWriter
+            );
+
+            if (meshQuality)
+            {
+                nFailedChecks += checkMeshQuality(mesh, qualDict(), surfWriter);
+            }
+
 
             if (nFailedChecks)
             {
@@ -187,6 +368,10 @@ int main(int argc, char *argv[])
             {
                 Info<< "\nMesh OK.\n" << endl;
             }
+
+
+            // Write selected fields
+            CML::writeFields(mesh, selectedFields);
         }
     }
 

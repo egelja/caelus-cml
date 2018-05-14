@@ -25,7 +25,7 @@ Description
 
     Does
     - move boundary points
-    - split boundary edges (multiple per edge if nessecary)
+    - split boundary edges (multiple per edge if necessary)
     - face-centre decomposes boundary faces
     - diagonal split of boundary faces
 

@@ -28,7 +28,7 @@ References
         International Symposium in Aerospace Technology, November 2015, 
         Cairns, Australia
 
-    [2] H. Kobayashi, F.E. Ham, X. Wu "Aplication of a local SGS model 
+    [2] H. Kobayashi, F.E. Ham, X. Wu "Application of a local SGS model 
         based on coherent structure to complex geometries", International
         Journal of Heat and Fluid Flow, 29(3) pp. 640-653
 

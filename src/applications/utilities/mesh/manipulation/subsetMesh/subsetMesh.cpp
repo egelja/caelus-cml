@@ -142,7 +142,40 @@ void subsetPointFields
 }
 
 
-// Main program:
+template<class Type>
+void subsetDimensionedFields
+(
+    const fvMeshSubset& subsetter,
+    const wordList& fieldNames,
+    PtrList<DimensionedField<Type, volMesh> >& subFields
+)
+{
+    const fvMesh& baseMesh = subsetter.baseMesh();
+
+    forAll(fieldNames, i)
+    {
+        const word& fieldName = fieldNames[i];
+
+        Info<< "Subsetting field " << fieldName << endl;
+
+        DimensionedField<Type, volMesh> fld
+        (
+            IOobject
+            (
+                fieldName,
+                baseMesh.time().timeName(),
+                baseMesh,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            ),
+            baseMesh
+        );
+
+        subFields.set(i, subsetter.interpolate(fld));
+    }
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -161,6 +194,19 @@ int main(int argc, char *argv[])
         "add exposed internal faces to specified patch instead of to "
         "'oldInternalFaces'"
     );
+    argList::addOption
+    (
+        "patches",
+        "names",
+        "add exposed internal faces to nearest of specified patches"
+        " instead of to 'oldInternalFaces'"
+    );
+    argList::addOption
+    (
+        "resultTime",
+        "time",
+        "specify a time for the resulting mesh"
+    );
     #include "setRootCase.hpp"
     #include "createTime.hpp"
     runTime.functionObjects().off();
@@ -170,10 +216,23 @@ int main(int argc, char *argv[])
 
     #include "createNamedMesh.hpp"
 
-    const word oldInstance = mesh.pointsInstance();
 
     const word setName = args[1];
+
+    word meshInstance = mesh.pointsInstance();
+    word fieldsInstance = runTime.timeName();
+
     const bool overwrite = args.optionFound("overwrite");
+    const bool specifiedInstance = args.optionReadIfPresent
+    (
+        "resultTime",
+        fieldsInstance
+    );
+    if (specifiedInstance)
+    {
+        // Set both mesh and field to this time
+        meshInstance = fieldsInstance;
+    }
 
 
     Info<< "Reading cell set from " << setName << endl << endl;
@@ -335,17 +394,54 @@ int main(int argc, char *argv[])
     subsetPointFields(subsetter, pMesh, pointTensorNames, pointTensorFlds);
 
 
+    // Read dimensioned fields and subset
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    typedef volScalarField::DimensionedInternalField dimScalType;
+    wordList scalarDimNames(objects.names(dimScalType::typeName));
+    PtrList<dimScalType> scalarDimFlds(scalarDimNames.size());
+    subsetDimensionedFields(subsetter, scalarDimNames, scalarDimFlds);
+
+    typedef volVectorField::DimensionedInternalField dimVecType;
+    wordList vectorDimNames(objects.names(dimVecType::typeName));
+    PtrList<dimVecType> vectorDimFlds(vectorDimNames.size());
+    subsetDimensionedFields(subsetter, vectorDimNames, vectorDimFlds);
+
+    typedef volSphericalTensorField::DimensionedInternalField dimSphereType;
+    wordList sphericalTensorDimNames(objects.names(dimSphereType::typeName));
+    PtrList<dimSphereType> sphericalTensorDimFlds
+    (
+        sphericalTensorDimNames.size()
+    );
+    subsetDimensionedFields
+    (
+        subsetter,
+        sphericalTensorDimNames,
+        sphericalTensorDimFlds
+    );
+
+    typedef volSymmTensorField::DimensionedInternalField dimSymmTensorType;
+    wordList symmTensorDimNames(objects.names(dimSymmTensorType::typeName));
+    PtrList<dimSymmTensorType> symmTensorDimFlds(symmTensorDimNames.size());
+    subsetDimensionedFields(subsetter, symmTensorDimNames, symmTensorDimFlds);
+
+    typedef volTensorField::DimensionedInternalField dimTensorType;
+    wordList tensorDimNames(objects.names(dimTensorType::typeName));
+    PtrList<dimTensorType> tensorDimFlds(tensorDimNames.size());
+    subsetDimensionedFields(subsetter, tensorDimNames, tensorDimFlds);
+
 
     // Write mesh and fields to new time
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if (!overwrite)
+    if (overwrite || specifiedInstance)
     {
-        runTime++;
+        runTime.setTime(instant(fieldsInstance), 0);
+        subsetter.subMesh().setInstance(meshInstance);
     }
     else
     {
-        subsetter.subMesh().setInstance(oldInstance);
+        runTime++;
     }
 
     Info<< "Writing subsetted mesh and fields to time " << runTime.timeName()
@@ -357,31 +453,26 @@ int main(int argc, char *argv[])
     forAll(scalarFlds, i)
     {
         scalarFlds[i].rename(scalarNames[i]);
-
         scalarFlds[i].write();
     }
     forAll(vectorFlds, i)
     {
         vectorFlds[i].rename(vectorNames[i]);
-
         vectorFlds[i].write();
     }
     forAll(sphericalTensorFlds, i)
     {
         sphericalTensorFlds[i].rename(sphericalTensorNames[i]);
-
         sphericalTensorFlds[i].write();
     }
     forAll(symmTensorFlds, i)
     {
         symmTensorFlds[i].rename(symmTensorNames[i]);
-
         symmTensorFlds[i].write();
     }
     forAll(tensorFlds, i)
     {
         tensorFlds[i].rename(tensorNames[i]);
-
         tensorFlds[i].write();
     }
 
@@ -389,31 +480,26 @@ int main(int argc, char *argv[])
     forAll(surfScalarFlds, i)
     {
         surfScalarFlds[i].rename(surfScalarNames[i]);
-
         surfScalarFlds[i].write();
     }
     forAll(surfVectorFlds, i)
     {
         surfVectorFlds[i].rename(surfVectorNames[i]);
-
         surfVectorFlds[i].write();
     }
     forAll(surfSphericalTensorFlds, i)
     {
         surfSphericalTensorFlds[i].rename(surfSphericalTensorNames[i]);
-
         surfSphericalTensorFlds[i].write();
     }
     forAll(surfSymmTensorFlds, i)
     {
         surfSymmTensorFlds[i].rename(surfSymmTensorNames[i]);
-
         surfSymmTensorFlds[i].write();
     }
     forAll(surfTensorNames, i)
     {
         surfTensorFlds[i].rename(surfTensorNames[i]);
-
         surfTensorFlds[i].write();
     }
 
@@ -421,32 +507,54 @@ int main(int argc, char *argv[])
     forAll(pointScalarFlds, i)
     {
         pointScalarFlds[i].rename(pointScalarNames[i]);
-
         pointScalarFlds[i].write();
     }
     forAll(pointVectorFlds, i)
     {
         pointVectorFlds[i].rename(pointVectorNames[i]);
-
         pointVectorFlds[i].write();
     }
     forAll(pointSphericalTensorFlds, i)
     {
         pointSphericalTensorFlds[i].rename(pointSphericalTensorNames[i]);
-
         pointSphericalTensorFlds[i].write();
     }
     forAll(pointSymmTensorFlds, i)
     {
         pointSymmTensorFlds[i].rename(pointSymmTensorNames[i]);
-
         pointSymmTensorFlds[i].write();
     }
     forAll(pointTensorNames, i)
     {
         pointTensorFlds[i].rename(pointTensorNames[i]);
-
         pointTensorFlds[i].write();
+    }
+
+    // DimensionedFields
+    forAll(scalarDimFlds, i)
+    {
+        scalarDimFlds[i].rename(scalarDimNames[i]);
+        scalarDimFlds[i].write();
+    }
+    forAll(vectorDimFlds, i)
+    {
+        vectorDimFlds[i].rename(vectorDimNames[i]);
+        vectorDimFlds[i].write();
+    }
+    forAll(sphericalTensorDimFlds, i)
+    {
+        sphericalTensorDimFlds[i].rename(sphericalTensorDimNames[i]);
+        sphericalTensorDimFlds[i].write();
+    }
+    forAll(symmTensorDimFlds, i)
+    {
+        symmTensorDimFlds[i].rename(symmTensorDimNames[i]);
+        symmTensorDimFlds[i].write();
+    }
+    forAll(tensorDimFlds, i)
+    {
+        tensorDimFlds[i].rename(tensorDimNames[i]);
+        tensorDimFlds[i].write();
     }
 
 

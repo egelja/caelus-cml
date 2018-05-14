@@ -18,6 +18,7 @@ radiationModel/viewFactor/viewFactor.cpp
 submodels/scatterModel/scatterModel/scatterModel.cpp
 submodels/scatterModel/scatterModel/scatterModelNew.cpp
 submodels/scatterModel/constantScatter/constantScatter.cpp
+submodels/scatterModel/noScatter/noScatter.cpp
 submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModel.cpp
 submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModelNew.cpp
 submodels/absorptionEmissionModel/noAbsorptionEmission/noAbsorptionEmission.cpp

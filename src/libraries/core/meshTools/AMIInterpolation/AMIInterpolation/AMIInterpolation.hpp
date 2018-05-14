@@ -518,7 +518,7 @@ public:
                 const SourcePatch& srcPatch,
                 const TargetPatch& tgtPatch,
                 const vector& n,
-                const label tgtFaceI,
+                const label tgtFacei,
                 point& tgtPoint
             )
             const;
@@ -529,7 +529,7 @@ public:
                 const SourcePatch& srcPatch,
                 const TargetPatch& tgtPatch,
                 const vector& n,
-                const label srcFaceI,
+                const label srcFacei,
                 point& srcPoint
             )
             const;
@@ -846,13 +846,13 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::normaliseWeights
     wghtSum.setSize(wght.size(), 0.0);
     label nLowWeight = 0;
 
-    forAll(wght, faceI)
+    forAll(wght, facei)
     {
-        scalarList& w = wght[faceI];
+        scalarList& w = wght[facei];
 
         if (w.size())
         {
-            scalar denom = patchAreas[faceI];
+            scalar denom = patchAreas[facei];
 
             scalar s = sum(w);
             scalar t = s/denom;
@@ -867,7 +867,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::normaliseWeights
                 w[i] /= denom;
             }
 
-            wghtSum[faceI] = t;
+            wghtSum[facei] = t;
 
             if (t < lowWeightTol)
             {
@@ -876,7 +876,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::normaliseWeights
         }
         else
         {
-            wghtSum[faceI] = 0;
+            wghtSum[facei] = 0;
         }
     }
 
@@ -944,10 +944,10 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
     // Agglomerate face areas
     {
         srcMagSf.setSize(sourceRestrictAddressing.size(), 0.0);
-        forAll(sourceRestrictAddressing, faceI)
+        forAll(sourceRestrictAddressing, facei)
         {
-            label coarseFaceI = sourceRestrictAddressing[faceI];
-            srcMagSf[coarseFaceI] += fineSrcMagSf[faceI];
+            label coarseFacei = sourceRestrictAddressing[facei];
+            srcMagSf[coarseFacei] += fineSrcMagSf[facei];
         }
     }
 
@@ -963,8 +963,8 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
 
         // So now we have agglomeration of the target side in
         // allRestrict:
-        //  0..size-1 : local agglomeration (= targetRestrictAddressing)
-        //  size..    : agglomeration data from other processors
+        //   0..size-1 : local agglomeration (= targetRestrictAddressing)
+        //   size..    : agglomeration data from other processors
 
         labelListList tgtSubMap(Pstream::nProcs());
 
@@ -973,20 +973,20 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
             tgtSubMap[Pstream::myProcNo()] = identity(targetCoarseSize);
         }
 
-        forAll(map.subMap(), procI)
+        forAll(map.subMap(), proci)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
                 // Combine entries that point to the same coarse element. All
                 // the elements refer to local data so index into
                 // targetRestrictAddressing or allRestrict (since the same
                 // for local data).
-                const labelList& elems = map.subMap()[procI];
-                labelList& newSubMap = tgtSubMap[procI];
+                const labelList& elems = map.subMap()[proci];
+                labelList& newSubMap = tgtSubMap[proci];
                 newSubMap.setSize(elems.size());
 
                 labelList oldToNew(targetCoarseSize, -1);
-                label newI = 0;
+                label newi = 0;
 
                 forAll(elems, i)
                 {
@@ -994,12 +994,12 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
                     label coarseElem = allRestrict[fineElem];
                     if (oldToNew[coarseElem] == -1)
                     {
-                        oldToNew[coarseElem] = newI;
-                        newSubMap[newI] = coarseElem;
-                        newI++;
+                        oldToNew[coarseElem] = newi;
+                        newSubMap[newi] = coarseElem;
+                        newi++;
                     }
                 }
-                newSubMap.setSize(newI);
+                newSubMap.setSize(newi);
             }
         }
 
@@ -1018,19 +1018,19 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
             tgtCompactMap = targetRestrictAddressing;
         }
         tgtCompactMap.setSize(map.constructSize());
-        label compactI = targetCoarseSize;
+        label compacti = targetCoarseSize;
 
         // Compact data from other processors
-        forAll(map.constructMap(), procI)
+        forAll(map.constructMap(), proci)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
                 // Combine entries that point to the same coarse element. All
                 // elements now are remote data so we cannot use any local
                 // data here - use allRestrict instead.
-                const labelList& elems = map.constructMap()[procI];
+                const labelList& elems = map.constructMap()[proci];
 
-                labelList& newConstructMap = tgtConstructMap[procI];
+                labelList& newConstructMap = tgtConstructMap[proci];
                 newConstructMap.setSize(elems.size());
 
                 if (elems.size())
@@ -1048,30 +1048,30 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
                     }
                     remoteTargetCoarseSize += 1;
 
-                    // Combine locally data coming from procI
+                    // Combine locally data coming from proci
                     labelList oldToNew(remoteTargetCoarseSize, -1);
-                    label newI = 0;
+                    label newi = 0;
 
                     forAll(elems, i)
                     {
                         label fineElem = elems[i];
-                        // fineElem now points to section from procI
+                        // fineElem now points to section from proci
                         label coarseElem = allRestrict[fineElem];
                         if (oldToNew[coarseElem] == -1)
                         {
-                            oldToNew[coarseElem] = newI;
-                            tgtCompactMap[fineElem] = compactI;
-                            newConstructMap[newI] = compactI++;
-                            newI++;
+                            oldToNew[coarseElem] = newi;
+                            tgtCompactMap[fineElem] = compacti;
+                            newConstructMap[newi] = compacti++;
+                            newi++;
                         }
                         else
                         {
                             // Get compact index
-                            label compactI = oldToNew[coarseElem];
-                            tgtCompactMap[fineElem] = newConstructMap[compactI];
+                            label compacti = oldToNew[coarseElem];
+                            tgtCompactMap[fineElem] = newConstructMap[compacti];
                         }
                     }
-                    newConstructMap.setSize(newI);
+                    newConstructMap.setSize(newi);
                 }
             }
         }
@@ -1080,28 +1080,28 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
         srcAddress.setSize(sourceCoarseSize);
         srcWeights.setSize(sourceCoarseSize);
 
-        forAll(fineSrcAddress, faceI)
+        forAll(fineSrcAddress, facei)
         {
-            // All the elements contributing to faceI. Are slots in
+            // All the elements contributing to facei. Are slots in
             // mapDistribute'd data.
-            const labelList& elems = fineSrcAddress[faceI];
-            const scalarList& weights = fineSrcWeights[faceI];
-            const scalar fineArea = fineSrcMagSf[faceI];
+            const labelList& elems = fineSrcAddress[facei];
+            const scalarList& weights = fineSrcWeights[facei];
+            const scalar fineArea = fineSrcMagSf[facei];
 
-            label coarseFaceI = sourceRestrictAddressing[faceI];
+            label coarseFacei = sourceRestrictAddressing[facei];
 
-            labelList& newElems = srcAddress[coarseFaceI];
-            scalarList& newWeights = srcWeights[coarseFaceI];
+            labelList& newElems = srcAddress[coarseFacei];
+            scalarList& newWeights = srcWeights[coarseFacei];
 
             forAll(elems, i)
             {
-                label elemI = elems[i];
-                label coarseElemI = tgtCompactMap[elemI];
+                label elemi = elems[i];
+                label coarseElemi = tgtCompactMap[elemi];
 
-                label index = findIndex(newElems, coarseElemI);
+                label index = findIndex(newElems, coarseElemi);
                 if (index == -1)
                 {
-                    newElems.append(coarseElemI);
+                    newElems.append(coarseElemi);
                     newWeights.append(fineArea*weights[i]);
                 }
                 else
@@ -1115,7 +1115,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
         (
             new mapDistribute
             (
-                compactI,
+                compacti,
                 tgtSubMap.xfer(),
                 tgtConstructMap.xfer()
             )
@@ -1126,28 +1126,28 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
         srcAddress.setSize(sourceCoarseSize);
         srcWeights.setSize(sourceCoarseSize);
 
-        forAll(fineSrcAddress, faceI)
+        forAll(fineSrcAddress, facei)
         {
-            // All the elements contributing to faceI. Are slots in
+            // All the elements contributing to facei. Are slots in
             // mapDistribute'd data.
-            const labelList& elems = fineSrcAddress[faceI];
-            const scalarList& weights = fineSrcWeights[faceI];
-            const scalar fineArea = fineSrcMagSf[faceI];
+            const labelList& elems = fineSrcAddress[facei];
+            const scalarList& weights = fineSrcWeights[facei];
+            const scalar fineArea = fineSrcMagSf[facei];
 
-            label coarseFaceI = sourceRestrictAddressing[faceI];
+            label coarseFacei = sourceRestrictAddressing[facei];
 
-            labelList& newElems = srcAddress[coarseFaceI];
-            scalarList& newWeights = srcWeights[coarseFaceI];
+            labelList& newElems = srcAddress[coarseFacei];
+            scalarList& newWeights = srcWeights[coarseFacei];
 
             forAll(elems, i)
             {
-                label elemI = elems[i];
-                label coarseElemI = targetRestrictAddressing[elemI];
+                label elemi = elems[i];
+                label coarseElemi = targetRestrictAddressing[elemi];
 
-                label index = findIndex(newElems, coarseElemI);
+                label index = findIndex(newElems, coarseElemi);
                 if (index == -1)
                 {
-                    newElems.append(coarseElemI);
+                    newElems.append(coarseElemi);
                     newWeights.append(fineArea*weights[i]);
                 }
                 else
@@ -1158,7 +1158,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
         }
     }
 
-    // weights normalisation
+    // Weights normalisation
     normaliseWeights
     (
         srcMagSf,
@@ -1183,7 +1183,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::constructFromSurface
 {
     if (surfPtr.valid())
     {
-        // create new patches for source and target
+        // Create new patches for source and target
         pointField srcPoints = srcPatch.points();
         SourcePatch srcPatch0
         (
@@ -1227,12 +1227,12 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::constructFromSurface
         }
 
 
-        // map source and target patches onto projection surface
+        // Map source and target patches onto projection surface
         projectPointsToSurface(surfPtr(), srcPoints);
         projectPointsToSurface(surfPtr(), tgtPoints);
 
 
-        // calculate AMI interpolation
+        // Calculate AMI interpolation
         update(srcPatch0, tgtPatch0);
     }
     else
@@ -1461,15 +1461,6 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
         tgtMapPtr_
     );
 
-    //if (tgtMapPtr_.valid())
-    //{
-    //    Pout<< "tgtMap:" << endl;
-    //    string oldPrefix = Pout.prefix();
-    //    Pout.prefix() = oldPrefix + "  ";
-    //    tgtMapPtr_().printLayout(Pout);
-    //    Pout.prefix() = oldPrefix;
-    //}
-
     agglomerate
     (
         fineAMI.srcMapPtr_,
@@ -1486,15 +1477,6 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
         tgtWeightsSum_,
         srcMapPtr_
     );
-
-    //if (srcMapPtr_.valid())
-    //{
-    //    Pout<< "srcMap:" << endl;
-    //    string oldPrefix = Pout.prefix();
-    //    Pout.prefix() = oldPrefix + "  ";
-    //    srcMapPtr_().printLayout(Pout);
-    //    Pout.prefix() = oldPrefix;
-    //}
 }
 
 
@@ -1536,14 +1518,14 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
 
     // Calculate face areas
     srcMagSf_.setSize(srcPatch.size());
-    forAll(srcMagSf_, faceI)
+    forAll(srcMagSf_, facei)
     {
-        srcMagSf_[faceI] = srcPatch[faceI].mag(srcPatch.points());
+        srcMagSf_[facei] = srcPatch[facei].mag(srcPatch.points());
     }
     tgtMagSf_.setSize(tgtPatch.size());
-    forAll(tgtMagSf_, faceI)
+    forAll(tgtMagSf_, facei)
     {
-        tgtMagSf_[faceI] = tgtPatch[faceI].mag(tgtPatch.points());
+        tgtMagSf_[facei] = tgtPatch[facei].mag(tgtPatch.points());
     }
 
     // Calculate if patches present on multiple processors
@@ -1551,7 +1533,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
 
     if (singlePatchProc_ == -1)
     {
-        // convert local addressing to global addressing
+        // Convert local addressing to global addressing
         globalIndex globalSrcFaces(srcPatch.size());
         globalIndex globalTgtFaces(tgtPatch.size());
 
@@ -1561,12 +1543,13 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
         autoPtr<mapDistribute> mapPtr = calcProcMap(srcPatch, tgtPatch);
         const mapDistribute& map = mapPtr();
 
-        // create new target patch that fully encompasses source patch
+        // Create new target patch that fully encompasses source patch
 
-        // faces and points
+        // Faces and points
         faceList newTgtFaces;
         pointField newTgtPoints;
-        // original faces from tgtPatch (in globalIndexing since might be
+
+        // Original faces from tgtPatch (in globalIndexing since might be
         // remote)
         labelList tgtFaceIDs;
         distributeAndMergePatches
@@ -1590,7 +1573,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
                 newTgtPoints
             );
 
-        // calculate AMI interpolation
+        // Calculate AMI interpolation
         autoPtr<AMIMethod<SourcePatch, TargetPatch> > AMIPtr
         (
             AMIMethod<SourcePatch, TargetPatch>::New
@@ -1629,22 +1612,22 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
         forAll(srcAddress_, i)
         {
             labelList& addressing = srcAddress_[i];
-            forAll(addressing, addrI)
+            forAll(addressing, addri)
             {
-                addressing[addrI] = tgtFaceIDs[addressing[addrI]];
+                addressing[addri] = tgtFaceIDs[addressing[addri]];
             }
         }
 
         forAll(tgtAddress_, i)
         {
             labelList& addressing = tgtAddress_[i];
-            forAll(addressing, addrI)
+            forAll(addressing, addri)
             {
-                addressing[addrI] = globalSrcFaces.toGlobal(addressing[addrI]);
+                addressing[addri] = globalSrcFaces.toGlobal(addressing[addri]);
             }
         }
 
-        // send data back to originating procs. Note that contributions
+        // Send data back to originating procs. Note that contributions
         // from different processors get added (ListAppendEqOp)
 
         mapDistributeBase::distribute
@@ -1677,7 +1660,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
             scalarList()
         );
 
-        // weights normalisation
+        // Weights normalisation
         normaliseWeights
         (
             srcMagSf_,
@@ -1701,7 +1684,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
             lowWeightCorrection_
         );
 
-        // cache maps and reset addresses
+        // Cache maps and reset addresses
         List<Map<label> > cMap;
         srcMapPtr_.reset(new mapDistribute(globalSrcFaces, tgtAddress_, cMap));
         tgtMapPtr_.reset(new mapDistribute(globalTgtFaces, srcAddress_, cMap));
@@ -1713,7 +1696,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::update
     }
     else
     {
-        // calculate AMI interpolation
+        // Calculate AMI interpolation
         autoPtr<AMIMethod<SourcePatch, TargetPatch> > AMIPtr
         (
             AMIMethod<SourcePatch, TargetPatch>::New
@@ -1834,40 +1817,40 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToTarget
         List<Type> work(fld);
         map.distribute(work);
 
-        forAll(result, faceI)
+        forAll(result, facei)
         {
-            if (tgtWeightsSum_[faceI] < lowWeightCorrection_)
+            if (tgtWeightsSum_[facei] < lowWeightCorrection_)
             {
-                result[faceI] = defaultValues[faceI];
+                result[facei] = defaultValues[facei];
             }
             else
             {
-                const labelList& faces = tgtAddress_[faceI];
-                const scalarList& weights = tgtWeights_[faceI];
+                const labelList& faces = tgtAddress_[facei];
+                const scalarList& weights = tgtWeights_[facei];
 
                 forAll(faces, i)
                 {
-                    cop(result[faceI], faceI, work[faces[i]], weights[i]);
+                    cop(result[facei], facei, work[faces[i]], weights[i]);
                 }
             }
         }
     }
     else
     {
-        forAll(result, faceI)
+        forAll(result, facei)
         {
-            if (tgtWeightsSum_[faceI] < lowWeightCorrection_)
+            if (tgtWeightsSum_[facei] < lowWeightCorrection_)
             {
-                result[faceI] = defaultValues[faceI];
+                result[facei] = defaultValues[facei];
             }
             else
             {
-                const labelList& faces = tgtAddress_[faceI];
-                const scalarList& weights = tgtWeights_[faceI];
+                const labelList& faces = tgtAddress_[facei];
+                const scalarList& weights = tgtWeights_[facei];
 
                 forAll(faces, i)
                 {
-                    cop(result[faceI], faceI, fld[faces[i]], weights[i]);
+                    cop(result[facei], facei, fld[faces[i]], weights[i]);
                 }
             }
         }
@@ -1935,40 +1918,40 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToSource
         List<Type> work(fld);
         map.distribute(work);
 
-        forAll(result, faceI)
+        forAll(result, facei)
         {
-            if (srcWeightsSum_[faceI] < lowWeightCorrection_)
+            if (srcWeightsSum_[facei] < lowWeightCorrection_)
             {
-                result[faceI] = defaultValues[faceI];
+                result[facei] = defaultValues[facei];
             }
             else
             {
-                const labelList& faces = srcAddress_[faceI];
-                const scalarList& weights = srcWeights_[faceI];
+                const labelList& faces = srcAddress_[facei];
+                const scalarList& weights = srcWeights_[facei];
 
                 forAll(faces, i)
                 {
-                    cop(result[faceI], faceI, work[faces[i]], weights[i]);
+                    cop(result[facei], facei, work[faces[i]], weights[i]);
                 }
             }
         }
     }
     else
     {
-        forAll(result, faceI)
+        forAll(result, facei)
         {
-            if (srcWeightsSum_[faceI] < lowWeightCorrection_)
+            if (srcWeightsSum_[facei] < lowWeightCorrection_)
             {
-                result[faceI] = defaultValues[faceI];
+                result[facei] = defaultValues[facei];
             }
             else
             {
-                const labelList& faces = srcAddress_[faceI];
-                const scalarList& weights = srcWeights_[faceI];
+                const labelList& faces = srcAddress_[facei];
+                const scalarList& weights = srcWeights_[facei];
 
                 forAll(faces, i)
                 {
-                    cop(result[faceI], faceI, fld[faces[i]], weights[i]);
+                    cop(result[facei], facei, fld[faces[i]], weights[i]);
                 }
             }
         }
@@ -1991,7 +1974,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToSource
         new Field<Type>
         (
             srcAddress_.size(),
-            pTraits<Type>::zero
+            Zero
         )
     );
 
@@ -2036,7 +2019,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToTarget
         new Field<Type>
         (
             tgtAddress_.size(),
-            pTraits<Type>::zero
+            Zero
         )
     );
 
@@ -2124,20 +2107,20 @@ CML::label CML::AMIInterpolation<SourcePatch, TargetPatch>::srcPointFace
     const SourcePatch& srcPatch,
     const TargetPatch& tgtPatch,
     const vector& n,
-    const label tgtFaceI,
+    const label tgtFacei,
     point& tgtPoint
 )
 const
 {
     const pointField& srcPoints = srcPatch.points();
 
-    // source face addresses that intersect target face tgtFaceI
-    const labelList& addr = tgtAddress_[tgtFaceI];
+    // Source face addresses that intersect target face tgtFacei
+    const labelList& addr = tgtAddress_[tgtFacei];
 
     forAll(addr, i)
     {
-        label srcFaceI = addr[i];
-        const face& f = srcPatch[srcFaceI];
+        const label srcFacei = addr[i];
+        const face& f = srcPatch[srcFacei];
 
         pointHit ray = f.ray(tgtPoint, n, srcPoints);
 
@@ -2145,18 +2128,18 @@ const
         {
             tgtPoint = ray.rawPoint();
 
-            return srcFaceI;
+            return srcFacei;
         }
     }
 
-    // no hit registered - try with face normal instead of input normal
+    // No hit registered - try with face normal instead of input normal
     forAll(addr, i)
     {
-        label srcFaceI = addr[i];
-        const face& f = srcPatch[srcFaceI];
+        label srcFacei = addr[i];
+        const face& f = srcPatch[srcFacei];
 
-        vector nFace(-srcPatch.faceNormals()[srcFaceI]);
-        nFace += tgtPatch.faceNormals()[tgtFaceI];
+        vector nFace(-srcPatch.faceNormals()[srcFacei]);
+        nFace += tgtPatch.faceNormals()[tgtFacei];
 
         pointHit ray = f.ray(tgtPoint, nFace, srcPoints);
 
@@ -2164,7 +2147,7 @@ const
         {
             tgtPoint = ray.rawPoint();
 
-            return srcFaceI;
+            return srcFacei;
         }
     }
 
@@ -2178,20 +2161,20 @@ CML::label CML::AMIInterpolation<SourcePatch, TargetPatch>::tgtPointFace
     const SourcePatch& srcPatch,
     const TargetPatch& tgtPatch,
     const vector& n,
-    const label srcFaceI,
+    const label srcFacei,
     point& srcPoint
 )
 const
 {
     const pointField& tgtPoints = tgtPatch.points();
 
-    // target face addresses that intersect source face srcFaceI
-    const labelList& addr = srcAddress_[srcFaceI];
+    // Target face addresses that intersect source face srcFacei
+    const labelList& addr = srcAddress_[srcFacei];
 
     forAll(addr, i)
     {
-        label tgtFaceI = addr[i];
-        const face& f = tgtPatch[tgtFaceI];
+        const label tgtFacei = addr[i];
+        const face& f = tgtPatch[tgtFacei];
 
         pointHit ray = f.ray(srcPoint, n, tgtPoints);
 
@@ -2199,18 +2182,18 @@ const
         {
             srcPoint = ray.rawPoint();
 
-            return tgtFaceI;
+            return tgtFacei;
         }
     }
 
-    // no hit registered - try with face normal instead of input normal
+    // No hit registered - try with face normal instead of input normal
     forAll(addr, i)
     {
-        label tgtFaceI = addr[i];
-        const face& f = tgtPatch[tgtFaceI];
+        label tgtFacei = addr[i];
+        const face& f = tgtPatch[tgtFacei];
 
-        vector nFace(-srcPatch.faceNormals()[srcFaceI]);
-        nFace += tgtPatch.faceNormals()[tgtFaceI];
+        vector nFace(-srcPatch.faceNormals()[srcFacei]);
+        nFace += tgtPatch.faceNormals()[tgtFacei];
 
         pointHit ray = f.ray(srcPoint, n, tgtPoints);
 
@@ -2218,7 +2201,7 @@ const
         {
             srcPoint = ray.rawPoint();
 
-            return tgtFaceI;
+            return tgtFacei;
         }
     }
 
@@ -2237,23 +2220,24 @@ const
 {
     OFstream os("faceConnectivity" + CML::name(Pstream::myProcNo()) + ".obj");
 
-    label ptI = 1;
+    label pti = 1;
 
     forAll(srcAddress, i)
     {
         const labelList& addr = srcAddress[i];
         const point& srcPt = srcPatch.faceCentres()[i];
+
         forAll(addr, j)
         {
-            label tgtPtI = addr[j];
-            const point& tgtPt = tgtPatch.faceCentres()[tgtPtI];
+            label tgtPti = addr[j];
+            const point& tgtPt = tgtPatch.faceCentres()[tgtPti];
 
             meshTools::writeOBJ(os, srcPt);
             meshTools::writeOBJ(os, tgtPt);
 
-            os  << "l " << ptI << " " << ptI + 1 << endl;
+            os  << "l " << pti << " " << pti + 1 << endl;
 
-            ptI += 2;
+            pti += 2;
         }
     }
 }
@@ -2271,7 +2255,7 @@ CML::label CML::AMIInterpolation<SourcePatch, TargetPatch>::calcDistribution
     const TargetPatch& tgtPatch
 ) const
 {
-    label procI = 0;
+    label proci = 0;
 
     if (Pstream::parRun())
     {
@@ -2292,7 +2276,7 @@ CML::label CML::AMIInterpolation<SourcePatch, TargetPatch>::calcDistribution
 
         if (nHaveFaces > 1)
         {
-            procI = -1;
+            proci = -1;
             if (debug)
             {
                 Info<< "AMIInterpolation::calcDistribution: "
@@ -2301,18 +2285,18 @@ CML::label CML::AMIInterpolation<SourcePatch, TargetPatch>::calcDistribution
         }
         else if (nHaveFaces == 1)
         {
-            procI = findIndex(facesPresentOnProc, 1);
+            proci = findIndex(facesPresentOnProc, 1);
             if (debug)
             {
                 Info<< "AMIInterpolation::calcDistribution: "
-                    << "AMI local to processor" << procI << endl;
+                    << "AMI local to processor" << proci << endl;
             }
         }
     }
 
 
     // Either not parallel or no faces on any processor
-    return procI;
+    return proci;
 }
 
 
@@ -2330,15 +2314,15 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcOverlappingProcs
 
     label nOverlaps = 0;
 
-    forAll(procBb, procI)
+    forAll(procBb, proci)
     {
-        const List<treeBoundBox>& bbs = procBb[procI];
+        const List<treeBoundBox>& bbs = procBb[proci];
 
-        forAll(bbs, bbI)
+        forAll(bbs, bbi)
         {
-            if (bbs[bbI].overlaps(bb))
+            if (bbs[bbi].overlaps(bb))
             {
-                overlaps[procI] = true;
+                overlaps[proci] = true;
                 nOverlaps++;
                 break;
             }
@@ -2465,10 +2449,10 @@ distributeAndMergePatches
     // Renumber and flatten
     label nFaces = 0;
     label nPoints = 0;
-    forAll(allFaces, procI)
+    forAll(allFaces, proci)
     {
-        nFaces += allFaces[procI].size();
-        nPoints += allPoints[procI].size();
+        nFaces += allFaces[proci].size();
+        nPoints += allPoints[proci].size();
     }
 
     tgtFaces.setSize(nFaces);
@@ -2504,14 +2488,14 @@ distributeAndMergePatches
 
 
     // Other proc data follows
-    forAll(allFaces, procI)
+    forAll(allFaces, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            const labelList& faceIDs = allTgtFaceIDs[procI];
+            const labelList& faceIDs = allTgtFaceIDs[proci];
             SubList<label>(tgtFaceIDs, faceIDs.size(), nFaces).assign(faceIDs);
 
-            const faceList& fcs = allFaces[procI];
+            const faceList& fcs = allFaces[proci];
             forAll(fcs, i)
             {
                 const face& f = fcs[i];
@@ -2523,7 +2507,7 @@ distributeAndMergePatches
                 }
             }
 
-            const pointField& pts = allPoints[procI];
+            const pointField& pts = allPoints[proci];
             forAll(pts, i)
             {
                 tgtPoints[nPoints++] = pts[i];
@@ -2589,10 +2573,10 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     }
 
     // slightly increase size of bounding boxes to allow for cases where
-    // bounding boxes are perfectly alligned
-    forAll(procBb[Pstream::myProcNo()], bbI)
+    // bounding boxes are perfectly aligned
+    forAll(procBb[Pstream::myProcNo()], bbi)
     {
-        treeBoundBox& bb = procBb[Pstream::myProcNo()][bbI];
+        treeBoundBox& bb = procBb[Pstream::myProcNo()][bbi];
         bb.inflate(0.01);
     }
 
@@ -2604,9 +2588,9 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     {
         Info<< "Determining extent of srcPatch per processor:" << nl
             << "\tproc\tbb" << endl;
-        forAll(procBb, procI)
+        forAll(procBb, proci)
         {
-            Info<< '\t' << procI << '\t' << procBb[procI] << endl;
+            Info<< '\t' << proci << '\t' << procBb[proci] << endl;
         }
     }
 
@@ -2624,20 +2608,20 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
         // Work array - whether processor bb overlaps the face bounds
         boolList procBbOverlaps(Pstream::nProcs());
 
-        forAll(faces, faceI)
+        forAll(faces, facei)
         {
-            if (faces[faceI].size())
+            if (faces[facei].size())
             {
-                treeBoundBox faceBb(points, faces[faceI]);
+                treeBoundBox faceBb(points, faces[facei]);
 
                 // Find the processor this face overlaps
                 calcOverlappingProcs(procBb, faceBb, procBbOverlaps);
 
-                forAll(procBbOverlaps, procI)
+                forAll(procBbOverlaps, proci)
                 {
-                    if (procBbOverlaps[procI])
+                    if (procBbOverlaps[proci])
                     {
-                        dynSendMap[procI].append(faceI);
+                        dynSendMap[proci].append(facei);
                     }
                 }
             }
@@ -2645,9 +2629,9 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
 
         // Convert dynamicList to labelList
         sendMap.setSize(Pstream::nProcs());
-        forAll(sendMap, procI)
+        forAll(sendMap, proci)
         {
-            sendMap[procI].transfer(dynSendMap[procI]);
+            sendMap[proci].transfer(dynSendMap[proci]);
         }
     }
 
@@ -2656,9 +2640,9 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     {
         Pout<< "Of my " << faces.size() << " I need to send to:" << nl
             << "\tproc\tfaces" << endl;
-        forAll(sendMap, procI)
+        forAll(sendMap, proci)
         {
-            Pout<< '\t' << procI << '\t' << sendMap[procI].size() << endl;
+            Pout<< '\t' << proci << '\t' << sendMap[proci].size() << endl;
         }
     }
 
@@ -2666,9 +2650,9 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     // Send over how many faces I need to receive
     labelListList sendSizes(Pstream::nProcs());
     sendSizes[Pstream::myProcNo()].setSize(Pstream::nProcs());
-    forAll(sendMap, procI)
+    forAll(sendMap, proci)
     {
-        sendSizes[Pstream::myProcNo()][procI] = sendMap[procI].size();
+        sendSizes[Pstream::myProcNo()][proci] = sendMap[proci].size();
     }
     Pstream::gatherList(sendSizes);
     Pstream::scatterList(sendSizes);
@@ -2683,18 +2667,18 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
         sendMap[Pstream::myProcNo()].size()
     );
 
-    label segmentI = constructMap[Pstream::myProcNo()].size();
-    forAll(constructMap, procI)
+    label segmenti = constructMap[Pstream::myProcNo()].size();
+    forAll(constructMap, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
             // What I need to receive is what other processor is sending to me
-            label nRecv = sendSizes[procI][Pstream::myProcNo()];
-            constructMap[procI].setSize(nRecv);
+            label nRecv = sendSizes[proci][Pstream::myProcNo()];
+            constructMap[proci].setSize(nRecv);
 
             for (label i = 0; i < nRecv; i++)
             {
-                constructMap[procI][i] = segmentI++;
+                constructMap[proci][i] = segmenti++;
             }
         }
     }
@@ -2703,7 +2687,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     (
         new mapDistribute
         (
-            segmentI,       // size after construction
+            segmenti,       // size after construction
             sendMap.xfer(),
             constructMap.xfer()
         )

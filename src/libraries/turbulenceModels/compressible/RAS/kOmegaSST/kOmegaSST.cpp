@@ -546,7 +546,7 @@ void kOmegaSST::correct()
         rhoGammaF1*min(fr1_*G, c1_*rho_*betaStar_*k_*omega_)/(mut_ + mutMin)
       - fvm::SuSp((2.0/3.0)*rhoGammaF1*divU, omega_)
       - fvm::Sp(beta(F1)*rho_*omega_, omega_)
-      + 2*(1-F1)*rho_*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
+      + (1-F1)*CDkOmega
     );
 
     omegaEqn().relax();

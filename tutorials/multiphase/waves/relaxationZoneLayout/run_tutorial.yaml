@@ -1,0 +1,12 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: yes
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: relaxationZoneLayout
+

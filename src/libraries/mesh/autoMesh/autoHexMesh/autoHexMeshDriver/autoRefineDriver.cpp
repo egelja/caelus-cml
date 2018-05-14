@@ -178,7 +178,7 @@ CML::label CML::autoRefineDriver::surfaceOnlyRefine
     const fvMesh& mesh = meshRefiner_.mesh();
 
     // Determine the maximum refinement level over all surfaces. This
-    // determines the minumum number of surface refinement iterations.
+    // determines the minimum number of surface refinement iterations.
     label overallMaxLevel = max(meshRefiner_.surfaces().maxLevel());
 
     label iter;
@@ -229,7 +229,7 @@ CML::label CML::autoRefineDriver::surfaceOnlyRefine
             << " cells (out of " << mesh.globalData().nTotalCells()
             << ')' << endl;
 
-        // Stop when no cells to refine or have done minimum nessecary
+        // Stop when no cells to refine or have done minimum necessary
         // iterations and not enough cells to refine.
         if
         (
@@ -344,7 +344,7 @@ CML::label CML::autoRefineDriver::shellRefine
     );
 
     // Determine the maximum refinement level over all volume refinement
-    // regions. This determines the minumum number of shell refinement
+    // regions. This determines the minimum number of shell refinement
     // iterations.
     label overallMaxShellLevel = meshRefiner_.shells().maxLevel();
 
@@ -431,7 +431,7 @@ CML::label CML::autoRefineDriver::shellRefine
             << " cells (out of " << mesh.globalData().nTotalCells()
             << ')' << endl;
 
-        // Stop when no cells to refine or have done minimum nessecary
+        // Stop when no cells to refine or have done minimum necessary
         // iterations and not enough cells to refine.
         if
         (

@@ -12541,7 +12541,7 @@ int main(int argc, char *argv[])
     fluentGroupToCAELUSPatch.insert("fan");
 
 
-    // Create intial empty polyMesh
+    // Create initial empty polyMesh
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     polyMesh mesh

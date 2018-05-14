@@ -33,11 +33,11 @@ Description
 
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.hpp"
 #include "incompressible/RAS/RASModel/RASModel.hpp"
-#include "nutWallFunction/nutWallFunctionFvPatchScalarField.hpp"
+#include "nutWF/nutWFFvPatchScalarField.hpp"
 
 #include "basicThermo.hpp"
 #include "compressible/RAS/RASModel/RASModel.hpp"
-#include "mutkWallFunction/mutkWallFunctionFvPatchScalarField.hpp"
+#include "mutkWF/mutkWFFvPatchScalarField.hpp"
 
 #include "wallDist.hpp"
 

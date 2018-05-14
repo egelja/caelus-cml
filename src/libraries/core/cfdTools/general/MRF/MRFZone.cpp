@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -68,11 +68,11 @@ void CML::MRFZone::setMRFFaces()
 
     label nZoneFaces = 0;
 
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
-        if (zoneCell[own[faceI]] || zoneCell[nei[faceI]])
+        if (zoneCell[own[facei]] || zoneCell[nei[facei]])
         {
-            faceType[faceI] = 1;
+            faceType[facei] = 1;
             nZoneFaces++;
         }
     }
@@ -80,19 +80,19 @@ void CML::MRFZone::setMRFFaces()
 
     labelHashSet excludedPatches(excludedPatchLabels_);
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        if (pp.coupled() || excludedPatches.found(patchI))
+        if (pp.coupled() || excludedPatches.found(patchi))
         {
             forAll(pp, i)
             {
-                label faceI = pp.start()+i;
+                label facei = pp.start()+i;
 
-                if (zoneCell[own[faceI]])
+                if (zoneCell[own[facei]])
                 {
-                    faceType[faceI] = 2;
+                    faceType[facei] = 2;
                     nZoneFaces++;
                 }
             }
@@ -101,11 +101,11 @@ void CML::MRFZone::setMRFFaces()
         {
             forAll(pp, i)
             {
-                label faceI = pp.start()+i;
+                label facei = pp.start()+i;
 
-                if (zoneCell[own[faceI]])
+                if (zoneCell[own[facei]])
                 {
-                    faceType[faceI] = 1;
+                    faceType[facei] = 1;
                     nZoneFaces++;
                 }
             }
@@ -125,11 +125,11 @@ void CML::MRFZone::setMRFFaces()
     internalFaces_.setSize(mesh_.nFaces());
     label nInternal = 0;
 
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
-        if (faceType[faceI] == 1)
+        if (faceType[facei] == 1)
         {
-            internalFaces_[nInternal++] = faceI;
+            internalFaces_[nInternal++] = facei;
         }
     }
     internalFaces_.setSize(nInternal);
@@ -143,13 +143,13 @@ void CML::MRFZone::setMRFFaces()
 
         forAll(pp, patchFacei)
         {
-            label faceI = pp.start() + patchFacei;
+            label facei = pp.start() + patchFacei;
 
-            if (faceType[faceI] == 1)
+            if (faceType[facei] == 1)
             {
                 nIncludedFaces[patchi]++;
             }
-            else if (faceType[faceI] == 2)
+            else if (faceType[facei] == 2)
             {
                 nExcludedFaces[patchi]++;
             }
@@ -172,13 +172,13 @@ void CML::MRFZone::setMRFFaces()
 
         forAll(pp, patchFacei)
         {
-            label faceI = pp.start() + patchFacei;
+            label facei = pp.start() + patchFacei;
 
-            if (faceType[faceI] == 1)
+            if (faceType[facei] == 1)
             {
                 includedFaces_[patchi][nIncludedFaces[patchi]++] = patchFacei;
             }
-            else if (faceType[faceI] == 2)
+            else if (faceType[facei] == 2)
             {
                 excludedFaces_[patchi][nExcludedFaces[patchi]++] = patchFacei;
             }
@@ -408,6 +408,11 @@ void CML::MRFZone::addCoriolis
 
 void CML::MRFZone::makeRelative(volVectorField& U) const
 {
+    if (cellZoneID_ == -1)
+    {
+        return;
+    }
+
     const volVectorField& C = mesh_.C();
 
     const vector Omega = this->Omega();
@@ -421,12 +426,15 @@ void CML::MRFZone::makeRelative(volVectorField& U) const
     }
 
     // Included patches
+
+    volVectorField::GeometricBoundaryField& Ubf = U.boundaryField();
+
     forAll(includedFaces_, patchi)
     {
         forAll(includedFaces_[patchi], i)
         {
             label patchFacei = includedFaces_[patchi][i];
-            U.boundaryField()[patchi][patchFacei] = vector::zero;
+            Ubf[patchi][patchFacei] = Zero;
         }
     }
 
@@ -436,7 +444,7 @@ void CML::MRFZone::makeRelative(volVectorField& U) const
         forAll(excludedFaces_[patchi], i)
         {
             label patchFacei = excludedFaces_[patchi][i];
-            U.boundaryField()[patchi][patchFacei] -=
+            Ubf[patchi][patchFacei] -=
                 (Omega
               ^ (C.boundaryField()[patchi][patchFacei] - origin_));
         }
@@ -456,6 +464,12 @@ void CML::MRFZone::makeRelative(FieldField<fvsPatchField, scalar>& phi) const
 }
 
 
+void CML::MRFZone::makeRelative(Field<scalar>& phi, const label patchi) const
+{
+    makeRelativeRhoFlux(oneField(), phi, patchi);
+}
+
+
 void CML::MRFZone::makeRelative
 (
     const surfaceScalarField& rho,
@@ -468,6 +482,11 @@ void CML::MRFZone::makeRelative
 
 void CML::MRFZone::makeAbsolute(volVectorField& U) const
 {
+    if (cellZoneID_ == -1)
+    {
+        return;
+    }
+
     const volVectorField& C = mesh_.C();
 
     const vector Omega = this->Omega();
@@ -481,12 +500,14 @@ void CML::MRFZone::makeAbsolute(volVectorField& U) const
     }
 
     // Included patches
+    volVectorField::GeometricBoundaryField& Ubf = U.boundaryField();
+
     forAll(includedFaces_, patchi)
     {
         forAll(includedFaces_[patchi], i)
         {
             label patchFacei = includedFaces_[patchi][i];
-            U.boundaryField()[patchi][patchFacei] =
+            Ubf[patchi][patchFacei] =
                 (Omega ^ (C.boundaryField()[patchi][patchFacei] - origin_));
         }
     }
@@ -497,7 +518,7 @@ void CML::MRFZone::makeAbsolute(volVectorField& U) const
         forAll(excludedFaces_[patchi], i)
         {
             label patchFacei = excludedFaces_[patchi][i];
-            U.boundaryField()[patchi][patchFacei] +=
+            Ubf[patchi][patchFacei] +=
                 (Omega ^ (C.boundaryField()[patchi][patchFacei] - origin_));
         }
     }
@@ -522,15 +543,21 @@ void CML::MRFZone::makeAbsolute
 
 void CML::MRFZone::correctBoundaryVelocity(volVectorField& U) const
 {
+    if (!active_)
+    {
+        return;
+    }
+
     const vector Omega = this->Omega();
 
-
     // Included patches
+    volVectorField::GeometricBoundaryField& Ubf = U.boundaryField();
+
     forAll(includedFaces_, patchi)
     {
         const vectorField& patchC = mesh_.Cf().boundaryField()[patchi];
 
-        vectorField pfld(U.boundaryField()[patchi]);
+        vectorField pfld(Ubf[patchi]);
 
         forAll(includedFaces_[patchi], i)
         {
@@ -539,7 +566,7 @@ void CML::MRFZone::correctBoundaryVelocity(volVectorField& U) const
             pfld[patchFacei] = (Omega ^ (patchC[patchFacei] - origin_));
         }
 
-        U.boundaryField()[patchi] == pfld;
+        Ubf[patchi] == pfld;
     }
 }
 
@@ -577,4 +604,11 @@ bool CML::MRFZone::read(const dictionary& dict)
 }
 
 
+void CML::MRFZone::update()
+{
+    if (mesh_.topoChanging())
+    {
+        setMRFFaces();
+    }
+}
 

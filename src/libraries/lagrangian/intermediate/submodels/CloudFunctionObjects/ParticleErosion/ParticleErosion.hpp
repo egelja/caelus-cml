@@ -239,7 +239,7 @@ CML::ParticleErosion<CloudType>::ParticleErosion
 
     patchIDs_ = uniquePatchIDs.toc();
 
-    // trigger ther creation of the Q field
+    // trigger the creation of the Q field
     preEvolve();
 }
 

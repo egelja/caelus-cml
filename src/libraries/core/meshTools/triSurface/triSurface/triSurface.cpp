@@ -366,7 +366,7 @@ bool CML::triSurface::read
         FatalErrorIn
         (
             "triSurface::read(const fileName&, const word&, const bool)"
-        )   << "Cannnot read " << name << exit(FatalError);
+        )   << "Cannot read " << name << exit(FatalError);
     }
 
     if (ext == "gz")

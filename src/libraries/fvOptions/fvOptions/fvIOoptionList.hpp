@@ -74,7 +74,10 @@ public:
 
 
     // Member Functions
-
+    
+        //- Inherit read from optionList
+        using optionList::read;
+    
         //- Read dictionary
         virtual bool read();
 };

@@ -106,6 +106,9 @@ public:
         //- Is method parallel aware (i.e. does it synchronize domains across
         //  proc boundaries)
         virtual bool parallelAware() const;
+    
+        //- Inherit decompose from decompositionMethod
+        using decompositionMethod::decompose;
 
         //- Return for every coordinate the wanted processor number. Use the
         //  mesh connectivity (if needed)

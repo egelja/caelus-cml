@@ -35,7 +35,7 @@ Description
     order but only for groups of edges belonging to each point. An example
     is given below:
     \verbatim
-        owner     eighbour
+        owner     neighbour
         0         1
         0         20
         1         2
@@ -166,6 +166,9 @@ public:
             return size_;
         }
 
+        //- Return number of interfaces
+        virtual label nPatches() const = 0;
+
         //- Return lower addressing
         virtual const labelUList& lowerAddr() const = 0;
 
@@ -174,6 +177,11 @@ public:
 
         //- Return patch to internal addressing given patch number
         virtual const labelUList& patchAddr
+        (
+            const label patchNo
+        ) const = 0;
+
+        virtual const labelUList& getPatchAddr
         (
             const label patchNo
         ) const = 0;

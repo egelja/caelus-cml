@@ -8,7 +8,7 @@ target = 'turbulenceDerivedFvPatchFields'
 sources = Split("""
 porousBafflePressure/porousBafflePressureFvPatchFields.cpp
 fixedShearStress/fixedShearStressFvPatchVectorField.cpp
-wallFunctions/kqRWallFunctions/kqRWallFunction/kqRWallFunctionFvPatchFields.cpp
+wallFunctions/kqRWFs/kqRWF/kqRWFFvPatchFields.cpp
 """)
 
 caelus_inc = [

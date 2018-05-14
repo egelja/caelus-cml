@@ -1,0 +1,50 @@
+/*-----------------------------------------------------------------------------*
+Caelus V4.10
+Web:   www.caelus-cml.com
+\*-----------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+5
+(
+    wall
+    {
+        type            wall;
+        nFaces          255;
+        startFace       3900;
+    }
+    inlet
+    {
+        type            patch;
+        nFaces          15;
+        startFace       4155;
+    }
+    outlet-1
+    {
+        type            patch;
+        nFaces          15;
+        startFace       4170;
+    }
+    outlet-2
+    {
+        type            patch;
+        nFaces          15;
+        startFace       4185;
+    }
+    symm-left-right
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          4050;
+        startFace       4200;
+    }
+)
+
+// ************************************************************************* //

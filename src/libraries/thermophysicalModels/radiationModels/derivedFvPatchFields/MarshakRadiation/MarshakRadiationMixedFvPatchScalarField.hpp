@@ -21,8 +21,31 @@ Class
     CML::MarshakRadiationFvPatchScalarField
 
 Description
-    Marshak boundary for radiation G field
-    - radiation temperature taken from patch value
+    A 'mixed' boundary condition that implements a Marshak condition for the
+    incident radiation field (usually written as G)
+
+    The radiation temperature is retrieved from the mesh database, using a
+    user specified temperature field name.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        T            | temperature field name  | no          | T
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            MarshakRadiation;
+        T               T;
+        value           uniform 0;
+    }
+    \endverbatim
+
+See also
+    CML::radiationCoupledBase
+    CML::mixedFvPatchField
 
 SourceFiles
     MarshakRadiationFvPatchScalarField.cpp

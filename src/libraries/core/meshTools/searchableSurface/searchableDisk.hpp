@@ -66,7 +66,10 @@ private:
 
 
     // Private Member Functions
-
+    
+        //- Inherit findNearest from searchableSurface
+        using searchableSurface::findNearest;
+    
         //- Find nearest point on disk
         pointIndexHit findNearest
         (

@@ -40,6 +40,8 @@ void CML::solutionControl::read(const bool absTolOnly)
         solnDict.lookupOrDefault<label>("nNonOrthogonalCorrectors", 0);
     momentumPredictor_ = solnDict.lookupOrDefault("momentumPredictor", true);
     transonic_ = solnDict.lookupOrDefault("transonic", false);
+    consistent_ = solnDict.lookupOrDefault("consistent", false);
+    correctionForm_ = solnDict.lookupOrDefault("correctionForm", false);
 
     // Read residual information
     const dictionary residualDict(solnDict.subOrEmptyDict("residualControl"));
@@ -124,6 +126,12 @@ void CML::solutionControl::read(const bool absTolOnly)
 }
 
 
+void CML::solutionControl::read()
+{
+    read(false);
+}
+
+
 CML::label CML::solutionControl::applyToField
 (
     const word& fieldName,
@@ -167,6 +175,8 @@ CML::solutionControl::solutionControl(fvMesh& mesh, const word& algorithmName)
     nNonOrthCorr_(0),
     momentumPredictor_(true),
     transonic_(false),
+    consistent_(false),
+    correctionForm_(false),
     corr_(0),
     corrNonOrtho_(0)
 {}

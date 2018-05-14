@@ -1,0 +1,7 @@
+This tutorial:
+
+1. Runs the steady state solution in motorBikeSS directory
+
+2. Copies the mesh and latest solution time step into motorBikeLES directory 
+
+3. Runs the LES simulation in motorBikeLES directory

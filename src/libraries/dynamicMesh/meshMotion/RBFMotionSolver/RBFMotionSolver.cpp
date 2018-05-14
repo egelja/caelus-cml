@@ -267,7 +267,7 @@ CML::RBFMotionSolver::RBFMotionSolver
 )
 :
     motionSolver(mesh,dict,typeName),
-    SBMFPtr_(solidBodyMotionFunction::New(coeffDict(), mesh.time(), true)),
+    SBMFPtr_(solidBodyMotionFunction::New(coeffDict(), mesh.time(), false)),
     movingPatches_(coeffDict().lookup("movingPatches")),
     staticPatches_(coeffDict().lookup("staticPatches")),
     coarseningRatio_(readLabel(coeffDict().lookup("coarseningRatio"))),
@@ -405,8 +405,8 @@ void CML::RBFMotionSolver::solve()
     vectorField oldPoints = movingPoints();
     vectorField newPoints = oldPoints;
 
-    // Transform oldPoints into newPoints
-    CML::transformPoints(newPoints, SBMFPtr_().transformation(), oldPoints);
+    // Transform undisplacedPoints into newPoints
+    CML::transformPoints(newPoints, SBMFPtr_().transformation(), undisplacedPoints_);
 
     // Work out change in position
     motion = newPoints - oldPoints;

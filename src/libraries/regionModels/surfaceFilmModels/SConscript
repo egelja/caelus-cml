@@ -37,8 +37,8 @@ submodels/thermo/filmRadiationModel/filmRadiationModel/filmRadiationModelNew.cpp
 submodels/thermo/filmRadiationModel/noRadiation/noRadiation.cpp
 submodels/thermo/filmRadiationModel/standardRadiation/standardRadiation.cpp
 derivedFvPatchFields/filmHeightInletVelocity/filmHeightInletVelocityFvPatchVectorField.cpp
-derivedFvPatchFields/wallFunctions/alphatFilmWallFunction/alphatFilmWallFunctionFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/mutkFilmWallFunction/mutkFilmWallFunctionFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/alphatFilmWF/alphatFilmWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/mutkFilmWF/mutkFilmWFFvPatchScalarField.cpp
 """)
 
 caelus_inc = [

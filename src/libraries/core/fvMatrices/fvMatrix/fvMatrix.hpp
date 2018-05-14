@@ -185,22 +185,6 @@ protected:
         ) const;
 
 
-        // Matrix completion functionality
-
-            void addBoundaryDiag
-            (
-                scalarField& diag,
-                const direction cmpt
-            ) const;
-
-            void addCmptAvBoundaryDiag(scalarField& diag) const;
-
-            void addBoundarySource
-            (
-                Field<Type>& source,
-                const bool couples=true
-            ) const;
-
         // Matrix manipulation functionality
 
             //- Set solution in given cells to the specified values
@@ -299,11 +283,25 @@ public:
                 return source_;
             }
 
+            //- Access to fvBoundary scalar field containing
+            //  pseudo-matrix coeffs for internal cells
+            const FieldField<Field, Type>& internalCoeffs() const
+            {
+                return internalCoeffs_;
+            }
+
             //- fvBoundary scalar field containing pseudo-matrix coeffs
             //  for internal cells
             FieldField<Field, Type>& internalCoeffs()
             {
                 return internalCoeffs_;
+            }
+
+            //- Access to fvBoundary scalar field containing
+            //  pseudo-matrix coeffs for boundary cells
+            const FieldField<Field, Type>& boundaryCoeffs() const
+            {
+                return boundaryCoeffs_;
             }
 
             //- fvBoundary scalar field containing pseudo-matrix coeffs
@@ -323,6 +321,23 @@ public:
             {
                 return faceFluxCorrectionPtr_;
             }
+
+
+        // Matrix completion functionality
+
+            void addBoundaryDiag
+            (
+                scalarField& diag,
+                const direction cmpt
+            ) const;
+
+            void addCmptAvBoundaryDiag(scalarField& diag) const;
+
+            void addBoundarySource
+            (
+                Field<Type>& source,
+                const bool couples=true
+            ) const;
 
 
         // Operations
@@ -3429,7 +3444,7 @@ CML::operator&
             Mphi.internalField().replace(cmpt, -boundaryDiagCmpt*psiCmpt);
         }
     }
-    else 
+    else
     {
         Mphi.internalField() = pTraits<Type>::zero;
     }
@@ -3574,14 +3589,17 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
     GeometricField<Type, fvPatchField, volMesh>& psi =
        const_cast<GeometricField<Type, fvPatchField, volMesh>&>(psi_);
 
-    tmp<GeometricField<Type, fvPatchField, volMesh> > Residual = this->R();
+    if (psi.mesh().defectCorr())
+    {
+        tmp<GeometricField<Type, fvPatchField, volMesh> > Residual = this->R();
 
-    tmp<GeometricField<Type, fvPatchField, volMesh> > Correction = psi.mesh().defectCorrVecs() & fvc::grad(Residual());
+        tmp<GeometricField<Type, fvPatchField, volMesh> > Correction = psi.mesh().defectCorrVecs() & fvc::grad(Residual());
 
-    source_ += psi.mesh().V()*Correction().internalField();
+        source_ += psi.mesh().V()*Correction().internalField();
 
-    Residual.clear();
-    Correction.clear();
+        Residual.clear();
+        Correction.clear();
+    }
 
     lduMatrix::solverPerformance solverPerfVec
     (

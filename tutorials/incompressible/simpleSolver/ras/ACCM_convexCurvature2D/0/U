@@ -1,0 +1,50 @@
+/*---------------------------------------------------------------------------*\
+Caelus 8.04
+ Web:      www.caelus-cml.com 
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (27.63313 0 15.954);
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform (27.63313 0 15.954);
+    }
+    left
+    {
+        type            empty;
+    }
+    outlet
+    {
+        type            zeroGradient;
+    }
+    right
+    {
+        type            empty;
+    }
+    top
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+    wall
+    {
+        type            noSlipWall;
+    }
+}
+
+
+// ************************************************************************* //

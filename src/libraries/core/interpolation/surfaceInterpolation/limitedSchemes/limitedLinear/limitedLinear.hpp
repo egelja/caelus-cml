@@ -24,7 +24,7 @@ Class
 Description
 
     Differencing scheme based on parameterised limiter function. 
-    Scheme selects a paramter value between 0 and 2 where
+    Scheme selects a parameter value between 0 and 2 where
     0 value represents unlimited linear scheme and values between 1 and 2
     representent a TVD satisfying scheme. A value between 0 and 2 must be
     specified in the dictionary entry.

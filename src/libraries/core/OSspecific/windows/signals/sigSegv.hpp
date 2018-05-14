@@ -21,7 +21,7 @@ Class
     sigSegv
 
 Description
-    Signal handler for SEGV interupt.  The standard interupt handler is
+    Signal handler for SEGV interrupt.  The standard interrupt handler is
     overridden to ensure that the runningJob file is removed.
 
 SourceFiles

@@ -67,14 +67,17 @@ meshToMeshInterpolation/meshToMesh/calcMethod/mapNearest/mapNearestMethod.cpp
 caelus_inc = [
 'surfMesh/lnInclude',
 'lagrangian/basic/lnInclude',
-'conversion/lnInclude'
+'conversion/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
 'core',
 'surfMesh',
 'lagrangian',
-'conversion'
+'conversion',
+'dynamicMesh'
+
 ]
 
 build_lib(env,

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,16 +23,19 @@ Class
 Description
     Polynomial templated on size (order):
 
-        poly = logCoeff*log(x) + sum(coeff_[i]*x^i)
+    \verbatim
+        poly = sum(coeffs[i]*x^i) + logCoeff*log(x)
+    \endverbatim
 
-    where 0 \<= i \<= N
+    where <tt> 0 <= i <= N </tt>
 
     - integer powers, starting at zero
-    - value(x) to evaluate the poly for a given value
-    - integrate(x1, x2) between two scalar values
-    - integral() to return a new, integral coeff polynomial
+    - \c value(x) to evaluate the poly for a given value
+    - \c derivative(x) returns derivative at value
+    - \c integral(x1, x2) returns integral between two scalar values
+    - \c integral() to return a new, integral coeff polynomial
       - increases the size (order)
-    - integralMinus1() to return a new, integral coeff polynomial where
+    - \c integralMinus1() to return a new, integral coeff polynomial where
       the base poly starts at order -1
 
 
@@ -130,16 +133,18 @@ public:
             //- Return polynomial value
             scalar value(const scalar x) const;
 
-            //- Integrate between two values
-            scalar integrate(const scalar x1, const scalar x2) const;
+            //- Return derivative of the polynomial at the given x
+            scalar derivative(const scalar x) const;
 
+            //- Return integral between two values
+            scalar integral(const scalar x1, const scalar x2) const;
 
             //- Return integral coefficients.
-            //  Argument becomes zeroth element (constant of integration)
+            //  Argument becomes zero'th element (constant of integration)
             intPolyType integral(const scalar intConstant = 0.0) const;
 
             //- Return integral coefficients when lowest order is -1.
-            //  Argument becomes zeroth element (constant of integration)
+            //  Argument becomes zero'th element (constant of integration)
             polyType integralMinus1(const scalar intConstant = 0.0) const;
 
 
@@ -224,30 +229,6 @@ CML::Polynomial<PolySize>::Polynomial(const UList<scalar>& coeffs)
 }
 
 
-// template<int PolySize>
-// CML::Polynomial<PolySize>::Polynomial(const polynomialFunction& poly)
-// :
-//     VectorSpace<Polynomial<PolySize>, scalar, PolySize>(),
-//     logActive_(poly.logActive()),
-//     logCoeff_(poly.logCoeff())
-// {
-//     if (poly.size() != PolySize)
-//     {
-//         FatalErrorIn
-//         (
-//             "Polynomial<PolySize>::Polynomial(const polynomialFunction&)"
-//         )   << "Size mismatch: Needed " << PolySize
-//             << " but given " << poly.size()
-//             << nl << exit(FatalError);
-//     }
-//
-//     for (int i = 0; i < PolySize; ++i)
-//     {
-//         this->v_[i] = poly[i];
-//     }
-// }
-
-
 template<int PolySize>
 CML::Polynomial<PolySize>::Polynomial(Istream& is)
 :
@@ -311,11 +292,11 @@ CML::scalar CML::Polynomial<PolySize>::value(const scalar x) const
     scalar val = this->v_[0];
 
     // avoid costly pow() in calculation
-    scalar powX = x;
+    scalar powX = 1;
     for (label i=1; i<PolySize; ++i)
     {
-        val += this->v_[i]*powX;
         powX *= x;
+        val += this->v_[i]*powX;
     }
 
     if (logActive_)
@@ -328,39 +309,57 @@ CML::scalar CML::Polynomial<PolySize>::value(const scalar x) const
 
 
 template<int PolySize>
-CML::scalar CML::Polynomial<PolySize>::integrate
+CML::scalar CML::Polynomial<PolySize>::derivative(const scalar x) const
+{
+    scalar deriv = 0;
+
+    if (PolySize > 1)
+    {
+        // avoid costly pow() in calculation
+        deriv += this->v_[1];
+
+        scalar powX = 1;
+        for (label i=2; i<PolySize; ++i)
+        {
+            powX *= x;
+            deriv += i*this->v_[i]*powX;
+        }
+    }
+
+    if (logActive_)
+    {
+        deriv += logCoeff_/x;
+    }
+
+    return deriv;
+}
+
+
+template<int PolySize>
+CML::scalar CML::Polynomial<PolySize>::integral
 (
     const scalar x1,
     const scalar x2
 ) const
 {
-    if (logActive_)
-    {
-        FatalErrorIn
-        (
-            "scalar Polynomial<PolySize>::integrate"
-            "("
-                "const scalar, "
-                "const scalar"
-            ") const"
-        )   << "Cannot integrate polynomial with logarithmic coefficients"
-            << nl << abort(FatalError);
-    }
-
-
     // avoid costly pow() in calculation
     scalar powX1 = x1;
     scalar powX2 = x2;
 
-    scalar val = this->v_[0]*(powX2 - powX1);
+    scalar integ = this->v_[0]*(powX2 - powX1);
     for (label i=1; i<PolySize; ++i)
     {
-        val += this->v_[i]/(i + 1) * (powX2 - powX1);
         powX1 *= x1;
         powX2 *= x2;
+        integ += this->v_[i]/(i + 1)*(powX2 - powX1);
     }
 
-    return val;
+    if (logActive_)
+    {
+        integ += logCoeff_*((x2*log(x2) - x2) - (x1*log(x1) - x1));
+    }
+
+    return integ;
 }
 
 
@@ -423,9 +422,6 @@ CML::Ostream& CML::operator<<
     return os;
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

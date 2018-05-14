@@ -13984,8 +13984,8 @@ int main(int argc, char *argv[])
         patchPhysicalTypes
     );
 
-    //dont write mesh yet, otherwise preservePatchTypes will be broken
-    //and zones wont be written
+    //don't write mesh yet, otherwise preservePatchTypes will be broken
+    //and zones won't be written
     //checkmesh done after patch addition as well
     Info<< "done." << endl;
 
@@ -13993,7 +13993,7 @@ int main(int argc, char *argv[])
     Info<< endl << "Building boundary and internal patches." << endl;
     //adding patches after mesh construction allows topological checks
     //on whether a patch is internal or external, something fluent
-    //doesnt seem to mind
+    //doesn't seem to mind
 
     // Make boundary patches
 

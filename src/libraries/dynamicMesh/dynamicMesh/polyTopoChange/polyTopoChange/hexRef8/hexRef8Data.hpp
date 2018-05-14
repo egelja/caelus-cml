@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 OpenFOAM Foundation
+Copyright (C) 2015-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -113,6 +113,9 @@ public:
         //- Parallel synchronise. This enforces valid objects on all processors
         //  (even if they don't have a mesh). Used by redistributePar.
         void sync(const IOobject& io);
+
+        //- In-place update for topology changes
+        void updateMesh(const mapPolyMesh&);
 
         //- In-place distribute
         void distribute(const mapDistributePolyMesh&);

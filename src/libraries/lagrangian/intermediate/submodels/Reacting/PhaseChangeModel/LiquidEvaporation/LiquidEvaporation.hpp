@@ -293,7 +293,7 @@ void CML::LiquidEvaporation<CloudType>::calculate
                     "scalarField&"
                 ") const"
             )   << "Parcel reached critical conditions: "
-                << "evaporating all avaliable mass" << endl;
+                << "evaporating all available mass" << endl;
         }
 
         forAll(activeLiquids_, i)

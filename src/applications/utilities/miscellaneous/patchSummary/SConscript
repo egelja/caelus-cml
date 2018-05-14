@@ -14,8 +14,7 @@ caelus_inc = [
 ]
 
 caelus_libs = [
-'core',
-'genericPatchFields'
+'core'
 ]
 
 ostype = utils.ostype()

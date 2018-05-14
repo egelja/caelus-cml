@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 7.04
+Caelus 8.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -20,22 +20,22 @@ boundaryField
 {
     floor
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           $internalField;
     }
     ceiling
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           $internalField;
     }
     inlet
     {
-        type            buoyantPressure;
+        type            fixedFluxPressure;
         value           $internalField;
     }
     outlet
     {
-        type            buoyantPressure;
+        type            fixedValue;
         value           $internalField;
     }
     fixedWalls
@@ -44,7 +44,7 @@ boundaryField
     }
     "baffle1Wall.*"
     {
-        type           calculated;
+        type            calculated;
     }
 }
 

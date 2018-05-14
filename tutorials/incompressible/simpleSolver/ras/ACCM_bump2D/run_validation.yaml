@@ -1,0 +1,21 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: no
+
+  - run_command:
+      cmd_name: decomposePar
+      cmd_args: "-force"
+
+  - run_command:
+      cmd_name: simpleSolver
+      parallel: True
+
+  - run_command:
+      cmd_name: reconstructPar
+      cmd_args: "-latestTime"
+
+  - process_logs:
+      log_file: simpleSolver.log
+

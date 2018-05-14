@@ -21,7 +21,7 @@ Class
     sigInt
 
 Description
-    Signal handler for INT interupt.  The standard interupt handler is
+    Signal handler for INT interrupt.  The standard interrupt handler is
     overridden to ensure that the runningJob file is removed.
 
 SourceFiles

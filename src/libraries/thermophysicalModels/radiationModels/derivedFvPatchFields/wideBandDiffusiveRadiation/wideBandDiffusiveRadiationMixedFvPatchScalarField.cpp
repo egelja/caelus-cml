@@ -42,7 +42,7 @@ wideBandDiffusiveRadiationMixedFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, "undefined", scalarField::null()),
-    TName_("undefinedT")
+    TName_("T")
 {
     refValue() = 0.0;
     refGrad() = 0.0;
@@ -80,7 +80,7 @@ wideBandDiffusiveRadiationMixedFvPatchScalarField
 :
     mixedFvPatchScalarField(p, iF),
     radiationCoupledBase(p, dict),
-    TName_(dict.lookup("T"))
+    TName_(dict.lookupOrDefault<word>("T", "T"))
 {
     if (dict.found("value"))
     {
@@ -165,7 +165,7 @@ updateCoeffs()
     label lambdaId = -1;
     dom.setRayIdLambdaId(dimensionedInternalField().name(), rayId, lambdaId);
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     if (dom.nLambda() == 0)
     {
@@ -183,51 +183,55 @@ updateCoeffs()
     radiativeIntensityRay& ray =
         const_cast<radiativeIntensityRay&>(dom.IRay(rayId));
 
-    ray.Qr().boundaryField()[patchI] += Iw*(n & ray.dAve());
+    const scalarField nAve(n & ray.dAve());
+    ray.qr().boundaryField()[patchi] += Iw*nAve;
 
     const scalarField Eb
     (
-        dom.blackBody().bLambda(lambdaId).boundaryField()[patchI]
+        dom.blackBody().bLambda(lambdaId).boundaryField()[patchi]
     );
 
     scalarField temissivity = emissivity();
 
-    forAll(Iw, faceI)
+    scalarField& qem = ray.qem().boundaryField()[patchi];
+    scalarField& qin = ray.qin().boundaryField()[patchi];
+
+    // Use updated Ir while iterating over rays
+    // avoids to used lagged qin
+    scalarField Ir = dom.IRay(0).qin().boundaryField()[patchi];
+
+    for (label rayI=1; rayI < dom.nRay(); rayI++)
     {
-        scalar Ir = 0.0;
-        for (label rayI=0; rayI < dom.nRay(); rayI++)
-        {
-            const vector& d = dom.IRay(rayI).d();
+        Ir += dom.IRay(rayI).qin().boundaryField()[patchi];
+    }
 
-            const scalarField& IFace =
-                dom.IRay(rayI).ILambda(lambdaId).boundaryField()[patchI];
-
-            if ((-n[faceI] & d) < 0.0) // qin into the wall
-            {
-                const vector& dAve = dom.IRay(rayI).dAve();
-                Ir = Ir + IFace[faceI]*mag(n[faceI] & dAve);
-            }
-        }
-
+    forAll(Iw, facei)
+    {
         const vector& d = dom.IRay(rayId).d();
 
-        if ((-n[faceI] & d) > 0.0)
+        if ((-n[facei] & d) > 0.0)
         {
             // direction out of the wall
-            refGrad()[faceI] = 0.0;
-            valueFraction()[faceI] = 1.0;
-            refValue()[faceI] =
+            refGrad()[facei] = 0.0;
+            valueFraction()[facei] = 1.0;
+            refValue()[facei] =
                 (
-                    Ir*(1.0 - temissivity[faceI])
-                  + temissivity[faceI]*Eb[faceI]
+                    Ir[facei]*(1.0 - temissivity[facei])
+                  + temissivity[facei]*Eb[facei]
                 )/pi;
+
+            // Emitted heat flux from this ray direction
+            qem[facei] = refValue()[facei]*nAve[facei];
         }
         else
         {
             // direction into the wall
-            valueFraction()[faceI] = 0.0;
-            refGrad()[faceI] = 0.0;
-            refValue()[faceI] = 0.0; //not used
+            valueFraction()[facei] = 0.0;
+            refGrad()[facei] = 0.0;
+            refValue()[facei] = 0.0; //not used
+
+            // Incident heat flux on this ray direction
+            qin[facei] = Iw[facei]*nAve[facei];
         }
     }
 
@@ -245,8 +249,7 @@ void CML::radiation::wideBandDiffusiveRadiationMixedFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     radiationCoupledBase::write(os);
-    os.writeKeyword("T") << TName_ << token::END_STATEMENT << nl;
-
+    writeEntryIfDifferent<word>(os, "T", "T", TName_);
 }
 
 

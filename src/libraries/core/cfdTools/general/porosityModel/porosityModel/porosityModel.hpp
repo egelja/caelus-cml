@@ -256,7 +256,10 @@ public:
 
         //- Write
         virtual bool writeData(Ostream& os) const;
-
+    
+        //- Inherit read from regIOobject
+        using regIOobject::read;
+    
         //- Read porosity dictionary
         virtual bool read(const dictionary& dict);
 };

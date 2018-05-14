@@ -28,12 +28,12 @@ Description
 #ifndef FieldMapper_H
 #define FieldMapper_H
 
+#include "mapDistributeBase.hpp"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
-
-class mapDistributeBase;
 
 /*---------------------------------------------------------------------------*\
                            Class FieldMapper Declaration
@@ -72,7 +72,7 @@ public:
             FatalErrorIn("FieldMapper::distributeMap() const")
                 << "attempt to access null distributeMap"
                 << abort(FatalError);
-            return *reinterpret_cast<mapDistributeBase*>(NULL);
+            return *(new mapDistributeBase());
         }
 
         //- Are there unmapped values? I.e. do all size() elements get

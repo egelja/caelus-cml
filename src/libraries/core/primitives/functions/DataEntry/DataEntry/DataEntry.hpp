@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::DataEntry
@@ -26,34 +26,27 @@ Description
     provide functions to return the (interpolated) value, and integral between
     limits.
 
-SourceFiles
-    DataEntry.cpp
-    DataEntryNew.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef DataEntry_H
-#define DataEntry_H
+#ifndef DataEntry_HPP
+#define DataEntry_HPP
 
 #include "dictionary.hpp"
 #include "Field.hpp"
-#include "dimensionedType.hpp"
+#include "Time.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
+
+// Forward declarations
 class Time;
 
-template<class Type>
-class DataEntry;
-
-template<class Type>
-Ostream& operator<<
-(
-    Ostream&,
-    const DataEntry<Type>&
-);
+// Forward declaration of friend functions and operators
+template<class Type> class DataEntry;
+template<class Type> Ostream& operator<<(Ostream&, const DataEntry<Type>&);
 
 /*---------------------------------------------------------------------------*\
                          Class DataEntry Declaration
@@ -110,6 +103,7 @@ public:
         {
             return tmp<DataEntry<Type> >(new DataEntry<Type>(*this));
         }
+//        virtual tmp<DataEntry<Type> > clone() const = 0;
 
 
     //- Selector
@@ -156,30 +150,6 @@ public:
                 const scalarField& x2
             ) const;
 
-            //- Return dimensioned type
-            virtual dimensioned<Type> dimValue(const scalar x) const;
-
-            //- Return dimensioned type as a function of (scalar)
-            virtual tmp<Field<dimensioned<Type> > > dimValue
-            (
-                const scalarField& x
-            ) const;
-
-            //- Integrate between two scalars and return a dimensioned type
-            virtual dimensioned<Type> dimIntegrate
-            (
-                const scalar x1,
-                const scalar x2
-            ) const;
-
-            //- Integrate between two scalar fields and return a field of
-            //  dimensioned type
-            virtual tmp<Field<dimensioned<Type> > > dimIntegrate
-            (
-                const scalarField& x1,
-                const scalarField& x2
-            ) const;
-
 
         // I/O
 
@@ -201,35 +171,37 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeDataEntry(Type)                                                   \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(DataEntry<Type>, 0);                  \
-                                                                              \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        DataEntry<Type>,                                                      \
-        dictionary                                                            \
+#define makeDataEntry(Type)                                                    \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(DataEntry<Type>, 0);                   \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        DataEntry<Type>,                                                       \
+        dictionary                                                             \
     );
 
 
-#define makeDataEntryType(SS, Type)                                           \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(SS<Type>, 0);                         \
-                                                                              \
-    DataEntry<Type>::adddictionaryConstructorToTable<SS<Type> >               \
+#define makeDataEntryType(SS, Type)                                            \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(DataEntryTypes::SS<Type>, 0);          \
+                                                                               \
+    DataEntry<Type>::adddictionaryConstructorToTable<DataEntryTypes::SS<Type> > \
         add##SS##Type##ConstructorToTable_;
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "Time.hpp"
+#define makeScalarDataEntry(SS)                                                \
+                                                                               \
+    defineTypeNameAndDebug(SS, 0);                                             \
+                                                                               \
+    DataEntry<scalar>::adddictionaryConstructorToTable<SS>                     \
+        add##SS##ConstructorToTable_;
 
 // * * * * * * * * * * * * * * * * Constructor * * * * * * * * * * * * * * * //
 
 template<class Type>
 CML::DataEntry<Type>::DataEntry(const word& entryName)
 :
-    refCount(),
     name_(entryName)
 {}
 
@@ -260,9 +232,7 @@ const CML::word& CML::DataEntry<Type>::name() const
 
 template<class Type>
 void CML::DataEntry<Type>::convertTimeBase(const Time&)
-{
-    // do nothing
-}
+{}
 
 
 template<class Type>
@@ -270,7 +240,7 @@ Type CML::DataEntry<Type>::value(const scalar x) const
 {
     notImplemented("Type CML::DataEntry<Type>::value(const scalar) const");
 
-    return pTraits<Type>::zero;
+    return Zero;
 }
 
 
@@ -286,7 +256,7 @@ Type CML::DataEntry<Type>::integrate(const scalar x1, const scalar x2) const
         ") const"
     );
 
-    return pTraits<Type>::zero;
+    return Zero;
 }
 
 
@@ -325,99 +295,20 @@ CML::tmp<CML::Field<Type> > CML::DataEntry<Type>::integrate
 }
 
 
-
 template<class Type>
-CML::dimensioned<Type> CML::DataEntry<Type>::dimValue(const scalar x) const
+void CML::DataEntry<Type>::writeData(Ostream& os) const
 {
-    notImplemented
-    (
-        "dimensioned<Type> CML::DataEntry<dimensioned<Type> >::dimValue"
-        "(const scalar) const"
-    );
-
-    return dimensioned<Type>("zero", dimless, pTraits<Type>::zero);
-}
-
-
-template<class Type>
-CML::dimensioned<Type> CML::DataEntry<Type>::dimIntegrate
-(
-    const scalar x1,
-    const scalar x2
-) const
-{
-    notImplemented
-    (
-        "dimensioned<Type> CML::DataEntry<Type>::dimIntegrate"
-        "("
-            "const scalar, "
-            "const scalar"
-        ") const"
-    );
-
-    return dimensioned<Type>("zero", dimless, pTraits<Type>::zero);
-}
-
-
-template<class Type>
-CML::tmp<CML::Field<CML::dimensioned<Type> > >
-CML::DataEntry<Type>::dimValue
-(
-    const scalarField& x
-) const
-{
-
-    tmp<Field<dimensioned<Type> > > tfld
-    (
-        new Field<dimensioned<Type> >
-        (
-            x.size(),
-            dimensioned<Type>("zero", dimless, pTraits<Type>::zero)
-        )
-    );
-
-    Field<dimensioned<Type> >& fld = tfld();
-
-    forAll(x, i)
-    {
-        fld[i] = this->dimValue(x[i]);
-    }
-    return tfld;
-}
-
-
-template<class Type>
-CML::tmp<CML::Field<CML::dimensioned<Type> > >
-CML::DataEntry<Type>::dimIntegrate
-(
-    const scalarField& x1,
-    const scalarField& x2
-) const
-{
-    tmp<Field<dimensioned<Type> > > tfld
-    (
-        new Field<dimensioned<Type> >(x1.size())
-    );
-
-    Field<dimensioned<Type> >& fld = tfld();
-
-    forAll(x1, i)
-    {
-        fld[i] = this->dimIntegrate(x1[i], x2[i]);
-    }
-    return tfld;
+    os.writeKeyword(name_) << type();
 }
 
 
 // * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * * * //
 
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
-
 template<class Type>
 CML::Ostream& CML::operator<<
 (
     Ostream& os,
-    const DataEntry<Type>& de
+    const DataEntry<Type>& f1
 )
 {
     // Check state of Ostream
@@ -426,68 +317,16 @@ CML::Ostream& CML::operator<<
         "Ostream& operator<<(Ostream&, const DataEntry<Type>&)"
     );
 
-    os  << de.name_;
+    os  << f1.name_;
+    f1.writeData(os);
 
     return os;
 }
 
 
-template<class Type>
-void CML::DataEntry<Type>::writeData(Ostream& os) const
-{
-    os.writeKeyword(name_) << type();
-}
+// ************************************************************************* //
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-template<class Type>
-CML::autoPtr<CML::DataEntry<Type> > CML::DataEntry<Type>::New
-(
-    const word& entryName,
-    const dictionary& dict
-)
-{
-    Istream& is(dict.lookup(entryName, false));
-
-    token firstToken(is);
-
-    word DataEntryType;
-    if (firstToken.isWord())
-    {
-        // Dimensioned type default compatibility
-        if (firstToken.wordToken() == entryName)
-        {
-            DataEntryType = "CompatibilityConstant";
-        }
-        else
-        {
-            DataEntryType = firstToken.wordToken();
-        }
-    }
-    else
-    {
-        // DataEntryType = CompatibilityConstant<Type>::typeName;
-        DataEntryType = "CompatibilityConstant";
-    }
-
-    typename dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(DataEntryType);
-
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
-    {
-        FatalErrorIn("DataEntry<Type>::New(const word&, const dictionary&)")
-            << "Unknown DataEntry type "
-            << DataEntryType << " for DataEntry "
-            << entryName << nl << nl
-            << "Valid DataEntry types are:" << nl
-            << dictionaryConstructorTablePtr_->sortedToc() << nl
-            << exit(FatalError);
-    }
-
-    return autoPtr<DataEntry<Type> >(cstrIter()(entryName, dict));
-}
-
-
+#include "Constant.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

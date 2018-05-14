@@ -39,6 +39,7 @@ SourceFiles
 #include "DimensionedField.hpp"
 #include "FieldField.hpp"
 #include "lduInterfaceFieldPtrsList.hpp"
+#include "BlockLduInterfaceFieldPtrsList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -187,6 +188,11 @@ public:
             //- Return a list of pointers for each patch field with only those
             //  pointing to interfaces being set
             lduInterfaceFieldPtrsList interfaces() const;
+
+            //- Return a list of pointers for each patch field with only those
+            //  pointing to block-coupled interfaces being set
+            typename BlockLduInterfaceFieldPtrsList<Type>::Type
+            blockInterfaces() const;
 
             //- Write boundary field as dictionary entry
             void writeEntry(const word& keyword, Ostream& os) const;
@@ -2238,7 +2244,7 @@ evaluate()
     else
     {
         FatalErrorIn("GeometricBoundaryField::evaluate()")
-            << "Unsuported communications type "
+            << "Unsupported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
     }
@@ -2296,6 +2302,35 @@ interfaces() const
             (
                 patchi,
                 &refCast<const lduInterfaceField>(this->operator[](patchi))
+            );
+        }
+    }
+
+    return interfaces;
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
+typename CML::BlockLduInterfaceFieldPtrsList<Type>::Type
+CML::GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
+blockInterfaces() const
+{
+    typename BlockLduInterfaceFieldPtrsList<Type>::Type interfaces
+    (
+        this->size()
+    );
+
+    forAll (interfaces, patchi)
+    {
+        if (isA<BlockLduInterfaceField<Type> >(this->operator[](patchi)))
+        {
+            interfaces.set
+            (
+                patchi,
+                &refCast<const BlockLduInterfaceField<Type> >
+                (
+                    this->operator[](patchi)
+                )
             );
         }
     }

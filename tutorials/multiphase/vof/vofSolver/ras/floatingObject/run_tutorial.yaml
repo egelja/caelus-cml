@@ -1,0 +1,40 @@
+
+tasks:
+  - clean_case:
+      remove_zero: yes
+      remove_mesh: yes
+      remove_extra:
+      - constant/dynamicMeshDict
+      preserve: [ "0.org" ]
+
+  - copy_files:
+      src: "constant/dynamicMeshDict-SLERP"
+      dest: "constant/dynamicMeshDict"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: topoSet
+
+  - run_command:
+      cmd_name: subsetMesh
+      cmd_args: "-overwrite c0 -patch floatingObject"
+
+  - copy_tree:
+      src: "0.org"
+      dest: "0"
+
+  - copy_files:
+      src: "0/pointDisplacement-SLERP"
+      dest: "0/pointDisplacement"
+
+  - run_command:
+      cmd_name: setFields
+
+  - run_command:
+      cmd_name: vofSolver
+
+  - process_logs:
+      log_file: vofSolver.log
+

@@ -34,14 +34,14 @@ namespace CML
 
 CML::solidReaction::solidReaction
 (
-    const speciesTable& componets,
+    const speciesTable& components,
     const speciesTable& pyrolisisGases,
     const List<label>& slhs,
     const List<label>& srhs,
     const List<label>& grhs
 )
 :
-    components_(componets),
+    components_(components),
     pyrolisisGases_(pyrolisisGases),
     slhs_(slhs),
     srhs_(srhs),
@@ -52,11 +52,11 @@ CML::solidReaction::solidReaction
 CML::solidReaction::solidReaction
 (
     const solidReaction& r,
-    const speciesTable& componets,
+    const speciesTable& components,
     const speciesTable& pyrolisisGases
 )
 :
-    components_(componets),
+    components_(components),
     pyrolisisGases_(pyrolisisGases),
     slhs_(r.slhs_),
     srhs_(r.srhs_),

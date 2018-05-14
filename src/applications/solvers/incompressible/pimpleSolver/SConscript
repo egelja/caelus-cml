@@ -17,7 +17,9 @@ caelus_inc = [
 'transportModels/incompressible/singlePhaseTransportModel',
 'transportModels/incompressible/lnInclude',
 'fvOptions/lnInclude',
-'sampling/lnInclude'
+'sampling/lnInclude',
+'dynamicMesh/dynamicFvMesh/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude'
 ]
 
 caelus_libs = [
@@ -29,8 +31,15 @@ caelus_libs = [
 'incompressibleTransportModels',
 'turbulenceDerivedFvPatchFields',
 'fvOptions',
-'sampling'
+'sampling',
+'dynamicFvMesh',
+'dynamicMesh',
+'topoChangerFvMesh'
 ]
+
+append_args = dict(
+    CPPPATH = ['..']
+)
 
 ostype = utils.ostype()
 prepend_args = {}
@@ -44,4 +53,5 @@ build_app(env,
           sources=sources,
           caelus_inc=caelus_inc,
           caelus_libs=caelus_libs,
-          prepend_args=prepend_args)
+          prepend_args=prepend_args,
+          append_args=append_args)

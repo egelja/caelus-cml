@@ -75,7 +75,7 @@ class multiDirRefinement
         //- Current set of cells to refine. Extended with added cells.
         labelList cellLabels_;
 
-        //- from original to added cells.
+        //- From original to added cells.
         //  Gives for every cell in the original mesh an empty list or the
         //  list of cells this one has been split into (note: will include
         //  itself so e.g. for hex will be 8 if 2x2x2 refinement)

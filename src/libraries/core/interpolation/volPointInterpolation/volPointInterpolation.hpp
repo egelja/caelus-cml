@@ -594,7 +594,7 @@ CML::volPointInterpolation::interpolate
 
     if (!cache || vf.mesh().changing())
     {
-        // Delete any old occurences to avoid double registration
+        // Delete any old occurrences to avoid double registration
         if (db.objectRegistry::template foundObject<PointFieldType>(name))
         {
             PointFieldType& pf = const_cast<PointFieldType&>

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,15 +35,21 @@ CML::globalIndex::globalIndex(const Xfer<labelList>& offsets)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-inline CML::label CML::globalIndex::offset(const label procI) const
+inline CML::labelList& CML::globalIndex::offsets()
 {
-    return offsets_[procI];
+    return offsets_;
 }
 
 
-inline CML::label CML::globalIndex::localSize(const label procI) const
+inline CML::label CML::globalIndex::offset(const label proci) const
 {
-    return offsets_[procI+1] - offsets_[procI];
+    return offsets_[proci];
+}
+
+
+inline CML::label CML::globalIndex::localSize(const label proci) const
+{
+    return offsets_[proci+1] - offsets_[proci];
 }
 
 
@@ -61,11 +67,11 @@ inline CML::label CML::globalIndex::size() const
 
 inline CML::label CML::globalIndex::toGlobal
 (
-    const label procI,
+    const label proci,
     const label i
 ) const
 {
-    return i + offsets_[procI];
+    return i + offsets_[proci];
 }
 
 
@@ -76,9 +82,9 @@ inline CML::label CML::globalIndex::toGlobal(const label i) const
 
 
 //- Is on local processor
-inline bool CML::globalIndex::isLocal(const label procI, const label i) const
+inline bool CML::globalIndex::isLocal(const label proci, const label i) const
 {
-    return i >= offsets_[procI] && i < offsets_[procI+1];
+    return i >= offsets_[proci] && i < offsets_[proci+1];
 }
 
 
@@ -88,16 +94,16 @@ inline bool CML::globalIndex::isLocal(const label i) const
 }
 
 
-inline CML::label CML::globalIndex::toLocal(const label procI, const label i)
+inline CML::label CML::globalIndex::toLocal(const label proci, const label i)
 const
 {
-    label localI = i - offsets_[procI];
+    label localI = i - offsets_[proci];
 
-    if (localI < 0 || i >= offsets_[procI+1])
+    if (localI < 0 || i >= offsets_[proci+1])
     {
         FatalErrorIn("globalIndex::toLocal(const label, const label)")
             << "Global " << i << " does not belong on processor "
-            << procI << endl << "Offsets:" << offsets_
+            << proci << endl << "Offsets:" << offsets_
             << abort(FatalError);
     }
     return localI;

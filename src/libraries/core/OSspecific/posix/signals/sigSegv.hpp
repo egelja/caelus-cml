@@ -21,9 +21,9 @@ Class
     CML::sigSegv
 
 Description
-    Signal handler for SEGV interupt.
+    Signal handler for SEGV interrupt.
 
-    The standard interupt handler is overridden to ensure that the
+    The standard interrupt handler is overridden to ensure that the
     runningJob file is removed.
 
 See Also

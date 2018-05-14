@@ -73,7 +73,10 @@ public:
 
 
     // Member functions
-
+    
+        //- Inherit readData from regIOobject
+        using regIOobject::readData;
+    
         virtual void readData(CloudType& c, bool checkClass);
 
         virtual bool write() const;

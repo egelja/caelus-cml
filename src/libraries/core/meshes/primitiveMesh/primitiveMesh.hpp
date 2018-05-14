@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 Copyright (C) 2014-16 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -40,9 +40,6 @@ SourceFiles
     primitiveMeshEdges.cpp
     primitiveMeshCellCentresAndVols.cpp
     primitiveMeshFaceCentresAndAreas.cpp
-    primitiveMeshEdgeVectors.cpp
-    primitiveMeshCheck.cpp
-    primitiveMeshCheckMotion.cpp
     primitiveMeshFindCell.cpp
 
 \*---------------------------------------------------------------------------*/
@@ -65,6 +62,8 @@ SourceFiles
 
 namespace CML
 {
+
+class PackedBoolList;
 
 /*---------------------------------------------------------------------------*\
                       Class primitiveMesh Declaration
@@ -149,7 +148,7 @@ class primitiveMesh
             mutable labelListList* cpPtr_;
 
 
-        // On-the-fly edge addresing storage
+        // On-the-fly edge addressing storage
 
             //- Temporary storage for addressing.
             mutable DynamicList<label> labels_;
@@ -288,7 +287,7 @@ protected:
             void calcEdgeVectors() const;
 
 
-        // Helper functions for mesh checking
+        // Mesh checking
 
             //- Check if all points on face are shared with another face.
             bool checkDuplicateFaces
@@ -305,6 +304,108 @@ protected:
                 const label,
                 const Map<label>&,
                 labelHashSet*
+            ) const;
+
+            //- Check boundary for closedness
+            bool checkClosedBoundary
+            (
+                const vectorField&,
+                const bool,
+                const PackedBoolList&
+            ) const;
+
+            //- Check cells for closedness
+            bool checkClosedCells
+            (
+                const vectorField& faceAreas,
+                const scalarField& cellVolumes,
+                const bool report,
+                labelHashSet* setPtr,
+                labelHashSet* aspectSetPtr,
+                const Vector<label>& meshD
+            ) const;
+
+            //- Check for negative face areas
+            bool checkFaceAreas
+            (
+                const vectorField& faceAreas,
+                const bool report,
+                const bool detailedReport,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check for negative cell volumes
+            bool checkCellVolumes
+            (
+                const scalarField& vols,
+                const bool report,
+                const bool detailedReport,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check for non-orthogonality
+            bool checkFaceOrthogonality
+            (
+                const vectorField& fAreas,
+                const vectorField& cellCtrs,
+                const bool report,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check face pyramid volume
+            bool checkFacePyramids
+            (
+                const pointField& points,
+                const vectorField& ctrs,
+                const bool report,
+                const bool detailedReport,
+                const scalar minPyrVol,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check face skewness
+            bool checkFaceSkewness
+            (
+                const pointField& points,
+                const vectorField& fCtrs,
+                const vectorField& fAreas,
+                const vectorField& cellCtrs,
+                const bool report,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check face angles
+            //  Allows a slight non-convexity.  E.g. maxDeg = 10 allows for
+            //  angles < 190 (or 10 degrees concavity) (if truly concave and
+            //  points not visible from face centre the face-pyramid check in
+            //  checkMesh will fail)
+            bool checkFaceAngles
+            (
+                const pointField& points,
+                const vectorField& faceAreas,
+                const bool report,
+                const scalar maxDeg,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check face warpage
+            bool checkFaceFlatness
+            (
+                const pointField& points,
+                const vectorField& faceCentres,
+                const vectorField& faceAreas,
+                const bool report,
+                const scalar warnFlatness,
+                labelHashSet* setPtr
+            ) const;
+
+            //- Check for concave cells by the planes of faces
+            bool checkConcaveCells
+            (
+                const vectorField& fAreas,
+                const pointField& fCentres,
+                const bool report,
+                labelHashSet* setPtr
             ) const;
 
 
@@ -432,7 +533,7 @@ public:
                 //- Return faces
                 virtual const faceList& faces() const = 0;
 
-                //- Face face-owner addresing
+                //- Face face-owner addressing
                 virtual const labelList& faceOwner() const = 0;
 
                 //- Face face-neighbour addressing
@@ -501,7 +602,10 @@ public:
                 const vectorField& faceCentres() const;
                 const scalarField& cellVolumes() const;
                 const vectorField& faceAreas() const;
-
+                bool defectCorr() const
+                {
+                    return defectCorr_;   
+                }
 
             // Mesh motion
 
@@ -519,29 +623,36 @@ public:
 
             // Topological checks
 
+                //- Check face ordering
+                virtual bool checkUpperTriangular
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
                 //- Check cell zip-up
-                bool checkCellsZipUp
+                virtual bool checkCellsZipUp
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check uniqueness of face vertices
-                bool checkFaceVertices
+                virtual bool checkFaceVertices
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
+                //- Check for unused points
+                virtual bool checkPoints
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check face-face connectivity
-                bool checkFaceFaces
-                (
-                    const bool report = false,
-                    labelHashSet* setPtr = NULL
-                ) const;
-
-                //- Check face ordering
-                bool checkUpperTriangular
+                virtual bool checkFaceFaces
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
@@ -551,10 +662,10 @@ public:
             // Geometric checks
 
                 //- Check boundary for closedness
-                bool checkClosedBoundary(const bool report = false) const;
+                virtual bool checkClosedBoundary(const bool report = false) const;
 
                 //- Check cells for closedness
-                bool checkClosedCells
+                virtual bool checkClosedCells
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL,
@@ -563,28 +674,28 @@ public:
                 ) const;
 
                 //- Check for negative face areas
-                bool checkFaceAreas
+                virtual bool checkFaceAreas
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check for negative cell volumes
-                bool checkCellVolumes
+                virtual bool checkCellVolumes
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check for non-orthogonality
-                bool checkFaceOrthogonality
+                virtual bool checkFaceOrthogonality
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check face pyramid volume
-                bool checkFacePyramids
+                virtual bool checkFacePyramids
                 (
                     const bool report = false,
                     const scalar minPyrVol = -SMALL,
@@ -592,14 +703,14 @@ public:
                 ) const;
 
                 //- Check face skewness
-                bool checkFaceSkewness
+                virtual bool checkFaceSkewness
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
                 //- Check face angles
-                bool checkFaceAngles
+                virtual bool checkFaceAngles
                 (
                     const bool report = false,
                     const scalar maxSin = 10,    // In degrees
@@ -609,31 +720,16 @@ public:
                 //- Check face warpage: decompose face and check ratio between
                 //  magnitude of sum of triangle areas and sum of magnitude of
                 //  triangle areas.
-                bool checkFaceFlatness
+                virtual bool checkFaceFlatness
                 (
                     const bool report,
                     const scalar warnFlatness,  // When to include in set.
                     labelHashSet* setPtr
                 ) const;
 
-                //- Check edge alignment for 1D/2D cases
-                bool checkEdgeAlignment
-                (
-                    const bool report,
-                    const Vector<label>& directions,
-                    labelHashSet* setPtr = NULL
-                ) const;
-
-                //- Check for unused points
-                bool checkPoints
-                (
-                    const bool report = false,
-                    labelHashSet* setPtr = NULL
-                ) const;
-
                 //- Check for point-point-nearness,
                 //  e.g. colocated points which may be part of baffles.
-                bool checkPointNearness
+                virtual bool checkPointNearness
                 (
                     const bool report,
                     const scalar reportDistSqr,
@@ -641,23 +737,15 @@ public:
                 ) const;
 
                 //- Check edge length
-                bool checkEdgeLength
+                virtual bool checkEdgeLength
                 (
                     const bool report,
                     const scalar minLenSqr,
                     labelHashSet* setPtr = NULL
                 ) const;
 
-                //- Check cell determinant
-                bool checkCellDeterminant
-                (
-                    const bool report = false,
-                    labelHashSet* setPtr = NULL,
-                    const Vector<label>& solutionD = Vector<label>::one
-                ) const;
-
                 //- Check for concave cells by the planes of faces
-                bool checkConcaveCells
+                virtual bool checkConcaveCells
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
@@ -666,22 +754,14 @@ public:
 
             //- Check mesh topology for correctness.
             //  Returns false for no error.
-            bool checkTopology(const bool report = false) const;
+            virtual bool checkTopology(const bool report = false) const;
 
             //- Check mesh geometry (& implicitly topology) for correctness.
             //  Returns false for no error.
-            bool checkGeometry(const bool report = false) const;
+            virtual bool checkGeometry(const bool report = false) const;
 
             //- Check mesh for correctness. Returns false for no error.
-            bool checkMesh(const bool report = false) const;
-
-            //- Check mesh motion for correctness given motion points
-            bool checkMeshMotion
-            (
-                const pointField& newPoints,
-                const bool report = false
-            ) const;
-
+            virtual bool checkMesh(const bool report = false) const;
 
             //- Set the closedness ratio warning threshold
             static scalar setClosedThreshold(const scalar);

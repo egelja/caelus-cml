@@ -151,7 +151,6 @@ public:
 
         tmp<fluxFieldType> fvcDdtPhiCorr
         (
-            const volScalarField& rA,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
         );
@@ -165,7 +164,6 @@ public:
 
         tmp<fluxFieldType> fvcDdtPhiCorr
         (
-            const volScalarField& rA,
             const volScalarField& rho,
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
@@ -188,7 +186,6 @@ tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtUfCorr
 template<>
 tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtPhiCorr
 (
-    const volScalarField& rA,
     const volScalarField& U,
     const surfaceScalarField& phi
 );
@@ -204,7 +201,6 @@ tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtUfCorr
 template<>
 tmp<surfaceScalarField> steadyStateDdtScheme<scalar>::fvcDdtPhiCorr
 (
-    const volScalarField& rA,
     const volScalarField& rho,
     const volScalarField& U,
     const surfaceScalarField& phi
@@ -491,7 +487,7 @@ steadyStateDdtScheme<Type>::fvcDdtUfCorr
             dimensioned<typename flux<Type>::type>
             (
                 "0",
-                mesh().Sf().dimensions()*Uf.dimensions()*dimArea/dimTime,
+                Uf.dimensions()*dimArea/dimTime,
                 pTraits<typename flux<Type>::type>::zero
             )
         )
@@ -503,7 +499,6 @@ template<class Type>
 tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
 steadyStateDdtScheme<Type>::fvcDdtPhiCorr
 (
-    const volScalarField& rA,
     const GeometricField<Type, fvPatchField, volMesh>& U,
     const fluxFieldType& phi
 )
@@ -514,8 +509,7 @@ steadyStateDdtScheme<Type>::fvcDdtPhiCorr
         (
             IOobject
             (
-                "ddtPhiCorr("
-              + rA.name() + ',' + U.name() + ',' + phi.name() + ')',
+                "ddtCorr(" + U.name() + ',' + phi.name() + ')',
                 mesh().time().timeName(),
                 mesh()
             ),
@@ -523,7 +517,7 @@ steadyStateDdtScheme<Type>::fvcDdtPhiCorr
             dimensioned<typename flux<Type>::type>
             (
                 "0",
-                rA.dimensions()*phi.dimensions()/dimTime,
+                phi.dimensions()/dimTime,
                 pTraits<typename flux<Type>::type>::zero
             )
         )
@@ -556,7 +550,7 @@ steadyStateDdtScheme<Type>::fvcDdtUfCorr
             dimensioned<typename flux<Type>::type>
             (
                 "0",
-                rho.dimensions()*Uf.dimensions()*dimArea/dimTime,
+                Uf.dimensions()*dimArea/dimTime,
                 pTraits<typename flux<Type>::type>::zero
             )
         )
@@ -568,7 +562,6 @@ template<class Type>
 tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
 steadyStateDdtScheme<Type>::fvcDdtPhiCorr
 (
-    const volScalarField& rA,
     const volScalarField& rho,
     const GeometricField<Type, fvPatchField, volMesh>& U,
     const fluxFieldType& phi
@@ -580,8 +573,8 @@ steadyStateDdtScheme<Type>::fvcDdtPhiCorr
         (
             IOobject
             (
-                "ddtPhiCorr("
-              + rA.name() + ',' + rho.name()
+                "ddtCorr("
+              + rho.name()
               + ',' + U.name() + ',' + phi.name() + ')',
                 mesh().time().timeName(),
                 mesh()
@@ -590,7 +583,7 @@ steadyStateDdtScheme<Type>::fvcDdtPhiCorr
             dimensioned<typename flux<Type>::type>
             (
                 "0",
-                rA.dimensions()*rho.dimensions()*phi.dimensions()/dimTime,
+                phi.dimensions()/dimTime,
                 pTraits<typename flux<Type>::type>::zero
             )
         )

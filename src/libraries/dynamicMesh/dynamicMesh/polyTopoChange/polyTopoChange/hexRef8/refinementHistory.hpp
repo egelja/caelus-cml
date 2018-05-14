@@ -85,14 +85,22 @@ namespace CML
 class mapPolyMesh;
 class mapDistributePolyMesh;
 
+
+// Forward declaration of friend functions and operators
+
+class refinementHistory;
+
+Istream& operator>>(Istream&, refinementHistory&);
+Ostream& operator<<(Ostream&, const refinementHistory&);
+
+
 /*---------------------------------------------------------------------------*\
                            Class refinementHistory Declaration
 \*---------------------------------------------------------------------------*/
 
 class refinementHistory
 :
-    public regIOobject,
-    public refCount
+    public regIOobject
 {
 public:
 
@@ -157,7 +165,6 @@ private:
             const List<splitCell8>&,
             const splitCell8&
         );
-
         //- Debug write
         static void writeDebug
         (
@@ -286,14 +293,14 @@ public:
         }
 
         //- Get parent of cell
-        label parentIndex(const label cellI) const
+        label parentIndex(const label celli) const
         {
-            label index = visibleCells_[cellI];
+            label index = visibleCells_[celli];
 
             if (index < 0)
             {
                 FatalErrorIn("refinementHistory::parentIndex(const label)")
-                    << "Cell " << cellI << " is not visible"
+                    << "Cell " << celli << " is not visible"
                     << abort(FatalError);
             }
             return splitCells_[index].parent_;
@@ -302,14 +309,14 @@ public:
         //- Store splitting of cell into 8
         void storeSplit
         (
-            const label cellI,
+            const label celli,
             const labelList& addedCells
         );
 
         //- Store combining 8 cells into master
         void combineCells
         (
-            const label masterCellI,
+            const label masterCelli,
             const labelList& combinedCells
         );
 
@@ -346,6 +353,7 @@ public:
         //  Can only distribute clusters sent across in one go; cannot
         //  handle parts recombined in multiple passes.
         void distribute(const mapDistributePolyMesh&);
+
 
         //- Compact splitCells_. Removes all freeSplitCells_ elements.
         void compact();
@@ -398,6 +406,10 @@ public:
 
         friend Ostream& operator<<(Ostream&, const refinementHistory&);
 };
+
+
+Istream& operator>>(Istream&, refinementHistory::splitCell8&);
+Ostream& operator<<(Ostream&, const refinementHistory::splitCell8&);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

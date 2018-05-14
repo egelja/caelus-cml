@@ -1,0 +1,24 @@
+
+tasks:
+  - clean_case:
+      remove_zero: no
+      remove_mesh: yes
+      remove_extra:
+      - 0/alpha1
+
+  - copy_files:
+      src: "0/alpha1.org"
+      dest: "0/alpha1"
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: setFields
+
+  - run_command:
+      cmd_name: isoVofSolver
+
+  - process_logs:
+      log_file: isoVofSolver.log
+

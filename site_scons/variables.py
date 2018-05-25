@@ -32,7 +32,8 @@ PROJECT_EXT_DIR  = os.path.join(PROJECT_DIR,'external')
 
 ostype = utils.ostype()
 
-caelus_vars = Variables('build_config.py',ARGUMENTS)
+caelus_vars = Variables(os.path.join(PROJECT_DIR, 'build_config.py'),
+                        ARGUMENTS)
 caelus_vars.AddVariables(
     # Project specific variables
     ('PROJECT_NAME', 'Name of the project', PROJECT_NAME),

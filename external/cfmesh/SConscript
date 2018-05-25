@@ -44,9 +44,15 @@ cfmesh_env.Append(CPPPATH = [
 
 cfmesh_env.Append(LIBS = ['core','edgeMesh'])
 
-if cfmesh_env['OMP'] and cfmesh_env['CXX'] != 'clang++' and cfmesh_env['CXX'] != 'icc' :
-    cfmesh_env.Append(CXXFLAGS = '-DUSE_OMP -fopenmp')
-    cfmesh_env.Append(LIBS = ['gomp'])
+if cfmesh_env['OMP']:
+    if cfmesh_env['CXX'] == 'g++':
+        cfmesh_env.Append(CXXFLAGS = '-DUSE_OMP -fopenmp')
+        cfmesh_env.Append(LIBS = ['gomp'])
+    elif cfmesh_env['CXX'] != 'icpc' :
+        cfmesh_env.Append(CXXFLAGS = '-DUSE_OMP -qopenmp')
+        cfmesh_env.Append(LIBS = ['iomp5'])
+    else:
+        pass
 
 ostype = utils.ostype()
 if ostype == 'windows' or ostype == 'darwin':

@@ -44,35 +44,7 @@ def populate_env_vars(env):
     env_vars['PROJECT'] = env['PROJECT_NAME'] + "-" + env['PROJECT_VERSION']
     env_vars['PROJECT_VER'] = env['PROJECT_VERSION']
     env_vars['CAELUS_PROJECT_DIR'] = env['PROJECT_DIR']
-    if env['PROJECT_DIR'] in env['MPI_LIB_PATH']:
-        env_vars['OPAL'] = os.path.dirname(env['MPI_LIB_PATH'])
-        env_vars['OPAL_PREFIX'] = env_vars['OPAL']
-        env_vars['PATH'] = (
-            env['BIN_PLATFORM_INSTALL'] + os.pathsep +
-            os.path.normpath(
-                os.path.join(env['MPI_LIB_PATH'], os.pardir, 'bin')) +
-            os.pathsep + get_osvar('PATH'))
-    else:
-        env_vars['PATH'] = (env['BIN_PLATFORM_INSTALL'] + os.pathsep +
-                            get_osvar('PATH'))
 
-    if ostype() == 'windows':
-        env_vars['PATH'] = (
-            env['LIB_PLATFORM_INSTALL'] + os.pathsep +
-            env['MPI_LIB_PATH'] + os.pathsep + env_vars['PATH'])
-    else:
-        ename = ('LD_LIBRARY_PATH' if ostype() != 'darwin'
-                 else 'DYLD_FALLBACK_LIBRARY_PATH')
-        env_vars[ename] = (env['LIB_PLATFORM_INSTALL'] + os.pathsep +
-                           env['MPI_LIB_PATH'])
-
-    env_vars['MPI_BUFFER_SIZE'] = "20000000"
-
-    zlib_dir = env['ZLIB_PATH']
-    if os.path.exists(zlib_dir):
-        env_vars['ZLIB_PATH'] = zlib_dir
-
-    env_vars['SCONSFLAGS'] = '--site-dir=%s'%os.path.dirname(__file__)
     prj_dir = env['PROJECT_DIR']
     env_vars['LIB_SRC'] = os.path.join(prj_dir, 'src', 'libraries')
     env_vars['CAELUS_APP'] = os.path.join(prj_dir, 'applications')
@@ -83,12 +55,48 @@ def populate_env_vars(env):
     env_vars['CAELUS_TUTORIALS'] = os.path.join(prj_dir, 'tutorials')
 
     user_dir = env['USER_DIR']
-    if os.path.exists(user_dir):
-        env_vars['CAELUS_USER_DIR'] = user_dir
-        env_vars['CAELUS_USER_APPBIN'] = os.path.join(
-            user_dir, 'platforms', env['BUILD_OPTION'], 'bin')
-        env_vars['CAELUS_USER_LIBBIN'] = os.path.join(
-            user_dir, 'platforms', env['BUILD_OPTION'], 'lib')
+    env_vars['CAELUS_USER_DIR'] = user_dir
+    env_vars['CAELUS_USER_APPBIN'] = os.path.join(
+        user_dir, 'platforms', env['BUILD_OPTION'], 'bin')
+    env_vars['CAELUS_USER_LIBBIN'] = os.path.join(
+        user_dir, 'platforms', env['BUILD_OPTION'], 'lib')
+
+    if env['PROJECT_DIR'] in env['MPI_LIB_PATH']:
+        env_vars['OPAL'] = os.path.dirname(env['MPI_LIB_PATH'])
+        env_vars['OPAL_PREFIX'] = env_vars['OPAL']
+        env_vars['PATH'] = (
+            env['BIN_PLATFORM_INSTALL'] + os.pathsep +
+            env_vars['CAELUS_USER_APPBIN'] + os.pathsep +
+            os.path.normpath(
+                os.path.join(env['MPI_LIB_PATH'], os.pardir, 'bin')) +
+            os.pathsep + get_osvar('PATH'))
+    else:
+        env_vars['PATH'] = (
+            env['BIN_PLATFORM_INSTALL'] + os.pathsep +
+            env_vars['CAELUS_USER_APPBIN'] + os.pathsep +
+            get_osvar('PATH'))
+
+    if ostype() == 'windows':
+        env_vars['PATH'] = (
+            env['LIB_PLATFORM_INSTALL'] + os.pathsep +
+            env_vars['CAELUS_USER_LIBBIN'] + os.pathsep +
+            env['MPI_LIB_PATH'] + os.pathsep + env_vars['PATH'])
+    else:
+        ename = ('LD_LIBRARY_PATH' if ostype() != 'darwin'
+                 else 'DYLD_FALLBACK_LIBRARY_PATH')
+        env_vars[ename] = (
+            env['LIB_PLATFORM_INSTALL'] + os.pathsep +
+            env_vars['CAELUS_USER_LIBBIN'] + os.pathsep +
+            env['MPI_LIB_PATH'] + os.pathsep +
+            get_osvar(ename))
+
+    env_vars['MPI_BUFFER_SIZE'] = "20000000"
+
+    zlib_dir = env['ZLIB_PATH']
+    if os.path.exists(zlib_dir):
+        env_vars['ZLIB_PATH'] = zlib_dir
+
+    env_vars['SCONSFLAGS'] = '--site-dir=%s'%os.path.dirname(__file__)
 
     return env_vars
 

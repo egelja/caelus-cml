@@ -9,6 +9,7 @@ Creates the base build environment used during the Caelus compilation process.
 
 import os
 from collections import OrderedDict
+import json
 import SCons.Script
 from SCons.Environment import Environment
 from variables import caelus_vars, init_dependent_vars
@@ -145,12 +146,26 @@ def write_unix_env(env_vars, etc_dir):
     os.chmod(bashrc_file, 493)
     os.chmod(cshrc_file, 493)
 
+def write_cpl_env(env_vars, etc_dir):
+    """Write out environment hint for CPL"""
+    env_file = os.path.join(etc_dir, "cml_env.json")
+    env = {}
+    if os.path.exists(env_file):
+        env = json.load(open(env_file, 'r'))
+        for key in list(env.keys()):
+            if not os.path.exists(env[key]['BIN_PLATFORM_INSTALL']):
+                env.pop(key)
+    env[env_vars['BUILD_OPTION']] = env_vars
+    with open(env_file, 'w') as fh:
+        json.dump(env, fh)
+
 def dump_environment(env):
     """Write out the environment"""
     site_scons_dir = os.path.dirname(__file__)
     etc_dir = os.path.normpath(
         os.path.join(site_scons_dir, os.pardir, "etc"))
     env_vars = populate_env_vars(env)
+    write_cpl_env(env_vars, etc_dir)
     if ostype() == 'windows':
         write_windows_env(env_vars, etc_dir)
     else:

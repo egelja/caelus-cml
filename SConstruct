@@ -19,7 +19,11 @@ env = Environment(variables = caelus_vars,
 Help(caelus_vars.GenerateHelpText(env))
 init_dependent_vars(env)
 update_compiler_settings(env)
-dump_environment(env)
+
+if not (env.GetOption('clean') or
+        env.GetOption('help') or
+        env.GetOption('no_exec')):
+    dump_environment(env)
 
 ### Isolate build environments based on build options
 build_dir = os.path.join(

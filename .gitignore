@@ -3,6 +3,7 @@ caelus_conf.py
 caelus-environment.cmd
 caelus-bashrc
 caelus-cshrc
+cml_env.json
 
 # SCon database file
 .sconsign.dblite

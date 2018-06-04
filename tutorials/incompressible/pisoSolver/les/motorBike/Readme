@@ -1,5 +1,0 @@
-Follow these instructions to successfully run this tutorial
-
-1. Run the steady state solution from motorBikeSS directory using the Allrun.py script
-
-2. Run the LES simulation from motorBikeLES directory using the Allrun.py script

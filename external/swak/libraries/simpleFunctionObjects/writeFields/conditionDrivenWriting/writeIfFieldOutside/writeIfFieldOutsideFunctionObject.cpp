@@ -54,8 +54,8 @@ writeIfFieldOutsideFunctionObject::writeIfFieldOutsideFunctionObject
 :
     conditionDrivenWritingFunctionObject(name,t,dict),
     fieldName_(""),
-    maximum_(HUGE),
-    minimum_(-HUGE)
+    maximum_(HUGE_VAL),
+    minimum_(-HUGE_VAL)
 {
 }
 

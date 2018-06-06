@@ -414,8 +414,8 @@ void SimpleDistribution<Type>::calcMinimumMaximum(
 
     for (direction cmpt = 0; cmpt < pTraits<Type>::nComponents; cmpt++)
     {
-        minimum_[cmpt]=List<scalar>((*this)[cmpt].size(), HUGE);
-        maximum_[cmpt]=List<scalar>((*this)[cmpt].size(),-HUGE);
+        minimum_[cmpt]=List<scalar>((*this)[cmpt].size(), HUGE_VAL);
+        maximum_[cmpt]=List<scalar>((*this)[cmpt].size(),-HUGE_VAL);
         nSamples_[cmpt]=List<label>((*this)[cmpt].size(), 0);
     }
 
@@ -1148,8 +1148,8 @@ SimpleDistribution<Type> operator+
 
         for (direction cmpt = 0; cmpt < pTraits<Type>::nComponents; cmpt++)
         {
-            d.minimum_[cmpt]=List<scalar>(d[cmpt].size(), HUGE);
-            d.maximum_[cmpt]=List<scalar>(d[cmpt].size(),-HUGE);
+            d.minimum_[cmpt]=List<scalar>(d[cmpt].size(), HUGE_VAL);
+            d.maximum_[cmpt]=List<scalar>(d[cmpt].size(),-HUGE_VAL);
             d.nSamples_[cmpt]=List<label>(d[cmpt].size(), 0);
         }
         List< List< List < Tuple2<scalar,scalar> > > > rawMin(2);

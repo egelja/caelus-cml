@@ -66,7 +66,7 @@ void setDistancePluginFunction::doEvaluation()
                 IOobject::NO_WRITE
             ),
             mesh(),
-            dimensionedScalar("no",dimless,HUGE)
+            dimensionedScalar("no",dimless,HUGE_VAL)
         )
     );
 

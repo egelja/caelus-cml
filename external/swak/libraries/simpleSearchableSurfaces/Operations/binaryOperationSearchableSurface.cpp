@@ -683,8 +683,8 @@ void  CML::binaryOperationSearchableSurface::whose
     const scalar farTolerance=1e-5;
 
     forAll(whom,i) {
-        scalar distA=HUGE;
-        scalar distB=HUGE;
+        scalar distA=HUGE_VAL;
+        scalar distB=HUGE_VAL;
         if(nearestA[i].hit()) {
             distA=mag(samples[i]-nearestA[i].hitPoint());
         }

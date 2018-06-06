@@ -84,7 +84,7 @@ CML::pointIndexHit CML::unitCylinderSearchableSurface::findNearest
         hit[2]=true;
     }
 
-    scalar minDist=HUGE;
+    scalar minDist=HUGE_VAL;
     label minIndex=-1;
     forAll(pts,i) {
         if(mag(sample-pts[i])<minDist) {
@@ -111,22 +111,22 @@ void CML::unitCylinderSearchableSurface::findLineAll
     List<pointIndexHit>& hit
 ) const
 {
-    List<scalar> f(4,HUGE);
+    List<scalar> f(4,HUGE_VAL);
 
     vector dir=end-start;
 
-    f[0]=max(min(top_.normalIntersect(start,dir),HUGE),-HUGE);
+    f[0]=max(min(top_.normalIntersect(start,dir),HUGE_VAL),-HUGE_VAL);
     point pt0=start+f[0]*dir;
     pt0.z()=0;
     if(magSqr(pt0)>1) {
-        f[0]=HUGE;
+        f[0]=HUGE_VAL;
     }
 
-    f[1]=max(min(bottom_.normalIntersect(start,dir),HUGE),-HUGE);
+    f[1]=max(min(bottom_.normalIntersect(start,dir),HUGE_VAL),-HUGE_VAL);
     point pt1=start+f[1]*dir;
     pt1.z()=0;
     if(magSqr(pt1)>1) {
-        f[1]=HUGE;
+        f[1]=HUGE_VAL;
     }
 
     {
@@ -142,11 +142,11 @@ void CML::unitCylinderSearchableSurface::findLineAll
         }
         scalar z2=start.z()+f[2]*dir.z();
         if(z2<-1 || z2>1) {
-            f[2]=HUGE;
+            f[2]=HUGE_VAL;
         }
         scalar z3=start.z()+f[3]*dir.z();
         if(z3<-1 || z3>1) {
-            f[3]=HUGE;
+            f[3]=HUGE_VAL;
         }
     }
 

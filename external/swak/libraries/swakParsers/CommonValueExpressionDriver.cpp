@@ -1915,8 +1915,8 @@ vector getExtremePosition(
 ) {
     assert(vals.size()==locs.size());
 
-    vector pos(HUGE,HUGE,HUGE);
-    scalar val=op(1,-1) ? -HUGE : HUGE;
+    vector pos(HUGE_VAL,HUGE_VAL,HUGE_VAL);
+    scalar val=op(1,-1) ? -HUGE_VAL : HUGE_VAL;
     forAll(vals,i) {
         if(op(vals[i],val)) {
             val=vals[i];

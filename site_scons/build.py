@@ -126,6 +126,8 @@ def build_user_lib(baseenv, target, sources,
         libenv.Prepend(CPPPATH=inc_dirs)
     if user_libs:
         libenv.Append(LIBS=user_libs)
+        libenv.Append(LIBPATH=libenv['CAELUS_USER_LIBBIN'])
+
     return libenv
 
 def build_user_app(baseenv, target, sources,
@@ -157,6 +159,7 @@ def build_user_app(baseenv, target, sources,
         appenv.Prepend(CPPPATH=inc_dirs)
     if user_libs:
         appenv.Append(LIBS=user_libs)
+        appenv.Append(LIBPATH=appenv['CAELUS_USER_LIBBIN'])
     return appenv
 
 def process_lninclude(env, basedir,
@@ -167,7 +170,7 @@ def process_lninclude(env, basedir,
         env (Environment): Caelus SCons build environment
         basedir (path): Directory to traverse
     """
-    from SCons.Script import Copy, Mkdir, Dir
+    from SCons.Script import Copy, Mkdir, Dir, Execute
 
     ostype = "windows" if utils.ostype() == "windows" else "posix"
     include_patterns = [".hpp", ".H", ".hxx", ".h", ".hh"]
@@ -193,4 +196,4 @@ def process_lninclude(env, basedir,
             if any(f.endswith(pat) for pat in include_patterns):
                 src = os.path.join(root, f)
                 dest = os.path.join(inc_dir, f)
-                yield inc_env.Install(inc_dir, src)
+                yield Execute(inc_env.Install(inc_dir, src))

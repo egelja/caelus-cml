@@ -49,7 +49,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::nutkRoughWallFunctionFvPatchScalarField
+    CML::nutkRoughWallFunctionFvPatchScalarField
 
 SourceFiles
     nutkRghWFFvPatchScalarField.cpp

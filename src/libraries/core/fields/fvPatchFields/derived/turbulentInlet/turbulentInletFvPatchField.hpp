@@ -61,10 +61,10 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::fixedValueFvPatchField
+    CML::fixedValueFvPatchField
 
 SourceFiles
-    turbulentInletFvPatchField.C
+    turbulentInletFvPatchField.cpp
 
 \*---------------------------------------------------------------------------*/
 

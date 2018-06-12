@@ -147,7 +147,7 @@ def init_dependent_vars(env):
 
     user_dir = env['USER_DIR']
     CAELUS_USER_LIB_SRC = os.path.join(user_dir, 'src', 'libraries')
-    CAELUS_USER_APP_SRC = os.path.join(user_dir, 'src', 'libraries')
+    CAELUS_USER_APP_SRC = os.path.join(user_dir, 'src', 'applications')
     CAELUS_USER_APPBIN = os.path.join(user_dir, 'platforms',
                                       BUILD_OPTION, 'bin')
     CAELUS_USER_LIBBIN = os.path.join(user_dir, 'platforms',

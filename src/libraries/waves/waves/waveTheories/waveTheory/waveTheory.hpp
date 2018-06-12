@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::waveTheories::waveTheory
+    CML::waveTheories::waveTheory
 
 Description
     An abstract base class for wave theories.

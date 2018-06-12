@@ -56,7 +56,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::nutkWallFunctionFvPatchField
+    CML::nutkWallFunctionFvPatchField
 
 SourceFiles
     nutkAtmRghWFFvPatchScalarField.cpp

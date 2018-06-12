@@ -38,7 +38,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::zeroGradientFvPatchField
+    CML::zeroGradientFvPatchField
 
 SourceFiles
     kqRWallFunctionFvPatchField.C

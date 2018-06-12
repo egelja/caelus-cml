@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::numericalBeaches::numericalBeachEmpty
+    CML::numericalBeaches::numericalBeachEmpty
 
 Description
     A dummy numerical beach to be used, if a relaxation zone should not include

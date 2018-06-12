@@ -47,7 +47,7 @@ Note
     The units of kinematic turbulent thermal conductivity are [m2/s]
 
 SeeAlso
-    Foam::fixedValueFvPatchField
+    CML::fixedValueFvPatchField
 
 SourceFiles
     alphatJayaWallFunctionFvPatchScalarField.cpp

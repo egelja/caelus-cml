@@ -75,11 +75,11 @@ Note
     \endverbatim
 
 See also
-    Foam::Euler
-    Foam::backward
+    CML::Euler
+    CML::backward
 
 SourceFiles
-    CrankNicolsonDdtScheme.C
+    CrankNicolsonDdtScheme.cpp
 
 \*---------------------------------------------------------------------------*/
 

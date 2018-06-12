@@ -30,7 +30,7 @@ Description
     for transport consistency reasons.
 
 See also
-    Foam::fv::CoEulerDdtScheme
+    CML::fv::CoEulerDdtScheme
 
 SourceFiles
     localEulerDdt.cpp

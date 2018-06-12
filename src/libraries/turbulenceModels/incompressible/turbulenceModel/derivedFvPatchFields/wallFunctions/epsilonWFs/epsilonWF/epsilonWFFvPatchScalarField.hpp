@@ -54,7 +54,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::fixedInternalValueFvPatchField
+    CML::fixedInternalValueFvPatchField
 
 SourceFiles
     epsilonWallFunctionFvPatchScalarField.cpp

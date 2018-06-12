@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 InClass
-    Foam::particle
+    CML::particle
 
 Description
     Macros for adding to particle property lists

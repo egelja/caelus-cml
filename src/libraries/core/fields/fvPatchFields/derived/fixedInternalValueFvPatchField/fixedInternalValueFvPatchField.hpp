@@ -43,7 +43,7 @@ Note
     number flows.
 
 SeeAlso
-    Foam::epsilonWallFunctionFvPatchScalarField
+    CML::epsilonWallFunctionFvPatchScalarField
 
 SourceFiles
     fixedInternalValueFvPatchField.cpp

@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Typedef
-    Foam::IOsampledSurfaceElevation
+    CML::IOsampledSurfaceElevation
 
 Description
     Instance of the generic IOOutputFilter for sampledSurfaceElevation.

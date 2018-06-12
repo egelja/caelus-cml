@@ -849,7 +849,7 @@ void CML::isoSurfaceCell::generateTriPoints
 
     if (countNotFoundTets > 0)
     {
-        WarningIn("Foam::isoSurfaceCell::generateTriPoints")
+        WarningIn("CML::isoSurfaceCell::generateTriPoints")
             << "Could not find " << countNotFoundTets
             << " tet base points, which may lead to inverted triangles."
             << endl;

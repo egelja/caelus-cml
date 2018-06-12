@@ -36,7 +36,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::nutWallFunctionFvPatchScalarField
+    CML::nutWallFunctionFvPatchScalarField
 
 SourceFiles
     nutLowReWFFvPatchScalarField.cpp

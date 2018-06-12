@@ -52,7 +52,7 @@ Note
      The underlying \c patchType should be set to \c cyclic
 
 SeeAlso
-    Foam::jumpCyclicFvPatchField
+    CML::jumpCyclicFvPatchField
 
 SourceFiles
     fixedJumpFvPatchField.cpp

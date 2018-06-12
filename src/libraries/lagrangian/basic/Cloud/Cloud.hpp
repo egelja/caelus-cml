@@ -369,7 +369,7 @@ void CML::Cloud<ParticleType>::checkPatches() const
 
     if (!ok)
     {
-        FatalErrorIn("void Foam::Cloud<ParticleType>::initCloud(const bool)")
+        FatalErrorIn("void CML::Cloud<ParticleType>::initCloud(const bool)")
             << "Particle tracking across AMI patches is only currently "
             << "supported for cases where the AMI patches reside on a "
             << "single processor" << abort(FatalError);

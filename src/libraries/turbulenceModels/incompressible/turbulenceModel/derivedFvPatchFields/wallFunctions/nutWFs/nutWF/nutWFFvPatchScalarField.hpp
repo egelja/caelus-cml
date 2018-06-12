@@ -35,7 +35,7 @@ Description
     \endverbatim
 
 SeeAlso
-    Foam::fixedValueFvPatchField
+    CML::fixedValueFvPatchField
 
 SourceFiles
     nutWFFvPatchScalarField.cpp

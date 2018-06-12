@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::waveVelocityFvPatchVectorField
+    CML::waveVelocityFvPatchVectorField
 
 Description
     Boundary condition for the velocity field in a multiphase solver.

@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::wavePressureFvPatchScalarField
+    CML::wavePressureFvPatchScalarField
 
 Description
     Boundary condition for the pressure gradient in a multiphase solver.

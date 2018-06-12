@@ -47,7 +47,7 @@ Note
     more than one patch.
 
 SeeAlso
-    Foam::nutWallFunctionFvPatchScalarField
+    CML::nutWallFunctionFvPatchScalarField
 
 SourceFiles
     nutUTabulatedWFFvPatchScalarField.cpp

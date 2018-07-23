@@ -11,6 +11,7 @@ subdirs = Split("""
    incompressible/simpleSolver/SRFSimpleSolver
    incompressible/pimpleSolver
    incompressible/pimpleSolver/SRFPimpleSolver
+   incompressible/pisoSolver
    compressible/PBNS/cpbnsLTS
    compressible/PBNS/cpbnsPIMPLE
    compressible/DBNS/explicitDBNSSolver

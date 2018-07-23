@@ -131,6 +131,24 @@ def get_git_version(branch='HEAD'):
     else:
         return stdout.strip()
 
+def get_git_branch():
+    """Return the current branch
+
+    Returns:
+        str: Name of the current branch 
+    """
+    import shlex
+    from subprocess import Popen, PIPE
+    shell = True if ostype() == "windows" else False
+    cmdline = shlex.split("git rev-parse --abbrev-ref HEAD")
+    cmd = Popen(cmdline, stdout=PIPE, stderr=PIPE, shell=shell)
+    stdout, stderr = cmd.communicate()
+    if stderr:
+        # Encountered some error, so return empty string
+        return ''
+    else:
+        return stdout.strip()
+
 def tag_build_version(target, source, env):
     """Tag the build version for dependency tracking"""
     cver = env['PROJECT_VERSION']
@@ -139,6 +157,23 @@ def tag_build_version(target, source, env):
         build_str = "%s-%s"%(cver, gitver)
     else:
         build_str = cver
+    output = True
+    if os.path.exists(target[0].abspath):
+        old_stamp = open(target[0].abspath).read().strip()
+        if old_stamp == build_str:
+            output = False
+    if output:
+        with open(target[0].abspath,'w') as fh:
+            fh.write(build_str)
+
+def tag_user_build_version(target, source, env):
+    """Tag the build version for tracking of the users library/application"""
+    branch = get_git_branch()
+    gitver = get_git_version()
+    if gitver:
+        build_str = "%s-%s"%(branch, gitver)
+    else:
+        build_str = branch
     output = True
     if os.path.exists(target[0].abspath):
         old_stamp = open(target[0].abspath).read().strip()
@@ -159,6 +194,21 @@ def stamp_caelus_version(target, source, env):
     data = open(source[0].abspath).read()
     data_out = data.replace(
         'VERSION_STRING', cver).replace(
+            'BUILD_STRING',build_str)
+    with open(target[0].abspath, 'w') as fh:
+        fh.write(data_out)
+
+def stamp_user_version(target, source, env):
+    """Generate user version.hpp file"""
+    branch = get_git_branch()
+    gitver = get_git_version()
+    if gitver:
+        build_str = "%s-%s"%(branch, gitver[:12])
+    else:
+        build_str = branch
+    data = open(source[0].abspath).read()
+    data_out = data.replace(
+        'BRANCH_STRING', branch).replace(
             'BUILD_STRING',build_str)
     with open(target[0].abspath, 'w') as fh:
         fh.write(data_out)

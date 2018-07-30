@@ -176,6 +176,8 @@ src_core = Split("""
     db/dictionary/primitiveEntry/primitiveEntryIO.cpp
     db/dictionary/dictionaryEntry/dictionaryEntry.cpp
     db/dictionary/dictionaryEntry/dictionaryEntryIO.cpp
+    db/dictionary/dictionaryListEntry/dictionaryListEntry.cpp
+    db/dictionary/dictionaryListEntry/dictionaryListEntryIO.cpp
     db/dictionary/functionEntries/functionEntry/functionEntry.cpp
     db/dictionary/functionEntries/includeEntry/includeEntry.cpp
     db/dictionary/functionEntries/includeIfPresentEntry/includeIfPresentEntry.cpp

@@ -192,7 +192,7 @@ const dictionary& lookupScopedDict
 }
 
 
-void remove(dictionary& dict, const dictionary& removeDict)
+void remove(dictionary& dict, const dictionary& removeDict, fileName dictName)
 {
     forAllConstIter(dictionary, removeDict, iter)
     {
@@ -203,22 +203,32 @@ void remove(dictionary& dict, const dictionary& removeDict)
             false
         );
 
+
         if (entPtr)
         {
             if (entPtr->isDict())
             {
                 if (iter().isDict())
                 {
+                   // Store old dictionary name - this is the parent
+                   fileName oldDictName = dictName;
+
+                   // Update the dictionar name to include the child
+                   dictName = dictName + "." + iter().keyword();
+
                     remove
                     (
                         const_cast<dictionary&>(entPtr->dict()),
-                        iter().dict()
+                        iter().dict(),
+                        dictName
                     );
 
                     // Check if dictionary is empty
                     if (!entPtr->dict().size())
                     {
                         dict.remove(iter().keyword());
+                        // Child deleted, reset name to parent
+                        dictName = oldDictName;
                     }
                 }
             }
@@ -230,10 +240,10 @@ void remove(dictionary& dict, const dictionary& removeDict)
                 }
                 else
                 {
-                    Info<<"Dictionary entry: "<< iter().keyword()
-                        <<" is different to template"<<nl
-                        <<"Expected entry: "<< nl << iter()
-                        <<"Actual entry  : "<< nl << *entPtr
+                    Info<< "Dictionary:"<< dictName << endl;
+                    Info<< "Dictionary entry " << iter().keyword() << " is different to template: "<< nl
+                        << "Expected entry: "<< nl << iter() 
+                        << "Actual entry  : "<< nl << *entPtr
                         << endl;
                     // Remove keyword from dictionary so we are left with only new entries
                     dict.remove(iter().keyword());
@@ -242,8 +252,9 @@ void remove(dictionary& dict, const dictionary& removeDict)
         }
         else
         {
-             Info<< "Template entry: "<< iter().keyword()
-                 << " not found in dictionary" << nl
+             Info<< "Dictionary:"<< dictName << endl;
+             Info<< "Template entry not found in dictionary: "<< nl 
+                 << iter().keyword()<<nl
                  << "Expected entry:"<< nl
                  << iter()<<endl;
         }
@@ -444,10 +455,12 @@ int main(int argc, char *argv[])
                     }
                     else if (ePtr->isDict() && e2Ptr->isDict())
                     {
+                        fileName dictName(dAk.first());
                         remove
                         (
                             const_cast<dictionary&>(ePtr->dict()),
-                            e2Ptr->dict()
+                            e2Ptr->dict(),
+                            dictName
                         );
                     }
                 }
@@ -516,7 +529,8 @@ int main(int argc, char *argv[])
     }
     else if (args.optionFound("diff"))
     {
-        remove(dict, diffDict);
+        fileName dictName;
+        remove(dict, diffDict, dictName);
         if (dict.size())
         {
             Info<<"Addtional entries found in dictionary:"<<endl;

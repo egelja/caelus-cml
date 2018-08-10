@@ -227,9 +227,11 @@ void remove(dictionary& dict, const dictionary& removeDict, fileName dictName)
                     if (!entPtr->dict().size())
                     {
                         dict.remove(iter().keyword());
-                        // Child deleted, reset name to parent
-                        dictName = oldDictName;
                     }
+                    // Either Child deleted because dictionar was empoty
+                    // or still contains entries not found in template.
+                    // Reset name to parent
+                    dictName = oldDictName;
                 }
             }
             else if (!iter().isDict())

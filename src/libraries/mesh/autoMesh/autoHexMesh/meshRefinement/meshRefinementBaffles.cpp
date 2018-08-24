@@ -2199,14 +2199,13 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMesh
 
 // Find boundary points that connect to more than one cell region and
 // split them.
-CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
+CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints
+(
+    const localPointRegion& regionSide
+)
 {
     // Topochange container
     polyTopoChange meshMod(mesh_);
-
-
-    // Analyse which points need to be duplicated
-    localPointRegion regionSide(mesh_);
 
     label nNonManifPoints = returnReduce
     (
@@ -2250,6 +2249,17 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
     updateMesh(map, labelList(0));
 
     return map;
+}
+
+
+// Find boundary points that connect to more than one cell region and
+// split them.
+CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
+{
+    // Analyse which points need to be duplicated
+    localPointRegion regionSide(mesh_);
+
+    return dupNonManifoldPoints(regionSide);
 }
 
 

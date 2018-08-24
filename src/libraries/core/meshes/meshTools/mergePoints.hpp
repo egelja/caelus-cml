@@ -41,7 +41,18 @@ namespace CML
                            Function mergePoints Declaration
 \*---------------------------------------------------------------------------*/
 
-//- Sort & merge points. All points closer than/equal mergeTol get merged.
+//- Sorts and merges points. All points closer than/equal mergeTol get merged.
+//  Returns the number of unique points and a map from old to new.
+label mergePoints
+(
+    const UList<point>& points,
+    const scalar mergeTol,
+    const bool verbose,
+    labelList& pointMap,
+    const point& origin = point::zero
+);
+
+//- Sorts and merges points. All points closer than/equal mergeTol get merged.
 //  Outputs the new unique points and a map from old to new. Returns
 //  true if anything merged, false otherwise.
 bool mergePoints

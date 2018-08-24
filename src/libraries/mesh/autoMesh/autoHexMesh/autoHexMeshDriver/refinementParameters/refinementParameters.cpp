@@ -72,6 +72,9 @@ CML::refinementParameters::refinementParameters(const dictionary& dict)
 CML::labelList CML::refinementParameters::findCells(const polyMesh& mesh)
  const
 {
+    // Force calculation of tet-diag decomposition (for use in findCell)
+    (void)mesh.tetBasePtIs();
+
     // Global calculation engine
     globalIndex globalCells(mesh.nCells());
 

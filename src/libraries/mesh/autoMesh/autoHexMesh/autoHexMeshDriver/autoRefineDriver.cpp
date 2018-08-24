@@ -178,7 +178,7 @@ CML::label CML::autoRefineDriver::surfaceOnlyRefine
     const fvMesh& mesh = meshRefiner_.mesh();
 
     // Determine the maximum refinement level over all surfaces. This
-    // determines the minimum number of surface refinement iterations.
+    // determines the minumum number of surface refinement iterations.
     label overallMaxLevel = max(meshRefiner_.surfaces().maxLevel());
 
     label iter;
@@ -344,7 +344,7 @@ CML::label CML::autoRefineDriver::shellRefine
     );
 
     // Determine the maximum refinement level over all volume refinement
-    // regions. This determines the minimum number of shell refinement
+    // regions. This determines the minumum number of shell refinement
     // iterations.
     label overallMaxShellLevel = meshRefiner_.shells().maxLevel();
 
@@ -659,17 +659,12 @@ void CML::autoRefineDriver::mergePatchFaces
     const dictionary& motionDict
 )
 {
-    const fvMesh& mesh = meshRefiner_.mesh();
-
     Info<< nl
         << "Merge refined boundary faces" << nl
         << "----------------------------" << nl
         << endl;
 
-    if (debug)
-    {
-        const_cast<Time&>(mesh.time())++;
-    }
+    const fvMesh& mesh = meshRefiner_.mesh();
 
     meshRefiner_.mergePatchFacesUndo
     (

@@ -275,6 +275,12 @@ public:
                 return internalField_;
             }
 
+            //- Return true if this patch field fixes a value
+            virtual bool fixesValue() const
+            {
+                return false;
+            }
+
             //- Return true if this patch field is coupled
             virtual bool coupled() const
             {
@@ -470,7 +476,7 @@ public:
 };
 
 
-// This function is added as a hack to enable simple backward compatibility
+// This function is added as a hack to enable simple backward compatability
 // with verions using referenceLevel in GeometicField
 template<class Type>
 const pointPatchField<Type>& operator+

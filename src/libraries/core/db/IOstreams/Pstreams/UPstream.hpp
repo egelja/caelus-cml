@@ -176,7 +176,7 @@ private:
         static int myProcNo_;
         static bool parRun_;
 
-        static List<int> procIDs_;
+        static List<label> procIDs_;
         static int msgType_;
 
         static List<commsStruct> linearCommunication_;
@@ -305,7 +305,7 @@ public:
         }
 
         //- Process IDs
-        static const List<int>& procIDs()
+        static const List<label>& procIDs()
         {
             return procIDs_;
         }

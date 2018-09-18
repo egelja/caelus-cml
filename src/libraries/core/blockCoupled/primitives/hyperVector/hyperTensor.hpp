@@ -541,7 +541,7 @@ inline Cmpt det(const hyperTensor<Cmpt, length>& t)
         }
 
         // Handle +/- sign switch
-        result += pow(-1, i)*t(i, 0)*det(subMatrix);
+        result += pow(scalar(-1.0), i)*t(i, 0)*det(subMatrix);
     }
 
     return result;

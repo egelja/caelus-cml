@@ -1729,7 +1729,7 @@ int CML::UPstream::myProcNo_(0);
 bool CML::UPstream::parRun_(false);
 
 // List of process IDs
-CML::List<int> CML::UPstream::procIDs_(label(1), 0);
+CML::List<CML::label> CML::UPstream::procIDs_(CML::label(1), CML::label(0));
 
 // Standard transfer message type
 int CML::UPstream::msgType_(1);

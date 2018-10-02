@@ -57,6 +57,9 @@ Usage
       - \par -disableFunctionEntries
         Do not expand macros or directives (#include etc)
 
+      - \par -additional
+        Reports additional entries
+
     Example usage:
       - Change simulation to run for one timestep only:
         \verbatim
@@ -317,10 +320,16 @@ int main(int argc, char *argv[])
         "disableFunctionEntries",
         "Disable expansion of dictionary directives - #include, etc"
     );
+    argList::addBoolOption
+    (
+        "additional",
+        "Reports additional entries"
+    );
 
     argList args(argc, argv);
 
     const bool listIncludes = args.optionFound("includes");
+    const bool listAdditional = args.optionFound("additional");
 
     if (listIncludes)
     {
@@ -533,10 +542,13 @@ int main(int argc, char *argv[])
     {
         fileName dictName;
         remove(dict, diffDict, dictName);
-        if (dict.size())
+        if (listAdditional)
         {
-            Info<<"Addtional entries found in dictionary:"<<endl;
-            dict.write(Info, false);
+            if (dict.size())
+            {
+                Info<<"Additional entries found in dictionary:"<<endl;
+                dict.write(Info, false);
+            }
         }
     }
     else

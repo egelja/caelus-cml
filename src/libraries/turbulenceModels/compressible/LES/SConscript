@@ -20,6 +20,9 @@ WALE/WALE.cpp
 SpalartAllmarasDES/SpalartAllmarasDES.cpp
 SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
 SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
+kOmegaSSTDES/kOmegaSSTDES.cpp
+kOmegaSSTDDES/kOmegaSSTDDES.cpp
+kOmegaSSTIDDES/kOmegaSSTIDDES.cpp
 derivedFvPatchFields/wallFunctions/muSgsWFs/muSgsUSpaldingWF/muSgsUSpaldingWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsWF/alphaSgsWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsJayaWF/alphaSgsJayaWFFvPatchScalarField.cpp

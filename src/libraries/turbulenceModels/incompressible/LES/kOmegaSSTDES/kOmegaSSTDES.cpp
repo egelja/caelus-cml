@@ -193,6 +193,15 @@ kOmegaSSTDES::kOmegaSSTDES
             10.0
         )
     ),
+    kappa_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "kappa",
+            coeffDict_,
+            0.41
+        )
+    ),
     CDES_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -374,6 +383,7 @@ bool kOmegaSSTDES::read()
         betaStar_.readIfPresent(coeffDict());
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
+        kappa_.readIfPresent(coeffDict());
         CDES_.readIfPresent(coeffDict());
         Cr1_.readIfPresent(coeffDict());
         Cr2_.readIfPresent(coeffDict());

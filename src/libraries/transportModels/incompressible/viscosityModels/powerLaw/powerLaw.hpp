@@ -23,6 +23,13 @@ Class
 Description
      Standard power-law non-Newtonian viscosity model.
 
+    References:
+    \verbatim
+        "Viscometry and plastometry"
+        de Waele
+        Oil Color Chem. Assoc. J., Vol. 6, 33, 1923.
+    \endverbatim
+
 SourceFiles
     powerLaw.cpp
 
@@ -56,8 +63,9 @@ class powerLaw
 
         dimensionedScalar k_;
         dimensionedScalar n_;
-        dimensionedScalar nuMin_;
-        dimensionedScalar nuMax_;
+        dimensionedScalar muMin_;
+        dimensionedScalar muMax_;
+        dimensionedScalar rhoRef_;
 
         volScalarField nu_;
 
@@ -100,10 +108,7 @@ public:
         }
 
         //- Correct the laminar viscosity
-        void correct()
-        {
-            nu_ = calcNu();
-        }
+        void correct();
 
         //- Read transportProperties dictionary
         bool read(const dictionary& viscosityProperties);

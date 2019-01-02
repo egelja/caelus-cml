@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,18 +18,38 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::viscosityModels::BirdCarreau
+    CML::viscosityModels::CarreauYasudaCross
 
 Description
-    An incompressible Bird-Carreau non-Newtonian viscosity model.
+    An incompressible non-Newtonian viscosity model based on Carreau-Yasuda-Cross.
+
+    References:
+    \verbatim
+        "Rheological equations from molecular network theories"
+        P. Carreau
+        Trans. Soc. Rheol, Vol. 16, 99, 1972.
+    \endverbatim
+
+    \verbatim
+        "Shear-flow properties of concentrated-solutions of linear and star branched polystyrenes"
+        R. A. K Yasuda
+        R. Cohen
+        Rheol. Acta rnal, Vol. 20, 163, 1981.
+    \endverbatim
+
+    \verbatim
+        "Rheology of non-Newtonian fluids: a new flow equation for pseudo-plastic systems"
+        M. Cross
+        J. Colloid, Vol. 20, 417, 1958.
+    \endverbatim
 
 SourceFiles
-    BirdCarreau.cpp
+    CarreauYasudaCross.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef BirdCarreau_H
-#define BirdCarreau_H
+#ifndef CarreauYasudaCross_H
+#define CarreauYasudaCross_H
 
 #include "viscosityModel.hpp"
 #include "dimensionedScalar.hpp"
@@ -43,21 +63,23 @@ namespace viscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class BirdCarreau Declaration
+                           Class CarreauYasudaCross Declaration
 \*---------------------------------------------------------------------------*/
 
-class BirdCarreau
+class CarreauYasudaCross
 :
     public viscosityModel
 {
     // Private data
 
-        dictionary BirdCarreauCoeffs_;
+        dictionary CarreauYasudaCrossCoeffs_;
 
-        dimensionedScalar nu0_;
-        dimensionedScalar nuInf_;
-        dimensionedScalar k_;
+        dimensionedScalar mu0_;
+        dimensionedScalar muInf_;
+        dimensionedScalar lambda_;
         dimensionedScalar n_;
+        dimensionedScalar a_;
+        dimensionedScalar rhoRef_;
 
         volScalarField nu_;
 
@@ -71,13 +93,13 @@ class BirdCarreau
 public:
 
     //- Runtime type information
-    TypeName("BirdCarreau");
+    TypeName("CarreauYasudaCross");
 
 
     // Constructors
 
         //- construct from components
-        BirdCarreau
+        CarreauYasudaCross
         (
             const word& name,
             const dictionary& viscosityProperties,
@@ -87,7 +109,7 @@ public:
 
 
     //- Destructor
-    ~BirdCarreau()
+    ~CarreauYasudaCross()
     {}
 
 
@@ -100,10 +122,7 @@ public:
         }
 
         //- Correct the laminar viscosity
-        void correct()
-        {
-            nu_ = calcNu();
-        }
+        void correct();
 
         //- Read transportProperties dictionary
         bool read(const dictionary& viscosityProperties);

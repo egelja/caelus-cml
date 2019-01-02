@@ -49,27 +49,17 @@ CML::viscosityModels::HerschelBulkley::calcNu() const
     dimensionedScalar tone("tone", dimTime, 1.0);
     dimensionedScalar rtone("rtone", dimless/dimTime, 1.0);
 
-    tmp<volScalarField> sr(strainRate());
+ return
+ (
+     min
+     (
+         mu0_,
+         (tau0_ + k_*rtone*(pow(tone*
+         mag(max(strainRate(), dimensionedScalar("VSMALL", dimless/dimTime, VSMALL)) - tau0_/mu0_), n_)))
+        /(max(strainRate(), dimensionedScalar("VSMALL", dimless/dimTime, VSMALL)))
+     )/rhoRef_
+ );
 
- // return
- // (
- //     min
- //     (
- //         nu0_,
- //         (tau0_ + k_*rtone*(pow(tone*sr(), n_) - pow(tone*tau0_/nu0_, n_)))
- //        /max(sr(), dimensionedScalar("VSMALL", dimless/dimTime, VSMALL))
- //     )
- // );
-
-    return
-    (
-        min
-        (
-            nu0_,
-            (tau0_ + k_*rtone*pow(tone*sr(), n_))
-           /(max(sr(), dimensionedScalar ("VSMALL", dimless/dimTime, VSMALL)))
-        )
-    );
 }
 
 
@@ -88,7 +78,8 @@ CML::viscosityModels::HerschelBulkley::HerschelBulkley
     k_(HerschelBulkleyCoeffs_.lookup("k")),
     n_(HerschelBulkleyCoeffs_.lookup("n")),
     tau0_(HerschelBulkleyCoeffs_.lookup("tau0")),
-    nu0_(HerschelBulkleyCoeffs_.lookup("nu0")),
+    mu0_(HerschelBulkleyCoeffs_.lookup("mu0")),
+    rhoRef_(HerschelBulkleyCoeffs_.lookup("rhoRef")),
     nu_
     (
         IOobject
@@ -106,6 +97,17 @@ CML::viscosityModels::HerschelBulkley::HerschelBulkley
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+
+void CML::viscosityModels::HerschelBulkley::correct()
+{
+    viscosityModel::correct();
+    nu_.storePrevIter();
+    nu_ = calcNu();
+    // Explicitly relax
+    nu_.relax();
+}
+
+
 bool CML::viscosityModels::HerschelBulkley::read
 (
     const dictionary& viscosityProperties
@@ -118,7 +120,8 @@ bool CML::viscosityModels::HerschelBulkley::read
     HerschelBulkleyCoeffs_.lookup("k") >> k_;
     HerschelBulkleyCoeffs_.lookup("n") >> n_;
     HerschelBulkleyCoeffs_.lookup("tau0") >> tau0_;
-    HerschelBulkleyCoeffs_.lookup("nu0") >> nu0_;
+    HerschelBulkleyCoeffs_.lookup("mu0") >> mu0_;
+    HerschelBulkleyCoeffs_.lookup("rhoRef") >> rhoRef_;
 
     return true;
 }

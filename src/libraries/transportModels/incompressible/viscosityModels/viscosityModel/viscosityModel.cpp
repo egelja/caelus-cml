@@ -68,7 +68,7 @@ CML::viscosityModel::viscosityModel
             "ShearStrainRate",
             U.mesh().time().timeName(),
             U.mesh(),
-            IOobject::NO_READ,
+            IOobject::READ_IF_PRESENT,
             outputShearStrainRate_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE 
         ),
         U.mesh(), 

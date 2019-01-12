@@ -35,23 +35,29 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define DefinePropertyList(str)                                               \
-                                                                              \
-    static string propertyList_;                                              \
-                                                                              \
-    static string propertyList()                                              \
-    {                                                                         \
-        return str;                                                           \
+//- Define a static 'propertyList' for particle properties
+//  The property list is space-delimited with brackets for vector groupings
+// \sa AddToPropertyList
+#define DefinePropertyList(str)                                                \
+                                                                               \
+    static string propertyList_;                                               \
+                                                                               \
+    static string propertyList()                                               \
+    {                                                                          \
+        return str;                                                            \
     }
 
 
-#define AddToPropertyList(ParcelType, str)                                    \
-                                                                              \
-    static string propertyList_;                                              \
-                                                                              \
-    static string propertyList()                                              \
-    {                                                                         \
-        return ParcelType::propertyList() + str;                              \
+//- Add to existing static 'propertyList' for particle properties
+//  The property list is space-delimited with brackets for vector groupings
+// \sa DefinePropertyList
+#define AddToPropertyList(ParcelType, str)                                     \
+                                                                               \
+    static string propertyList_;                                               \
+                                                                               \
+    static string propertyList()                                               \
+    {                                                                          \
+        return ParcelType::propertyList() + str;                               \
     }
 
 

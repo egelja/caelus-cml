@@ -38,7 +38,7 @@ Description
         SAE Technical Paper Series
     @endverbatim
 
-See Also
+See also
     The TAB model
 
 \*---------------------------------------------------------------------------*/
@@ -103,7 +103,7 @@ public:
 
     // Member Functions
 
-        //- update the parcel properties
+        //- Update the parcel properties
         virtual bool update
         (
             const scalar dt,
@@ -226,7 +226,7 @@ bool CML::ETAB<CloudType>::update
         scalar romega = 1.0/omega;
 
         scalar We = rhoc*sqr(Urmag)*r/sigma;
-        scalar Wetmp = We/this->TABWeCrit_;
+        scalar Wetmp = We/this->TABtwoWeCrit_;
 
         scalar y1 = y - Wetmp;
         scalar y2 = yDot*romega;

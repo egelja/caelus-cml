@@ -48,10 +48,8 @@ inline const FixedList<Vector<label>, 8>& meshOctree::octantVectors() const
 inline label meshOctree::numberOfLeaves() const
 {
     if( leaves_.size() == 0 )
-        FatalErrorIn
-        (
-            "inline const label& meshOctree::numberOfLeaves() const"
-        ) << "Leaves are not yet created!!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Leaves are not yet created!!" << exit(FatalError);
 
     return leaves_.size();
 }

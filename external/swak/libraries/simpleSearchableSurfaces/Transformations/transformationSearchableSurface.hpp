@@ -181,7 +181,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("transformationSearchableSurface::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

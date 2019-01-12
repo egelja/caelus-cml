@@ -94,7 +94,7 @@ executeIfExecutableFitsFunctionObject::executeIfExecutableFitsFunctionObject
     {
 		const int bufSize=1024;
 		char path[bufSize];
-		GetModuleFileName(NULL, path, bufSize);
+		GetModuleFileName(nullptr, path, bufSize);
 		exePath=string(path);
     }
 #endif

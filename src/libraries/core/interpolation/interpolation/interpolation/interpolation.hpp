@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -127,22 +127,28 @@ public:
         virtual Type interpolate
         (
             const vector& position,
-            const label cellI,
-            const label faceI = -1
+            const label celli,
+            const label facei = -1
         ) const = 0;
 
-        //- Interpolate field to the given point in the tetrahedron
+        //- Interpolate field to the given coordinates in the tetrahedron
         //  defined by the given indices.  Calls interpolate function
         //  above here execpt where overridden by derived
         //  interpolation types.
         virtual Type interpolate
         (
-            const vector& position,
+            const barycentric& coordinates,
             const tetIndices& tetIs,
-            const label faceI = -1
+            const label facei = -1
         ) const
         {
-            return interpolate(position, tetIs.cell(), faceI);
+            return
+                interpolate
+                (
+                    tetIs.tet(pMesh_).barycentricToPoint(coordinates),
+                    tetIs.cell(),
+                    facei
+                );
         }
 };
 
@@ -220,11 +226,8 @@ CML::autoPtr<CML::interpolation<Type> > CML::interpolation<Type>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "interpolation::New(const word&, "
-            "const GeometricField<Type, fvPatchField, volMesh>&)"
-        )   << "Unknown interpolation type " << interpolationType
+        FatalErrorInFunction
+            << "Unknown interpolation type " << interpolationType
             << " for field " << psi.name() << nl << nl
             << "Valid interpolation types : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()

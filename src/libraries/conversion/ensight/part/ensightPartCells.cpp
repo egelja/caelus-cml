@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,6 +33,8 @@ namespace CML
     defineTypeNameAndDebug(ensightPartCells, 0);
     addToRunTimeSelectionTable(ensightPart, ensightPartCells, istream);
 }
+
+const CML::polyMesh* const CML::ensightPartCells::polyMeshNullPtr_ = nullptr;
 
 const CML::List<CML::word> CML::ensightPartCells::elemTypes_
 (
@@ -178,7 +180,7 @@ CML::ensightPartCells::ensightPartCells
 )
 :
     ensightPart(partNumber, partDescription),
-    mesh_(*reinterpret_cast<polyMesh*>(0))
+    mesh_(*polyMeshNullPtr_)
 {}
 
 
@@ -233,7 +235,7 @@ CML::ensightPartCells::ensightPartCells(const ensightPartCells& part)
 CML::ensightPartCells::ensightPartCells(Istream& is)
 :
     ensightPart(),
-    mesh_(*reinterpret_cast<polyMesh*>(0))
+    mesh_(*polyMeshNullPtr_)
 {
     reconstruct(is);
 }

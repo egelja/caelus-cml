@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,7 +44,7 @@ CML::direction CML::searchablePlate::calcNormal(const point& span)
     {
         if (span[dir] < 0)
         {
-            FatalErrorIn("searchablePlate::calcNormal()")
+            FatalErrorInFunction
                 << "Span should have two positive and one zero entry. Now:"
                 << span << exit(FatalError);
         }
@@ -65,7 +65,7 @@ CML::direction CML::searchablePlate::calcNormal(const point& span)
 
     if (normalDir == 3)
     {
-        FatalErrorIn("searchablePlate::calcNormal()")
+        FatalErrorInFunction
             << "Span should have two positive and one zero entry. Now:"
             << span << exit(FatalError);
     }
@@ -186,7 +186,7 @@ CML::pointIndexHit CML::searchablePlate::findLine
 
         if (!bb.contains(info.hitPoint()))
         {
-            FatalErrorIn("searchablePlate::findLine(..)")
+            FatalErrorInFunction
                 << "bb:" << bb << endl
                 << "origin_:" << origin_ << endl
                 << "span_:" << span_ << endl
@@ -436,11 +436,8 @@ void CML::searchablePlate::getVolumeType
     List<volumeType>& volType
 ) const
 {
-    FatalErrorIn
-    (
-        "searchableCollection::getVolumeType(const pointField&"
-        ", List<volumeType>&) const"
-    )   << "Volume type not supported for plate."
+    FatalErrorInFunction
+        << "Volume type not supported for plate."
         << exit(FatalError);
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -244,11 +244,8 @@ CML::fv::SemiImplicitSource<Type>::wordToVolumeModeType
         }
     }
 
-    FatalErrorIn
-    (
-        "SemiImplicitSource<Type>::volumeModeType"
-        "SemiImplicitSource<Type>::wordToVolumeModeType(const word&)"
-    )   << "Unknown volumeMode type " << vmtName
+    FatalErrorInFunction
+        << "Unknown volumeMode type " << vmtName
         << ". Valid volumeMode types are:" << nl << volumeModeTypeNames_
         << exit(FatalError);
 

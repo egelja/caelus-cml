@@ -95,7 +95,7 @@ simpleFunctionObject::simpleFunctionObject
     obr_(time_.lookupObject<objectRegistry>(regionName_))
 {
     if(!dict.found("outputControlMode")) {
-        WarningIn("simpleFunctionObject::simpleFunctionObject")
+        WarningInFunction
             << "'outputControlMode' not found in " << this->name() << endl
                 << "Assuming: " << outputControlModeTypeNames_[outputControlMode_]
                 << endl;
@@ -103,7 +103,7 @@ simpleFunctionObject::simpleFunctionObject
     switch(outputControlMode_) {
         case ocmTimestep:
             if(!dict.found("outputInterval")) {
-                WarningIn("simpleFunctionObject::simpleFunctionObject")
+                WarningInFunction
                     << "'outputInterval' not found in " << this->name() << endl
                         << "Assuming: " << outputInterval_
                         << endl;
@@ -169,7 +169,7 @@ bool simpleFunctionObject::outputTime(const bool forceWrite)
             doOutput=false;
             break;
         default:
-            FatalErrorIn("simpleFunctionObject::outputTime()")
+            FatalErrorInFunction
                 << "'outputControlMode' not implemented in " << name() << endl
                     << "Mode: " << outputControlModeTypeNames_[outputControlMode_]
                     << endl

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2014 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -37,6 +37,13 @@ License
 namespace CML
 {
     defineTypeNameAndDebug(streamLine, 0);
+
+    template<>
+    const char* NamedEnum<streamLine::trackDirection, 3>::names[] =
+        {"forward", "backward", "both"};
+
+    const NamedEnum<streamLine::trackDirection, 3>
+        streamLine::trackDirectionNames_;
 }
 
 
@@ -51,12 +58,11 @@ CML::streamLine::wallPatch() const
 
     label nFaces = 0;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        //if (!polyPatch::constraintType(patches[patchI].type()))
-        if (isA<wallPolyPatch>(patches[patchI]))
+        if (isA<wallPolyPatch>(patches[patchi]))
         {
-            nFaces += patches[patchI].size();
+            nFaces += patches[patchi].size();
         }
     }
 
@@ -64,12 +70,11 @@ CML::streamLine::wallPatch() const
 
     nFaces = 0;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        //if (!polyPatch::constraintType(patches[patchI].type()))
-        if (isA<wallPolyPatch>(patches[patchI]))
+        if (isA<wallPolyPatch>(patches[patchi]))
         {
-            const polyPatch& pp = patches[patchI];
+            const polyPatch& pp = patches[patchi];
 
             forAll(pp, i)
             {
@@ -117,7 +122,7 @@ void CML::streamLine::track()
                 mesh,
                 seedPoints[i],
                 seedPoints.cells()[i],
-                lifeTime_               // lifetime
+                lifeTime_
             )
         );
     }
@@ -190,7 +195,7 @@ void CML::streamLine::track()
             }
             else
             {
-                FatalErrorIn("streamLine::track()")
+                FatalErrorInFunction
                     << "Cannot find field " << fields_[i] << nl
                     << "Valid scalar fields are:"
                     << mesh.names(volScalarField::typeName) << nl
@@ -263,7 +268,7 @@ void CML::streamLine::track()
 
     if (UIndex == -1)
     {
-        FatalErrorIn("streamLine::track()")
+        FatalErrorInFunction
             << "Cannot find field to move particles with : " << UName_ << nl
             << "This field has to be present in the sampled fields " << fields_
             << " and in the objectRegistry."
@@ -290,14 +295,16 @@ void CML::streamLine::track()
     }
 
 
-    // additional particle info
+    // Additional particle info
     streamLineParticle::trackingData td
     (
         particles,
         vsInterp,
         vvInterp,
         UIndex,         // index of U in vvInterp
-        trackForward_,  // track in +u direction?
+
+        trackDirection_ == trackDirection::FORWARD,
+
         nSubCycle_,     // automatic track control:step through cells in steps?
         trackLength_,   // fixed track length
 
@@ -312,7 +319,19 @@ void CML::streamLine::track()
     const scalar trackTime = CML::sqrt(GREAT);
 
     // Track
-    particles.move(td, trackTime);
+    if (trackDirection_ == trackDirection::BOTH)
+    {
+        initialParticles = particles;
+    }
+
+    particles.move(particles, td, trackTime);
+
+    if (trackDirection_ == trackDirection::BOTH)
+    {
+        particles.IDLList<streamLineParticle>::operator=(initialParticles);
+        td.trackForward_ = !td.trackForward_;
+        particles.move(particles, td, trackTime);
+    }
 }
 
 
@@ -341,16 +360,8 @@ CML::streamLine::streamLine
     else
     {
         active_ = false;
-        WarningIn
-        (
-            "streamLine::streamLine\n"
-            "(\n"
-                "const word&,\n"
-                "const objectRegistry&,\n"
-                "const dictionary&,\n"
-                "const bool\n"
-            ")"
-        )   << "No fvMesh available, deactivating."
+        WarningInFunction
+            << "No fvMesh available, deactivating."
             << nl << endl;
     }
 }
@@ -381,7 +392,7 @@ void CML::streamLine::read(const dictionary& dict)
             UName_ = "U";
             if (dict.found("U"))
             {
-                IOWarningIn("streamLine::read(const dictionary&)", dict)
+                IOWarningInFunction(dict)
                     << "Using deprecated entry \"U\"."
                     << " Please use \"UName\" instead."
                     << endl;
@@ -391,29 +402,47 @@ void CML::streamLine::read(const dictionary& dict)
 
         if (findIndex(fields_, UName_) == -1)
         {
-            FatalIOErrorIn("streamLine::read(const dictionary&)", dict)
+            FatalIOErrorInFunction(dict)
                 << "Velocity field for tracking " << UName_
                 << " should be present in the list of fields " << fields_
                 << exit(FatalIOError);
         }
 
+        // The trackForward entry is maintained here for backwards compatibility
+        if (!dict.found("direction") && dict.found("trackForward"))
+        {
+            trackDirection_ =
+                dict.lookupType<bool>("trackForward")
+              ? trackDirection::FORWARD
+              : trackDirection::BACKWARD;
+        }
+        else
+        {
+            trackDirection_ = trackDirectionNames_[word(dict.lookup("direction"))];
+        }
 
-        dict.lookup("trackForward") >> trackForward_;
         dict.lookup("lifeTime") >> lifeTime_;
         if (lifeTime_ < 1)
         {
-            FatalErrorIn(":streamLine::read(const dictionary&)")
+            FatalErrorInFunction
                 << "Illegal value " << lifeTime_ << " for lifeTime"
                 << exit(FatalError);
         }
 
+        dict.lookup("lifeTime") >> lifeTime_;
+        if (lifeTime_ < 1)
+        {
+            FatalErrorInFunction
+                << "Illegal value " << lifeTime_ << " for lifeTime"
+                << exit(FatalError);
+        }
 
         bool subCycling = dict.found("nSubCycle");
         bool fixedLength = dict.found("trackLength");
 
         if (subCycling && fixedLength)
         {
-            FatalIOErrorIn("streamLine::read(const dictionary&)", dict)
+            FatalIOErrorInFunction(dict)
                 << "Cannot both specify automatic time stepping (through '"
                 << "nSubCycle' specification) and fixed track length (through '"
                 << "trackLength')"

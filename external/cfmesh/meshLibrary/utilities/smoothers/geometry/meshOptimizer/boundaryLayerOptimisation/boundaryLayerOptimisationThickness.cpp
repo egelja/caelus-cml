@@ -421,11 +421,8 @@ void boundaryLayerOptimisation::optimiseThicknessVariation
             const scalar magN = hairLength[hairEdgeI];
 
             if( magN < VSMALL )
-                FatalErrorIn
-                (
-                    "void boundaryLayerOptimisation::optimiseThicknessVariation"
-                    "(const direction, const label, const scalar, const scalar)"
-                ) << "Zero layer thickness at hair edge " << hairEdgeI
+                FatalErrorInFunction
+                  << "Zero layer thickness at hair edge " << hairEdgeI
                   << ". Exitting..." << exit(FatalError);
 
             if( hairEdgeType_[hairEdgeI] & edgeType )

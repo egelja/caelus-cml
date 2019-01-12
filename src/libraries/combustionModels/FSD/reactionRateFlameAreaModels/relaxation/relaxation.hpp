@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
 
@@ -27,8 +27,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef relaxation_H
-#define relaxation_H
+#ifndef relaxation_HPP
+#define relaxation_HPP
 
 #include "reactionRateFlameArea.hpp"
 #include "consumptionSpeed.hpp"
@@ -48,25 +48,24 @@ class relaxation
 :
     public reactionRateFlameArea
 {
-    // Private Data
 
-        //- Correlation
-        consumptionSpeed correlation_;
+    //- Correlation
+    consumptionSpeed correlation_;
 
-        //- Proportionality constant for time scale in the relaxation Eq.
-        scalar C_;
+    //- Proportionality constant for time scale in the relaxation Eq.
+    scalar C_;
 
-        //- Proportionality constant for sub-grid strain
-        scalar alpha_;
+    //- Proportionality constant for sub-grid strain
+    scalar alpha_;
 
 
-     // Private Member Functions
+    // Private Member Functions
 
-        //- Disallow copy construct
-        relaxation(const relaxation&);
+    //- Disallow copy construct
+    relaxation(const relaxation&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const relaxation&);
+    //- Disallow default bitwise assignment
+    void operator=(const relaxation&);
 
 
 public:
@@ -75,43 +74,36 @@ public:
     TypeName("relaxation");
 
 
-    // Constructors
-
-        //- Construct from dictionary and hsCombustionThermo
-        relaxation
-        (
-            const word modelType,
-            const dictionary& dictCoeffs,
-            const fvMesh& mesh,
-            const combustionModel& combModel
-        );
+    //- Construct from dictionary and psiReactionThermo
+    relaxation
+    (
+        const word modelType,
+        const dictionary& dictCoeffs,
+        const fvMesh& mesh,
+        const combustionModel& combModel
+    );
 
 
     // Destructor
-
-        virtual ~relaxation();
+    virtual ~relaxation();
 
 
     // Member functions
 
-        //- Correct omega
-        virtual void correct(const volScalarField& sigma);
+    //- Correct omega
+    virtual void correct(const volScalarField& sigma);
 
 
-    // I-O
+    // IO
 
-        //- Update properties from given dictionary
-        virtual bool read(const dictionary& dictProperties);
+    //- Update properties from given dictionary
+    virtual bool read(const dictionary& dictProperties);
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End reactionRateFlameAreaModels
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

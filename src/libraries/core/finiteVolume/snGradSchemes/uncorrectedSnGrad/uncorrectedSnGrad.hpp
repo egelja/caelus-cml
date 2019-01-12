@@ -145,12 +145,8 @@ uncorrectedSnGrad<Type>::correction
     const GeometricField<Type, fvPatchField, volMesh>&
 ) const
 {
-    notImplemented
-    (
-        "uncorrectedSnGrad<Type>::correction"
-        "(const GeometricField<Type, fvPatchField, volMesh>&)"
-    );
-    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(NULL);
+    NotImplemented;
+    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(nullptr);
 }
 
 

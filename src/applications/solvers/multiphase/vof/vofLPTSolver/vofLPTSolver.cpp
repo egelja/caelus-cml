@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     #include "createDyMControls.hpp"
     #include "createFields.hpp"
     #include "createMRF.hpp"
-    #include "createClouds.hpp"
+    #include "createClouds_vof.hpp"
     #include "createFvOptions.hpp"
     #include "initCorrectPhi.hpp"
     #include "createUfIfPresent.hpp"

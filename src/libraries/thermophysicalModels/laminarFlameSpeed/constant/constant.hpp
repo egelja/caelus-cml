@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef constant_H
-#define constant_H
+#ifndef constant_HPP
+#define constant_HPP
 
 #include "laminarFlameSpeed.hpp"
 
@@ -52,15 +52,12 @@ class constant
 private:
 
     // Const laminar flame speed
+    dimensionedScalar Su_;
 
-        dimensionedScalar Su_;
 
-
-    // Private Member Functions
-
-        //- Construct as copy (not implemented)
-        constant(const constant&);
-        void operator=(const constant&);
+    //- Construct as copy (not implemented)
+    constant(const constant&);
+    void operator=(const constant&);
 
 
 public:
@@ -69,34 +66,29 @@ public:
     TypeName("constant");
 
 
-    // Constructors
-
-        //- Construct from dictionary and hhuCombustionThermo
-        constant
-        (
-            const dictionary&,
-            const hhuCombustionThermo&
-        );
+    //- Construct from dictionary and psiuReactionThermo
+    constant
+    (
+        const dictionary&,
+        const psiuReactionThermo&
+    );
 
 
     //- Destructor
-    virtual ~constant();
+    virtual ~constant()
+    {}
 
 
     // Member functions
 
-        //- Return the laminar flame speed [m/s]
-        tmp<volScalarField> operator()() const;
+    //- Return the laminar flame speed [m/s]
+    tmp<volScalarField> operator()() const;
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End laminarFlameSpeedModels
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

@@ -140,11 +140,11 @@ void swakExpressionAverageDistributionFunctionObject::write()
             driver_->getResult<scalar>().ptr()
         );
     } else {
-        FatalErrorIn("swakExpressionAverageDistributionFunctionObject::write()")
+        FatalErrorInFunction
             << "Don't know how to handle weight expressions of type "
-                << driver_->CommonValueExpressionDriver::getResultType()
-                << endl
-                << exit(FatalError);
+            << driver_->CommonValueExpressionDriver::getResultType()
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -172,11 +172,11 @@ void swakExpressionAverageDistributionFunctionObject::write()
             }
         }
     } else {
-        FatalErrorIn("swakExpressionAverageDistributionFunctionObject::write()")
+        FatalErrorInFunction
             << "Don't know how to handle logical expressions of type "
-                << driver_->CommonValueExpressionDriver::getResultType()
-                << endl
-                << exit(FatalError);
+            << driver_->CommonValueExpressionDriver::getResultType()
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -193,10 +193,10 @@ void swakExpressionAverageDistributionFunctionObject::write()
     } else if(rType==pTraits<sphericalTensor>::typeName) {
         getDistributionInternal(distSphericalTensor_);
     } else {
-        WarningIn("swakExpressionAverageDistributionFunctionObject::write()")
+        WarningInFunction
             << "Don't know how to handle type " << rType
-                << " of expression " << abscissaExpression_
-                << endl;
+            << " of expression " << abscissaExpression_
+            << endl;
     }
 
     bool zeroDistribution=false;
@@ -241,10 +241,10 @@ void swakExpressionAverageDistributionFunctionObject::write()
     }
 
     if(zeroDistribution) {
-        WarningIn("swakExpressionAverageDistributionFunctionObject::write")
+        WarningInFunction
             << "Distribution for " << name() << " has size 0. "
-                << "Doing nothing"
-                << endl;
+            << "Doing nothing"
+            << endl;
     } else if(Pstream::master()) {
         writeADistribution(distScalar_);
         writeADistribution(distVector_);

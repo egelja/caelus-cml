@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 - 2016 Applied CCM
+Copyright (C) 2015 - 2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -102,7 +102,7 @@ public:
     {
         if (!schemeData.eof())
         {
-            IOWarningIn("limitedCentralMinmod(fvMesh const&, Istream&)", schemeData)
+            IOWarningInFunction(schemeData)
                 << "unexpected additional entries in stream." << nl
                 << "    Only the name of the gradient scheme in the"
                    " 'gradSchemes' dictionary should be specified."
@@ -131,12 +131,8 @@ public:
 
         if (!schemeData.eof())
         {
-            IOWarningIn
-            (
-                "limitedCentralMinmod(fvMesh const&, "
-                "surfaceScalarField const& faceFlux, Istream&)",
-                schemeData
-            )   << "unexpected additional entries in stream." << nl
+            IOWarningInFunction(schemeData)
+                << "unexpected additional entries in stream." << nl
                 << "    Only the name of the gradient scheme in the"
                    " 'gradSchemes' dictionary should be specified."
                 << endl;

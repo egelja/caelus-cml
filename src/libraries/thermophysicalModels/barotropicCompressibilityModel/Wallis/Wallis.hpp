@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Wallis_H
-#define Wallis_H
+#ifndef Wallis_HPP
+#define Wallis_HPP
 
 #include "barotropicCompressibilityModel.hpp"
 #include "dimensionedScalar.hpp"
@@ -49,13 +49,12 @@ class Wallis
 :
     public barotropicCompressibilityModel
 {
-    // Private data
 
-        dimensionedScalar psiv_;
-        dimensionedScalar psil_;
+    dimensionedScalar psiv_;
+    dimensionedScalar psil_;
 
-        dimensionedScalar rhovSat_;
-        dimensionedScalar rholSat_;
+    dimensionedScalar rhovSat_;
+    dimensionedScalar rholSat_;
 
 
 public:
@@ -64,15 +63,13 @@ public:
     TypeName("Wallis");
 
 
-    // Constructors
-
-        //- construct from components
-        Wallis
-        (
-            const dictionary& compressibilityProperties,
-            const volScalarField& gamma,
-            const word& psiName = "psi"
-        );
+    //- Construct from components
+    Wallis
+    (
+        const dictionary& compressibilityProperties,
+        const volScalarField& gamma,
+        const word& psiName = "psi"
+    );
 
 
     //- Destructor
@@ -82,21 +79,17 @@ public:
 
     // Member Functions
 
-        //- Correct the Wallis compressibility
-        void correct();
+    //- Correct the Wallis compressibility
+    void correct();
 
-        //- Read transportProperties dictionary
-        bool read(const dictionary& compressibilityProperties);
+    //- Read transportProperties dictionary
+    bool read(const dictionary& compressibilityProperties);
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace compressibilityModels
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

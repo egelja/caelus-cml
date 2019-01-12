@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,11 +41,11 @@ addToRunTimeSelectionTable(force, thermocapillaryForce, dictionary);
 
 thermocapillaryForce::thermocapillaryForce
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    force(owner)
+    force(film)
 {}
 
 
@@ -59,7 +59,7 @@ thermocapillaryForce::~thermocapillaryForce()
 
 tmp<fvVectorMatrix> thermocapillaryForce::correct(volVectorField& U)
 {
-    const volScalarField& sigma = owner_.sigma();
+    const volScalarField& sigma = filmModel_.sigma();
 
     tmp<fvVectorMatrix>
         tfvm(new fvVectorMatrix(U, dimForce/dimArea*dimVolume));

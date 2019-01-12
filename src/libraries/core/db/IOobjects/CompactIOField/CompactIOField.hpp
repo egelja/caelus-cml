@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -143,11 +143,8 @@ void CML::CompactIOField<Type, BaseType>::readFromStream()
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CompactIOField<Type, BaseType>::readFromStream()",
-            is
-        )   << "unexpected class name " << headerClassName()
+        FatalIOErrorInFunction(is)
+            << "unexpected class name " << headerClassName()
             << " expected " << typeName << " or " << IOField<Type>::typeName
             << endl
             << "    while reading object " << name()

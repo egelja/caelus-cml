@@ -126,10 +126,8 @@ void CML::regionToCell::combine(topoSet& set, const bool add) const
 
     if (regionI == -1)
     {
-        WarningIn
-        (
-            "regionToCell::combine(topoSet&, const bool) const"
-        )   << "Point " << insidePoint_
+        WarningInFunction
+            << "Point " << insidePoint_
             << " is not inside the mesh." << nl
             << "Bounding box of the mesh:" << mesh_.bounds()
             << endl;

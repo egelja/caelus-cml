@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -63,10 +63,8 @@ CML::pointFieldDecomposer::patchFieldDecomposer::patchFieldDecomposer
     {
         hasUnmapped_ = true;
 
-        FatalErrorIn
-        (
-            "pointFieldDecomposer::patchFieldDecomposer()"
-        )   << "Incomplete patch point addressing"
+        FatalErrorInFunction
+            << "Incomplete patch point addressing"
             << abort(FatalError);
     }
 }
@@ -87,7 +85,7 @@ CML::pointFieldDecomposer::pointFieldDecomposer
     patchFieldDecomposerPtrs_
     (
         procMesh_.boundary().size(),
-        static_cast<patchFieldDecomposer*>(NULL)
+        static_cast<patchFieldDecomposer*>(nullptr)
     )
 {
     forAll(boundaryAddressing_, patchi)

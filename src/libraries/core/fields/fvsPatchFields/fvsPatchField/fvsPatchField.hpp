@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -452,16 +452,8 @@ fvsPatchField<Type>::fvsPatchField
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "fvsPatchField<Type>::fvsPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, surfaceMesh>& iF,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "essential value entry not provided"
+        FatalIOErrorInFunction(dict)
+            << "essential value entry not provided"
             << exit(FatalIOError);
     }
 }
@@ -506,7 +498,7 @@ void fvsPatchField<Type>::check(const fvsPatchField<Type>& ptf) const
 {
     if (&patch_ != &(ptf.patch_))
     {
-        FatalErrorIn("PatchField<Type>::check(const fvsPatchField<Type>&)")
+        FatalErrorInFunction
             << "different patches for fvsPatchField<Type>s"
             << abort(FatalError);
     }
@@ -598,10 +590,8 @@ void fvsPatchField<Type>::operator*=
 {
     if (&patch_ != &ptf.patch())
     {
-        FatalErrorIn
-        (
-            "PatchField<Type>::operator*=(const fvsPatchField<scalar>& ptf)"
-        )   << "incompatible patches for patch fields"
+        FatalErrorInFunction
+            << "incompatible patches for patch fields"
             << abort(FatalError);
     }
 
@@ -617,10 +607,8 @@ void fvsPatchField<Type>::operator/=
 {
     if (&patch_ != &ptf.patch())
     {
-        FatalErrorIn
-        (
-            "PatchField<Type>::operator/=(const fvsPatchField<scalar>& ptf)"
-        )   << "    incompatible patches for patch fields"
+        FatalErrorInFunction
+            << "    incompatible patches for patch fields"
             << abort(FatalError);
     }
 
@@ -795,11 +783,8 @@ tmp<fvsPatchField<Type> > fvsPatchField<Type>::New
 
     if (cstrIter == patchConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "fvsPatchField<Type>::New(const word&, const word&, const fvPatch&"
-            ", const Field<Type>&)"
-        )   << "Unknown patchField type "
+        FatalErrorInFunction
+            << "Unknown patchField type "
             << patchFieldType << nl << nl
             << "Valid patchField types are :" << endl
             << patchConstructorTablePtr_->sortedToc()
@@ -873,12 +858,8 @@ tmp<fvsPatchField<Type> > fvsPatchField<Type>::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "fvsPatchField<Type>::New(const fvPatch&, const Field<Type>&, "
-                "const dictionary&)",
-                dict
-            )   << "Unknown patchField type " << patchFieldType
+            FatalIOErrorInFunction(dict)
+                << "Unknown patchField type " << patchFieldType
                 << " for patch type " << p.type() << nl << nl
                 << "Valid patchField types are :" << endl
                 << dictionaryConstructorTablePtr_->sortedToc()
@@ -901,12 +882,8 @@ tmp<fvsPatchField<Type> > fvsPatchField<Type>::New
          && patchTypeCstrIter() != cstrIter()
         )
         {
-            FatalIOErrorIn
-            (
-                "fvsPatchField<Type>const fvPatch&, const Field<Type>&, "
-                "const dictionary&)",
-                dict
-            )   << "inconsistent patch and patchField types for \n"
+            FatalIOErrorInFunction(dict)
+                << "inconsistent patch and patchField types for \n"
                    "    patch type " << p.type()
                 << " and patchField type " << patchFieldType
                 << exit(FatalIOError);
@@ -942,12 +919,8 @@ tmp<fvsPatchField<Type> > fvsPatchField<Type>::New
 
     if (cstrIter == patchMapperConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "fvsPatchField<Type>::New(const fvsPatchField<Type>&, "
-            "const fvPatch&, const Field<Type>&, "
-            "const fvPatchFieldMapper&)"
-        )   << "Unknown patchField type " << ptf.type() << nl << nl
+        FatalErrorInFunction
+            << "Unknown patchField type " << ptf.type() << nl << nl
             << "Valid patchField types are :" << endl
             << patchMapperConstructorTablePtr_->sortedToc()
             << exit(FatalError);

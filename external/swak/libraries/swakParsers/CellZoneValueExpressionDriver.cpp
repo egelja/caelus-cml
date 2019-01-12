@@ -49,11 +49,11 @@ label getCellZoneID(const fvMesh &mesh,const word &name)
 {
     label result=mesh.cellZones().findZoneID(name);
     if(result<0) {
-        FatalErrorIn("getCellZoneID(const fvMesh &mesh,const word &name)")
+        FatalErrorInFunction
             << "The cellZone " << name << " was not found in "
-                << mesh.cellZones().names()
-                << endl
-                << exit(FatalError);
+            << mesh.cellZones().names()
+            << endl
+            << exit(FatalError);
 
     }
     return result;
@@ -195,15 +195,15 @@ tmp<scalarField> CellZoneValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> CellZoneValueExpressionDriver::makePointField()
 // {
-//     notImplemented("CellZoneValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField> CellZoneValueExpressionDriver::makeFaceAreaMagField() const
 {
-    FatalErrorIn("CellZoneValueExpressionDriver::makeFaceAreaField()")
+    FatalErrorInFunction
         << "cellZone knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<scalarField>(
         new scalarField(0)
     );
@@ -211,10 +211,10 @@ tmp<scalarField> CellZoneValueExpressionDriver::makeFaceAreaMagField() const
 
 tmp<vectorField> CellZoneValueExpressionDriver::makeFaceNormalField() const
 {
-    FatalErrorIn("CellZoneValueExpressionDriver::makeFaceNormalField()")
+    FatalErrorInFunction
         << "cellZone knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<vectorField>(
         new vectorField(0)
     );
@@ -222,10 +222,10 @@ tmp<vectorField> CellZoneValueExpressionDriver::makeFaceNormalField() const
 
 tmp<scalarField> CellZoneValueExpressionDriver::makeFaceFlipField() const
 {
-    FatalErrorIn("CellZoneValueExpressionDriver::makeFaceFlipField()")
+    FatalErrorInFunction
         << "cellZone knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<scalarField>(
         new scalarField(0)
     );
@@ -233,10 +233,10 @@ tmp<scalarField> CellZoneValueExpressionDriver::makeFaceFlipField() const
 
 tmp<vectorField> CellZoneValueExpressionDriver::makeFaceAreaField() const
 {
-    FatalErrorIn("CellZoneValueExpressionDriver::makeFaceAreaField()")
+    FatalErrorInFunction
         << "cellZone knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<vectorField>(
         new vectorField(0)
     );
@@ -275,11 +275,11 @@ tmp<scalarField> CellZoneValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Cell size: " << cellSize << endl;
 
-        FatalErrorIn("CellZoneValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
 
     return tmp<scalarField>(makeCellVolumeField());

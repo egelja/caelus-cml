@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -49,6 +49,15 @@ namespace CML
 
 // Forward declaration of classes
 class triSurface;
+
+// Forward declaration of friend functions and operators
+
+class surfaceLocation;
+
+Istream& operator>>(Istream&, surfaceLocation&);
+Ostream& operator<<(Ostream&, const surfaceLocation&);
+Ostream& operator<<(Ostream&, const InfoProxy<surfaceLocation>&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class surfaceLocation Declaration

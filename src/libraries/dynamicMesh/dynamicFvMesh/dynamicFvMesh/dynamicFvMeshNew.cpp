@@ -58,10 +58,8 @@ CML::autoPtr<CML::dynamicFvMesh> CML::dynamicFvMesh::New(const IOobject& io)
 
         if (!IOobjectConstructorTablePtr_)
         {
-            FatalErrorIn
-            (
-                "dynamicFvMesh::New(const IOobject&)"
-            )   << "dynamicFvMesh table is empty"
+            FatalErrorInFunction
+                << "dynamicFvMesh table is empty"
                 << exit(FatalError);
         }
 
@@ -70,10 +68,8 @@ CML::autoPtr<CML::dynamicFvMesh> CML::dynamicFvMesh::New(const IOobject& io)
 
         if (cstrIter == IOobjectConstructorTablePtr_->end())
         {
-            FatalErrorIn
-            (
-                "dynamicFvMesh::New(const IOobject&)"
-            )   << "Unknown dynamicFvMesh type "
+            FatalErrorInFunction
+                << "Unknown dynamicFvMesh type "
                 << dynamicFvMeshTypeName << nl << nl
                 << "Valid dynamicFvMesh types are :" << endl
                 << IOobjectConstructorTablePtr_->sortedToc()

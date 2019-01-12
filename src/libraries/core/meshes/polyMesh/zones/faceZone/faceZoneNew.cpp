@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,12 +46,8 @@ CML::autoPtr<CML::faceZone> CML::faceZone::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "faceZone::New(const word&, const dictionary&, "
-            "const label, const faceZoneMesh&)",
-            dict
-        )   << "Unknown faceZone type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown faceZone type "
             << zoneType << nl << nl
             << "Valid faceZone types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

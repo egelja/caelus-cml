@@ -45,7 +45,7 @@ CML::phasePropertiesList::phasePropertiesList
 {
     forAll(props_, i)
     {
-        props_[i].initialiseGlobalIds(gasNames, liquidNames, solidNames);
+        props_[i].reorder(gasNames, liquidNames, solidNames);
     }
 
     phaseTypeNames_.setSize(props_.size());

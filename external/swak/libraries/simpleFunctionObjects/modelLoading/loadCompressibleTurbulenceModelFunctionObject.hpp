@@ -36,7 +36,7 @@ Contributors/Copyright:
 #define loadCompressibleTurbulenceModelFunctionObject_H
 
 #include "modelLoadingFunctionObject.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

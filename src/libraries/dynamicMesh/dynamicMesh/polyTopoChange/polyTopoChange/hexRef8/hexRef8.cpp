@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,7 +77,7 @@ void CML::hexRef8::reorder
 
         if (newI >= len)
         {
-            FatalErrorIn("hexRef8::reorder(..)") << abort(FatalError);
+            FatalErrorInFunction << abort(FatalError);
         }
 
         if (newI >= 0)
@@ -348,10 +348,8 @@ CML::scalar CML::hexRef8::getLevel0EdgeLength() const
 {
     if (cellLevel_.size() != mesh_.nCells())
     {
-        FatalErrorIn
-        (
-            "hexRef8::getLevel0EdgeLength() const"
-        )   << "Number of cells in mesh:" << mesh_.nCells()
+        FatalErrorInFunction
+            << "Number of cells in mesh:" << mesh_.nCells()
             << " does not equal size of cellLevel:" << cellLevel_.size()
             << endl
             << "This might be because of a restart with inconsistent cellLevel."
@@ -520,7 +518,7 @@ CML::scalar CML::hexRef8::getLevel0EdgeLength() const
 
     if (level0Size == -1)
     {
-        FatalErrorIn("hexRef8::getLevel0EdgeLength()")
+        FatalErrorInFunction
             << "Problem : typEdgeLenSqr:" << typEdgeLenSqr << abort(FatalError);
     }
 
@@ -569,7 +567,7 @@ CML::label CML::hexRef8::getAnchorCell
         Perr<< "cell:" << celli << " anchorPoints:" << cellAnchorPoints[celli]
             << endl;
 
-        FatalErrorIn("hexRef8::getAnchorCell(..)")
+        FatalErrorInFunction
             << "Could not find point " << pointi
             << " in the anchorPoints for cell " << celli << endl
             << "Does your original mesh obey the 2:1 constraint and"
@@ -751,7 +749,7 @@ CML::label CML::hexRef8::findLevel
                 dumpCell(mesh_.faceNeighbour()[facei]);
             }
 
-            FatalErrorIn("hexRef8::findLevel(..)")
+            FatalErrorInFunction
                 << "face:" << f
                 << " level:" << UIndirectList<label>(pointLevel_, f)()
                 << " startFp:" << startFp
@@ -779,7 +777,7 @@ CML::label CML::hexRef8::findLevel
         dumpCell(mesh_.faceNeighbour()[facei]);
     }
 
-    FatalErrorIn("hexRef8::findLevel(..)")
+    FatalErrorInFunction
         << "face:" << f
         << " level:" << UIndirectList<label>(pointLevel_, f)()
         << " startFp:" << startFp
@@ -829,16 +827,16 @@ void CML::hexRef8::checkInternalOrientation
     const face& newFace
 )
 {
-    face compactFace(identity(newFace.size()));
-    pointField compactPoints(meshMod.points(), newFace);
+    const face compactFace(identity(newFace.size()));
+    const pointField compactPoints(meshMod.points(), newFace);
 
-    vector n(compactFace.normal(compactPoints));
+    const vector a(compactFace.area(compactPoints));
 
-    vector dir(neiPt - ownPt);
+    const vector dir(neiPt - ownPt);
 
-    if ((dir & n) < 0)
+    if ((dir & a) < 0)
     {
-        FatalErrorIn("checkInternalOrientation(..)")
+        FatalErrorInFunction
             << "cell:" << celli << " old face:" << facei
             << " newFace:" << newFace << endl
             << " coords:" << compactPoints
@@ -847,13 +845,13 @@ void CML::hexRef8::checkInternalOrientation
             << abort(FatalError);
     }
 
-    vector fcToOwn(compactFace.centre(compactPoints) - ownPt);
+    const vector fcToOwn(compactFace.centre(compactPoints) - ownPt);
 
-    scalar s = (fcToOwn&n) / (dir&n);
+    const scalar s = (fcToOwn & a) / (dir & a);
 
     if (s < 0.1 || s > 0.9)
     {
-        FatalErrorIn("checkInternalOrientation(..)")
+        FatalErrorInFunction
             << "cell:" << celli << " old face:" << facei
             << " newFace:" << newFace << endl
             << " coords:" << compactPoints
@@ -875,16 +873,16 @@ void CML::hexRef8::checkBoundaryOrientation
     const face& newFace
 )
 {
-    face compactFace(identity(newFace.size()));
-    pointField compactPoints(meshMod.points(), newFace);
+    const face compactFace(identity(newFace.size()));
+    const pointField compactPoints(meshMod.points(), newFace);
 
-    vector n(compactFace.normal(compactPoints));
+    const vector a(compactFace.area(compactPoints));
 
-    vector dir(boundaryPt - ownPt);
+    const vector dir(boundaryPt - ownPt);
 
-    if ((dir & n) < 0)
+    if ((dir & a) < 0)
     {
-        FatalErrorIn("checkBoundaryOrientation(..)")
+        FatalErrorInFunction
             << "cell:" << celli << " old face:" << facei
             << " newFace:" << newFace
             << " coords:" << compactPoints
@@ -893,13 +891,13 @@ void CML::hexRef8::checkBoundaryOrientation
             << abort(FatalError);
     }
 
-    vector fcToOwn(compactFace.centre(compactPoints) - ownPt);
+    const vector fcToOwn(compactFace.centre(compactPoints) - ownPt);
 
-    scalar s = (fcToOwn&dir) / magSqr(dir);
+    const scalar s = (fcToOwn&dir) / magSqr(dir);
 
     if (s < 0.7 || s > 1.3)
     {
-        WarningIn("checkBoundaryOrientation(..)")
+        WarningInFunction
             << "cell:" << celli << " old face:" << facei
             << " newFace:" << newFace
             << " coords:" << compactPoints
@@ -907,7 +905,6 @@ void CML::hexRef8::checkBoundaryOrientation
             << " boundaryPt:" << boundaryPt
             << " s:" << s
             << endl;
-            //<< abort(FatalError);
     }
 }
 
@@ -1269,7 +1266,7 @@ void CML::hexRef8::createInternalFaces
                 dumpCell(mesh_.faceNeighbour()[facei]);
             }
 
-            FatalErrorIn("createInternalFaces(..)")
+            FatalErrorInFunction
                 << "nAnchors:" << nAnchors
                 << " facei:" << facei
                 << abort(FatalError);
@@ -1311,7 +1308,7 @@ void CML::hexRef8::createInternalFaces
 
                         const labelList& cPoints = mesh_.cellPoints(celli);
 
-                        FatalErrorIn("createInternalFaces(..)")
+                        FatalErrorInFunction
                             << "cell:" << celli << " cLevel:" << cLevel
                             << " cell points:" << cPoints
                             << " pointLevel:"
@@ -1384,7 +1381,7 @@ void CML::hexRef8::createInternalFaces
 
                         const labelList& cPoints = mesh_.cellPoints(celli);
 
-                        FatalErrorIn("createInternalFaces(..)")
+                        FatalErrorInFunction
                             << "cell:" << celli << " cLevel:" << cLevel
                             << " cell points:" << cPoints
                             << " pointLevel:"
@@ -1668,10 +1665,8 @@ void CML::hexRef8::checkWantedRefinementLevels
         {
             dumpCell(own);
             dumpCell(nei);
-            FatalErrorIn
-            (
-                "hexRef8::checkWantedRefinementLevels(const labelList&)"
-            )   << "cell:" << own
+            FatalErrorInFunction
+                << "cell:" << own
                 << " current level:" << cellLevel_[own]
                 << " level after refinement:" << ownLevel
                 << nl
@@ -1711,10 +1706,8 @@ void CML::hexRef8::checkWantedRefinementLevels
             label patchi = mesh_.boundaryMesh().whichPatch(facei);
 
             dumpCell(own);
-            FatalErrorIn
-            (
-                "hexRef8::checkWantedRefinementLevels(const labelList&)"
-            )   << "Celllevel does not satisfy 2:1 constraint."
+            FatalErrorInFunction
+                << "Celllevel does not satisfy 2:1 constraint."
                 << " On coupled face "
                 << facei
                 << " on patch " << patchi << " "
@@ -2005,10 +1998,8 @@ CML::hexRef8::hexRef8(const polyMesh& mesh, const bool readHistory)
 
     if (history_.active() && history_.visibleCells().size() != mesh_.nCells())
     {
-        FatalErrorIn
-        (
-            "hexRef8::hexRef8(const polyMesh&)"
-        )   << "History enabled but number of visible cells "
+        FatalErrorInFunction
+            << "History enabled but number of visible cells "
             << history_.visibleCells().size() << " in "
             << history_.objectPath()
             << " is not equal to the number of cells in the mesh "
@@ -2022,10 +2013,8 @@ CML::hexRef8::hexRef8(const polyMesh& mesh, const bool readHistory)
      || pointLevel_.size() != mesh_.nPoints()
     )
     {
-        FatalErrorIn
-        (
-            "hexRef8::hexRef8(const polyMesh&)"
-        )   << "Restarted from inconsistent cellLevel or pointLevel files."
+        FatalErrorInFunction
+            << "Restarted from inconsistent cellLevel or pointLevel files."
             << endl
             << "cellLevel file " << cellLevel_.objectPath() << endl
             << "pointLevel file " << pointLevel_.objectPath() << endl
@@ -2124,11 +2113,8 @@ CML::hexRef8::hexRef8
 {
     if (history_.active() && history_.visibleCells().size() != mesh_.nCells())
     {
-        FatalErrorIn
-        (
-            "hexRef8::hexRef8(const polyMesh&, const labelList&"
-            ", const labelList&, const refinementHistory&)"
-        )   << "History enabled but number of visible cells in it "
+        FatalErrorInFunction
+            << "History enabled but number of visible cells in it "
             << history_.visibleCells().size()
             << " is not equal to the number of cells in the mesh "
             << mesh_.nCells() << abort(FatalError);
@@ -2140,11 +2126,8 @@ CML::hexRef8::hexRef8
      || pointLevel_.size() != mesh_.nPoints()
     )
     {
-        FatalErrorIn
-        (
-            "hexRef8::hexRef8(const polyMesh&, const labelList&"
-            ", const labelList&, const refinementHistory&)"
-        )   << "Incorrect cellLevel or pointLevel size." << endl
+        FatalErrorInFunction
+            << "Incorrect cellLevel or pointLevel size." << endl
             << "Number of cells in mesh:" << mesh_.nCells()
             << " does not equal size of cellLevel:" << cellLevel_.size() << endl
             << "Number of points in mesh:" << mesh_.nPoints()
@@ -2244,11 +2227,8 @@ CML::hexRef8::hexRef8
      || pointLevel_.size() != mesh_.nPoints()
     )
     {
-        FatalErrorIn
-        (
-            "hexRef8::hexRef8(const polyMesh&, const labelList&"
-            ", const labelList&)"
-        )   << "Incorrect cellLevel or pointLevel size." << endl
+        FatalErrorInFunction
+            << "Incorrect cellLevel or pointLevel size." << endl
             << "Number of cells in mesh:" << mesh_.nCells()
             << " does not equal size of cellLevel:" << cellLevel_.size() << endl
             << "Number of points in mesh:" << mesh_.nPoints()
@@ -2278,7 +2258,7 @@ CML::labelList CML::hexRef8::consistentRefinement
 {
     // Loop, modifying cellsToRefine, until no more changes to due to 2:1
     // conflicts.
-    // maxSet = false : unselect cells to refine
+    // maxSet = false : deselect cells to refine
     // maxSet = true  : select cells to refine
 
     // Go to straight boolList.
@@ -2360,12 +2340,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement
 
     if (maxFaceDiff <= 0)
     {
-        FatalErrorIn
-        (
-            "hexRef8::consistentSlowRefinement"
-            "(const label, const labelList&, const labelList&"
-            ", const label, const labelList&)"
-        )   << "Illegal maxFaceDiff " << maxFaceDiff << nl
+        FatalErrorInFunction
+            << "Illegal maxFaceDiff " << maxFaceDiff << nl
             << "Value should be >= 1" << exit(FatalError);
     }
 
@@ -2423,12 +2399,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement
         if (allFaceInfo[facei].valid(dummyTrackData))
         {
             // Can only occur if face has already gone through loop below.
-            FatalErrorIn
-            (
-                "hexRef8::consistentSlowRefinement"
-                "(const label, const labelList&, const labelList&"
-                ", const label, const labelList&)"
-            )   << "Argument facesToCheck seems to have duplicate entries!"
+            FatalErrorInFunction
+                << "Argument facesToCheck seems to have duplicate entries!"
                 << endl
                 << "face:" << facei << " occurs at positions "
                 << findIndices(facesToCheck, facei)
@@ -2488,7 +2460,7 @@ CML::labelList CML::hexRef8::consistentSlowRefinement
     }
 
 
-    // Just seed with all faces inbetween different refinement levels for now
+    // Just seed with all faces in between different refinement levels for now
     // (alternatively only seed faces on cellsToRefine but that gives problems
     //  if no cells to refine)
     forAll(faceNeighbour, facei)
@@ -2721,12 +2693,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement
             {
                 dumpCell(own);
                 dumpCell(nei);
-                FatalErrorIn
-                (
-                    "hexRef8::consistentSlowRefinement"
-                    "(const label, const labelList&, const labelList&"
-                    ", const label, const labelList&)"
-                )   << "cell:" << own
+                FatalErrorInFunction
+                    << "cell:" << own
                     << " current level:" << cellLevel_[own]
                     << " current refData:" << allCellInfo[own]
                     << " level after refinement:" << ownLevel
@@ -2782,12 +2750,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement
                 dumpCell(own);
                 label patchi = mesh_.boundaryMesh().whichPatch(facei);
 
-                FatalErrorIn
-                (
-                    "hexRef8::consistentSlowRefinement"
-                    "(const label, const labelList&, const labelList&"
-                    ", const label, const labelList&)"
-                )   << "Celllevel does not satisfy 2:1 constraint."
+                FatalErrorInFunction
+                    << "Celllevel does not satisfy 2:1 constraint."
                     << " On coupled face "
                     << facei
                     << " refData:" << allFaceInfo[facei]
@@ -2857,11 +2821,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement2
 
     if (maxFaceDiff <= 0)
     {
-        FatalErrorIn
-        (
-            "hexRef8::consistentSlowRefinement2"
-            "(const label, const labelList&, const labelList&)"
-        )   << "Illegal maxFaceDiff " << maxFaceDiff << nl
+        FatalErrorInFunction
+            << "Illegal maxFaceDiff " << maxFaceDiff << nl
             << "Value should be >= 1" << exit(FatalError);
     }
 
@@ -2924,11 +2885,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement2
         if (allFaceInfo[facei].valid(dummyTrackData))
         {
             // Can only occur if face has already gone through loop below.
-            FatalErrorIn
-            (
-                "hexRef8::consistentSlowRefinement2"
-                "(const label, const labelList&, const labelList&)"
-            )   << "Argument facesToCheck seems to have duplicate entries!"
+            FatalErrorInFunction
+                << "Argument facesToCheck seems to have duplicate entries!"
                 << endl
                 << "face:" << facei << " occurs at positions "
                 << findIndices(facesToCheck, facei)
@@ -3030,7 +2988,7 @@ CML::labelList CML::hexRef8::consistentSlowRefinement2
 
     // Create some initial seeds to start walking from. This is only if there
     // are no facesToCheck.
-    // Just seed with all faces inbetween different refinement levels for now
+    // Just seed with all faces in between different refinement levels for now
     forAll(faceNeighbour, facei)
     {
         // Check if face already handled in loop above
@@ -3260,11 +3218,8 @@ CML::labelList CML::hexRef8::consistentSlowRefinement2
                 if (refineCell.get(celli) && !savedRefineCell.get(celli))
                 {
                     dumpCell(celli);
-                    FatalErrorIn
-                    (
-                        "hexRef8::consistentSlowRefinement2"
-                        "(const label, const labelList&, const labelList&)"
-                    )   << "Cell:" << celli << " cc:"
+                    FatalErrorInFunction
+                        << "Cell:" << celli << " cc:"
                         << mesh_.cellCentres()[celli]
                         << " was not marked for refinement but does not obey"
                         << " 2:1 constraints."
@@ -3739,11 +3694,8 @@ CML::labelListList CML::hexRef8::setRefinement
                     if (nAnchorPoints[celli] == 8)
                     {
                         dumpCell(celli);
-                        FatalErrorIn
-                        (
-                            "hexRef8::setRefinement(const labelList&"
-                            ", polyTopoChange&)"
-                        )   << "cell " << celli
+                        FatalErrorInFunction
+                            << "cell " << celli
                             << " of level " << cellLevel_[celli]
                             << " uses more than 8 points of equal or"
                             << " lower level" << nl
@@ -3766,11 +3718,8 @@ CML::labelListList CML::hexRef8::setRefinement
 
                     const labelList& cPoints = mesh_.cellPoints(celli);
 
-                    FatalErrorIn
-                    (
-                        "hexRef8::setRefinement(const labelList&"
-                        ", polyTopoChange&)"
-                    )   << "cell " << celli
+                    FatalErrorInFunction
+                        << "cell " << celli
                         << " of level " << cellLevel_[celli]
                         << " does not seem to have 8 points of equal or"
                         << " lower level" << endl
@@ -4245,7 +4194,7 @@ CML::labelListList CML::hexRef8::setRefinement
 
         if (minPointi != labelMax && minPointi != mesh_.nPoints())
         {
-            FatalErrorIn("hexRef8::setRefinement(..)")
+            FatalErrorInFunction
                 << "Added point labels not consecutive to existing mesh points."
                 << nl
                 << "mesh_.nPoints():" << mesh_.nPoints()
@@ -4418,7 +4367,7 @@ void CML::hexRef8::updateMesh
 
             if (fnd == savedCellLevel_.end())
             {
-                FatalErrorIn("hexRef8::updateMesh(const mapPolyMesh&)")
+                FatalErrorInFunction
                     << "Problem : trying to restore old value for new cell "
                     << newCelli << " but cannot find old cell " << storedCelli
                     << " in map of stored values " << savedCellLevel_
@@ -4429,7 +4378,7 @@ void CML::hexRef8::updateMesh
 
         //if (findIndex(cellLevel_, -1) != -1)
         //{
-        //    WarningIn("hexRef8::updateMesh(const mapPolyMesh&)")
+        //    WarningInFunction
         //        << "Problem : "
         //        << "cellLevel_ contains illegal value -1 after mapping
         //        << " at cell " << findIndex(cellLevel_, -1) << endl
@@ -4463,7 +4412,7 @@ void CML::hexRef8::updateMesh
 
                 if (oldPointi == -1)
                 {
-                    //FatalErrorIn("hexRef8::updateMesh(const mapPolyMesh&)")
+                    //FatalErrorInFunction
                     //    << "Problem : point " << newPointi
                     //    << " at " << mesh_.points()[newPointi]
                     //    << " does not originate from another point"
@@ -4491,7 +4440,7 @@ void CML::hexRef8::updateMesh
 
             if (fnd == savedPointLevel_.end())
             {
-                FatalErrorIn("hexRef8::updateMesh(const mapPolyMesh&)")
+                FatalErrorInFunction
                     << "Problem : trying to restore old value for new point "
                     << newPointi << " but cannot find old point "
                     << storedPointi
@@ -4503,7 +4452,7 @@ void CML::hexRef8::updateMesh
 
         //if (findIndex(pointLevel_, -1) != -1)
         //{
-        //    WarningIn("hexRef8::updateMesh(const mapPolyMesh&)")
+        //    WarningInFunction
         //        << "Problem : "
         //        << "pointLevel_ contains illegal value -1 after mapping"
         //        << " at point" << findIndex(pointLevel_, -1) << endl
@@ -4549,11 +4498,8 @@ void CML::hexRef8::subset
 
     if (history_.active())
     {
-        WarningIn
-        (
-            "hexRef8::subset(const labelList&, const labelList&"
-            ", const labelList&)"
-        )   << "Subsetting will not work in combination with unrefinement."
+        WarningInFunction
+            << "Subsetting will not work in combination with unrefinement."
             << nl
             << "Proceed at your own risk." << endl;
     }
@@ -4572,7 +4518,7 @@ void CML::hexRef8::subset
 
         if (findIndex(cellLevel_, -1) != -1)
         {
-            FatalErrorIn("hexRef8::subset(..)")
+            FatalErrorInFunction
                 << "Problem : "
                 << "cellLevel_ contains illegal value -1 after mapping:"
                 << cellLevel_
@@ -4593,7 +4539,7 @@ void CML::hexRef8::subset
 
         if (findIndex(pointLevel_, -1) != -1)
         {
-            FatalErrorIn("hexRef8::subset(..)")
+            FatalErrorInFunction
                 << "Problem : "
                 << "pointLevel_ contains illegal value -1 after mapping:"
                 << pointLevel_
@@ -4696,7 +4642,7 @@ void CML::hexRef8::checkMesh() const
                     if (!cellToFace.insert(labelPair(own, nei[bFacei]), facei))
                     {
                         dumpCell(own);
-                        FatalErrorIn("hexRef8::checkMesh()")
+                        FatalErrorInFunction
                             << "Faces do not seem to be correct across coupled"
                             << " boundaries" << endl
                             << "Coupled face " << facei
@@ -4741,7 +4687,7 @@ void CML::hexRef8::checkMesh() const
 
                 dumpCell(mesh_.faceOwner()[facei]);
 
-                FatalErrorIn("hexRef8::checkMesh()")
+                FatalErrorInFunction
                     << "Faces do not seem to be correct across coupled"
                     << " boundaries" << endl
                     << "Coupled face " << facei
@@ -4783,7 +4729,7 @@ void CML::hexRef8::checkMesh() const
 
                 label patchi = mesh_.boundaryMesh().whichPatch(facei);
 
-                FatalErrorIn("hexRef8::checkMesh()")
+                FatalErrorInFunction
                     << "Faces do not seem to be correct across coupled"
                     << " boundaries" << endl
                     << "Coupled face " << facei
@@ -4833,7 +4779,7 @@ void CML::hexRef8::checkMesh() const
 
                 label patchi = mesh_.boundaryMesh().whichPatch(facei);
 
-                FatalErrorIn("hexRef8::checkMesh()")
+                FatalErrorInFunction
                     << "Faces do not seem to be correct across coupled"
                     << " boundaries" << endl
                     << "Coupled face " << facei
@@ -4874,7 +4820,7 @@ void CML::hexRef8::checkRefinementLevels
      || pointLevel_.size() != mesh_.nPoints()
     )
     {
-        FatalErrorIn("hexRef8::checkRefinementLevels(const label)")
+        FatalErrorInFunction
             << "cellLevel size should be number of cells"
             << " and pointLevel size should be number of points."<< nl
             << "cellLevel:" << cellLevel_.size()
@@ -4900,10 +4846,8 @@ void CML::hexRef8::checkRefinementLevels
                 dumpCell(own);
                 dumpCell(nei);
 
-                FatalErrorIn
-                (
-                    "hexRef8::checkRefinementLevels(const label)"
-                )   << "Celllevel does not satisfy 2:1 constraint." << nl
+                FatalErrorInFunction
+                    << "Celllevel does not satisfy 2:1 constraint." << nl
                     << "On face " << facei << " owner cell " << own
                     << " has refinement " << cellLevel_[own]
                     << " neighbour cell " << nei << " has refinement "
@@ -4937,10 +4881,8 @@ void CML::hexRef8::checkRefinementLevels
 
                 label patchi = mesh_.boundaryMesh().whichPatch(facei);
 
-                FatalErrorIn
-                (
-                    "hexRef8::checkRefinementLevels(const label)"
-                )   << "Celllevel does not satisfy 2:1 constraint."
+                FatalErrorInFunction
+                    << "Celllevel does not satisfy 2:1 constraint."
                     << " On coupled face " << facei
                     << " on patch " << patchi << " "
                     << mesh_.boundaryMesh()[patchi].name()
@@ -4973,10 +4915,8 @@ void CML::hexRef8::checkRefinementLevels
         {
             if (pointLevel_[pointi] != syncPointLevel[pointi])
             {
-                FatalErrorIn
-                (
-                    "hexRef8::checkRefinementLevels(const label)"
-                )   << "PointLevel is not consistent across coupled patches."
+                FatalErrorInFunction
+                    << "PointLevel is not consistent across coupled patches."
                     << endl
                     << "point:" << pointi << " coord:" << mesh_.points()[pointi]
                     << " has level " << pointLevel_[pointi]
@@ -5034,10 +4974,8 @@ void CML::hexRef8::checkRefinementLevels
                 {
                     dumpCell(celli);
 
-                    FatalErrorIn
-                    (
-                        "hexRef8::checkRefinementLevels(const label)"
-                    )   << "Too big a difference between"
+                    FatalErrorInFunction
+                        << "Too big a difference between"
                         << " point-connected cells." << nl
                         << "cell:" << celli
                         << " cellLevel:" << cellLevel_[celli]
@@ -5108,10 +5046,8 @@ void CML::hexRef8::checkRefinementLevels
     //
     //    if (returnReduce(nHanging, sumOp<label>()) > 0)
     //    {
-    //        FatalErrorIn
-    //        (
-    //            "hexRef8::checkRefinementLevels(const label)"
-    //        )   << "Detected a point used by two edges only (hanging point)"
+    //        FatalErrorInFunction
+    //            << "Detected a point used by two edges only (hanging point)"
     //            << nl << "This is not allowed"
     //            << abort(FatalError);
     //    }
@@ -5195,7 +5131,7 @@ CML::labelList CML::hexRef8::getSplitPoints() const
 
     if (!history_.active())
     {
-        FatalErrorIn("hexRef8::getSplitPoints()")
+        FatalErrorInFunction
             << "Only call if constructed with history capability"
             << abort(FatalError);
     }
@@ -5396,16 +5332,14 @@ CML::labelList CML::hexRef8::consistentUnrefinement
 
     if (maxSet)
     {
-        FatalErrorIn
-        (
-            "hexRef8::consistentUnrefinement(const labelList&, const bool"
-        )   << "maxSet not implemented yet."
+        FatalErrorInFunction
+            << "maxSet not implemented yet."
             << abort(FatalError);
     }
 
     // Loop, modifying pointsToUnrefine, until no more changes to due to 2:1
     // conflicts.
-    // maxSet = false : unselect points to refine
+    // maxSet = false : deselect points to refine
     // maxSet = true: select points to refine
 
     // Maintain boolList for pointsToUnrefine and cellsToUnrefine
@@ -5469,13 +5403,13 @@ CML::labelList CML::hexRef8::consistentUnrefinement
                     // could also combine with unset:
                     // if (!unrefineCell.unset(own))
                     // {
-                    //     FatalErrorIn("hexRef8::consistentUnrefinement(..)")
+                    //     FatalErrorInFunction
                     //         << "problem cell already unset"
                     //         << abort(FatalError);
                     // }
                     if (unrefineCell.get(own) == 0)
                     {
-                        FatalErrorIn("hexRef8::consistentUnrefinement(..)")
+                        FatalErrorInFunction
                             << "problem" << abort(FatalError);
                     }
 
@@ -5493,7 +5427,7 @@ CML::labelList CML::hexRef8::consistentUnrefinement
                 {
                     if (unrefineCell.get(nei) == 0)
                     {
-                        FatalErrorIn("hexRef8::consistentUnrefinement(..)")
+                        FatalErrorInFunction
                             << "problem" << abort(FatalError);
                     }
 
@@ -5529,7 +5463,7 @@ CML::labelList CML::hexRef8::consistentUnrefinement
                 {
                     if (unrefineCell.get(own) == 0)
                     {
-                        FatalErrorIn("hexRef8::consistentUnrefinement(..)")
+                        FatalErrorInFunction
                             << "problem" << abort(FatalError);
                     }
 
@@ -5543,7 +5477,7 @@ CML::labelList CML::hexRef8::consistentUnrefinement
                 {
                     if (unrefineCell.get(own) == 1)
                     {
-                        FatalErrorIn("hexRef8::consistentUnrefinement(..)")
+                        FatalErrorInFunction
                             << "problem" << abort(FatalError);
                     }
 
@@ -5626,10 +5560,8 @@ void CML::hexRef8::setUnrefinement
 {
     if (!history_.active())
     {
-        FatalErrorIn
-        (
-            "hexRef8::setUnrefinement(const labelList&, polyTopoChange&)"
-        )   << "Only call if constructed with history capability"
+        FatalErrorInFunction
+            << "Only call if constructed with history capability"
             << abort(FatalError);
     }
 
@@ -5644,14 +5576,8 @@ void CML::hexRef8::setUnrefinement
         {
             if (cellLevel_[celli] < 0)
             {
-                FatalErrorIn
-                (
-                    "hexRef8::setUnrefinement"
-                    "("
-                        "const labelList&, "
-                        "polyTopoChange&"
-                    ")"
-                )   << "Illegal cell level " << cellLevel_[celli]
+                FatalErrorInFunction
+                    << "Illegal cell level " << cellLevel_[celli]
                     << " for cell " << celli
                     << abort(FatalError);
             }
@@ -5713,10 +5639,8 @@ void CML::hexRef8::setUnrefinement
 
         if (facesToRemove.size() != splitFaces.size())
         {
-            FatalErrorIn
-            (
-                "hexRef8::setUnrefinement(const labelList&, polyTopoChange&)"
-            )   << "Ininitial set of split points to unrefine does not"
+            FatalErrorInFunction
+                << "Ininitial set of split points to unrefine does not"
                 << " seem to be consistent or not mid points of refined cells"
                 << abort(FatalError);
         }
@@ -5737,10 +5661,8 @@ void CML::hexRef8::setUnrefinement
         // Check
         if (pCells.size() != 8)
         {
-            FatalErrorIn
-            (
-                "hexRef8::setUnrefinement(const labelList&, polyTopoChange&)"
-            )   << "splitPoint " << pointi
+            FatalErrorInFunction
+                << "splitPoint " << pointi
                 << " should have 8 cells using it. It has " << pCells
                 << abort(FatalError);
         }
@@ -5760,7 +5682,7 @@ void CML::hexRef8::setUnrefinement
 
                 if (region == -1)
                 {
-                    FatalErrorIn("hexRef8::setUnrefinement(..)")
+                    FatalErrorInFunction
                         << "Ininitial set of split points to unrefine does not"
                         << " seem to be consistent or not mid points"
                         << " of refined cells" << nl
@@ -5771,7 +5693,7 @@ void CML::hexRef8::setUnrefinement
 
                 if (masterCelli != cellRegionMaster[region])
                 {
-                    FatalErrorIn("hexRef8::setUnrefinement(..)")
+                    FatalErrorInFunction
                         << "cell:" << celli << " on splitPoint:" << pointi
                         << " in region " << region
                         << " has master:" << cellRegionMaster[region]

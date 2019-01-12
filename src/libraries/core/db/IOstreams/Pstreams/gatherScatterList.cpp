@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,11 +52,8 @@ void Pstream::gatherList
     {
         if (Values.size() != UPstream::nProcs())
         {
-            FatalErrorIn
-            (
-                "UPstream::gatherList(const List<UPstream::commsStruct>&"
-                ", List<T>)"
-            )   << "Size of list:" << Values.size()
+            FatalErrorInFunction
+                << "Size of list:" << Values.size()
                 << " does not equal the number of processors:"
                 << UPstream::nProcs()
                 << CML::abort(FatalError);
@@ -201,11 +198,8 @@ void Pstream::scatterList
     {
         if (Values.size() != UPstream::nProcs())
         {
-            FatalErrorIn
-            (
-                "UPstream::scatterList(const List<UPstream::commsStruct>&"
-                ", List<T>)"
-            )   << "Size of list:" << Values.size()
+            FatalErrorInFunction
+                << "Size of list:" << Values.size()
                 << " does not equal the number of processors:"
                 << UPstream::nProcs()
                 << CML::abort(FatalError);

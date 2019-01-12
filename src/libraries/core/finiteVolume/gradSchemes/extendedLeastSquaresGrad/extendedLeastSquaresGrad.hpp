@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -81,12 +81,8 @@ public:
         {
             if (minDet_ < 0)    //-for facearea weighted: || minDet_ > 8)
             {
-                FatalIOErrorIn
-                (
-                    "extendedLeastSquaresGrad"
-                    "(const fvMesh&, Istream& schemeData)",
-                    schemeData
-                )   << "Minimum determinant = " << minDet_
+                FatalIOErrorInFunction(schemeData)
+                    << "Minimum determinant = " << minDet_
                     << " should be >= 0"    // and <= 8"
                     << exit(FatalIOError);
             }

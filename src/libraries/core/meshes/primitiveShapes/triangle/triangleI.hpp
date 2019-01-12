@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,16 +89,25 @@ inline Point CML::triangle<Point, PointRef>::centre() const
 
 
 template<class Point, class PointRef>
+inline CML::vector CML::triangle<Point, PointRef>::area() const
+{
+    return 0.5*((b_ - a_)^(c_ - a_));
+}
+
+
+template<class Point, class PointRef>
 inline CML::scalar CML::triangle<Point, PointRef>::mag() const
 {
-    return CML::mag(normal());
+    return CML::mag(area());
 }
 
 
 template<class Point, class PointRef>
 inline CML::vector CML::triangle<Point, PointRef>::normal() const
 {
-    return 0.5*((b_ - a_)^(c_ - a_));
+    const vector a = area();
+    const scalar maga = CML::mag(a);
+    return maga > 0 ? a/maga : Zero;
 }
 
 
@@ -227,46 +236,40 @@ inline CML::tensor CML::triangle<Point, PointRef>::inertia
 template<class Point, class PointRef>
 inline Point CML::triangle<Point, PointRef>::randomPoint(Random& rndGen) const
 {
-    // Generating Random Points in Triangles
-    // by Greg Turk
-    // from "Graphics Gems", Academic Press, 1990
-    // http://tog.acm.org/GraphicsGems/gems/TriPoints.c
-
-    scalar s = rndGen.scalar01();
-
-    scalar t = sqrt(rndGen.scalar01());
-
-    return (1 - t)*a_ + (1 - s)*t*b_ + s*t*c_;
+    return barycentricToPoint(barycentric2D01(rndGen));
 }
 
 
 template<class Point, class PointRef>
-inline Point CML::triangle<Point, PointRef>::randomPoint
+inline Point CML::triangle<Point, PointRef>::barycentricToPoint
 (
-    cachedRandom& rndGen
+    const barycentric2D& bary
 ) const
 {
-    // Generating Random Points in Triangles
-    // by Greg Turk
-    // from "Graphics Gems", Academic Press, 1990
-    // http://tog.acm.org/GraphicsGems/gems/TriPoints.c
-
-    scalar s = rndGen.sample01<scalar>();
-
-    scalar t = sqrt(rndGen.sample01<scalar>());
-
-    return (1 - t)*a_ + (1 - s)*t*b_ + s*t*c_;
+    return bary[0]*a_ + bary[1]*b_ + bary[2]*c_;
 }
 
 
 template<class Point, class PointRef>
-CML::scalar CML::triangle<Point, PointRef>::barycentric
+inline CML::barycentric2D CML::triangle<Point, PointRef>::pointToBarycentric
+(
+    const point& pt
+) const
+{
+    barycentric2D bary;
+    pointToBarycentric(pt, bary);
+    return bary;
+}
+
+
+template<class Point, class PointRef>
+inline CML::scalar CML::triangle<Point, PointRef>::pointToBarycentric
 (
     const point& pt,
-    List<scalar>& bary
+    barycentric2D& bary
 ) const
 {
-    // From:
+    // Reference:
     // Real-time collision detection, Christer Ericson, 2005, p47-48
 
     vector v0 = b_ - a_;
@@ -285,12 +288,10 @@ CML::scalar CML::triangle<Point, PointRef>::barycentric
     {
         // Degenerate triangle, returning 1/3 barycentric coordinates.
 
-        bary = List<scalar>(3, 1.0/3.0);
+        bary = barycentric2D(1.0/3.0, 1.0/3.0, 1.0/3.0);
 
         return denom;
     }
-
-    bary.setSize(3);
 
     bary[1] = (d11*d20 - d01*d21)/denom;
     bary[2] = (d00*d21 - d01*d20)/denom;
@@ -311,16 +312,16 @@ inline CML::pointHit CML::triangle<Point, PointRef>::ray
 {
     // Express triangle in terms of baseVertex (point a_) and
     // two edge vectors
-    vector E0 = b_ - a_;
-    vector E1 = c_ - a_;
+    const vector E0 = b_ - a_;
+    const vector E1 = c_ - a_;
 
     // Initialize intersection to miss.
     pointHit inter(p);
 
     vector n(0.5*(E0 ^ E1));
-    scalar area = CML::mag(n);
+    const scalar magArea = CML::mag(n);
 
-    if (area < VSMALL)
+    if (magArea < VSMALL)
     {
         // Ineligible miss.
         inter.setMiss(false);
@@ -336,17 +337,18 @@ inline CML::pointHit CML::triangle<Point, PointRef>::ray
         return inter;
     }
 
-    vector q1 = q/CML::mag(q);
+    const vector q1 = q/CML::mag(q);
 
     if (dir == intersection::CONTACT_SPHERE)
     {
-        n /= area;
+        n /= magArea;
 
         return ray(p, q1 - n, alg, intersection::VECTOR);
     }
 
     // Intersection point with triangle plane
     point pInter;
+
     // Is intersection point inside triangle
     bool hit;
     {
@@ -368,7 +370,7 @@ inline CML::pointHit CML::triangle<Point, PointRef>::ray
     }
 
     // Distance to intersection point
-    scalar dist = q1 & (pInter - p);
+    const scalar dist = q1 & (pInter - p);
 
     const scalar planarPointTol =
         CML::min
@@ -386,7 +388,7 @@ inline CML::pointHit CML::triangle<Point, PointRef>::ray
      || (alg == intersection::HALF_RAY && dist > -planarPointTol)
      || (
             alg == intersection::VISIBLE
-         && ((q1 & normal()) < -VSMALL)
+         && ((q1 & area()) < -VSMALL)
         );
 
     if (hit && eligible)
@@ -408,7 +410,6 @@ inline CML::pointHit CML::triangle<Point, PointRef>::ray
         // original point and plane of intersection
         inter.setDistance(CML::mag(pInter - p));
     }
-
 
     return inter;
 }
@@ -435,7 +436,7 @@ inline CML::pointHit CML::triangle<Point, PointRef>::intersection
     const scalar det = edge1 & pVec;
 
     // Initialise to miss
-    pointHit intersection(false, vector::zero, GREAT, false);
+    pointHit intersection(false, Zero, GREAT, false);
 
     if (alg == intersection::VISIBLE)
     {
@@ -671,6 +672,132 @@ inline bool CML::triangle<Point, PointRef>::classify
 ) const
 {
     return nearestPointClassify(p, nearType, nearLabel).hit();
+}
+
+
+template<class Point, class PointRef>
+inline CML::pointHit CML::triangle<Point, PointRef>::nearestPoint
+(
+    const linePointRef& ln,
+    pointHit& lnInfo
+) const
+{
+    vector q = ln.vec();
+    pointHit triInfo
+    (
+        triangle<Point, PointRef>::intersection
+        (
+            ln.start(),
+            q,
+            intersection::FULL_RAY
+        )
+    );
+
+    if (triInfo.hit())
+    {
+        // Line hits triangle. Find point on line.
+        if (triInfo.distance() > 1)
+        {
+            // Hit beyond endpoint
+            lnInfo.setMiss(true);
+            lnInfo.setPoint(ln.end());
+            scalar dist = CML::mag(triInfo.hitPoint()-lnInfo.missPoint());
+            lnInfo.setDistance(dist);
+            triInfo.setMiss(true);
+            triInfo.setDistance(dist);
+        }
+        else if (triInfo.distance() < 0)
+        {
+            // Hit beyond startpoint
+            lnInfo.setMiss(true);
+            lnInfo.setPoint(ln.start());
+            scalar dist = CML::mag(triInfo.hitPoint()-lnInfo.missPoint());
+            lnInfo.setDistance(dist);
+            triInfo.setMiss(true);
+            triInfo.setDistance(dist);
+        }
+        else
+        {
+            // Hit on line
+            lnInfo.setHit();
+            lnInfo.setPoint(triInfo.hitPoint());
+            lnInfo.setDistance(0.0);
+            triInfo.setDistance(0.0);
+        }
+    }
+    else
+    {
+        // Line skips triangle. See which triangle edge it gets closest to
+
+        point nearestEdgePoint;
+        point nearestLinePoint;
+        //label minEdgeIndex = 0;
+        scalar minDist = ln.nearestDist
+        (
+            linePointRef(a_, b_),
+            nearestLinePoint,
+            nearestEdgePoint
+        );
+
+        {
+            point linePoint;
+            point triEdgePoint;
+            scalar dist = ln.nearestDist
+            (
+                linePointRef(b_, c_),
+                linePoint,
+                triEdgePoint
+            );
+            if (dist < minDist)
+            {
+                minDist = dist;
+                nearestEdgePoint = triEdgePoint;
+                nearestLinePoint = linePoint;
+                //minEdgeIndex = 1;
+            }
+        }
+
+        {
+            point linePoint;
+            point triEdgePoint;
+            scalar dist = ln.nearestDist
+            (
+                linePointRef(c_, a_),
+                linePoint,
+                triEdgePoint
+            );
+            if (dist < minDist)
+            {
+                minDist = dist;
+                nearestEdgePoint = triEdgePoint;
+                nearestLinePoint = linePoint;
+                //minEdgeIndex = 2;
+            }
+        }
+
+        lnInfo.setDistance(minDist);
+        triInfo.setDistance(minDist);
+        triInfo.setMiss(false);
+        triInfo.setPoint(nearestEdgePoint);
+
+        // Convert point on line to pointHit
+        if (CML::mag(nearestLinePoint-ln.start()) < SMALL)
+        {
+            lnInfo.setMiss(true);
+            lnInfo.setPoint(ln.start());
+        }
+        else if (CML::mag(nearestLinePoint-ln.end()) < SMALL)
+        {
+            lnInfo.setMiss(true);
+            lnInfo.setPoint(ln.end());
+        }
+        else
+        {
+            lnInfo.setHit();
+            lnInfo.setPoint(nearestLinePoint);
+        }
+    }
+    return triInfo;
 }
 
 

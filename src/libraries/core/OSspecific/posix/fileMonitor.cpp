@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -147,7 +147,7 @@ namespace CML
                     if (!hasWarned)
                     {
                         hasWarned = true;
-                        WarningIn("fileMonitorWatcher(const bool, const label)")
+                        WarningInFunction
                             << "Failed allocating an inotify descriptor : "
                             << string(strerror(errno)) << endl
                             << "    Please increase the number of allowable "
@@ -164,7 +164,7 @@ namespace CML
                     }
                 }
                 #else
-                    FatalErrorIn("fileMonitorWatcher(const bool, const label)")
+                    FatalErrorInFunction
                         << "You selected inotify but this file was compiled"
                         << " without CAELUS_USE_INOTIFY"
                         << " Please select another fileModification test method"
@@ -189,7 +189,7 @@ namespace CML
                     {
                         if (inotify_rm_watch(inotifyFd_, int(dirWatches_[i])))
                         {
-                            WarningIn("fileMonitor::~fileMonitor()")
+                            WarningInFunction
                                 << "Failed deleting directory watch "
                                 << dirWatches_[i] << endl;
                         }
@@ -227,7 +227,7 @@ namespace CML
 
                     if (dirWatchID < 0)
                     {
-                        FatalErrorIn("addWatch(const label, const fileName&)")
+                        FatalErrorInFunction
                             << "Failed adding watch " << watchFd
                             << " to directory " << fName << " due to "
                             << string(strerror(errno))
@@ -238,7 +238,7 @@ namespace CML
                 if (watchFd < dirWatches_.size() && dirWatches_[watchFd] != -1)
                 {
                     // Reuse of watchFd : should have dir watchID set to -1.
-                    FatalErrorIn("addWatch(const label, const fileName&)")
+                    FatalErrorInFunction
                         << "Problem adding watch " << watchFd
                         << " to file " << fName
                         << abort(FatalError);
@@ -253,7 +253,7 @@ namespace CML
                 if (watchFd < lastMod_.size() && lastMod_[watchFd] != 0)
                 {
                     // Reuse of watchFd : should have lastMod set to 0.
-                    FatalErrorIn("addWatch(const label, const fileName&)")
+                    FatalErrorInFunction
                         << "Problem adding watch " << watchFd
                         << " to file " << fName
                         << abort(FatalError);
@@ -311,14 +311,14 @@ void CML::fileMonitor::checkFiles() const
             (
                 watcher_->inotifyFd_+1,     // num filedescriptors in fdSet
                 &fdSet,             // fdSet with only inotifyFd
-                NULL,               // No writefds
-                NULL,               // No errorfds
+                nullptr,               // No writefds
+                nullptr,               // No errorfds
                 &zeroTimeout        // eNo timeout
             );
 
             if (ready < 0)
             {
-                FatalErrorIn("fileMonitor::checkFiles()")
+                FatalErrorInFunction
                     << "Problem in issuing select."
                     << abort(FatalError);
             }
@@ -334,7 +334,7 @@ void CML::fileMonitor::checkFiles() const
 
                 if (nBytes < 0)
                 {
-                    FatalErrorIn("fileMonitor::checkFiles()")
+                    FatalErrorInFunction
                         << "read of " << watcher_->inotifyFd_
                         << " failed with " << label(nBytes)
                         << abort(FatalError);
@@ -471,7 +471,7 @@ CML::label CML::fileMonitor::addWatch(const fileName& fName)
 
     if (watchFd < 0)
     {
-        WarningIn("fileMonitor::addWatch(const fileName&)")
+        WarningInFunction
             << "could not add watch for file " << fName << endl;
     }
     else
@@ -591,11 +591,8 @@ void CML::fileMonitor::updateStates
                             << endl;
                     }
 
-                    WarningIn
-                    (
-                        "fileMonitor::updateStates"
-                        "(const bool, const bool) const"
-                    )   << "Delaying reading " << watchFile_[watchFd]
+                    WarningInFunction
+                        << "Delaying reading " << watchFile_[watchFd]
                         << " due to inconsistent "
                            "file time-stamps between processors" << endl;
                 }

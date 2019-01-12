@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,7 +37,7 @@ bool CML::IOobject::readHeader(Istream& is)
     {
         if (rOpt_ == MUST_READ || rOpt_ == MUST_READ_IF_MODIFIED)
         {
-            FatalIOErrorIn("IOobject::readHeader(Istream&)", is)
+            FatalIOErrorInFunction(is)
                 << " stream not open for reading essential object from file "
                 << is.name()
                 << exit(FatalIOError);
@@ -45,7 +45,7 @@ bool CML::IOobject::readHeader(Istream& is)
 
         if (IOobject::debug)
         {
-            SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
+            SeriousIOErrorInFunction(is)
                 << " stream not open for reading from file "
                 << is.name() << endl;
         }
@@ -71,7 +71,7 @@ bool CML::IOobject::readHeader(Istream& is)
         const word headerObject(headerDict.lookup("object"));
         if (IOobject::debug && headerObject != name())
         {
-            IOWarningIn("IOobject::readHeader(Istream&)", is)
+            IOWarningInFunction(is)
                 << " object renamed from "
                 << name() << " to " << headerObject
                 << " for file " << is.name() << endl;
@@ -82,7 +82,7 @@ bool CML::IOobject::readHeader(Istream& is)
     }
     else
     {
-        SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
+        SeriousIOErrorInFunction(is)
             << "First token could not be read or is not the keyword 'FoamFile'"
             << nl << nl << "Check header is of the form:" << nl << endl;
 
@@ -100,7 +100,7 @@ bool CML::IOobject::readHeader(Istream& is)
     {
         if (rOpt_ == MUST_READ || rOpt_ == MUST_READ_IF_MODIFIED)
         {
-            FatalIOErrorIn("IOobject::readHeader(Istream&)", is)
+            FatalIOErrorInFunction(is)
                 << " stream failure while reading header"
                 << " on line " << is.lineNumber()
                 << " of file " << is.name()

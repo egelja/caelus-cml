@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -101,11 +101,8 @@ void CML::edgeVertex::updateLabels
 
             if (newMaster == -1)
             {
-                WarningIn
-                (
-                    "edgeVertex::updateLabels(const labelList&, "
-                    "Map<label>&)"
-                )   << "master cell:" << iter.key()
+                WarningInFunction
+                    << "master cell:" << iter.key()
                     << " has disappeared" << endl;
             }
             else

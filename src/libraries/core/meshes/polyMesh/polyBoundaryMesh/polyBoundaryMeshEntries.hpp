@@ -69,7 +69,7 @@ public:
 
         bool writeData(Ostream&) const
         {
-            notImplemented("writeData(Ostream&) const");
+            NotImplemented;
             return false;
         }
 };

@@ -226,12 +226,12 @@ AccumulationCalculation<Type>::AccumulationCalculation(
     hasSumMag_(false)
 {
     if(data_.size()!=mask_.size()) {
-        FatalErrorIn("AccumulationCalculation<Type>::AccumulationCalculation")
+        FatalErrorInFunction
             << "Sizes of data " << data_.size()
-                << " and specified maks " << mask_.size()
-                << " differ"
-                << endl
-                << exit(FatalError);
+            << " and specified maks " << mask_.size()
+            << " differ"
+            << endl
+            << exit(FatalError);
 
     }
 }
@@ -465,10 +465,10 @@ Type AccumulationCalculation<Type>::operator()(
                 ||
                 accu.second()>1
             ) {
-                WarningIn("AccumulationCalculation<Type>operator()")
+                WarningInFunction
                     << "Accumulation " << accu << " does not have parameter "
-                        << "in the range [0,1]"
-                        << endl;
+                    << "in the range [0,1]"
+                    << endl;
             }
             break;
         default:
@@ -540,9 +540,9 @@ Type AccumulationCalculation<Type>::operator()(
             return pTraits<Type>::one-weightedDistribution().smaller(accu.second());
             break;
         default:
-            WarningIn("AccumulationCalculation<Type>operator()")
+            WarningInFunction
                 << "Unimplemented accumultation type "
-                    << NumericAccumulationNamedEnum::names[accu.first()]
+                << NumericAccumulationNamedEnum::names[accu.first()]
                 // << ". Currently only 'min', 'max', 'sum', 'weightedAverage' and 'average' are supported"
                     << endl;
             return pTraits<Type>::zero;

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -138,9 +138,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         );
 };
 
@@ -260,9 +258,7 @@ bool CML::MultiInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
-    bool& keepParticle,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    bool& keepParticle
 )
 {
     label origFacei = p.face();
@@ -276,9 +272,7 @@ bool CML::MultiInteraction<CloudType>::correct
         (
             p,
             this->owner().pMesh().boundaryMesh()[patchi],
-            keepParticle,
-            trackFraction,
-            tetIs
+            keepParticle
         );
 
         if (myInteracted && oneInteractionOnly_)
@@ -295,7 +289,7 @@ bool CML::MultiInteraction<CloudType>::correct
         if (p.face() != origFacei)
         {
             origFacei = p.face();
-            patchi = p.patch(p.face());
+            patchi = p.patch();
 
             // Interaction model has moved particle off wall?
             if (patchi == -1)

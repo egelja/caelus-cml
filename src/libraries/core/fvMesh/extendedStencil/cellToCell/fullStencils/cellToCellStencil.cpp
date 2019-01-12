@@ -119,7 +119,7 @@ void CML::cellToCellStencil::merge
 
     if (resultI != result.size())
     {
-        FatalErrorIn("cellToCellStencil::merge(..)")
+        FatalErrorInFunction
             << "problem" << abort(FatalError);
     }
 

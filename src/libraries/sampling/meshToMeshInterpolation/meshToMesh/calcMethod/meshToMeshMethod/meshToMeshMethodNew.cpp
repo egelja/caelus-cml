@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,15 +40,8 @@ CML::autoPtr<CML::meshToMeshMethod> CML::meshToMeshMethod::New
 
     if (cstrIter == componentsConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "CML::autoPtr<CML::meshToMeshMethod> CML::meshToMeshMethod::New"
-            "("
-                "const word&, "
-                "const polyMesh&, "
-                "const polyMesh&"
-            ")"
-        )   << "Unknown meshToMesh type "
+        FatalErrorInFunction
+            << "Unknown meshToMesh type "
             << methodName << nl << nl
             << "Valid meshToMesh types are:" << nl
             << componentsConstructorTablePtr_->sortedToc() << exit(FatalError);

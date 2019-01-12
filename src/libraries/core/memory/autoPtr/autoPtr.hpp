@@ -60,14 +60,14 @@ public:
         inline explicit autoPtr(T* = 0);
 
         //- Construct as copy by transferring pointer to this autoPtr and
-        //  setting the arguments pointer to NULL
+        //  setting the arguments pointer to nullptr
         inline autoPtr(const autoPtr<T>&);
 
         //- Construct either by transferring pointer or cloning.
         //  Should only be called with type that supports cloning
         inline autoPtr(const autoPtr<T>&, const bool reuse);
 
-    //- Destructor, delete object if pointer is not NULL
+    //- Destructor, delete object if pointer is not nullptr
     inline ~autoPtr();
 
 
@@ -95,7 +95,7 @@ public:
             //  pointer
             inline void reset(T* = 0);
 
-            //- Delete object (if the pointer is valid) and set pointer to NULL.
+            //- Delete object (if the pointer is valid) and set pointer to nullptr.
             inline void clear();
 
 

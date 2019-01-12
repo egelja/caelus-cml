@@ -12,9 +12,9 @@ extrudeMesh.cpp
 """)
 
 caelus_inc = [
-'extrudedMesh',
 'dynamicMesh/dynamicMesh/lnInclude',
-'surfMesh/lnInclude'
+'surfMesh/lnInclude',
+'mesh/extrudeModel/lnInclude'
 ]
 
 caelus_libs = [

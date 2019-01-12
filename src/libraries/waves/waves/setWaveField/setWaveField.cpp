@@ -60,16 +60,8 @@ setWaveField::setWaveField
 {
     if (waveProps_->conflictTSoftInitialise())
     {
-        WarningIn
-        (
-            "setWaveField::setWaveField"
-            "("
-            " const fvMesh& mesh,"
-            " volVectorField& U,"
-            " volScalarField& alpha,"
-            " volScalarField& p"
-            ")"
-        ) << "\n    The specified value of Tsoft is non-zero in the waveType:"
+        WarningInFunction
+          << "\n    The specified value of Tsoft is non-zero in the waveType:"
           << " `" << waveProps_->type() << "'" << nl
           << "    specified in the sub-dictionary waveProperties::"
           << name_ << "Coeffs"

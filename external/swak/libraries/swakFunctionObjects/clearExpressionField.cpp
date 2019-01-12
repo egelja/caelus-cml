@@ -80,9 +80,9 @@ void CML::clearExpressionField::execute()
     }
 
     if(!found) {
-        WarningIn("clearExpressionField::execute()")
+        WarningInFunction
             << "No function object named " << name_ << " found" 
-                << endl;
+            << endl;
     }
 }
 

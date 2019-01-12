@@ -1,15 +1,22 @@
 {
-    fvScalarMatrix hEqn
+    volScalarField& he = thermo.he();
+
+    fvScalarMatrix EEqn
     (
-        fvm::div(phi, h)
-      - fvm::Sp(fvc::div(phi), h)
-      - fvm::laplacian(turbulence->alphaEff(), h)
+        fvm::div(phi, he)
+      + (
+            he.name() == "e"
+          ? fvc::div(phi, volScalarField("Ekp", 0.5*magSqr(U) + p/rho))
+          : fvc::div(phi, volScalarField("K", 0.5*magSqr(U)))
+        )
+      - fvm::laplacian(turbulence->alphaEff(), he)
      ==
-      - fvc::div(phi, 0.5*magSqr(U), "div(phi,K)")
+        rho*(U&g)
     );
 
-    hEqn.relax();
-    hEqn.solve();
+    EEqn.relax();
+
+    EEqn.solve();
 
     thermo.correct();
 }

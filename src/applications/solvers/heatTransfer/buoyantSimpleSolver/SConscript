@@ -24,7 +24,7 @@ caelus_libs = [
 'core',
 'compressibleTurbulenceModel',
 'compressibleRASModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'turbulenceDerivedFvPatchFields',
 'specie',
 'fvOptions',

@@ -7,7 +7,7 @@ Import('env')
 target = 'removeFaces'
 
 sources = Split("""
-removeFaces.cpp
+removeFaces_app.cpp
 """)
 
 caelus_inc = [

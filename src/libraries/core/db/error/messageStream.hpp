@@ -212,6 +212,16 @@ extern messageStream Info;
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Convenience macros to add the file name and line number to the function name
 
+// Compiler provided function name string:
+//    for gcc-compatible compilers use __PRETTY_FUNCTION__
+//    otherwise use the standard __func__
+#ifdef __GNUC__
+    #define FUNCTION_NAME __PRETTY_FUNCTION__
+#else
+    #define FUNCTION_NAME __func__
+#endif
+
+
 /**
  * \def SeriousErrorIn(functionName)
  * Report an error message using CML::SeriousError for functionName in
@@ -219,6 +229,11 @@ extern messageStream Info;
 */
 #define SeriousErrorIn(fn) \
     ::CML::SeriousError((fn), __FILE__, __LINE__)
+
+//- Report an error message using CML::SeriousError
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+#define SeriousErrorInFunction SeriousErrorIn(FUNCTION_NAME)
+
 
 /**
  * \def SeriousIOErrorIn(functionName, ios)
@@ -229,6 +244,12 @@ extern messageStream Info;
 #define SeriousIOErrorIn(fn, ios) \
     ::CML::SeriousError((fn), __FILE__, __LINE__, ios)
 
+//- Report an IO error message using CML::SeriousError
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  for a particular IOstream
+#define SeriousIOErrorInFunction(ios) SeriousIOErrorIn(FUNCTION_NAME, ios)
+
+
 /**
  * \def WarningIn(functionName)
  * Report a warning using CML::Warning for functionName in
@@ -236,6 +257,11 @@ extern messageStream Info;
 */
 #define WarningIn(fn) \
     ::CML::Warning((fn), __FILE__, __LINE__)
+
+//- Report a warning using CML::Warning
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+#define WarningInFunction WarningIn(FUNCTION_NAME)
+
 
 /**
  * \def IOWarningIn(functionName, ios)
@@ -246,6 +272,12 @@ extern messageStream Info;
 #define IOWarningIn(fn, ios) \
     ::CML::Warning((fn), __FILE__, __LINE__, (ios))
 
+//- Report an IO warning using CML::Warning
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  for a particular IOstream
+#define IOWarningInFunction(ios) IOWarningIn(FUNCTION_NAME, ios)
+
+
 /**
  * \def InfoIn(functionName)
  * Report a information message using CML::Info for functionName in
@@ -253,6 +285,11 @@ extern messageStream Info;
 */
 #define InfoIn(fn) \
     ::CML::Info((fn), __FILE__, __LINE__)
+
+//- Report an information message using CML::Info
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+#define InfoInFunction InfoIn(FUNCTION_NAME)
+
 
 /**
  * \def IOInfoIn(functionName, ios)
@@ -262,6 +299,12 @@ extern messageStream Info;
 */
 #define IOInfoIn(fn, ios) \
     ::CML::Info((fn), __FILE__, __LINE__, (ios))
+
+//- Report an IO information message using CML::Info
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  for a particular IOstream
+#define IOInfoInFunction(ios) IOInfoIn(FUNCTION_NAME, ios)
+
 
 //- Report an information message using CML::Info
 //  if the local debug switch is true
@@ -273,6 +316,12 @@ extern messageStream Info;
 //  if the local debug switch is true
 #define DebugIn(functionName)                                                  \
     if (debug) InfoIn(functionName)
+
+//- Report an information message using CML::Info
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  if the local debug switch is true
+#define DebugInFunction                                                        \
+    if (debug) InfoInFunction
 
 //- Report a variable name and value
 //  using CML::Pout in file __FILE__ at line __LINE__

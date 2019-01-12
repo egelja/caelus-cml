@@ -27,7 +27,7 @@ caelus_libs = [
 'incompressibleRASModels',
 'incompressibleLESModels',
 'incompressibleVLESModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'compressibleRASModels',
 'compressibleLESModels',
 'compressibleVLESModels',

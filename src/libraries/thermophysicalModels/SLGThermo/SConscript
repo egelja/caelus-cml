@@ -13,17 +13,12 @@ caelus_inc = [
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/specie/lnInclude',
 'thermophysicalModels/reactionThermo/lnInclude',
-'thermophysicalModels/properties/liquidProperties/lnInclude',
-'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-'thermophysicalModels/properties/solidProperties/lnInclude',
-'thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+'thermophysicalModels/thermophysicalProperties/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'basicThermophysicalModels',
-'liquidMixtureProperties',
-'solidMixtureProperties'
+'thermophysicalProperties'
 ]
 
 build_lib(env,

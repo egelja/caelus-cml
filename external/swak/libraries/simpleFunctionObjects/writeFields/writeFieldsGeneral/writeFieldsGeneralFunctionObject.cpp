@@ -87,11 +87,11 @@ void writeFieldsGeneralFunctionObject::write()
         cnt+=writeField<surfaceTensorField>(name);
 
         if(cnt>1) {
-            WarningIn("writeFieldsGeneralFunctionObject::write()")
+            WarningInFunction
                 << " More than one (" << cnt
                     << ") fields are known by the name " << name << endl;
         } else if(cnt<0) {
-            WarningIn("writeFieldsGeneralFunctionObject::write()")
+            WarningInFunction
                 << " No field with the name " << name
                     << " found" << endl;
         } else {

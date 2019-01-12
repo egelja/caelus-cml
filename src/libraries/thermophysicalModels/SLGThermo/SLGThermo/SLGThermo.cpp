@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,20 +31,28 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::SLGThermo::SLGThermo(const fvMesh& mesh, basicThermo& thermo)
+CML::SLGThermo::SLGThermo(const fvMesh& mesh, fluidThermo& thermo)
 :
-    MeshObject<fvMesh, SLGThermo>(mesh),
+    regIOobject
+    (
+        IOobject
+        (
+            SLGThermo::typeName,
+            mesh.polyMesh::instance(),
+            mesh
+        )
+    ),
     thermo_(thermo),
-    carrier_(NULL),
-    liquids_(NULL),
-    solids_(NULL)
+    carrier_(nullptr),
+    liquids_(nullptr),
+    solids_(nullptr)
 {
     Info<< "Creating component thermo properties:" << endl;
 
-    if (isA<basicMultiComponentMixture>(thermo))
+    if (isA<basicSpecieMixture>(thermo))
     {
-        basicMultiComponentMixture& mcThermo =
-            dynamic_cast<basicMultiComponentMixture&>(thermo);
+        basicSpecieMixture& mcThermo =
+            dynamic_cast<basicSpecieMixture&>(thermo);
         carrier_ = &mcThermo;
 
         Info<< "    multi-component carrier - " << mcThermo.species().size()
@@ -79,29 +87,20 @@ CML::SLGThermo::SLGThermo(const fvMesh& mesh, basicThermo& thermo)
 }
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::SLGThermo::~SLGThermo()
-{}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const CML::basicThermo& CML::SLGThermo::thermo() const
+const CML::fluidThermo& CML::SLGThermo::thermo() const
 {
     return thermo_;
 }
 
 
-const CML::basicMultiComponentMixture& CML::SLGThermo::carrier() const
+const CML::basicSpecieMixture& CML::SLGThermo::carrier() const
 {
-    if (carrier_ == NULL)
+    if (carrier_ == nullptr)
     {
-        FatalErrorIn
-        (
-            "const CML::basicMultiComponentMixture& "
-            "CML::SLGThermo::carrier() const"
-        )   << "carrier requested, but object is not allocated"
+        FatalErrorInFunction
+            << "carrier requested, but object is not allocated"
             << abort(FatalError);
     }
 
@@ -113,11 +112,8 @@ const CML::liquidMixtureProperties& CML::SLGThermo::liquids() const
 {
     if (!liquids_.valid())
     {
-        FatalErrorIn
-        (
-            "const CML::liquidMixtureProperties& "
-            "CML::SLGThermo::liquids() const"
-        )   << "liquids requested, but object is not allocated"
+        FatalErrorInFunction
+            << "liquids requested, but object is not allocated"
             << abort(FatalError);
     }
 
@@ -129,11 +125,8 @@ const CML::solidMixtureProperties& CML::SLGThermo::solids() const
 {
     if (!solids_.valid())
     {
-        FatalErrorIn
-        (
-            "const CML::solidMixtureProperties& "
-            "CML::SLGThermo::solids() const"
-        )   << "solids requested, but object is not allocated"
+        FatalErrorInFunction
+            << "solids requested, but object is not allocated"
             << abort(FatalError);
     }
 
@@ -157,10 +150,8 @@ CML::label CML::SLGThermo::carrierId
 
     if (!allowNotfound)
     {
-        FatalErrorIn
-        (
-            "CML::label CML::SLGThermo::carrierId(const word&, bool) const"
-        )   << "Unknown carrier component " << cmptName
+        FatalErrorInFunction
+            << "Unknown carrier component " << cmptName
             << ". Valid carrier components are:" << nl
             << carrier_->species() << exit(FatalError);
     }
@@ -185,10 +176,8 @@ CML::label CML::SLGThermo::liquidId
 
     if (!allowNotfound)
     {
-        FatalErrorIn
-        (
-            "CML::label CML::SLGThermo::liquidId(const word&, bool) const"
-        )   << "Unknown liquid component " << cmptName << ". Valid liquids are:"
+        FatalErrorInFunction
+            << "Unknown liquid component " << cmptName << ". Valid liquids are:"
             << nl << liquids_->components() << exit(FatalError);
     }
 
@@ -212,10 +201,8 @@ CML::label CML::SLGThermo::solidId
 
     if (!allowNotfound)
     {
-        FatalErrorIn
-        (
-            "CML::label CML::SLGThermo::solidId(const word&, bool) const"
-        )   << "Unknown solid component " << cmptName << ". Valid solids are:"
+        FatalErrorInFunction
+            << "Unknown solid component " << cmptName << ". Valid solids are:"
             << nl << solids_->components() << exit(FatalError);
     }
 
@@ -225,7 +212,7 @@ CML::label CML::SLGThermo::solidId
 
 bool CML::SLGThermo::hasMultiComponentCarrier() const
 {
-    return (carrier_ != NULL);
+    return (carrier_ != nullptr);
 }
 
 
@@ -239,7 +226,3 @@ bool CML::SLGThermo::hasSolids() const
 {
     return solids_.valid();
 }
-
-
-// ************************************************************************* //
-

@@ -18,8 +18,8 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'basicThermophysicalModels',
-'basicSolidThermo',
+'fluidThermophysicalModels',
+'solidThermo',
 'radiationModels',
 'fvOptions',
 'swakParsers'

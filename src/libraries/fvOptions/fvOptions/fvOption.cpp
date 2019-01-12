@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -89,7 +89,7 @@ void CML::fv::option::setSelection(const dictionary& dict)
         }
         default:
         {
-            FatalErrorIn("option::setSelection(const dictionary&)")
+            FatalErrorInFunction
                 << "Unknown selectionMode "
                 << selectionModeTypeNames_[selectionMode_]
                 << ". Valid selectionMode types are" << selectionModeTypeNames_
@@ -120,7 +120,7 @@ void CML::fv::option::setCellSet()
                 label globalCellI = returnReduce(cellI, maxOp<label>());
                 if (globalCellI < 0)
                 {
-                    WarningIn("option::setCellSet()")
+                    WarningInFunction
                         << "Unable to find owner cell for point " << points_[i]
                         << endl;
                 }
@@ -149,7 +149,7 @@ void CML::fv::option::setCellSet()
             label zoneID = mesh_.cellZones().findZoneID(cellSetName_);
             if (zoneID == -1)
             {
-                FatalErrorIn("option::setCellIds()")
+                FatalErrorInFunction
                     << "Cannot find cellZone " << cellSetName_ << endl
                     << "Valid cellZones are " << mesh_.cellZones().names()
                     << exit(FatalError);
@@ -169,7 +169,7 @@ void CML::fv::option::setCellSet()
 
                 if (mesh_.name() == nbrMesh.name())
                 {
-                    FatalErrorIn("option::setCellIds()")
+                    FatalErrorInFunction
                         << "Inter-region model selected, but local and "
                         << "neighbour regions are the same: " << nl
                         << "    local region: " << mesh_.name() << nl
@@ -195,7 +195,7 @@ void CML::fv::option::setCellSet()
                 }
                 else
                 {
-                    FatalErrorIn("option::setCellSet()")
+                    FatalErrorInFunction
                         << "regions " << mesh_.name() << " and "
                         << nbrMesh.name() <<  " do not intersect"
                         << exit(FatalError);
@@ -214,7 +214,7 @@ void CML::fv::option::setCellSet()
         }
         default:
         {
-            FatalErrorIn("option::setCellSet()")
+            FatalErrorInFunction
                 << "Unknown selectionMode "
                 << selectionModeTypeNames_[selectionMode_]
                 << ". Valid selectionMode types are" << selectionModeTypeNames_
@@ -303,10 +303,8 @@ CML::autoPtr<CML::fv::option> CML::fv::option::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "option::New(const word&, const dictionary&, const fvMesh&)"
-        )   << "Unknown Model type " << modelType << nl << nl
+        FatalErrorInFunction
+            << "Unknown Model type " << modelType << nl << nl
             << "Valid model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()
             << exit(FatalError);
@@ -355,7 +353,7 @@ void CML::fv::option::checkApplied() const
     {
         if (!applied_[i])
         {
-            WarningIn("void option::checkApplied() const")
+            WarningInFunction
                 << "Source " << name_ << " defined for field "
                 << fieldNames_[i] << " but never used" << endl;
         }
@@ -647,7 +645,7 @@ void CML::fv::option::writeData(Ostream& os) const
         }
         default:
         {
-            FatalErrorIn("option::writeData(Ostream&) const")
+            FatalErrorInFunction
                 << "Unknown selectionMode "
                 << selectionMode_
                 << abort(FatalError);

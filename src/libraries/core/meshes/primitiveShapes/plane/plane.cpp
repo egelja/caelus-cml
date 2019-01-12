@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,7 +45,7 @@ void CML::plane::calcPntAndVec(const scalarList& C)
             }
             else
             {
-                FatalErrorIn("void plane::calcPntAndVec(const scalarList&)")
+                FatalErrorInFunction
                     << "At least one plane coefficient must have a value"
                     << abort(FatalError);
             }
@@ -57,7 +57,7 @@ void CML::plane::calcPntAndVec(const scalarList& C)
 
     if (magUnitVector < VSMALL)
     {
-        FatalErrorIn("void plane::calcPntAndVec(const scalarList&)")
+        FatalErrorInFunction
             << "Plane normal defined with zero length"
             << abort(FatalError);
     }
@@ -84,15 +84,8 @@ void CML::plane::calcPntAndVec
      || mag(point3-point1) < VSMALL
     )
     {
-        FatalErrorIn
-        (
-            "void plane::calcPntAndVec\n"
-            "(\n"
-            "    const point&,\n"
-            "    const point&,\n"
-            "    const point&\n"
-            ")\n"
-        )   << "Bad points:" << point1 << ' ' << point2 << ' ' << point3
+        FatalErrorInFunction
+            << "Bad points:" << point1 << ' ' << point2 << ' ' << point3
             << abort(FatalError);
     }
 
@@ -101,15 +94,8 @@ void CML::plane::calcPntAndVec
 
     if (magUnitVector < VSMALL)
     {
-        FatalErrorIn
-        (
-            "void plane::calcPntAndVec\n"
-            "(\n"
-            "    const point&,\n"
-            "    const point&,\n"
-            "    const point&\n"
-            ")\n"
-        )   << "Plane normal defined with zero length" << nl
+        FatalErrorInFunction
+            << "Plane normal defined with zero length" << nl
             << "Bad points:" << point1 << ' ' << point2 << ' ' << point3
             << abort(FatalError);
     }
@@ -134,7 +120,7 @@ CML::plane::plane(const vector& normalVector)
     }
     else
     {
-        FatalErrorIn("plane::plane(const vector&)")
+        FatalErrorInFunction
             << "plane normal has zero length. basePoint:" << basePoint_
             << abort(FatalError);
     }
@@ -155,7 +141,7 @@ CML::plane::plane(const point& basePoint, const vector& normalVector)
     }
     else
     {
-        FatalErrorIn("plane::plane(const point&, const vector&)")
+        FatalErrorInFunction
             << "plane normal has zero length. basePoint:" << basePoint_
             << abort(FatalError);
     }
@@ -222,11 +208,8 @@ CML::plane::plane(const dictionary& dict)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "plane::plane(const dictionary&)",
-            dict
-        )   << "Invalid plane type: " << planeType
+        FatalIOErrorInFunction(dict)
+            << "Invalid plane type: " << planeType
             << abort(FatalIOError);
     }
 }
@@ -246,7 +229,7 @@ CML::plane::plane(Istream& is)
     }
     else
     {
-        FatalErrorIn("plane::plane(Istream& is)")
+        FatalErrorInFunction
             << "plane normal has zero length. basePoint:" << basePoint_
             << abort(FatalError);
     }

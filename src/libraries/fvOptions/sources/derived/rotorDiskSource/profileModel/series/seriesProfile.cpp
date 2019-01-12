@@ -96,25 +96,13 @@ CML::seriesProfile::seriesProfile
 
     if (CdCoeffs_.empty())
     {
-        FatalErrorIn
-        (
-            "CML::seriesProfile::seriesProfile"
-            "("
-                "const dictionary&, "
-                "const word&"
-            ")"
-        )   << "CdCoeffs must be specified" << exit(FatalError);
+        FatalErrorInFunction
+            << "CdCoeffs must be specified" << exit(FatalError);
     }
     if (ClCoeffs_.empty())
     {
-        FatalErrorIn
-        (
-            "CML::seriesProfile::seriesProfile"
-            "("
-                "const dictionary&, "
-                "const word&"
-            ")"
-        )   << "ClCoeffs must be specified" << exit(FatalError);
+        FatalErrorInFunction
+            << "ClCoeffs must be specified" << exit(FatalError);
     }
 }
 

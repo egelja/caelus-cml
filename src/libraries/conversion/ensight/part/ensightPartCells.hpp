@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,8 +89,10 @@ protected:
 
 
     // Static data members
-
-        static const List<word> elemTypes_;
+    
+    static const polyMesh* const polyMeshNullPtr_;
+    
+    static const List<word> elemTypes_;
 
 
     // Protected data

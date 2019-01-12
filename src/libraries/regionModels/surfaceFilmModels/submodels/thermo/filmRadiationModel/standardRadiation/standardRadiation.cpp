@@ -48,43 +48,41 @@ addToRunTimeSelectionTable
 
 standardRadiation::standardRadiation
 (
-    const surfaceFilmModel& owner,
+     surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    filmRadiationModel(typeName, owner, dict),
-    QrPrimary_
+    filmRadiationModel(typeName, film, dict),
+    qinPrimary_
     (
         IOobject
         (
-            "Qr", // same name as Qr on primary region to enable mapping
-            owner.time().timeName(),
-            owner.regionMesh(),
+            "qin", // same name as qin on primary region to enable mapping
+            film.time().timeName(),
+            film.regionMesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        owner.regionMesh(),
+        film.regionMesh(),
         dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0),
-        owner.mappedPushedFieldPatchTypes<scalar>()
+        film.mappedPushedFieldPatchTypes<scalar>()
     ),
-    QrNet_
+    qrNet_
     (
         IOobject
         (
-            "QrNet",
-            owner.time().timeName(),
-            owner.regionMesh(),
+            "qrNet",
+            film.time().timeName(),
+            film.regionMesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        owner.regionMesh(),
+        film.regionMesh(),
         dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0),
         zeroGradientFvPatchScalarField::typeName
     ),
-    delta_(owner.delta()),
-    deltaMin_(readScalar(coeffs_.lookup("deltaMin"))),
-    beta_(readScalar(coeffs_.lookup("beta"))),
-    kappaBar_(readScalar(coeffs_.lookup("kappaBar")))
+    beta_(readScalar(coeffDict_.lookup("beta"))),
+    kappaBar_(readScalar(coeffDict_.lookup("kappaBar")))
 {}
 
 
@@ -98,8 +96,8 @@ standardRadiation::~standardRadiation()
 
 void standardRadiation::correct()
 {
-    // Transfer Qr from primary region
-    QrPrimary_.correctBoundaryConditions();
+    // Transfer qr from primary region
+    qinPrimary_.correctBoundaryConditions();
 }
 
 
@@ -111,27 +109,27 @@ tmp<volScalarField> standardRadiation::Shs()
         (
             IOobject
             (
-                typeName + "::Shs",
-                owner().time().timeName(),
-                owner().regionMesh(),
+                typeName + ":Shs",
+                film().time().timeName(),
+                film().regionMesh(),
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            owner().regionMesh(),
-            dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            film().regionMesh(),
+            dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0)
         )
     );
 
     scalarField& Shs = tShs();
-    const scalarField& QrP = QrPrimary_.internalField();
-    const scalarField& delta = delta_.internalField();
+    const scalarField& qinP = qinPrimary_;
+    const scalarField& delta = filmModel_.delta();
+    const scalarField& alpha = filmModel_.alpha();
 
-    Shs = beta_*(QrP*pos(delta - deltaMin_))*(1.0 - exp(-kappaBar_*delta));
+    Shs = beta_*qinP*alpha*(1.0 - exp(-kappaBar_*delta));
 
-    // Update net Qr on local region
-    QrNet_.internalField() = QrP - Shs;
-    QrNet_.correctBoundaryConditions();
+    // Update net qr on local region
+    qrNet_.internalField() = qinP - Shs;
+    qrNet_.correctBoundaryConditions();
 
     return tShs;
 }

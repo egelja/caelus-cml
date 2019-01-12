@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
 
@@ -27,52 +27,66 @@ namespace CML
     defineTypeNameAndDebug(combustionModel, 0);
 }
 
+const CML::word CML::combustionModel::combustionPropertiesName
+(
+    "combustionProperties"
+);
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+CML::IOobject CML::combustionModel::createIOobject
+(
+    basicThermo& thermo,
+    const word& combustionProperties
+) const
+{
+    IOobject io
+    (
+        thermo.phasePropertyName(combustionProperties),
+        thermo.db().time().constant(),
+        thermo.db(),
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE
+    );
+
+    if (io.headerOk())
+    {
+        io.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
+        return io;
+    }
+    else
+    {
+        io.readOpt() = IOobject::NO_READ;
+        return io;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::combustionModel::combustionModel
 (
     const word& modelType,
-    const fvMesh& mesh
+    basicThermo& thermo,
+    const compressible::turbulenceModel& turb,
+    const word& combustionProperties
 )
 :
-    IOdictionary
-    (
-        IOobject
-        (
-            "combustionProperties",
-            mesh.time().constant(),
-            mesh,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        )
-    ),
-    turbulencePtr_(),
-    mesh_(mesh),
-    active_(lookupOrDefault<Switch>("active", true)),
+    IOdictionary(createIOobject(thermo, combustionProperties)),
+    mesh_(thermo.p().mesh()),
+    turb_(turb),
     coeffs_(subDict(modelType + "Coeffs")),
     modelType_(modelType)
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-CML::combustionModel::~combustionModel()
-{
-    if (turbulencePtr_)
-    {
-        turbulencePtr_ = 0;
-    }
-}
-
-
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
 
 bool CML::combustionModel::read()
 {
     if (regIOobject::read())
     {
-        this->lookup("active") >> active_;
         coeffs_ = subDict(modelType_ + "Coeffs");
         return true;
     }
@@ -81,27 +95,3 @@ bool CML::combustionModel::read()
         return false;
     }
 }
-
-
-CML::tmp<CML::volScalarField> CML::combustionModel::Sh() const
-{
-    return tmp<CML::volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "Sh",
-                mesh_.time().timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh_,
-            dimensionedScalar("zero", dimEnergy/dimVolume/dimTime, 0.0)
-        )
-    );
-}
-
-
-// ************************************************************************* //

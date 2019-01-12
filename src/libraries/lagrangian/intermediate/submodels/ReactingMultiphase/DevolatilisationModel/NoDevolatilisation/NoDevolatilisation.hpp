@@ -154,7 +154,7 @@ void CML::NoDevolatilisation<CloudType>::calculate
 ) const
 {
     // Model does not stop combustion taking place
-    canCombust = 1;
+    canCombust = true;
 }
 
 

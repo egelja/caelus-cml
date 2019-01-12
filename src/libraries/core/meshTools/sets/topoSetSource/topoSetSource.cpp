@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,7 +50,7 @@ namespace CML
 }
 
 
-CML::HashTable<CML::string>* CML::topoSetSource::usageTablePtr_ = NULL;
+CML::HashTable<CML::string>* CML::topoSetSource::usageTablePtr_ = nullptr;
 
 
 const CML::NamedEnum<CML::topoSetSource::setAction, 8>
@@ -78,11 +78,8 @@ CML::autoPtr<CML::topoSetSource> CML::topoSetSource::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "topoSetSource::New(const word&, "
-            "const polyMesh&, const dictionary&)"
-        )   << "Unknown topoSetSource type " << topoSetSourceType
+        FatalErrorInFunction
+            << "Unknown topoSetSource type " << topoSetSourceType
             << endl << endl
             << "Valid topoSetSource types : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -105,11 +102,8 @@ CML::autoPtr<CML::topoSetSource> CML::topoSetSource::New
 
     if (cstrIter == istreamConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "topoSetSource::New(const word&, "
-            "const polyMesh&, Istream&)"
-        )   << "Unknown topoSetSource type " << topoSetSourceType
+        FatalErrorInFunction
+            << "Unknown topoSetSource type " << topoSetSourceType
             << endl << endl
             << "Valid topoSetSource types : " << endl
             << istreamConstructorTablePtr_->sortedToc()
@@ -128,7 +122,7 @@ CML::Istream& CML::topoSetSource::checkIs(Istream& is)
     }
     else
     {
-        FatalErrorIn("cellToFace::cellToFace") << "Istream not good"
+        FatalErrorInFunction << "Istream not good"
             << exit(FatalError);
 
         return is;

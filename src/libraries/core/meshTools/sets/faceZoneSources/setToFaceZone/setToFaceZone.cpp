@@ -102,11 +102,8 @@ void CML::setToFaceZone::applyToSet
 {
     if (!isA<faceZoneSet>(set))
     {
-        WarningIn
-        (
-            "setToFaceZone::applyToSet(const topoSetSource::setAction"
-            ", topoSet"
-        )   << "Operation only allowed on a faceZoneSet." << endl;
+        WarningInFunction
+            << "Operation only allowed on a faceZoneSet." << endl;
     }
     else
     {

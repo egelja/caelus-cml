@@ -87,12 +87,17 @@ motionSolver/velocity/velocityMotionSolver.cpp
 motionSolver/componentVelocity/componentVelocityMotionSolver.cpp
 pointPatchDist/externalPointEdgePoint.cpp
 pointPatchDist/pointPatchDist.cpp
+createShellMesh/createShellMesh.cpp
+extrudePatchMesh/extrudePatchMesh.cpp
 """)
 
-caelus_inc = []
+caelus_inc = [
+'mesh/extrudeModel/lnInclude'
+]
 
 caelus_libs = [
-'core'
+'core',
+'extrudeModel'
 ]
 
 build_lib(env,

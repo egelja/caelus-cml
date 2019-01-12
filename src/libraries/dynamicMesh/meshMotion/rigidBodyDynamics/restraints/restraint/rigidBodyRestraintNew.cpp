@@ -38,11 +38,7 @@ CML::RBD::restraint::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "RBD::restraint::New"
-            "(const word&, const dictionary&, const rigidBodyModel&)"
-        )
+        FatalErrorInFunction
             << "Unknown restraint type "
             << restraintType << nl << nl
             << "Valid restraint types are : " << endl

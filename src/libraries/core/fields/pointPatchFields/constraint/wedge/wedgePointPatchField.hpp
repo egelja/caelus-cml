@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -170,16 +170,8 @@ CML::wedgePointPatchField<Type>::wedgePointPatchField
 {
     if (!isType<wedgePointPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "wedgePointPatchField<Type>::wedgePointPatchField\n"
-            "(\n"
-            "    const pointPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not wedge type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not wedge type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -199,16 +191,8 @@ CML::wedgePointPatchField<Type>::wedgePointPatchField
 {
     if (!isType<wedgePointPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "wedgePointPatchField<Type>::wedgePointPatchField\n"
-            "(\n"
-            "    const wedgePointPatchField<Type>& ptf,\n"
-            "    const pointPatch& p,\n"
-            "    const DimensionedField<Type, pointMesh>& iF,\n"
-            "    const pointPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()

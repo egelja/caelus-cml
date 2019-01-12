@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2012 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,8 +34,7 @@ int CML::sigStopAtWriteNow::signal_
     debug::optimisationSwitch("stopAtWriteNowSignal", -1)
 );
 
-static CML::Time const* runTimePtr_ = NULL;
-
+CML::Time const* CML::sigStopAtWriteNow::runTimePtr_ = nullptr;
 
 __p_sig_fn_t CML::sigStopAtWriteNow::oldAction_ = SIG_DFL;
 
@@ -49,10 +49,8 @@ void CML::sigStopAtWriteNow::sigHandler(int)
     
     if (SIG_ERR == success)
     {
-        FatalErrorIn
-        (
-            "CML::sigStopAtWriteNow::sigHandler(int)"
-        )   << "Cannot reset " << signal_ << " trapping"
+        FatalErrorInFunction
+            << "Cannot reset " << signal_ << " trapping"
             << abort(FatalError);
     }
 
@@ -80,35 +78,56 @@ CML::sigStopAtWriteNow::sigStopAtWriteNow
     const Time& runTime
 )
 {
+    // Store runTime
+    runTimePtr_ = &runTime;
+
+    set(verbose);
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::sigStopAtWriteNow::~sigStopAtWriteNow()
+{
+    // Reset old handling
+    if (signal_ > 0)
+    {
+        const __p_sig_fn_t success = ::signal(signal_, oldAction_);
+        oldAction_ = SIG_DFL;
+
+        if (SIG_ERR == success)
+        {
+            FatalErrorInFunction
+                << "Cannot reset " << signal_ << " trapping"
+                << abort(FatalError);
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void CML::sigStopAtWriteNow::set(const bool verbose)
+{
     if (signal_ > 0)
     {
         // Check that the signal is different from the writeNowSignal
         if (sigWriteNow::signal_ == signal_)
         {
-            FatalErrorIn
-            (
-                "CML::sigStopAtWriteNow::sigStopAtWriteNow"
-                "(const bool, const Time&)"
-            )   << "stopAtWriteNowSignal : " << signal_
+            FatalErrorInFunction
+                << "stopAtWriteNowSignal : " << signal_
                 << " cannot be the same as the writeNowSignal."
-                << " Please change this in the controlDict ("
-                << findEtcFile("controlDict", false) << ")."
+                << " Please change this in the etc/controlDict."
                 << exit(FatalError);
         }
 
 
-        // Store runTime
-        runTimePtr_ = &runTime;
+        oldAction_ = ::signal(signal_, &CML::sigWriteNow::sigHandler);        
 
-	oldAction_ = ::signal(signal_, &CML::sigWriteNow::sigHandler);        
-
-	if (SIG_ERR == oldAction_)
+        if (SIG_ERR == oldAction_)
         {
-            FatalErrorIn
-            (
-                "CML::sigStopAtWriteNow::sigStopAtWriteNow"
-                "(const bool, const Time&)"
-            )   << "Cannot set " << signal_ << " trapping"
+            FatalErrorInFunction
+                << "Cannot set " << signal_ << " trapping"
                 << abort(FatalError);
         }
 
@@ -121,30 +140,6 @@ CML::sigStopAtWriteNow::sigStopAtWriteNow
     }
 }
 
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::sigStopAtWriteNow::~sigStopAtWriteNow()
-{
-    // Reset old handling
-    if (signal_ > 0)
-    {
-        const __p_sig_fn_t success = ::signal(signal_, oldAction_);
-	oldAction_ = SIG_DFL;
-
-	if (SIG_ERR == success)
-        {
-            FatalErrorIn
-            (
-                "CML::sigStopAtWriteNow::~sigStopAtWriteNow()"
-            )   << "Cannot reset " << signal_ << " trapping"
-                << abort(FatalError);
-        }
-    }
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 bool CML::sigStopAtWriteNow::active() const
 {

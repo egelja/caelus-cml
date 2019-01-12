@@ -91,7 +91,7 @@ void setField
 
     forAll(*pTemp,cellI) {
         if(cond[cellI]!=0) {
-	  (*pTemp)[cellI]=result[cellI];
+            (*pTemp)[cellI]=result[cellI];
             setCells++;
         }
     }
@@ -103,7 +103,10 @@ void setField
     FieldValueExpressionDriver::setValuePatches(*pTemp,keepPatches,valuePatches);
 
     forAll(result.boundaryField(),patchI) {
-        typename T::PatchFieldType &pf=pTemp->boundaryField()[patchI];
+        typename T::PatchFieldType &pf=
+            const_cast<typename T::PatchFieldType&>(
+                pTemp->boundaryField()[patchI]
+            );
         const typename T::PatchFieldType &pfOrig=result.boundaryField()[patchI];
 
         if(pf.patch().coupled()) {
@@ -245,10 +248,10 @@ void doAnExpression
             &&
             !driver.resultIsTyp<pointScalarField>(true)
         ) {
-            FatalErrorIn("doAnExpression()")
+            FatalErrorInFunction
                 << " condition: " << condition
-                    << " does not evaluate to a logical expression"
-                    << exit(FatalError);
+                << " does not evaluate to a logical expression"
+                << exit(FatalError);
         }
 
         if(driver.resultIsTyp<volScalarField>(true)) {
@@ -300,10 +303,10 @@ void doAnExpression
         ||
         conditionIsPoint!=driver.isPointField()
     ) {
-        FatalErrorIn("doAnExpression()")
+        FatalErrorInFunction
             << "Inconsistent expression and condition. "
-                << "Expression " << expression << " is defined on the "
-                << (
+            << "Expression " << expression << " is defined on the "
+            << (
                     driver.isSurfaceField()
                     ?
                     "faces"
@@ -337,22 +340,20 @@ void doAnExpression
         &&
         !create
     ) {
-        FatalErrorIn("doAnExpression()")
-            //            << args.executable()
-                << " The type of the " << field << " is  "
-                    << oldFieldType
-                    << ". Seems that it doesn't exist. Use 'create'"
-                    << endl
+        FatalErrorInFunction
+            << " The type of the " << field << " is  "
+            << oldFieldType
+            << ". Seems that it doesn't exist. Use 'create'"
+            << endl
             << exit(FatalError);
     }
 
     if(driver.typ()!=oldFieldType) {
-        FatalErrorIn("doAnExpression()")
-            //            << args.executable()
-                << " inconsistent types: " << field << " is  "
-                    << oldFieldType
-                    << " while the expression evaluates to a "
-                    << driver.typ()
+        FatalErrorInFunction
+            << " inconsistent types: " << field << " is  "
+            << oldFieldType
+            << " while the expression evaluates to a "
+            << driver.typ()
             << exit(FatalError);
     } else {
         if(driver.typ()==pTraits<volScalarField>::typeName) {
@@ -541,11 +542,11 @@ void doAnExpression
                 valuePatches
             );
         } else {
-            FatalErrorIn("doAnExpression")
+            FatalErrorInFunction
                 << "Expression " << expression
-                    << " evaluates to an unsupported type "
-                    << driver.typ() << endl
-                    << exit(FatalError);
+                << " evaluates to an unsupported type "
+                << driver.typ() << endl
+                << exit(FatalError);
         }
     }
 }
@@ -629,9 +630,9 @@ int main(int argc, char *argv[])
     dimensionSet::debug=false;
 
     if (!args.options().found("time") && !args.options().found("latestTime")) {
-        FatalErrorIn("main()")
+        FatalErrorInFunction
             << args.executable()
-                << ": time/latestTime option is required" << endl
+            << ": time/latestTime option is required" << endl
             << exit(FatalError);
     }
 
@@ -760,10 +761,10 @@ int main(int argc, char *argv[])
         ||
         otherHasSameTime
     ) {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "'otherCase' not specified"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -846,10 +847,10 @@ int main(int argc, char *argv[])
             if (args.options().found("keepPatches")) {
                 keepPatches=true;
                 if(keepPatches && create) {
-                    FatalErrorIn("main()")
+                    FatalErrorInFunction
                         << args.executable()
-                            << ": the options <keepPatches> and <create> contradict"
-                            << exit(FatalError);
+                        << ": the options <keepPatches> and <create> contradict"
+                        << exit(FatalError);
                 }
             }
 
@@ -925,10 +926,10 @@ int main(int argc, char *argv[])
                 ||
                 args.options().found("expression")
             ) {
-                FatalErrorIn("main()")
+                FatalErrorInFunction
                     << args.executable()
-                        << ": No other options than -time valid when using funkySetFieldsDict"
-                        << exit(FatalError);
+                    << ": No other options than -time valid when using funkySetFieldsDict"
+                    << exit(FatalError);
             }
 
             word dictName="funkySetFieldsDict";
@@ -1019,10 +1020,10 @@ int main(int argc, char *argv[])
                 if (part.found("keepPatches")) {
                     keepPatches=readBool(part["keepPatches"]);
                     if(keepPatches && create) {
-                        FatalErrorIn("main()")
+                        FatalErrorInFunction
                             << args.executable()
-                                << ": the options <keepPatches> and <create> contradict"
-                                << exit(FatalError);
+                            << ": the options <keepPatches> and <create> contradict"
+                            << exit(FatalError);
                     }
                 }
 

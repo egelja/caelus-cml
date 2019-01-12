@@ -79,10 +79,7 @@ void CML::RBD::joints::null::jcalc
     const scalarField& qDot
 ) const
 {
-    FatalErrorIn
-    (
-        "RBD::joints::null::jcalc(joint::XSvc&, const scalarField&, const scalarField&) const"
-    )
+    FatalErrorInFunction
         << "Cannot calculate the state of a null-joint"
         << abort(FatalError);
 }

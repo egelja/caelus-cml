@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -479,11 +479,8 @@ void CML::UnsortedMeshedSurface<Face>::write
         }
         else
         {
-            FatalErrorIn
-            (
-                "UnsortedMeshedSurface::write"
-                "(const fileName&, const UnsortedMeshedSurface&)"
-            )   << "Unknown file extension " << ext << nl << nl
+            FatalErrorInFunction
+                << "Unknown file extension " << ext << nl << nl
                 << "Valid types are :" << endl
                 << (supported | writeTypes())
                 << exit(FatalError);
@@ -1150,12 +1147,8 @@ CML::UnsortedMeshedSurface<Face>::New(const fileName& name, const word& ext)
         // nothing left but to issue an error
         supported += readTypes();
 
-        FatalErrorIn
-        (
-            "UnsortedMeshedSurface<Face>::New"
-            "(const fileName&, const word&) : "
-            "constructing UnsortedMeshedSurface"
-        )   << "Unknown file extension " << ext << nl << nl
+        FatalErrorInFunction
+            << "Unknown file extension " << ext << nl << nl
             << "Valid types are:" << nl
             << supported
             << exit(FatalError);

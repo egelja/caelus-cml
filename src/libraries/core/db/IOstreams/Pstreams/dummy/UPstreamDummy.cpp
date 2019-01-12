@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,7 +30,7 @@ void CML::UPstream::addValidParOptions(HashTable<string>& validParOptions)
 
 bool CML::UPstream::init(int& argc, char**& argv)
 {
-    FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+    FatalErrorInFunction
         << "Trying to use the dummy Pstream library." << nl
         << "This dummy library cannot be used in parallel mode"
         << CML::exit(FatalError);
@@ -41,13 +41,13 @@ bool CML::UPstream::init(int& argc, char**& argv)
 
 void CML::UPstream::exit(int errnum)
 {
-    notImplemented("UPstream::exit(int errnum)");
+    NotImplemented;
 }
 
 
 void CML::UPstream::abort()
 {
-    notImplemented("UPstream::abort()");
+    NotImplemented;
 }
 
 
@@ -72,7 +72,7 @@ void CML::UPstream::waitRequests(const label start)
 
 bool CML::UPstream::finishedRequest(const label i)
 {
-    notImplemented("UPstream::finishedRequest()");
+    NotImplemented;
     return false;
 }
 

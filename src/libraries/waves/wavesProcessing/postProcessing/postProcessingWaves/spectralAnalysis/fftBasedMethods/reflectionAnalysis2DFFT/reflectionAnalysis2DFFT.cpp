@@ -342,10 +342,8 @@ void reflectionAnalysis2DFFT::evaluate()
     }
     else
     {
-        FatalErrorIn
-        (
-            "void reflectionAnalysis2DFFT::evaluate()"
-        )   << "Only supports input of scalar quantities (surface elevation) "
+        FatalErrorInFunction
+            << "Only supports input of scalar quantities (surface elevation) "
             << exit(FatalError);
     }
 }

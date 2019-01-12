@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,6 +36,7 @@ Description
 #include "snapParameters.hpp"
 #include "refinementSurfaces.hpp"
 #include "unitConversion.hpp"
+#include "localPointRegion.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -59,53 +60,52 @@ CML::label CML::autoSnapDriver::getCollocatedPoints
 )
 {
     labelList pointMap;
-    pointField newPoints;
-    bool hasMerged = mergePoints
+    label nUnique = mergePoints
     (
         points,                         // points
         tol,                            // mergeTol
         false,                          // verbose
-        pointMap,
-        newPoints
+        pointMap
     );
+    bool hasMerged = (nUnique < points.size());
 
     if (!returnReduce(hasMerged, orOp<bool>()))
     {
         return 0;
     }
 
-    // Determine which newPoints are referenced more than once
+    // Determine which merged points are referenced more than once
     label nCollocated = 0;
 
     // Per old point the newPoint. Or -1 (not set yet) or -2 (already seen
     // twice)
-    labelList firstOldPoint(newPoints.size(), -1);
-    forAll(pointMap, oldPointI)
+    labelList firstOldPoint(nUnique, -1);
+    forAll(pointMap, oldPointi)
     {
-        label newPointI = pointMap[oldPointI];
+        label newPointi = pointMap[oldPointi];
 
-        if (firstOldPoint[newPointI] == -1)
+        if (firstOldPoint[newPointi] == -1)
         {
-            // First use of oldPointI. Store.
-            firstOldPoint[newPointI] = oldPointI;
+            // First use of oldPointi. Store.
+            firstOldPoint[newPointi] = oldPointi;
         }
-        else if (firstOldPoint[newPointI] == -2)
+        else if (firstOldPoint[newPointi] == -2)
         {
-            // Third or more reference of oldPointI -> non-manifold
-            isCollocatedPoint.set(oldPointI, 1u);
+            // Third or more reference of oldPointi -> non-manifold
+            isCollocatedPoint.set(oldPointi, 1u);
             nCollocated++;
         }
         else
         {
-            // Second reference of oldPointI -> non-manifold
-            isCollocatedPoint.set(firstOldPoint[newPointI], 1u);
+            // Second reference of oldPointi -> non-manifold
+            isCollocatedPoint.set(firstOldPoint[newPointi], 1u);
             nCollocated++;
 
-            isCollocatedPoint.set(oldPointI, 1u);
+            isCollocatedPoint.set(oldPointi, 1u);
             nCollocated++;
 
             // Mark with special value to save checking next time round
-            firstOldPoint[newPointI] = -2;
+            firstOldPoint[newPointi] = -2;
         }
     }
     return returnReduce(nCollocated, sumOp<label>());
@@ -171,7 +171,7 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
             }
             else
             {
-                FatalErrorIn("autoSnapDriver::smoothPatchDisplacement(..)")
+                FatalErrorInFunction
                     << "Both sides of baffle consisting of faces " << f0
                     << " and " << f1 << " are already slave faces."
                     << abort(FatalError);
@@ -186,18 +186,18 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
     vectorField avgBoundary(pointFaces.size(), vector::zero);
     labelList nBoundary(pointFaces.size(), 0);
 
-    forAll(pointFaces, patchPointI)
+    forAll(pointFaces, patchPointi)
     {
-        const labelList& pFaces = pointFaces[patchPointI];
+        const labelList& pFaces = pointFaces[patchPointi];
 
         forAll(pFaces, pfI)
         {
-            label faceI = pFaces[pfI];
+            label facei = pFaces[pfI];
 
-            if (isMasterFace.get(pp.addressing()[faceI]))
+            if (isMasterFace.get(pp.addressing()[facei]))
             {
-                avgBoundary[patchPointI] += pp[faceI].centre(points);
-                nBoundary[patchPointI]++;
+                avgBoundary[patchPointi] += pp[facei].centre(points);
+                nBoundary[patchPointi]++;
             }
         }
     }
@@ -237,10 +237,10 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
         // Note: no use of pointFaces
         const faceList& faces = mesh.faces();
 
-        for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
+        for (label facei = 0; facei < mesh.nInternalFaces(); facei++)
         {
-            const face& f = faces[faceI];
-            const point& fc = mesh.faceCentres()[faceI];
+            const face& f = faces[facei];
+            const point& fc = mesh.faceCentres()[facei];
 
             forAll(f, fp)
             {
@@ -252,16 +252,16 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
         // Count coupled faces as internal ones (but only once)
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                patches[patchI].coupled()
-             && refCast<const coupledPolyPatch>(patches[patchI]).owner()
+                patches[patchi].coupled()
+             && refCast<const coupledPolyPatch>(patches[patchi]).owner()
             )
             {
                 const coupledPolyPatch& pp =
-                    refCast<const coupledPolyPatch>(patches[patchI]);
+                    refCast<const coupledPolyPatch>(patches[patchi]);
 
                 const vectorField::subField faceCentres = pp.faceCentres();
 
@@ -297,21 +297,21 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
         avgInternal.setSize(meshPoints.size());
         nInternal.setSize(meshPoints.size());
 
-        forAll(avgInternal, patchPointI)
+        forAll(avgInternal, patchPointi)
         {
-            label meshPointI = meshPoints[patchPointI];
+            label meshPointi = meshPoints[patchPointi];
 
-            nInternal[patchPointI] = globalNum[meshPointI];
+            nInternal[patchPointi] = globalNum[meshPointi];
 
-            if (nInternal[patchPointI] == 0)
+            if (nInternal[patchPointi] == 0)
             {
-                avgInternal[patchPointI] = globalSum[meshPointI];
+                avgInternal[patchPointi] = globalSum[meshPointi];
             }
             else
             {
-                avgInternal[patchPointI] =
-                    globalSum[meshPointI]
-                  / nInternal[patchPointI];
+                avgInternal[patchPointi] =
+                    globalSum[meshPointi]
+                  / nInternal[patchPointi];
             }
         }
     }
@@ -321,21 +321,21 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     labelList anyCell(mesh.nPoints(), -1);
-    forAll(mesh.faceNeighbour(), faceI)
+    forAll(mesh.faceNeighbour(), facei)
     {
-        label own = mesh.faceOwner()[faceI];
-        const face& f = mesh.faces()[faceI];
+        label own = mesh.faceOwner()[facei];
+        const face& f = mesh.faces()[facei];
 
         forAll(f, fp)
         {
             anyCell[f[fp]] = own;
         }
     }
-    for (label faceI = mesh.nInternalFaces(); faceI < mesh.nFaces(); faceI++)
+    for (label facei = mesh.nInternalFaces(); facei < mesh.nFaces(); facei++)
     {
-        label own = mesh.faceOwner()[faceI];
+        label own = mesh.faceOwner()[facei];
 
-        const face& f = mesh.faces()[faceI];
+        const face& f = mesh.faces()[facei];
 
         forAll(f, fp)
         {
@@ -349,8 +349,8 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
 
     forAll(pointFaces, i)
     {
-        label meshPointI = meshPoints[i];
-        const point& currentPos = pp.points()[meshPointI];
+        label meshPointi = meshPoints[i];
+        const point& currentPos = pp.points()[meshPointi];
 
         // Now we have the two average points: avgBoundary and avgInternal
         // and how many boundary/internal faces connect to the point
@@ -381,9 +381,9 @@ CML::pointField CML::autoSnapDriver::smoothPatchDisplacement
         {
             // Non-manifold without internal faces. Use any connected cell
             // as internal point instead. Use precalculated any cell to avoid
-            // e.g. pointCells()[meshPointI][0]
+            // e.g. pointCells()[meshPointi][0]
 
-            const point& cc = mesh.cellCentres()[anyCell[meshPointI]];
+            const point& cc = mesh.cellCentres()[anyCell[meshPointi]];
 
             scalar cellCBlend = 0.8;
             scalar blend = 0.1;
@@ -480,9 +480,9 @@ CML::tmp<CML::scalarField> CML::autoSnapDriver::edgePatchDist
     //        pointDist[e[0]] += d;
     //        pointDist[e[1]] += d;
     //    }
-    //    forAll(pointDist, pointI)
+    //    forAll(pointDist, pointi)
     //    {
-    //        pointDist[pointI] /= mesh.pointEdges()[pointI].size();
+    //        pointDist[pointi] /= mesh.pointEdges()[pointi].size();
     //    }
     //    Info<< "Writing patch distance to " << pointDist.name()
     //        << " at time " << meshRefiner_.timeName() << endl;
@@ -502,7 +502,7 @@ void CML::autoSnapDriver::dumpMove
 )
 {
     // Dump direction of growth into file
-    Pout<< nl << "Dumping move direction to " << fName << endl;
+    Info<< "Dumping move direction to " << fName << endl;
 
     OFstream nearestStream(fName);
 
@@ -532,11 +532,11 @@ bool CML::autoSnapDriver::outwardsDisplacement
     const vectorField& faceNormals = pp.faceNormals();
     const labelListList& pointFaces = pp.pointFaces();
 
-    forAll(pointFaces, pointI)
+    forAll(pointFaces, pointi)
     {
-        const labelList& pFaces = pointFaces[pointI];
+        const labelList& pFaces = pointFaces[pointi];
 
-        vector disp(patchDisp[pointI]);
+        vector disp(patchDisp[pointi]);
 
         scalar magDisp = mag(disp);
 
@@ -548,9 +548,9 @@ bool CML::autoSnapDriver::outwardsDisplacement
 
             if (!outwards)
             {
-                Warning<< "Displacement " << patchDisp[pointI]
-                    << " at mesh point " << pp.meshPoints()[pointI]
-                    << " coord " << pp.points()[pp.meshPoints()[pointI]]
+                Warning<< "Displacement " << patchDisp[pointi]
+                    << " at mesh point " << pp.meshPoints()[pointi]
+                    << " coord " << pp.points()[pp.meshPoints()[pointi]]
                     << " points through the surrounding patch faces" << endl;
                 return false;
             }
@@ -620,9 +620,9 @@ CML::scalarField CML::autoSnapDriver::calcSnapDistance
 
     scalarField maxEdgeLen(localPoints.size(), -GREAT);
 
-    forAll(pointEdges, pointI)
+    forAll(pointEdges, pointi)
     {
-        const labelList& pEdges = pointEdges[pointI];
+        const labelList& pEdges = pointEdges[pointi];
 
         forAll(pEdges, pEdgeI)
         {
@@ -630,7 +630,7 @@ CML::scalarField CML::autoSnapDriver::calcSnapDistance
 
             scalar len = e.mag(localPoints);
 
-            maxEdgeLen[pointI] = max(maxEdgeLen[pointI], len);
+            maxEdgeLen[pointi] = max(maxEdgeLen[pointi], len);
         }
     }
 
@@ -669,9 +669,9 @@ void CML::autoSnapDriver::preSmoothPatch
     {
         Info<< "Smoothing iteration " << smoothIter << endl;
         checkFaces.setSize(mesh.nFaces());
-        forAll(checkFaces, faceI)
+        forAll(checkFaces, facei)
         {
-            checkFaces[faceI] = faceI;
+            checkFaces[facei] = facei;
         }
 
         pointField patchDisp(smoothPatchDisplacement(meshMover, baffles));
@@ -717,14 +717,14 @@ void CML::autoSnapDriver::preSmoothPatch
     if (debug)
     {
         const_cast<Time&>(mesh.time())++;
-        Pout<< "Writing patch smoothed mesh to time "
+        Info<< "Writing patch smoothed mesh to time "
             << meshRefiner_.timeName() << '.' << endl;
         meshRefiner_.write
         (
             debug,
             mesh.time().path()/meshRefiner_.timeName()
         );
-        Pout<< "Dumped mesh in = "
+        Info<< "Dumped mesh in = "
             << mesh.time().cpuTimeIncrement() << " s\n" << nl << endl;
     }
 
@@ -746,11 +746,8 @@ CML::labelList CML::autoSnapDriver::getZoneSurfacePoints
 
     if (zoneI == -1)
     {
-        FatalErrorIn
-        (
-            "autoSnapDriver::getZoneSurfacePoints"
-            "(const indirectPrimitivePatch&, const word&)"
-        )   << "Cannot find zone " << zoneName
+        FatalErrorInFunction
+            << "Cannot find zone " << zoneName
             << exit(FatalError);
     }
 
@@ -768,15 +765,15 @@ CML::labelList CML::autoSnapDriver::getZoneSurfacePoints
 
         forAll(f, fp)
         {
-            label meshPointI = f[fp];
+            label meshPointi = f[fp];
 
             Map<label>::const_iterator iter =
-                pp.meshPointMap().find(meshPointI);
+                pp.meshPointMap().find(meshPointi);
 
             if (iter != pp.meshPointMap().end())
             {
-                label pointI = iter();
-                pointOnZone[pointI] = true;
+                label pointi = iter();
+                pointOnZone[pointi] = true;
             }
         }
     }
@@ -883,36 +880,36 @@ CML::vectorField CML::autoSnapDriver::calcNearestSurface
 
             forAll(hitInfo, i)
             {
-                label pointI = zonePointIndices[i];
+                label pointi = zonePointIndices[i];
 
                 if (hitInfo[i].hit())
                 {
-                    patchDisp[pointI] =
+                    patchDisp[pointi] =
                         hitInfo[i].hitPoint()
-                      - localPoints[pointI];
+                      - localPoints[pointi];
 
-                    minSnapDist[pointI] = min
+                    minSnapDist[pointi] = min
                     (
-                        minSnapDist[pointI],
-                        mag(patchDisp[pointI])
+                        minSnapDist[pointi],
+                        mag(patchDisp[pointi])
                     );
 
-                    snapSurf[pointI] = zoneSurfI;
+                    snapSurf[pointi] = zoneSurfI;
                 }
             }
         }
 
         // Check if all points are being snapped
-        forAll(snapSurf, pointI)
+        forAll(snapSurf, pointi)
         {
-            if (snapSurf[pointI] == -1)
+            if (snapSurf[pointi] == -1)
             {
-                WarningIn("autoSnapDriver::calcNearestSurface(..)")
-                    << "For point:" << pointI
-                    << " coordinate:" << localPoints[pointI]
+                WarningInFunction
+                    << "For point:" << pointi
+                    << " coordinate:" << localPoints[pointi]
                     << " did not find any surface within:"
-                    << minSnapDist[pointI]
-                    << " meter." << endl;
+                    << minSnapDist[pointi]
+                    << " metre." << endl;
             }
         }
 
@@ -931,16 +928,16 @@ CML::vectorField CML::autoSnapDriver::calcNearestSurface
 
 
     // Limit amount of movement.
-    forAll(patchDisp, patchPointI)
+    forAll(patchDisp, patchPointi)
     {
-        scalar magDisp = mag(patchDisp[patchPointI]);
+        scalar magDisp = mag(patchDisp[patchPointi]);
 
-        if (magDisp > snapDist[patchPointI])
+        if (magDisp > snapDist[patchPointi])
         {
-            patchDisp[patchPointI] *= snapDist[patchPointI] / magDisp;
+            patchDisp[patchPointi] *= snapDist[patchPointi] / magDisp;
 
-            Pout<< "Limiting displacement for " << patchPointI
-                << " from " << magDisp << " to " << snapDist[patchPointI]
+            Pout<< "Limiting displacement for " << patchPointi
+                << " from " << magDisp << " to " << snapDist[patchPointi]
                 << endl;
         }
     }
@@ -994,7 +991,7 @@ void CML::autoSnapDriver::smoothDisplacement
     if (debug)
     {
         const_cast<Time&>(mesh.time())++;
-        Pout<< "Writing smoothed mesh to time " << meshRefiner_.timeName()
+        Info<< "Writing smoothed mesh to time " << meshRefiner_.timeName()
             << endl;
 
         // Moving mesh creates meshPhi. Can be cleared out by a mesh.clearOut
@@ -1006,17 +1003,17 @@ void CML::autoSnapDriver::smoothDisplacement
             debug,
             mesh.time().path()/meshRefiner_.timeName()
         );
-
-        Pout<< "Writing displacement field ..." << endl;
+        Info<< "Writing displacement field ..." << endl;
         disp.write();
         tmp<pointScalarField> magDisp(mag(disp));
         magDisp().write();
 
-        Pout<< "Writing actual patch displacement ..." << endl;
+        Info<< "Writing actual patch displacement ..." << endl;
         vectorField actualPatchDisp(disp, pp.meshPoints());
         dumpMove
         (
-            mesh.time().path()/"actualPatchDisplacement.obj",
+            mesh.time().path()
+          / "actualPatchDisplacement_" + meshRefiner_.timeName() + ".obj",
             pp.localPoints(),
             pp.localPoints() + actualPatchDisp
         );
@@ -1063,11 +1060,11 @@ bool CML::autoSnapDriver::scaleMesh
         if (debug)
         {
             const_cast<Time&>(mesh.time())++;
-            Pout<< "Writing scaled mesh to time " << meshRefiner_.timeName()
+            Info<< "Writing scaled mesh to time " << meshRefiner_.timeName()
                 << endl;
             mesh.write();
 
-            Pout<< "Writing displacement field ..." << endl;
+            Info<< "Writing displacement field ..." << endl;
             meshMover.displacement().write();
             tmp<pointScalarField> magDisp(mag(meshMover.displacement()));
             magDisp().write();
@@ -1093,7 +1090,8 @@ bool CML::autoSnapDriver::scaleMesh
 CML::autoPtr<CML::mapPolyMesh> CML::autoSnapDriver::repatchToSurface
 (
     const snapParameters& snapParams,
-    const labelList& adaptPatchIDs
+    const labelList& adaptPatchIDs,
+    const labelList& preserveFaces
 )
 {
     const fvMesh& mesh = meshRefiner_.mesh();
@@ -1120,7 +1118,16 @@ CML::autoPtr<CML::mapPolyMesh> CML::autoSnapDriver::repatchToSurface
     // Faces that do not move
     PackedBoolList isZonedFace(mesh.nFaces());
     {
-        // 1. All faces on zoned surfaces
+        // 1. Preserve faces in preserveFaces list
+        forAll(preserveFaces, faceI)
+        {
+            if (preserveFaces[faceI] != -1)
+            {
+                isZonedFace.set(faceI, 1);
+            }
+        }
+
+        // 2. All faces on zoned surfaces
         const wordList& faceZoneNames = surfaces.faceZoneNames();
         const faceZoneMesh& fZones = mesh.faceZones();
 
@@ -1151,15 +1158,15 @@ CML::autoPtr<CML::mapPolyMesh> CML::autoSnapDriver::repatchToSurface
 
             const faceList& localFaces = pp.localFaces();
 
-            forAll(localFaces, faceI)
+            forAll(localFaces, facei)
             {
-                const face& f = localFaces[faceI];
+                const face& f = localFaces[facei];
 
                 forAll(f, fp)
                 {
-                    faceSnapDist[faceI] = max
+                    faceSnapDist[facei] = max
                     (
-                        faceSnapDist[faceI],
+                        faceSnapDist[facei],
                         snapDist[f[fp]]
                     );
                 }
@@ -1183,9 +1190,9 @@ CML::autoPtr<CML::mapPolyMesh> CML::autoSnapDriver::repatchToSurface
         // Get patch
         forAll(pp, i)
         {
-            label faceI = pp.addressing()[i];
+            label facei = pp.addressing()[i];
 
-            if (hitSurface[i] != -1 && !isZonedFace.get(faceI))
+            if (hitSurface[i] != -1 && !isZonedFace.get(facei))
             {
                 closestPatch[i] = globalToPatch_
                 [
@@ -1208,26 +1215,26 @@ CML::autoPtr<CML::mapPolyMesh> CML::autoSnapDriver::repatchToSurface
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         forAll(pp, i)
         {
-            ownPatch[pp.start()+i] = patchI;
-            neiPatch[pp.start()+i] = patchI;
+            ownPatch[pp.start()+i] = patchi;
+            neiPatch[pp.start()+i] = patchi;
         }
     }
 
     label nChanged = 0;
     forAll(closestPatch, i)
     {
-        label faceI = pp.addressing()[i];
+        label facei = pp.addressing()[i];
 
-        if (closestPatch[i] != -1 && closestPatch[i] != ownPatch[faceI])
+        if (closestPatch[i] != -1 && closestPatch[i] != ownPatch[facei])
         {
-            ownPatch[faceI] = closestPatch[i];
-            neiPatch[faceI] = closestPatch[i];
+            ownPatch[facei] = closestPatch[i];
+            neiPatch[facei] = closestPatch[i];
             nChanged++;
         }
     }
@@ -1261,7 +1268,159 @@ void CML::autoSnapDriver::doSnap
     // Create baffles (pairs of faces that share the same points)
     // Baffles stored as owner and neighbour face that have been created.
     List<labelPair> baffles;
-    meshRefiner_.createZoneBaffles(globalToPatch_, baffles);
+    meshRefiner_.createZoneBaffles
+    (
+        globalToPatch_,
+        baffles
+    );
+
+    // Keep copy of baffles
+    labelList origBaffles(mesh.nFaces(), -1);
+
+    forAll(baffles, i)
+    {
+        const labelPair& baffle = baffles[i];
+        origBaffles[baffle.first()] = baffle.second();
+        origBaffles[baffle.second()] = baffle.first();
+    }
+
+    // Selectively 'forget' about the baffles, i.e. not check across them
+    // or merge across them.
+    {
+        const faceZoneMesh& fZones = mesh.faceZones();
+        const refinementSurfaces& surfaces = meshRefiner_.surfaces();
+        const wordList& faceZoneNames = surfaces.faceZoneNames();
+        const List<refinementSurfaces::faceZoneType>& faceType =
+            surfaces.faceType();
+
+        // Determine which
+        //  - faces to remove from list of baffles (so not merge)
+        //  - points to duplicate
+        labelList filterFace(mesh.nFaces(), -1);
+        label nFilterFaces = 0;
+        PackedBoolList duplicatePoint(mesh.nPoints());
+        label nDuplicatePoints = 0;
+        forAll(faceZoneNames, surfI)
+        {
+            if
+            (
+                faceType[surfI] == refinementSurfaces::BAFFLE
+             || faceType[surfI] == refinementSurfaces::BOUNDARY
+            )
+            {
+                if (faceZoneNames[surfI].size())
+                {
+                    // Filter out all faces for this zone.
+                    label zoneI = fZones.findZoneID(faceZoneNames[surfI]);
+                    const faceZone& fZone = fZones[zoneI];
+                    forAll(fZone, i)
+                    {
+                        label faceI = fZone[i];
+                        filterFace[faceI] = zoneI;
+                        nFilterFaces++;
+                    }
+
+                    if (faceType[surfI] == refinementSurfaces::BOUNDARY)
+                    {
+                        forAll(fZone, i)
+                        {
+                            label faceI = fZone[i];
+                            const face& f = mesh.faces()[faceI];
+                            forAll(f, fp)
+                            {
+                                if (!duplicatePoint[f[fp]])
+                                {
+                                    duplicatePoint[f[fp]] = 1;
+                                    nDuplicatePoints++;
+                                }
+                            }
+                        }
+                    }
+
+                    Info<< "Surface : " << surfaces.names()[surfI] << nl
+                        << "    faces to become baffle : "
+                        << returnReduce(nFilterFaces, sumOp<label>()) << nl
+                        << "    points to duplicate    : "
+                        << returnReduce(nDuplicatePoints, sumOp<label>())
+                        << endl;
+                }
+            }
+        }
+
+
+        // Duplicate points
+        if (returnReduce(nDuplicatePoints, sumOp<label>()) > 0)
+        {
+            // Collect all points
+            labelList candidatePoints(nDuplicatePoints);
+            nDuplicatePoints = 0;
+            forAll(duplicatePoint, pointI)
+            {
+                if (duplicatePoint[pointI])
+                {
+                    candidatePoints[nDuplicatePoints++] = pointI;
+                }
+            }
+
+
+            localPointRegion regionSide(mesh, candidatePoints);
+            autoPtr<mapPolyMesh> mapPtr =
+                meshRefiner_.dupNonManifoldPoints(regionSide);
+            meshRefinement::updateList(mapPtr().faceMap(), -1, filterFace);
+
+            const labelList& reverseFaceMap = mapPtr().reverseFaceMap();
+            origBaffles.setSize(mesh.nFaces());
+            origBaffles = -1;
+
+            forAll(baffles, i)
+            {
+                labelPair& baffle = baffles[i];
+                baffle.first() = reverseFaceMap[baffle.first()];
+                baffle.second() = reverseFaceMap[baffle.second()];
+                origBaffles[baffle.first()] = baffle.second();
+                origBaffles[baffle.second()] = baffle.first();
+            }
+
+            if (debug&meshRefinement::MESH)
+            {
+                const_cast<Time&>(mesh.time())++;
+                Pout<< "Writing duplicatedPoints mesh to time "
+                    << meshRefiner_.timeName()
+                    << endl;
+                meshRefiner_.write
+                (
+                    debug, mesh.time().path()
+                   /"duplicatedPoints"
+                );
+            }
+        }
+
+
+        // Forget about baffles in a BAFFLE/BOUNDARY type zone
+        DynamicList<labelPair> newBaffles(baffles.size());
+        forAll(baffles, i)
+        {
+            const labelPair& baffle = baffles[i];
+            if
+            (
+                filterFace[baffle.first()] == -1
+             && filterFace[baffles[i].second()] == -1
+            )
+            {
+                newBaffles.append(baffle);
+            }
+        }
+
+        if (newBaffles.size() < baffles.size())
+        {
+            //Info<< "Splitting baffles into" << nl
+            //    << "    internal : " << newBaffles.size() << nl
+            //    << "    baffle   : " << baffles.size()-newBaffles.size()
+            //    << nl << endl;
+            baffles.transfer(newBaffles);
+        }
+        Info<< endl;
+    }
 
 
     bool doFeatures = false;
@@ -1287,9 +1446,10 @@ void CML::autoSnapDriver::doSnap
                 adaptPatchIDs
             )
         );
+        indirectPrimitivePatch& pp = ppPtr();
 
         // Distance to attract to nearest feature on surface
-        const scalarField snapDist(calcSnapDistance(snapParams, ppPtr()));
+        const scalarField snapDist(calcSnapDistance(snapParams, pp));
 
 
         // Construct iterative mesh mover.
@@ -1301,7 +1461,7 @@ void CML::autoSnapDriver::doSnap
         motionSmoother meshMover
         (
             mesh,
-            ppPtr(),
+            pp,
             adaptPatchIDs,
             meshRefinement::makeDisplacementField(pMesh, adaptPatchIDs),
             motionDict
@@ -1345,6 +1505,7 @@ void CML::autoSnapDriver::doSnap
             {
                 disp = calcNearestSurfaceFeature
                 (
+                    snapParams,
                     iter,
                     featureCos,
                     scalar(iter+1)/nFeatIter,
@@ -1355,7 +1516,7 @@ void CML::autoSnapDriver::doSnap
             }
 
             // Check for displacement being outwards.
-            outwardsDisplacement(ppPtr(), disp);
+            outwardsDisplacement(pp, disp);
 
             // Set initial distribution of displacement field (on patches)
             // from patchDisp and make displacement consistent with b.c.
@@ -1369,8 +1530,8 @@ void CML::autoSnapDriver::doSnap
                 (
                     mesh.time().path()
                   / "patchDisplacement_" + name(iter) + ".obj",
-                    ppPtr().localPoints(),
-                    ppPtr().localPoints() + disp
+                    pp.localPoints(),
+                    pp.localPoints() + disp
                 );
             }
 
@@ -1388,26 +1549,32 @@ void CML::autoSnapDriver::doSnap
 
             if (!meshOk)
             {
-                Info<< "Did not successfully snap mesh. Giving up."
-                    << nl << endl;
-
-                // Use current mesh as base mesh
-                meshMover.correct();
-
-                break;
+                WarningInFunction
+                    << "Did not succesfully snap mesh."
+                    << " Continuing to snap to resolve easy" << nl
+                    << "    surfaces but the"
+                    << " resulting mesh will not satisfy your quality"
+                    << " constraints" << nl << endl;
+                //Info<< "Did not succesfully snap mesh. Giving up."
+                //    << nl << endl;
+                //
+                //// Use current mesh as base mesh
+                //meshMover.correct();
+                //
+                //break;
             }
 
             if (debug)
             {
                 const_cast<Time&>(mesh.time())++;
-                Pout<< "Writing scaled mesh to time "
+                Info<< "Writing scaled mesh to time "
                     << meshRefiner_.timeName() << endl;
                 meshRefiner_.write
                 (
                     debug,
                     mesh.time().path()/meshRefiner_.timeName()
                 );
-                Pout<< "Writing displacement field ..." << endl;
+                Info<< "Writing displacement field ..." << endl;
                 meshMover.displacement().write();
                 tmp<pointScalarField> magDisp(mag(meshMover.displacement()));
                 magDisp().write();
@@ -1419,10 +1586,23 @@ void CML::autoSnapDriver::doSnap
     }
 
     // Merge any introduced baffles.
-    mergeZoneBaffles(baffles);
+    {
+        autoPtr<mapPolyMesh> mapPtr = mergeZoneBaffles(baffles);
+
+        if (mapPtr.valid())
+        {
+            forAll(origBaffles, faceI)
+            {
+                if (origBaffles[faceI] != -1)
+                {
+                    origBaffles[faceI] = mapPtr->reverseFaceMap()[faceI];
+                }
+            }
+        }
+    }
 
     // Repatch faces according to nearest.
-    repatchToSurface(snapParams, adaptPatchIDs);
+    repatchToSurface(snapParams, adaptPatchIDs, origBaffles);
 
     // Repatching might have caused faces to be on same patch and hence
     // mergeable so try again to merge coplanar faces
@@ -1443,7 +1623,7 @@ void CML::autoSnapDriver::doSnap
     if (nChanged > 0 && debug)
     {
         const_cast<Time&>(mesh.time())++;
-        Pout<< "Writing patchFace merged mesh to time "
+        Info<< "Writing patchFace merged mesh to time "
             << meshRefiner_.timeName() << endl;
         meshRefiner_.write
         (

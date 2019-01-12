@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -807,7 +807,7 @@ void CML::searchableSurfacesQueries::signedDistance
                     }
                     default:
                     {
-                        FatalErrorIn("signedDistance()")
+                        FatalErrorInFunction
                             << "getVolumeType failure,"
                             << " neither INSIDE or OUTSIDE."
                             << " point:" << surfPoints[i]
@@ -876,11 +876,8 @@ CML::pointIndexHit CML::searchableSurfacesQueries::facesIntersection
         }
         else
         {
-            FatalErrorIn
-            (
-                "searchableSurfacesQueries::facesIntersection"
-                "(const labelList&, const scalar, const scalar, const point&)"
-            )   << "Did not find point within distance "
+            FatalErrorInFunction
+                << "Did not find point within distance "
                 << initDistSqr << " of starting point " << start
                 << " on surface "
                 << allSurfaces[surfacesToTest[i]].IOobject::name()

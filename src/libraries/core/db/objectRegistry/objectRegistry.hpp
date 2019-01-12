@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -210,11 +210,7 @@ public:
             //  for this class, write is used instead
             virtual bool writeData(Ostream&) const
             {
-                notImplemented
-                (
-                    "void objectRegistry::writeData(Ostream&) const: "
-                    "use write() instead"
-                );
+                NotImplemented;
 
                 return false;
             }
@@ -389,10 +385,8 @@ const Type& CML::objectRegistry::lookupObject(const word& name) const
             return *vpsiPtr_;
         }
 
-        FatalErrorIn
-        (
-            "objectRegistry::lookupObject<Type>(const word&) const"
-        )   << nl
+        FatalErrorInFunction
+            << nl
             << "    lookup of " << name << " from objectRegistry "
             << this->name()
             << " successful\n    but it is not a " << Type::typeName
@@ -406,10 +400,8 @@ const Type& CML::objectRegistry::lookupObject(const word& name) const
             return parent_.lookupObject<Type>(name);
         }
 
-        FatalErrorIn
-        (
-            "objectRegistry::lookupObject<Type>(const word&) const"
-        )   << nl
+        FatalErrorInFunction
+            << nl
             << "    request for " << Type::typeName
             << " " << name << " from objectRegistry " << this->name()
             << " failed\n    available objects of type " << Type::typeName

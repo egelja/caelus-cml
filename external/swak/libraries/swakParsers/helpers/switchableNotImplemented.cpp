@@ -48,15 +48,15 @@ namespace CML {
             fileName fullName=dict.name()+"_"+methodName;
             if(!notImplementedWarningAlreadyIssued.found(fullName)) {
                 Info << endl;
-                WarningIn("switchableNotImpleemnted")
+                WarningInFunction
                     << "The method " << methodName << " isn't properly "
-                        << " implemented (at least that is what the developer "
-                        << " thinks. You chose to ignore this for "
-                        << dict.name() << endl
-                        << "The consequences are your responsibility "
-                        << "(but if you're lucky everything will be OK)" << endl
-                        << "This warning will only appear once"
-                        << nl << endl;
+                    << " implemented (at least that is what the developer "
+                    << " thinks. You chose to ignore this for "
+                    << dict.name() << endl
+                    << "The consequences are your responsibility "
+                    << "(but if you're lucky everything will be OK)" << endl
+                    << "This warning will only appear once"
+                    << nl << endl;
 
                 notImplementedWarningAlreadyIssued.insert(fullName);
             }

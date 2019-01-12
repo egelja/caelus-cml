@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,6 +22,7 @@ License
 #include "noPyrolysis.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "volFields.hpp"
+#include "absorptionEmissionModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,13 +43,20 @@ addToRunTimeSelectionTable(pyrolysisModel, noPyrolysis, dictionary);
 
 void noPyrolysis::constructThermoChemistry()
 {
+    solidThermo_.reset
+    (
+        solidReactionThermo::New(regionMesh()).ptr()
+    );
+
     solidChemistry_.reset
     (
-        solidChemistryModel::New(regionMesh()).ptr()
+        basicSolidChemistryModel::New(solidThermo_()).ptr()
     );
 
     solidThermo_.reset(&solidChemistry_->solidThermo());
+    radiation_.reset(radiation::radiationModel::New(solidThermo_->T()).ptr());
 }
+
 
 bool noPyrolysis::read()
 {
@@ -80,11 +88,17 @@ bool noPyrolysis::read(const dictionary& dict)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-noPyrolysis::noPyrolysis(const word& modelType, const fvMesh& mesh)
+noPyrolysis::noPyrolysis
+(
+    const word& modelType,
+    const fvMesh& mesh,
+    const word& regionType
+)
 :
-    pyrolysisModel(mesh),
-    solidChemistry_(NULL),
-    solidThermo_(NULL)
+    pyrolysisModel(mesh, regionType),
+    solidThermo_(nullptr),
+    solidChemistry_(nullptr),
+    radiation_(nullptr)
 {
     if (active())
     {
@@ -97,17 +111,21 @@ noPyrolysis::noPyrolysis
 (
     const word& modelType,
     const fvMesh& mesh,
-    const dictionary& dict
-):
-    pyrolysisModel(mesh),
-    solidChemistry_(NULL),
-    solidThermo_(NULL)
+    const dictionary& dict,
+    const word& regionType
+)
+:
+    pyrolysisModel(mesh, regionType),
+    solidThermo_(nullptr),
+    solidChemistry_(nullptr),
+    radiation_(nullptr)
 {
     if (active())
     {
         constructThermoChemistry();
     }
 }
+
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -118,50 +136,46 @@ noPyrolysis::~noPyrolysis()
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 void noPyrolysis::preEvolveRegion()
-{
-    //Do nothing
-}
+{}
 
 
 void noPyrolysis::evolveRegion()
-{
-    //Do nothing
-}
+{}
 
 
 const volScalarField& noPyrolysis::rho() const
 {
-    return (solidThermo_->rho());
+    return solidThermo_->rho();
 }
 
 
 const volScalarField& noPyrolysis::T() const
 {
-    return (solidThermo_->T());
+    return solidThermo_->T();
 }
 
 
 const tmp<volScalarField> noPyrolysis::Cp() const
 {
-    return (solidThermo_->Cp());
+    return solidThermo_->Cp();
 }
 
 
-const volScalarField& noPyrolysis::kappa() const
+tmp<volScalarField> noPyrolysis::kappaRad() const
 {
-    return (solidThermo_->kappa());
+    return radiation_->absorptionEmission().a();
 }
 
 
-const volScalarField& noPyrolysis::K() const
+tmp<volScalarField> noPyrolysis::kappa() const
 {
-     return (solidThermo_->K());
+     return solidThermo_->kappa();
 }
 
 
 const surfaceScalarField& noPyrolysis::phiGas() const
 {
-    FatalErrorIn("const volScalarField& noPyrolysis::phiGas() const")
+    FatalErrorInFunction
         << "phiGas field not available for " << type() << abort(FatalError);
     return surfaceScalarField::null();
 }

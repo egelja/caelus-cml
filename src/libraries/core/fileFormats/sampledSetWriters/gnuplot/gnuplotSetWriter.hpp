@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -173,7 +173,7 @@ void CML::gnuplotSetWriter<Type>::write
 {
     if (valueSets.size() != valueSetNames.size())
     {
-        FatalErrorIn("gnuplotSetWriter<Type>::write(..)")
+        FatalErrorInFunction
             << "Number of variables:" << valueSetNames.size() << endl
             << "Number of valueSets:" << valueSets.size()
             << exit(FatalError);

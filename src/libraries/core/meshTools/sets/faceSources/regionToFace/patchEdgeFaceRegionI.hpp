@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,7 +35,7 @@ inline bool CML::patchEdgeFaceRegion::update
 {
     if (!w2.valid(td))
     {
-        FatalErrorIn("patchEdgeFaceRegion::update(..)")
+        FatalErrorInFunction
             << "problem." << abort(FatalError);
     }
 

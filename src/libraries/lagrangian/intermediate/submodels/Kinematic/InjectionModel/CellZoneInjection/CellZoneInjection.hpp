@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,14 +22,17 @@ Class
     CML::CellZoneInjection
 
 Description
-    Injection positions specified by a particle number density within a cell set
+    Injection positions specified by a particle number density within a cell
+    set.
 
-    - User specifies
+    User specifies:
       - Number density of particles in cell set (effective)
       - Total mass to inject
       - Initial parcel velocity
-    - Parcel diameters obtained by PDF model
-    - All parcels introduced at SOI
+
+    Properties:
+      - Parcel diameters obtained by PDF model
+      - All parcels introduced at SOI
 
 
 \*---------------------------------------------------------------------------*/
@@ -85,7 +88,7 @@ class CellZoneInjection
         const vector U0_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
 
     // Private Member Functions
@@ -152,8 +155,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -192,7 +195,7 @@ void CML::CellZoneInjection<CloudType>::setPositions
     const fvMesh& mesh = this->owner().mesh();
     const scalarField& V = mesh.V();
     const label nCells = cellZoneCells.size();
-    cachedRandom& rnd = this->owner().rndGen();
+    Random& rnd = this->owner().rndGen();
 
     DynamicList<vector> positions(nCells);          // initial size only
     DynamicList<label> injectorCells(nCells);       // initial size only
@@ -204,10 +207,10 @@ void CML::CellZoneInjection<CloudType>::setPositions
 
     forAll(cellZoneCells, i)
     {
-        const label cellI = cellZoneCells[i];
+        const label celli = cellZoneCells[i];
 
         // Calc number of particles to add
-        const scalar newParticles = V[cellI]*numberDensity_;
+        const scalar newParticles = V[celli]*numberDensity_;
         newParticlesTotal += newParticles;
         label addParticles = floor(newParticles);
         addParticlesTotal += addParticles;
@@ -222,14 +225,14 @@ void CML::CellZoneInjection<CloudType>::setPositions
 
         // Construct cell tet indices
         const List<tetIndices> cellTetIs =
-            polyMeshTetDecomposition::cellTetIndices(mesh, cellI);
+            polyMeshTetDecomposition::cellTetIndices(mesh, celli);
 
         // Construct cell tet volume fractions
         scalarList cTetVFrac(cellTetIs.size(), 0.0);
         for (label tetI = 1; tetI < cellTetIs.size() - 1; tetI++)
         {
             cTetVFrac[tetI] =
-                cTetVFrac[tetI-1] + cellTetIs[tetI].tet(mesh).mag()/V[cellI];
+                cTetVFrac[tetI-1] + cellTetIs[tetI].tet(mesh).mag()/V[celli];
         }
         cTetVFrac.last() = 1.0;
 
@@ -248,7 +251,7 @@ void CML::CellZoneInjection<CloudType>::setPositions
             }
             positions.append(cellTetIs[tetI].tet(mesh).randomPoint(rnd));
 
-            injectorCells.append(cellI);
+            injectorCells.append(celli);
             injectorTetFaces.append(cellTetIs[tetI].face());
             injectorTetPts.append(cellTetIs[tetI].tetPt());
         }
@@ -331,7 +334,7 @@ CML::CellZoneInjection<CloudType>::CellZoneInjection
     U0_(this->coeffDict().lookup("U0")),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"), owner.rndGen()
         )
@@ -378,7 +381,7 @@ void CML::CellZoneInjection<CloudType>::updateMesh()
 
     if (zoneI < 0)
     {
-        FatalErrorIn("CML::CellZoneInjection<CloudType>::updateMesh()")
+        FatalErrorInFunction
             << "Unknown cell zone name: " << cellZoneName_
             << ". Valid cell zones are: " << mesh.cellZones().names()
             << nl << exit(FatalError);
@@ -394,7 +397,7 @@ void CML::CellZoneInjection<CloudType>::updateMesh()
 
     if ((nCellsTotal == 0) || (VCellsTotal*numberDensity_ < 1))
     {
-        WarningIn("CML::CellZoneInjection<CloudType>::updateMesh()")
+        WarningInFunction
             << "Number of particles to be added to cellZone " << cellZoneName_
             << " is zero" << endl;
     }
@@ -471,14 +474,14 @@ void CML::CellZoneInjection<CloudType>::setPositionAndCell
     const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     position = positions_[parcelI];
     cellOwner = injectorCells_[parcelI];
-    tetFaceI = injectorTetFaces_[parcelI];
-    tetPtI = injectorTetPts_[parcelI];
+    tetFacei = injectorTetFaces_[parcelI];
+    tetPti = injectorTetPts_[parcelI];
 }
 
 

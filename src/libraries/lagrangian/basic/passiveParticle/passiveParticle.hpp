@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -58,26 +58,26 @@ public:
         passiveParticle
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
         )
         :
-            particle(mesh, position, cellI, tetFaceI, tetPtI)
+            particle(mesh, coordinates, celli, tetFacei, tetPti)
         {}
 
-        //- Construct from components, with searching for tetFace and
-        //  tetPt unless disabled by doCellFacePt = false.
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology
         passiveParticle
         (
             const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            bool doCellFacePt = true
+            const label celli
         )
         :
-            particle(mesh, position, cellI, doCellFacePt)
+            particle(mesh, position, celli)
         {}
 
         //- Construct from Istream
@@ -85,10 +85,11 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true
+            bool readFields = true,
+            bool newFormat = true
         )
         :
-            particle(mesh, is, readFields)
+            particle(mesh, is, readFields, newFormat)
         {}
 
         //- Construct as copy

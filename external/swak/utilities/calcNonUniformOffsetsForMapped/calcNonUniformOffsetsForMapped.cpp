@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
         const word &name=otherRegions[i];
         Info << "Reading  region " << name << endl;
         if(name==regionName){
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << name << " is the default mesh"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
 
         additionalMeshes.set(
@@ -185,16 +185,16 @@ int main(int argc, char *argv[])
 
         label patchID=mesh.boundaryMesh().findPatchID(name);
         if(patchID<0) {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Patch " << name << " does not exist"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
         const polyPatch &thePatch=mesh.boundaryMesh()[patchID];
         if(!isA<const mappedPatchBase>(thePatch)) {
-            WarningIn(args.executable())
+            WarningInFunction
                 << name << " is not a subclass of " << mappedPatchBase::typeName
-                    << endl << endl;
+                << endl << endl;
             continue;
         }
         //        const mappedPatchBase &mb=dynamicCast<const mappedPatchBase&>(
@@ -262,10 +262,10 @@ int main(int argc, char *argv[])
             case AUTOTRANSPOSE:
                 {
                     if(!allOtherPoints.valid()){
-                        FatalErrorIn(args.executable())
+                        FatalErrorInFunction
                             << mode << " only working for modes that map from a patch"
-                                << endl
-                                << exit(FatalError);
+                            << endl
+                            << exit(FatalError);
 
                     }
                     boundBox from(allFacePoints);
@@ -275,10 +275,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             default:
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Currently mode " << mode << " is not implemented"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
         }
 
         Info << "Transforming face centers" << endl;
@@ -367,11 +367,11 @@ int main(int argc, char *argv[])
                 mag(moved.max()-mappedTo.max())>thres
             ) {
                 Info << "not OK" << endl;
-                WarningIn(args.executable())
+                WarningInFunction
                     << "Boxes of moved points " << moved << " and mapped from "
-                        << mappedTo << " differ by more than threshold "
-                        << thres
-                        << endl;
+                    << mappedTo << " differ by more than threshold "
+                    << thres
+                    << endl;
             } else {
                 Info << "OK" << endl;
             }
@@ -396,10 +396,10 @@ int main(int argc, char *argv[])
 
             if(pointsOutside>0) {
                 Info << " not OK" << endl;
-                WarningIn(args.executable())
+                WarningInFunction
                     << pointsOutside << " of " << allMoved.size()
-                        << " points outside of region " << otherMesh.name()
-                        << endl;
+                    << " points outside of region " << otherMesh.name()
+                    << endl;
             } else {
                 Info << " OK" << endl;
             }

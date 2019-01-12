@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +21,8 @@ License
 
 #include "patchInteractionDataList.hpp"
 #include "stringListOps.hpp"
-#include "wallPolyPatch.hpp"
+#include "emptyPolyPatch.hpp"
+#include "cyclicAMIPolyPatch.hpp"
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
@@ -52,43 +53,36 @@ CML::patchInteractionDataList::patchInteractionDataList
 
         if (patchIDs.empty())
         {
-            WarningIn
-            (
-                "CML::patchInteractionDataList::patchInteractionDataList"
-                "("
-                    "const polyMesh&, "
-                    "const dictionary&"
-                ")"
-            )   << "Cannot find any patch names matching " << patchName
+            WarningInFunction
+                << "Cannot find any patch names matching " << patchName
                 << endl;
         }
 
         patchGroupIDs_[i].transfer(patchIDs);
     }
 
-    // check that all walls are specified
-    DynamicList<word> badWalls;
-    forAll(bMesh, patchI)
+    // Check that all patches are specified
+    DynamicList<word> badPatches;
+    forAll(bMesh, patchi)
     {
-        const polyPatch& pp = bMesh[patchI];
-        if (isA<wallPolyPatch>(pp) && applyToPatch(pp.index()) < 0)
+        const polyPatch& pp = bMesh[patchi];
+        if
+        (
+            !pp.coupled()
+         && !isA<emptyPolyPatch>(pp)
+         && applyToPatch(pp.index()) < 0
+        )
         {
-            badWalls.append(pp.name());
+            badPatches.append(pp.name());
         }
     }
 
-    if (badWalls.size() > 0)
+    if (badPatches.size() > 0)
     {
-        FatalErrorIn
-        (
-            "CML::patchInteractionDataList::patchInteractionDataList"
-            "("
-                "const polyMesh&, "
-                "const dictionary&"
-            ")"
-        )    << "All wall patches must be specified when employing local patch "
+        FatalErrorInFunction
+            << "All patches must be specified when employing local patch "
             << "interaction. Please specify data for patches:" << nl
-            << badWalls << nl << exit(FatalError);
+            << badPatches << nl << exit(FatalError);
     }
 }
 
@@ -110,9 +104,9 @@ CML::label CML::patchInteractionDataList::applyToPatch(const label id) const
     forAll(patchGroupIDs_, groupI)
     {
         const labelList& patchIDs = patchGroupIDs_[groupI];
-        forAll(patchIDs, patchI)
+        forAll(patchIDs, patchi)
         {
-            if (patchIDs[patchI] == id)
+            if (patchIDs[patchi] == id)
             {
                 return groupI;
             }

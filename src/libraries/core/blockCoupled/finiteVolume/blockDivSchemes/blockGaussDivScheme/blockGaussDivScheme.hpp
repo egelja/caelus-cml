@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -100,13 +100,8 @@ blockGaussDivScheme<Type>::fvmUDiv
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> blockGaussDivScheme<Type>::fvmUDiv\n"
-        "(\n"
-        "    GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block div operator defined only for vector."
+    FatalErrorInFunction
+        << "Implicit block div operator defined only for vector."
         << abort(FatalError);
 
     typedef typename innerProduct<vector, Type>::type DivType;
@@ -128,14 +123,8 @@ blockGaussDivScheme<Type>::fvmUDiv
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> blockGaussDivScheme<Type>::fvmUDiv\n"
-        "(\n"
-        "    const surfaceScalarField& flux"
-        "    const GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block div operator defined only for vector."
+    FatalErrorInFunction
+        << "Implicit block div operator defined only for vector."
         << abort(FatalError);
 
     typedef typename innerProduct<vector, Type>::type DivType;

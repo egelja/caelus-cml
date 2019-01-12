@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,7 +39,7 @@ void CML::cellMapper::calcAddressing() const
      || insertedCellLabelsPtr_
     )
     {
-        FatalErrorIn("void cellMapper::calcAddressing() const")
+        FatalErrorInFunction
             << "Addressing already calculated."
             << abort(FatalError);
     }
@@ -93,7 +93,7 @@ void CML::cellMapper::calcAddressing() const
 
             if (addr[cellI].size())
             {
-                FatalErrorIn("void cellMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master cell " << cellI
                     << " mapped from point cells " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -115,7 +115,7 @@ void CML::cellMapper::calcAddressing() const
 
             if (addr[cellI].size())
             {
-                FatalErrorIn("void cellMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master cell " << cellI
                     << " mapped from edge cells " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -137,7 +137,7 @@ void CML::cellMapper::calcAddressing() const
 
             if (addr[cellI].size())
             {
-                FatalErrorIn("void cellMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master cell " << cellI
                     << " mapped from face cells " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -159,7 +159,7 @@ void CML::cellMapper::calcAddressing() const
 
             if (addr[cellI].size())
             {
-                FatalErrorIn("void cellMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master cell " << cellI
                     << " mapped from cell cells " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -229,10 +229,10 @@ CML::cellMapper::cellMapper(const mapPolyMesh& mpm)
     mpm_(mpm),
     insertedCells_(true),
     direct_(false),
-    directAddrPtr_(NULL),
-    interpolationAddrPtr_(NULL),
-    weightsPtr_(NULL),
-    insertedCellLabelsPtr_(NULL)
+    directAddrPtr_(nullptr),
+    interpolationAddrPtr_(nullptr),
+    weightsPtr_(nullptr),
+    insertedCellLabelsPtr_(nullptr)
 {
     // Check for possibility of direct mapping
     if
@@ -326,10 +326,8 @@ const CML::labelUList& CML::cellMapper::directAddressing() const
 {
     if (!direct())
     {
-        FatalErrorIn
-        (
-            "const labelUList& cellMapper::directAddressing() const"
-        )   << "Requested direct addressing for an interpolative mapper."
+        FatalErrorInFunction
+            << "Requested direct addressing for an interpolative mapper."
             << abort(FatalError);
     }
 
@@ -354,10 +352,8 @@ const CML::labelListList& CML::cellMapper::addressing() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const labelListList& cellMapper::addressing() const"
-        )   << "Requested interpolative addressing for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative addressing for a direct mapper."
             << abort(FatalError);
     }
 
@@ -374,10 +370,8 @@ const CML::scalarListList& CML::cellMapper::weights() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const scalarListList& cellMapper::weights() const"
-        )   << "Requested interpolative weights for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative weights for a direct mapper."
             << abort(FatalError);
     }
 

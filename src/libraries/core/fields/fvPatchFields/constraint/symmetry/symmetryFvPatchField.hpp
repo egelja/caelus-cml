@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -151,16 +151,8 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
 {
     if (!isType<symmetryFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "symmetryFvPatchField<Type>::symmetryFvPatchField\n"
-            "(\n"
-            "    const symmetryFvPatchField<Type>& ptf,\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, volMesh>& iF,\n"
-            "    const fvPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "\n    patch type '" << p.type()
+        FatalErrorInFunction
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -182,16 +174,8 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
 {
     if (!isType<symmetryFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "symmetryFvPatchField<Type>::symmetryFvPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "\n    patch type '" << p.type()
+        FatalIOErrorInFunction(dict)
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()

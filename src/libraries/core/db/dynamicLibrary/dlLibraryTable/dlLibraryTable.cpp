@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,10 +89,8 @@ bool CML::dlLibraryTable::open
         {
             if (verbose)
             {
-                WarningIn
-                (
-                    "dlLibraryTable::open(const fileName&, const bool)"
-                )   << "could not load " << functionLibName
+                WarningInFunction
+                    << "could not load " << functionLibName
                     << endl;
             }
 
@@ -138,17 +136,15 @@ bool CML::dlLibraryTable::close
 
         bool ok = dlClose(libPtrs_[index]);
 
-        libPtrs_[index] = NULL;
+        libPtrs_[index] = nullptr;
         libNames_[index] = fileName::null;
 
         if (!ok)
         {
             if (verbose)
             {
-                WarningIn
-                (
-                    "dlLibraryTable::close(const fileName&)"
-                )   << "could not close " << functionLibName
+                WarningInFunction
+                    << "could not close " << functionLibName
                     << endl;
             }
 
@@ -177,7 +173,7 @@ void* CML::dlLibraryTable::findLibrary(const fileName& functionLibName)
     {
         return libPtrs_[index];
     }
-    return NULL;
+    return nullptr;
 }
 
 

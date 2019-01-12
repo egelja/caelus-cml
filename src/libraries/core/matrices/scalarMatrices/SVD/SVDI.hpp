@@ -24,7 +24,8 @@ License
 template<class T>
 inline const T CML::SVD::sign(const T& a, const T& b)
 {
-    return b >= 0 ? (a >= 0 ? a : -a) : (a >= 0 ? -a : a);
+    // return b >= 0 ? (a >= 0 ? a : -a) : (a >= 0 ? -a : a);
+    return b >= 0 ? a : -a;
 }
 
 
@@ -35,30 +36,35 @@ inline const CML::scalarRectangularMatrix& CML::SVD::U() const
     return U_;
 }
 
+
 inline const CML::scalarRectangularMatrix& CML::SVD::V() const
 {
     return V_;
 }
+
 
 inline const CML::scalarDiagonalMatrix& CML::SVD::S() const
 {
     return S_;
 }
 
-inline const CML::scalarRectangularMatrix& CML::SVD::VSinvUt() const
+
+inline bool CML::SVD::converged() const
 {
-    return VSinvUt_;
+    return converged_;
 }
+
 
 inline CML::label CML::SVD::nZeros() const
 {
     return nZeros_;
 }
 
+
 inline CML::scalar CML::SVD::minNonZeroS() const
 {
     scalar minS = S_[0];
-    for (label i = 1; i < S_.size(); i++)
+    for (label i=1; i<S_.size(); i++)
     {
         scalar s = S_[i];
         if (s > VSMALL && s < minS) minS = s;

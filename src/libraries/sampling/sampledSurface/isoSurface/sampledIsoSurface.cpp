@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -106,7 +106,7 @@ void CML::sampledIsoSurface::getIsoFields() const
             }
             else
             {
-                FatalErrorIn("sampledIsoSurface::getIsoFields()")
+                FatalErrorInFunction
                 << "Cannot find isosurface field " << isoField_
                 << " in database or directory " << vfHeader.path()
                 << exit(FatalError);
@@ -413,22 +413,18 @@ CML::sampledIsoSurface::sampledIsoSurface
     average_(dict.lookupOrDefault("average", false)),
     zoneID_(dict.lookupOrDefault("zone", word::null), mesh.cellZones()),
     exposedPatchName_(word::null),
-    surfPtr_(NULL),
-    facesPtr_(NULL),
+    surfPtr_(nullptr),
+    facesPtr_(nullptr),
     prevTimeIndex_(-1),
-    storedVolFieldPtr_(NULL),
-    volFieldPtr_(NULL),
-    storedPointFieldPtr_(NULL),
-    pointFieldPtr_(NULL)
+    storedVolFieldPtr_(nullptr),
+    volFieldPtr_(nullptr),
+    storedPointFieldPtr_(nullptr),
+    pointFieldPtr_(nullptr)
 {
     if (!sampledSurface::interpolate())
     {
-        FatalIOErrorIn
-        (
-            "sampledIsoSurface::sampledIsoSurface"
-            "(const word&, const polyMesh&, const dictionary&)",
-            dict
-        )   << "Non-interpolated iso surface not supported since triangles"
+        FatalIOErrorInFunction(dict)
+            << "Non-interpolated iso surface not supported since triangles"
             << " span across cells." << exit(FatalIOError);
     }
 
@@ -438,12 +434,8 @@ CML::sampledIsoSurface::sampledIsoSurface
 
         if (mesh.boundaryMesh().findPatchID(exposedPatchName_) == -1)
         {
-            FatalIOErrorIn
-            (
-                "sampledIsoSurface::sampledIsoSurface"
-                "(const word&, const polyMesh&, const dictionary&)",
-                dict
-            )   << "Cannot find patch " << exposedPatchName_
+            FatalIOErrorInFunction(dict)
+                << "Cannot find patch " << exposedPatchName_
                 << " in which to put exposed faces." << endl
                 << "Valid patches are " << mesh.boundaryMesh().names()
                 << exit(FatalIOError);

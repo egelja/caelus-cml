@@ -89,18 +89,18 @@ CML::binaryOperationSearchableSurface::binaryOperationSearchableSurface
     )
 {
     if(aName_==bName_) {
-        FatalErrorIn("binaryOperationSearchableSurface::binaryOperationSearchableSurface")
+        FatalErrorInFunction
             << "'aName' and 'bName' have the same value " << aName_
-                << " for " << name()
-                << endl
-                << exit(FatalError);
+            << " for " << name()
+            << endl
+            << exit(FatalError);
     }
     if(regions().size()!=size()) {
-        FatalErrorIn("binaryOperationSearchableSurface::binaryOperationSearchableSurface")
+        FatalErrorInFunction
             << "Number of regions " << regions().size() << " not equal to size "
-                << size() << nl << "Regions: " << regions()
-                << endl
-                << exit(FatalError);
+            << size() << nl << "Regions: " << regions()
+            << endl
+            << exit(FatalError);
 
     }
 }
@@ -188,7 +188,7 @@ CML::binaryOperationSearchableSurface::coordinates() const
             << " -> " << result.size() << "(" << this->size() << ")" << endl;
     }
     // if(result.size()!=this->size()) {
-    //     WarningIn("binaryOperationSearchableSurface::coordinates()")
+    //     WarningInFunction
     //         << "Number of coordinates " << result.size() << " does not match "
     //             << " the promised size: " << this->size() << endl
     //             << "Coordinates: " << result << endl
@@ -202,10 +202,7 @@ CML::binaryOperationSearchableSurface::coordinates() const
 
 bool CML::binaryOperationSearchableSurface::overlaps(const boundBox& bb) const
 {
-    notImplemented
-        (
-            "CML::binaryOperationSearchableSurface::overlaps(const boundBox&) const"
-        );
+    NotImplemented;
 
     return false;
 }
@@ -256,7 +253,7 @@ void CML::binaryOperationSearchableSurface::findNearest
         bool validA=(hitA[i].hit() && this->decidePoint(hA,inAA[i],inBA[i]));
         bool validB=(hitB[i].hit() && this->decidePoint(hB,inAB[i],inBB[i]));
         if(!validA && !validB) {
-            // WarningIn("CML::binaryOperationSearchableSurface::findNearest")
+            // WarningInFunction
             //     << "Neither hit " << hitA[i] << " nor " << hitB[i]
             //         << " near " << samples[i] << " valid" << endl
             //         << same[i] << " " << inAA[i] << " " << inBA[i]
@@ -514,14 +511,14 @@ void CML::binaryOperationSearchableSurface::getRegion
         } else if(who[i]==NONE) {
             //            region[i]=-1;
             region[i]=0;
-            WarningIn("CML::binaryOperationSearchableSurface::getRegion")
+            WarningInFunction
                 << "Hit " << info[i] << " does not fit any component" << endl
                     << "Defaulting to 0" << endl;
 
-            // FatalErrorIn("binaryOperationSearchableSurface::getRegion")
+            // FatalErrorInFunction
             //     << "The hit " << info[i] << " hits none of both"
-            //         << endl
-            //         << abort(FatalError);
+            //     << endl
+            //     << abort(FatalError);
         }
     }
 
@@ -543,13 +540,13 @@ void CML::binaryOperationSearchableSurface::getRegion
             << " B: " << cntInB << " Both: " << cntBoth
             << " None: " << cntNone << endl;
 
-        FatalErrorIn("binaryOperationSearchableSurface::getRegion")
+        FatalErrorInFunction
             << "Something went horribly wrong. The sizes "
-                << cntA << "!=" << regionA.size() << " and/or "
-                << cntB << "!=" << regionB.size() << "\n"
-                << "We're lucky that the program got here\n"
-                << endl
-                << abort(FatalError);
+            << cntA << "!=" << regionA.size() << " and/or "
+            << cntB << "!=" << regionB.size() << "\n"
+            << "We're lucky that the program got here\n"
+            << endl
+            << abort(FatalError);
     }
 
     assert(region.size()==info.size());
@@ -642,13 +639,13 @@ void CML::binaryOperationSearchableSurface::getNormal
             << " B: " << cntInB << " Both: " << cntBoth
             << " None: " << cntNone << endl;
 
-        FatalErrorIn("binaryOperationSearchableSurface::getNormal")
+        FatalErrorInFunction
             << "Something went horribly wrong. The sizes "
-                << cntA << "!=" << normalA.size() << " and/or "
-                << cntB << "!=" << normalB.size() << "\n"
-                << "We're lucky that the program got here\n"
-                << endl
-                << abort(FatalError);
+            << cntA << "!=" << normalA.size() << " and/or "
+            << cntB << "!=" << normalB.size() << "\n"
+            << "We're lucky that the program got here\n"
+            << endl
+            << abort(FatalError);
     }
 }
 
@@ -769,10 +766,10 @@ void  CML::binaryOperationSearchableSurface::splitHits
         }
     }
     if( cntA!=nrA || cntB!=nrB ) {
-        FatalErrorIn("CML::binaryOperationSearchableSurface::splitHits")
+        FatalErrorInFunction
             << "Counts differ: " << cntA << "/" << nrA << " " << cntB << "/" << nrB
-                << "\n" << endl
-                << abort(FatalError);
+            << "\n" << endl
+            << abort(FatalError);
     }
     if(debug) {
         Info << "From " << hits.size() << " to A: " << hitsA.size()
@@ -838,11 +835,11 @@ void CML::binaryOperationSearchableSurface::samePoint(
 ) const
 {
     if(hitA.size()!=hitB.size()) {
-        FatalErrorIn("CML::binaryOperationSearchableSurface::samePoint")
+        FatalErrorInFunction
             << "hitA (" << hitA.size() << ") and "
-                << "hitB (" << hitB.size() << ") are not of same size"
-                << endl
-                << abort(FatalError);
+            << "hitB (" << hitB.size() << ") are not of same size"
+            << endl
+            << abort(FatalError);
     }
     const scalar sameTolerance=1e-10;
 

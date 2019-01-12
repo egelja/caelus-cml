@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,8 +37,8 @@ namespace CML
 CML::leastSquaresVectors::leastSquaresVectors(const fvMesh& mesh)
 :
     MeshObject<fvMesh, leastSquaresVectors>(mesh),
-    pVectorsPtr_(NULL),
-    nVectorsPtr_(NULL)
+    pVectorsPtr_(nullptr),
+    nVectorsPtr_(nullptr)
 {}
 
 
@@ -289,7 +289,7 @@ void CML::leastSquaresVectors::makeLeastSquaresVectors() const
 
         if (debug)
         {
-            InfoIn("leastSquaresVectors::makeLeastSquaresVectors()")
+            InfoInFunction
                 << "number of bad cells switched to Gauss = " << nBadCells
                 << endl;
         }

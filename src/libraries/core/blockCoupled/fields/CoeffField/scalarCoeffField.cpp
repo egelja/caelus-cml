@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2013 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -125,15 +126,8 @@ void CML::CoeffField<CML::scalar>::getSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "void CML::CoeffField<CML::scalar>::getSubset\n"
-            "(\n"
-            "    CoeffField<scalar>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -155,14 +149,8 @@ void CML::CoeffField<CML::scalar>::getSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "void CML::CoeffField<CML::scalar>::getSubset\n"
-            "(\n"
-            "    CoeffField<scalar>& f,\n"
-            "    const labelList addr\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -185,15 +173,8 @@ void CML::CoeffField<CML::scalar>::setSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "void CML::CoeffField<CML::scalar>::setSubset\n"
-            "(\n"
-            "     const CoeffField<scalar>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -215,14 +196,8 @@ void CML::CoeffField<CML::scalar>::setSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "void CML::CoeffField<CML::scalar>::setSubset\n"
-            "(\n"
-            "    const CoeffField<scalar>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -273,14 +248,8 @@ void CML::CoeffField<CML::scalar>::addSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "void CML::CoeffField<CML::scalar>::addSubset\n"
-            "(\n"
-            "    const CoeffField<scalar>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 

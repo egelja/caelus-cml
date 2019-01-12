@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -55,21 +55,21 @@ CML::JobInfo::JobInfo()
 
         if (baseDir.empty())
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot get JobInfo directory $CAELUS_JOB_DIR"
                 << CML::exit(FatalError);
         }
 
         if (!isDir(runningDir) && !mkDir(runningDir))
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot make JobInfo directory " << runningDir
                 << CML::exit(FatalError);
         }
 
         if (!isDir(finishedDir) && !mkDir(finishedDir))
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot make JobInfo directory " << finishedDir
                 << CML::exit(FatalError);
         }
@@ -121,7 +121,7 @@ void CML::JobInfo::write() const
     {
         if (!write(OFstream(runningJobPath_)()))
         {
-            FatalErrorIn("JobInfo::write() const")
+            FatalErrorInFunction
                 << "Failed to write to JobInfo file "
                 << runningJobPath_
                 << CML::exit(FatalError);

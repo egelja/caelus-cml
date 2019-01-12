@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -612,15 +612,8 @@ void CML::ReactingCloud<CloudType>::checkSuppliedComposition
 {
     if (YSupplied.size() != Y.size())
     {
-        FatalErrorIn
-        (
-            "ReactingCloud<CloudType>::checkSuppliedComposition"
-            "("
-                "const scalarField&, "
-                "const scalarField&, "
-                "const word&"
-            ")"
-        )   << YName << " supplied, but size is not compatible with "
+        FatalErrorInFunction
+            << YName << " supplied, but size is not compatible with "
             << "parcel composition: " << nl << "    "
             << YName << "(" << YSupplied.size() << ") vs required composition "
             << YName << "(" << Y.size() << ")" << nl
@@ -654,10 +647,10 @@ CML::ReactingCloud<CloudType>::ReactingCloud
 :
     CloudType(cloudName, rho, U, g, thermo, false),
     reactingCloud(),
-    cloudCopyPtr_(NULL),
-    constProps_(this->particleProperties(), this->solution().active()),
-    compositionModel_(NULL),
-    phaseChangeModel_(NULL),
+    cloudCopyPtr_(nullptr),
+    constProps_(this->particleProperties()),
+    compositionModel_(nullptr),
+    phaseChangeModel_(nullptr),
     rhoTrans_(thermo.carrier().species().size())
 {
     if (this->solution().active())
@@ -667,6 +660,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
         if (readFields)
         {
             parcelType::readFields(*this, this->composition());
+            this->deleteLostParticles();
         }
     }
 
@@ -709,7 +703,7 @@ CML::ReactingCloud<CloudType>::ReactingCloud
 :
     CloudType(c, name),
     reactingCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     constProps_(c.constProps_),
     compositionModel_(c.compositionModel_->clone()),
     phaseChangeModel_(c.phaseChangeModel_->clone()),
@@ -749,11 +743,11 @@ CML::ReactingCloud<CloudType>::ReactingCloud
 :
     CloudType(mesh, name, c),
     reactingCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     constProps_(),
     compositionModel_(c.compositionModel_->clone()),
-//    compositionModel_(NULL),
-    phaseChangeModel_(NULL),
+//    compositionModel_(nullptr),
+    phaseChangeModel_(nullptr),
     rhoTrans_(0)
 {}
 
@@ -776,7 +770,6 @@ void CML::ReactingCloud<CloudType>::setParcelThermoProperties
 {
     CloudType::setParcelThermoProperties(parcel, lagrangianDt);
 
-    parcel.pc() = this->thermo().thermo().p()[parcel.cell()];
     parcel.Y() = composition().YMixture0();
 }
 
@@ -848,10 +841,10 @@ void CML::ReactingCloud<CloudType>::relaxSources
 
     typedef DimensionedField<scalar, volMesh> dsfType;
 
-    forAll(rhoTrans_, fieldI)
+    forAll(rhoTrans_, fieldi)
     {
-        dsfType& rhoT = rhoTrans_[fieldI];
-        const dsfType& rhoT0 = cloudOldTime.rhoTrans()[fieldI];
+        dsfType& rhoT = rhoTrans_[fieldi];
+        const dsfType& rhoT0 = cloudOldTime.rhoTrans()[fieldi];
         this->relax(rhoT, rhoT0, "rho");
     }
 }
@@ -864,9 +857,9 @@ void CML::ReactingCloud<CloudType>::scaleSources()
 
     typedef DimensionedField<scalar, volMesh> dsfType;
 
-    forAll(rhoTrans_, fieldI)
+    forAll(rhoTrans_, fieldi)
     {
-        dsfType& rhoT = rhoTrans_[fieldI];
+        dsfType& rhoT = rhoTrans_[fieldi];
         this->scale(rhoT, "rho");
     }
 }
@@ -877,10 +870,9 @@ void CML::ReactingCloud<CloudType>::evolve()
 {
     if (this->solution().canEvolve())
     {
-        typename parcelType::template
-            TrackingData<ReactingCloud<CloudType> > td(*this);
+        typename parcelType::trackingData td(*this);
 
-        this->solve(td);
+        this->solve(*this, td);
     }
 }
 
@@ -888,11 +880,7 @@ void CML::ReactingCloud<CloudType>::evolve()
 template<class CloudType>
 void CML::ReactingCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
-    typedef typename particle::TrackingData<ReactingCloud<CloudType> > tdType;
-
-    tdType td(*this);
-
-    Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+    Cloud<parcelType>::autoMap(mapper);
 
     this->updateMesh();
 }
@@ -910,7 +898,7 @@ void CML::ReactingCloud<CloudType>::info()
 template<class CloudType>
 void CML::ReactingCloud<CloudType>::writeFields() const
 {
-    if (this->size())
+    if (compositionModel_.valid())
     {
         CloudType::particleType::writeFields(*this, this->composition());
     }

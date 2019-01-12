@@ -484,11 +484,11 @@ tmp<volScalarField> FieldValueExpressionDriver::makeDistanceToPatchField(
 ) {
     label patchI=mesh().boundaryMesh().findPatchID(name);
     if(patchI<0) {
-        FatalErrorIn("FieldValueExpressionDriver::makeDistanceToPatchField(const word &name)")
+        FatalErrorInFunction
             << "Patch name " << name << " not in valid names"
-                << mesh().boundaryMesh().names()
-                << endl
-                << exit(FatalError);
+            << mesh().boundaryMesh().names()
+            << endl
+            << exit(FatalError);
     }
     labelHashSet patchIDs;
     patchIDs.insert(patchI);
@@ -668,11 +668,11 @@ tmp<surfaceScalarField> FieldValueExpressionDriver::makeOnPatchField(const word 
 
     label patchI=mesh().boundaryMesh().findPatchID(name);
     if(patchI<0) {
-        FatalErrorIn("makeFaceSetField(const word &name)")
+        FatalErrorInFunction
             << "Patch name " << name << " not in valid names"
-                << mesh().boundaryMesh().names()
-                << endl
-                << exit(FatalError);
+            << mesh().boundaryMesh().names()
+            << endl
+            << exit(FatalError);
     } else {
         forAll(f().boundaryField()[patchI],faceI) {
             f().boundaryField()[patchI][faceI]=1;
@@ -718,11 +718,11 @@ tmp<surfaceScalarField> FieldValueExpressionDriver::makeFaceSetField(const word 
       } else {
           label patchI=mesh().boundaryMesh().whichPatch(faces[faceI]);
           if(patchI<0) {
-              FatalErrorIn("FieldValueExpressionDriver::makeFaceSetField(const word &name")
+              FatalErrorInFunction
                   << "Face " << faces[faceI] << " of faceSet "
-                      << name << " is not in the mesh"
-                      << endl
-                      << exit(FatalError);
+                  << name << " is not in the mesh"
+                  << endl
+                  << exit(FatalError);
           } else {
               f().boundaryField()[patchI][
                   faces[faceI]
@@ -778,11 +778,11 @@ tmp<volScalarField> FieldValueExpressionDriver::makeCellZoneField(const word &na
   label zoneID=mesh_.cellZones().findZoneID(name);
 
   if(zoneID<0) {
-      FatalErrorIn("FieldValueExpressionDriver::makeCellZoneField")
+      FatalErrorInFunction
           << "No zone named " << name << "found. Present: "
-              << mesh_.cellZones().names()
-              << endl
-              << exit(FatalError);
+          << mesh_.cellZones().names()
+          << endl
+          << exit(FatalError);
   }
 
   const cellZone &zone=mesh_.cellZones()[zoneID];
@@ -803,11 +803,11 @@ tmp<surfaceScalarField> FieldValueExpressionDriver::makeFaceZoneField(const word
   label zoneID=mesh_.faceZones().findZoneID(name);
 
   if(zoneID<0) {
-      FatalErrorIn("FieldValueExpressionDriver::makeFaceZoneField")
+      FatalErrorInFunction
           << "No zone named " << name << "found. Present: "
-              << mesh_.faceZones().names()
-              << endl
-              << exit(FatalError);
+          << mesh_.faceZones().names()
+          << endl
+          << exit(FatalError);
   }
 
   const faceZone &zone=mesh_.faceZones()[zoneID];
@@ -820,11 +820,11 @@ tmp<surfaceScalarField> FieldValueExpressionDriver::makeFaceZoneField(const word
       } else {
           label patchI=mesh().boundaryMesh().whichPatch(faceI);
           if(patchI<0) {
-              FatalErrorIn("FieldValueExpressionDriver::makeFaceZoneField(const word &name")
+              FatalErrorInFunction
                   << "Face " << faceI << " of faceZone "
-                      << name << " is not in the mesh"
-                      << endl
-                      << exit(FatalError);
+                  << name << " is not in the mesh"
+                  << endl
+                  << exit(FatalError);
           } else {
               f().boundaryField()[patchI][
                   faceI
@@ -843,11 +843,11 @@ tmp<pointScalarField> FieldValueExpressionDriver::makePointZoneField(const word 
   label zoneID=mesh_.pointZones().findZoneID(name);
 
   if(zoneID<0) {
-      FatalErrorIn("FieldValueExpressionDriver::makeFaceZoneField")
+      FatalErrorInFunction
           << "No zone named " << name << "found. Present: "
-              << mesh_.faceZones().names()
-              << endl
-              << exit(FatalError);
+          << mesh_.faceZones().names()
+          << endl
+          << exit(FatalError);
   }
 
   const pointZone &zone=mesh_.pointZones()[zoneID];
@@ -1304,20 +1304,20 @@ tmp<scalarField> FieldValueExpressionDriver::weightsNonPoint(
     reduce(isFace,andOp<bool>());
 
     if(isCell && isFace) {
-        WarningIn("FieldValueExpressionDriver::weightsNonPoint")
+        WarningInFunction
             << "Can't determine whether this is a face or a cell field" << endl
-                << "Going for CELL"
-                << endl;
+            << "Going for CELL"
+            << endl;
     } else if(isCell==isFace) {
         Pout << "Expected size: " << size
             << " Cell size: " << cellSize
             << " Face size: " << faceSize << endl;
 
-        FatalErrorIn("FieldValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
     if(isCell) {
         return tmp<scalarField>(new scalarField(mesh().V()));

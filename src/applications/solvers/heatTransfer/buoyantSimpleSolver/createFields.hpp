@@ -1,10 +1,8 @@
     Info<< "Reading thermophysical properties\n" << endl;
 
-    autoPtr<basicPsiThermo> pThermo
-    (
-        basicPsiThermo::New(mesh)
-    );
-    basicPsiThermo& thermo = pThermo();
+    autoPtr<rhoThermo> pThermo(rhoThermo::New(mesh));
+    rhoThermo& thermo = pThermo();
+    thermo.validate(args.executable(), "h", "e");
 
     volScalarField rho
     (
@@ -20,7 +18,7 @@
     );
 
     volScalarField& p = thermo.p();
-    volScalarField& h = thermo.h();
+
     const volScalarField& psi = thermo.psi();
 
     Info<< "Reading field U\n" << endl;

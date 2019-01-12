@@ -264,7 +264,7 @@ public:
         void updateVerticesSMP(const List<LongList<labelledPoint> >&);
 
         //- updates the vertices of the original polyMeshGen
-        void updateOrigMesh(boolList* changedFacePtr = NULL);
+        void updateOrigMesh(boolList* changedFacePtr = nullptr);
 
         //- creates polyMeshGen from this partTetMesh
         void createPolyMesh(polyMeshGen& pmg) const;

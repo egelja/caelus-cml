@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -361,7 +361,7 @@ CML::meshTriangulation::meshTriangulation
 
                 if (faceTris.empty())
                 {
-                    WarningIn("meshTriangulation::meshTriangulation")
+                    WarningInFunction
                         << "Could not find triangulation for face " << faceI
                         << " vertices " << faces[faceI] << " coords "
                         << IndirectList<point>(points, faces[faceI])() << endl;
@@ -424,7 +424,7 @@ CML::meshTriangulation::meshTriangulation
 
                 if (faceTris.empty())
                 {
-                    WarningIn("meshTriangulation::meshTriangulation")
+                    WarningInFunction
                         << "Could not find triangulation for face " << faceI
                         << " vertices " << faces[faceI] << " coords "
                         << IndirectList<point>(points, faces[faceI])() << endl;

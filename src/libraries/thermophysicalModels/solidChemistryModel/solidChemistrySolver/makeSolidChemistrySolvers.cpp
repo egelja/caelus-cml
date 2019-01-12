@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,47 +23,34 @@ License
 #include "solidThermoPhysicsTypes.hpp"
 #include "thermoPhysicsTypes.hpp"
 
-#include "chemistrySolver.hpp"
-
-#include "ODESolidChemistryModel.hpp"
-#include "solidChemistryModel.hpp"
-
-#include "ode_.hpp"
+#include "pyrolysisChemistryModel.hpp"
+#include "basicSolidChemistryModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
-    typedef ODESolidChemistryModel
-        <solidChemistryModel, constSolidThermoPhysics, gasThermoPhysics>
-            solidODEChemistryConstThermo;
-
-    makeChemistrySolver(solidODEChemistryConstThermo)
-
-    makeSolidChemistrySolverType
+    makeSolidChemistrySolverTypes
     (
-        ode,
-        ODESolidChemistryModel,
-        solidChemistryModel,
-        constSolidThermoPhysics,
-        gasThermoPhysics
+        pyrolysisChemistryModel,
+        basicSolidChemistryModel,
+        hConstSolidThermoPhysics,
+        gasHThermoPhysics
     )
 
-    typedef ODESolidChemistryModel
-        <solidChemistryModel, expoSolidThermoPhysics, gasThermoPhysics>
-            solidODEChemistryExpThermo;
-
-    makeChemistrySolver(solidODEChemistryExpThermo)
-
-    makeSolidChemistrySolverType
+    makeSolidChemistrySolverTypes
     (
-        ode,
-        ODESolidChemistryModel,
-        solidChemistryModel,
-        expoSolidThermoPhysics,
-        gasThermoPhysics
+        pyrolysisChemistryModel,
+        basicSolidChemistryModel,
+        hPowerSolidThermoPhysics,
+        gasHThermoPhysics
+    )
+
+    makeSolidChemistrySolverTypes
+    (
+        pyrolysisChemistryModel,
+        basicSolidChemistryModel,
+        hExpKappaConstSolidThermoPhysics,
+        gasHThermoPhysics
     )
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

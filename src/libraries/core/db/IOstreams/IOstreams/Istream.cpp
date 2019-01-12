@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,13 +27,13 @@ void CML::Istream::putBack(const token& t)
 {
     if (bad())
     {
-        FatalIOErrorIn("void Istream::putBack(const token&)", *this)
+        FatalIOErrorInFunction(*this)
             << "Attempt to put back onto bad stream"
             << exit(FatalIOError);
     }
     else if (putBack_)
     {
-        FatalIOErrorIn("void Istream::putBack(const token&)", *this)
+        FatalIOErrorInFunction(*this)
             << "Attempt to put back another token"
             << exit(FatalIOError);
     }
@@ -49,7 +49,7 @@ bool CML::Istream::getBack(token& t)
 {
     if (bad())
     {
-        FatalIOErrorIn("void Istream::getBack(token&)", *this)
+        FatalIOErrorInFunction(*this)
             << "Attempt to get back from bad stream"
             << exit(FatalIOError);
     }
@@ -87,7 +87,7 @@ CML::Istream& CML::Istream::readBegin(const char* funcName)
     if (delimiter != token::BEGIN_LIST)
     {
         setBad();
-        FatalIOErrorIn("Istream::readBegin(const char*)", *this)
+        FatalIOErrorInFunction(*this)
             << "Expected a '" << token::BEGIN_LIST
             << "' while reading " << funcName
             << ", found " << delimiter.info()
@@ -104,7 +104,7 @@ CML::Istream& CML::Istream::readEnd(const char* funcName)
     if (delimiter != token::END_LIST)
     {
         setBad();
-        FatalIOErrorIn("Istream::readEnd(const char*)", *this)
+        FatalIOErrorInFunction(*this)
             << "Expected a '" << token::END_LIST
             << "' while reading " << funcName
             << ", found " << delimiter.info()
@@ -131,7 +131,7 @@ char CML::Istream::readBeginList(const char* funcName)
     if (delimiter != token::BEGIN_LIST && delimiter != token::BEGIN_BLOCK)
     {
         setBad();
-        FatalIOErrorIn("Istream::readBeginList(const char*)", *this)
+        FatalIOErrorInFunction(*this)
             << "Expected a '" << token::BEGIN_LIST
             << "' or a '" << token::BEGIN_BLOCK
             << "' while reading " << funcName
@@ -152,7 +152,7 @@ char CML::Istream::readEndList(const char* funcName)
     if (delimiter != token::END_LIST && delimiter != token::END_BLOCK)
     {
         setBad();
-        FatalIOErrorIn("Istream::readEndList(const char*)", *this)
+        FatalIOErrorInFunction(*this)
             << "Expected a '" << token::END_LIST
             << "' or a '" << token::END_BLOCK
             << "' while reading " << funcName

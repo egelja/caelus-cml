@@ -26,7 +26,7 @@ License
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
@@ -143,7 +143,7 @@ void fixedShearStressFvPatchVectorField::updateCoeffs()
     }
     else
     {
-        FatalErrorIn("fixedShearStressFvPatchVectorField::updateCoeffs()")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << "\n    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()

@@ -261,10 +261,8 @@ void CML::mappedFixedInternalValueFvPatchField<Type>::updateCoeffs()
     {
         case mappedPatchBase::NEARESTCELL:
         {
-            FatalErrorIn
-            (
-                "void mappedFixedValueFvPatchField<Type>::updateCoeffs()"
-            )   << "Cannot apply "
+            FatalErrorInFunction
+                << "Cannot apply "
                 << mappedPatchBase::sampleModeNames_
                    [
                        mappedPatchBase::NEARESTCELL
@@ -311,7 +309,7 @@ void CML::mappedFixedInternalValueFvPatchField<Type>::updateCoeffs()
         }
         default:
         {
-            FatalErrorIn("mappedFixedValueFvPatchField<Type>::updateCoeffs()")
+            FatalErrorInFunction
                 << "Unknown sampling mode: " << mpp.mode()
                 << abort(FatalError);
         }

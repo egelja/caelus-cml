@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,13 +23,11 @@ Class
 Description
     Power series reaction rate.
 
-SourceFiles
-    powerSeriesReactionRateI.hpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef powerSeriesReactionRate_H
-#define powerSeriesReactionRate_H
+#ifndef powerSeriesReactionRate_HPP
+#define powerSeriesReactionRate_HPP
 
 #include "scalarField.hpp"
 #include "typeInfo.hpp"
@@ -40,89 +38,178 @@ SourceFiles
 namespace CML
 {
 
+// Forward declaration of friend functions and operators
+
+class powerSeriesReactionRate;
+
+Ostream& operator<<(Ostream&, const powerSeriesReactionRate&);
+
+
 /*---------------------------------------------------------------------------*\
                    Class powerSeriesReactionRate Declaration
 \*---------------------------------------------------------------------------*/
 
 class powerSeriesReactionRate
 {
-    // Private data
 
-        scalar A_;
-        scalar beta_;
-        scalar Ta_;
+    scalar A_;
+    scalar beta_;
+    scalar Ta_;
 
-        static const label nCoeff_ = 4;
-        FixedList<scalar, nCoeff_> coeffs_;
+    static const label nCoeff_ = 4;
+    FixedList<scalar, nCoeff_> coeffs_;
 
 
 public:
 
-    // Constructors
 
-        //- Construct from components
-        inline powerSeriesReactionRate
-        (
-            const scalar A,
-            const scalar beta,
-            const scalar Ta,
-            const FixedList<scalar, nCoeff_> coeffs
-        );
+    //- Construct from components
+    inline powerSeriesReactionRate
+    (
+        const scalar A,
+        const scalar beta,
+        const scalar Ta,
+        const FixedList<scalar, nCoeff_> coeffs
+    )
+    :
+        A_(A),
+        beta_(beta),
+        Ta_(Ta),
+        coeffs_(coeffs)
+    {}
 
-        //- Construct from Istream
-        inline powerSeriesReactionRate
-        (
-            const speciesTable& species,
-            Istream& is
-        );
-
-        //- Construct from dictionary
-        inline powerSeriesReactionRate
-        (
-            const speciesTable& species,
-            const dictionary& dict
-        );
+    //- Construct from dictionary
+    inline powerSeriesReactionRate
+    (
+        const speciesTable& species,
+        const dictionary& dict
+    )
+    :
+        A_(readScalar(dict.lookup("A"))),
+        beta_(readScalar(dict.lookup("beta"))),
+        Ta_(readScalar(dict.lookup("Ta"))),
+        coeffs_(dict.lookup("coeffs"))
+    {}
 
 
     // Member Functions
 
-        //- Return the type name
-        static word type()
+    //- Return the type name
+    static word type()
+    {
+        return "powerSeries";
+    }
+
+    inline scalar operator()
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const
+    {
+        scalar lta = A_;
+
+        if (mag(beta_) > VSMALL)
         {
-            return "powerSeries";
+            lta *= pow(T, beta_);
         }
 
-        inline scalar operator()
-        (
-            const scalar T,
-            const scalar p,
-            const scalarField& c
-        ) const;
+        scalar expArg = 0.0;
 
-        //- Write to stream
-        inline void write(Ostream& os) const;
+        forAll(coeffs_, n)
+        {
+            expArg += coeffs_[n]/pow(T, n + 1);
+        }
+
+        lta *= exp(expArg);
+
+        return lta;
+    }
+
+    inline scalar ddT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const
+    {
+        scalar lta = A_;
+
+        if (mag(beta_) > VSMALL)
+        {
+            lta *= pow(T, beta_);
+        }
+
+        scalar expArg = 0;
+        scalar deriv = 0;
+
+        forAll(coeffs_, n)
+        {
+            scalar cT = coeffs_[n]/pow(T, n + 1);
+            expArg += cT;
+            deriv -= (n + 1)*cT;
+        }
+
+        lta *= exp(expArg);
+
+        return lta*(beta_+deriv)/T;
+    }
+
+    //- Third-body efficiencies (beta = 1-alpha)
+    //  non-empty only for third-body reactions
+    //  with enhanced molecularity (alpha != 1)
+    inline const List<Tuple2<label, scalar> >& beta() const
+    {
+        return NullSingletonRef<List<Tuple2<label, scalar> > >();
+    }
+
+    //- Species concentration derivative of the pressure dependent term
+    inline void dcidc
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c,
+        scalarField& dcidc
+    ) const
+    {}
+
+    //- Temperature derivative of the pressure dependent term
+    inline scalar dcidT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const
+    {
+        return 0;
+    }
+
+    //- Write to stream
+    inline void write(Ostream& os) const
+    {
+        os.writeKeyword("A") << A_ << token::END_STATEMENT << nl;
+        os.writeKeyword("beta") << beta_ << token::END_STATEMENT << nl;
+        os.writeKeyword("Ta") << Ta_ << token::END_STATEMENT << nl;
+        os.writeKeyword("coeffs") << coeffs_ << token::END_STATEMENT << nl;
+    }
 
 
     // Ostream Operator
 
-        inline friend Ostream& operator<<
-        (
-            Ostream&,
-            const powerSeriesReactionRate&
-        );
+    inline friend Ostream& operator<<
+    (
+        Ostream& os,
+        const powerSeriesReactionRate& psrr
+    )
+    {
+    psrr.write(os);
+    return os;
+   }
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "powerSeriesReactionRateI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

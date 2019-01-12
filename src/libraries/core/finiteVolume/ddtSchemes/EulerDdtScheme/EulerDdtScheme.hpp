@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -821,7 +821,7 @@ EulerDdtScheme<Type>::fvcDdtUfCorr
     }
     else
     {
-        FatalErrorIn("EulerDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of Uf are not correct"
             << abort(FatalError);
 
@@ -883,7 +883,7 @@ EulerDdtScheme<Type>::fvcDdtPhiCorr
     }
     else
     {
-        FatalErrorIn("EulerDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 

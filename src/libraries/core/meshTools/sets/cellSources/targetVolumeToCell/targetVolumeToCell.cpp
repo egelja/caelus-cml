@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -159,7 +159,7 @@ void CML::targetVolumeToCell::combine(topoSet& set, const bool add) const
         // Check that maxPoint indeed selects all cells
         if (maxCells != nTotCells)
         {
-            WarningIn("targetVolumeToCell::combine(topoSet&, const bool) const")
+            WarningInFunction
                 << "Plane " << plane(points[maxPointI], n_)
                 << " selects " << maxCells
                 << " cells instead of all " << nTotCells
@@ -237,7 +237,7 @@ void CML::targetVolumeToCell::combine(topoSet& set, const bool add) const
         }
         else
         {
-            WarningIn("targetVolumeToCell::combine(topoSet&, const bool) const")
+            WarningInFunction
                 << "Did not converge onto plane. " << nl
                 << "high plane:"
                 << plane(high*n_, n_)

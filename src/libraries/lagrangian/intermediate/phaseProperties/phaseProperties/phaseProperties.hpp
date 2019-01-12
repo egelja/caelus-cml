@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +21,7 @@ Class
     CML::phaseProperties
 
 Description
-    Helper class to manage multi-component phase properties
+    Helper class to manage multi-specie phase properties
 
 SourceFiles
     phaseProperties.cpp
@@ -41,6 +41,14 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class phaseProperties;
+
+Istream& operator>>(Istream&, phaseProperties&);
+Ostream& operator<<(Ostream&, const phaseProperties&);
+
 
 /*---------------------------------------------------------------------------*\
                       Class phaseProperties Declaration
@@ -62,7 +70,7 @@ public:
         };
 
         //- Corresponding word representations for phase type enumerations
-        static const NamedEnum<phaseType, 4> phaseTypeNames_;
+        static const NamedEnum<phaseType, 4> phaseTypeNames;
 
 
 private:
@@ -75,27 +83,23 @@ private:
         //- State label (s), (l), (g) etc.
         word stateLabel_;
 
-        //- List of component names
+        //- List of specie names
         List<word> names_;
 
-        //- List of component mass fractions
+        //- List of specie mass fractions
         scalarField Y_;
 
-        //- Global ids
-        labelList globalIds_;
-
-        //- Map to carrier global id
-        labelList globalCarrierIds_;
+        //- Map to carrier id
+        labelList carrierIds_;
 
 
     // Private Member Functions
 
-        //- Set global ids
-        void setGlobalIds(const wordList& globalNames);
+        //- Reorder species to be consistent with the given specie name list
+        void reorder(const wordList& specieNames);
 
-        //- Set global carrier ids - attempts to map component names to global
-        //  carrier species
-        void setGlobalCarrierIds(const wordList& carrierNames);
+        //- Set carrier ids
+        void setCarrierIds(const wordList& carrierNames);
 
         //- Check the total mass fraction
         void checkTotalMassFraction() const;
@@ -124,8 +128,9 @@ public:
 
     // Public Member Functions
 
-        //- Initialise the global ids
-        void initialiseGlobalIds
+        //- Reorder species to be consistent with the corresponding
+        //  phase specie name list
+        void reorder
         (
             const wordList& gasNames,
             const wordList& liquidNames,
@@ -144,31 +149,24 @@ public:
             //- Return word representation of the phase type
             word phaseTypeName() const;
 
-            //- Return the list of component names
+            //- Return the list of specie names
             const List<word>& names() const;
 
-            //- Return const access to a component name
-            const word& name(const label cmptI) const;
+            //- Return const access to a specie name
+            const word& name(const label speciei) const;
 
-            //- Return const access to all component mass fractions
+            //- Return const access to all specie mass fractions
             const scalarField& Y() const;
 
-            //- Return non-const access to a component mass fraction
-            scalar& Y(const label cmptI);
+            //- Return non-const access to a specie mass fraction
+            scalar& Y(const label speciei);
 
-            //- Return const access to the global ids
-            const labelList& globalIds() const;
+            //- Return const access to the map to the carrier ids
+            const labelList& carrierIds() const;
 
-            //- Return const access to the map to the carrier global ids
-            const labelList& globalCarrierIds() const;
-
-            //- Return the global id of a component in the local list by name
+            //- Return the id of a specie in the local list by name
             //  Returns -1 if not found
-            label globalId(const word& cmptName) const;
-
-            //- Return the id of a component in the local list by name
-            //  Returns -1 if not found
-            label id(const word& cmptName) const;
+            label id(const word& specieName) const;
 
 
     // IOstream Operators

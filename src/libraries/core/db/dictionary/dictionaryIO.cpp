@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,7 +84,7 @@ bool CML::dictionary::read(Istream& is, const bool keepHeader)
 
     if (!is.good())
     {
-        FatalIOErrorIn("dictionary::read(Istream&, bool)", is)
+        FatalIOErrorInFunction(is)
             << "Istream not OK for reading dictionary "
             << exit(FatalIOError);
 
@@ -133,7 +133,7 @@ bool CML::dictionary::substituteKeyword(const word& keyword)
     const entry* ePtr = lookupEntryPtr(varName, true, true);
 
     // if defined insert its entries into this dictionary
-    if (ePtr != NULL)
+    if (ePtr != nullptr)
     {
         const dictionary& addDict = ePtr->dict();
 
@@ -189,7 +189,7 @@ void CML::dictionary::write(Ostream& os, bool subDict) const
         // Check stream before going to next entry.
         if (!os.good())
         {
-            WarningIn("dictionary::write(Ostream&, bool subDict)")
+            WarningInFunction
                 << "Can't write entry " << iter().keyword()
                 << " for dictionary " << name()
                 << endl;

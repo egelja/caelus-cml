@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -131,7 +131,7 @@ bool CML::sampledPatch::update()
 
         if (isA<emptyPolyPatch>(pp))
         {
-            FatalErrorIn("sampledPatch::update()")
+            FatalErrorInFunction
                 << "Cannot sample an empty patch. Patch " << pp.name()
                 << exit(FatalError);
         }

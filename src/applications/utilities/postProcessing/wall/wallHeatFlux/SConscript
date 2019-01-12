@@ -7,7 +7,7 @@ Import('env')
 target = 'wallHeatFlux'
 
 sources = Split("""
-wallHeatFlux.cpp
+wallHeatFlux_app.cpp
 """)
 
 caelus_inc = [
@@ -17,7 +17,8 @@ caelus_inc = [
 'turbulenceModels/compressible/RAS/RASModel',
 'thermophysicalModels/specie/lnInclude',
 'thermophysicalModels/reactionThermo/lnInclude',
-'thermophysicalModels/basic/lnInclude'
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude'
 ]
 
 caelus_libs = [
@@ -25,8 +26,9 @@ caelus_libs = [
 'compressibleRASModels',
 'reactionThermophysicalModels',
 'specie',
-'basicThermophysicalModels',
-'compressibleTurbulenceModel'
+'fluidThermophysicalModels',
+'compressibleTurbulenceModel',
+'solidThermo'
 ]
 
 ostype = utils.ostype()

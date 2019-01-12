@@ -216,14 +216,8 @@ groovyBCFixedValueFvPatchField<Type>::groovyBCFixedValueFvPatchField
     {
         (*this)==pTraits<Type>::zero;
 
-        WarningIn(
-            "groovyBCFixedValueFvPatchField<Type>::groovyBCFixedValueFvPatchField"
-            "("
-            "const fvPatch& p,"
-            "const DimensionedField<Type, volMesh>& iF,"
-            "const dictionary& dict"
-            ")"
-        ) << "No value defined for " << this->dimensionedInternalField().name()
+        WarningInFunction
+            << "No value defined for " << this->dimensionedInternalField().name()
             << " on " << this->patch().name() << " therefore would be undefined "
             << pTraits<Type>::zero
             << endl;

@@ -501,9 +501,9 @@ template<class Type>
 BlockLduMatrix<Type>::BlockLduMatrix(const lduMesh& ldu)
 :
     lduMesh_(ldu),
-    diagPtr_(NULL),
-    upperPtr_(NULL),
-    lowerPtr_(NULL),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr),
+    lowerPtr_(nullptr),
     interfaces_(ldu.interfaces().size()),
     coupleUpper_(ldu.lduAddr().nPatches()),
     coupleLower_(ldu.lduAddr().nPatches()),
@@ -524,9 +524,9 @@ BlockLduMatrix<Type>::BlockLduMatrix(const BlockLduMatrix<Type>& A)
 :
     refCount(),
     lduMesh_(A.lduMesh_),
-    diagPtr_(NULL),
-    upperPtr_(NULL),
-    lowerPtr_(NULL),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr),
+    lowerPtr_(nullptr),
     interfaces_(A.interfaces_),
     coupleUpper_(A.coupleUpper_),
     coupleLower_(A.coupleLower_),
@@ -555,9 +555,9 @@ BlockLduMatrix<Type>::BlockLduMatrix(BlockLduMatrix<Type>& A, bool reUse)
 :
     refCount(),
     lduMesh_(A.lduMesh_),
-    diagPtr_(NULL),
-    upperPtr_(NULL),
-    lowerPtr_(NULL),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr),
+    lowerPtr_(nullptr),
     interfaces_(A.interfaces_, reUse),
     coupleUpper_(A.coupleUpper_, reUse),
     coupleLower_(A.coupleLower_, reUse),
@@ -568,19 +568,19 @@ BlockLduMatrix<Type>::BlockLduMatrix(BlockLduMatrix<Type>& A, bool reUse)
         if (A.lowerPtr_)
         {
             lowerPtr_ = A.lowerPtr_;
-            A.lowerPtr_ = NULL;
+            A.lowerPtr_ = nullptr;
         }
 
         if (A.diagPtr_)
         {
             diagPtr_ = A.diagPtr_;
-            A.diagPtr_ = NULL;
+            A.diagPtr_ = nullptr;
         }
 
         if (A.upperPtr_)
         {
             upperPtr_ = A.upperPtr_;
-            A.upperPtr_ = NULL;
+            A.upperPtr_ = nullptr;
         }
     }
     else
@@ -633,10 +633,8 @@ BlockLduMatrix<Type>::diag() const
 {
     if (not diagPtr_)
     {
-        FatalErrorIn
-        (
-            "const TypeCoeffField& BlockLduMatrix<Type>::diag() const"
-        )   << "diagPtr_ unallocated"
+        FatalErrorInFunction
+            << "diagPtr_ unallocated"
             << abort(FatalError);
     }
 
@@ -663,10 +661,8 @@ BlockLduMatrix<Type>::upper() const
 {
     if (not upperPtr_)
     {
-        FatalErrorIn
-        (
-            "const TypeCoeffField& BlockLduMatrix<Type>::upper() const"
-        )   << "upperPtr_ unallocated"
+        FatalErrorInFunction
+            << "upperPtr_ unallocated"
             << abort(FatalError);
     }
 
@@ -700,10 +696,8 @@ BlockLduMatrix<Type>::lower() const
 {
     if (not lowerPtr_)
     {
-        FatalErrorIn
-        (
-            "const TypeCoeffField&  BlockLduMatrix<Type>::lower() const"
-        )   << "lowerPtr_ unallocated"
+        FatalErrorInFunction
+            << "lowerPtr_ unallocated"
             << abort(FatalError);
     }
 
@@ -743,10 +737,8 @@ bool BlockLduMatrix<Type>::symmetric() const
 {
     if (lowerPtr_ && not upperPtr_)
     {
-        FatalErrorIn
-        (
-            "bool BlockLduMatrix<Type>::symmetric() const"
-        )   << "Matrix assembly error: symmetric matrix but only lower "
+        FatalErrorInFunction
+            << "Matrix assembly error: symmetric matrix but only lower "
             << "triangle is allocated.  This is not allowed."
             << abort(FatalError);
     }
@@ -1003,7 +995,7 @@ void BlockLduMatrix<Type>::sumDiag()
     }
     else
     {
-        FatalErrorIn("void BlockLduMatrix<Type>::sumDiag()")
+        FatalErrorInFunction
             << "No off-diagonal available"
             << abort(FatalError);
     }
@@ -1137,7 +1129,7 @@ void BlockLduMatrix<Type>::negSumDiag()
     }
     else
     {
-        FatalErrorIn("void BlockLduMatrix<Type>::negSumDiag()")
+        FatalErrorInFunction
             << "No off-diagonal available"
             << abort(FatalError);
     }
@@ -1218,7 +1210,7 @@ void BlockLduMatrix<Type>::check() const
             // Divide diagonal with sum of off-diagonals
             cmptDivide(diagDiag, diagDiag, activeSumOffDiag);
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Symmetric matrix: " << activeDiag.size()
                 << " diagonal dominance sym square: "
                 << CML::min(diagDiag)
@@ -1245,7 +1237,7 @@ void BlockLduMatrix<Type>::check() const
 
             cmptDivide(diagDiag, diagDiag, activeSumOffDiag);
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Symmetric matrix: " << activeDiag.size()
                 << " diagonal dominance sym linear: "
                 << CML::min(diagDiag)
@@ -1268,7 +1260,7 @@ void BlockLduMatrix<Type>::check() const
                 activeSumOffDiag[u[coeffI]] += cmptMag(activeUpper[coeffI]);
             }
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Symmetric matrix: " << activeDiag.size()
                 << " diagonal dominance sym scalar: "
                 << CML::min(mag(activeDiag)/activeSumOffDiag)
@@ -1334,7 +1326,7 @@ void BlockLduMatrix<Type>::check() const
             // Divide diagonal with sum of off-diagonals
             cmptDivide(diagDiag, diagDiag, activeSumOffDiag);
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Asymmetric matrix: " << activeDiag.size()
                 << " diagonal dominance assym square: "
                 << CML::min(diagDiag)
@@ -1363,7 +1355,7 @@ void BlockLduMatrix<Type>::check() const
 
             cmptDivide(diagDiag, diagDiag, activeSumOffDiag);
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Asymmetric matrix: " << activeDiag.size()
                 << " diagonal dominance assym linear: "
                 << CML::min(diagDiag)
@@ -1388,7 +1380,7 @@ void BlockLduMatrix<Type>::check() const
                 activeSumOffDiag[u[coeffI]] += cmptMag(activeUpper[coeffI]);
             }
 
-            InfoIn("void BlockLduMatrix<Type>::check() const)")
+            InfoInFunction
                 << "Asymmetric matrix: "  << activeDiag.size()
                 << " diagonal dominance assym scalar: "
                 << CML::min(mag(activeDiag)/activeSumOffDiag)
@@ -1397,7 +1389,7 @@ void BlockLduMatrix<Type>::check() const
     }
     else
     {
-        InfoIn("void BlockLduMatrix<Type>::check() const)")
+        InfoInFunction
             << "Diagonal matrix" << endl;
     }
 }
@@ -1682,11 +1674,8 @@ void BlockLduMatrix<Type>::setValue
     }
     else
     {
-        WarningIn
-        (
-            "void BlockLduMatrix<Type>::setValue(const label eqnIndex, "
-            "const Type& value)"
-        )   << "Adding constraint on an already constrained point."
+        WarningInFunction
+            << "Adding constraint on an already constrained point."
             << "  Point: " << eqnIndex << endl;
 
         fixedEqns_[eqnIndex].combine(cp);
@@ -1747,11 +1736,8 @@ void BlockLduMatrix<Type>::operator=(const BlockLduMatrix<Type>& A)
 {
     if (this == &A)
     {
-        FatalErrorIn
-        (
-            "void BlockLduMatrix<Type>::operator="
-            "(const BlockLduMatrix<Type>& A)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1762,7 +1748,7 @@ void BlockLduMatrix<Type>::operator=(const BlockLduMatrix<Type>& A)
     else if (lowerPtr_)
     {
         delete lowerPtr_;
-        lowerPtr_ = NULL;
+        lowerPtr_ = nullptr;
     }
 
     if (A.upperPtr_)
@@ -1772,7 +1758,7 @@ void BlockLduMatrix<Type>::operator=(const BlockLduMatrix<Type>& A)
     else if (upperPtr_)
     {
         delete upperPtr_;
-        upperPtr_ = NULL;
+        upperPtr_ = nullptr;
     }
 
     if (A.diagPtr_)
@@ -2024,7 +2010,7 @@ void BlockLduMatrix<Type>::initInterfaces
     }
     else
     {
-        FatalErrorIn("BlockLduMatrix<Type>::initMatrixInterfaces")
+        FatalErrorInFunction
             << "Unsuported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
@@ -2138,7 +2124,7 @@ void BlockLduMatrix<Type>::updateInterfaces
     }
     else
     {
-        FatalErrorIn("BlockLduMatrix<Type>::updateInterfaces")
+        FatalErrorInFunction
             << "Unsuported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
@@ -2306,7 +2292,7 @@ CML::BlockLduMatrix<Type>::updateMatrixInterfaces
     }
     else
     {
-        FatalErrorIn("lduMatrix::updateMatrixInterfaces(..)")
+        FatalErrorInFunction
             << "Unsuported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
@@ -2372,7 +2358,7 @@ BlockLduMatrix<Type>::initMatrixInterfaces
     }
     else
     {
-        FatalErrorIn("BlockLduMatrix::initMatrixInterfaces(..)")
+        FatalErrorInFunction
             << "Unsuported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);
@@ -3056,7 +3042,7 @@ void BlockLduMatrix<Type>::decoupledSumDiag()
     }
     else
     {
-        FatalErrorIn("void BlockLduMatrix<Type>::decoupledSumDiag()")
+        FatalErrorInFunction
             << "No off-diagonal available"
             << abort(FatalError);
     }
@@ -3157,7 +3143,7 @@ void BlockLduMatrix<Type>::decoupledNegSumDiag()
     }
     else
     {
-        FatalErrorIn("void BlockLduMatrix<Type>::decoupledNegSumDiag()")
+        FatalErrorInFunction
             << "No off-diagonal available"
             << abort(FatalError);
     }

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,9 +84,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         );
 };
 
@@ -141,9 +139,7 @@ bool CML::NoInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch&,
-    bool&,
-    const scalar,
-    const tetIndices&
+    bool&
 )
 {
     return false;

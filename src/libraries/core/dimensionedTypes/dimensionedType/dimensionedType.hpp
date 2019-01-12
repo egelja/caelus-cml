@@ -339,11 +339,8 @@ void dimensioned<Type>::initialize(Istream& is)
 
         if (dims != dimensions_)
         {
-            FatalIOErrorIn
-            (
-                "dimensioned<Type>::initialize(Istream&)",
-                is
-            ) << "The dimensions " << dims
+            FatalIOErrorInFunction(is)
+              << "The dimensions " << dims
               << " provided do not match the required dimensions "
               << dimensions_
               << abort(FatalIOError);
@@ -712,7 +709,7 @@ dimensioned<Type> max
 {
     if (dt1.dimensions() != dt2.dimensions())
     {
-        FatalErrorIn("max(const dimensioned<Type>&, const dimensioned<Type>&)")
+        FatalErrorInFunction
             << "dimensions of arguments are not equal"
             << abort(FatalError);
     }
@@ -735,7 +732,7 @@ dimensioned<Type> min
 {
     if (dt1.dimensions() != dt2.dimensions())
     {
-        FatalErrorIn("min(const dimensioned<Type>&, const dimensioned<Type>&)")
+        FatalErrorInFunction
             << "dimensions of arguments are not equal"
             << abort(FatalError);
     }

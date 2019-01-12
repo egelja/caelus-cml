@@ -44,7 +44,7 @@ cellShape extrudedTriangleCellShape
     faceList& frontAndBackFaces
 )
 {
-    static const cellModel* prismModelPtr_ = NULL;
+    static const cellModel* prismModelPtr_ = nullptr;
 
     if (!prismModelPtr_)
     {
@@ -56,13 +56,8 @@ cellShape extrudedTriangleCellShape
     // Checking
     if (faceLabels.size() != 3)
     {
-        FatalErrorIn
-        (
-            "extrudedTriangleCellShape(const label cellIndex, "
-            "const labelList& faceLabels, const faceList& faces, "
-            "const labelList& owner, const labelList& neighbour, "
-            "const label pointOffset, faceList& frontAndBackFaces)"
-        )   << "Trying to create a triangle with " << faceLabels.size()
+        FatalErrorInFunction
+            << "Trying to create a triangle with " << faceLabels.size()
             << " faces"
             << abort(FatalError);
     }
@@ -78,13 +73,8 @@ cellShape extrudedTriangleCellShape
 
         if (curFace.size() != 2)
         {
-            FatalErrorIn
-            (
-                "extrudedTriangleCellShape(const label cellIndex, "
-                "const labelList& faceLabels, const faceList& faces, "
-                "const labelList& owner, const labelList& neighbour, "
-                "const label pointOffset, faceList& frontAndBackFaces)"
-            )   << "face " << curFaceLabel
+            FatalErrorInFunction
+                << "face " << curFaceLabel
                 << "does not have 2 vertices. Number of vertices: " << curFace
                 << abort(FatalError);
         }
@@ -108,13 +98,8 @@ cellShape extrudedTriangleCellShape
         }
         else
         {
-            FatalErrorIn
-            (
-                "extrudedTriangleCellShape(const label cellIndex, "
-                "const labelList& faceLabels, const faceList& faces, "
-                "const labelList& owner, const labelList& neighbour, "
-                "const label pointOffset, faceList& frontAndBackFaces)"
-            )   << "face " << curFaceLabel
+            FatalErrorInFunction
+                << "face " << curFaceLabel
                 << " does not belong to cell " << cellIndex
                 << ". Face owner: " << owner[curFaceLabel] << " neighbour: "
                 << neighbour[curFaceLabel]
@@ -189,13 +174,8 @@ cellShape extrudedTriangleCellShape
     }
     else
     {
-        FatalErrorIn
-        (
-            "extrudedTriangleCellShape(const label cellIndex, "
-            "const labelList& faceLabels, const faceList& faces, "
-            "const labelList& owner, const labelList& neighbour, "
-            "const label pointOffset, faceList& frontAndBackFaces)"
-        )   << "Problem with edge matching. Edges: " << localFaces
+        FatalErrorInFunction
+            << "Problem with edge matching. Edges: " << localFaces
             << abort(FatalError);
     }
 

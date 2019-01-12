@@ -15,13 +15,13 @@ caelus_inc = [
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/specie/lnInclude',
 'thermophysicalModels/reactionThermo/lnInclude',
-'thermophysicalModels/radiationModels/lnInclude'
+'thermophysicalModels/radiation/lnInclude'
 ]
 
 caelus_libs = [
 'core',
 'swakParsers',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'radiationModels'
 ]
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -97,13 +97,7 @@ public:
         SurfaceReactionModel(const SurfaceReactionModel<CloudType>& srm);
 
         //- Construct and return a clone
-        virtual autoPtr<SurfaceReactionModel<CloudType> > clone() const
-        {
-            return autoPtr<SurfaceReactionModel<CloudType> >
-            (
-                new SurfaceReactionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<SurfaceReactionModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -125,7 +119,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -141,7 +135,7 @@ public:
             scalarField& dMassLiquid,
             scalarField& dMassSolid,
             scalarField& dMassSRCarrier
-        ) const;
+        ) const = 0;
 
         //- Add to devolatilisation mass
         void addToSurfaceReactionMass(const scalar dMass);
@@ -160,30 +154,32 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeSurfaceReactionModel(CloudType)                                   \
-                                                                              \
-    typedef CloudType::reactingMultiphaseCloudType                            \
-        reactingMultiphaseCloudType;                                          \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        SurfaceReactionModel<reactingMultiphaseCloudType>,                    \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        SurfaceReactionModel<reactingMultiphaseCloudType>,                    \
-        dictionary                                                            \
+#define makeSurfaceReactionModel(CloudType)                                    \
+                                                                               \
+    typedef CloudType::reactingMultiphaseCloudType                             \
+        reactingMultiphaseCloudType;                                           \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        SurfaceReactionModel<reactingMultiphaseCloudType>,                     \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        SurfaceReactionModel<reactingMultiphaseCloudType>,                     \
+        dictionary                                                             \
     );
 
 
-#define makeSurfaceReactionModelType(SS, CloudType)                           \
-                                                                              \
-    typedef CloudType::reactingMultiphaseCloudType                            \
-        reactingMultiphaseCloudType;                                          \
-    defineNamedTemplateTypeNameAndDebug(SS<reactingMultiphaseCloudType>, 0);  \
-                                                                              \
-    SurfaceReactionModel<reactingMultiphaseCloudType>::                       \
-        adddictionaryConstructorToTable<SS<reactingMultiphaseCloudType> >     \
+#define makeSurfaceReactionModelType(SS, CloudType)                            \
+                                                                               \
+    typedef CloudType::reactingMultiphaseCloudType                             \
+        reactingMultiphaseCloudType;                                           \
+    defineNamedTemplateTypeNameAndDebug                                        \
+        (SS<reactingMultiphaseCloudType>, 0);                                  \
+                                                                               \
+    SurfaceReactionModel<reactingMultiphaseCloudType>::                        \
+        adddictionaryConstructorToTable                                        \
+        <SS<reactingMultiphaseCloudType> >                                     \
         add##SS##CloudType##reactingMultiphaseCloudType##ConstructorToTable_;
 
 
@@ -255,29 +251,7 @@ CML::scalar CML::SurfaceReactionModel<CloudType>::calculate
     scalarField&
 ) const
 {
-    notImplemented
-    (
-        "CML::scalar CML::SurfaceReactionModel<CloudType>::calculate"
-        "("
-            "const scalar, "
-            "const label, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalarField&, "
-            "const scalarField&, "
-            "const scalarField&, "
-            "const scalarField&, "
-            "const scalar, "
-            "scalarField&, "
-            "scalarField&, "
-            "scalarField&, "
-            "scalarField&"
-        ") const"
-    );
+    NotImplemented;
 
     return 0.0;
 }
@@ -328,14 +302,8 @@ CML::SurfaceReactionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "SurfaceReactionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown surface reaction model type "
+        FatalErrorInFunction
+            << "Unknown surface reaction model type "
             << modelType << nl << nl
             << "Valid surface reaction model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

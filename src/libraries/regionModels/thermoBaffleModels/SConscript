@@ -3,33 +3,34 @@
 from build import build_lib
 Import('env')
 
-target = 'thermoBaffleModels'
+target = 'thermalBaffleModels'
 
 sources = Split("""
-thermoBaffleModel/thermoBaffleModel.cpp
-thermoBaffleModel/thermoBaffleModelNew.cpp
-thermoBaffle2D/thermoBaffle2D.cpp
+thermalBaffleModel/thermalBaffleModel.cpp
+thermalBaffleModel/thermalBaffleModelNew.cpp
+thermalBaffle/thermalBaffle.cpp
 noThermo/noThermo.cpp
-derivedFvPatchFields/temperatureThermoBaffle/temperatureThermoBaffleFvPatchScalarField.cpp
+derivedFvPatchFields/thermalBaffle/thermalBaffleFvPatchScalarField.cpp
 """)
 
 caelus_inc = [
-'sampling/lnInclude',
-'AMIInterpolation/lnInclude',
 'regionModels/regionModel/lnInclude',
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/specie/lnInclude',
-'thermophysicalModels/solid/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude',
-'turbulenceModels/compressible/turbulenceModel/lnInclude'
+'thermophysicalModels/solidThermo/lnInclude',
+'turbulenceModels/compressible/turbulenceModel/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
+'dynamicMesh/dynamicMesh/lnInclude',
+'mesh/extrudeModel/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'solid',
 'regionModels',
-'basicSolidThermo',
-'compressibleTurbulenceModel'
+'solidThermo',
+'compressibleTurbulenceModel',
+'radiationModels',
+'dynamicMesh'
 ]
 
 build_lib(env,

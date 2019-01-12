@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -83,12 +83,8 @@ CML::lduMatrix::preconditioner::New
 
         if (constructorIter == symMatrixConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "lduMatrix::preconditioner::New"
-                "(const solver&, const dictionary&)",
-                controls
-            )   << "Unknown symmetric matrix preconditioner "
+            FatalIOErrorInFunction(controls)
+                << "Unknown symmetric matrix preconditioner "
                 << name << nl << nl
                 << "Valid symmetric matrix preconditioners :" << endl
                 << symMatrixConstructorTablePtr_->sortedToc()
@@ -111,12 +107,8 @@ CML::lduMatrix::preconditioner::New
 
         if (constructorIter == asymMatrixConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "lduMatrix::preconditioner::New"
-                "(const solver&, const dictionary&)",
-                controls
-            )   << "Unknown asymmetric matrix preconditioner "
+            FatalIOErrorInFunction(controls)
+                << "Unknown asymmetric matrix preconditioner "
                 << name << nl << nl
                 << "Valid asymmetric matrix preconditioners :" << endl
                 << asymMatrixConstructorTablePtr_->sortedToc()
@@ -134,16 +126,12 @@ CML::lduMatrix::preconditioner::New
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "lduMatrix::preconditioner::New"
-            "(const solver&, const dictionary&)",
-            controls
-        )   << "cannot solve incomplete matrix, "
+        FatalIOErrorInFunction(controls)
+            << "cannot solve incomplete matrix, "
                "no diagonal or off-diagonal coefficient"
             << exit(FatalIOError);
 
-        return autoPtr<lduMatrix::preconditioner>(NULL);
+        return autoPtr<lduMatrix::preconditioner>(nullptr);
     }
 }
 

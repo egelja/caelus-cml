@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -102,11 +102,8 @@ bool CML::functionEntry::execute
 
     if (mfIter == executedictionaryIstreamMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "functionEntry::execute"
-            "(const word& functionName, dictionary& parentDict, Istream&)"
-        )   << "Unknown functionEntry '" << functionName
+        FatalErrorInFunction
+            << "Unknown functionEntry '" << functionName
             << "' in " << is.name() << " near line " << is.lineNumber()
             << nl << nl
             << "Valid functionEntries are :" << endl
@@ -148,11 +145,8 @@ bool CML::functionEntry::execute
 
     if (mfIter == executeprimitiveEntryIstreamMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "functionEntry::execute"
-            "(const word&, const dictionary&, primitiveEntry&, Istream&)"
-        )   << "Unknown functionEntry '" << functionName
+        FatalErrorInFunction
+            << "Unknown functionEntry '" << functionName
             << "' in " << is.name() << " near line " << is.lineNumber()
             << nl << nl
             << "Valid functionEntries are :" << endl

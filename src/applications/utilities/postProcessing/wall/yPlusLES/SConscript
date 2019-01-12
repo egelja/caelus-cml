@@ -7,7 +7,7 @@ Import('env')
 target = 'yPlusLES'
 
 sources = Split("""
-yPlusLES.cpp
+yPlusLES_app.cpp
 """)
 
 caelus_inc = [

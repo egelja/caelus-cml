@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,6 +36,7 @@ SourceFiles
 #include "word.hpp"
 #include "contiguous.hpp"
 #include "pointField.hpp"
+#include "transformField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -138,9 +139,21 @@ public:
             //- Inverse transform the given pointField
             inline pointField invTransformPosition(const pointField& pts) const;
 
+            //- Transform the given type
+            template<class Type>
+            Type transform(const Type&) const;
+
             //- Transform the given field
             template<class Type>
             tmp<Field<Type> > transform(const Field<Type>&) const;
+
+            //- Inverse transform the given type
+            template<class Type>
+            Type invTransform(const Type&) const;
+
+            //- Inverse transform the given field
+            template<class Type>
+            tmp<Field<Type> > invTransform(const Field<Type>&) const;
 
 
     // Member operators
@@ -523,6 +536,21 @@ inline CML::vectorTensorTransform CML::operator&
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+
+template<class Type>
+Type CML::vectorTensorTransform::transform(const Type& x) const
+{
+    if (hasR_)
+    {
+        return CML::transform(R(), x);
+    }
+    else
+    {
+        return x;
+    }
+}
+
+
 template<class Type>
 CML::tmp<CML::Field<Type> > CML::vectorTensorTransform::transform
 (
@@ -531,13 +559,45 @@ CML::tmp<CML::Field<Type> > CML::vectorTensorTransform::transform
 {
     if (hasR_)
     {
-        return R() & fld;
+        return CML::transform(R(), fld);
     }
     else
     {
         return fld;
     }
 }
+
+
+template<class Type>
+Type CML::vectorTensorTransform::invTransform(const Type& x) const
+{
+    if (hasR_)
+    {
+        return CML::transform(R().T(), x);
+    }
+    else
+    {
+        return x;
+    }
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::vectorTensorTransform::invTransform
+(
+    const Field<Type>& fld
+) const
+{
+    if (hasR_)
+    {
+        return CML::transform(R().T(), fld);
+    }
+    else
+    {
+        return fld;
+    }
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

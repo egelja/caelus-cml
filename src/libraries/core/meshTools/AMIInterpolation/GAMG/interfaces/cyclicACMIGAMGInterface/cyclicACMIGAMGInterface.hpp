@@ -149,10 +149,7 @@ public:
             {
                 //TBD. How to serialise the AMI such that we can stream
                 // cyclicACMIGAMGInterface.
-                notImplemented
-                (
-                    "cyclicACMIGAMGInterface::write(Ostream&) const"
-                );
+                NotImplemented;
             }
 };
 

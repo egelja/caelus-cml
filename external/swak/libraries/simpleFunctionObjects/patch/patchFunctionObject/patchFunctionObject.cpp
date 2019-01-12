@@ -74,7 +74,7 @@ bool patchFunctionObject::start()
                 label patchI=mesh.boundaryMesh().findPatchID(name);
                 const polyPatch &thePatch=mesh.boundaryMesh()[patchI];
                 if(thePatch.coupled()) {
-                    WarningIn("patchFunctionObject::start()")
+                    WarningInFunction
                         << "Patch " << name << " in " << dict_.name() << " is coupled." << nl
                             << "Disabling. If you want it enabled set 'allowCoupled true;'"
                             << endl;
@@ -101,7 +101,7 @@ bool patchFunctionObject::start()
         const word &name=patchNames_[i];
         patchIndizes_[i]=mesh.boundaryMesh().findPatchID(name);
         if(patchIndizes_[i]<0) {
-            WarningIn("patchFunctionObject::start()")
+            WarningInFunction
                 << " Patch " << name << " does not exist in patches: "
                     << mesh.boundaryMesh().names() << endl;
         }

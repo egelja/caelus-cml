@@ -272,7 +272,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("triSurfaceMesh::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

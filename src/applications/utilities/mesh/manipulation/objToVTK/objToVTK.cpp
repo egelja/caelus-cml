@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
     if (!OBJfile.good())
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Cannot read file " << objName << exit(FatalError);
     }
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
             {
                 hasWarned = true;
 
-                WarningIn(args.executable())
+                WarningInFunction
                     << "Unrecognized OBJ command " << cmd << nl
                     << "In line " << lineStream.str()
                     << " at linenumber " << lineNo << nl

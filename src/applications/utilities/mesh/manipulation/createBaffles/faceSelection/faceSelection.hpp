@@ -104,8 +104,8 @@ public:
         //- Clone
         autoPtr<faceSelection> clone() const
         {
-            notImplemented("autoPtr<faceSelection> clone() const");
-            return autoPtr<faceSelection>(NULL);
+            NotImplemented;
+            return autoPtr<faceSelection>(nullptr);
         }
 
 

@@ -143,7 +143,7 @@ CML::IOobject* CML::IOobjectList::lookup(const word& name) const
                 << name << endl;
         }
 
-        return NULL;
+        return nullptr;
     }
 }
 

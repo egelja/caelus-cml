@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -93,10 +93,10 @@ public:
 
     // Member Functions
 
-        //- initial value of liquidCore
+        //- Initial value of liquidCore
         virtual scalar initLiquidCore() const;
 
-        //- flag to indicate if chi needs to be calculated
+        //- Flag to indicate if chi needs to be calculated
         virtual bool calcChi() const;
 
         virtual void update
@@ -115,7 +115,7 @@ public:
             const vector& injectionPos,
             const scalar pAmbient,
             const scalar chi,
-            cachedRandom& rndGen
+            Random& rndGen
         ) const;
 };
 
@@ -191,7 +191,7 @@ void CML::BlobsSheetAtomization<CloudType>::update
     const vector& injectionPos,
     const scalar pAmbient,
     const scalar chi,
-    cachedRandom& rndGen
+    Random& rndGen
 ) const
 {
     scalar lBU =

@@ -73,7 +73,7 @@ void CML::regExp::set(const char* pattern, const bool ignoreCase) const
 {
     clear();
 
-    // avoid NULL pointer and zero-length patterns
+    // Avoid nullptr and zero-length patterns
     if (pattern && *pattern)
     {
         int cflags = EXTENDED;

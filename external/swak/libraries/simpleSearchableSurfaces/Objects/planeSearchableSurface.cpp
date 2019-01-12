@@ -238,10 +238,7 @@ CML::tmp<CML::pointField> CML::planeSearchableSurface::points() const
 
 bool CML::planeSearchableSurface::overlaps(const boundBox& bb) const
 {
-    notImplemented
-        (
-            "CML::planeSearchableSurface::overlaps(const boundBox&) const"
-        );
+    NotImplemented;
 
     return false;
 }

@@ -1,0 +1,34 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'solidThermo'
+
+sources = Split("""
+solidThermo/solidThermo.cpp
+solidThermo/solidThermos.cpp
+solidReactionThermo/solidReactionThermo.cpp
+solidReactionThermo/solidReactionThermos.cpp
+""")
+
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/solidSpecie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'specie',
+'solidSpecie',
+'fluidThermophysicalModels',
+'reactionThermophysicalModels'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

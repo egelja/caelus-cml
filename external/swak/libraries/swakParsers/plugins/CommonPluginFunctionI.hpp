@@ -51,11 +51,11 @@ tmp<Field<T> > CommonPluginFunction::evaluate(
     evaluateInternal(content,consumed);
 
     if(isPoint!=result_.isPoint()) {
-        FatalErrorIn("CommonPluginFunction::evaluate")
+        FatalErrorInFunction
             << "Expected 'pointiness' of result " << result_.isPoint()
-                << " is not as expected " << isPoint
-                << endl
-                << exit(FatalError);
+            << " is not as expected " << isPoint
+            << endl
+            << exit(FatalError);
 
     }
     return tmp<Field<T> >(result_.getResult<T>(false));

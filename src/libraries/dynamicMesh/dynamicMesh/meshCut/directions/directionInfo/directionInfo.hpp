@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,6 +64,14 @@ class primitiveMesh;
 class edge;
 class face;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class directionInfo;
+
+Istream& operator>>(Istream&, directionInfo&);
+Ostream& operator<<(Ostream&, const directionInfo&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class directionInfo Declaration

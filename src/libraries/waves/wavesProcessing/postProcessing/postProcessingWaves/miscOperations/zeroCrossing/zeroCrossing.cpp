@@ -123,7 +123,7 @@ void zeroCrossing::evaluateScalar()
     }
     else
     {
-        FatalErrorIn("void zeroCrossing::evaluateScalar()")
+        FatalErrorInFunction
             << "\nDefine either of the following crossing methods for the\n"
             << "zero-crossing analysis: up, down or both\n"
             << endl << endl << exit(FatalError);
@@ -295,7 +295,7 @@ void zeroCrossing::evaluate()
     }
     else
     {
-        notImplemented("Only scalars are supported.");
+        NotImplemented;
     }
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ int CML::sigWriteNow::signal_
     debug::optimisationSwitch("writeNowSignal", -1)
 );
 
-static CML::Time* runTimePtr_ = NULL;
+static CML::Time* runTimePtr_ = nullptr;
 
 
 struct sigaction CML::sigWriteNow::oldAction_;
@@ -71,10 +71,8 @@ CML::sigWriteNow::sigWriteNow(const bool verbose, Time& runTime)
         sigemptyset(&newAction.sa_mask);
         if (sigaction(signal_, &newAction, &oldAction_) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::sigWriteNow::sigWriteNow(const bool, const Time&)"
-            )   << "Cannot set " << signal_ << " trapping"
+            FatalErrorInFunction
+                << "Cannot set " << signal_ << " trapping"
                 << abort(FatalError);
         }
 
@@ -95,12 +93,10 @@ CML::sigWriteNow::~sigWriteNow()
     // Reset old handling
     if (signal_ > 0)
     {
-        if (sigaction(signal_, &oldAction_, NULL) < 0)
+        if (sigaction(signal_, &oldAction_, nullptr) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::sigWriteNow::~sigWriteNow()"
-            )   << "Cannot reset " << signal_ << " trapping"
+            FatalErrorInFunction
+                << "Cannot reset " << signal_ << " trapping"
                 << abort(FatalError);
         }
     }

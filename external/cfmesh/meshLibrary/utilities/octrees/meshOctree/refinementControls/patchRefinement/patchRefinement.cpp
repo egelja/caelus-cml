@@ -74,10 +74,8 @@ label patchRefinement::patchInSurface(const triSurf& ts) const
         if( ts.patches()[patchI].name() == patchName_ )
             return patchI;
 
-    FatalErrorIn
-    (
-        "label patchRefinement::patchInSurface(const triSurf& ts) const"
-    ) << "Patch " << patchName_
+    FatalErrorInFunction
+      << "Patch " << patchName_
         << " does not exist in surface " << ts.patches()
         << exit(FatalError);
 

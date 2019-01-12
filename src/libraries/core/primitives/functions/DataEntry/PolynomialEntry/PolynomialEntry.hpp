@@ -154,10 +154,7 @@ CML::DataEntryTypes::Polynomial<Type>::Polynomial
 
     if (!coeffs_.size())
     {
-        FatalErrorIn
-        (
-            "CML::DataEntryTypes::polynomial::polynomial(const word&, const dictionary&)"
-        ) 
+        FatalErrorInFunction
             << "Polynomial coefficients for entry " << this->name_
             << " are invalid (empty)" << nl << exit(FatalError);
     }
@@ -175,10 +172,7 @@ CML::DataEntryTypes::Polynomial<Type>::Polynomial
     {
         if (!canIntegrate_)
         {
-            WarningIn
-            (
-                "CML::DataEntryTypes::polynomial::polynomial(const word&, const dictionary&)"
-            ) 
+            WarningInFunction
                 << "Polynomial " << this->name_ << " cannot be integrated"
                 << endl;
         }
@@ -199,11 +193,7 @@ CML::DataEntryTypes::Polynomial<Type>::Polynomial
 {
     if (!coeffs_.size())
     {
-        FatalErrorIn
-        (
-            "CML::DataEntryTypes::polynomial::polynomial"
-            "(const word&, const List<Tuple2<scalar, scalar> >&)"
-        ) 
+        FatalErrorInFunction
             << "Polynomial coefficients for entry " << this->name_
             << " are invalid (empty)" << nl << exit(FatalError);
     }
@@ -221,11 +211,7 @@ CML::DataEntryTypes::Polynomial<Type>::Polynomial
     {
         if (!canIntegrate_)
         {
-            WarningIn
-            (
-                "CML::DataEntryTypes::polynomial::polynomial"
-                "(const word&, const List<Tuple2<scalar, scalar> >&)"
-            )
+            WarningInFunction
                 << "Polynomial " << this->name_ << " cannot be integrated"
                 << endl;
         }

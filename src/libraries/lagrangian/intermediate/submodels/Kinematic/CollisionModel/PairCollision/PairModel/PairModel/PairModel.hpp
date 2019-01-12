@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,6 +57,21 @@ class PairModel
 
         //- The coefficients dictionary
         const dictionary coeffDict_;
+
+        //- Time to bleed-in collision forces; default = 0 (no delay)
+        scalar forceRampTime_;
+
+
+protected:
+
+    // Protected Member Functions
+
+        //- Return the force coefficient based on the forceRampTime_
+        scalar forceCoeff
+        (
+            typename CloudType::parcelType& pA,
+            typename CloudType::parcelType& pB
+        ) const;
 
 
 public:
@@ -138,26 +154,25 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makePairModel(CloudType)                                              \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(PairModel<CloudType>, 0);             \
-                                                                              \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        PairModel<CloudType>,                                                 \
-        dictionary                                                            \
+#define makePairModel(CloudType)                                               \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(PairModel<CloudType>, 0);              \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        PairModel<CloudType>,                                                  \
+        dictionary                                                             \
     );
 
 
-#define makePairModelType(SS, CloudType)                                      \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                    \
-                                                                              \
-    PairModel<CloudType>::adddictionaryConstructorToTable<SS<CloudType> >     \
+#define makePairModelType(SS, CloudType)                                       \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                     \
+                                                                               \
+    PairModel<CloudType>::                                                     \
+        adddictionaryConstructorToTable<SS<CloudType> >                        \
         add##SS##CloudType##ConstructorToTable_;
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -171,7 +186,11 @@ CML::PairModel<CloudType>::PairModel
 :
     dict_(dict),
     owner_(owner),
-    coeffDict_(dict.subDict(type + "Coeffs"))
+    coeffDict_(dict.subDict(type + "Coeffs")),
+    forceRampTime_
+    (
+        this->coeffDict().template lookupOrDefault<scalar>("forceRampTime", -1)
+    )
 {}
 
 
@@ -200,10 +219,25 @@ const CML::dictionary& CML::PairModel<CloudType>::dict() const
 
 
 template<class CloudType>
-const CML::dictionary&
-CML::PairModel<CloudType>::coeffDict() const
+const CML::dictionary& CML::PairModel<CloudType>::coeffDict() const
 {
     return coeffDict_;
+}
+
+
+template<class CloudType>
+CML::scalar CML::PairModel<CloudType>::forceCoeff
+(
+    typename CloudType::parcelType& pA,
+    typename CloudType::parcelType& pB
+) const
+{
+    if (forceRampTime_ < 0)
+    {
+        return 1;
+    }
+
+    return min(min(pA.age(), pB.age())/forceRampTime_, 1);
 }
 
 
@@ -226,14 +260,8 @@ CML::PairModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PairModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown pair model type "
+        FatalErrorInFunction
+            << "Unknown pair model type "
             << PairModelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid pair model types are:" << nl

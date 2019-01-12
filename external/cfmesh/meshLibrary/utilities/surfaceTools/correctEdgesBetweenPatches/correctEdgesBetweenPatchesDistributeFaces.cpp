@@ -349,10 +349,8 @@ void correctEdgesBetweenPatches::decomposeConcaveFaces()
             }
             else if( edgeInPatch[beI] != patchI )
             {
-                FatalErrorIn
-                (
-                    "void correctEdgesBetweenPatches::decomposeConcaveFaces()"
-                ) << "Invalid patch!" << abort(FatalError);
+                FatalErrorInFunction
+                   << "Invalid patch!" << abort(FatalError);
             }
         }
     }

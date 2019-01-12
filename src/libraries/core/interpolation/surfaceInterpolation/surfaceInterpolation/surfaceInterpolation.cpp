@@ -56,11 +56,11 @@ void CML::surfaceInterpolation::clearOut()
 CML::surfaceInterpolation::surfaceInterpolation(const fvMesh& fvm)
 :
     mesh_(fvm),
-    weights_(NULL),
-    deltaCoeffs_(NULL),
-    nonOrthDeltaCoeffs_(NULL),
-    nonOrthCorrectionVectors_(NULL),
-	fvNonOrthCorrectionVectors_(NULL)
+    weights_(nullptr),
+    deltaCoeffs_(nullptr),
+    nonOrthDeltaCoeffs_(nullptr),
+    nonOrthCorrectionVectors_(nullptr),
+	fvNonOrthCorrectionVectors_(nullptr)
 {}
 
 

@@ -49,7 +49,7 @@ void meshOctreeCreator::setRootCubeSizeAndRefParameters()
         return;
     if( !meshDictPtr_ )
     {
-        WarningIn("void meshOctreeCreator::setRootCubeSizeAndRefParameters()")
+        WarningInFunction
             << "meshDict is not available" << endl;
         return;
     }

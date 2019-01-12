@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,14 +22,17 @@ Class
     CML::ConeInjection
 
 Description
-    Multi-point cone injection model
-    - User specifies
+    Multi-point cone injection model.
+
+    User specifies:
       - time of start of injection
       - list of injector positions and directions (along injection axes)
       - number of parcels to inject per injector
       - parcel velocities
-      - inner and outer cone angles
-    - Parcel diameters obtained by distribution model
+      - inner and outer half-cone angles
+
+    Properties:
+      - Parcel diameters obtained by distribution model
 
 
 \*---------------------------------------------------------------------------*/
@@ -92,7 +95,7 @@ class ConeInjection
         const TimeDataEntry<scalar> thetaOuter_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
         //- Number of parcels per injector already injected
         mutable label nInjected_;
@@ -166,8 +169,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -255,7 +258,7 @@ CML::ConeInjection<CloudType>::ConeInjection
     ),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"), owner.rndGen()
         )
@@ -274,20 +277,8 @@ CML::ConeInjection<CloudType>::ConeInjection
 
         axis /= mag(axis);
 
-        vector tangent = vector::zero;
-        scalar magTangent = 0.0;
-
-        cachedRandom& rnd = this->owner().rndGen();
-        while (magTangent < SMALL)
-        {
-            vector v = rnd.sample01<vector>();
-
-            tangent = v - (v & axis)*axis;
-            magTangent = mag(tangent);
-        }
-
-        tanVec1_[i] = tangent/magTangent;
-        tanVec2_[i] = axis^tanVec1_[i];
+        tanVec1_[i] = normalised(perpendicular(axis));
+        tanVec2_[i] = normalised(axis^tanVec1_[i]);
     }
 
     // Set total volume to inject
@@ -365,14 +356,12 @@ CML::label CML::ConeInjection<CloudType>::parcelsToInject
     {
         const scalar targetVolume = flowRateProfile_.integrate(0, time1);
 
+        const scalar volumeFraction = targetVolume/this->volumeTotal_;
+
         const label targetParcels =
-            parcelsPerInjector_*targetVolume/this->volumeTotal_;
+            ceil(positionAxis_.size()*parcelsPerInjector_*volumeFraction);
 
-        const label nToInject = targetParcels - nInjected_;
-
-        nInjected_ += nToInject;
-
-        return positionAxis_.size()*nToInject;
+        return targetParcels - nInjected_;
     }
     else
     {
@@ -407,16 +396,16 @@ void CML::ConeInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     const label i = parcelI % positionAxis_.size();
 
     position = positionAxis_[i].first();
     cellOwner = injectorCells_[i];
-    tetFaceI = injectorTetFaces_[i];
-    tetPtI = injectorTetPts_[i];
+    tetFacei = injectorTetFaces_[i];
+    tetPti = injectorTetPts_[i];
 }
 
 
@@ -429,7 +418,7 @@ void CML::ConeInjection<CloudType>::setProperties
     typename CloudType::parcelType& parcel
 )
 {
-    cachedRandom& rnd = this->owner().rndGen();
+    Random& rnd = this->owner().rndGen();
 
     // set particle velocity
     const label i = parcelI % positionAxis_.size();
@@ -437,7 +426,7 @@ void CML::ConeInjection<CloudType>::setProperties
     scalar t = time - this->SOI_;
     scalar ti = thetaInner_.value(t);
     scalar to = thetaOuter_.value(t);
-    scalar coneAngle = degToRad(rnd.position<scalar>(ti, to));
+    scalar coneAngle = degToRad(rnd.scalarAB(ti, to));
 
     scalar alpha = sin(coneAngle);
     scalar dcorr = cos(coneAngle);

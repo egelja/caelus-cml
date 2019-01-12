@@ -141,8 +141,8 @@ public:
         //- Clone
         autoPtr<cellLooper> clone() const
         {
-            notImplemented("autoPtr<tcellLooper> clone() const");
-            return autoPtr<cellLooper>(NULL);
+            NotImplemented;
+            return autoPtr<cellLooper>(nullptr);
         }
 
 

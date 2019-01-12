@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -209,18 +209,6 @@ bool dlSymFound(void* handle, const std::string& symbol);
 
 //- Return all loaded libraries
 fileNameList dlLoaded();
-
-
-// Low level random numbers. Use Random class instead.
-
-//- Seed random number generator.
-void osRandomSeed(const label seed);
-
-//- Return random integer (uniform distribution between 0 and 2^31)
-label osRandomInteger();
-
-//- Return random double precision (uniform distribution between 0 and 1)
-scalar osRandomDouble();
 
 //- Convert to unix path separators
 std::string toUnixPath(const std::string& path);

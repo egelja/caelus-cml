@@ -51,8 +51,11 @@ class sigStopAtWriteNow
 {
     // Private data
 
-        //- number of signal to use
+        //- Number of signal to use
         static int signal_;
+
+        //- Pointer to Time
+        static Time const* runTimePtr_;
 
         //- Saved old signal trapping setting
         static __p_sig_fn_t oldAction_;
@@ -78,6 +81,9 @@ public:
 
 
     // Member functions
+
+        //- (re)set signal catcher
+        static void set(const bool verbose);
 
         //- Is active?
         bool active() const;

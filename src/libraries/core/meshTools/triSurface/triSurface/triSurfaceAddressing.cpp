@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,7 +35,7 @@ void CML::triSurface::calcSortedEdgeFaces() const
 {
     if (sortedEdgeFacesPtr_)
     {
-        FatalErrorIn("triSurface::calcSortedEdgeFaces()")
+        FatalErrorInFunction
             << "sortedEdgeFacesPtr_ already set"
             << abort(FatalError);
     }
@@ -53,7 +53,7 @@ void CML::triSurface::calcEdgeOwner() const
 {
     if (edgeOwnerPtr_)
     {
-        FatalErrorIn("triSurface::calcEdgeOwner()")
+        FatalErrorInFunction
             << "edgeOwnerPtr_ already set"
             << abort(FatalError);
     }
@@ -97,7 +97,7 @@ void CML::triSurface::calcEdgeOwner() const
 
             if (edgeOwner[edgeI] == -1)
             {
-                FatalErrorIn("triSurface::calcEdgeOwner()")
+                FatalErrorInFunction
                     << "Edge " << edgeI << " vertices:" << e
                     << " is used by faces " << myFaces
                     << " vertices:"

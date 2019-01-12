@@ -21,7 +21,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "clockTime.hpp"
-
 #include <sys/time.h>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -34,19 +33,15 @@ namespace CML
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void clockTime::getTime(struct timeval& t)
+void clockTime::getTime(timeType& t)
 {
-    gettimeofday(&t, NULL);
+    gettimeofday(&t, nullptr);
 }
 
 
-double clockTime::timeDifference
-(
-    const struct timeval& start,
-    const struct timeval& end
-)
+double clockTime::timeDifference(const timeType& start, const timeType& end)
 {
-    return end.tv_sec - start.tv_sec + 1E-6*(end.tv_usec - start.tv_usec);
+    return end.tv_sec - start.tv_sec + 1e-6*(end.tv_usec - start.tv_usec);
 }
 
 
@@ -76,8 +71,6 @@ double clockTime::timeIncrement() const
     return timeDifference(lastTime_, newTime_);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 

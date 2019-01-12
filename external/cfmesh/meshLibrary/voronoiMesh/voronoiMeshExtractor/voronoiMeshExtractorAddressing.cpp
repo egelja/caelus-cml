@@ -152,10 +152,8 @@ void voronoiMeshExtractor::createAddressing() const
             }
 
             if( searchPoint < 0 )
-                FatalErrorIn
-                (
-                    "void voronoiMeshExtractor::createAddressing() const"
-                ) << " invalid search point " << abort(FatalError);
+                FatalErrorInFunction
+                  << " invalid search point " << abort(FatalError);
 
             bool found(false);
             forAll(eTets, i)

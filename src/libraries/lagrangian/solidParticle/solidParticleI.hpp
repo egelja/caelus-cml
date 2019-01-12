@@ -23,14 +23,14 @@ License
 
 inline CML::solidParticle::trackingData::trackingData
 (
-    solidParticleCloud& spc,
+    const solidParticleCloud& spc,
     const interpolationCellPoint<scalar>& rhoInterp,
     const interpolationCellPoint<vector>& UInterp,
     const interpolationCellPoint<scalar>& nuInterp,
     const vector& g
 )
 :
-    particle::TrackingData<solidParticleCloud>(spc),
+    particle::trackingData(spc),
     rhoInterp_(rhoInterp),
     UInterp_(UInterp),
     nuInterp_(nuInterp),
@@ -41,15 +41,15 @@ inline CML::solidParticle::trackingData::trackingData
 inline CML::solidParticle::solidParticle
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const scalar d,
     const vector& U
 )
 :
-    particle(mesh, position, cellI, tetFaceI, tetPtI),
+    particle(mesh, coordinates, celli, tetFacei, tetPti),
     d_(d),
     U_(U)
 {}

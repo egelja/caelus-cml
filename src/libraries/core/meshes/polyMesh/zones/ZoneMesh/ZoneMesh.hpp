@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -211,7 +211,7 @@ void CML::ZoneMesh<ZoneType, MeshType>::calcZoneMap() const
     // if the pointer is already set
     if (zoneMapPtr_)
     {
-        FatalErrorIn("void ZoneMesh<ZoneType>::calcZoneMap() const")
+        FatalErrorInFunction
             << "zone map already calculated"
             << abort(FatalError);
     }
@@ -255,14 +255,8 @@ bool CML::ZoneMesh<ZoneType, MeshType>::read()
     {
         if (readOpt() == IOobject::MUST_READ_IF_MODIFIED)
         {
-            WarningIn
-            (
-                "ZoneMesh::ZoneMesh\n"
-                "(\n"
-                "    const IOobject&,\n"
-                "    const MeshType&\n"
-                ")"
-            )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+            WarningInFunction
+                << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
                 << " does not support automatic rereading."
                 << endl;
         }
@@ -322,7 +316,7 @@ CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
     PtrList<ZoneType>(),
     regIOobject(io),
     mesh_(mesh),
-    zoneMapPtr_(NULL)
+    zoneMapPtr_(nullptr)
 {
     read();
 }
@@ -340,7 +334,7 @@ CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
     PtrList<ZoneType>(size),
     regIOobject(io),
     mesh_(mesh),
-    zoneMapPtr_(NULL)
+    zoneMapPtr_(nullptr)
 {
     // Optionally read contents, otherwise keep size
     read();
@@ -358,7 +352,7 @@ CML::ZoneMesh<ZoneType, MeshType>::ZoneMesh
     PtrList<ZoneType>(),
     regIOobject(io),
     mesh_(mesh),
-    zoneMapPtr_(NULL)
+    zoneMapPtr_(nullptr)
 {
     if (!read())
     {
@@ -721,10 +715,8 @@ const ZoneType& CML::ZoneMesh<ZoneType, MeshType>::operator[]
 
     if (zoneI < 0)
     {
-        FatalErrorIn
-        (
-            "ZoneMesh<ZoneType>::operator[](const word&) const"
-        )   << "Zone named " << zoneName << " not found." << nl
+        FatalErrorInFunction
+            << "Zone named " << zoneName << " not found." << nl
             << "Available zone names: " << names() << endl
             << abort(FatalError);
     }
@@ -743,10 +735,8 @@ ZoneType& CML::ZoneMesh<ZoneType, MeshType>::operator[]
 
     if (zoneI < 0)
     {
-        FatalErrorIn
-        (
-            "ZoneMesh<ZoneType>::operator[](const word&)"
-        )   << "Zone named " << zoneName << " not found." << nl
+        FatalErrorInFunction
+            << "Zone named " << zoneName << " not found." << nl
             << "Available zone names: " << names() << endl
             << abort(FatalError);
     }

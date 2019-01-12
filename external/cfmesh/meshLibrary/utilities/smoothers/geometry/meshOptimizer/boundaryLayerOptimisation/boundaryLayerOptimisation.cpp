@@ -38,7 +38,7 @@ boundaryLayerOptimisation::boundaryLayerOptimisation(polyMeshGen& mesh)
     mesh_(mesh),
     meshSurfacePtr_(new meshSurfaceEngine(mesh)),
     deleteMeshSurface_(true),
-    partitionerPtr_(NULL),
+    partitionerPtr_(nullptr),
     hairEdges_(),
     hairEdgesAtBndPoint_(),
     hairEdgesNearHairEdge_(),
@@ -64,7 +64,7 @@ boundaryLayerOptimisation::boundaryLayerOptimisation
     mesh_(mesh),
     meshSurfacePtr_(&mse),
     deleteMeshSurface_(false),
-    partitionerPtr_(NULL),
+    partitionerPtr_(nullptr),
     hairEdges_(),
     hairEdgesAtBndPoint_(),
     hairEdgesNearHairEdge_(),
@@ -196,11 +196,8 @@ void boundaryLayerOptimisation::readSettings
                     readScalar(optParams.lookup("featureSizeFactor"));
 
                 if( featureSizeFactor >= 1.0 || featureSizeFactor < 0.0 )
-                    FatalErrorIn
-                    (
-                        "void boundaryLayerOptimisation::optimiseLayer"
-                        "(const dictionary&, boundaryLayerOptimisation&)"
-                    ) << "Feature size factor is out"
+                    FatalErrorInFunction
+                      << "Feature size factor is out"
                       << " of a valid range 0 to 1" << exit(FatalError);
 
                 blOptimisation.setFeatureSizeFactor(featureSizeFactor);
@@ -212,11 +209,8 @@ void boundaryLayerOptimisation::readSettings
                     readScalar(optParams.lookup("relThicknessTol"));
 
                 if( relThicknessTol >= 1.0 || relThicknessTol < 0.0 )
-                    FatalErrorIn
-                    (
-                        "void boundaryLayerOptimisation::optimiseLayer"
-                        "(const dictionary&, boundaryLayerOptimisation&)"
-                    ) << "Relative thickness tolerance is out"
+                    FatalErrorInFunction
+                      << "Relative thickness tolerance is out"
                       << " of a valid range 0 to 1" << exit(FatalError);
 
                 blOptimisation.setRelativeThicknessTolerance(relThicknessTol);

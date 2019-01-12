@@ -22,7 +22,7 @@ Class
     None
 
 Description
-    Helper function that usually issues a notImplemented unless the user
+    Helper function that usually issues a NotImplemented unless the user
     decided to switch it off in the dictionary
 
 Contributors/Copyright:

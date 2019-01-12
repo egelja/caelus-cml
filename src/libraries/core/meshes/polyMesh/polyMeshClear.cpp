@@ -22,10 +22,10 @@ License
 #include "polyMesh.hpp"
 #include "primitiveMesh.hpp"
 #include "globalMeshData.hpp"
-#include "pointMesh.hpp"
 #include "Time.hpp"
 #include "indexedOctree.hpp"
 #include "treeDataCell.hpp"
+#include "pointMesh.hpp"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -33,9 +33,7 @@ void CML::polyMesh::removeBoundary()
 {
     if (debug)
     {
-        Info<< "void polyMesh::removeBoundary(): "
-            << "Removing boundary patches."
-            << endl;
+        InfoInFunction << "Removing boundary patches." << endl;
     }
 
     // Remove the point zones
@@ -52,37 +50,18 @@ void CML::polyMesh::clearGeom()
 {
     if (debug)
     {
-        Info<< "void polyMesh::clearGeom() : "
-            << "clearing geometric data"
-            << endl;
+        InfoInFunction << "Clearing geometric data" << endl;
     }
+
 
     primitiveMesh::clearGeom();
 
     boundary_.clearGeom();
 
     // Reset valid directions (could change with rotation)
-    geometricD_ = Vector<label>::zero;
-    solutionD_ = Vector<label>::zero;
+    geometricD_ = Zero;
+    solutionD_ = Zero;
 
-    // Remove the stored tet base points
-    tetBasePtIsPtr_.clear();
-    // Remove the cell tree
-    cellTreePtr_.clear();
-}
-
-
-void CML::polyMesh::clearAdditionalGeom()
-{
-    if (debug)
-    {
-        Info<< "void polyMesh::clearAdditionalGeom() : "
-            << "clearing additional geometric data"
-            << endl;
-    }
-
-    // Remove the stored tet base points
-    tetBasePtIsPtr_.clear();
     // Remove the cell tree
     cellTreePtr_.clear();
 }
@@ -92,8 +71,8 @@ void CML::polyMesh::clearAddressing(const bool isMeshUpdate)
 {
     if (debug)
     {
-        Info<< "void polyMesh::clearAddressing() : "
-            << "clearing topology  isMeshUpdate:" << isMeshUpdate
+        InfoInFunction
+            << "Clearing topology isMeshUpdate" << isMeshUpdate
             << endl;
     }
 
@@ -104,8 +83,8 @@ void CML::polyMesh::clearAddressing(const bool isMeshUpdate)
     globalMeshDataPtr_.clear();
 
     // Reset valid directions
-    geometricD_ = Vector<label>::zero;
-    solutionD_ = Vector<label>::zero;
+    geometricD_ = Zero;
+    solutionD_ = Zero;
 
     // Update zones
     pointZones_.clearAddressing();
@@ -144,13 +123,22 @@ void CML::polyMesh::clearOut()
 }
 
 
+void CML::polyMesh::clearTetBasePtIs()
+{
+    if (debug)
+    {
+        InfoInFunction << "Clearing tet base points" << endl;
+    }
+
+    tetBasePtIsPtr_.clear();
+}
+
+
 void CML::polyMesh::clearCellTree()
 {
     if (debug)
     {
-        Info<< "void polyMesh::clearCellTree() : "
-            << "clearing cell tree"
-            << endl;
+        InfoInFunction << "Clearing cell tree" << endl;
     }
 
     cellTreePtr_.clear();

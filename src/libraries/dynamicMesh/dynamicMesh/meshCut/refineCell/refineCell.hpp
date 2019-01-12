@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,8 +39,11 @@ SourceFiles
 namespace CML
 {
 
-class Istream;
-class Ostream;
+// Forward declaration of friend functions and operators
+
+class refineCell;
+
+Ostream& operator<<(Ostream&, const refineCell&);
 
 /*---------------------------------------------------------------------------*\
                            Class refineCell Declaration

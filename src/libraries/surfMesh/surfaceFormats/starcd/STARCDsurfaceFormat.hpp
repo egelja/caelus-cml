@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -226,10 +226,7 @@ bool CML::fileFormats::STARCDsurfaceFormat<Face>::read
     IFstream is(baseName + ".cel");
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STARCDsurfaceFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << is.name()
             << exit(FatalError);
     }

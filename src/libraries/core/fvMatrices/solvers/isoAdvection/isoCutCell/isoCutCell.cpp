@@ -479,16 +479,7 @@ CML::label CML::isoCutCell::vofCutCell
 {
     if (debug)
     {
-        InfoIn
-        (
-            "CML::label CML::isoCutCell::vofCutCell"
-            "("
-                 "const label celli,"
-                 "const scalar alpha1,"
-                 "const scalar tol,"
-                 "const label maxIter"
-            ")"
-        )
+        InfoInFunction
           << "vofCutCell for cell " << celli << " with alpha1 = "
           << alpha1 << " ------" << endl;
     }
@@ -588,7 +579,7 @@ CML::label CML::isoCutCell::vofCutCell
 
         // C holds the 4 polynomial coefficients
         C = a;
-        scalarSquareMatrix::LUsolve(M, C);
+        LUsolve(M, C);
     }
 
     // Finding root with Newton method

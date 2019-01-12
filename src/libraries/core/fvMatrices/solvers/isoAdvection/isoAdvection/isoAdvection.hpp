@@ -391,14 +391,7 @@ Type CML::isoAdvection::faceValue
 
         if (patchi < 0 || patchi >= pbm.size())
         {
-            FatalErrorIn
-            (
-                "Type CML::isoAdvection::faceValue"
-                "("
-                    "const GeometricField<Type, fvsPatchField, surfaceMesh>&,"
-                    "const label"
-                 ") const"
-            )
+            FatalErrorInFunction
                 << "Cannot find patch for face " << facei
                 << abort(FatalError);
         }
@@ -437,14 +430,7 @@ void CML::isoAdvection::setFaceValue
 
         if (patchi < 0 || patchi >= pbm.size())
         {
-            FatalErrorIn
-            (
-                "void CML::isoAdvection::setFaceValue"
-                "("
-                    "GeometricField<Type, fvsPatchField, surfaceMesh>&,"
-                    "const label, const Type&"
-                ") const"
-            )
+            FatalErrorInFunction
                 << "Cannot find patch for face " << facei
                 << abort(FatalError);
         }

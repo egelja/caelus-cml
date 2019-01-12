@@ -215,10 +215,10 @@ tmp<vectorField> SampledSetValueExpressionDriver::makePositionField() const
 
 tmp<scalarField> SampledSetValueExpressionDriver::makeCellVolumeField() const
 {
-    FatalErrorIn("SampledSetValueExpressionDriver::makeCellVolumeField()")
+    FatalErrorInFunction
         << "faceZone knows nothing about cells"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<scalarField>(
         new scalarField(0)
     );
@@ -227,15 +227,15 @@ tmp<scalarField> SampledSetValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> SampledSetValueExpressionDriver::makePointField()
 // {
-//     notImplemented("SampledSetValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField> SampledSetValueExpressionDriver::makeFaceAreaMagField() const
 {
-    FatalErrorIn("SampledSetValueExpressionDriver::makeFaceAreaMagField()")
+    FatalErrorInFunction
         << "sampledSets knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
 
     return tmp<scalarField>(
         new scalarField(0)
@@ -256,10 +256,10 @@ tmp<vectorField> SampledSetValueExpressionDriver::makeFaceNormalField() const
 
 tmp<vectorField> SampledSetValueExpressionDriver::makeFaceAreaField() const
 {
-    FatalErrorIn("SampledSetValueExpressionDriver::makeFaceAreaField()")
+    FatalErrorInFunction
         << "sampledSets knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
 
     return tmp<vectorField>(
         new vectorField(0)
@@ -299,11 +299,11 @@ tmp<scalarField> SampledSetValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " The size: " << faceSize << endl;
 
-        FatalErrorIn("SampledSetValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
 
     return tmp<scalarField>(

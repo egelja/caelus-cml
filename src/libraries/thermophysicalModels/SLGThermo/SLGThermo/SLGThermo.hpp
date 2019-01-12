@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,9 +27,9 @@ Description
     - liquids : liquid components - access  to elemental properties
     - solids  : solid components - access  to elemental properties
 
-    If thermo is not a multi-component thermo package, carrier is NULL.
+    If thermo is not a multi-component thermo package, carrier is nullptr.
     Similarly, if no liquids or solids are specified, their respective
-    pointers will also be NULL.
+    pointers will also be nullptr.
 
     Registered to the mesh so that it can be looked-up
 
@@ -38,12 +38,12 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef SLGThermo_H
-#define SLGThermo_H
+#ifndef SLGThermo_HPP
+#define SLGThermo_HPP
 
-#include "MeshObject.hpp"
-#include "basicThermo.hpp"
-#include "basicMultiComponentMixture.hpp"
+#include "regIOobject.hpp"
+#include "fluidThermo.hpp"
+#include "basicSpecieMixture.hpp"
 #include "liquidMixtureProperties.hpp"
 #include "solidMixtureProperties.hpp"
 
@@ -58,21 +58,20 @@ namespace CML
 
 class SLGThermo
 :
-    public MeshObject<fvMesh, SLGThermo>
+    public regIOobject
 {
-    // Private data
 
-        //- Thermo package
-        basicThermo& thermo_;
+    //- Thermo package
+    fluidThermo& thermo_;
 
-        //- Reference to the multi-component carrier phase thermo
-        basicMultiComponentMixture* carrier_;
+    //- Reference to the multi-component carrier phase thermo
+    basicSpecieMixture* carrier_;
 
-        //- Additional liquid properties data
-        autoPtr<liquidMixtureProperties> liquids_;
+    //- Additional liquid properties data
+    autoPtr<liquidMixtureProperties> liquids_;
 
-        //- Additional solid properties data
-        autoPtr<solidMixtureProperties> solids_;
+    //- Additional solid properties data
+    autoPtr<solidMixtureProperties> solids_;
 
 
 public:
@@ -80,76 +79,77 @@ public:
     //- Runtime type information
     TypeName("SLGThermo");
 
-    // Constructors
 
-        //- Construct from mesh
-        SLGThermo(const fvMesh& mesh, basicThermo& thermo);
+    //- Construct from mesh
+    SLGThermo(const fvMesh& mesh, fluidThermo& thermo);
 
 
     //- Destructor
-    virtual ~SLGThermo();
+    virtual ~SLGThermo()
+    {}
 
 
     // Member Functions
 
-        // Access
+    //- Return reference to the thermo database
+    const fluidThermo& thermo() const;
 
-            //- Return reference to the thermo database
-            const basicThermo& thermo() const;
+    //- Return reference to the gaseous components
+    const basicSpecieMixture& carrier() const;
 
-            //- Return reference to the gaseous components
-            const basicMultiComponentMixture& carrier() const;
+    //- Return reference to the global (additional) liquids
+    const liquidMixtureProperties& liquids() const;
 
-            //- Return reference to the global (additional) liquids
-            const liquidMixtureProperties& liquids() const;
-
-            //- Return reference to the global (additional) solids
-            const solidMixtureProperties& solids() const;
+    //- Return reference to the global (additional) solids
+    const solidMixtureProperties& solids() const;
 
 
-            // Index retrieval
+    // Index retrieval
 
-                //- Index of carrier component
-                label carrierId
-                (
-                    const word& cmptName,
-                    bool allowNotFound = false
-                ) const;
+    //- Index of carrier component
+    label carrierId
+    (
+        const word& cmptName,
+        bool allowNotFound = false
+    ) const;
 
-                //- Index of liquid component
-                label liquidId
-                (
-                    const word& cmptName,
-                    bool allowNotFound = false
-                ) const;
+    //- Index of liquid component
+    label liquidId
+    (
+        const word& cmptName,
+        bool allowNotFound = false
+    ) const;
 
-                //- Index of solid component
-                label solidId
-                (
-                    const word& cmptName,
-                    bool allowNotFound = false
-                ) const;
+    //- Index of solid component
+    label solidId
+    (
+        const word& cmptName,
+        bool allowNotFound = false
+    ) const;
 
 
-        // Checks
+    // Checks
 
-            //- Thermo database has multi-component carrier flag
-            bool hasMultiComponentCarrier() const;
+    //- Thermo database has multi-component carrier flag
+    bool hasMultiComponentCarrier() const;
 
-            //- Thermo database has liquid components flag
-            bool hasLiquids() const;
+    //- Thermo database has liquid components flag
+    bool hasLiquids() const;
 
-            //- Thermo database has solid components flag
-            bool hasSolids() const;
+    //- Thermo database has solid components flag
+    bool hasSolids() const;
+
+    // IO
+
+    bool writeData(CML::Ostream&) const
+    {
+        return true;
+    }
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

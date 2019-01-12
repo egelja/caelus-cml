@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -182,7 +182,7 @@ CML::label CML::objectRegistry::getEvent() const
     {
         if (objectRegistry::debug)
         {
-            WarningIn("objectRegistry::getEvent() const")
+            WarningInFunction
                 << "Event counter has overflowed. "
                 << "Resetting counter on all dependent objects." << nl
                 << "This might cause extra evaluations." << endl;
@@ -243,7 +243,7 @@ bool CML::objectRegistry::checkOut(regIOobject& io) const
         {
             if (objectRegistry::debug)
             {
-                WarningIn("objectRegistry::checkOut(regIOobject&)")
+                WarningInFunction
                     << name() << " : attempt to checkOut copy of "
                     << iter.key()
                     << endl;

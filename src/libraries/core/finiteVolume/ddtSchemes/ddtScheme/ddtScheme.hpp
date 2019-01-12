@@ -290,7 +290,7 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
     const surfaceScalarField& Uf                                               \
 )                                                                              \
 {                                                                              \
-    notImplemented(#SS"<scalar>::fvcDdtUfCorr");                               \
+    NotImplemented;                                                            \
     return surfaceScalarField::null();                                         \
 }                                                                              \
                                                                                \
@@ -301,7 +301,7 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
     const surfaceScalarField& phi                                              \
 )                                                                              \
 {                                                                              \
-    notImplemented(#SS"<scalar>::fvcDdtPhiCorr");                              \
+    NotImplemented;                                                            \
     return surfaceScalarField::null();                                         \
 }                                                                              \
                                                                                \
@@ -313,7 +313,7 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtUfCorr                               \
     const surfaceScalarField& Uf                                               \
 )                                                                              \
 {                                                                              \
-    notImplemented(#SS"<scalar>::fvcDdtUfCorr");                               \
+    NotImplemented;                                                            \
     return surfaceScalarField::null();                                         \
 }                                                                              \
                                                                                \
@@ -325,7 +325,7 @@ tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \
     const surfaceScalarField& phi                                              \
 )                                                                              \
 {                                                                              \
-    notImplemented(#SS"<scalar>::fvcDdtPhiCorr");                              \
+    NotImplemented;                                                            \
     return surfaceScalarField::null();                                         \
 }                                                                              \
                                                                                \
@@ -368,11 +368,8 @@ tmp<ddtScheme<Type> > ddtScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "ddtScheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "Ddt scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Ddt scheme not specified" << endl << endl
             << "Valid ddt schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -385,11 +382,8 @@ tmp<ddtScheme<Type> > ddtScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "ddtScheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "Unknown ddt scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown ddt scheme " << schemeName << nl << nl
             << "Valid ddt schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -416,7 +410,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > ddtScheme<Type>::fvcDdt
     const GeometricField<Type, fvPatchField, volMesh>& vf
 )
 {
-    notImplemented("fvcDdt(alpha, rho, psi)");
+    NotImplemented;
 
     return tmp<GeometricField<Type, fvPatchField, volMesh> >
     (
@@ -433,7 +427,7 @@ tmp<fvMatrix<Type> > ddtScheme<Type>::fvmDdt
     const GeometricField<Type, fvPatchField, volMesh>& vf
 )
 {
-    notImplemented("fvmDdt(alpha, rho, psi)");
+    NotImplemented;
 
     return tmp<fvMatrix<Type> >
     (
@@ -453,7 +447,7 @@ tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > ddtScheme<Type>::fvcDdt
     const GeometricField<Type, fvsPatchField, surfaceMesh>& sf
 )
 {
-    notImplemented("fvcDdt(psi)");
+    NotImplemented;
 
     return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
     (

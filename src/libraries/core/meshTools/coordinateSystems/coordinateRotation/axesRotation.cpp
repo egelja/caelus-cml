@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2014 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,7 +53,7 @@ void CML::axesRotation::calcTransform
 
     if (mag(b) < SMALL)
     {
-        FatalErrorIn("axesRotation::calcTransform()")
+        FatalErrorInFunction
             << "axis1, axis2 appear co-linear: "
             << axis1 << ", " << axis2 << endl
             << abort(FatalError);
@@ -82,15 +82,7 @@ void CML::axesRotation::calcTransform
         }
         default:
         {
-            FatalErrorIn
-            (
-                "axesRotation::calcTransform"
-                "("
-                    "const vector&,"
-                    "const vector&,"
-                    "const axisOrder&"
-                ")"
-            )
+            FatalErrorInFunction
                 << "Unhandled axes specifictation" << endl
                 << abort(FatalError);
 
@@ -164,10 +156,7 @@ CML::axesRotation::axesRotation(const tensor& R)
 
 const CML::tensorField& CML::axesRotation::Tr() const
 {
-    notImplemented
-    (
-        "const CML::tensorField& axesRotation::Tr() const"
-    );
+    NotImplemented;
     return NullSingletonRef<const tensorField>();
 }
 
@@ -207,11 +196,8 @@ CML::tmp<CML::tensorField> CML::axesRotation::transformTensor
     const tensorField& st
 ) const
 {
-    notImplemented
-    (
-        "const tensorField& axesRotation::transformTensor() const"
-    );
-    return tmp<tensorField>(NULL);
+    NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 
@@ -230,15 +216,8 @@ CML::tmp<CML::tensorField> CML::axesRotation::transformTensor
     const labelList& cellMap
 ) const
 {
-    notImplemented
-    (
-        "tmp<CML::tensorField> axesRotation::transformTensor "
-        "("
-            "const tensorField&,"
-            "const labelList&"
-        ") const"
-    );
-    return tmp<tensorField>(NULL);
+    NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 
@@ -301,10 +280,8 @@ void CML::axesRotation::operator=(const dictionary& dict)
     }
     else
     {
-        FatalErrorIn
-        (
-            "axesRotation::operator=(const dictionary&) "
-        )   << "not entry of the type (e1, e2) or (e2, e3) or (e3, e1) "
+        FatalErrorInFunction
+            << "not entry of the type (e1, e2) or (e2, e3) or (e3, e1) "
             << "found "
             << exit(FatalError);
     }

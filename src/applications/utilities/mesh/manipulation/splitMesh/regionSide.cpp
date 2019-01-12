@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -97,11 +97,8 @@ CML::label CML::regionSide::otherEdge
         }
     }
 
-    FatalErrorIn
-    (
-        "regionSide::otherEdge(const primitiveMesh&, const label, const label"
-        ", const label)"
-    )   << "Cannot find other edge on face " << faceI << " that uses point "
+    FatalErrorInFunction
+        << "Cannot find other edge on face " << faceI << " that uses point "
         << pointI << " but not point " << freePointI << endl
         << "Edges on face:" << fEdges
         << " verts:" << UIndirectList<edge>(mesh.edges(), fEdges)()

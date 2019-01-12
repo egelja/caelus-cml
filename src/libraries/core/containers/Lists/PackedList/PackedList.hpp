@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
+Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -368,6 +369,10 @@ public:
                 const bool indexedOutput=false
             ) const;
 
+            //- Write the List, with line-breaks in ASCII if the list length
+            //- exceeds shortListLen.
+            //  Using '0' suppresses line-breaks entirely.
+            Ostream& writeList(Ostream& os, const label shortListLen=0) const;
 
             //- Write as a dictionary entry
             void writeEntry(Ostream&) const;
@@ -714,11 +719,7 @@ inline unsigned int CML::PackedList<nBits>::readValue(Istream& is)
 
     if (val > max_value())
     {
-        FatalIOErrorIn
-        (
-            "PackedList<nBits>::readValue(Istream&)",
-            is
-        )
+        FatalIOErrorInFunction(is)
             << "Out-of-range value " << val << " for PackedList<" << nBits
             << ">. Maximum permitted value is " << max_value() << "."
             << exit(FatalIOError);
@@ -740,11 +741,7 @@ inline void CML::PackedList<nBits>::setPair(Istream& is)
 
     if (val > max_value())
     {
-        FatalIOErrorIn
-        (
-            "PackedList<nBits>::setPair(Istream&)",
-            is
-        )
+        FatalIOErrorInFunction(is)
             << "Out-of-range value " << val << " for PackedList<" << nBits
             << "> at index " << ind
             << ". Maximum permitted value is " << max_value() << "."
@@ -1660,10 +1657,8 @@ inline unsigned int CML::PackedList<nBits>::remove()
 {
     if (!size_)
     {
-        FatalErrorIn
-        (
-            "CML::PackedList<nBits>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     label elemI = size_ - 1;
@@ -2017,11 +2012,7 @@ CML::Istream& CML::PackedList<nBits>::read(Istream& is)
                 }
                 else
                 {
-                    FatalIOErrorIn
-                    (
-                        "PackedList<nBits>::read(Istream&)",
-                        is
-                    )
+                    FatalIOErrorInFunction(is)
                         << "incorrect list token, expected '(' or '{', found "
                         << firstTok.info()
                         << exit(FatalIOError);
@@ -2091,11 +2082,7 @@ CML::Istream& CML::PackedList<nBits>::read(Istream& is)
         }
         else
         {
-            FatalIOErrorIn
-            (
-                "PackedList<nBits>::read(Istream&)",
-                is
-            )
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected '(', found "
                 << firstTok.info()
                 << exit(FatalIOError);
@@ -2103,17 +2090,73 @@ CML::Istream& CML::PackedList<nBits>::read(Istream& is)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "PackedList<nBits>::read(Istream&)",
-            is
-        )
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int>, '(' or '{', found "
             << firstTok.info()
             << exit(FatalIOError);
     }
 
     return is;
+}
+
+
+template<unsigned Width>
+CML::Ostream& CML::PackedList<Width>::writeList
+(
+    Ostream& os,
+    const label shortListLen
+) const
+{
+    const PackedList<Width>& list = *this;
+    const label len = list.size();
+
+    // Write list contents depending on data format
+    if (os.format() == IOstream::ASCII)
+    {
+        if (list.uniform())
+        {
+            // Two or more entries, and all entries have identical values.
+            os  << len << token::BEGIN_BLOCK << list[0] << token::END_BLOCK;
+        }
+        else if (!shortListLen || len <= shortListLen)
+        {
+            // Shorter list, or line-breaks suppressed
+            os  << len << token::BEGIN_LIST;
+            for (label i=0; i < len; ++i)
+            {
+                if (i) os << token::SPACE;
+                os  << list[i];
+            }
+            os  << token::END_LIST;
+        }
+        else
+        {
+            // Longer list
+            os << nl << len << nl << token::BEGIN_LIST << nl;
+            for (label i=0; i < len; ++i)
+            {
+                os << list[i] << nl;
+            }
+            os << token::END_LIST << nl;
+        }
+    }
+    else
+    {
+        // Contents are binary and contiguous
+        os  << nl << len << nl;
+
+        if (len)
+        {
+            // write(...) includes surrounding start/end delimiters
+            os.write
+            (
+                reinterpret_cast<const char*>(list.storage().cdata()),
+                list.byteSize()
+            );
+        }
+    }
+
+    return os;
 }
 
 

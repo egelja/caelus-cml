@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::drippingInjection
+    CML::regionModels::surfaceFilmModels::drippingInjection
 
 Description
     Film Dripping mass transfer model.
@@ -38,7 +38,7 @@ SourceFiles
 
 #include "injectionModel.hpp"
 #include "distributionModel.hpp"
-#include "cachedRandom.hpp"
+#include "Random.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -73,17 +73,17 @@ protected:
     // Protected data
 
         //- Stable film thickness - drips only formed if thickness
-        //  execeeds this threhold value
+        //  exceeds this threshold value
         scalar deltaStable_;
 
         //- Number of particles per parcel
         scalar particlesPerParcel_;
 
         //- Random number generator
-        cachedRandom rndGen_;
+        Random rndGen_;
 
         //- Parcel size PDF model
-        const autoPtr<distributionModels::distributionModel>
+        const autoPtr<distributionModel>
             parcelDistribution_;
 
         //- Diameters of particles to inject into the dripping
@@ -101,7 +101,7 @@ public:
         //- Construct from surface film model
         drippingInjection
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

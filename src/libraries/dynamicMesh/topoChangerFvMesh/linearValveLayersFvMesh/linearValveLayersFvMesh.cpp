@@ -225,7 +225,7 @@ void CML::linearValveLayersFvMesh::makeLayersLive()
         }
         else
         {
-            FatalErrorIn("void linearValveLayersFvMesh::makeLayersLive()")
+            FatalErrorInFunction
                 << "Don't know what to do with mesh modifier "
                 << modI << " of type " << topoChanges[modI].type()
                 << abort(FatalError);
@@ -251,7 +251,7 @@ void CML::linearValveLayersFvMesh::makeSlidersLive()
         }
         else
         {
-            FatalErrorIn("void linearValveLayersFvMesh::makeLayersLive()")
+            FatalErrorInFunction
                 << "Don't know what to do with mesh modifier "
                 << modI << " of type " << topoChanges[modI].type()
                 << abort(FatalError);
@@ -287,7 +287,7 @@ bool CML::linearValveLayersFvMesh::attached() const
              != refCast<const slidingInterface>(topoChanges[modI]).attached()
             )
             {
-                FatalErrorIn("bool linearValveLayersFvMesh::attached() const")
+                FatalErrorInFunction
                     << "Slider " << modI << " named "
                     << topoChanges[modI].name()
                     << " out of sync: Should be" << result

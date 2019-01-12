@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,12 +46,8 @@ void CML::hierarchGeomDecomp::setDecompOrder()
 
     if (order.size() != 3)
     {
-        FatalIOErrorIn
-        (
-            "hierarchGeomDecomp::hierarchGeomDecomp"
-            "(const dictionary& decompositionDict)",
-            decompositionDict_
-        )   << "number of characters in order (" << order << ") != 3"
+        FatalIOErrorInFunction(decompositionDict_)
+            << "number of characters in order (" << order << ") != 3"
             << exit(FatalIOError);
     }
 
@@ -71,12 +67,8 @@ void CML::hierarchGeomDecomp::setDecompOrder()
         }
         else
         {
-            FatalIOErrorIn
-            (
-                "hierarchGeomDecomp::hierarchGeomDecomp"
-                "(const dictionary& decompositionDict)",
-                decompositionDict_
-            )   << "Illegal decomposition order " << order << endl
+            FatalIOErrorInFunction(decompositionDict_)
+                << "Illegal decomposition order " << order << endl
                 << "It should only contain x, y or z" << exit(FatalError);
         }
     }
@@ -225,7 +217,7 @@ void CML::hierarchGeomDecomp::findBinary
 
         if (returnReduce(hasNotChanged, andOp<bool>()))
         {
-            WarningIn("hierarchGeomDecomp::findBinary(..)")
+            WarningInFunction
                 << "unable to find desired deomposition split, making do!"
                 << endl;
             break;
@@ -305,7 +297,7 @@ void CML::hierarchGeomDecomp::findBinary
 
         if (returnReduce(hasNotChanged, andOp<bool>()))
         {
-            WarningIn("hierarchGeomDecomp::findBinary(..)")
+            WarningInFunction
                 << "unable to find desired deomposition split, making do!"
                 << endl;
             break;

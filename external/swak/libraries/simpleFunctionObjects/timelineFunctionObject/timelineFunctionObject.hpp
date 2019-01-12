@@ -175,7 +175,7 @@ inline void timelineFunctionObject::writeData(const word &name,const UList<strin
                 s << separator_.c_str() << d.c_str();
                 break;
             default:
-                FatalErrorIn("timelineFunctionObject::write(const word &name,const UList<T> &data)")
+                FatalErrorInFunction
                     << "Don't know how to write files of type "
                         << outputFileModeNames_[outputFileMode_] << endl
                         << exit(FatalError);
@@ -196,7 +196,7 @@ inline void timelineFunctionObject::writeData(const word &name,const UList<scala
                 s << separator_.c_str() << data[index];
                 break;
             default:
-                FatalErrorIn("timelineFunctionObject::write(const word &name,const UList<T> &data)")
+                FatalErrorInFunction
                     << "Don't know how to write files of type "
                         << outputFileModeNames_[outputFileMode_] << endl
                         << exit(FatalError);
@@ -220,7 +220,7 @@ void timelineFunctionObject::writeData(const word &name,const UList<T> &data) {
                         s << separator_.c_str() << data[index][i];
                         break;
                     default:
-                        FatalErrorIn("timelineFunctionObject::write(const word &name,const UList<T> &data)")
+                        FatalErrorInFunction
                             << "Don't know how to write files of type "
                                 << outputFileModeNames_[outputFileMode_] << endl
                                 << exit(FatalError);
@@ -242,7 +242,7 @@ void timelineFunctionObject::writeTime(const word &name,const T &time) {
             s <<  time;
             break;
         default:
-            FatalErrorIn("timelineFunctionObject::writeTime(const word &name,const UList<T> &data)")
+            FatalErrorInFunction
                     << "Don't know how to write files of type "
                         << outputFileModeNames_[outputFileMode_] << endl
                         << exit(FatalError);

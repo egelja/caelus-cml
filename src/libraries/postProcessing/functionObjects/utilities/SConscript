@@ -6,7 +6,7 @@ Import('env')
 target = 'utilityFunctionObjects'
 
 sources = Split("""
-CourantNo/CourantNo.cpp
+CourantNo/CourantNo_fo.cpp
 CourantNo/CourantNoFunctionObject.cpp
 Lambda2/Lambda2.cpp
 Lambda2/Lambda2FunctionObject.cpp
@@ -62,7 +62,7 @@ caelus_libs = [
 'compressibleRASModels',
 'compressibleVLESModels',
 'compressibleLESModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'incompressibleTurbulenceModel',
 'compressibleTurbulenceModel'
 ]

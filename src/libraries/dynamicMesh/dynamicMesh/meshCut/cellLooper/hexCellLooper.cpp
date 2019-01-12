@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -211,7 +211,7 @@ bool CML::hexCellLooper::cut
     {
         if (loop.empty())
         {
-            WarningIn("hexCellLooper")
+            WarningInFunction
                 << "could not cut cell " << cellI << endl;
 
             fileName cutsFile("hexCellLooper_" + name(cellI) + ".obj");
@@ -241,7 +241,7 @@ bool CML::hexCellLooper::cut
 
             if (loopSet.found(elem))
             {
-                FatalErrorIn("hexCellLooper::walkHex") << " duplicate cut"
+                FatalErrorInFunction << " duplicate cut"
                     << abort(FatalError);
             }
             loopSet.insert(elem);
@@ -255,7 +255,7 @@ bool CML::hexCellLooper::cut
 
         if ((faceVerts.mag(facePoints) < SMALL) || (loop.size() < 3))
         {
-            FatalErrorIn("hexCellLooper::walkHex") << "Face:" << faceVerts
+            FatalErrorInFunction << "Face:" << faceVerts
                 << " on points:" << facePoints << endl
                 << UIndirectList<point>(facePoints, faceVerts)()
                 << abort(FatalError);

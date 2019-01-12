@@ -109,8 +109,8 @@ public:
         //- Clone
         autoPtr<block> clone() const
         {
-            notImplemented("block::clone()");
-            return autoPtr<block>(NULL);
+            NotImplemented;
+            return autoPtr<block>(nullptr);
         }
 
 

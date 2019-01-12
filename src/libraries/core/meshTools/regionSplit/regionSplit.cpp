@@ -116,12 +116,7 @@ void CML::regionSplit::calcNonCompactRegionSplit
 
             if (blockedFace.size() && !blockedFace[faceI])
             {
-                FatalErrorIn
-                (
-                    "regionSplit::calcNonCompactRegionSplit("
-                    "const globalIndex&, const boolList&,"
-                    "const List<labelPair>&, labelList& )"
-                )
+                FatalErrorInFunction
                     << "Problem: unblocked face " << faceI
                     << " at " << mesh().faceCentres()[faceI]
                     << " on unassigned cell " << cellI

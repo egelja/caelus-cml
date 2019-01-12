@@ -1,22 +1,27 @@
 {
+    volScalarField& he = thermo.he();
+
     Uf = phi/fvc::interpolate(rho);
-    fvScalarMatrix hEqn
+
+    fvScalarMatrix EEqn
     (
-        fvm::ddt(rho, h)
-      + fvm::div(phi, h)
-      - fvm::laplacian(turbulence->alphaEff(), h)
+        fvm::ddt(rho, he) + fvm::div(phi, he)
+      - fvm::laplacian(turbulence->alphaEff(), he)
      ==
         fvc::ddt(p)
       + fvc::div(Uf(), p, "div(U,p)")
       - p*fvc::div(Uf())
       - (turbulence->devRhoReff() && CML::fvc::grad(U))
-      + fvOptions(rho,h)
+      + fvOptions(rho,he)
     );
 
-    hEqn.relax();
-    fvOptions.constrain(hEqn);
-    hEqn.solve();
-    fvOptions.correct(h);
+    EEqn.relax();
 
-    thermo->correct();
+    fvOptions.constrain(EEqn);
+
+    EEqn.solve();
+
+    fvOptions.correct(he);
+
+    thermo.correct();
 }

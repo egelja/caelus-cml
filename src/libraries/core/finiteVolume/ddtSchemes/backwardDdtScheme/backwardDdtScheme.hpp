@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -1043,7 +1043,7 @@ backwardDdtScheme<Type>::fvcDdtUfCorr
     }
     else
     {
-        FatalErrorIn("backwardDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 
@@ -1118,7 +1118,7 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
     }
     else
     {
-        FatalErrorIn("backwardDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 

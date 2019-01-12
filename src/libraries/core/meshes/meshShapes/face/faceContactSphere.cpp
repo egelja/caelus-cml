@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,7 +36,7 @@ CML::scalar CML::face::contactSphereDiameter
     scalar magN = CML::mag(n);
 
     vector n1 = n/(magN + SMALL);
-    vector n2 = normal(meshPoints);
+    vector n2 = area(meshPoints);
 
     n2 /= CML::mag(n2) + SMALL;
 

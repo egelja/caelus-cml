@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -476,7 +476,7 @@ public:
                     }
                     else
                     {
-                        FatalErrorIn("mergedPoint(const label) const")
+                        FatalErrorInFunction
                             << "old point label " << oldPointI
                             << " has reverseMap " << i << endl
                             << "Only call mergedPoint for removed points."
@@ -507,7 +507,7 @@ public:
                     }
                     else
                     {
-                        FatalErrorIn("mergedFace(const label) const")
+                        FatalErrorInFunction
                             << "old face label " << oldFaceI
                             << " has reverseMap " << i << endl
                             << "Only call mergedFace for removed faces."
@@ -538,7 +538,7 @@ public:
                     }
                     else
                     {
-                        FatalErrorIn("mergedCell(const label) const")
+                        FatalErrorInFunction
                             << "old cell label " << oldCellI
                             << " has reverseMap " << i << endl
                             << "Only call mergedCell for removed cells."

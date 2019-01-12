@@ -17,7 +17,6 @@ subdirs = Split("""
     mesh/advanced/selectCells
     mesh/advanced/splitCells
     mesh/generation/blockMesh 
-    mesh/generation/extrude/extrudeModel
     mesh/generation/extrude/extrudeMesh
     mesh/generation/extrude/extrudeToRegionMesh
     mesh/conversion/caelusMeshToFluent

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -261,15 +261,8 @@ SingleKineticRateDevolatilisation
 {
     if (volatileData_.empty())
     {
-        WarningIn
-        (
-            "CML::SingleKineticRateDevolatilisation<CloudType>::"
-            "SingleKineticRateDevolatilisation"
-            "("
-                "const dictionary& dict, "
-                "CloudType& owner"
-            ")"
-        )   << "Devolatilisation model selected, but no volatiles defined"
+        WarningInFunction
+            << "Devolatilisation model selected, but no volatiles defined"
             << nl << endl;
     }
     else
@@ -349,7 +342,7 @@ void CML::SingleKineticRateDevolatilisation<CloudType>::calculate
         const scalar E = volatileData_[i].E();
 
         // Kinetic rate
-        const scalar kappa = A1*exp(-E/(specie::RR*T));
+        const scalar kappa = A1*exp(-E/(RR*T));
 
         // Mass transferred from particle to carrier gas phase
         dMassDV[id] = min(dt*kappa*massVolatile, massVolatile);

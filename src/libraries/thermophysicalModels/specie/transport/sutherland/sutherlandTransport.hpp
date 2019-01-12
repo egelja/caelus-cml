@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -54,23 +54,9 @@ inline sutherlandTransport<Thermo> operator+
 );
 
 template<class Thermo>
-inline sutherlandTransport<Thermo> operator-
-(
-    const sutherlandTransport<Thermo>&,
-    const sutherlandTransport<Thermo>&
-);
-
-template<class Thermo>
 inline sutherlandTransport<Thermo> operator*
 (
     const scalar,
-    const sutherlandTransport<Thermo>&
-);
-
-template<class Thermo>
-inline sutherlandTransport<Thermo> operator==
-(
-    const sutherlandTransport<Thermo>&,
     const sutherlandTransport<Thermo>&
 );
 
@@ -107,6 +93,9 @@ class sutherlandTransport
             const scalar mu2, const scalar T2
         );
 
+        //- Read coefficient from dictionary
+        scalar readCoeff(const word& coeffName, const dictionary& dict);
+
 
 public:
 
@@ -131,17 +120,14 @@ public:
         //- Construct as named copy
         inline sutherlandTransport(const word&, const sutherlandTransport&);
 
-        //- Construct from Istream
-        sutherlandTransport(Istream&);
-
         //- Construct from dictionary
         sutherlandTransport(const dictionary& dict);
 
+        //- Construct from base thermo and dictionary
+        sutherlandTransport(const Thermo& t,const dictionary& dict);
+
         //- Construct and return a clone
         inline autoPtr<sutherlandTransport> clone() const;
-
-        // Selector from Istream
-        inline static autoPtr<sutherlandTransport> New(Istream& is);
 
         // Selector from dictionary
         inline static autoPtr<sutherlandTransport> New(const dictionary& dict);
@@ -149,17 +135,23 @@ public:
 
     // Member functions
 
+        //- Return the instantiated type name
+        static word typeName()
+        {
+            return "sutherland<" + Thermo::typeName() + '>';
+        }
+
         //- Dynamic viscosity [kg/ms]
-        inline scalar mu(const scalar T) const;
+        inline scalar mu(const scalar p, const scalar T) const;
 
         //- Thermal conductivity [W/mK]
-        inline scalar kappa(const scalar T) const;
+        inline scalar kappa(const scalar p, const scalar T) const;
 
-        //- Thermal diffusivity for enthalpy [kg/ms]
-        inline scalar alpha(const scalar T) const;
+        //- Thermal diffusivity of enthalpy [kg/ms]
+        inline scalar alphah(const scalar p, const scalar T) const;
 
         // Species diffusivity
-        //inline scalar D(const scalar T) const;
+        // inline scalar D(const scalar p, const scalar T) const;
 
         //- Write to Ostream
         void write(Ostream& os) const;
@@ -167,11 +159,9 @@ public:
 
     // Member operators
 
-        inline sutherlandTransport& operator=(const sutherlandTransport&);
+        inline void operator=(const sutherlandTransport&);
 
         inline void operator+=(const sutherlandTransport&);
-
-        inline void operator-=(const sutherlandTransport&);
 
         inline void operator*=(const scalar);
 
@@ -184,21 +174,9 @@ public:
             const sutherlandTransport&
         );
 
-        friend sutherlandTransport operator- <Thermo>
-        (
-            const sutherlandTransport&,
-            const sutherlandTransport&
-        );
-
         friend sutherlandTransport operator* <Thermo>
         (
             const scalar,
-            const sutherlandTransport&
-        );
-
-        friend sutherlandTransport operator== <Thermo>
-        (
-            const sutherlandTransport&,
             const sutherlandTransport&
         );
 
@@ -298,20 +276,6 @@ template<class Thermo>
 inline CML::autoPtr<CML::sutherlandTransport<Thermo> >
 CML::sutherlandTransport<Thermo>::New
 (
-    Istream& is
-)
-{
-    return autoPtr<sutherlandTransport<Thermo> >
-    (
-        new sutherlandTransport<Thermo>(is)
-    );
-}
-
-
-template<class Thermo>
-inline CML::autoPtr<CML::sutherlandTransport<Thermo> >
-CML::sutherlandTransport<Thermo>::New
-(
     const dictionary& dict
 )
 {
@@ -325,7 +289,11 @@ CML::sutherlandTransport<Thermo>::New
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Thermo>
-inline CML::scalar CML::sutherlandTransport<Thermo>::mu(const scalar T) const
+inline CML::scalar CML::sutherlandTransport<Thermo>::mu
+(
+    const scalar p,
+    const scalar T
+) const
 {
     return As_*::sqrt(T)/(1.0 + Ts_/T);
 }
@@ -334,37 +302,30 @@ inline CML::scalar CML::sutherlandTransport<Thermo>::mu(const scalar T) const
 template<class Thermo>
 inline CML::scalar CML::sutherlandTransport<Thermo>::kappa
 (
-    const scalar T
+    const scalar p, const scalar T
 ) const
 {
-    scalar Cv_ = this->Cv(T);
-    return mu(T)*Cv_*(1.32 + 1.77*this->R()/Cv_);
+    scalar Cv_ = this->Cv(p, T);
+    return mu(p, T)*Cv_*(1.32 + 1.77*this->R()/Cv_);
 }
 
 
 template<class Thermo>
-inline CML::scalar CML::sutherlandTransport<Thermo>::alpha
+inline CML::scalar CML::sutherlandTransport<Thermo>::alphah
 (
+    const scalar p,
     const scalar T
 ) const
 {
-    scalar Cv_ = this->Cv(T);
-    scalar R_ = this->R();
-    scalar Cp_ = Cv_ + R_;
 
-    scalar deltaT = T - specie::Tstd;
-    scalar CpBar =
-        (deltaT*(this->H(T) - this->H(specie::Tstd)) + Cp_)/(sqr(deltaT) + 1);
-
-    return mu(T)*Cv_*(1.32 + 1.77*this->R()/Cv_)/CpBar;
+    return kappa(p, T)/this->Cp(p, T);
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Thermo>
-inline CML::sutherlandTransport<Thermo>&
-CML::sutherlandTransport<Thermo>::operator=
+inline void CML::sutherlandTransport<Thermo>::operator=
 (
     const sutherlandTransport<Thermo>& st
 )
@@ -373,8 +334,6 @@ CML::sutherlandTransport<Thermo>::operator=
 
     As_ = st.As_;
     Ts_ = st.Ts_;
-
-    return *this;
 }
 
 
@@ -384,33 +343,18 @@ inline void CML::sutherlandTransport<Thermo>::operator+=
     const sutherlandTransport<Thermo>& st
 )
 {
-    scalar molr1 = this->nMoles();
+    scalar Y1 = this->Y();
 
     Thermo::operator+=(st);
 
-    molr1 /= this->nMoles();
-    scalar molr2 = st.nMoles()/this->nMoles();
+    if (mag(this->Y()) > SMALL)
+    {
+        Y1 /= this->Y();
+        scalar Y2 = st.Y()/this->Y();
 
-    As_ = molr1*As_ + molr2*st.As_;
-    Ts_ = molr1*Ts_ + molr2*st.Ts_;
-}
-
-
-template<class Thermo>
-inline void CML::sutherlandTransport<Thermo>::operator-=
-(
-    const sutherlandTransport<Thermo>& st
-)
-{
-    scalar molr1 = this->nMoles();
-
-    Thermo::operator-=(st);
-
-    molr1 /= this->nMoles();
-    scalar molr2 = st.nMoles()/this->nMoles();
-
-    As_ = molr1*As_ - molr2*st.As_;
-    Ts_ = molr1*Ts_ - molr2*st.Ts_;
+        As_ = Y1*As_ + Y2*st.As_;
+        Ts_ = Y1*Ts_ + Y2*st.Ts_;
+    }
 }
 
 
@@ -438,39 +382,28 @@ inline CML::sutherlandTransport<Thermo> CML::operator+
         static_cast<const Thermo&>(st1) + static_cast<const Thermo&>(st2)
     );
 
-    scalar molr1 = st1.nMoles()/t.nMoles();
-    scalar molr2 = st2.nMoles()/t.nMoles();
+    if (mag(t.Y()) < SMALL)
+    {
+        return sutherlandTransport<Thermo>
+        (
+            t,
+            0,
+            st1.As_,
+            st1.Ts_
+        );
+    }
+    else
+    {
+        scalar Y1 = st1.Y()/t.Y();
+        scalar Y2 = st2.Y()/t.Y();
 
-    return sutherlandTransport<Thermo>
-    (
-        t,
-        molr1*st1.As_ + molr2*st2.As_,
-        molr1*st1.Ts_ + molr2*st2.Ts_
-    );
-}
-
-
-template<class Thermo>
-inline CML::sutherlandTransport<Thermo> CML::operator-
-(
-    const sutherlandTransport<Thermo>& st1,
-    const sutherlandTransport<Thermo>& st2
-)
-{
-    Thermo t
-    (
-        static_cast<const Thermo&>(st1) - static_cast<const Thermo&>(st2)
-    );
-
-    scalar molr1 = st1.nMoles()/t.nMoles();
-    scalar molr2 = st2.nMoles()/t.nMoles();
-
-    return sutherlandTransport<Thermo>
-    (
-        t,
-        molr1*st1.As_ - molr2*st2.As_,
-        molr1*st1.Ts_ - molr2*st2.Ts_
-    );
+        return sutherlandTransport<Thermo>
+        (
+            t,
+            Y1*st1.As_ + Y2*st2.As_,
+            Y1*st1.Ts_ + Y2*st2.Ts_
+        );
+    }
 }
 
 
@@ -489,39 +422,43 @@ inline CML::sutherlandTransport<Thermo> CML::operator*
     );
 }
 
-
-template<class Thermo>
-inline CML::sutherlandTransport<Thermo> CML::operator==
-(
-    const sutherlandTransport<Thermo>& st1,
-    const sutherlandTransport<Thermo>& st2
-)
-{
-    return st2 - st1;
-}
-
-
 #include "IOstreams.hpp"
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class Thermo>
-CML::sutherlandTransport<Thermo>::sutherlandTransport(Istream& is)
-:
-    Thermo(is),
-    As_(readScalar(is)),
-    Ts_(readScalar(is))
+CML::scalar CML::sutherlandTransport<Thermo>::readCoeff
+(
+    const word& coeffName,
+    const dictionary& dict
+)
 {
-    is.check("sutherlandTransport<Thermo>::sutherlandTransport(Istream&)");
+    return readScalar(dict.subDict("transport").lookup(coeffName));
 }
 
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Thermo>
 CML::sutherlandTransport<Thermo>::sutherlandTransport(const dictionary& dict)
 :
     Thermo(dict),
-    As_(readScalar(dict.subDict("transport").lookup("As"))),
-    Ts_(readScalar(dict.subDict("transport").lookup("Ts")))
+    As_(readCoeff("As", dict)),
+    Ts_(readCoeff("Ts", dict))
+{}
+
+
+template<class Thermo>
+CML::sutherlandTransport<Thermo>::sutherlandTransport
+(
+    const Thermo& t,
+    const dictionary& dict
+)
+:
+    Thermo(t),
+    As_(readCoeff("As", dict)),
+    Ts_(readCoeff("Ts", dict))
 {}
 
 
@@ -530,18 +467,19 @@ CML::sutherlandTransport<Thermo>::sutherlandTransport(const dictionary& dict)
 template<class Thermo>
 void CML::sutherlandTransport<Thermo>::write(Ostream& os) const
 {
-    os  << this->name() << endl;
-    os  << token::BEGIN_BLOCK  << incrIndent << nl;
+    os  << this->specie::name() << endl
+        << token::BEGIN_BLOCK  << incrIndent << nl;
 
     Thermo::write(os);
 
     dictionary dict("transport");
     dict.add("As", As_);
     dict.add("Ts", Ts_);
-    os  << indent << dict.dictName() << dict;
 
-    os  << decrIndent << token::END_BLOCK << nl;
+    os  << indent << dict.dictName() << dict
+        << decrIndent << token::END_BLOCK << nl;
 }
+
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
@@ -552,19 +490,10 @@ CML::Ostream& CML::operator<<
     const sutherlandTransport<Thermo>& st
 )
 {
-    os << static_cast<const Thermo&>(st) << tab << st.As_ << tab << st.Ts_;
-
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const sutherlandTransport<Thermo>&)"
-    );
-
+    st.write(os);
     return os;
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

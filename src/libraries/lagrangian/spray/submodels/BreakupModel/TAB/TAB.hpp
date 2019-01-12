@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ Description
 
     This implementation follows the kiva version.
 
-See Also
+See also
     The Enhanced %TAB model - ETAB
 
 \*---------------------------------------------------------------------------*/
@@ -113,7 +113,7 @@ public:
 
     // Member Functions
 
-        //- update the parcel diameter
+        //- Update the parcel diameter
         virtual bool update
         (
             const scalar dt,
@@ -180,7 +180,7 @@ CML::TAB<CloudType>::TAB
     else
     {
         SMDMethod_ = method2;
-        WarningIn("CML::TAB<CloudType>::TAB(const dictionary&, CloudType&)")
+        WarningInFunction
             << "Unknown SMDCalculationMethod. Valid options are "
             << "(method1 | method2). Using method2" << endl;
     }
@@ -230,7 +230,7 @@ bool CML::TAB<CloudType>::update
     scalar& massChild
 )
 {
-    cachedRandom& rndGen = this->owner().rndGen();
+    Random& rndGen = this->owner().rndGen();
 
     scalar r = 0.5*d;
     scalar r2 = r*r;
@@ -248,7 +248,7 @@ bool CML::TAB<CloudType>::update
     {
         scalar omega = sqrt(omega2);
         scalar We = rhoc*sqr(Urmag)*r/sigma;
-        scalar Wetmp = We/this->TABWeCrit_;
+        scalar Wetmp = We/this->TABtwoWeCrit_;
 
         scalar y1 = y - Wetmp;
         scalar y2 = yDot/omega;

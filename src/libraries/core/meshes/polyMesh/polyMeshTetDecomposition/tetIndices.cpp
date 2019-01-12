@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,72 +25,23 @@ License
 
 CML::tetIndices::tetIndices()
 :
-    cellI_(-1),
-    faceI_(-1),
-    faceBasePtI_(-1),
-    facePtAI_(-1),
-    facePtBI_(-1),
-    tetPtI_(-1)
+    celli_(-1),
+    facei_(-1),
+    tetPti_(-1)
 {}
 
 
 CML::tetIndices::tetIndices
 (
-    label cellI,
-    label faceI,
-    label faceBasePtI,
-    label facePtAI,
-    label facePtBI,
+    label celli,
+    label facei,
     label tetPtI
 )
 :
-    cellI_(cellI),
-    faceI_(faceI),
-    faceBasePtI_(faceBasePtI),
-    facePtAI_(facePtAI),
-    facePtBI_(facePtBI),
-    tetPtI_(tetPtI)
+    celli_(celli),
+    facei_(facei),
+    tetPti_(tetPtI)
 {}
-
-
-CML::tetIndices::tetIndices
-(
-    label cellI,
-    label faceI,
-    label tetPtI,
-    const polyMesh& mesh
-)
-:
-    cellI_(cellI),
-    faceI_(faceI),
-    faceBasePtI_(-1),
-    facePtAI_(-1),
-    facePtBI_(-1),
-    tetPtI_(tetPtI)
-{
-    const faceList& pFaces = mesh.faces();
-    const labelList& pOwner = mesh.faceOwner();
-
-    const CML::face& f = pFaces[faceI_];
-
-    bool own = (pOwner[faceI_] == cellI_);
-
-    faceBasePtI_ = mesh.tetBasePtIs()[faceI_];
-
-    label facePtI = (tetPtI_ + faceBasePtI_) % f.size();
-    label otherFacePtI = f.fcIndex(facePtI);
-
-    if (own)
-    {
-        facePtAI_ = facePtI;
-        facePtBI_ = otherFacePtI;
-    }
-    else
-    {
-        facePtAI_ = otherFacePtI;
-        facePtBI_ = facePtI;
-    }
-}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -103,12 +54,7 @@ CML::tetIndices::~tetIndices()
 
 CML::Istream& CML::operator>>(Istream& is, tetIndices& tI)
 {
-    is  >> tI.cell()
-        >> tI.face()
-        >> tI.faceBasePt()
-        >> tI.facePtA()
-        >> tI.facePtB()
-        >> tI.tetPt();
+    is  >> tI.cell() >> tI.face() >> tI.tetPt();
 
     // Check state of Istream
     is.check
@@ -124,9 +70,6 @@ CML::Ostream& CML::operator<<(Ostream& os, const tetIndices& tI)
 {
     os  << tI.cell() << token::SPACE
         << tI.face() << token::SPACE
-        << tI.faceBasePt() << token::SPACE
-        << tI.facePtA() << token::SPACE
-        << tI.facePtB() << token::SPACE
         << tI.tetPt() << token::SPACE
         << endl;
 

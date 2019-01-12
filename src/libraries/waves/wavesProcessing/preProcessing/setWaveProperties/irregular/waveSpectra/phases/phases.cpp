@@ -67,10 +67,8 @@ autoPtr<phases> phases::New
 
     if (cstrIter == phasesConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "phases::New(const Time&, dictionary&)"
-        )   << "Unknown phasing method '" << phaseName << "'"
+        FatalErrorInFunction
+            << "Unknown phasing method '" << phaseName << "'"
             << endl << endl
             << "Valid phasing methods are:" << endl
             << phasesConstructorTablePtr_->toc()

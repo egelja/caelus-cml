@@ -72,25 +72,13 @@ void CML::fv::meanVelocityForce::writeProps
 
 void CML::fv::meanVelocityForce::writeData(Ostream& os) const
 {
-    notImplemented
-    (
-        "void CML::fv::meanVelocityForce::writeData"
-        "("
-            "Ostream&"
-        ") const"
-    );
+    NotImplemented;
 }
 
 
 bool CML::fv::meanVelocityForce::read(const dictionary& dict)
 {
-    notImplemented
-    (
-        "bool CML::fv::meanVelocityForce::read"
-        "("
-            "const dictionary&"
-        ") const"
-    );
+    NotImplemented;
 
     return false;
 }
@@ -111,22 +99,14 @@ CML::fv::meanVelocityForce::meanVelocityForce
     dGradP_(0.0),
     flowDir_(Ubar_/mag(Ubar_)),
     relaxation_(coeffs_.lookupOrDefault<scalar>("relaxation", 1.0)),
-    rAPtr_(NULL)
+    rAPtr_(nullptr)
 {
     coeffs_.lookup("fieldNames") >> fieldNames_;
 
     if (fieldNames_.size() != 1)
     {
-        FatalErrorIn
-        (
-            "CML::fv::meanVelocityForce::meanVelocityForce"
-            "("
-                "const word&, "
-                "const word&, "
-                "const dictionary&, "
-                "const fvMesh&"
-            ")"
-        )   << "Source can only be applied to a single field.  Current "
+        FatalErrorInFunction
+            << "Source can only be applied to a single field.  Current "
             << "settings are:" << fieldNames_ << exit(FatalError);
     }
 

@@ -449,7 +449,7 @@ void CML::removePoints::setRefinement
 
                 if (meshPoints != keptPoints)
                 {
-                    FatalErrorIn("setRefinement")
+                    FatalErrorInFunction
                         << "faceI:" << savedFaceLabels_[saveI] << nl
                         << "meshPoints:" << meshPoints << nl
                         << "keptPoints:" << keptPoints << nl
@@ -473,10 +473,8 @@ void CML::removePoints::updateMesh(const mapPolyMesh& map)
 
                 if (newFaceI == -1)
                 {
-                    FatalErrorIn
-                    (
-                        "removePoints::updateMesh(const mapPolyMesh&)"
-                    )   << "Old face " << savedFaceLabels_[localI]
+                    FatalErrorInFunction
+                        << "Old face " << savedFaceLabels_[localI]
                         << " seems to have dissappeared."
                         << abort(FatalError);
                 }
@@ -501,10 +499,8 @@ void CML::removePoints::updateMesh(const mapPolyMesh& map)
 
                     if (f[fp] == -1)
                     {
-                        FatalErrorIn
-                        (
-                            "removePoints::updateMesh(const mapPolyMesh&)"
-                        )   << "Old point " << pointI
+                        FatalErrorInFunction
+                            << "Old point " << pointI
                             << " seems to have dissappeared."
                             << abort(FatalError);
                     }
@@ -543,7 +539,7 @@ void CML::removePoints::updateMesh(const mapPolyMesh& map)
                     // face::operator== takes care of this)
                     if (keptFace != f)
                     {
-                        FatalErrorIn("setRefinement")
+                        FatalErrorInFunction
                             << "faceI:" << savedFaceLabels_[saveI] << nl
                             << "face:" << f << nl
                             << "keptFace:" << keptFace << nl
@@ -575,11 +571,8 @@ void CML::removePoints::getUnrefimentSet
 {
     if (!undoable_)
     {
-        FatalErrorIn
-        (
-            "removePoints::getUnrefimentSet(const labelList&"
-            ", labelList&, labelList&) const"
-        )   << "removePoints not constructed with"
+        FatalErrorInFunction
+            << "removePoints not constructed with"
             << " unrefinement capability."
             << abort(FatalError);
     }
@@ -593,11 +586,8 @@ void CML::removePoints::getUnrefimentSet
         undoFacesSet.sync(mesh_);
         if (sz != undoFacesSet.size())
         {
-            FatalErrorIn
-            (
-                "removePoints::getUnrefimentSet(const labelList&"
-                ", labelList&, labelList&) const"
-            )   << "undoFaces not synchronised across coupled faces." << endl
+            FatalErrorInFunction
+                << "undoFaces not synchronised across coupled faces." << endl
                 << "Size before sync:" << sz
                 << "  after sync:" << undoFacesSet.size()
                 << abort(FatalError);
@@ -627,11 +617,8 @@ void CML::removePoints::getUnrefimentSet
         {
             if (savedFaceLabels_[saveI] < 0)
             {
-                FatalErrorIn
-                (
-                    "removePoints::getUnrefimentSet(const labelList&"
-                    ", labelList&, labelList&) const"
-                )   << "Illegal face label " << savedFaceLabels_[saveI]
+                FatalErrorInFunction
+                    << "Illegal face label " << savedFaceLabels_[saveI]
                     << " at index " << saveI
                     << abort(FatalError);
             }
@@ -648,12 +635,8 @@ void CML::removePoints::getUnrefimentSet
 
                         if (savedPoints_[savedPointI] == vector::max)
                         {
-                            FatalErrorIn
-                            (
-                                "removePoints::getUnrefimentSet"
-                                "(const labelList&, labelList&, labelList&)"
-                                " const"
-                            )   << "Trying to restore point " << savedPointI
+                            FatalErrorInFunction
+                                << "Trying to restore point " << savedPointI
                                 << " from mesh face " << savedFaceLabels_[saveI]
                                 << " saved face:" << savedFace
                                 << " which has already been undone."
@@ -733,12 +716,8 @@ void CML::removePoints::getUnrefimentSet
                     {
                         if (savedFace[fp] >= 0)
                         {
-                            FatalErrorIn
-                            (
-                                "removePoints::getUnrefimentSet"
-                                "(const labelList&, labelList&, labelList&)"
-                                " const"
-                            )   << "Problem: on coupled face:"
+                            FatalErrorInFunction
+                                << "Problem: on coupled face:"
                                 << savedFaceLabels_[saveI]
                                 << " fc:"
                                 << mesh_.faceCentres()[savedFaceLabels_[saveI]]
@@ -804,11 +783,8 @@ void CML::removePoints::setUnrefinement
 {
     if (!undoable_)
     {
-        FatalErrorIn
-        (
-            "removePoints::setUnrefinement(const labelList&"
-            ", labelList&, polyTopoChange&)"
-        )   << "removePoints not constructed with"
+        FatalErrorInFunction
+            << "removePoints not constructed with"
             << " unrefinement capability."
             << abort(FatalError);
     }
@@ -823,11 +799,8 @@ void CML::removePoints::setUnrefinement
 
         if (savedPoints_[localI] == vector::max)
         {
-            FatalErrorIn
-            (
-                "removePoints::setUnrefinement(const labelList&"
-                ", labelList&, polyTopoChange&)"
-            )   << "Saved point " << localI << " already restored!"
+            FatalErrorInFunction
+                << "Saved point " << localI << " already restored!"
                 << abort(FatalError);
         }
 
@@ -928,7 +901,7 @@ void CML::removePoints::setUnrefinement
 
                     if (addedPointI != -1)
                     {
-                        FatalErrorIn("setUnrefinement")
+                        FatalErrorInFunction
                             << "Face:" << savedFaceLabels_[saveI]
                             << " savedVerts:" << savedFace
                             << " uses restored point:" << -savedFace[fp]-1

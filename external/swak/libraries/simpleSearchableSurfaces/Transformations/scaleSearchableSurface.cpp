@@ -53,11 +53,11 @@ CML::scaleSearchableSurface::scaleSearchableSurface
 {
     scalar mini=min(mag(scale_.x()),min(mag(scale_.y()),mag(scale_.z())));
     if(mini<SMALL) {
-        FatalErrorIn("CML::scaleSearchableSurface::scaleSearchableSurface")
+        FatalErrorInFunction
             << "Scaling vector " << scale_ << " has a component that is almost zero\n"
-                << " -> Division by zero while inverse operation"
-                <<endl
-                <<abort(FatalError);
+            << " -> Division by zero while inverse operation"
+            <<endl
+            <<abort(FatalError);
     }
 }
 

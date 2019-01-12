@@ -54,10 +54,7 @@ CML::autoPtr<CML::RBD::joint> CML::RBD::joint::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "RBD::joint::New(const dictionary&)"
-        )
+        FatalErrorInFunction
             << "Unknown joint type "
             << bodyType << nl << nl
             << "Valid joint types are : " << endl

@@ -33,10 +33,8 @@ inline bool CML::wallNormalInfo::update
 {
     if (!w2.valid(td))
     {
-        FatalErrorIn
-        (
-            "wallNormalInfo::update(const wallNormalInfo&)"
-        ) << "Problem: w2 is not valid" << abort(FatalError);
+        FatalErrorInFunction
+          << "Problem: w2 is not valid" << abort(FatalError);
 
         return false;
     }

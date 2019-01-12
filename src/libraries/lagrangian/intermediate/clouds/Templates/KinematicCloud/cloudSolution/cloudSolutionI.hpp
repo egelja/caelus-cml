@@ -97,6 +97,12 @@ inline CML::scalar CML::cloudSolution::trackTime() const
 }
 
 
+inline CML::scalar CML::cloudSolution::deltaTMax() const
+{
+    return deltaTMax_;
+}
+
+
 inline CML::Switch& CML::cloudSolution::coupled()
 {
     return coupled_;

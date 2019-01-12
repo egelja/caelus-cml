@@ -33,7 +33,6 @@ CML::surfaceMeshWriter::surfaceMeshWriter
     const fileName& fName
 )
 :
-    vMesh_(vMesh),
     binary_(binary),
     pp_(pp),
     fName_(fName),

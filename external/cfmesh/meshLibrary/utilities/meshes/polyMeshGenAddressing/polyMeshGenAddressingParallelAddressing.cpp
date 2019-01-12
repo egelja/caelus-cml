@@ -34,10 +34,8 @@ namespace CML
 void polyMeshGenAddressing::calcGlobalPointLabels() const
 {
     if( !Pstream::parRun() )
-        FatalErrorIn
-        (
-            "void polyMeshGenAddressing::calcGlobalPointLabels() const"
-        ) << "Cannot calculate global point addressing "
+        FatalErrorInFunction
+            << "Cannot calculate global point addressing "
             << "for a serial run!" << exit(FatalError);
 
     if( !globalPointLabelPtr_ )
@@ -267,11 +265,8 @@ void polyMeshGenAddressing::calcGlobalPointLabels() const
                 }
                 else if( globalPointLabel[f[pI]] != globalLabel )
                 {
-                    FatalErrorIn
-                    (
-                        "void polyMeshGenAddressing::"
-                        "calcGlobalPointLabels() const"
-                    ) << "Point labels on processors do not match!"
+                    FatalErrorInFunction
+                        << "Point labels on processors do not match!"
                         << abort(FatalError);
                 }
             }
@@ -429,10 +424,8 @@ void polyMeshGenAddressing::calcGlobalCellLabels() const
 void polyMeshGenAddressing::calcGlobalEdgeLabels() const
 {
     if( !Pstream::parRun() )
-        FatalErrorIn
-        (
-            "void polyMeshGenAddressing::calcGlobalEdgeLabels() const"
-        ) << "Cannot calculate global edge addressing "
+        FatalErrorInFunction
+            << "Cannot calculate global edge addressing "
             << "for a serial run?!?!" << exit(FatalError);
 
     if( !globalEdgeLabelPtr_ )
@@ -676,11 +669,8 @@ void polyMeshGenAddressing::calcGlobalEdgeLabels() const
                 }
                 else if( globalEdgeLabel[edgeI] != globalLabel )
                 {
-                    FatalErrorIn
-                    (
-                        "void polyMeshGenAddressing::"
-                        "calcGlobalEdgeLabels() const"
-                    ) << "Edge labels on processors do not match!"
+                    FatalErrorInFunction
+                       << "Edge labels on processors do not match!"
                         << abort(FatalError);
                 }
             }
@@ -708,11 +698,8 @@ const labelLongList& polyMeshGenAddressing::globalPointLabel() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const labelLongList& polyMeshGenAddressing::"
-                "globalPointLabel() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -728,11 +715,8 @@ const labelLongList& polyMeshGenAddressing::globalFaceLabel() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const labelLongList& polyMeshGenAddressing"
-                "::globalFaceLabel() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -756,11 +740,8 @@ const labelLongList& polyMeshGenAddressing::globalEdgeLabel() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const labelLongList& polyMeshGenAddressing"
-                "::globalEdgeLabel() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -776,10 +757,8 @@ const VRWGraph& polyMeshGenAddressing::pointAtProcs() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const VRWGraph& polyMeshGenAddressing::pointAtProcs() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -795,11 +774,8 @@ const DynList<label>& polyMeshGenAddressing::pointNeiProcs() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const DynList<label>& polyMeshGenAddressing"
-                "::pointNeiProcs() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -815,11 +791,8 @@ const Map<label>& polyMeshGenAddressing::globalToLocalPointAddressing() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const Map<label>& polyMeshGenAddressing"
-                "::globalToLocalPointAddressing() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -835,10 +808,8 @@ const VRWGraph& polyMeshGenAddressing::edgeAtProcs() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const VRWGraph& polyMeshGenAddressing::edgeAtProcs() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -854,10 +825,8 @@ const DynList<label>& polyMeshGenAddressing::edgeNeiProcs() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const DynList<label>& polyMeshGenAddressing::edgeNeiProcs() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -873,11 +842,8 @@ const Map<label>& polyMeshGenAddressing::globalToLocalEdgeAddressing() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const Map<label>& polyMeshGenAddressing"
-                "::globalToLocalEdgeAddressing() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 

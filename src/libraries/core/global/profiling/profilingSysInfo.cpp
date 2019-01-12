@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2016 OpenCFD Ltd
+Copyright (C) 2016-2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -20,8 +20,10 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "profilingSysInfo.hpp"
-#include "demandDrivenData.hpp"
 #include "caelusVersion.hpp"
+#include "clock.hpp"
+#include "Ostream.hpp"
+#include "OSspecific.hpp"
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
 
@@ -39,10 +41,12 @@ inline static void writeEntry
 // File-scope function
 inline static void printEnv
 (
-    CML::Ostream& os, const CML::word& key, const CML::word& envName
+    CML::Ostream& os,
+    const CML::word& key,
+    const std::string& envName
 )
 {
-    const std::string value = getEnv(envName);
+    const std::string value = CML::getEnv(envName);
     if (!value.empty())
     {
         writeEntry(os, key, value);
@@ -52,20 +56,19 @@ inline static void printEnv
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::profiling::sysInfo::sysInfo()
+CML::profilingSysInfo::profilingSysInfo()
 {}
-
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-CML::profiling::sysInfo::~sysInfo()
+CML::profilingSysInfo::~profilingSysInfo()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-CML::Ostream& CML::profiling::sysInfo::write
+CML::Ostream& CML::profilingSysInfo::write
 (
     Ostream& os
 ) const
@@ -74,11 +77,11 @@ CML::Ostream& CML::profiling::sysInfo::write
     writeEntry(os, "date", clock::dateTime());
 
     // Compile-time information
-    writeEntry(os, "version",     std::string(CAELUSversion));
-    writeEntry(os, "build",       std::string(CAELUSbuild));
+    writeEntry(os, "version",    std::string(CAELUSversion));
+    writeEntry(os, "build",      std::string(CAELUSbuild));
 
-    printEnv(os, "arch",            "WHICH_OS");
-    printEnv(os, "Compiler",        "COMPILER");
+    printEnv(os, "arch",           "WHICH_OS");
+    printEnv(os, "Compiler",       "COMPILER");
     printEnv(os, "FloatPrecision", "PRECISION_OPTION");
     printEnv(os, "IntegerType",    "INT_TYPE");
     printEnv(os, "MPILibrary",     "MPI_LIB");

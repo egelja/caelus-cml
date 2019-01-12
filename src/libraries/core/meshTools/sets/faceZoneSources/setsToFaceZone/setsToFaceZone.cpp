@@ -103,11 +103,8 @@ void CML::setsToFaceZone::applyToSet
 {
     if (!isA<faceZoneSet>(set))
     {
-        WarningIn
-        (
-            "setsToFaceZone::applyToSet(const topoSetSource::setAction"
-            ", topoSet"
-        )   << "Operation only allowed on a faceZoneSet." << endl;
+        WarningInFunction
+            << "Operation only allowed on a faceZoneSet." << endl;
     }
     else
     {
@@ -152,11 +149,8 @@ void CML::setsToFaceZone::applyToSet
                         }
                         else
                         {
-                            WarningIn
-                            (
-                                "setsToFaceZone::applyToSet"
-                                "(const topoSetSource::setAction, topoSet)"
-                            )   << "One of owner or neighbour of internal face "
+                            WarningInFunction
+                                << "One of owner or neighbour of internal face "
                                 << faceI << " should be in cellSet "
                                 << cSet.name()
                                 << " to be able to determine orientation."

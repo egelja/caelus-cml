@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,7 +35,7 @@ Description
 #include "IFstream.hpp"
 #include "demandDrivenData.hpp"
 #include "writePatch.hpp"
-#include "writePointSet.hpp"
+#include "writePointSet_setSet.hpp"
 #include "IOobjectList.hpp"
 #include "cellZoneSet.hpp"
 #include "faceZoneSet.hpp"
@@ -167,12 +167,8 @@ void writeVTK
     }
     else
     {
-        WarningIn
-        (
-            "void writeVTK"
-            "(const polyMesh& mesh, const topoSet& currentSet,"
-            "const fileName& vtkName)"
-        )   << "Don't know how to handle set of type " << currentSet.type()
+        WarningInFunction
+            << "Don't know how to handle set of type " << currentSet.type()
             << endl;
     }
 }
@@ -683,7 +679,7 @@ polyMesh::readUpdateState meshReadUpdate(polyMesh& mesh)
         }
         default:
         {
-            FatalErrorIn("meshReadUpdate(polyMesh&)")
+            FatalErrorInFunction
                 << "Illegal mesh update state "
                 << stat  << abort(FatalError);
             break;
@@ -763,11 +759,8 @@ commandStatus parseType
     }
     else
     {
-        SeriousErrorIn
-        (
-            "commandStatus parseType(Time&, polyMesh&, const word&"
-            ", IStringStream&)"
-        )   << "Illegal command " << setType << endl
+        SeriousErrorInFunction
+            << "Illegal command " << setType << endl
             << "Should be one of 'help', 'list', 'time' or a set type :"
             << " 'cellSet', 'faceSet', 'pointSet', 'faceZoneSet'"
             << endl;
@@ -833,7 +826,7 @@ int main(int argc, char *argv[])
 
     if (loop && !batch)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Can only loop in batch mode."
             << exit(FatalError);
     }
@@ -872,7 +865,7 @@ int main(int argc, char *argv[])
         // Main command read & execute loop
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        autoPtr<IFstream> fileStreamPtr(NULL);
+        autoPtr<IFstream> fileStreamPtr(nullptr);
 
         if (batch)
         {
@@ -883,7 +876,7 @@ int main(int argc, char *argv[])
             // we cannot handle .gz files
             if (!isFile(batchFile, false))
             {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Cannot open file " << batchFile << exit(FatalError);
             }
 

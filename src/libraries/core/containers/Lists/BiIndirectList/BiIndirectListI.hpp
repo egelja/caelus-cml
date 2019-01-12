@@ -174,7 +174,7 @@ inline void CML::BiIndirectList<T>::operator=(const UList<T>& ae)
 {
     if (addressing_.size() != ae.size())
     {
-        FatalErrorIn("BiIndirectList<T>::operator=(const UList<T>&)")
+        FatalErrorInFunction
             << "Addressing and list of addressed elements "
                "have different sizes: "
             << addressing_.size() << " " << ae.size()

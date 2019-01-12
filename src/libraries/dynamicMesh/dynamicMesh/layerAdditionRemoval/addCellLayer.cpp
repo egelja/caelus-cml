@@ -415,11 +415,8 @@ void CML::layerAdditionRemoval::addCellLayer
 
         if (patchID < 0)
         {
-            FatalErrorIn
-            (
-                "void CML::layerAdditionRemoval::setRefinement("
-                "polyTopoChange& ref)"
-            )   << "Cannot find patch for edge " << meshEdges[curEdgeID]
+            FatalErrorInFunction
+                << "Cannot find patch for edge " << meshEdges[curEdgeID]
                 << ". Edge: " << mesh.edges()[meshEdges[curEdgeID]]
                 << abort(FatalError);
         }

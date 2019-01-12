@@ -6,45 +6,45 @@ Import('env')
 target = 'compressibleTurbulenceModel'
 
 sources = Split("""
-turbulenceModel.cpp
-laminar/laminar.cpp
-derivedFvPatchFields/wallFunctions/alphatWFs/alphatWF/alphatWFFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/alphatWFs/alphatJayaWF/alphatJayaWFFvPatchScalarField.cpp
+compressibleTurbulenceModel.cpp
+laminar/compressibleLaminar.cpp
+derivedFvPatchFields/wallFunctions/alphatWFs/alphatWF/compAlphatWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/alphatWFs/alphatJayaWF/compAlphatJayaWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutkRghWF/mutkRghWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutkWF/mutkWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutURghWF/mutURghWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutUSpaldingWF/mutUSpaldingWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutUWF/mutUWFFvPatchScalarField.cpp
 derivedFvPatchFields/wallFunctions/mutWFs/mutLowReWF/mutLowReWFFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/epsilonWFs/epsilonWF/epsilonWFFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/omegaWFs/omegaWF/omegaWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/epsilonWFs/epsilonWF/compEpsilonWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/omegaWFs/omegaWF/compOmegaWFFvPatchScalarField.cpp
 derivedFvPatchFields/convectiveHeatTransfer/convectiveHeatTransferFvPatchScalarField.cpp
-derivedFvPatchFields/turbulentMixingLengthDsiptRateInlet/turbulentMixingLengthDsiptRateInletFvPatchScalarField.cpp
-derivedFvPatchFields/turbulentMixingLengthFreqInlet/turbulentMixingLengthFreqInletFvPatchScalarField.cpp
-derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.cpp
+derivedFvPatchFields/turbulentMixingLengthDsiptRateInlet/compTurbulentMixingLengthDsiptRateInletFvPatchScalarField.cpp
+derivedFvPatchFields/turbulentMixingLengthFreqInlet/compTurbulentMixingLengthFreqInletFvPatchScalarField.cpp
 derivedFvPatchFields/temperatureCoupledBase/temperatureCoupledBase.cpp
 derivedFvPatchFields/turbulentTemperatureCoupledBaffleMixed/turbulentTemperatureCoupledBaffleMixedFvPatchScalarField.cpp
-derivedFvPatchFields/temperatureThermoBaffle1D/temperatureThermoBaffle1DFvPatchScalarFields.cpp
+derivedFvPatchFields/thermalBaffle1D/thermalBaffle1DFvPatchScalarFields.cpp
 derivedFvPatchFields/totalFlowRateAdvectiveDiffusive/totalFlowRateAdvectiveDiffusiveFvPatchScalarField.cpp
 derivedFvPatchFields/turbulentTemperatureRadCoupledMixed/turbulentTemperatureRadCoupledMixedFvPatchScalarField.cpp
 derivedFvPatchFields/externalWallHeatFluxTemperature/externalWallHeatFluxTemperatureFvPatchScalarField.cpp
+derivedFvPatchFields/wallHeatTransfer/wallHeatTransferFvPatchScalarField.cpp
 """)
 
 caelus_inc = [
 'turbulenceModels',
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/specie/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude',
-'thermophysicalModels/solid/lnInclude'
+'thermophysicalModels/solidThermo/lnInclude',
+'thermophysicalModels/solidSpecie/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'solid',
+'solidSpecie',
 'specie',
 'radiationModels',
-'basicThermophysicalModels',
-'basicSolidThermo'
+'fluidThermophysicalModels',
+'solidThermo'
 ]
 
 build_lib(env,

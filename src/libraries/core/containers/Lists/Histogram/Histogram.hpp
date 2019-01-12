@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -125,7 +125,7 @@ void CML::Histogram<List>::count(const List& bins, const List& l)
 {
     if (bins.size() < 2)
     {
-        FatalErrorIn("Histogram<List>::count(const List&, const List&)")
+        FatalErrorInFunction
             << "Should have at least two values in bins. Now:" << bins
             << exit(FatalError);
     }

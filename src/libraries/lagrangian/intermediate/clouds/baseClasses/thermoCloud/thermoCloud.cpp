@@ -35,7 +35,7 @@ CML::thermoCloud::thermoCloud()
 {}
 
 
-// * * * * * * * * * * * * * * * *  Destructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * *  Destructor   * * * * * * * * * * * * * * //
 
 CML::thermoCloud::~thermoCloud()
 {}

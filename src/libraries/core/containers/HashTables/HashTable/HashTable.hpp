@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -630,7 +630,7 @@ inline T& CML::HashTable<T, Key, Hash>::operator[](const Key& key)
 
     if (iter == this->end())
     {
-        FatalErrorIn("HashTable<T, Key, Hash>::operator[](const Key&)")
+        FatalErrorInFunction
             << key << " not found in table.  Valid entries: "
             << toc()
             << exit(FatalError);
@@ -647,7 +647,7 @@ inline const T& CML::HashTable<T, Key, Hash>::operator[](const Key& key) const
 
     if (iter == this->cend())
     {
-        FatalErrorIn("HashTable<T, Key, Hash>::operator[](const Key&) const")
+        FatalErrorInFunction
             << key << " not found in table.  Valid entries: "
             << toc()
             << exit(FatalError);
@@ -697,7 +697,7 @@ inline CML::HashTable<T, Key, Hash>::iteratorBase::iteratorBase
 {
     if (hashTable_->nElmts_)
     {
-        // find first non-NULL table entry
+        // find first non-nullptr table entry
         while
         (
             !(entryPtr_ = hashTable_->table_[hashIndex_])
@@ -751,7 +751,7 @@ CML::HashTable<T, Key, Hash>::iteratorBase::increment()
     }
     // else
     // {
-    //     // if we reach here (entryPtr_ is NULL) it is already at the end()
+    //     // if we reach here (entryPtr_ is nullptr) it is already at the end()
     //     // we should probably stop
     // }
 
@@ -1058,7 +1058,7 @@ CML::HashTable<T, Key, Hash>::HashTable(const label size)
     HashTableCore(),
     nElmts_(0),
     tableSize_(HashTableCore::canonicalSize(size)),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -1078,7 +1078,7 @@ CML::HashTable<T, Key, Hash>::HashTable(const HashTable<T, Key, Hash>& ht)
     HashTableCore(),
     nElmts_(0),
     tableSize_(ht.tableSize_),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -1105,7 +1105,7 @@ CML::HashTable<T, Key, Hash>::HashTable
     HashTableCore(),
     nElmts_(0),
     tableSize_(0),
-    table_(NULL)
+    table_(nullptr)
 {
     transfer(ht());
 }
@@ -1331,7 +1331,7 @@ bool CML::HashTable<T, Key, Hash>::set
 template<class T, class Key, class Hash>
 bool CML::HashTable<T, Key, Hash>::iteratorBase::erase()
 {
-    // note: entryPtr_ is NULL for end(), so this catches that too
+    // note: entryPtr_ is nullptr for end(), so this catches that too
     if (entryPtr_)
     {
         // Search element before entryPtr_
@@ -1364,7 +1364,7 @@ bool CML::HashTable<T, Key, Hash>::iteratorBase::erase()
             hashTable_->table_[hashIndex_] = entryPtr_->next_;
             delete entryPtr_;
 
-            // assign any non-NULL pointer value so it doesn't look
+            // assign any non-nullptr pointer value so it doesn't look
             // like end()/cend()
             entryPtr_ = reinterpret_cast<hashedEntry*>(this);
 
@@ -1549,7 +1549,7 @@ void CML::HashTable<T, Key, Hash>::transfer(HashTable<T, Key, Hash>& ht)
     ht.tableSize_ = 0;
 
     table_ = ht.table_;
-    ht.table_ = NULL;
+    ht.table_ = nullptr;
 
     nElmts_ = ht.nElmts_;
     ht.nElmts_ = 0;
@@ -1567,11 +1567,8 @@ void CML::HashTable<T, Key, Hash>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "HashTable<T, Key, Hash>::operator="
-            "(const HashTable<T, Key, Hash>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1641,7 +1638,7 @@ CML::HashTable<T, Key, Hash>::HashTable(Istream& is, const label size)
     HashTableCore(),
     nElmts_(0),
     tableSize_(HashTableCore::canonicalSize(size)),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -1751,11 +1748,8 @@ CML::Istream& CML::operator>>
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-                    is
-                )   << "incorrect first token, '(', found " << firstToken.info()
+                FatalIOErrorInFunction(is)
+                    << "incorrect first token, '(', found " << firstToken.info()
                     << exit(FatalIOError);
             }
         }
@@ -1767,11 +1761,8 @@ CML::Istream& CML::operator>>
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -1805,11 +1796,8 @@ CML::Istream& CML::operator>>
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

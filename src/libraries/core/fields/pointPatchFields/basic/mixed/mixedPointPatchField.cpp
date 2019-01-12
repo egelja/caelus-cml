@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,10 +35,8 @@ void CML::mixedPointPatchField<Type>::checkFieldSize() const
      || valueFraction_.size() != this->patch().size()
     )
     {
-        FatalErrorIn
-        (
-            "void mixedPointPatchField<Type>::checkField() const"
-        )   << "field does not correspond to patch. " << endl
+        FatalErrorInFunction
+            << "field does not correspond to patch. " << endl
             << "Field size: " << this->size() << " value size: "
             << refValue_.size()
             << " valueFraction size: " << valueFraction_.size()

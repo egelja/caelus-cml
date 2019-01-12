@@ -314,7 +314,7 @@ scalar postProcessingWaves::readDeltaT
     // Check for validity of the time step
     if (dt <= 0.0)
     {
-        FatalErrorIn("scalar postProcessingWaves::readDeltaT")
+        FatalErrorInFunction
             << "The time step (deltaT) given in\n    "
             <<  timeDict.name() << endl
             << "is less than or equal to zero." << endl << exit(FatalError);
@@ -440,10 +440,7 @@ void postProcessingWaves::interpolationWeights
         timeLabel[timeLabel.size() - 1].first < t[t.size() - 1]
     )
     {
-        FatalErrorIn
-        (
-            "void CML::dataProcessingTools::interpolationWeights( ... )"
-        )
+        FatalErrorInFunction
         << "The target times for interpolations are outside the bounds" << endl
         << "of the sampled data set." << endl << exit(FatalError);
     }
@@ -515,10 +512,8 @@ autoPtr<postProcessingWaves> postProcessingWaves::New
 
     if (cstrIter == postProcessingWavesConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "postProcessingWaves::New(const dictionary&)"
-        )   << "Unknown post processing method: " << action
+        FatalErrorInFunction
+            << "Unknown post processing method: " << action
             << endl << endl
             << "Valid methods are :" << endl
             << postProcessingWavesConstructorTablePtr_->toc()

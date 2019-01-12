@@ -96,10 +96,7 @@ public:
             scalarField& weights
         ) const
         {
-            notImplemented
-            (
-                "splineInterpolationWeights::integrationWeights(..)"
-            );
+            NotImplemented;
             return false;
         }
 

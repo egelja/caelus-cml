@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -109,7 +109,7 @@ void CML::channelIndex::walkOppositeFaces
 
                 if (oppositeFaceI == -1)
                 {
-                    FatalErrorIn("channelIndex::walkOppositeFaces(..)")
+                    FatalErrorInFunction
                         << "Face:" << faceI << " owner cell:" << ownCell
                         << " is not a hex?" << abort(FatalError);
                 }
@@ -131,7 +131,7 @@ void CML::channelIndex::walkOppositeFaces
 
                 if (oppositeFaceI == -1)
                 {
-                    FatalErrorIn("channelIndex::walkOppositeFaces(..)")
+                    FatalErrorInFunction
                         << "Face:" << faceI << " neighbour cell:" << neiCell
                         << " is not a hex?" << abort(FatalError);
                 }
@@ -243,7 +243,7 @@ CML::channelIndex::channelIndex
 
         if (patchI == -1)
         {
-            FatalErrorIn("channelIndex::channelIndex(const polyMesh&)")
+            FatalErrorInFunction
                 << "Illegal patch " << patchNames[i]
                 << ". Valid patches are " << patches.name()
                 << exit(FatalError);

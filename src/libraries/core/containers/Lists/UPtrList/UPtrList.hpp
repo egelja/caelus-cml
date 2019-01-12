@@ -160,7 +160,7 @@ public:
             //- Is element set
             inline bool set(const label) const;
 
-            //- Set element. Return old element (can be NULL).
+            //- Set element. Return old element (can be nullptr).
             //  No checks on new element.
             inline T* set(const label, T*);
 
@@ -325,7 +325,7 @@ inline void CML::UPtrList<T>::resize(const label newSize)
 template<class T>
 inline bool CML::UPtrList<T>::set(const label i) const
 {
-    return ptrs_[i] != NULL;
+    return ptrs_[i] != nullptr;
 }
 
 
@@ -352,7 +352,7 @@ inline const T& CML::UPtrList<T>::operator[](const label i) const
 {
     if (!ptrs_[i])
     {
-        FatalErrorIn("UPtrList::operator[] const")
+        FatalErrorInFunction
             << "hanging pointer, cannot dereference"
             << abort(FatalError);
     }
@@ -366,7 +366,7 @@ inline T& CML::UPtrList<T>::operator[](const label i)
 {
     if (!ptrs_[i])
     {
-        FatalErrorIn("UPtrList::operator[]")
+        FatalErrorInFunction
             << "hanging pointer, cannot dereference"
             << abort(FatalError);
     }
@@ -597,10 +597,10 @@ void CML::UPtrList<T>::setSize(const label newSize)
     {
         ptrs_.setSize(newSize);
 
-        // set new elements to NULL
+        // set new elements to nullptr
         for (register label i=oldSize; i<newSize; i++)
         {
-            ptrs_[i] = NULL;
+            ptrs_[i] = nullptr;
         }
     }
 }
@@ -625,7 +625,7 @@ void CML::UPtrList<T>::reorder(const labelUList& oldToNew)
 {
     if (oldToNew.size() != size())
     {
-        FatalErrorIn("UPtrList<T>::reorder(const labelUList&)")
+        FatalErrorInFunction
             << "Size of map (" << oldToNew.size()
             << ") not equal to list size (" << size()
             << ")." << abort(FatalError);
@@ -639,7 +639,7 @@ void CML::UPtrList<T>::reorder(const labelUList& oldToNew)
 
         if (newI < 0 || newI >= size())
         {
-            FatalErrorIn("UPtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "Illegal index " << newI << nl
                 << "Valid indices are 0.." << size()-1
                 << abort(FatalError);
@@ -647,7 +647,7 @@ void CML::UPtrList<T>::reorder(const labelUList& oldToNew)
 
         if (newPtrs_[newI])
         {
-            FatalErrorIn("UPtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "reorder map is not unique; element " << newI
                 << " already set." << abort(FatalError);
         }
@@ -658,7 +658,7 @@ void CML::UPtrList<T>::reorder(const labelUList& oldToNew)
     {
         if (!newPtrs_[i])
         {
-            FatalErrorIn("UPtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "Element " << i << " not set after reordering." << nl
                 << abort(FatalError);
         }

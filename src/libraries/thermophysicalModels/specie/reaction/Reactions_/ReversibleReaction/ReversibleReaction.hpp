@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,8 +29,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef ReversibleReaction_H
-#define ReversibleReaction_H
+#ifndef ReversibleReaction_HPP
+#define ReversibleReaction_HPP
 
 #include "Reaction.hpp"
 
@@ -43,20 +43,30 @@ namespace CML
                      Class ReversibleReaction Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class ReactionThermo, class ReactionRate>
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
 class ReversibleReaction
 :
-    public Reaction<ReactionThermo>
+    public ReactionType<ReactionThermo>
 {
-    // Private data
 
-        ReactionRate k_;
+    ReactionRate k_;
 
 
-    // Private Member Functions
-
-        //- Disallow default bitwise assignment
-        void operator=(const ReversibleReaction<ReactionThermo, ReactionRate>&);
+    //- Disallow default bitwise assignment
+    void operator=
+    (
+        const ReversibleReaction
+        <
+            ReactionType,
+            ReactionThermo,
+            ReactionRate
+        >&
+    );
 
 
 public:
@@ -65,62 +75,63 @@ public:
     TypeName("reversible");
 
 
-    // Constructors
+    //- Construct from components
+    ReversibleReaction
+    (
+        const ReactionType<ReactionThermo>& reaction,
+        const ReactionRate& k
+    );
 
-        //- Construct from components
-        ReversibleReaction
+    //- Construct as copy given new speciesTable
+    ReversibleReaction
+    (
+        const ReversibleReaction
+        <
+            ReactionType,
+            ReactionThermo,
+            ReactionRate
+        >&,
+        const speciesTable& species
+    );
+
+    //- Construct from dictionary
+    ReversibleReaction
+    (
+        const speciesTable& species,
+        const HashPtrTable<ReactionThermo>& thermoDatabase,
+        const dictionary& dict
+    );
+
+    //- Construct and return a clone
+    virtual autoPtr<ReactionType<ReactionThermo> > clone() const
+    {
+        return autoPtr<ReactionType<ReactionThermo> >
         (
-            const Reaction<ReactionThermo>& reaction,
-            const ReactionRate& k
+            new ReversibleReaction
+            <
+                ReactionType,
+                ReactionThermo,
+                ReactionRate
+            >(*this)
         );
+    }
 
-        //- Construct as copy given new speciesTable
-        ReversibleReaction
+    //- Construct and return a clone with new speciesTable
+    virtual autoPtr<ReactionType<ReactionThermo> > clone
+    (
+        const speciesTable& species
+    ) const
+    {
+        return autoPtr<ReactionType<ReactionThermo> >
         (
-            const ReversibleReaction<ReactionThermo, ReactionRate>&,
-            const speciesTable& species
-        );
-
-        //- Construct from Istream
-        ReversibleReaction
-        (
-            const speciesTable& species,
-            const HashPtrTable<ReactionThermo>& thermoDatabase,
-            Istream& is
-        );
-
-        //- Construct from dictionary
-        ReversibleReaction
-        (
-            const speciesTable& species,
-            const HashPtrTable<ReactionThermo>& thermoDatabase,
-            const dictionary& dict
-        );
-
-        //- Construct and return a clone
-        virtual autoPtr<Reaction<ReactionThermo> > clone() const
-        {
-            return autoPtr<Reaction<ReactionThermo> >
+            new ReversibleReaction
+            <ReactionType, ReactionThermo, ReactionRate>
             (
-                new ReversibleReaction<ReactionThermo, ReactionRate>(*this)
-            );
-        }
-
-        //- Construct and return a clone with new speciesTable
-        virtual autoPtr<Reaction<ReactionThermo> > clone
-        (
-            const speciesTable& species
-        ) const
-        {
-            return autoPtr<Reaction<ReactionThermo> >
-            (
-                new ReversibleReaction<ReactionThermo, ReactionRate>
-                (
-                    *this,
-                    species
-                )
-            );
-        }
+                *this,
+                species
+            )
+        );
+    }
 
 
     //- Destructor
@@ -130,138 +141,337 @@ public:
 
     // Member Functions
 
-        // ReversibleReaction rate coefficients
+    // ReversibleReaction rate coefficients
 
-            //- Forward rate constant
-            virtual scalar kf
-            (
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Forward rate constant
+    virtual scalar kf
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
-            //- Reverse rate constant from the given formard rate constant
-            virtual scalar kr
-            (
-                const scalar kfwd,
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Reverse rate constant from the given formard rate constant
+    virtual scalar kr
+    (
+        const scalar kfwd,
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
-            //- Reverse rate constant.
-            //  Note this evaluates the forward rate constant and divides by the
-            //  equilibrium constant
-            virtual scalar kr
-            (
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Reverse rate constant.
+    //  Note this evaluates the forward rate constant and divides by
+    //  the equilibrium constant
+    virtual scalar kr
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
 
-        //- Write
-        virtual void write(Ostream&) const;
+    // ReversibleReaction Jacobian functions
+
+    //- Temperature derivative of forward rate
+    virtual scalar dkfdT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
+
+    //- Temperature derivative of backward rate
+    virtual scalar dkrdT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c,
+        const scalar dkfdT,
+        const scalar kr
+    ) const;
+
+    //- Third-body efficiencies (beta = 1-alpha)
+    //  non-empty only for third-body reactions
+    //  with enhanced molecularity (alpha != 1)
+    virtual const List<Tuple2<label, scalar> >& beta() const;
+
+    //- Species concentration derivative of the pressure dependent term
+    //  By default this value is 1 as it multiplies the third-body term
+    virtual void dcidc
+    (
+         const scalar p,
+         const scalar T,
+         const scalarField& c,
+         scalarField& dcidc
+    ) const;
+
+    //- Temperature derivative of the pressure dependent term
+    //  By default this value is 0 since ddT of molecularity is approx.0
+    virtual scalar dcidT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
+
+    //- Write
+    virtual void write(Ostream&) const;
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class ReactionThermo, class ReactionRate>
-CML::ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::ReversibleReaction<ReactionType, ReactionThermo, ReactionRate>::
+ReversibleReaction
 (
-    const Reaction<ReactionThermo>& reaction,
+    const ReactionType<ReactionThermo>& reaction,
     const ReactionRate& k
 )
 :
-    Reaction<ReactionThermo>(reaction),
+    ReactionType<ReactionThermo>(reaction),
     k_(k)
 {}
 
 
-template<class ReactionThermo, class ReactionRate>
-CML::ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
-(
-    const speciesTable& species,
-    const HashPtrTable<ReactionThermo>& thermoDatabase,
-    Istream& is
-)
-:
-    Reaction<ReactionThermo>(species, thermoDatabase, is),
-    k_(species, is)
-{}
-
-
-template<class ReactionThermo, class ReactionRate>
-CML::ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::ReversibleReaction<ReactionType, ReactionThermo, ReactionRate>::
+ReversibleReaction
 (
     const speciesTable& species,
     const HashPtrTable<ReactionThermo>& thermoDatabase,
     const dictionary& dict
 )
 :
-    Reaction<ReactionThermo>(species, thermoDatabase, dict),
+    ReactionType<ReactionThermo>(species, thermoDatabase, dict),
     k_(species, dict)
 {}
 
 
-template<class ReactionThermo, class ReactionRate>
-CML::ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::ReversibleReaction<ReactionType, ReactionThermo, ReactionRate>::
+ReversibleReaction
 (
-    const ReversibleReaction<ReactionThermo, ReactionRate>& rr,
+    const ReversibleReaction<ReactionType, ReactionThermo, ReactionRate>& rr,
     const speciesTable& species
 )
 :
-    Reaction<ReactionThermo>(rr, species),
+    ReactionType<ReactionThermo>(rr, species),
     k_(rr.k_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class ReactionThermo, class ReactionRate>
-CML::scalar CML::ReversibleReaction<ReactionThermo, ReactionRate>::kf
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kf
 (
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return k_(T, p, c);
+    return k_(p, T, c);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
-CML::scalar CML::ReversibleReaction<ReactionThermo, ReactionRate>::kr
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kr
 (
     const scalar kfwd,
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return kfwd/this->Kc(T);
+    return kfwd/max(this->Kc(p, T), ROOTSMALL);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
-CML::scalar CML::ReversibleReaction<ReactionThermo, ReactionRate>::kr
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kr
 (
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return kr(kf(T, p, c), T, p, c);
+    return kr(kf(p, T, c), p, T, c);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
-void CML::ReversibleReaction<ReactionThermo, ReactionRate>::write
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dkfdT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c
+) const
+{
+    return k_.ddT(p, T, c);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dkrdT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c,
+    const scalar dkfdT,
+    const scalar kr
+) const
+{
+    scalar Kc = max(this->Kc(p, T), ROOTSMALL);
+
+    return dkfdT/Kc - kr*this->dKcdTbyKc(p, T);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+const CML::List<CML::Tuple2<CML::label, CML::scalar> >&
+CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::beta() const
+{
+    return k_.beta();
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+void CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dcidc
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c,
+    scalarField& dcidc
+) const
+{
+    k_.dcidc(p, T, c, dcidc);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dcidT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c
+) const
+{
+    return k_.dcidT(p, T, c);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+void CML::ReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::write
 (
     Ostream& os
 ) const
@@ -271,10 +481,4 @@ void CML::ReversibleReaction<ReactionThermo, ReactionRate>::write
 }
 
 
-// ************************************************************************* //
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

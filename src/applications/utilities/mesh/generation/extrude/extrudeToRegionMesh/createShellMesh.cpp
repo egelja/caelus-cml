@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -429,7 +429,7 @@ CML::createShellMesh::createShellMesh
 {
     if (pointRegions_.size() != patch_.size())
     {
-        FatalErrorIn("createShellMesh::createShellMesh(..)")
+        FatalErrorInFunction
             << "nFaces:" << patch_.size()
             << " pointRegions:" << pointRegions.size()
             << exit(FatalError);
@@ -452,7 +452,7 @@ void CML::createShellMesh::setRefinement
 {
     if (firstLayerDisp.size() != regionPoints_.size())
     {
-        FatalErrorIn("createShellMesh::setRefinement(..)")
+        FatalErrorInFunction
             << "nRegions:" << regionPoints_.size()
             << " firstLayerDisp:" << firstLayerDisp.size()
             << exit(FatalError);
@@ -464,7 +464,7 @@ void CML::createShellMesh::setRefinement
      && bottomPatchID.size() != patch_.size()
     )
     {
-        FatalErrorIn("createShellMesh::setRefinement(..)")
+        FatalErrorInFunction
             << "nFaces:" << patch_.size()
             << " topPatchID:" << topPatchID.size()
             << " bottomPatchID:" << bottomPatchID.size()
@@ -473,7 +473,7 @@ void CML::createShellMesh::setRefinement
 
     if (extrudeEdgePatches.size() != patch_.nEdges())
     {
-        FatalErrorIn("createShellMesh::setRefinement(..)")
+        FatalErrorInFunction
             << "nEdges:" << patch_.nEdges()
             << " extrudeEdgePatches:" << extrudeEdgePatches.size()
             << exit(FatalError);
@@ -669,7 +669,7 @@ void CML::createShellMesh::setRefinement
             // Internal face
             if (eFaces.size() != 2)
             {
-                FatalErrorIn("createShellMesh::setRefinement(..)")
+                FatalErrorInFunction
                     << "edge:" << edgeI
                     << " not internal but does not have side-patches defined."
                     << exit(FatalError);
@@ -679,7 +679,7 @@ void CML::createShellMesh::setRefinement
         {
             if (eFaces.size() != ePatches.size())
             {
-                FatalErrorIn("createShellMesh::setRefinement(..)")
+                FatalErrorInFunction
                     << "external/feature edge:" << edgeI
                     << " has " << eFaces.size() << " connected extruded faces "
                     << " but only " << ePatches.size()

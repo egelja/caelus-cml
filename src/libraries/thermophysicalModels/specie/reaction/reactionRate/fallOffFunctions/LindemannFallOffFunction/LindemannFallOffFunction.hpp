@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,13 +23,11 @@ Class
 Description
     Lindemann fall-off function
 
-SourceFiles
-    LindemannFallOffFunctionI.hpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef LindemannFallOffFunction_H
-#define LindemannFallOffFunction_H
+#ifndef LindemannFallOffFunction_HPP
+#define LindemannFallOffFunction_HPP
 
 #include "scalar.hpp"
 
@@ -53,52 +51,73 @@ class LindemannFallOffFunction
 
 public:
 
-    // Constructors
 
-        //- Construct null
-        inline LindemannFallOffFunction();
+    //- Construct null
+    inline LindemannFallOffFunction()
+    {}
 
-        //- Construct from Istream
-        inline LindemannFallOffFunction(Istream&);
-
-        //- Construct from dictionary
-        inline LindemannFallOffFunction(const dictionary& dict);
+    //- Construct from dictionary
+    inline LindemannFallOffFunction(const dictionary& dict)
+    {}
 
 
     // Member Functions
 
-        //- Return the type name
-        static word type()
-        {
-            return "Lindemann";
-        }
+    //- Return the type name
+    static word type()
+    {
+        return "Lindemann";
+    }
 
-        inline scalar operator()
-        (
-            const scalar T,
-            const scalar Pr
-        ) const;
+    inline scalar operator()
+    (
+        const scalar T,
+        const scalar Pr
+    ) const
+    {
+        return 1.0;
+    }
 
-        //- Write to stream
-        inline void write(Ostream& os) const;
+    inline scalar ddT
+    (
+        const scalar Pr,
+        const scalar F,
+        const scalar dPrdT,
+        const scalar T
+    ) const
+    {
+        return 0;
+    }
+
+    inline scalar ddc
+    (
+        const scalar Pr,
+        const scalar F,
+        const scalar dPrdc,
+        const scalar T
+    ) const
+    {
+        return 0;
+    }
+
+    //- Write to stream
+    inline void write(Ostream& os) const
+    {}
 
 
     // Ostream Operator
-
-        friend Ostream& operator<<(Ostream&, const LindemannFallOffFunction&);
+    friend Ostream& operator<<
+    (
+        Ostream& os,
+        const LindemannFallOffFunction&
+    )
+    {
+        return os;
+    }
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "LindemannFallOffFunctionI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

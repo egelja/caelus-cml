@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,7 +45,7 @@ CML::labelList CML::invert
         {
             if (inverse[newPos] >= 0)
             {
-                FatalErrorIn("invert(const label, const labelUList&)")
+                FatalErrorInFunction
                     << "Map is not one-to-one. At index " << i
                     << " element " << newPos << " has already occurred before"
                     << nl << "Please use invertOneToMany instead"

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,15 +30,15 @@ namespace surfaceFilmModels
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-inline const surfaceFilmModel& filmSubModelBase::owner() const
+inline const surfaceFilmRegionModel& filmSubModelBase::film() const
 {
-    return owner_;
+    return filmModel_;
 }
 
 
-inline const dictionary& filmSubModelBase::coeffs() const
+inline surfaceFilmRegionModel& filmSubModelBase::film()
 {
-    return coeffs_;
+    return filmModel_;
 }
 
 

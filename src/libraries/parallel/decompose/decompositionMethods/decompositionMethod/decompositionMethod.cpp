@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -177,11 +177,8 @@ CML::autoPtr<CML::decompositionMethod> CML::decompositionMethod::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "decompositionMethod::New"
-            "(const dictionary& decompositionDict)"
-        )   << "Unknown decompositionMethod "
+        FatalErrorInFunction
+            << "Unknown decompositionMethod "
             << methodType << nl << nl
             << "Valid decompositionMethods are : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -1071,18 +1068,7 @@ CML::labelList CML::decompositionMethod::decompose
 
     if (nWeights > 0 && cellWeights.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "labelList decompose\n"
-            "(\n"
-            "    const polyMesh&,\n"
-            "    const scalarField&,\n"
-            "    const boolList&,\n"
-            "    const PtrList<labelList>&,\n"
-            "    const labelList&,\n"
-            "    const List<labelPair>&\n"
-            ")"
-        ) 
+        FatalErrorInFunction
             << "Number of weights " << cellWeights.size()
             << " differs from number of cells " << mesh.nCells()
             << exit(FatalError);
@@ -1243,18 +1229,8 @@ CML::labelList CML::decompositionMethod::decompose
             }
             else if (blockedFace[f0] != blockedFace[f1])
             {
-                FatalErrorIn
-                (
-                    "labelList decompose\n"
-                    "(\n"
-                    "    const polyMesh&,\n"
-                    "    const scalarField&,\n"
-                    "    const boolList&,\n"
-                    "    const PtrList<labelList>&,\n"
-                    "    const labelList&,\n"
-                    "    const List<labelPair>&\n"
-                    ")"
-                )   << "On explicit connection between faces " << f0
+                FatalErrorInFunction
+                    << "On explicit connection between faces " << f0
                     << " and " << f1
                     << " the two blockedFace status are not equal : "
                     << blockedFace[f0] << " and " << blockedFace[f1]
@@ -1398,18 +1374,7 @@ CML::labelList CML::decompositionMethod::decompose
                             label nbrProc = nbrDecomp[bFacei];
                             if (ownProc != nbrProc)
                             {
-                                FatalErrorIn
-                                (
-                                    "labelList decompose\n"
-                                    "(\n"
-                                    "    const polyMesh&,\n"
-                                    "    const scalarField&,\n"
-                                    "    const boolList&,\n"
-                                    "    const PtrList<labelList>&,\n"
-                                    "    const labelList&,\n"
-                                    "    const List<labelPair>&\n"
-                                    ")"
-                                )
+                                FatalErrorInFunction
                                     << "patch:" << pp.name()
                                     << " face:" << facei
                                     << " at:" << mesh.faceCentres()[facei]

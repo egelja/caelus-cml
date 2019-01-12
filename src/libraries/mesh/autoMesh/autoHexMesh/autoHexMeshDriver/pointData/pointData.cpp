@@ -39,9 +39,11 @@ CML::Ostream& CML::operator<<(Ostream& os, const pointData& wDist)
     }
 }
 
+
 CML::Istream& CML::operator>>(Istream& is, pointData& wDist)
 {
     return is >> static_cast<pointEdgePoint&>(wDist) >> wDist.s_ >> wDist.v_;
 }
+
 
 // ************************************************************************* //

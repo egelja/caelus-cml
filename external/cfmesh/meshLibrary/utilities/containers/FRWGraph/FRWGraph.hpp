@@ -168,21 +168,15 @@ void CML::FRWGraph<T, width>::checkIndex(const label i, const label j) const
 {
     if( (i < 0) || (i >= nRows_) )
     {
-        FatalErrorIn
-        (
-            "void CML::FRWGraph<T,width>::"
-            "checkIndex(const label i, const label j) const"
-        ) << "Row index " << i
+        FatalErrorInFunction
+            << "Row index " << i
             << " is not in range " << 0
             << " and " << nRows_ << abort(FatalError);
     }
 
     if( (j < 0) || (j >= width) )
-        FatalErrorIn
-        (
-            "void CML::FRWGraph<T,width>::"
-            "checkIndex(const label i, const label j) const"
-        ) << "Column index " << j
+        FatalErrorInFunction
+            << "Column index " << j
             << " is not in range " << 0
             << " and " << width << abort(FatalError);
 }

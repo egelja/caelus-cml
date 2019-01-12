@@ -60,7 +60,7 @@ forceEquation<T>::forceEquation
     createWriterAndRead(dict.name().name()+"_"+this->type()+"<"+pTraits<T>::typeName+">");
 
     if(verbose_) {
-        WarningIn(string("forceEquation<") + pTraits<T>::typeName + ">::forceEquation")
+        WarningInFunction
             << "Fixing to the values " << valueExpression_
                 << " with the mask " << maskExpression_
                 << " will be verbose. To switch this off set the parameter 'verbose'"
@@ -83,7 +83,7 @@ bool forceEquation<T>::getMask(DynamicList<label> &cellIDs,const word &psi)
 {
     parse(maskExpression_);
     if(!resultIsTyp<volScalarField>(true)) {
-        FatalErrorIn("forceEquation<scalar>::operator()(fvMatrix<T> &)")
+        FatalErrorInFunction
             << "Result of " << maskExpression_ << " is not a logical expression"
                 << endl
                 << exit(FatalError);

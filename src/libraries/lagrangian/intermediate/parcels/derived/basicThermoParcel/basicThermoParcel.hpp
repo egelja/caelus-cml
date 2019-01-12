@@ -40,7 +40,7 @@ SourceFiles
 
 namespace CML
 {
-    typedef ThermoParcel<KinematicParcel<particle> > basicThermoParcel;
+    typedef ThermoParcel<KinematicParcel<particle>> basicThermoParcel;
 
     template<>
     inline bool contiguous<basicThermoParcel>()

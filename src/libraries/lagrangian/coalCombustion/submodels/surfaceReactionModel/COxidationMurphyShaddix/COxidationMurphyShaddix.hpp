@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    COxidationMurphyShaddix
+    CML::COxidationMurphyShaddix
 
 Description
     Limited to C(s) + O2 -> CO2
@@ -157,7 +157,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -210,8 +210,8 @@ CML::COxidationMurphyShaddix<CloudType>::COxidationMurphyShaddix
     n_(readScalar(this->coeffDict().lookup("n"))),
     WVol_(readScalar(this->coeffDict().lookup("WVol"))),
     CsLocalId_(-1),
-    O2GlobalId_(owner.composition().globalCarrierId("O2")),
-    CO2GlobalId_(owner.composition().globalCarrierId("CO2")),
+    O2GlobalId_(owner.composition().carrierId("O2")),
+    CO2GlobalId_(owner.composition().carrierId("CO2")),
     WC_(0.0),
     WO2_(0.0),
     HcCO2_(0.0)
@@ -221,8 +221,8 @@ CML::COxidationMurphyShaddix<CloudType>::COxidationMurphyShaddix
     CsLocalId_ = owner.composition().localId(idSolid, "C");
 
     // Set local copies of thermo properties
-    WO2_ = owner.thermo().carrier().W(O2GlobalId_);
-    const scalar WCO2 = owner.thermo().carrier().W(CO2GlobalId_);
+    WO2_ = owner.thermo().carrier().Wi(O2GlobalId_);
+    const scalar WCO2 = owner.thermo().carrier().Wi(CO2GlobalId_);
     WC_ = WCO2 - WO2_;
 
     HcCO2_ = owner.thermo().carrier().Hc(CO2GlobalId_);
@@ -270,7 +270,7 @@ template<class CloudType>
 CML::scalar CML::COxidationMurphyShaddix<CloudType>::calculate
 (
     const scalar dt,
-    const label cellI,
+    const label celli,
     const scalar d,
     const scalar T,
     const scalar Tc,
@@ -301,7 +301,7 @@ CML::scalar CML::COxidationMurphyShaddix<CloudType>::calculate
     const SLGThermo& thermo = this->owner().thermo();
 
     // Cell carrier phase O2 species density [kg/m^3]
-    const scalar rhoO2 = rhoc*thermo.carrier().Y(O2GlobalId_)[cellI];
+    const scalar rhoO2 = rhoc*thermo.carrier().Y(O2GlobalId_)[celli];
 
     if (rhoO2 < SMALL)
     {
@@ -316,10 +316,10 @@ CML::scalar CML::COxidationMurphyShaddix<CloudType>::calculate
     const scalar D = D0_*(rho0_/rhoc)*pow(Tc/T0_, Dn_);
 
     // Far field partial pressure O2 [Pa]
-    const scalar ppO2 = rhoO2/WO2_*specie::RR*Tc;
+    const scalar ppO2 = rhoO2/WO2_*RR*Tc;
 
     // Total molar concentration of the carrier phase [kmol/m^3]
-    const scalar C = pc/(specie::RR*Tc);
+    const scalar C = pc/(RR*Tc);
 
     if (debug)
     {
@@ -347,7 +347,7 @@ CML::scalar CML::COxidationMurphyShaddix<CloudType>::calculate
     {
         qCsOld = qCs;
         const scalar PO2Surface = ppO2*exp(-(qCs + N)*d/(2*C*D));
-        qCs = A_*exp(-E_/(specie::RR*T))*pow(PO2Surface, n_);
+        qCs = A_*exp(-E_/(RR*T))*pow(PO2Surface, n_);
         qCs = (100.0*qCs + iter*qCsOld)/(100.0 + iter);
         qCs = min(qCs, qCsLim);
 
@@ -364,10 +364,8 @@ CML::scalar CML::COxidationMurphyShaddix<CloudType>::calculate
 
     if (iter > maxIters_)
     {
-        WarningIn
-        (
-            "scalar CML::COxidationMurphyShaddix<CloudType>::calculate(...)"
-        )   << "iter limit reached (" << maxIters_ << ")" << nl << endl;
+        WarningInFunction
+            << "iter limit reached (" << maxIters_ << ")" << nl << endl;
     }
 
     // Calculate the number of molar units reacted

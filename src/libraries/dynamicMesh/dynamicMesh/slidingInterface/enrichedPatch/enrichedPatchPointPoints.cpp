@@ -33,7 +33,7 @@ void CML::enrichedPatch::calcPointPoints() const
     // Calculate point-point addressing
     if (pointPointsPtr_)
     {
-        FatalErrorIn("void enrichedPatch::calcPointPoints() const")
+        FatalErrorInFunction
             << "Point-point addressing already calculated."
             << abort(FatalError);
     }

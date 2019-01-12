@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -41,7 +41,7 @@ void CML::primitiveMesh::calcCellCentres() const
     // if the pointer is already set
     if (cellCentresPtr_)
     {
-        FatalErrorIn("primitiveMesh::calcCellCentres() const")
+        FatalErrorInFunction
             << "Cell centres already calculated"
             << abort(FatalError);
     }
@@ -120,7 +120,7 @@ void CML::primitiveMesh::calcCellCentresAndVolsGeometric() const
     // if the pointer is already set
     if (cellCentresGeometricPtr_ || cellVolumesPtr_)
     {
-        FatalErrorIn("primitiveMesh::calcCellCentresAndVolsGeometric() const")
+        FatalErrorInFunction
             << "Geometric cell centres or cell volumes already calculated"
             << abort(FatalError);
     }

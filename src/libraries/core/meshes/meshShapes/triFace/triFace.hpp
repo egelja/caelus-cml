@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -115,10 +115,13 @@ public:
         template<class Type>
         Type average(const pointField&, const Field<Type>&) const;
 
-        //- Magnitude of face area
+        //- Return vector area
+        inline vector area(const pointField&) const;
+
+        //- Return scalar magnitude
         inline scalar mag(const pointField&) const;
 
-        //- Vector normal; magnitude is equal to area of face
+        //- Return unit normal
         inline vector normal(const pointField&) const;
 
         //- Number of triangles after splitting
@@ -214,7 +217,7 @@ public:
         //  -  0: edge not found on the face
         inline int edgeDirection(const edge&) const;
 
-        //- compare triFaces
+        //- Compare triFaces
         //  Returns:
         //  -  0: different
         //  - +1: identical
@@ -434,20 +437,27 @@ inline CML::point CML::triFace::centre(const pointField& points) const
 }
 
 
-inline CML::scalar CML::triFace::mag(const pointField& points) const
-{
-    return ::CML::mag(normal(points));
-}
-
-
-// could also delegate to triPointRef(...).normal()
-inline CML::vector CML::triFace::normal(const pointField& points) const
+inline CML::vector CML::triFace::area(const pointField& points) const
 {
     return 0.5*
     (
         (points[operator[](1)] - points[operator[](0)])
        ^(points[operator[](2)] - points[operator[](0)])
     );
+}
+
+
+inline CML::scalar CML::triFace::mag(const pointField& points) const
+{
+    return ::CML::mag(area(points));
+}
+
+
+inline CML::vector CML::triFace::normal(const pointField& points) const
+{
+    const vector a = area(points);
+    const scalar maga = CML::mag(a);
+    return maga > 0 ? a/maga : Zero;
 }
 
 

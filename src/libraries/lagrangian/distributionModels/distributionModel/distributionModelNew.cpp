@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,11 +23,11 @@ License
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
-CML::autoPtr<CML::distributionModels::distributionModel>
-CML::distributionModels::distributionModel::New
+CML::autoPtr<CML::distributionModel>
+CML::distributionModel::New
 (
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 {
     const word modelType(dict.lookup("type"));
@@ -39,14 +39,7 @@ CML::distributionModels::distributionModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "distributionModels::distributionModel::New"
-            "("
-                "const dictionary&, "
-                "cachedRandom&"
-            ")"
-        )
+        FatalErrorInFunction
             << "Unknown distribution model type " << modelType << nl << nl
             << "Valid distribution model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

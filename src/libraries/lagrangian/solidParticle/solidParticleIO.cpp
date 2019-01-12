@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,16 +22,25 @@ License
 #include "solidParticle.hpp"
 #include "IOstreams.hpp"
 
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+const std::size_t CML::solidParticle::sizeofFields_
+(
+    sizeof(solidParticle) - sizeof(particle)
+);
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::solidParticle::solidParticle
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields
+    bool readFields,
+    bool newFormat
 )
 :
-    particle(mesh, is, readFields)
+    particle(mesh, is, readFields, newFormat)
 {
     if (readFields)
     {
@@ -42,16 +51,12 @@ CML::solidParticle::solidParticle
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&d_),
-                sizeof(d_) + sizeof(U_)
-            );
+            is.read(reinterpret_cast<char*>(&d_), sizeofFields_);
         }
     }
 
     // Check state of Istream
-    is.check("solidParticle::solidParticle(Istream&)");
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -122,7 +127,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const solidParticle& p)
         os.write
         (
             reinterpret_cast<const char*>(&p.d_),
-            sizeof(p.d_) + sizeof(p.U_)
+            solidParticle::sizeofFields_
         );
     }
 

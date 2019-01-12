@@ -62,6 +62,7 @@ caelus_src = Split("""
     src/libraries
     src/applications/solvers
     src/applications/utilities
+    src/applications/test
 """)
 
 for d in caelus_src:

@@ -2,7 +2,7 @@
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014-2016 H. Jasak
 Copyright (C) 2014 V. Vukcevic
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -81,7 +81,7 @@ public:
     :
         blockGradScheme<Type>(mesh),
         basicBlockGradScheme_(fv::blockGradScheme<Type>::New(mesh, schemeData)),
-        basicGradScheme_(NULL),
+        basicGradScheme_(nullptr),
         k_(readScalar(schemeData))
     {
         // Rewind stream as we want to re-read the scheme for the basic
@@ -108,15 +108,21 @@ public:
 
         if (k_ < 0 || k_ > 1)
         {
-            FatalIOErrorIn
-            (
-                "cellLimitedBlockGrad(const fvMesh& mesh, Istream& schemeData)",
-                schemeData
-            )   << "coefficient = " << k_
+            FatalIOErrorInFunction(schemeData)
+                << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
         }
     }
+
+    // Member Functions
+    static inline void limitFace
+    (
+        Type& limiter,
+        const Type& maxDelta,
+        const Type& minDelta,
+        const Type& extrapolate
+    );
 
     //- Return the BlockLduSystem corresponding to the implicit cell
     //  limited grad discretization.  For block coupled systems.
@@ -126,6 +132,50 @@ public:
         const GeometricField<Type, fvPatchField, volMesh>&
     ) const;
 };
+
+
+// * * * * * * * * * * * * Inline Member Function  * * * * * * * * * * * * * //
+
+template<>
+inline void cellLimitedBlockGrad<scalar>::limitFace
+(
+    scalar& limiter,
+    const scalar& maxDelta,
+    const scalar& minDelta,
+    const scalar& extrapolate
+)
+{
+    if (extrapolate > maxDelta + VSMALL)
+    {
+        limiter = min(limiter, maxDelta/extrapolate);
+    }
+    else if (extrapolate < minDelta - VSMALL)
+    {
+        limiter = min(limiter, minDelta/extrapolate);
+    }
+}
+
+
+template<class Type>
+inline void cellLimitedBlockGrad<Type>::limitFace
+(
+    Type& limiter,
+    const Type& maxDelta,
+    const Type& minDelta,
+    const Type& extrapolate
+)
+{
+    for (direction cmpt=0; cmpt<Type::nComponents; cmpt++)
+    {
+        cellLimitedBlockGrad<scalar>::limitFace
+        (
+            limiter.component(cmpt),
+            maxDelta.component(cmpt),
+            minDelta.component(cmpt),
+            extrapolate.component(cmpt)
+        );
+    }
+}
 
 
 } // End namespace fv

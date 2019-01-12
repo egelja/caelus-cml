@@ -80,7 +80,7 @@ class sampledSurfaceElevation
             fieldGroup()
             :
                 wordList(0),
-                formatter(NULL)
+                formatter(nullptr)
             {}
 
             void clear()
@@ -159,11 +159,6 @@ class sampledSurfaceElevation
         //- Mesh search engine
         meshSearch searchEngine_;
 
-        scalar startTime_;
-        scalar nextSampleTime_;
-        scalar surfaceSampleDeltaT_;
-
-
         // Read from dictonary
 
             //- Names of fields to sample
@@ -222,13 +217,10 @@ class sampledSurfaceElevation
 
         void sampleIntegrateAndWrite(fieldGroup<scalar>& fields);
 
-        void sampleAndIntegrate(fieldGroup<scalar>& fields, Field<scalar>&);
-
         //- Disallow default bitwise copy construct and assignment
         sampledSurfaceElevation(const sampledSurfaceElevation&);
         void operator=(const sampledSurfaceElevation&);
 
-        bool performAction();
 
 public:
 
@@ -333,12 +325,20 @@ CML::sampledSurfaceElevation::volFieldSampler<Type>::volFieldSampler
             label celli = samples.cells()[samplei];
             label facei = samples.faces()[samplei];
 
-            values[samplei] = interpolator().interpolate
-            (
-                samplePt,
-                celli,
-                facei
-            );
+            if (celli == -1 && facei == -1)
+            {
+                // Special condition for illegal sampling points
+                values[samplei] = pTraits<Type>::max;
+            }
+            else
+            {
+                values[samplei] = interpolator().interpolate
+                (
+                    samplePt,
+                    celli,
+                    facei
+                );
+            }
         }
     }
 }
@@ -362,7 +362,16 @@ CML::sampledSurfaceElevation::volFieldSampler<Type>::volFieldSampler
         values.setSize(samples.size());
         forAll (samples, samplei)
         {
-            values[samplei] = field[samples.cells()[samplei]];
+            label celli = samples.cells()[samplei];
+
+            if (celli == -1)
+            {
+                values[samplei] = pTraits<Type>::max;
+            }
+            else
+            {
+                values[samplei] = field[samples.cells()[samplei]];
+            }
         }
     }
 }

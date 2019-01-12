@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2016-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,134 +22,201 @@ License
 
 #include "particle.hpp"
 #include "IOstreams.hpp"
-#include "IOPosition.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 CML::string CML::particle::propertyList_ = CML::particle::propertyList();
 
+const std::size_t CML::particle::sizeofPosition_
+(
+    offsetof(particle, facei_) - offsetof(particle, coordinates_)
+);
+
+const std::size_t CML::particle::sizeofFields_
+(
+    sizeof(particle) - offsetof(particle, coordinates_)
+);
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::particle::particle(const polyMesh& mesh, Istream& is, bool readFields)
+CML::particle::particle
+(
+    const polyMesh& mesh,
+    Istream& is,
+    bool readFields,
+    bool newFormat
+)
 :
     mesh_(mesh),
-    position_(),
-    cellI_(-1),
-    faceI_(-1),
+    coordinates_(),
+    celli_(-1),
+    tetFacei_(-1),
+    tetPti_(-1),
+    facei_(-1),
     stepFraction_(0.0),
-    tetFaceI_(-1),
-    tetPtI_(-1),
+    behind_(0.0),
+    nBehind_(0),
     origProc_(Pstream::myProcNo()),
     origId_(-1)
 {
-    // readFields : read additional data. Should be consistent with writeFields.
-
-    if (is.format() == IOstream::ASCII)
+    if (newFormat)
     {
-        is  >> position_ >> cellI_;
-
-        if (readFields)
+        if (is.format() == IOstream::ASCII)
         {
-            is  >> tetFaceI_ >> tetPtI_ >> origProc_ >> origId_;
+            is  >> coordinates_ >> celli_ >> tetFacei_ >> tetPti_;
+            if (readFields)
+            {
+                is  >> facei_ >> stepFraction_ >> behind_ >> nBehind_
+                    >> origProc_ >> origId_;
+            }
+        }
+        else
+        {
+            if (readFields)
+            {
+                is.read(reinterpret_cast<char*>(&coordinates_), sizeofFields_);
+            }
+            else
+            {
+                is.read(reinterpret_cast<char*>(&coordinates_), sizeofPosition_);
+            }
         }
     }
     else
     {
-        // In binary read all particle data - needed for parallel transfer
-        if (readFields)
+        positionsCompat804 p;
+
+        if (is.format() == IOstream::ASCII)
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&position_),
-                sizeof(position_)
-              + sizeof(cellI_)
-              + sizeof(faceI_)
-              + sizeof(stepFraction_)
-              + sizeof(tetFaceI_)
-              + sizeof(tetPtI_)
-              + sizeof(origProc_)
-              + sizeof(origId_)
-            );
+            is >> p.position >> p.celli;
+
+            if (readFields)
+            {
+                is  >> p.facei
+                    >> p.stepFraction
+                    >> p.tetFacei
+                    >> p.tetPti
+                    >> p.origProc
+                    >> p.origId;
+            }
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&position_),
-                sizeof(position_)
-              + sizeof(cellI_)
-              + sizeof(faceI_)
-              + sizeof(stepFraction_)
-            );
+            if (readFields)
+            {
+                // Read whole struct
+                const size_t s =
+                (
+                    sizeof(positionsCompat804)
+                  - offsetof(positionsCompat804, position)
+                );
+                is.read(reinterpret_cast<char*>(&p.position), s);
+            }
+            else
+            {
+                // Read only position and cell
+                const size_t s =
+                (
+                    offsetof(positionsCompat804, facei)
+                  - offsetof(positionsCompat804, position)
+                );
+                is.read(reinterpret_cast<char*>(&p.position), s);
+            }
         }
+
+        if (readFields)
+        {
+            // Note: other position-based properties are set using locate(...)
+            stepFraction_ = p.stepFraction;
+            origProc_ = p.origProc;
+            origId_ = p.origId;
+        }
+
+        locate
+        (
+            p.position,
+            nullptr,
+            p.celli,
+            false,
+            "Particle initialised with a location outside of the mesh."
+        );
     }
 
     // Check state of Istream
-    is.check("particle::particle(Istream&, bool)");
+    is.check(FUNCTION_NAME);
 }
 
 
-void CML::particle::write(Ostream& os, bool writeFields) const
+void CML::particle::writeCoordinates(Ostream& os) const
 {
     if (os.format() == IOstream::ASCII)
     {
-        if (writeFields)
-        {
-            // Write the additional entries
-            os  << position_
-                << token::SPACE << cellI_
-                << token::SPACE << tetFaceI_
-                << token::SPACE << tetPtI_
-                << token::SPACE << origProc_
-                << token::SPACE << origId_;
-        }
-        else
-        {
-            os  << position_
-                << token::SPACE << cellI_;
-        }
+        os  << coordinates_
+            << token::SPACE << celli_
+            << token::SPACE << tetFacei_
+            << token::SPACE << tetPti_;
     }
     else
     {
-        // In binary write both cellI_ and faceI_, needed for parallel transfer
-        if (writeFields)
-        {
-            os.write
-            (
-                reinterpret_cast<const char*>(&position_),
-                sizeof(position_)
-              + sizeof(cellI_)
-              + sizeof(faceI_)
-              + sizeof(stepFraction_)
-              + sizeof(tetFaceI_)
-              + sizeof(tetPtI_)
-              + sizeof(origProc_)
-              + sizeof(origId_)
-            );
-        }
-        else
-        {
-            os.write
-            (
-                reinterpret_cast<const char*>(&position_),
-                sizeof(position_)
-              + sizeof(cellI_)
-              + sizeof(faceI_)
-              + sizeof(stepFraction_)
-            );
-        }
+        os.write(reinterpret_cast<const char*>(&coordinates_), sizeofPosition_);
     }
 
     // Check state of Ostream
-    os.check("particle::write(Ostream& os, bool) const");
+    os.check(FUNCTION_NAME);
+}
+
+
+void CML::particle::writePosition(Ostream& os) const
+{
+    if (os.format() == IOstream::ASCII)
+    {
+        os  << position() << token::SPACE << celli_;
+    }
+    else
+    {
+        positionsCompat804 p;
+
+        const size_t s =
+        (
+            offsetof(positionsCompat804, facei)
+          - offsetof(positionsCompat804, position)
+        );
+
+        p.position = position();
+        p.celli = celli_;
+
+        os.write(reinterpret_cast<const char*>(&p.position), s);
+    }
+
+    // Check state of Ostream
+    os.check(FUNCTION_NAME);
 }
 
 
 CML::Ostream& CML::operator<<(Ostream& os, const particle& p)
 {
-    // Write all data
-    p.write(os, true);
+    if (os.format() == IOstream::ASCII)
+    {
+        os  << p.coordinates_
+            << token::SPACE << p.celli_
+            << token::SPACE << p.tetFacei_
+            << token::SPACE << p.tetPti_
+            << token::SPACE << p.facei_
+            << token::SPACE << p.stepFraction_
+            << token::SPACE << p.behind_
+            << token::SPACE << p.nBehind_
+            << token::SPACE << p.origProc_
+            << token::SPACE << p.origId_;
+    }
+    else
+    {
+        os.write
+        (
+            reinterpret_cast<const char*>(&p.coordinates_),
+            particle::sizeofFields_
+        );
+    }
 
     return os;
 }

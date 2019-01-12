@@ -243,10 +243,8 @@ void meshSurfaceMapper2D::adjustZCoordinates()
         }
         else
         {
-            FatalErrorIn
-            (
-                "void meshSurfaceMapper2D::adjustZCoordinates()"
-            ) << "This mesh is not in the x-y plane!" << exit(FatalError);
+            FatalErrorInFunction
+               << "This mesh is not in the x-y plane!" << exit(FatalError);
         }
 
         modifier.moveBoundaryVertexNoUpdate(bp[pointI], newP);
@@ -271,7 +269,7 @@ void meshSurfaceMapper2D::mapVerticesOntoSurface(const labelLongList& edgesToMap
     const labelList& bp = surfaceEngine_.bp();
     const pointFieldPMG& points = surfaceEngine_.points();
 
-    const VRWGraph* beAtProcsPtr(NULL);
+    const VRWGraph* beAtProcsPtr(nullptr);
     if( Pstream::parRun() )
         beAtProcsPtr = &surfaceEngine_.beAtProcs();
 
@@ -402,10 +400,8 @@ void meshSurfaceMapper2D::mapCorners(const labelLongList& edgesToMap)
         }
 
         if( !corners.found(bps) || !corners.found(bpe) )
-            FatalErrorIn
-            (
-                "meshSurfaceMapper2D::mapCorners(const labelLongList&)"
-            ) << "Trying to map a point that is not a corner"
+            FatalErrorInFunction
+                << "Trying to map a point that is not a corner"
                 << abort(FatalError);
 
         const point& p = points[be.start()];
@@ -504,7 +500,7 @@ void meshSurfaceMapper2D::mapVerticesOntoSurfacePatches
     const VRWGraph& edgePatches = surfaceEngine_.edgePatches();
     const labelList& bp = surfaceEngine_.bp();
 
-    const VRWGraph* beAtProcsPtr(NULL);
+    const VRWGraph* beAtProcsPtr(nullptr);
     if( Pstream::parRun() )
         beAtProcsPtr = &surfaceEngine_.beAtProcs();
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::uniform
+    CML::distributionModels::uniform
 
 Description
     Uniform/equally-weighted distribution model
@@ -66,7 +66,7 @@ public:
     // Constructors
 
         //- Construct from components
-        uniform(const dictionary& dict, cachedRandom& rndGen);
+        uniform(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         uniform(const uniform& p);
@@ -84,7 +84,7 @@ public:
 
     // Member Functions
 
-         //- Sample the distributionModel
+        //- Sample the distributionModel
         virtual scalar sample() const;
 
         //- Return the minimum value

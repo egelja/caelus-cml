@@ -54,7 +54,6 @@ class volPointInterpolation;
 
 class surfaceMeshWriter
 {
-    const vtkMesh& vMesh_;
 
     const bool binary_;
 
@@ -64,9 +63,6 @@ class surfaceMeshWriter
 
     std::ofstream os_;
 
-//    label nPoints_;
-//
-//    label nFaces_;
 
 public:
 
@@ -89,19 +85,6 @@ public:
         {
             return os_;
         }
-
-//        label nPoints() const
-//        {
-//            return nPoints_;
-//        }
-//
-//        label nFaces() const
-//        {
-//            return nFaces_;
-//        }
-//
-//        //- Write cellIDs
-//        void writePatchIDs();
 
         //- Extract face data
         template<class Type>

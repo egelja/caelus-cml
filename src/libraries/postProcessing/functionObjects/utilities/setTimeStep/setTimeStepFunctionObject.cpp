@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -128,7 +128,7 @@ bool CML::setTimeStepFunctionObject::read(const dictionary& dict)
          || !adjust
         )
         {
-            FatalIOErrorIn("setTimeStep::read(const dictionary&)", dict)
+            FatalIOErrorInFunction(dict)
                 << "Need to have 'adjustTimeStep' true to enable external"
                 << " timestep control" << exit(FatalIOError);
         }

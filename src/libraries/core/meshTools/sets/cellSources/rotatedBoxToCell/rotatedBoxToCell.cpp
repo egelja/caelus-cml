@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,20 +22,15 @@ License
 #include "rotatedBoxToCell.hpp"
 #include "polyMesh.hpp"
 #include "cellModeller.hpp"
-
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
 {
-
-defineTypeNameAndDebug(rotatedBoxToCell, 0);
-
-addToRunTimeSelectionTable(topoSetSource, rotatedBoxToCell, word);
-
-addToRunTimeSelectionTable(topoSetSource, rotatedBoxToCell, istream);
-
+    defineTypeNameAndDebug(rotatedBoxToCell, 0);
+    addToRunTimeSelectionTable(topoSetSource, rotatedBoxToCell, word);
+    addToRunTimeSelectionTable(topoSetSource, rotatedBoxToCell, istream);
 }
 
 
@@ -78,17 +73,14 @@ void CML::rotatedBoxToCell::combine(topoSet& set, const bool add) const
     vectorField boxFaceNormals(boxFaces.size());
     forAll(boxFaces, i)
     {
-        boxFaceNormals[i] = boxFaces[i].normal(boxPoints);
-
-        //Pout<< "Face:" << i << " position:" << boxFaces[i].centre(boxPoints)
-        //    << " normal:" << boxFaceNormals[i] << endl;
+        boxFaceNormals[i] = boxFaces[i].area(boxPoints);
     }
 
     // Check whether cell centre is inside all faces of box.
 
     const pointField& ctrs = mesh_.cellCentres();
 
-    forAll(ctrs, cellI)
+    forAll(ctrs, celli)
     {
         bool inside = true;
 
@@ -96,7 +88,7 @@ void CML::rotatedBoxToCell::combine(topoSet& set, const bool add) const
         {
             const face& f = boxFaces[i];
 
-            if (((ctrs[cellI] - boxPoints[f[0]]) & boxFaceNormals[i]) > 0)
+            if (((ctrs[celli] - boxPoints[f[0]]) & boxFaceNormals[i]) > 0)
             {
                 inside = false;
                 break;
@@ -105,7 +97,7 @@ void CML::rotatedBoxToCell::combine(topoSet& set, const bool add) const
 
         if (inside)
         {
-            addOrDelete(set, cellI, add);
+            addOrDelete(set, celli, add);
         }
     }
 }

@@ -6,8 +6,8 @@ Import('env')
 target = 'setSet'
 
 sources = Split("""
-writePointSet.cpp
-  writeFuns.cpp
+  writePointSet_setSet.cpp
+  writeFuns_setSet.cpp
   writePatch.cpp
   setSet.cpp
 """)

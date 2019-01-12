@@ -53,7 +53,7 @@ externalSource::externalSource
 {
     if (external_.type() == CML::waveTheories::emptyExternal::typeName)
     {
-        FatalErrorIn("CML::waveTheories::externalSource::externalSource(...)")
+        FatalErrorInFunction
             << "The wave theory externalSource is used together with the\n"
             << "external wave forcing 'emptyExternal'. Either specify an\n"
             << "actual external source or switch to the algebraric theories.\n"

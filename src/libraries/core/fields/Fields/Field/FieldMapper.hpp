@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -69,7 +69,7 @@ public:
 
         virtual const mapDistributeBase& distributeMap() const
         {
-            FatalErrorIn("FieldMapper::distributeMap() const")
+            FatalErrorInFunction
                 << "attempt to access null distributeMap"
                 << abort(FatalError);
             return *(new mapDistributeBase());
@@ -81,7 +81,7 @@ public:
 
         virtual const labelUList& directAddressing() const
         {
-            FatalErrorIn("FieldMapper::directAddressing() const")
+            FatalErrorInFunction
                 << "attempt to access null direct addressing"
                 << abort(FatalError);
 
@@ -90,7 +90,7 @@ public:
 
         virtual const labelListList& addressing() const
         {
-            FatalErrorIn("FieldMapper::addressing() const")
+            FatalErrorInFunction
                 << "attempt to access null interpolation addressing"
                 << abort(FatalError);
 
@@ -99,7 +99,7 @@ public:
 
         virtual const scalarListList& weights() const
         {
-            FatalErrorIn("FieldMapper::weights() const")
+            FatalErrorInFunction
                 << "attempt to access null interpolation weights"
                 << abort(FatalError);
 

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2015 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -123,11 +124,7 @@ public:
         const Field<Type>& bT
     ) const
     {
-        notImplemented
-        (
-            type() +"::preconditionT"
-            "(Field<Type>& xT, const Field<Type>& bT) const"
-        );
+        NotImplemented;
     }
 
 };
@@ -183,15 +180,8 @@ CML::autoPtr<CML::BlockLduPrecon<Type> > CML::BlockLduPrecon<Type>::New
 
         if (constructorIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "autoPtr<BlockLduPrecon> BlockLduPrecon::New\n"
-                "(\n"
-                "    const BlockLduMatrix<Type>& matrix,\n"
-                "    const dictionary& dict\n"
-                ")",
-                dict
-            )   << "Unknown matrix preconditioner " << preconName
+            FatalIOErrorInFunction(dict)
+                << "Unknown matrix preconditioner " << preconName
                 << endl << endl
                 << "Valid matrix preconditioners are :" << endl
                 << dictionaryConstructorTablePtr_->sortedToc()

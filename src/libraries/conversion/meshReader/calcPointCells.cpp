@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ void CML::meshReader::calcPointCells() const
 
     if (pointCellsPtr_)
     {
-        FatalErrorIn("meshReader::calcPointCells() const")
+        FatalErrorInFunction
             << "pointCells already calculated"
             << abort(FatalError);
     }

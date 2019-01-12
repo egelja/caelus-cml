@@ -43,7 +43,7 @@ void polyMeshGenAddressing::calcCellCentresAndVols() const
 {
     if( cellCentresPtr_ || cellVolumesPtr_ )
     {
-        FatalErrorIn("polyMeshGenAddressing::calcCellCentresAndVols() const")
+        FatalErrorInFunction
             << "Cell centres or cell volumes already calculated"
             << abort(FatalError);
     }
@@ -125,10 +125,8 @@ const vectorField& polyMeshGenAddressing::cellCentres() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const vectorField& polyMeshGenAddressing::cellCentres() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -144,10 +142,8 @@ const scalarField& polyMeshGenAddressing::cellVolumes() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const scalarField& polyMeshGenAddressing::cellVolumes() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 

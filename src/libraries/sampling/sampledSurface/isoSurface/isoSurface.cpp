@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -93,10 +93,8 @@ CML::PackedBoolList CML::isoSurface::collocatedFaces
     }
     else
     {
-        FatalErrorIn
-        (
-            "isoSurface::collocatedFaces(const coupledPolyPatch&) const"
-        )   << "Unhandled coupledPolyPatch type " << pp.type()
+        FatalErrorInFunction
+            << "Unhandled coupledPolyPatch type " << pp.type()
             << abort(FatalError);
     }
     return collocated;
@@ -116,27 +114,27 @@ void CML::isoSurface::syncUnseparatedPoints
     if (Pstream::parRun())
     {
         // Send
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nPoints() > 0
-             && collocatedPatch(patches[patchI])
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nPoints() > 0
+             && collocatedPatch(patches[patchi])
             )
             {
                 const processorPolyPatch& pp =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 const labelList& meshPts = pp.meshPoints();
                 const labelList& nbrPts = pp.neighbPoints();
 
                 pointField patchInfo(meshPts.size());
 
-                forAll(nbrPts, pointI)
+                forAll(nbrPts, pointi)
                 {
-                    label nbrPointI = nbrPts[pointI];
-                    patchInfo[nbrPointI] = pointValues[meshPts[pointI]];
+                    label nbrPointi = nbrPts[pointi];
+                    patchInfo[nbrPointi] = pointValues[meshPts[pointi]];
                 }
 
                 OPstream toNbr(Pstream::blocking, pp.neighbProcNo());
@@ -146,17 +144,17 @@ void CML::isoSurface::syncUnseparatedPoints
 
         // Receive and combine.
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             if
             (
-                isA<processorPolyPatch>(patches[patchI])
-             && patches[patchI].nPoints() > 0
-             && collocatedPatch(patches[patchI])
+                isA<processorPolyPatch>(patches[patchi])
+             && patches[patchi].nPoints() > 0
+             && collocatedPatch(patches[patchi])
             )
             {
                 const processorPolyPatch& pp =
-                    refCast<const processorPolyPatch>(patches[patchI]);
+                    refCast<const processorPolyPatch>(patches[patchi]);
 
                 pointField nbrPatchInfo(pp.nPoints());
                 {
@@ -168,13 +166,13 @@ void CML::isoSurface::syncUnseparatedPoints
 
                 const labelList& meshPts = pp.meshPoints();
 
-                forAll(meshPts, pointI)
+                forAll(meshPts, pointi)
                 {
-                    label meshPointI = meshPts[pointI];
+                    label meshPointi = meshPts[pointi];
                     minEqOp<point>()
                     (
-                        pointValues[meshPointI],
-                        nbrPatchInfo[pointI]
+                        pointValues[meshPointi],
+                        nbrPatchInfo[pointi]
                     );
                 }
             }
@@ -182,12 +180,12 @@ void CML::isoSurface::syncUnseparatedPoints
     }
 
     // Do the cyclics.
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
+        if (isA<cyclicPolyPatch>(patches[patchi]))
         {
             const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
+                refCast<const cyclicPolyPatch>(patches[patchi]);
 
             if (cycPatch.owner() && collocatedPatch(cycPatch))
             {
@@ -231,9 +229,9 @@ void CML::isoSurface::syncUnseparatedPoints
 
         forAll(pd.sharedPointLabels(), i)
         {
-            label meshPointI = pd.sharedPointLabels()[i];
+            label meshPointi = pd.sharedPointLabels()[i];
             // Fill my entries in the shared points
-            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointI];
+            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointi];
         }
 
         // Combine on master.
@@ -244,8 +242,8 @@ void CML::isoSurface::syncUnseparatedPoints
         // my local information.
         forAll(pd.sharedPointLabels(), i)
         {
-            label meshPointI = pd.sharedPointLabels()[i];
-            pointValues[meshPointI] = sharedPts[pd.sharedPointAddr()[i]];
+            label meshPointi = pd.sharedPointLabels()[i];
+            pointValues[meshPointi] = sharedPts[pd.sharedPointAddr()[i]];
         }
     }
 }
@@ -301,8 +299,8 @@ void CML::isoSurface::getNeighbour
     const labelList& boundaryRegion,
     const volVectorField& meshC,
     const volScalarField& cVals,
-    const label cellI,
-    const label faceI,
+    const label celli,
+    const label facei,
     scalar& nbrValue,
     point& nbrPoint
 ) const
@@ -310,21 +308,21 @@ void CML::isoSurface::getNeighbour
     const labelList& own = mesh_.faceOwner();
     const labelList& nei = mesh_.faceNeighbour();
 
-    if (mesh_.isInternalFace(faceI))
+    if (mesh_.isInternalFace(facei))
     {
-        label nbr = (own[faceI] == cellI ? nei[faceI] : own[faceI]);
+        label nbr = (own[facei] == celli ? nei[facei] : own[facei]);
         nbrValue = cVals[nbr];
         nbrPoint = meshC[nbr];
     }
     else
     {
-        label bFaceI = faceI-mesh_.nInternalFaces();
-        label patchI = boundaryRegion[bFaceI];
-        const polyPatch& pp = mesh_.boundaryMesh()[patchI];
-        label patchFaceI = faceI-pp.start();
+        label bFacei = facei-mesh_.nInternalFaces();
+        label patchi = boundaryRegion[bFacei];
+        const polyPatch& pp = mesh_.boundaryMesh()[patchi];
+        label patchFacei = facei-pp.start();
 
-        nbrValue = cVals.boundaryField()[patchI][patchFaceI];
-        nbrPoint = meshC.boundaryField()[patchI][patchFaceI];
+        nbrValue = cVals.boundaryField()[patchi][patchFacei];
+        nbrPoint = meshC.boundaryField()[patchi][patchFacei];
     }
 }
 
@@ -345,10 +343,10 @@ void CML::isoSurface::calcCutTypes
     faceCutType_.setSize(mesh_.nFaces());
     faceCutType_ = NOTCUT;
 
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
         // CC edge.
-        bool ownLower = (cVals[own[faceI]] < iso_);
+        bool ownLower = (cVals[own[facei]] < iso_);
 
         scalar nbrValue;
         point nbrPoint;
@@ -357,8 +355,8 @@ void CML::isoSurface::calcCutTypes
             boundaryRegion,
             meshC,
             cVals,
-            own[faceI],
-            faceI,
+            own[facei],
+            facei,
             nbrValue,
             nbrPoint
         );
@@ -367,30 +365,30 @@ void CML::isoSurface::calcCutTypes
 
         if (ownLower != neiLower)
         {
-            faceCutType_[faceI] = CUT;
+            faceCutType_[facei] = CUT;
         }
         else
         {
             // See if any mesh edge is cut by looping over all the edges of the
             // face.
-            const face f = mesh_.faces()[faceI];
+            const face f = mesh_.faces()[facei];
 
             if (isEdgeOfFaceCut(pVals, f, ownLower, neiLower))
             {
-                faceCutType_[faceI] = CUT;
+                faceCutType_[facei] = CUT;
             }
         }
     }
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        label faceI = pp.start();
+        label facei = pp.start();
 
         forAll(pp, i)
         {
-            bool ownLower = (cVals[own[faceI]] < iso_);
+            bool ownLower = (cVals[own[facei]] < iso_);
 
             scalar nbrValue;
             point nbrPoint;
@@ -399,8 +397,8 @@ void CML::isoSurface::calcCutTypes
                 boundaryRegion,
                 meshC,
                 cVals,
-                own[faceI],
-                faceI,
+                own[facei],
+                facei,
                 nbrValue,
                 nbrPoint
             );
@@ -409,20 +407,20 @@ void CML::isoSurface::calcCutTypes
 
             if (ownLower != neiLower)
             {
-                faceCutType_[faceI] = CUT;
+                faceCutType_[facei] = CUT;
             }
             else
             {
                 // Mesh edge.
-                const face f = mesh_.faces()[faceI];
+                const face f = mesh_.faces()[facei];
 
                 if (isEdgeOfFaceCut(pVals, f, ownLower, neiLower))
                 {
-                    faceCutType_[faceI] = CUT;
+                    faceCutType_[facei] = CUT;
                 }
             }
 
-            faceI++;
+            facei++;
         }
     }
 
@@ -432,29 +430,29 @@ void CML::isoSurface::calcCutTypes
     cellCutType_.setSize(mesh_.nCells());
     cellCutType_ = NOTCUT;
 
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
-        if (faceCutType_[faceI] != NOTCUT)
+        if (faceCutType_[facei] != NOTCUT)
         {
-            if (cellCutType_[own[faceI]] == NOTCUT)
+            if (cellCutType_[own[facei]] == NOTCUT)
             {
-                cellCutType_[own[faceI]] = CUT;
+                cellCutType_[own[facei]] = CUT;
                 nCutCells_++;
             }
-            if (cellCutType_[nei[faceI]] == NOTCUT)
+            if (cellCutType_[nei[facei]] == NOTCUT)
             {
-                cellCutType_[nei[faceI]] = CUT;
+                cellCutType_[nei[facei]] = CUT;
                 nCutCells_++;
             }
         }
     }
-    for (label faceI = mesh_.nInternalFaces(); faceI < mesh_.nFaces(); faceI++)
+    for (label facei = mesh_.nInternalFaces(); facei < mesh_.nFaces(); facei++)
     {
-        if (faceCutType_[faceI] != NOTCUT)
+        if (faceCutType_[facei] != NOTCUT)
         {
-            if (cellCutType_[own[faceI]] == NOTCUT)
+            if (cellCutType_[own[facei]] == NOTCUT)
             {
-                cellCutType_[own[faceI]] = CUT;
+                cellCutType_[own[facei]] = CUT;
                 nCutCells_++;
             }
         }
@@ -608,24 +606,24 @@ void CML::isoSurface::calcSnappedCc
     // Work arrays
     DynamicList<point, 64> localTriPoints(64);
 
-    forAll(mesh_.cells(), cellI)
+    forAll(mesh_.cells(), celli)
     {
-        if (cellCutType_[cellI] == CUT)
+        if (cellCutType_[celli] == CUT)
         {
-            scalar cVal = cVals[cellI];
+            scalar cVal = cVals[celli];
 
-            const cell& cFaces = mesh_.cells()[cellI];
+            const cell& cFaces = mesh_.cells()[celli];
 
             localTriPoints.clear();
             label nOther = 0;
-            point otherPointSum = vector::zero;
+            point otherPointSum = Zero;
 
             // Create points for all intersections close to cell centre
             // (i.e. from pyramid edges)
 
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                label faceI = cFaces[cFaceI];
+                label facei = cFaces[cFacei];
 
                 scalar nbrValue;
                 point nbrPoint;
@@ -634,8 +632,8 @@ void CML::isoSurface::calcSnappedCc
                     boundaryRegion,
                     meshC,
                     cVals,
-                    cellI,
-                    faceI,
+                    celli,
+                    facei,
                     nbrValue,
                     nbrPoint
                 );
@@ -646,21 +644,21 @@ void CML::isoSurface::calcSnappedCc
 
                 // From cc to neighbour cc.
                 s[2] = isoFraction(cVal, nbrValue);
-                pt[2] = (1.0-s[2])*cc[cellI] + s[2]*nbrPoint;
+                pt[2] = (1.0-s[2])*cc[celli] + s[2]*nbrPoint;
 
-                const face& f = mesh_.faces()[cFaces[cFaceI]];
+                const face& f = mesh_.faces()[cFaces[cFacei]];
 
                 forAll(f, fp)
                 {
                     // From cc to fp
                     label p0 = f[fp];
                     s[0] = isoFraction(cVal, pVals[p0]);
-                    pt[0] = (1.0-s[0])*cc[cellI] + s[0]*pts[p0];
+                    pt[0] = (1.0-s[0])*cc[celli] + s[0]*pts[p0];
 
                     // From cc to fp+1
                     label p1 = f[f.fcIndex(fp)];
                     s[1] = isoFraction(cVal, pVals[p1]);
-                    pt[1] = (1.0-s[1])*cc[cellI] + s[1]*pts[p1];
+                    pt[1] = (1.0-s[1])*cc[celli] + s[1]*pts[p1];
 
                     if
                     (
@@ -694,12 +692,12 @@ void CML::isoSurface::calcSnappedCc
                 // points.
                 if (nOther > 0)
                 {
-                    snappedCc[cellI] = snappedPoints.size();
+                    snappedCc[celli] = snappedPoints.size();
                     snappedPoints.append(otherPointSum/nOther);
 
-                    //Pout<< "    point:" << pointI
-                    //    << " replacing coord:" << mesh_.points()[pointI]
-                    //    << " by average:" << collapsedPoint[pointI] << endl;
+                    //Pout<< "    point:" << pointi
+                    //    << " replacing coord:" << mesh_.points()[pointi]
+                    //    << " by average:" << collapsedPoint[pointi] << endl;
                 }
             }
             else if (localTriPoints.size() == 3)
@@ -707,12 +705,12 @@ void CML::isoSurface::calcSnappedCc
                 // Single triangle. No need for any analysis. Average points.
                 pointField points;
                 points.transfer(localTriPoints);
-                snappedCc[cellI] = snappedPoints.size();
+                snappedCc[celli] = snappedPoints.size();
                 snappedPoints.append(sum(points)/points.size());
 
-                //Pout<< "    point:" << pointI
-                //    << " replacing coord:" << mesh_.points()[pointI]
-                //    << " by average:" << collapsedPoint[pointI] << endl;
+                //Pout<< "    point:" << pointi
+                //    << " replacing coord:" << mesh_.points()[pointi]
+                //    << " by average:" << collapsedPoint[pointi] << endl;
             }
             else
             {
@@ -741,11 +739,11 @@ void CML::isoSurface::calcSnappedCc
 
                 if (nZones == 1)
                 {
-                    snappedCc[cellI] = snappedPoints.size();
+                    snappedCc[celli] = snappedPoints.size();
                     snappedPoints.append(calcCentre(surf));
-                    //Pout<< "    point:" << pointI << " nZones:" << nZones
-                    //    << " replacing coord:" << mesh_.points()[pointI]
-                    //    << " by average:" << collapsedPoint[pointI] << endl;
+                    //Pout<< "    point:" << pointi << " nZones:" << nZones
+                    //    << " replacing coord:" << mesh_.points()[pointi]
+                    //    << " by average:" << collapsedPoint[pointi] << endl;
                 }
             }
         }
@@ -772,26 +770,25 @@ void CML::isoSurface::calcSnappedPoint
 
     pointField collapsedPoint(mesh_.nPoints(), point::max);
 
-
     // Work arrays
     DynamicList<point, 64> localTriPoints(100);
 
-    forAll(mesh_.pointFaces(), pointI)
+    forAll(mesh_.pointFaces(), pointi)
     {
-        if (isBoundaryPoint.get(pointI) == 1)
+        if (isBoundaryPoint.get(pointi) == 1)
         {
             continue;
         }
 
-        const labelList& pFaces = mesh_.pointFaces()[pointI];
+        const labelList& pFaces = mesh_.pointFaces()[pointi];
 
         bool anyCut = false;
 
         forAll(pFaces, i)
         {
-            label faceI = pFaces[i];
+            label facei = pFaces[i];
 
-            if (faceCutType_[faceI] == CUT)
+            if (faceCutType_[facei] == CUT)
             {
                 anyCut = true;
                 break;
@@ -806,16 +803,16 @@ void CML::isoSurface::calcSnappedPoint
 
         localTriPoints.clear();
         label nOther = 0;
-        point otherPointSum = vector::zero;
+        point otherPointSum = Zero;
 
-        forAll(pFaces, pFaceI)
+        forAll(pFaces, pFacei)
         {
             // Create points for all intersections close to point
             // (i.e. from pyramid edges)
 
-            label faceI = pFaces[pFaceI];
-            const face& f = mesh_.faces()[faceI];
-            label own = mesh_.faceOwner()[faceI];
+            label facei = pFaces[pFacei];
+            const face& f = mesh_.faces()[facei];
+            label own = mesh_.faceOwner()[facei];
 
             // Get neighbour value
             scalar nbrValue;
@@ -826,7 +823,7 @@ void CML::isoSurface::calcSnappedPoint
                 meshC,
                 cVals,
                 own,
-                faceI,
+                facei,
                 nbrValue,
                 nbrPoint
             );
@@ -835,20 +832,20 @@ void CML::isoSurface::calcSnappedPoint
             FixedList<scalar, 4> s;
             FixedList<point, 4> pt;
 
-            label fp = findIndex(f, pointI);
-            s[0] = isoFraction(pVals[pointI], cVals[own]);
-            pt[0] = (1.0-s[0])*pts[pointI] + s[0]*cc[own];
+            label fp = findIndex(f, pointi);
+            s[0] = isoFraction(pVals[pointi], cVals[own]);
+            pt[0] = (1.0-s[0])*pts[pointi] + s[0]*cc[own];
 
-            s[1] = isoFraction(pVals[pointI], nbrValue);
-            pt[1] = (1.0-s[1])*pts[pointI] + s[1]*nbrPoint;
+            s[1] = isoFraction(pVals[pointi], nbrValue);
+            pt[1] = (1.0-s[1])*pts[pointi] + s[1]*nbrPoint;
 
-            label nextPointI = f[f.fcIndex(fp)];
-            s[2] = isoFraction(pVals[pointI], pVals[nextPointI]);
-            pt[2] = (1.0-s[2])*pts[pointI] + s[2]*pts[nextPointI];
+            label nextPointi = f[f.fcIndex(fp)];
+            s[2] = isoFraction(pVals[pointi], pVals[nextPointi]);
+            pt[2] = (1.0-s[2])*pts[pointi] + s[2]*pts[nextPointi];
 
-            label prevPointI = f[f.rcIndex(fp)];
-            s[3] = isoFraction(pVals[pointI], pVals[prevPointI]);
-            pt[3] = (1.0-s[3])*pts[pointI] + s[3]*pts[prevPointI];
+            label prevPointi = f[f.rcIndex(fp)];
+            s[3] = isoFraction(pVals[pointi], pVals[prevPointi]);
+            pt[3] = (1.0-s[3])*pts[pointi] + s[3]*pts[prevPointi];
 
             if
             (
@@ -890,7 +887,7 @@ void CML::isoSurface::calcSnappedPoint
             // points.
             if (nOther > 0)
             {
-                collapsedPoint[pointI] = otherPointSum/nOther;
+                collapsedPoint[pointi] = otherPointSum/nOther;
             }
         }
         else if (localTriPoints.size() == 3)
@@ -898,7 +895,7 @@ void CML::isoSurface::calcSnappedPoint
             // Single triangle. No need for any analysis. Average points.
             pointField points;
             points.transfer(localTriPoints);
-            collapsedPoint[pointI] = sum(points)/points.size();
+            collapsedPoint[pointi] = sum(points)/points.size();
         }
         else
         {
@@ -927,7 +924,7 @@ void CML::isoSurface::calcSnappedPoint
 
             if (nZones == 1)
             {
-                collapsedPoint[pointI] = calcCentre(surf);
+                collapsedPoint[pointi] = calcCentre(surf);
             }
         }
     }
@@ -940,12 +937,12 @@ void CML::isoSurface::calcSnappedPoint
     snappedPoint.setSize(mesh_.nPoints());
     snappedPoint = -1;
 
-    forAll(collapsedPoint, pointI)
+    forAll(collapsedPoint, pointi)
     {
-        if (collapsedPoint[pointI] != point::max)
+        if (collapsedPoint[pointi] != point::max)
         {
-            snappedPoint[pointI] = snappedPoints.size();
-            snappedPoints.append(collapsedPoint[pointI]);
+            snappedPoint[pointi] = snappedPoints.size();
+            snappedPoints.append(collapsedPoint[pointi]);
         }
     }
 }
@@ -963,7 +960,7 @@ CML::triSurface CML::isoSurface::stitchTriPoints
 
     if ((triPoints.size() % 3) != 0)
     {
-        FatalErrorIn("isoSurface::stitchTriPoints(..)")
+        FatalErrorInFunction
             << "Problem: number of points " << triPoints.size()
             << " not a multiple of 3." << abort(FatalError);
     }
@@ -994,7 +991,7 @@ CML::triSurface CML::isoSurface::stitchTriPoints
 
         if (hasMerged)
         {
-            FatalErrorIn("isoSurface::stitchTriPoints(..)")
+            FatalErrorInFunction
                 << "Merged points contain duplicates"
                 << " when merging with distance " << mergeDistance_ << endl
                 << "merged:" << newPoints.size() << " re-merged:"
@@ -1007,19 +1004,19 @@ CML::triSurface CML::isoSurface::stitchTriPoints
     List<labelledTri> tris;
     {
         DynamicList<labelledTri> dynTris(nTris);
-        label rawPointI = 0;
+        label rawPointi = 0;
         DynamicList<label> newToOldTri(nTris);
 
         for (label oldTriI = 0; oldTriI < nTris; oldTriI++)
         {
             labelledTri tri
             (
-                triPointReverseMap[rawPointI],
-                triPointReverseMap[rawPointI+1],
-                triPointReverseMap[rawPointI+2],
+                triPointReverseMap[rawPointi],
+                triPointReverseMap[rawPointi+1],
+                triPointReverseMap[rawPointi+2],
                 0
             );
-            rawPointI += 3;
+            rawPointi += 3;
 
             if ((tri[0] != tri[1]) && (tri[0] != tri[2]) && (tri[1] != tri[2]))
             {
@@ -1092,30 +1089,30 @@ CML::triSurface CML::isoSurface::stitchTriPoints
         {
             triSurface surf(tris, geometricSurfacePatchList(0), newPoints);
 
-            forAll(surf, faceI)
+            forAll(surf, facei)
             {
-                const labelledTri& f = surf[faceI];
-                const labelList& fFaces = surf.faceFaces()[faceI];
+                const labelledTri& f = surf[facei];
+                const labelList& fFaces = surf.faceFaces()[facei];
 
                 forAll(fFaces, i)
                 {
-                    label nbrFaceI = fFaces[i];
+                    label nbrFacei = fFaces[i];
 
-                    if (nbrFaceI <= faceI)
+                    if (nbrFacei <= facei)
                     {
                         // lower numbered faces already checked
                         continue;
                     }
 
-                    const labelledTri& nbrF = surf[nbrFaceI];
+                    const labelledTri& nbrF = surf[nbrFacei];
 
                     if (f == nbrF)
                     {
-                        FatalErrorIn("validTri(const triSurface&, const label)")
+                        FatalErrorInFunction
                             << "Check : "
-                            << " triangle " << faceI << " vertices " << f
+                            << " triangle " << facei << " vertices " << f
                             << " fc:" << f.centre(surf.points())
-                            << " has the same vertices as triangle " << nbrFaceI
+                            << " has the same vertices as triangle " << nbrFacei
                             << " vertices " << nbrF
                             << " fc:" << nbrF.centre(surf.points())
                             << abort(FatalError);
@@ -1143,7 +1140,7 @@ bool CML::isoSurface::validTri(const triSurface& surf, const label faceI)
      || (f[2] < 0) || (f[2] >= surf.points().size())
     )
     {
-        WarningIn("validTri(const triSurface&, const label)")
+        WarningInFunction
             << "triangle " << faceI << " vertices " << f
             << " uses point indices outside point range 0.."
             << surf.points().size()-1 << endl;
@@ -1153,7 +1150,7 @@ bool CML::isoSurface::validTri(const triSurface& surf, const label faceI)
 
     if ((f[0] == f[1]) || (f[0] == f[2]) || (f[1] == f[2]))
     {
-        WarningIn("validTri(const triSurface&, const label)")
+        WarningInFunction
             << "triangle " << faceI
             << " uses non-unique vertices " << f
             << endl;
@@ -1185,7 +1182,7 @@ bool CML::isoSurface::validTri(const triSurface& surf, const label faceI)
          && ((f[2] == nbrF[0]) || (f[2] == nbrF[1]) || (f[2] == nbrF[2]))
         )
         {
-            WarningIn("validTri(const triSurface&, const label)")
+            WarningInFunction
                 << "triangle " << faceI << " vertices " << f
                 << " fc:" << f.centre(surf.points())
                 << " has the same vertices as triangle " << nbrFaceI
@@ -1322,7 +1319,7 @@ void CML::isoSurface::calcAddressing
             }
             else
             {
-                //WarningIn("orientSurface(triSurface&)")
+                //WarningInFunction
                 //    << "Edge " << edgeI << " with centre "
                 //    << mergedCentres[edgeI]
                 //    << " used by more than two triangles: "
@@ -1448,7 +1445,7 @@ void CML::isoSurface::walkOrientation
 
                     if (nbrFp == -1)
                     {
-                        FatalErrorIn("isoSurface::walkOrientation(..)")
+                        FatalErrorInFunction
                             << "triI:" << triI
                             << " tri:" << tri
                             << " p0:" << p0
@@ -1546,10 +1543,8 @@ void CML::isoSurface::orientSurface
         }
         else if (flipState[triI] == -1)
         {
-            FatalErrorIn
-            (
-                "isoSurface::orientSurface(triSurface&, const label)"
-            )   << "problem" << abort(FatalError);
+            FatalErrorInFunction
+                << "problem" << abort(FatalError);
         }
     }
 }
@@ -1654,7 +1649,7 @@ CML::triSurface CML::isoSurface::subsetMesh
     oldToNewPoints.setSize(s.points().size());
     oldToNewPoints = -1;
     {
-        label pointI = 0;
+        label pointi = 0;
 
         forAll(include, oldFacei)
         {
@@ -1665,17 +1660,17 @@ CML::triSurface CML::isoSurface::subsetMesh
 
                 forAll(tri, fp)
                 {
-                    label oldPointI = tri[fp];
+                    label oldPointi = tri[fp];
 
-                    if (oldToNewPoints[oldPointI] == -1)
+                    if (oldToNewPoints[oldPointi] == -1)
                     {
-                        oldToNewPoints[oldPointI] = pointI;
-                        newToOldPoints[pointI++] = oldPointI;
+                        oldToNewPoints[oldPointi] = pointi;
+                        newToOldPoints[pointi++] = oldPointi;
                     }
                 }
             }
         }
-        newToOldPoints.setSize(pointI);
+        newToOldPoints.setSize(pointi);
     }
 
     // Extract points
@@ -1769,16 +1764,16 @@ CML::isoSurface::isoSurface
         mesh_.cellCentres(),
         mesh_.faceCentres()
     );
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         // Adapt separated coupled (proc and cyclic) patches
         if (pp.coupled())
         {
             fvPatchVectorField& pfld = const_cast<fvPatchVectorField&>
             (
-                meshC.boundaryField()[patchI]
+                meshC.boundaryField()[patchi]
             );
 
             PackedBoolList isCollocated
@@ -1801,21 +1796,21 @@ CML::isoSurface::isoSurface
             bType& bfld = const_cast<bType&>(meshC.boundaryField());
 
             // Clear old value. Cannot resize it since is a slice.
-            bfld.set(patchI, NULL);
+            bfld.set(patchi, nullptr);
 
             // Set new value we can change
             bfld.set
             (
-                patchI,
+                patchi,
                 new calculatedFvPatchField<vector>
                 (
-                    mesh_.boundary()[patchI],
+                    mesh_.boundary()[patchi],
                     meshC
                 )
             );
 
             // Change to face centres
-            bfld[patchI] = pp.patchSlice(mesh_.faceCentres());
+            bfld[patchi] = pp.patchSlice(mesh_.faceCentres());
         }
     }
 
@@ -1824,16 +1819,16 @@ CML::isoSurface::isoSurface
     // Pre-calculate patch-per-face to avoid whichPatch call.
     labelList boundaryRegion(mesh_.nFaces()-mesh_.nInternalFaces());
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        label faceI = pp.start();
+        label facei = pp.start();
 
         forAll(pp, i)
         {
-            boundaryRegion[faceI-mesh_.nInternalFaces()] = patchI;
-            faceI++;
+            boundaryRegion[facei-mesh_.nInternalFaces()] = patchi;
+            facei++;
         }
     }
 
@@ -1884,17 +1879,17 @@ CML::isoSurface::isoSurface
         // Determine if point is on boundary.
         PackedBoolList isBoundaryPoint(mesh_.nPoints());
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
             // Mark all boundary points that are not physically coupled
             // (so anything but collocated coupled patches)
 
-            if (patches[patchI].coupled())
+            if (patches[patchi].coupled())
             {
                 const coupledPolyPatch& cpp =
                     refCast<const coupledPolyPatch>
                     (
-                        patches[patchI]
+                        patches[patchi]
                     );
 
                 PackedBoolList isCollocated(collocatedFaces(cpp));
@@ -1914,7 +1909,7 @@ CML::isoSurface::isoSurface
             }
             else
             {
-                const polyPatch& pp = patches[patchI];
+                const polyPatch& pp = patches[patchi];
 
                 forAll(pp, i)
                 {

@@ -74,7 +74,7 @@ void CML::undoableMeshCutter::printRefTree(Ostream& os) const
         {
             if (!splitPtr->isMaster())
             {
-                splitPtr = NULL;
+                splitPtr = nullptr;
 
                 break;
             }
@@ -112,11 +112,8 @@ void CML::undoableMeshCutter::updateLabels
 
         if (!splitPtr)
         {
-            FatalErrorIn
-            (
-                "undoableMeshCutter::updateLabels"
-                "(const labelList&, Map<splitCell*>&)"
-            )   << "Problem: null pointer on liveSplitCells list"
+            FatalErrorInFunction
+                << "Problem: null pointer on liveSplitCells list"
                 << abort(FatalError);
         }
 
@@ -209,9 +206,9 @@ CML::undoableMeshCutter::~undoableMeshCutter()
             {
                 splitCell* otherSidePtr = splitPtr->getOther();
 
-                otherSidePtr->parent() = NULL;
+                otherSidePtr->parent() = nullptr;
 
-                splitPtr->parent() = NULL;
+                splitPtr->parent() = nullptr;
             }
 
             // Delete splitCell (updates pointer on parent to itself)
@@ -257,7 +254,7 @@ void CML::undoableMeshCutter::setRefinement
                 // place.
 
                 // Create 0th level. Null parent to denote this.
-                splitCell* parentPtr = new splitCell(cellI, NULL);
+                splitCell* parentPtr = new splitCell(cellI, nullptr);
 
                 splitCell* masterPtr = new splitCell(cellI, parentPtr);
 
@@ -272,7 +269,7 @@ void CML::undoableMeshCutter::setRefinement
 
                 if (liveSplitCells_.found(addedCellI))
                 {
-                    FatalErrorIn("undoableMeshCutter::setRefinement")
+                    FatalErrorInFunction
                         << "problem addedCell:" << addedCellI
                         << abort(FatalError);
                 }
@@ -301,7 +298,7 @@ void CML::undoableMeshCutter::setRefinement
 
                 if (liveSplitCells_.found(addedCellI))
                 {
-                    FatalErrorIn("undoableMeshCutter::setRefinement")
+                    FatalErrorInFunction
                         << "problem addedCell:" << addedCellI
                         << abort(FatalError);
                 }
@@ -343,7 +340,7 @@ CML::labelList CML::undoableMeshCutter::getSplitFaces() const
 {
     if (!undoable_)
     {
-        FatalErrorIn("undoableMeshCutter::getSplitFaces()")
+        FatalErrorInFunction
             << "Only call if constructed with unrefinement capability"
             << abort(FatalError);
     }
@@ -356,7 +353,7 @@ CML::labelList CML::undoableMeshCutter::getSplitFaces() const
 
         if (!splitPtr->parent())
         {
-            FatalErrorIn("undoableMeshCutter::getSplitFaces()")
+            FatalErrorInFunction
                 << "Live split cell without parent" << endl
                 << "splitCell:" << splitPtr->cellLabel()
                 << abort(FatalError);
@@ -404,7 +401,7 @@ CML::Map<CML::label> CML::undoableMeshCutter::getAddedCells() const
 
     if (!undoable_)
     {
-        FatalErrorIn("undoableMeshCutter::getAddedCells()")
+        FatalErrorInFunction
             << "Only call if constructed with unrefinement capability"
             << abort(FatalError);
     }
@@ -417,7 +414,7 @@ CML::Map<CML::label> CML::undoableMeshCutter::getAddedCells() const
 
         if (!splitPtr->parent())
         {
-            FatalErrorIn("undoableMeshCutter::getAddedCells()")
+            FatalErrorInFunction
                 << "Live split cell without parent" << endl
                 << "splitCell:" << splitPtr->cellLabel()
                 << abort(FatalError);
@@ -452,7 +449,7 @@ CML::labelList CML::undoableMeshCutter::removeSplitFaces
 {
     if (!undoable_)
     {
-        FatalErrorIn("undoableMeshCutter::removeSplitFaces(const labelList&)")
+        FatalErrorInFunction
             << "Only call if constructed with unrefinement capability"
             << abort(FatalError);
     }
@@ -476,10 +473,8 @@ CML::labelList CML::undoableMeshCutter::removeSplitFaces
         Pout<< "cellRegion:" << cellRegion << endl;
         Pout<< "cellRegionMaster:" << cellRegionMaster << endl;
 
-        FatalErrorIn
-        (
-            "undoableMeshCutter::removeSplitFaces(const labelList&)"
-        )   << "Faces to remove:" << splitFaces << endl
+        FatalErrorInFunction
+            << "Faces to remove:" << splitFaces << endl
             << "to be removed:" << facesToRemove
             << abort(FatalError);
     }
@@ -493,10 +488,8 @@ CML::labelList CML::undoableMeshCutter::removeSplitFaces
 
         if (!mesh().isInternalFace(faceI))
         {
-            FatalErrorIn
-            (
-                "undoableMeshCutter::removeSplitFaces(const labelList&)"
-            )   << "Trying to remove face that is not internal"
+            FatalErrorInFunction
+                << "Trying to remove face that is not internal"
                 << abort(FatalError);
         }
 
@@ -539,28 +532,22 @@ CML::labelList CML::undoableMeshCutter::removeSplitFaces
             }
             if (!parentPtr)
             {
-                FatalErrorIn
-                (
-                    "undoableMeshCutter::removeSplitFaces(const labelList&)"
-                )   << "No parent for owner " << ownPtr->cellLabel()
+                FatalErrorInFunction
+                    << "No parent for owner " << ownPtr->cellLabel()
                     << abort(FatalError);
             }
 
             if (!nbrPtr->parent())
             {
-                FatalErrorIn
-                (
-                    "undoableMeshCutter::removeSplitFaces(const labelList&)"
-                )   << "No parent for neighbour " << nbrPtr->cellLabel()
+                FatalErrorInFunction
+                    << "No parent for neighbour " << nbrPtr->cellLabel()
                     << abort(FatalError);
             }
 
             if (parentPtr != nbrPtr->parent())
             {
-                FatalErrorIn
-                (
-                    "undoableMeshCutter::removeSplitFaces(const labelList&)"
-                )   << "Owner and neighbour liveSplitCell entries do not have"
+                FatalErrorInFunction
+                    << "Owner and neighbour liveSplitCell entries do not have"
                     << " same parent. faceI:" << faceI << "  owner:" << own
                     << "  ownparent:" << parentPtr->cellLabel()
                     << " neighbour:" << nbr
@@ -576,10 +563,8 @@ CML::labelList CML::undoableMeshCutter::removeSplitFaces
             )
             {
                 // Live owner and neighbour are refined themselves.
-                FatalErrorIn
-                (
-                    "undoableMeshCutter::removeSplitFaces(const labelList&)"
-                )   << "Owner and neighbour liveSplitCell entries are"
+                FatalErrorInFunction
+                    << "Owner and neighbour liveSplitCell entries are"
                     << " refined themselves or the parent is not refined"
                     << endl
                     << "owner unrefined:" << ownPtr->isUnrefined()

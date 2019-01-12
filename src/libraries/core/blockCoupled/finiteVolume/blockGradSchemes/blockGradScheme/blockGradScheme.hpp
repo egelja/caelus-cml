@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2013-2016 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -174,12 +174,8 @@ tmp<blockGradScheme<Type> > blockGradScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "blockGradScheme<Type>::New"
-            "(const fvMesh& mesh, Istream& schemeData)",
-            schemeData
-        )   << "Block grad scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Block grad scheme not specified" << endl << endl
             << "Valid block grad schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -192,12 +188,8 @@ tmp<blockGradScheme<Type> > blockGradScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "blockGradScheme<Type>::New"
-            "(const fvMesh& mesh, Istream& schemeData)",
-            schemeData
-        )   << "Unknown block grad scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown block grad scheme " << schemeName << nl << nl
             << "Valid block grad schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -224,13 +216,8 @@ fv::blockGradScheme<Type>::fvmGrad
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> blockGradScheme<Type>::fvmGrad\n"
-        "(\n"
-        "    GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block gradient operator currently defined only for "
+    FatalErrorInFunction
+        << "Implicit block gradient operator currently defined only for "
         << "Gauss linear and leastSquares "
         << "(cell and face limiters are optional)."
         << abort(FatalError);

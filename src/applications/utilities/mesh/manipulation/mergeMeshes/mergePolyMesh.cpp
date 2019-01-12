@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -308,7 +308,7 @@ void CML::mergePolyMesh::addMesh(const polyMesh& m)
             // Check that the face is valid
             if (min(newFace) < 0)
             {
-                FatalErrorIn("void mergePolyMesh::addMesh(const polyMesh&)")
+                FatalErrorInFunction
                     << "Error in point mapping for face " << faceI
                     << ".  Old face: " << curFace << " New face: " << newFace
                     << abort(FatalError);

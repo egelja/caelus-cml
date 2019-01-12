@@ -27,8 +27,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
-#include "basicPsiThermo.hpp"
-#include "RASModel.hpp"
+#include "rhoThermo.hpp"
+#include "compressibleRASModel.hpp"
 #include "fixedGradientFvPatchFields.hpp"
 #include "fvIOoptionList.hpp"
 #include "simpleControl.hpp"

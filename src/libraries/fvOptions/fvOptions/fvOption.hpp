@@ -198,8 +198,8 @@ public:
         //- Return clone
         autoPtr<option> clone() const
         {
-            notImplemented("autoPtr<option> clone() const");
-            return autoPtr<option>(NULL);
+            NotImplemented;
+            return autoPtr<option>(nullptr);
         }
 
         //- Return pointer to new fvOption object created

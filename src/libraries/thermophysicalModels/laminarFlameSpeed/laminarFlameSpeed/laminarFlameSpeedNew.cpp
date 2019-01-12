@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,10 +25,10 @@ License
 
 CML::autoPtr<CML::laminarFlameSpeed> CML::laminarFlameSpeed::New
 (
-    const hhuCombustionThermo& ct
+    const psiuReactionThermo& ct
 )
 {
-    // do not register the dictionary
+    // Do not register the dictionary
     IOdictionary propDict
     (
         IOobject
@@ -51,9 +51,8 @@ CML::autoPtr<CML::laminarFlameSpeed> CML::laminarFlameSpeed::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
+        FatalIOErrorInFunction
         (
-            "laminarFlameSpeed::New(const hhuCombustionThermo&)",
             propDict
         )   << "Unknown laminarFlameSpeed type "
             << corrType << nl << nl
@@ -64,6 +63,3 @@ CML::autoPtr<CML::laminarFlameSpeed> CML::laminarFlameSpeed::New
 
     return autoPtr<laminarFlameSpeed>(cstrIter()(propDict, ct));
 }
-
-
-// ************************************************************************* //

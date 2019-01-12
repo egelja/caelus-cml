@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -211,7 +211,7 @@ CML::Map<CML::label> CML::refinementIterator::setRefinement
         {
             if (!addedCells.insert(iter.key(), iter()))
             {
-                FatalErrorIn("refinementIterator")
+                FatalErrorInFunction
                     << "Master cell " << iter.key()
                     << " already has been refined" << endl
                     << "Added cell:" << iter() << abort(FatalError);
@@ -267,9 +267,9 @@ CML::Map<CML::label> CML::refinementIterator::setRefinement
     while (!stop);
 
 
-    if (nRefCells == oldRefCells)
+    if (returnReduce((nRefCells == oldRefCells), andOp<bool>()))
     {
-        WarningIn("refinementIterator")
+        WarningInFunction
             << "stopped refining."
             << "Did not manage to refine a single cell" << endl
             << "Wanted :" << oldRefCells << endl;

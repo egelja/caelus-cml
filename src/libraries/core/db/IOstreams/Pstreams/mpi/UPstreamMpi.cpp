@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -91,7 +91,7 @@ bool CML::UPstream::init(int& argc, char**& argv)
 
 	if (numprocs <= 1)
 	{
-	    FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+	    FatalErrorInFunction
 	        << "bool IPstream::init(int& argc, char**& argv) : "
 	           "attempt to run parallel on 1 processor"
 	        << CML::abort(FatalError);
@@ -118,7 +118,7 @@ bool CML::UPstream::init(int& argc, char**& argv)
 
 //    if (n_caelus_procs < 2)
 //    {
-//        FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+//        FatalErrorInFunction
 //            << "bool IPstream::init(int& argc, char**& argv) : "
 //               "not enough Caelus processors"
 //            << CML::abort(FatalError);
@@ -154,7 +154,7 @@ bool CML::UPstream::init(int& argc, char**& argv)
     }
     else
     {
-        FatalErrorIn("UPstream::init(int& argc, char**& argv)")
+        FatalErrorInFunction
             << "UPstream::init(int& argc, char**& argv) : "
             << "environment variable MPI_BUFFER_SIZE not defined"
             << CML::abort(FatalError);
@@ -192,7 +192,7 @@ void CML::UPstream::exit(int errnum)
         label n = PstreamGlobals::outstandingRequests_.size();
         PstreamGlobals::outstandingRequests_.clear();
 
-        WarningIn("UPstream::exit(int)")
+        WarningInFunction
             << "There are still " << n << " outstanding MPI_Requests." << endl
             << "This means that your code exited before doing a"
             << " UPstream::waitRequests()." << endl
@@ -260,10 +260,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     )
                 )
                 {
-                    FatalErrorIn
-                    (
-                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                    )   << "MPI_Recv failed"
+                    FatalErrorInFunction
+                        << "MPI_Recv failed"
                         << CML::abort(FatalError);
                 }
 
@@ -286,10 +284,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                 )
             )
             {
-                FatalErrorIn
-                (
-                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                )   << "MPI_Send failed"
+                FatalErrorInFunction
+                    << "MPI_Send failed"
                     << CML::abort(FatalError);
             }
         }
@@ -318,10 +314,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     )
                 )
                 {
-                    FatalErrorIn
-                    (
-                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                    )   << "MPI_Send failed"
+                    FatalErrorInFunction
+                        << "MPI_Send failed"
                         << CML::abort(FatalError);
                 }
             }
@@ -343,10 +337,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                 )
             )
             {
-                FatalErrorIn
-                (
-                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                )   << "MPI_Recv failed"
+                FatalErrorInFunction
+                    << "MPI_Recv failed"
                     << CML::abort(FatalError);
             }
         }
@@ -396,10 +388,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     )
                 )
                 {
-                    FatalErrorIn
-                    (
-                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                    )   << "MPI_Recv failed"
+                    FatalErrorInFunction
+                        << "MPI_Recv failed"
                         << CML::abort(FatalError);
                 }
 
@@ -431,10 +421,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                 )
             )
             {
-                FatalErrorIn
-                (
-                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                )   << "MPI_Send failed"
+                FatalErrorInFunction
+                    << "MPI_Send failed"
                     << CML::abort(FatalError);
             }
 
@@ -452,10 +440,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                 )
             )
             {
-                FatalErrorIn
-                (
-                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                )   << "MPI_Recv failed"
+                FatalErrorInFunction
+                    << "MPI_Recv failed"
                     << CML::abort(FatalError);
             }
         }
@@ -487,10 +473,8 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
                     )
                 )
                 {
-                    FatalErrorIn
-                    (
-                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
-                    )   << "MPI_Send failed"
+                    FatalErrorInFunction
+                        << "MPI_Send failed"
                         << CML::abort(FatalError);
                 }
             }
@@ -552,10 +536,8 @@ void CML::UPstream::waitRequests(const label start)
             )
         )
         {
-            FatalErrorIn
-            (
-                "UPstream::waitRequests()"
-            )   << "MPI_Waitall returned with error" << CML::endl;
+            FatalErrorInFunction
+                << "MPI_Waitall returned with error" << CML::endl;
         }
 
         resetRequests(start);
@@ -578,10 +560,8 @@ bool CML::UPstream::finishedRequest(const label i)
 
     if (i >= PstreamGlobals::outstandingRequests_.size())
     {
-        FatalErrorIn
-        (
-            "UPstream::finishedRequest(const label)"
-        )   << "There are " << PstreamGlobals::outstandingRequests_.size()
+        FatalErrorInFunction
+            << "There are " << PstreamGlobals::outstandingRequests_.size()
             << " outstanding send requests and you are asking for i=" << i
             << nl
             << "Maybe you are mixing blocking/non-blocking comms?"

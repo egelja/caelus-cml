@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -213,7 +213,7 @@ dimensionedScalar func(const dimensionedScalar& ds)                        \
 {                                                                          \
     if (!ds.dimensions().dimensionless())                                  \
     {                                                                      \
-        FatalErrorIn(#func "(const dimensionedScalar& ds)")                \
+        FatalErrorInFunction                                               \
             << "ds not dimensionless"                                      \
             << abort(FatalError);                                          \
     }                                                                      \
@@ -257,7 +257,7 @@ dimensionedScalar func(const int n, const dimensionedScalar& ds)           \
 {                                                                          \
     if (!ds.dimensions().dimensionless())                                  \
     {                                                                      \
-        FatalErrorIn(#func "(const int n, const dimensionedScalar& ds)")   \
+        FatalErrorInFunction                                               \
             << "ds not dimensionless"                                      \
             << abort(FatalError);                                          \
     }                                                                      \

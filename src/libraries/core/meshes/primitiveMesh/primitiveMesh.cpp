@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -46,29 +46,29 @@ CML::primitiveMesh::primitiveMesh(const bool defectCorr, const scalar areaSwitch
     nFaces_(0),
     nCells_(0),
 
-    cellShapesPtr_(NULL),
-    edgesPtr_(NULL),
-    ccPtr_(NULL),
-    ecPtr_(NULL),
-    pcPtr_(NULL),
+    cellShapesPtr_(nullptr),
+    edgesPtr_(nullptr),
+    ccPtr_(nullptr),
+    ecPtr_(nullptr),
+    pcPtr_(nullptr),
 
-    cfPtr_(NULL),
-    efPtr_(NULL),
-    pfPtr_(NULL),
+    cfPtr_(nullptr),
+    efPtr_(nullptr),
+    pfPtr_(nullptr),
 
-    cePtr_(NULL),
-    fePtr_(NULL),
-    pePtr_(NULL),
-    ppPtr_(NULL),
-    cpPtr_(NULL),
+    cePtr_(nullptr),
+    fePtr_(nullptr),
+    pePtr_(nullptr),
+    ppPtr_(nullptr),
+    cpPtr_(nullptr),
 
     labels_(0),
 
-    cellCentresPtr_(NULL),
-    cellCentresGeometricPtr_(NULL),
-    faceCentresPtr_(NULL),
-    cellVolumesPtr_(NULL),
-    faceAreasPtr_(NULL),
+    cellCentresPtr_(nullptr),
+    cellCentresGeometricPtr_(nullptr),
+    faceCentresPtr_(nullptr),
+    cellVolumesPtr_(nullptr),
+    faceAreasPtr_(nullptr),
     defectCorr_(defectCorr),
     areaSwitch_(areaSwitch)
 {}
@@ -93,29 +93,29 @@ CML::primitiveMesh::primitiveMesh
     nFaces_(nFaces),
     nCells_(nCells),
 
-    cellShapesPtr_(NULL),
-    edgesPtr_(NULL),
-    ccPtr_(NULL),
-    ecPtr_(NULL),
-    pcPtr_(NULL),
+    cellShapesPtr_(nullptr),
+    edgesPtr_(nullptr),
+    ccPtr_(nullptr),
+    ecPtr_(nullptr),
+    pcPtr_(nullptr),
 
-    cfPtr_(NULL),
-    efPtr_(NULL),
-    pfPtr_(NULL),
+    cfPtr_(nullptr),
+    efPtr_(nullptr),
+    pfPtr_(nullptr),
 
-    cePtr_(NULL),
-    fePtr_(NULL),
-    pePtr_(NULL),
-    ppPtr_(NULL),
-    cpPtr_(NULL),
+    cePtr_(nullptr),
+    fePtr_(nullptr),
+    pePtr_(nullptr),
+    ppPtr_(nullptr),
+    cpPtr_(nullptr),
 
     labels_(0),
 
-    cellCentresPtr_(NULL),
-    cellCentresGeometricPtr_(NULL),
-    faceCentresPtr_(NULL),
-    cellVolumesPtr_(NULL),
-    faceAreasPtr_(NULL),
+    cellCentresPtr_(nullptr),
+    cellCentresGeometricPtr_(nullptr),
+    faceCentresPtr_(nullptr),
+    cellVolumesPtr_(nullptr),
+    faceAreasPtr_(nullptr),
     defectCorr_(defectCorr),
     areaSwitch_(areaSwitch)
 {}
@@ -316,11 +316,8 @@ CML::tmp<CML::scalarField> CML::primitiveMesh::movePoints
 {
     if (newPoints.size() <  nPoints() || oldPoints.size() < nPoints())
     {
-        FatalErrorIn
-        (
-            "primitiveMesh::movePoints(const pointField& newPoints, "
-            "const pointField& oldPoints)"
-        )   << "Cannot move points: size of given point list smaller "
+        FatalErrorInFunction
+            << "Cannot move points: size of given point list smaller "
             << "than the number of active points"
             << abort(FatalError);
     }

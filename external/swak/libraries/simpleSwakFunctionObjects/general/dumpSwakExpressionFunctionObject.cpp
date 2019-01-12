@@ -66,11 +66,11 @@ dumpSwakExpressionFunctionObject::dumpSwakExpressionFunctionObject
 {
     const string warnSwitch="IKnowThatThisFunctionObjectMayWriteExcessiveAmountsOfData";
     if(!dict.lookupOrDefault<bool>(warnSwitch,false)) {
-        WarningIn("dumpSwakExpressionFunctionObject::dumpSwakExpressionFunctionObject")
+        WarningInFunction
             << "This functionObject may write huge amounts of data. "
-                << "If you understand the risks set the switch " << warnSwitch
-                << " to 'true' to get rid of this warning"
-                << endl;
+            << "If you understand the risks set the switch " << warnSwitch
+            << " to 'true' to get rid of this warning"
+            << endl;
     }
 
     driver_->createWriterAndRead(name+"_"+type());
@@ -115,9 +115,9 @@ void dumpSwakExpressionFunctionObject::write()
     } else if(rType==pTraits<sphericalTensor>::typeName) {
         writeTheData<sphericalTensor>(driver_());
     } else {
-        WarningIn("dumpSwakExpressionFunctionObject::write()")
+        WarningInFunction
             << "Don't know how to handle type " << rType
-                << endl;
+            << endl;
     }
 
     if(verbose()) {

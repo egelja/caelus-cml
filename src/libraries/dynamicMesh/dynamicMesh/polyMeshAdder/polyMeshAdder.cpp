@@ -422,12 +422,8 @@ CML::labelList CML::polyMeshAdder::getFaceOrder
     {
         if (oldToNew[faceI] == -1)
         {
-            FatalErrorIn
-            (
-                "polyMeshAdder::getFaceOrder"
-                "(const cellList&, const label, const labelList&"
-                ", const labelList&) const"
-            )   << "Did not determine new position"
+            FatalErrorInFunction
+                << "Did not determine new position"
                 << " for face " << faceI
                 << abort(FatalError);
         }
@@ -1821,7 +1817,7 @@ CML::Map<CML::label> CML::polyMeshAdder::findSharedPoints
             // Check just to make sure.
             if (findIndex(connectedPointLabels, pointI) != -1)
             {
-                FatalErrorIn("polyMeshAdder::findSharedPoints(..)")
+                FatalErrorInFunction
                     << "Duplicate point in sharedPoint addressing." << endl
                     << "When trying to add point " << pointI << " on shared "
                     << sharedI  << " with connected points "

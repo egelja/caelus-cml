@@ -25,10 +25,11 @@ License
 
 // Kinematic
 #include "makeThermoParcelForces.hpp" // thermo variant
-#include "makeParcelRASDispersionModels.hpp"
-#include "makeParcelLESDispersionModels.hpp"
+#include "makeParcelDispersionModels.hpp"
 #include "makeReactingParcelInjectionModels.hpp" // Reacting variant
 #include "makeParcelPatchInteractionModels.hpp"
+#include "makeParcelStochasticCollisionModels.hpp"
+#include "makeReactingParcelSurfaceFilmModels.hpp" // Reacting variant
 
 // Thermodynamic
 #include "makeParcelHeatTransferModels.hpp"
@@ -36,7 +37,6 @@ License
 // Reacting
 #include "makeReactingParcelCompositionModels.hpp"
 #include "makeReactingParcelPhaseChangeModels.hpp"
-#include "makeReactingParcelSurfaceFilmModels.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,10 +46,11 @@ namespace CML
 
     // Kinematic sub-models
     makeThermoParcelForces(basicReactingCloud);
-    makeParcelRASDispersionModels(basicReactingCloud);
-    makeParcelLESDispersionModels(basicReactingCloud);
+    makeParcelDispersionModels(basicReactingCloud);
     makeReactingParcelInjectionModels(basicReactingCloud);
     makeParcelPatchInteractionModels(basicReactingCloud);
+    makeParcelStochasticCollisionModels(basicReactingCloud);
+    makeReactingParcelSurfaceFilmModels(basicReactingCloud);
 
     // Thermo sub-models
     makeParcelHeatTransferModels(basicReactingCloud);
@@ -57,8 +58,6 @@ namespace CML
     // Reacting sub-models
     makeReactingParcelCompositionModels(basicReactingCloud);
     makeReactingParcelPhaseChangeModels(basicReactingCloud);
-    makeReactingParcelSurfaceFilmModels(basicReactingCloud);
 }
-
 
 // ************************************************************************* //

@@ -202,7 +202,7 @@ void CML::residuals::writeResidual
 
         if (solverDict.found(fieldName))
         {
-            const List<lduMatrix::solverPerformance> sp(solverDict.lookup(fieldName));
+            const List<solverPerformance> sp(solverDict.lookup(fieldName));
             const scalar residual = sp.first().initialResidual();
             file() << token::TAB << residual;
         }

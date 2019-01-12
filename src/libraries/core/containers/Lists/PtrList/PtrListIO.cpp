@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -91,11 +91,8 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "PtrList<T>::read(Istream&, const INew&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -114,11 +111,8 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
 
             if (is.eof())
             {
-                FatalIOErrorIn
-                (
-                    "PtrList<T>::read(Istream&, const INew&)",
-                    is
-                )   << "Premature EOF after reading " << lastToken.info()
+                FatalIOErrorInFunction(is)
+                    << "Premature EOF after reading " << lastToken.info()
                     << exit(FatalIOError);
             }
 
@@ -141,11 +135,8 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "PtrList<T>::read(Istream&, const INew&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

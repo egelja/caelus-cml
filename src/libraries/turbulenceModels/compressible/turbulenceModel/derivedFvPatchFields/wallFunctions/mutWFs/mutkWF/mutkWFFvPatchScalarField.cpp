@@ -20,7 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "mutkWFFvPatchScalarField.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
 #include "wallFvPatch.hpp"
@@ -39,7 +39,7 @@ void mutkWallFunctionFvPatchScalarField::checkType()
 {
     if (!isA<wallFvPatch>(patch()))
     {
-        FatalErrorIn("mutkWallFunctionFvPatchScalarField::checkType()")
+        FatalErrorInFunction
             << "Invalid wall function specification" << nl
             << "    Patch type for patch " << patch().name()
             << " must be wall" << nl

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -267,15 +267,8 @@ bool CML::pairPatchAgglomeration::agglomeratePatch
 {
     if (min(fineToCoarse) == -1)
     {
-        FatalErrorIn
-        (
-            "pairPatchAgglomeration::agglomeratePatch"
-            "("
-                "const bPatch&, "
-                "const labelList&, "
-                "const label"
-            ")"
-        )   << "min(fineToCoarse) == -1" << exit(FatalError);
+        FatalErrorInFunction
+            << "min(fineToCoarse) == -1" << exit(FatalError);
     }
 
     if (fineToCoarse.size() == 0)
@@ -285,15 +278,8 @@ bool CML::pairPatchAgglomeration::agglomeratePatch
 
     if (fineToCoarse.size() != patch.size())
     {
-        FatalErrorIn
-        (
-            "pairPatchAgglomeration::agglomeratePatch"
-            "("
-                "const bPatch&, "
-                "const labelList&, "
-                "const label"
-            ")"
-        )   << "restrict map does not correspond to fine level. " << endl
+        FatalErrorInFunction
+            << "restrict map does not correspond to fine level. " << endl
             << " Sizes: restrictMap: " << fineToCoarse.size()
             << " nEqns: " << patch.size()
             << abort(FatalError);
@@ -534,13 +520,10 @@ CML::tmp<CML::labelField> CML::pairPatchAgglomeration::agglomerateOneLevel
     {
         if (coarseCellMap[facei] < 0)
         {
-            FatalErrorIn
-            (
-                "pairPatchAgglomeration::agglomerateOneLevel "
-                "(label&, const bPatch&) "
-            ) << " face " << facei
-            << " is not part of a cluster"
-            << exit(FatalError);
+            FatalErrorInFunction
+                << " face " << facei
+                << " is not part of a cluster"
+                << exit(FatalError);
         }
     }
 
@@ -567,9 +550,9 @@ void CML::pairPatchAgglomeration::combineLevels(const label curLevel)
     }
 
     // Delete the restrictAddressing for the coarser level
-    restrictAddressing_.set(curLevel, NULL);
+    restrictAddressing_.set(curLevel, nullptr);
 
-    patchLevels_.set(prevLevel, patchLevels_.set(curLevel, NULL));
+    patchLevels_.set(prevLevel, patchLevels_.set(curLevel, nullptr));
 }
 
 

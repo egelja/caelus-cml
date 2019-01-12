@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -245,17 +245,8 @@ mappedFixedValueFvPatchField<Type>::mappedFixedValueFvPatchField
 {
     if (!isA<mappedPatchBase>(this->patch().patch()))
     {
-        FatalErrorIn
-        (
-            "mappedFixedValueFvPatchField<Type>::"
-            "mappedFixedValueFvPatchField\n"
-            "(\n"
-            "    const mappedFixedValueFvPatchField<Type>&,\n"
-            "    const fvPatch&,\n"
-            "    const Field<Type>&,\n"
-            "    const fvPatchFieldMapper&\n"
-            ")\n"
-        )   << "\n    patch type '" << p.type()
+        FatalErrorInFunction
+            << "\n    patch type '" << p.type()
             << "' not type '" << mappedPatchBase::typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -281,16 +272,8 @@ mappedFixedValueFvPatchField<Type>::mappedFixedValueFvPatchField
 {
     if (!isA<mappedPatchBase>(this->patch().patch()))
     {
-        FatalErrorIn
-        (
-            "mappedFixedValueFvPatchField<Type>::"
-            "mappedFixedValueFvPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, volMesh>& iF,\n"
-            "    const dictionary& dict\n"
-            ")\n"
-        )   << "\n    patch type '" << p.type()
+        FatalErrorInFunction
+            << "\n    patch type '" << p.type()
             << "' not type '" << mappedPatchBase::typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -461,10 +444,8 @@ void mappedFixedValueFvPatchField<Type>::updateCoeffs()
 
             if (nbrPatchID < 0)
             {
-                FatalErrorIn
-                (
-                    "void mappedFixedValueFvPatchField<Type>::updateCoeffs()"
-                )<< "Unable to find sample patch " << mpp.samplePatch()
+                FatalErrorInFunction
+                 << "Unable to find sample patch " << mpp.samplePatch()
                  << " in region " << mpp.sampleRegion()
                  << " for patch " << this->patch().name() << nl
                  << abort(FatalError);
@@ -502,10 +483,8 @@ void mappedFixedValueFvPatchField<Type>::updateCoeffs()
         }
         default:
         {
-            FatalErrorIn
-            (
-                "mappedFixedValueFvPatchField<Type>::updateCoeffs()"
-            )<< "Unknown sampling mode: " << mpp.mode()
+            FatalErrorInFunction
+             << "Unknown sampling mode: " << mpp.mode()
              << nl << abort(FatalError);
         }
     }

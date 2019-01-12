@@ -76,6 +76,9 @@ class cloudSolution
         //- Particle track time
         scalar trackTime_;
 
+        //- Maximum integration time step (optional)
+        scalar deltaTMax_;
+
 
         // Run-time options
 
@@ -167,6 +170,9 @@ public:
             //- Return the particle track time
             inline scalar trackTime() const;
 
+            //- Return the maximum integation time step
+            inline scalar deltaTMax() const;
+
             //- Return const access to the coupled flag
             inline const Switch coupled() const;
 
@@ -203,6 +209,12 @@ public:
 
         //- Returns true if writing this step
         bool output() const;
+
+        //- Return the maximum integration time
+        scalar deltaTMax(const scalar trackTime) const;
+
+        //- Return the maximum integration length
+        scalar deltaLMax(const scalar lRef) const;
 };
 
 

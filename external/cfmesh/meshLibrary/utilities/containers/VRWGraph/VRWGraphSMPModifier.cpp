@@ -52,10 +52,8 @@ void VRWGraphSMPModifier::mergeGraphs(const List<VRWGraph>& graphParts)
     forAll(graphParts, i)
     {
         if( nRows != graphParts[i].size() )
-            FatalErrorIn
-            (
-                "inline void CML::VRWGraph::mergeGraphs(const List<VRWGraph>&)"
-            ) << "Cannot merge graphs" << abort(FatalError);
+            FatalErrorInFunction
+                << "Cannot merge graphs" << abort(FatalError);
     }
 
     //- find the number of elements in each row

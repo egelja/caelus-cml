@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,8 +20,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "pyrolysisModel.hpp"
-#include "fvMesh.hpp"
-#include "mappedFieldFvPatchField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -38,62 +36,10 @@ defineTypeNameAndDebug(pyrolysisModel, 0);
 defineRunTimeSelectionTable(pyrolysisModel, mesh);
 defineRunTimeSelectionTable(pyrolysisModel, dictionary);
 
-// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
-
-void pyrolysisModel::constructMeshObjects()
-{
-    // construct filmDelta field if coupled to film model
-    if (filmCoupled_)
-    {
-        filmDeltaPtr_.reset
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "filmDelta",
-                    time_.timeName(),
-                    regionMesh(),
-                    IOobject::MUST_READ,
-                    IOobject::AUTO_WRITE
-                ),
-                regionMesh()
-            )
-        );
-
-        const volScalarField& filmDelta = filmDeltaPtr_();
-
-        bool foundCoupledPatch = false;
-        forAll(filmDelta.boundaryField(), patchI)
-        {
-            const fvPatchField<scalar>& fvp = filmDelta.boundaryField()[patchI];
-            if (isA<mappedFieldFvPatchField<scalar> >(fvp))
-            {
-                foundCoupledPatch = true;
-                break;
-            }
-        }
-
-        if (!foundCoupledPatch)
-        {
-            WarningIn("void pyrolysisModels::constructMeshObjects()")
-                << "filmCoupled flag set to true, but no "
-                << mappedFieldFvPatchField<scalar>::typeName
-                << " patches found on " << filmDelta.name() << " field"
-                << endl;
-        }
-    }
-}
-
-
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void pyrolysisModel::readPyrolysisControls()
-{
-    filmCoupled_ = readBool(coeffs_.lookup("filmCoupled"));
-    reactionDeltaMin_ =
-        coeffs_.lookupOrDefault<scalar>("reactionDeltaMin", 0.0);
-}
+{}
 
 
 bool pyrolysisModel::read()
@@ -126,26 +72,24 @@ bool pyrolysisModel::read(const dictionary& dict)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-pyrolysisModel::pyrolysisModel(const fvMesh& mesh)
+pyrolysisModel::pyrolysisModel(const fvMesh& mesh, const word& regionType)
 :
-    regionModel1D(mesh),
-    filmCoupled_(false),
-    filmDeltaPtr_(NULL),
-    reactionDeltaMin_(0.0)
+    regionModel1D(mesh, regionType)
 {}
 
 
-pyrolysisModel::pyrolysisModel(const word& modelType, const fvMesh& mesh)
+pyrolysisModel::pyrolysisModel
+(
+    const word& modelType,
+    const fvMesh& mesh,
+    const word& regionType
+)
 :
-    regionModel1D(mesh, "pyrolysis", modelType),
-    filmCoupled_(false),
-    filmDeltaPtr_(NULL),
-    reactionDeltaMin_(0.0)
+    regionModel1D(mesh, regionType, modelType)
 {
     if (active_)
     {
         read();
-        constructMeshObjects();
     }
 }
 
@@ -154,18 +98,15 @@ pyrolysisModel::pyrolysisModel
 (
     const word& modelType,
     const fvMesh& mesh,
-    const dictionary& dict
+    const dictionary& dict,
+    const word& regionType
 )
 :
-    regionModel1D(mesh, "pyrolysis", modelType, dict),
-    filmCoupled_(false),
-    filmDeltaPtr_(NULL),
-    reactionDeltaMin_(0.0)
+    regionModel1D(mesh, regionType, modelType, dict)
 {
     if (active_)
     {
         read(dict);
-        constructMeshObjects();
     }
 }
 
@@ -180,20 +121,11 @@ pyrolysisModel::~pyrolysisModel()
 
 scalar pyrolysisModel::addMassSources
 (
-    const label patchI,
-    const label faceI
+    const label patchi,
+    const label facei
 )
 {
     return 0.0;
-}
-
-
-void pyrolysisModel::preEvolveRegion()
-{
-    if (filmCoupled_)
-    {
-        filmDeltaPtr_->correctBoundaryConditions();
-    }
 }
 
 

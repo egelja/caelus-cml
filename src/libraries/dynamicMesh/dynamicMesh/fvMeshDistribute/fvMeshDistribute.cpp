@@ -115,10 +115,8 @@ void CML::fvMeshDistribute::inplaceRenumberWithFlip
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "fvMeshDistribute::inplaceRenumberWithFlip(..)"
-                    )   << "Problem : zero value " << val
+                    FatalErrorInFunction
+                        << "Problem : zero value " << val
                         << " at index " << elemI << " out of " << lst.size()
                         << " list with flip bit" << exit(FatalError);
                 }
@@ -141,10 +139,8 @@ void CML::fvMeshDistribute::inplaceRenumberWithFlip
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "fvMeshDistribute::inplaceRenumberWithFlip(..)"
-                    )   << "Problem : zero value " << newVal
+                    FatalErrorInFunction
+                        << "Problem : zero value " << newVal
                         << " at index " << elemI << " out of "
                         << oldToNew.size()
                         << " list with flip bit" << exit(FatalError);
@@ -206,7 +202,7 @@ void CML::fvMeshDistribute::checkEqualWordList
     {
         if (allNames[proci] != allNames[0])
         {
-            FatalErrorIn("fvMeshDistribute::checkEqualWordList(..)")
+            FatalErrorInFunction
                 << "When checking for equal " << msg.c_str() << " :" << endl
                 << "processor0 has:" << allNames[0] << endl
                 << "processor" << proci << " has:" << allNames[proci] << endl
@@ -343,7 +339,7 @@ CML::label CML::fvMeshDistribute::findNonEmptyPatch() const
 
     if (nonEmptyPatchi == -1)
     {
-        FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
+        FatalErrorInFunction
             << "Cannot find a patch which is neither of type empty nor"
             << " coupled in patches " << patches.names() << endl
             << "There has to be at least one such patch for"
@@ -371,7 +367,7 @@ CML::label CML::fvMeshDistribute::findNonEmptyPatch() const
         }
         else if (procPatchi != -1)
         {
-            FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
+            FatalErrorInFunction
                 << "Processor patches should be at end of patch list."
                 << endl
                 << "Have processor patch " << procPatchi
@@ -551,10 +547,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::repatch
 
         if (index != -1)
         {
-            FatalErrorIn
-            (
-                "fvMeshDistribute::repatch(const labelList&, labelListList&)"
-            )   << "reverseFaceMap contains -1 at index:"
+            FatalErrorInFunction
+                << "reverseFaceMap contains -1 at index:"
                 << index << endl
                 << "This means that the repatch operation was not just"
                 << " a shuffle?" << abort(FatalError);
@@ -600,7 +594,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::mergeSharedPoints
 
     if (returnReduce(pointToMaster.size(), sumOp<label>()) == 0)
     {
-        return autoPtr<mapPolyMesh>(NULL);
+        return autoPtr<mapPolyMesh>(nullptr);
     }
 
     polyTopoChange meshMod(mesh_);
@@ -634,7 +628,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::fvMeshDistribute::mergeSharedPoints
             }
             else
             {
-                FatalErrorIn("fvMeshDistribute::mergeSharedPoints()")
+                FatalErrorInFunction
                     << "Problem. oldPointi:" << oldPointi
                     << " newPointi:" << newPointi << abort(FatalError);
             }
@@ -1495,7 +1489,7 @@ CML::labelList CML::fvMeshDistribute::countCells
 
         if (newProc < 0 || newProc >= Pstream::nProcs())
         {
-            FatalErrorIn("fvMeshDistribute::distribute(const labelList&)")
+            FatalErrorInFunction
                 << "Distribution should be in range 0.." << Pstream::nProcs()-1
                 << endl
                 << "At index " << celli << " distribution:" << newProc
@@ -1515,7 +1509,7 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
     // Some checks on distribution
     if (distribution.size() != mesh_.nCells())
     {
-        FatalErrorIn("fvMeshDistribute::distribute(const labelList&)")
+        FatalErrorInFunction
             << "Size of distribution:"
             << distribution.size() << " mesh nCells:" << mesh_.nCells()
             << abort(FatalError);
@@ -1527,7 +1521,7 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::fvMeshDistribute::distribute
     // Check all processors have same non-proc patches in same order.
     if (patches.checkParallelSync(true))
     {
-        FatalErrorIn("fvMeshDistribute::distribute(const labelList&)")
+        FatalErrorInFunction
             << "This application requires all non-processor patches"
             << " to be present in the same order on all patches" << nl
             << "followed by the processor patches (which of course are unique)."

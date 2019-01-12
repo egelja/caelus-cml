@@ -211,14 +211,8 @@ groovyBCPointPatchField<Type>::groovyBCPointPatchField
     {
         Field<Type>::operator=(this->refValue());
 
-        WarningIn(
-            "groovyBCPointPatchField<Type>::groovyBCPointPatchField"
-            "("
-            "const pointPatch& p,"
-            "const DimensionedField<Type, pointMesh>& iF,"
-            "const dictionary& dict"
-            ")"
-        ) << "No value defined for " << this->dimensionedInternalField().name()
+        WarningInFunction
+            << "No value defined for " << this->dimensionedInternalField().name()
             << " on " << this->patch().name() << " therefore using "
             << this->refValue()
             << endl;

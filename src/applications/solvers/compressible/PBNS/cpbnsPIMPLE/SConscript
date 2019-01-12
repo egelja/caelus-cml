@@ -16,9 +16,7 @@ caelus_inc = [
 'transportModels',
 'transportModels/compressible/singlePhaseTransportModel',
 'transportModels/compressible/lnInclude',
-'thermophysicalModels',
-'thermophysicalModels/basic/basicThermo',
-'thermophysicalModels/basic/psiThermo/basicPsiThermo',
+'thermophysicalModels/basic/lnInclude',
 'fvOptions/lnInclude',
 'sampling/lnInclude'
 ]
@@ -29,7 +27,7 @@ caelus_libs = [
 'compressibleRASModels',
 'compressibleLESModels',
 'compressibleVLESModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'turbulenceDerivedFvPatchFields',
 'fvOptions',
 'sampling'

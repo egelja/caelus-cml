@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -100,11 +100,8 @@ CML::label CML::surfaceIntersection::getEdge
         }
     }
 
-    FatalErrorIn
-    (
-        "surfaceIntersection::getEdge(const triSurface&"
-        ", const label, const label"
-    )   << "Problem:: Cannot find edge with vertices " << faceEdge
+    FatalErrorInFunction
+        << "Problem:: Cannot find edge with vertices " << faceEdge
         << " in face " << faceI
         << abort(FatalError);
 

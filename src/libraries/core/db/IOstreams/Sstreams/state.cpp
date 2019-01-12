@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,22 +45,22 @@ void CML::state(ostream& to, const string& s)
         break;
 
         case _fail:
-            SeriousErrorIn("state(ostream& to, const string& s)")
+            SeriousErrorInFunction
                 << "Output stream failure (bad format?)", s << endl;
         break;
 
         case (_fail + _eof) :
-         SeriousErrorIn("state(ostream& to, const string& s)")
+         SeriousErrorInFunction
              << "Output stream failure and end of stream", s << endl;
         break;
 
         case _bad:
-            SeriousErrorIn("state(ostream& to, const string& s)")
+            SeriousErrorInFunction
                 << "Serious output stream failure", s << endl;
         break;
 
         default:
-            SeriousErrorIn("state(ostream& to, const string& s)")
+            SeriousErrorInFunction
                 << "Output stream failure of unknown type", s << endl
                 << "Stream state value = ", osState << endl;
         break;
@@ -87,26 +87,26 @@ void CML::state(istream& from, const string& s)
         break;
 
         case _fail:
-            SeriousErrorIn("state(istream& from, const string& s)")
+            SeriousErrorInFunction
                 << "Input stream failure (bad format?)", s << endl;
             Info<< "If all else well, possibly a quote mark missing" << endl;
         break;
 
         case (_fail + _eof) :
-            SeriousErrorIn("state(istream& from, const string& s)")
+            SeriousErrorInFunction
                 << "Input stream failure and end of stream", s << endl;
             Info<< "If all else well, possibly a quote mark missing" << endl;
         break;
 
         case _bad:
-            SeriousErrorIn("state(istream& from, const string& s)")
+            SeriousErrorInFunction
                 << "Serious input stream failure", s << endl;
         break;
 
         default:
-            SeriousErrorIn("state(istream& from, const string& s)")
+            SeriousErrorInFunction
                 << "Input stream failure of unknown type", s << endl;
-            SeriousErrorIn("state(istream& from, const string& s)")
+            SeriousErrorInFunction
                 << "Stream state value = ", isState << endl;
         break;
     }

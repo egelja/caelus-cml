@@ -159,7 +159,7 @@ void meshUntangler::cutRegion::removeCoincidentVertices()
 
     deleteDemandDrivenData(edgesPtr_);
     edgesPtr_ = cEdgesPtr_;
-    cEdgesPtr_ = NULL;
+    cEdgesPtr_ = nullptr;
 
     //- renumber faces
     const DynList<DynList<label, 8>, 64>& faces = *facesPtr_;
@@ -182,7 +182,7 @@ void meshUntangler::cutRegion::removeCoincidentVertices()
 
     deleteDemandDrivenData(facesPtr_);
     facesPtr_ = cFacesPtr_;
-    cFacesPtr_ = NULL;
+    cFacesPtr_ = nullptr;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

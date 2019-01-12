@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -108,11 +108,11 @@ public:
 
         //- Return the active pair collisions
         inline const DynamicList<PairCollisionRecord<PairType> >&
-        pairRecords() const;
+            pairRecords() const;
 
         //- Return the active wall collisions
         inline const DynamicList<WallCollisionRecord<WallType> >&
-        wallRecords() const;
+            wallRecords() const;
 
         // Fields representing the data from each record, i.e if the
         // records 0-N containing each data members {a, b, c, d...}
@@ -294,19 +294,7 @@ CML::CollisionRecordList<PairType, WallType>::CollisionRecordList
      || pairData.size() != nPair
     )
     {
-        FatalErrorIn
-        (
-            "CML::CollisionRecordList<PairType, WallType>::CollisionRecordList"
-            "("
-                "const labelField& pairAccessed,"
-                "const labelField& pairOrigProcOfOther,"
-                "const labelField& pairOrigIdOfOther,"
-                "const Field<PairType>& pairData,"
-                "const labelField& wallAccessed,"
-                "const vectorField& wallPRel,"
-                "const Field<WallType>& wallData"
-            ")"
-        )
+        FatalErrorInFunction
             << "Pair field size mismatch." << nl
             << pairAccessed << nl
             << pairOrigProcOfOther << nl
@@ -333,19 +321,7 @@ CML::CollisionRecordList<PairType, WallType>::CollisionRecordList
 
     if (wallPRel.size() != nWall || wallData.size() != nWall)
     {
-        FatalErrorIn
-        (
-            "CML::CollisionRecordList<PairType, WallType>::CollisionRecordList"
-            "("
-                "const labelField& pairAccessed,"
-                "const labelField& pairOrigProcOfOther,"
-                "const labelField& pairOrigIdOfOther,"
-                "const Field<PairType>& pairData,"
-                "const labelField& wallAccessed,"
-                "const vectorField& wallPRel,"
-                "const Field<WallType>& wallData"
-            ")"
-        )
+        FatalErrorInFunction
             << "Wall field size mismatch." << nl
             << wallAccessed << nl
             << wallPRel << nl
@@ -642,11 +618,7 @@ void CML::CollisionRecordList<PairType, WallType>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::CollisionRecordList<PairType, WallType>::operator="
-            "(const CML::CollisionRecordList<PairType, WallType>&)"
-        )
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }

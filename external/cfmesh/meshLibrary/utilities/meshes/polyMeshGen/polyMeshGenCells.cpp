@@ -41,10 +41,8 @@ namespace CML
 void polyMeshGenCells::calculateOwnersAndNeighbours() const
 {
     if( ownerPtr_ || neighbourPtr_ )
-        FatalErrorIn
-        (
-            "void polyMeshGenCells::calculateOwnersAndNeighbours() const"
-        ) << "Owners and neighbours are already allocated" << abort(FatalError);
+        FatalErrorInFunction
+          << "Owners and neighbours are already allocated" << abort(FatalError);
 
     //- allocate owners
     ownerPtr_ =
@@ -144,11 +142,8 @@ void polyMeshGenCells::calculateOwnersAndNeighbours() const
                         Serr << "Owner " << own[faceI] << endl;
                         Serr << "Neighbour " << nei[faceI] << endl;
                         Serr << "Current cell " << cellI << endl;
-                        FatalErrorIn
-                        (
-                            "void polyMeshGenCells::"
-                            "calculateOwnersAndNeighbours()"
-                        ) << Pstream::myProcNo() << "Face " << faceI
+                        FatalErrorInFunction
+                            << Pstream::myProcNo() << "Face " << faceI
                             << " appears in more than 2 cells!!"
                             << abort(FatalError);
                     }
@@ -193,11 +188,8 @@ void polyMeshGenCells::calculateOwnersAndNeighbours() const
                         Serr << "Owner " << own[faceI] << endl;
                         Serr << "Neighbour " << nei[faceI] << endl;
                         Serr << "Current cell " << cellI << endl;
-                        FatalErrorIn
-                        (
-                            "void polyMeshGenCells::"
-                            "calculateOwnersAndNeighbours()"
-                        ) << Pstream::myProcNo() << "Face " << faceI
+                        FatalErrorInFunction
+                            << Pstream::myProcNo() << "Face " << faceI
                             << " appears in more than 2 cells!!"
                             << abort(FatalError);
                     }
@@ -213,11 +205,8 @@ void polyMeshGenCells::calculateOwnersAndNeighbours() const
                     Serr << "Owner " << own[faceI] << endl;
                     Serr << "Neighbour " << nei[faceI] << endl;
                     Serr << "Current cell " << cellI << endl;
-                    FatalErrorIn
-                    (
-                        "void polyMeshGenCells::"
-                        "calculateOwnersAndNeighbours()"
-                    ) << Pstream::myProcNo() << "Face " << faceI
+                    FatalErrorInFunction
+                        << Pstream::myProcNo() << "Face " << faceI
                         << " appears in more than 2 cells!!"
                         << abort(FatalError);
                 }
@@ -234,10 +223,8 @@ void polyMeshGenCells::calculateAddressingData() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline label polyMeshGenCells::calculateAddressingData() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -261,7 +248,7 @@ polyMeshGenCells::polyMeshGenCells(const Time& runTime)
     polyMeshGenFaces(runTime),
     cells_(),
     cellSubsets_(),
-    addressingDataPtr_(NULL)
+    addressingDataPtr_(nullptr)
 {
 }
 
@@ -277,7 +264,7 @@ polyMeshGenCells::polyMeshGenCells
     polyMeshGenFaces(runTime, points, faces),
     cells_(),
     cellSubsets_(),
-    addressingDataPtr_(NULL)
+    addressingDataPtr_(nullptr)
 {
     cells_ = cells;
 }
@@ -305,7 +292,7 @@ polyMeshGenCells::polyMeshGenCells
     ),
     cells_(),
     cellSubsets_(),
-    addressingDataPtr_(NULL)
+    addressingDataPtr_(nullptr)
 {
     cells_ = cells;
 }
@@ -326,10 +313,8 @@ const polyMeshGenAddressing& polyMeshGenCells::addressingData() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline label polyMeshGenCells::addressingData() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -426,7 +411,7 @@ void polyMeshGenCells::read()
             nCells = nei[faceI] + 1;
     }
 
-    List<direction> nFacesInCell(nCells, direction(0));
+    List<label> nFacesInCell(nCells, label(0));
     forAll(own, faceI)
         ++nFacesInCell[own[faceI]];
 

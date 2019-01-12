@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,11 +39,8 @@ CML::geomDecomp::geomDecomp
 
     if (nProcessors_ != n_.x()*n_.y()*n_.z())
     {
-        FatalErrorIn
-        (
-            "geomDecomp::geomDecomp"
-            "(const dictionary& decompositionDict)"
-        )   << "Wrong number of processor divisions in geomDecomp:" << nl
+        FatalErrorInFunction
+            << "Wrong number of processor divisions in geomDecomp:" << nl
             << "Number of domains    : " << nProcessors_ << nl
             << "Wanted decomposition : " << n_
             << exit(FatalError);

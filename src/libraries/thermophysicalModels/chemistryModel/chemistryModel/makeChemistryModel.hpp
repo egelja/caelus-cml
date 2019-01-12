@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,8 +23,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef makeChemistryModel_H
-#define makeChemistryModel_H
+#ifndef makeChemistryModel_HPP
+#define makeChemistryModel_HPP
 
 #include "addToRunTimeSelectionTable.hpp"
 
@@ -35,36 +35,37 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeChemistryModel(SS, Comp, Thermo)                                  \
-                                                                              \
-    typedef SS<Comp, Thermo> SS##Comp##Thermo;                                \
-                                                                              \
-    defineTemplateTypeNameAndDebugWithName                                    \
-    (                                                                         \
-        SS##Comp##Thermo,                                                     \
-        #SS"<"#Comp","#Thermo">",                                             \
-        0                                                                     \
+#define makeChemistryModel(Comp)                                               \
+                                                                               \
+    typedef BasicChemistryModel<Comp> BasicChemistryModel##Comp;               \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        BasicChemistryModel##Comp,                                             \
+        "BasicChemistryModel<"#Comp">",                                        \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        BasicChemistryModel##Comp,                                             \
+        thermo                                                                 \
     );
 
 
-#define makeSolidChemistryModel(SS, Comp, SThermo, GThermo)                   \
-                                                                              \
-    typedef SS<Comp, SThermo, GThermo> SS##Comp##SThermo##GThermo;            \
-                                                                              \
-    defineTemplateTypeNameAndDebugWithName                                    \
-    (                                                                         \
-        SS##Comp##SThermo##GThermo,                                           \
-        #SS"<"#Comp","#SThermo","#GThermo">",                                 \
-        0                                                                     \
+#define makeChemistryModelType(SS, Comp, Thermo)                               \
+                                                                               \
+    typedef SS<Comp, Thermo> SS##Comp##Thermo;                                 \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        SS##Comp##Thermo,                                                      \
+        (#SS"<"#Comp"," + Thermo::typeName() + ">").c_str(),                   \
+        0                                                                      \
     );
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

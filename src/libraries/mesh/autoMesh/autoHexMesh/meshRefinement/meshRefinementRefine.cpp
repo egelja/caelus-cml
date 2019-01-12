@@ -240,14 +240,10 @@ bool CML::meshRefinement::markForRefine
 }
 
 
-// Calculates list of cells to refine based on intersection with feature edge.
-CML::label CML::meshRefinement::markFeatureRefinement
+void CML::meshRefinement::markFeatureCellLevel
 (
     const point& keepPoint,
-    const label nAllowRefine,
-
-    labelList& refineCell,
-    label& nRefine
+    labelList& maxFeatureLevel
 ) const
 {
     // We want to refine all cells containing a feature edge.
@@ -266,131 +262,121 @@ CML::label CML::meshRefinement::markFeatureRefinement
 
 
     // Find all start cells of features. Is done by tracking from keepPoint.
-    Cloud<trackedParticle> cloud(mesh_, IDLList<trackedParticle>());
+    Cloud<trackedParticle> startPointCloud
+    (
+        mesh_,
+        "startPointCloud",
+        IDLList<trackedParticle>()
+    );
 
 
     // Features are identical on all processors. Number them so we know
     // what to seed. Do this on only the processor that
     // holds the keepPoint.
 
-    label cellI = -1;
-    label tetFaceI = -1;
-    label tetPtI = -1;
 
-    mesh_.findCellFacePt(keepPoint, cellI, tetFaceI, tetPtI);
+        const label celli = mesh_.cellTree().findInside(keepPoint);
 
-    if (cellI != -1)
-    {
-        // I am the processor that holds the keepPoint
-
-        forAll(features_, featI)
+        if (celli != -1)
         {
-            const featureEdgeMesh& featureMesh = features_[featI];
-            const label featureLevel = features_.levels()[featI];
-            const labelListList& pointEdges = featureMesh.pointEdges();
+            // I am the processor that holds the keepPoint
 
-            // Find regions on edgeMesh
-            labelList edgeRegion;
-            label nRegions = featureMesh.regions(edgeRegion);
-
-
-            PackedBoolList regionVisited(nRegions);
-
-
-            // 1. Seed all 'knots' in edgeMesh
-
-
-            forAll(pointEdges, pointI)
+            forAll(features_, feati)
             {
-                if (pointEdges[pointI].size() != 2)
+                const featureEdgeMesh& featureMesh = features_[feati];
+                const label featureLevel = features_.levels()[feati];
+                const labelListList& pointEdges = featureMesh.pointEdges();
+
+                // Find regions on edgeMesh
+                labelList edgeRegion;
+                label nRegions = featureMesh.regions(edgeRegion);
+
+
+                PackedBoolList regionVisited(nRegions);
+
+
+                // 1. Seed all 'knots' in edgeMesh
+
+
+                forAll(pointEdges, pointi)
                 {
-                    if (debug)
+                    if (pointEdges[pointi].size() != 2)
                     {
-                        Pout<< "Adding particle from point:" << pointI
-                            << " coord:" << featureMesh.points()[pointI]
-                            << " pEdges:" << pointEdges[pointI]
-                            << endl;
-                    }
+                        if (debug)
+                        {
+                            Pout<< "Adding particle from point:" << pointi
+                                << " coord:" << featureMesh.points()[pointi]
+                                << " since number of emanating edges:"
+                                << pointEdges[pointi].size()
+                                << endl;
+                        }
 
-                    // Non-manifold point. Create particle.
-                    cloud.addParticle
-                    (
-                        new trackedParticle
+                        // Non-manifold point. Create particle.
+                        startPointCloud.addParticle
                         (
-                            mesh_,
-                            keepPoint,
-                            cellI,
-                            tetFaceI,
-                            tetPtI,
-                            featureMesh.points()[pointI],   // endpos
-                            featureLevel,                   // level
-                            featI,                          // featureMesh
-                            pointI                          // end point
-                        )
-                    );
+                            new trackedParticle
+                            (
+                                mesh_,
+                                keepPoint,
+                                celli,
+                                featureMesh.points()[pointi],   // endpos
+                                featureLevel,                   // level
+                                feati,                          // featureMesh
+                                pointi,                         // end point
+                                -1                              // feature edge
+                            )
+                        );
 
-                    // Mark
-                    if (pointEdges[pointI].size() > 0)
-                    {
-                        label e0 = pointEdges[pointI][0];
-                        label regionI = edgeRegion[e0];
-                        regionVisited[regionI] = 1u;
+                        // Mark
+                        if (pointEdges[pointi].size() > 0)
+                        {
+                            label e0 = pointEdges[pointi][0];
+                            label regioni = edgeRegion[e0];
+                            regionVisited[regioni] = 1u;
+                        }
                     }
                 }
-            }
 
 
-            // 2. Any regions that have not been visited at all? These can
-            //    only be circular regions!
-            forAll(featureMesh.edges(), edgeI)
-            {
-                if (regionVisited.set(edgeRegion[edgeI], 1u))
+                // 2. Any regions that have not been visited at all? These can
+                //    only be circular regions!
+                forAll(featureMesh.edges(), edgei)
                 {
-                    const edge& e = featureMesh.edges()[edgeI];
-                    label pointI = e.start();
-                    if (debug)
+                    if (regionVisited.set(edgeRegion[edgei], 1u))
                     {
-                        Pout<< "Adding particle from point:" << pointI
-                            << " coord:" << featureMesh.points()[pointI]
-                            << " on circular region:" << edgeRegion[edgeI]
-                            << endl;
-                    }
+                        const edge& e = featureMesh.edges()[edgei];
+                        label pointi = e.start();
+                        if (debug)
+                        {
+                            Pout<< "Adding particle from point:" << pointi
+                                << " coord:" << featureMesh.points()[pointi]
+                                << " on circular region:" << edgeRegion[edgei]
+                                << endl;
+                        }
 
-                    // Non-manifold point. Create particle.
-                    cloud.addParticle
-                    (
-                        new trackedParticle
+                        // Non-manifold point. Create particle.
+                        startPointCloud.addParticle
                         (
-                            mesh_,
-                            keepPoint,
-                            cellI,
-                            tetFaceI,
-                            tetPtI,
-                            featureMesh.points()[pointI],   // endpos
-                            featureLevel,                   // level
-                            featI,                          // featureMesh
-                            pointI                          // end point
-                        )
-                    );
+                            new trackedParticle
+                            (
+                                mesh_,
+                                keepPoint,
+                                celli,
+                                featureMesh.points()[pointi],   // endpos
+                                featureLevel,                   // level
+                                feati,                          // featureMesh
+                                pointi,                         // end point
+                                -1                              // feature edge
+                            )
+                        );
+                    }
                 }
             }
         }
-    }
 
 
     // Largest refinement level of any feature passed through
-    labelList maxFeatureLevel(mesh_.nCells(), -1);
-
-    // Database to pass into trackedParticle::move
-    trackedParticle::trackingData td(cloud, maxFeatureLevel);
-
-    // Track all particles to their end position (= starting feature point)
-    // Note that the particle might have started on a different processor
-    // so this will transfer across nicely until we can start tracking proper.
-    cloud.move(td, GREAT);
-
-    // Reset level
-    maxFeatureLevel = -1;
+    maxFeatureLevel = labelList(mesh_.nCells(), -1);
 
     // Whether edge has been visited.
     List<PackedBoolList> featureEdgeVisited(features_.size());
@@ -401,9 +387,105 @@ CML::label CML::meshRefinement::markFeatureRefinement
         featureEdgeVisited[featI] = 0u;
     }
 
+    // Database to pass into trackedParticle::move
+    trackedParticle::trackingData td
+    (
+        startPointCloud,
+        maxFeatureLevel,
+        featureEdgeVisited
+    );
+
+
+    // Track all particles to their end position (= starting feature point)
+    // Note that the particle might have started on a different processor
+    // so this will transfer across nicely until we can start tracking proper.
+    scalar maxTrackLen = 2.0*mesh_.bounds().mag();
+
+    if (debug)
+    {
+        Pout<< "Tracking " << startPointCloud.size()
+            << " particles over distance " << maxTrackLen
+            << " to find the starting cell" << endl;
+    }
+    startPointCloud.move(startPointCloud, td, maxTrackLen);
+
+
+    // Reset levels
+    maxFeatureLevel = -1;
+    forAll(features_, featI)
+    {
+        featureEdgeVisited[featI] = 0u;
+    }
+
+
+    Cloud<trackedParticle> cloud
+    (
+        mesh_,
+        "featureCloud",
+        IDLList<trackedParticle>()
+    );
+
+    if (debug)
+    {
+        Pout<< "Constructing cloud for cell marking" << endl;
+    }
+
+    forAllIter(Cloud<trackedParticle>, startPointCloud, iter)
+    {
+        const trackedParticle& startTp = iter();
+
+        label featI = startTp.i();
+        label pointI = startTp.j();
+
+        const featureEdgeMesh& featureMesh = features_[featI];
+        const labelList& pEdges = featureMesh.pointEdges()[pointI];
+
+        // Now shoot particles down all pEdges.
+        forAll(pEdges, pEdgeI)
+        {
+            label edgeI = pEdges[pEdgeI];
+
+            if (featureEdgeVisited[featI].set(edgeI, 1u))
+            {
+                // Unvisited edge. Make the particle go to the other point
+                // on the edge.
+
+                const edge& e = featureMesh.edges()[edgeI];
+                label otherPointi = e.otherVertex(pointI);
+
+                trackedParticle* tp(new trackedParticle(startTp));
+                tp->start() = tp->position();
+                tp->end() = featureMesh.points()[otherPointi];
+                tp->j() = otherPointi;
+                tp->k() = edgeI;
+
+                if (debug)
+                {
+                    Pout<< "Adding particle for point:" << pointI
+                        << " coord:" << tp->position()
+                        << " feature:" << featI
+                        << " to track to:" << tp->end()
+                        << endl;
+                }
+
+                cloud.addParticle(tp);
+            }
+        }
+    }
+
+    startPointCloud.clear();
+
+
     while (true)
     {
-        label nParticles = 0;
+        // Track all particles to their end position.
+        if (debug)
+        {
+            Pout<< "Tracking " << cloud.size()
+                << " particles over distance " << maxTrackLen
+                << " to mark cells" << endl;
+        }
+        cloud.move(cloud, td, maxTrackLen);
 
         // Make particle follow edge.
         forAllIter(Cloud<trackedParticle>, cloud, iter)
@@ -431,10 +513,12 @@ CML::label CML::meshRefinement::markFeatureRefinement
                     // on the edge.
 
                     const edge& e = featureMesh.edges()[edgeI];
-                    label otherPointI = e.otherVertex(pointI);
+                    label otherPointi = e.otherVertex(pointI);
 
-                    tp.end() = featureMesh.points()[otherPointI];
-                    tp.j() = otherPointI;
+                    tp.start() = tp.position();
+                    tp.end() = featureMesh.points()[otherPointi];
+                    tp.j() = otherPointi;
+                    tp.k() = edgeI;
                     keepParticle = true;
                     break;
                 }
@@ -446,23 +530,51 @@ CML::label CML::meshRefinement::markFeatureRefinement
                 // seeded. Delete particle.
                 cloud.deleteParticle(tp);
             }
-            else
-            {
-                // Keep particle
-                nParticles++;
-            }
         }
 
-        reduce(nParticles, sumOp<label>());
-        if (nParticles == 0)
+
+        if (debug)
+        {
+            Pout<< "Remaining particles " << cloud.size() << endl;
+        }
+
+        if (returnReduce(cloud.size(), sumOp<label>()) == 0)
         {
             break;
         }
-
-        // Track all particles to their end position.
-        cloud.move(td, GREAT);
     }
 
+
+
+    //if (debug)
+    //{
+    //    forAll(maxFeatureLevel, celli)
+    //    {
+    //        if (maxFeatureLevel[celli] != -1)
+    //        {
+    //            Pout<< "Feature went through cell:" << celli
+    //                << " coord:" << mesh_.cellCentres()[celli]
+    //                << " leve:" << maxFeatureLevel[celli]
+    //                << endl;
+    //        }
+    //    }
+    //}
+}
+
+
+// Calculates list of cells to refine based on intersection with feature edge.
+CML::label CML::meshRefinement::markFeatureRefinement
+(
+    const point& keepPoint,
+    const label nAllowRefine,
+
+    labelList& refineCell,
+    label& nRefine
+) const
+{
+    // Largest refinement level of any feature passed through
+    labelList maxFeatureLevel;
+    markFeatureCellLevel(keepPoint, maxFeatureLevel);
 
     // See which cells to refine. maxFeatureLevel will hold highest level
     // of any feature edge that passed through.
@@ -471,9 +583,9 @@ CML::label CML::meshRefinement::markFeatureRefinement
 
     label oldNRefine = nRefine;
 
-    forAll(maxFeatureLevel, cellI)
+    forAll(maxFeatureLevel, celli)
     {
-        if (maxFeatureLevel[cellI] > cellLevel[cellI])
+        if (maxFeatureLevel[celli] > cellLevel[celli])
         {
             // Mark
             if
@@ -482,7 +594,7 @@ CML::label CML::meshRefinement::markFeatureRefinement
                 (
                     0,                      // surface (n/a)
                     nAllowRefine,
-                    refineCell[cellI],
+                    refineCell[celli],
                     nRefine
                 )
             )
@@ -525,12 +637,12 @@ CML::label CML::meshRefinement::markInternalRefinement
     labelList testLevels(cellLevel.size()-nRefine);
     label testI = 0;
 
-    forAll(cellLevel, cellI)
+    forAll(cellLevel, celli)
     {
-        if (refineCell[cellI] == -1)
+        if (refineCell[celli] == -1)
         {
-            testCc[testI] = cellCentres[cellI];
-            testLevels[testI] = cellLevel[cellI];
+            testCc[testI] = cellCentres[celli];
+            testLevels[testI] = cellLevel[celli];
             testI++;
         }
     }
@@ -542,9 +654,9 @@ CML::label CML::meshRefinement::markInternalRefinement
     // Mark for refinement. Note that we didn't store the original cellID so
     // now just reloop in same order.
     testI = 0;
-    forAll(cellLevel, cellI)
+    forAll(cellLevel, celli)
     {
-        if (refineCell[cellI] == -1)
+        if (refineCell[celli] == -1)
         {
             if (maxLevel[testI] > testLevels[testI])
             {
@@ -552,7 +664,7 @@ CML::label CML::meshRefinement::markInternalRefinement
                 (
                     maxLevel[testI],    // mark with any positive value
                     nAllowRefine,
-                    refineCell[cellI],
+                    refineCell[celli],
                     nRefine
                 );
 
@@ -595,26 +707,26 @@ CML::labelList CML::meshRefinement::getRefineCandidateFaces
 
     label nTest = 0;
 
-    forAll(surfaceIndex_, faceI)
+    forAll(surfaceIndex_, facei)
     {
-        if (surfaceIndex_[faceI] != -1)
+        if (surfaceIndex_[facei] != -1)
         {
-            label own = mesh_.faceOwner()[faceI];
+            label own = mesh_.faceOwner()[facei];
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                label nei = mesh_.faceNeighbour()[faceI];
+                label nei = mesh_.faceNeighbour()[facei];
 
                 if (refineCell[own] == -1 || refineCell[nei] == -1)
                 {
-                    testFaces[nTest++] = faceI;
+                    testFaces[nTest++] = facei;
                 }
             }
             else
             {
                 if (refineCell[own] == -1)
                 {
-                    testFaces[nTest++] = faceI;
+                    testFaces[nTest++] = facei;
                 }
             }
         }
@@ -658,13 +770,13 @@ CML::label CML::meshRefinement::markSurfaceRefinement
 
     forAll(testFaces, i)
     {
-        label faceI = testFaces[i];
+        label facei = testFaces[i];
 
-        label own = mesh_.faceOwner()[faceI];
+        label own = mesh_.faceOwner()[facei];
 
-        if (mesh_.isInternalFace(faceI))
+        if (mesh_.isInternalFace(facei))
         {
-            label nei = mesh_.faceNeighbour()[faceI];
+            label nei = mesh_.faceNeighbour()[facei];
 
             start[i] = cellCentres[own];
             end[i] = cellCentres[nei];
@@ -672,17 +784,17 @@ CML::label CML::meshRefinement::markSurfaceRefinement
         }
         else
         {
-            label bFaceI = faceI - mesh_.nInternalFaces();
+            label bFacei = facei - mesh_.nInternalFaces();
 
             start[i] = cellCentres[own];
-            end[i] = neiCc[bFaceI];
-            minLevel[i] = min(cellLevel[own], neiLevel[bFaceI]);
+            end[i] = neiCc[bFacei];
+            minLevel[i] = min(cellLevel[own], neiLevel[bFacei]);
         }
     }
 
     // Extend segments a bit
     {
-        const vectorField smallVec(CML::sqrt(SMALL)*(end-start));
+        const vectorField smallVec(ROOTSMALL*(end-start));
         start -= smallVec;
         end += smallVec;
     }
@@ -709,7 +821,7 @@ CML::label CML::meshRefinement::markSurfaceRefinement
 
     forAll(testFaces, i)
     {
-        label faceI = testFaces[i];
+        label facei = testFaces[i];
 
         label surfI = surfaceHit[i];
 
@@ -721,7 +833,7 @@ CML::label CML::meshRefinement::markSurfaceRefinement
             // do the check with the surfaceMinLevel whilst intersecting the
             // surfaces?
 
-            label own = mesh_.faceOwner()[faceI];
+            label own = mesh_.faceOwner()[facei];
 
             if (surfaceMinLevel[i] > cellLevel[own])
             {
@@ -741,9 +853,9 @@ CML::label CML::meshRefinement::markSurfaceRefinement
                 }
             }
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                label nei = mesh_.faceNeighbour()[faceI];
+                label nei = mesh_.faceNeighbour()[facei];
                 if (surfaceMinLevel[i] > cellLevel[nei])
                 {
                     // Neighbour needs refining
@@ -790,7 +902,7 @@ bool CML::meshRefinement::checkCurvature
     const label surfaceLevel,   // current intersection max level
     const vector& surfaceNormal,// current intersection normal
 
-    const label cellI,
+    const label celli,
 
     label& cellMaxLevel,        // cached max surface level for this cell
     vector& cellMaxNormal,      // cached surface normal for this cell
@@ -802,7 +914,7 @@ bool CML::meshRefinement::checkCurvature
     const labelList& cellLevel = meshCutter_.cellLevel();
 
     // Test if surface applicable
-    if (surfaceLevel > cellLevel[cellI])
+    if (surfaceLevel > cellLevel[celli])
     {
         if (cellMaxLevel == -1)
         {
@@ -819,7 +931,7 @@ bool CML::meshRefinement::checkCurvature
                 (
                     surfaceLevel,   // mark with any non-neg number.
                     nAllowRefine,
-                    refineCell[cellI],
+                    refineCell[celli],
                     nRefine
                 );
             }
@@ -874,13 +986,13 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
 
     forAll(testFaces, i)
     {
-        label faceI = testFaces[i];
+        label facei = testFaces[i];
 
-        label own = mesh_.faceOwner()[faceI];
+        label own = mesh_.faceOwner()[facei];
 
-        if (mesh_.isInternalFace(faceI))
+        if (mesh_.isInternalFace(facei))
         {
-            label nei = mesh_.faceNeighbour()[faceI];
+            label nei = mesh_.faceNeighbour()[facei];
 
             start[i] = cellCentres[own];
             end[i] = cellCentres[nei];
@@ -888,17 +1000,17 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
         }
         else
         {
-            label bFaceI = faceI - mesh_.nInternalFaces();
+            label bFacei = facei - mesh_.nInternalFaces();
 
             start[i] = cellCentres[own];
-            end[i] = neiCc[bFaceI];
-            minLevel[i] = min(cellLevel[own], neiLevel[bFaceI]);
+            end[i] = neiCc[bFacei];
+            minLevel[i] = min(cellLevel[own], neiLevel[bFacei]);
         }
     }
 
     // Extend segments a bit
     {
-        const vectorField smallVec(CML::sqrt(SMALL)*(end-start));
+        const vectorField smallVec(ROOTSMALL*(end-start));
         start -= smallVec;
         end += smallVec;
     }
@@ -933,8 +1045,8 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
         // Extract per cell information on the surface with the highest max
         forAll(testFaces, i)
         {
-            label faceI = testFaces[i];
-            label own = mesh_.faceOwner()[faceI];
+            label facei = testFaces[i];
+            label own = mesh_.faceOwner()[facei];
 
             const vectorList& fNormals = surfaceNormal[i];
             const labelList& fLevels = surfaceLevel[i];
@@ -958,9 +1070,9 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
                 );
             }
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                label nei = mesh_.faceNeighbour()[faceI];
+                label nei = mesh_.faceNeighbour()[facei];
 
                 forAll(fLevels, hitI)
                 {
@@ -990,13 +1102,13 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
     labelList neiBndMaxLevel(mesh_.nFaces()-mesh_.nInternalFaces());
     vectorField neiBndMaxNormal(mesh_.nFaces()-mesh_.nInternalFaces());
 
-    for (label faceI = mesh_.nInternalFaces(); faceI < mesh_.nFaces(); faceI++)
+    for (label facei = mesh_.nInternalFaces(); facei < mesh_.nFaces(); facei++)
     {
-        label bFaceI = faceI-mesh_.nInternalFaces();
-        label own = mesh_.faceOwner()[faceI];
+        label bFacei = facei-mesh_.nInternalFaces();
+        label own = mesh_.faceOwner()[facei];
 
-        neiBndMaxLevel[bFaceI] = cellMaxLevel[own];
-        neiBndMaxNormal[bFaceI] = cellMaxNormal[own];
+        neiBndMaxLevel[bFacei] = cellMaxLevel[own];
+        neiBndMaxNormal[bFacei] = cellMaxNormal[own];
     }
     syncTools::swapBoundaryFaceList(mesh_, neiBndMaxLevel);
     syncTools::swapBoundaryFaceList(mesh_, neiBndMaxNormal);
@@ -1004,10 +1116,10 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
     // Loop over all faces. Could only be checkFaces.. except if they're coupled
 
     // Internal faces
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
-        label own = mesh_.faceOwner()[faceI];
-        label nei = mesh_.faceNeighbour()[faceI];
+        label own = mesh_.faceOwner()[facei];
+        label nei = mesh_.faceNeighbour()[facei];
 
         if (cellMaxLevel[own] != -1 && cellMaxLevel[nei] != -1)
         {
@@ -1064,15 +1176,15 @@ CML::label CML::meshRefinement::markSurfaceCurvatureRefinement
         }
     }
     // Boundary faces
-    for (label faceI = mesh_.nInternalFaces(); faceI < mesh_.nFaces(); faceI++)
+    for (label facei = mesh_.nInternalFaces(); facei < mesh_.nFaces(); facei++)
     {
-        label own = mesh_.faceOwner()[faceI];
-        label bFaceI = faceI - mesh_.nInternalFaces();
+        label own = mesh_.faceOwner()[facei];
+        label bFacei = facei - mesh_.nInternalFaces();
 
-        if (cellLevel[own] < cellMaxLevel[own] && neiBndMaxLevel[bFaceI] != -1)
+        if (cellLevel[own] < cellMaxLevel[own] && neiBndMaxLevel[bFacei] != -1)
         {
             // Have valid data on both sides. Check curvature.
-            if ((cellMaxNormal[own] & neiBndMaxNormal[bFaceI]) < curvature)
+            if ((cellMaxNormal[own] & neiBndMaxNormal[bFacei]) < curvature)
             {
                 if
                 (
@@ -1207,8 +1319,8 @@ CML::labelList CML::meshRefinement::refineCandidates
                 refineCell,
                 nRefine
             );
-            Info<< "Marked for refinement due to refinement shells    : "
-                << nShell << " cells."  << endl;
+            Info<< "Marked for refinement due to refinement shells             "
+                << ": " << nShell << " cells."  << endl;
         }
 
         // Refinement based on intersection of surface
@@ -1225,8 +1337,8 @@ CML::labelList CML::meshRefinement::refineCandidates
                 refineCell,
                 nRefine
             );
-            Info<< "Marked for refinement due to surface intersection : "
-                << nSurf << " cells."  << endl;
+            Info<< "Marked for refinement due to surface intersection          "
+                << ": " << nSurf << " cells."  << endl;
         }
 
         // Refinement based on curvature of surface
@@ -1249,8 +1361,8 @@ CML::labelList CML::meshRefinement::refineCandidates
                 refineCell,
                 nRefine
             );
-            Info<< "Marked for refinement due to curvature/regions    : "
-                << nCurv << " cells."  << endl;
+            Info<< "Marked for refinement due to curvature/regions             "
+                << ": " << nCurv << " cells."  << endl;
         }
 
         // Pack cells-to-refine
@@ -1259,11 +1371,11 @@ CML::labelList CML::meshRefinement::refineCandidates
         cellsToRefine.setSize(nRefine);
         nRefine = 0;
 
-        forAll(refineCell, cellI)
+        forAll(refineCell, celli)
         {
-            if (refineCell[cellI] != -1)
+            if (refineCell[celli] != -1)
             {
-                cellsToRefine[nRefine++] = cellI;
+                cellsToRefine[nRefine++] = celli;
             }
         }
     }
@@ -1428,10 +1540,10 @@ CML::meshRefinement::balanceAndRefine
     //    globalIndex globalCells(mesh_.nCells());
     //
     //    Info<< "** Distribution before balancing/refining:" << endl;
-    //    for (label procI = 0; procI < Pstream::nProcs(); procI++)
+    //    for (label proci = 0; proci < Pstream::nProcs(); proci++)
     //    {
-    //        Info<< "    " << procI << '\t'
-    //            << globalCells.localSize(procI) << endl;
+    //        Info<< "    " << proci << '\t'
+    //            << globalCells.localSize(proci) << endl;
     //    }
     //    Info<< endl;
     //}
@@ -1439,10 +1551,10 @@ CML::meshRefinement::balanceAndRefine
     //    globalIndex globalCells(cellsToRefine.size());
     //
     //    Info<< "** Cells to be refined:" << endl;
-    //    for (label procI = 0; procI < Pstream::nProcs(); procI++)
+    //    for (label proci = 0; proci < Pstream::nProcs(); proci++)
     //    {
-    //        Info<< "    " << procI << '\t'
-    //            << globalCells.localSize(procI) << endl;
+    //        Info<< "    " << proci << '\t'
+    //            << globalCells.localSize(proci) << endl;
     //    }
     //    Info<< endl;
     //}
@@ -1501,10 +1613,10 @@ CML::meshRefinement::balanceAndRefine
         //    globalIndex globalCells(mesh_.nCells());
         //
         //    Info<< "** Distribution after balancing:" << endl;
-        //    for (label procI = 0; procI < Pstream::nProcs(); procI++)
+        //    for (label proci = 0; proci < Pstream::nProcs(); proci++)
         //    {
-        //        Info<< "    " << procI << '\t'
-        //            << globalCells.localSize(procI) << endl;
+        //        Info<< "    " << proci << '\t'
+        //            << globalCells.localSize(proci) << endl;
         //    }
         //    Info<< endl;
         //}
@@ -1558,10 +1670,10 @@ CML::meshRefinement::balanceAndRefine
     //    globalIndex globalCells(mesh_.nCells());
     //
     //    Info<< "** After refinement distribution:" << endl;
-    //    for (label procI = 0; procI < Pstream::nProcs(); procI++)
+    //    for (label proci = 0; proci < Pstream::nProcs(); proci++)
     //    {
-    //        Info<< "    " << procI << '\t'
-    //            << globalCells.localSize(procI) << endl;
+    //        Info<< "    " << proci << '\t'
+    //            << globalCells.localSize(proci) << endl;
     //    }
     //    Info<< endl;
     //}

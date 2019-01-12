@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -246,11 +246,8 @@ void CML::HashPtrTable<T, Key, Hash>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "HashPtrTable<T, Key, Hash>::operator="
-            "(const HashPtrTable<T, Key, Hash>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -316,11 +313,8 @@ void CML::HashPtrTable<T, Key, Hash>::read(Istream& is, const INew& inewt)
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "HashPtrTable<T, Key, Hash>::read(Istream&, const INew&)",
-                    is
-                )   << "incorrect first token, '(', found " << firstToken.info()
+                FatalIOErrorInFunction(is)
+                    << "incorrect first token, '(', found " << firstToken.info()
                     << exit(FatalIOError);
             }
         }
@@ -332,11 +326,8 @@ void CML::HashPtrTable<T, Key, Hash>::read(Istream& is, const INew& inewt)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "HashPtrTable<T, Key, Hash>::read(Istream&, const INew&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -365,11 +356,8 @@ void CML::HashPtrTable<T, Key, Hash>::read(Istream& is, const INew& inewt)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "HashPtrTable<T, Key, Hash>::read(Istream&, const INew&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

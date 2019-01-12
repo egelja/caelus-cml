@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,7 +19,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "makeReactionThermo.hpp"
+#include "makeReaction.hpp"
 #include "reactionTypes.hpp"
 #include "LangmuirHinshelwoodReactionRate.hpp"
 
@@ -27,8 +27,9 @@ License
 
 namespace CML
 {
-    makeIRReactions(gasThermoPhysics, LangmuirHinshelwoodReactionRate)
-    makeIRReactions(icoPoly8ThermoPhysics, LangmuirHinshelwoodReactionRate)
-}
+    makeIRReactions(gasHThermoPhysics, LangmuirHinshelwoodReactionRate)
+    makeIRReactions(icoPoly8HThermoPhysics, LangmuirHinshelwoodReactionRate)
 
-// ************************************************************************* //
+    makeIRReactions(gasEThermoPhysics, LangmuirHinshelwoodReactionRate)
+    makeIRReactions(icoPoly8EThermoPhysics, LangmuirHinshelwoodReactionRate)
+}

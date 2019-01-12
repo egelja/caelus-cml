@@ -766,7 +766,7 @@ void polyMeshGenModifier::zipUpCells()
             labelList toc(problemCells.toc());
             sort(toc);
 
-            FatalErrorIn("void polyMesh::zipUpCells()")
+            FatalErrorInFunction
                 << "Found " << problemCells.size() << " problem cells." << nl
                 << "Cells: " << toc
                 << abort(FatalError);
@@ -778,7 +778,7 @@ void polyMeshGenModifier::zipUpCells()
 
     if (nChangedFacesInMesh > 0)
     {
-        FatalErrorIn("void polyMesh::zipUpCells()")
+        FatalErrorInFunction
             << "cell zip-up failed after 100 cycles.  Probable problem "
             << "with the original mesh"
             << abort(FatalError);

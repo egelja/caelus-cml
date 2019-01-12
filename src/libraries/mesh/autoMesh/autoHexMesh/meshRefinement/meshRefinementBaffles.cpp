@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -86,11 +86,8 @@ CML::label CML::meshRefinement::createBaffle
     {
         if (neiPatch == -1)
         {
-            FatalErrorIn
-            (
-                "meshRefinement::createBaffle"
-                "(const label, const label, const label, polyTopoChange&)"
-            )   << "No neighbour patch for internal face " << faceI
+            FatalErrorInFunction
+                << "No neighbour patch for internal face " << faceI
                 << " fc:" << mesh_.faceCentres()[faceI]
                 << " ownPatch:" << ownPatch << abort(FatalError);
         }
@@ -200,10 +197,8 @@ CML::label CML::meshRefinement::getBafflePatch
         }
     }
 
-    WarningIn
-    (
-        "meshRefinement::getBafflePatch(const labelList&, const label)"
-    )   << "Could not find boundary face neighbouring internal face "
+    WarningInFunction
+        << "Could not find boundary face neighbouring internal face "
         << faceI << " with face centre " << mesh_.faceCentres()[faceI]
         << nl
         << "Using arbitrary patch " << 0 << " instead." << endl;
@@ -343,7 +338,7 @@ void CML::meshRefinement::getBafflePatches
 
             if (ownPatch[faceI] == -1 || neiPatch[faceI] == -1)
             {
-                FatalErrorIn("getBafflePatches(..)")
+                FatalErrorInFunction
                     << "problem." << abort(FatalError);
             }
         }
@@ -407,7 +402,7 @@ CML::Map<CML::label> CML::meshRefinement::getZoneBafflePatches
 
                         if (oldPatchI != patchI)
                         {
-                            FatalErrorIn("getZoneBafflePatches(const bool)")
+                            FatalErrorInFunction
                                 << "Face " << faceI
                                 << " fc:" << mesh_.faceCentres()[faceI]
                                 << " in zone " << fZone.name()
@@ -439,11 +434,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::createBaffles
      || neiPatch.size() != mesh_.nFaces()
     )
     {
-        FatalErrorIn
-        (
-            "meshRefinement::createBaffles"
-            "(const labelList&, const labelList&)"
-        )   << "Illegal size :"
+        FatalErrorInFunction
+            << "Illegal size :"
             << " ownPatch:" << ownPatch.size()
             << " neiPatch:" << neiPatch.size()
             << ". Should be number of faces:" << mesh_.nFaces()
@@ -465,11 +457,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::createBaffles
              || (neiPatch[faceI] == -1 && syncedNeiPatch[faceI] != -1)
             )
             {
-                FatalErrorIn
-                (
-                    "meshRefinement::createBaffles"
-                    "(const labelList&, const labelList&)"
-                )   << "Non synchronised at face:" << faceI
+                FatalErrorInFunction
+                    << "Non synchronised at face:" << faceI
                     << " on patch:" << mesh_.boundaryMesh().whichPatch(faceI)
                     << " fc:" << mesh_.faceCentres()[faceI] << endl
                     << "ownPatch:" << ownPatch[faceI]
@@ -609,11 +598,8 @@ CML::List<CML::labelPair> CML::meshRefinement::getDuplicateFaces
              || (patch1 != -1 && isA<processorPolyPatch>(patches[patch1]))
             )
             {
-                FatalErrorIn
-                (
-                    "meshRefinement::getDuplicateFaces"
-                    "(const bool, const labelList&)"
-                )   << "One of two duplicate faces is on"
+                FatalErrorInFunction
+                    << "One of two duplicate faces is on"
                     << " processorPolyPatch."
                     << "This is not allowed." << nl
                     << "Face:" << meshFace0
@@ -714,7 +700,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::createZoneBaffles
 
             if (baffleI != faceToPatch.size())
             {
-                FatalErrorIn("meshRefinement::createZoneBaffles(..)")
+                FatalErrorInFunction
                     << "Had " << faceToPatch.size() << " patches to create "
                     << " but encountered " << baffleI
                     << " slave faces originating from patcheable faces."
@@ -1259,12 +1245,8 @@ void CML::meshRefinement::findCellZoneInsideWalk
 
         if (keepRegionI == -1)
         {
-            FatalErrorIn
-            (
-                "meshRefinement::findCellZoneInsideWalk"
-                "(const labelList&, const labelList&"
-                ", const labelList&, const labelList&)"
-            )   << "Point " << insidePoint
+            FatalErrorInFunction
+                << "Point " << insidePoint
                 << " is not inside the mesh." << nl
                 << "Bounding box of the mesh:" << mesh_.bounds()
                 << exit(FatalError);
@@ -1281,12 +1263,8 @@ void CML::meshRefinement::findCellZoneInsideWalk
                 }
                 else if (cellToZone[cellI] != surfaceToCellZone[surfI])
                 {
-                    WarningIn
-                    (
-                        "meshRefinement::findCellZoneInsideWalk"
-                        "(const labelList&, const labelList&"
-                        ", const labelList&, const labelList&)"
-                    )   << "Cell " << cellI
+                    WarningInFunction
+                        << "Cell " << cellI
                         << " at " << mesh_.cellCentres()[cellI]
                         << " is inside surface " << surfaces_.names()[surfI]
                         << " but already marked as being in zone "
@@ -1428,11 +1406,8 @@ void CML::meshRefinement::findCellZoneTopo
 
     if (keepRegionI == -1)
     {
-        FatalErrorIn
-        (
-            "meshRefinement::findCellZoneTopo"
-            "(const point&, const labelList&, const labelList&, labelList&)"
-        )   << "Point " << keepPoint
+        FatalErrorInFunction
+            << "Point " << keepPoint
             << " is not inside the mesh." << nl
             << "Bounding box of the mesh:" << mesh_.bounds()
             << exit(FatalError);
@@ -1551,11 +1526,8 @@ void CML::meshRefinement::findCellZoneTopo
 
         if (zoneI ==  -2)
         {
-            FatalErrorIn
-            (
-                "meshRefinement::findCellZoneTopo"
-                "(const point&, const labelList&, const labelList&, labelList&)"
-            )   << "For region " << regionI << " haven't set cell zone."
+            FatalErrorInFunction
+                << "For region " << regionI << " haven't set cell zone."
                 << exit(FatalError);
         }
     }
@@ -1600,7 +1572,7 @@ void CML::meshRefinement::makeConsistentFaceIndex
         }
         else if (ownZone != neiZone && namedSurfaceIndex[faceI] == -1)
         {
-            FatalErrorIn("meshRefinement::zonify()")
+            FatalErrorInFunction
                 << "Different cell zones on either side of face " << faceI
                 << " at " << mesh_.faceCentres()[faceI]
                 << " but face not marked with a surface."
@@ -1648,7 +1620,7 @@ void CML::meshRefinement::makeConsistentFaceIndex
                 }
                 else if (ownZone != neiZone && namedSurfaceIndex[faceI] == -1)
                 {
-                    FatalErrorIn("meshRefinement::zonify()")
+                    FatalErrorInFunction
                         << "Different cell zones on either side of face "
                         << faceI << " at " << mesh_.faceCentres()[faceI]
                         << " but face not marked with a surface."
@@ -1969,11 +1941,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMesh
 
     if (keepRegionI == -1)
     {
-        FatalErrorIn
-        (
-            "meshRefinement::splitMesh"
-            "(const label, const labelList&, const point&)"
-        )   << "Point " << keepPoint
+        FatalErrorInFunction
+            << "Point " << keepPoint
             << " is not inside the mesh." << nl
             << "Bounding box of the mesh:" << mesh_.bounds()
             << exit(FatalError);
@@ -2177,7 +2146,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMesh
         }
         else
         {
-            WarningIn("meshRefinement::splitMesh(..)")
+            WarningInFunction
                 << "For exposed face " << faceI
                 << " fc:" << mesh_.faceCentres()[faceI]
                 << " found no patch." << endl
@@ -2199,14 +2168,13 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMesh
 
 // Find boundary points that connect to more than one cell region and
 // split them.
-CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
+CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints
+(
+    const localPointRegion& regionSide
+)
 {
     // Topochange container
     polyTopoChange meshMod(mesh_);
-
-
-    // Analyse which points need to be duplicated
-    localPointRegion regionSide(mesh_);
 
     label nNonManifPoints = returnReduce
     (
@@ -2250,6 +2218,17 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
     updateMesh(map, labelList(0));
 
     return map;
+}
+
+
+// Find boundary points that connect to more than one cell region and
+// split them.
+CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::dupNonManifoldPoints()
+{
+    // Analyse which points need to be duplicated
+    localPointRegion regionSide(mesh_);
+
+    return dupNonManifoldPoints(regionSide);
 }
 
 
@@ -2323,11 +2302,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::zonify
         {
             if (allFaceZones[procI] != allFaceZones[0])
             {
-                FatalErrorIn
-                (
-                    "meshRefinement::zonify"
-                    "(const label, const point&)"
-                )   << "Zones not synchronised among processors." << nl
+                FatalErrorInFunction
+                    << "Zones not synchronised among processors." << nl
                     << " Processor0 has faceZones:" << allFaceZones[0]
                     << " , processor" << procI
                     << " has faceZones:" << allFaceZones[procI]
@@ -2384,11 +2360,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::zonify
         {
             if (allCellZones[procI] != allCellZones[0])
             {
-                FatalErrorIn
-                (
-                    "meshRefinement::zonify"
-                    "(const label, const point&)"
-                )   << "Zones not synchronised among processors." << nl
+                FatalErrorInFunction
+                    << "Zones not synchronised among processors." << nl
                     << " Processor0 has cellZones:" << allCellZones[0]
                     << " , processor" << procI
                     << " has cellZones:" << allCellZones[procI]

@@ -55,11 +55,8 @@ CML::autoPtr<CML::motionDiffusivity> CML::motionDiffusivity::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "motionDiffusivity::New(const tetPolyMesh& tetMesh, "
-            "const Istream& dict)"
-        )   << "Unknown diffusion type "
+        FatalErrorInFunction
+            << "Unknown diffusion type "
             << motionType << nl << nl
             << "Valid diffusion types are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()

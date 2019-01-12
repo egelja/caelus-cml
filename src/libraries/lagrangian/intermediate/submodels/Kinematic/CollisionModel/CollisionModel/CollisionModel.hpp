@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -91,16 +91,10 @@ public:
         );
 
         //- Construct copy
-        CollisionModel(CollisionModel<CloudType>& cm);
+        CollisionModel(const CollisionModel<CloudType>& cm);
 
         //- Construct and return a clone
-        virtual autoPtr<CollisionModel<CloudType> > clone()
-        {
-            return autoPtr<CollisionModel<CloudType> >
-            (
-                new CollisionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<CollisionModel<CloudType>> clone() const = 0;
 
 
     //- Destructor
@@ -119,14 +113,10 @@ public:
 
         //- Return the number of times to subcycle the current
         //  timestep to meet the criteria of the collision model
-        virtual label nSubCycles() const;
-
-        //- Indicates whether model determines wall collisions or not,
-        //  used to determine what value to use for wallImpactDistance
-        virtual bool controlsWallInteraction() const;
+        virtual label nSubCycles() const = 0;
 
         // Collision function
-        virtual void collide();
+        virtual void collide() = 0;
 };
 
 
@@ -136,28 +126,28 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeCollisionModel(CloudType)                                         \
-                                                                              \
-    typedef CloudType::collidingCloudType collidingCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        CollisionModel<collidingCloudType>,                                   \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        CollisionModel<collidingCloudType>,                                   \
-        dictionary                                                            \
+#define makeCollisionModel(CloudType)                                          \
+                                                                               \
+    typedef CloudType::collidingCloudType collidingCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        CollisionModel<collidingCloudType>,                                    \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        CollisionModel<collidingCloudType>,                                    \
+        dictionary                                                             \
     );
 
 
-#define makeCollisionModelType(SS, CloudType)                                 \
-                                                                              \
-    typedef CloudType::collidingCloudType collidingCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<collidingCloudType>, 0);           \
-                                                                              \
-    CollisionModel<collidingCloudType>::                                      \
-        adddictionaryConstructorToTable<SS<collidingCloudType> >              \
+#define makeCollisionModelType(SS, CloudType)                                  \
+                                                                               \
+    typedef CloudType::collidingCloudType collidingCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<collidingCloudType>, 0);            \
+                                                                               \
+    CollisionModel<collidingCloudType>::                                       \
+        adddictionaryConstructorToTable<SS<collidingCloudType> >               \
             add##SS##CloudType##collidingCloudType##ConstructorToTable_;
 
 
@@ -183,7 +173,10 @@ CML::CollisionModel<CloudType>::CollisionModel
 
 
 template<class CloudType>
-CML::CollisionModel<CloudType>::CollisionModel(CollisionModel<CloudType>& cm)
+CML::CollisionModel<CloudType>::CollisionModel
+(
+    const CollisionModel<CloudType>& cm
+)
 :
     CloudSubModelBase<CloudType>(cm)
 {}
@@ -194,36 +187,6 @@ CML::CollisionModel<CloudType>::CollisionModel(CollisionModel<CloudType>& cm)
 template<class CloudType>
 CML::CollisionModel<CloudType>::~CollisionModel()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-CML::label CML::CollisionModel<CloudType>::nSubCycles() const
-{
-    notImplemented
-    (
-        "CML::label CML::CollisionModel<CloudType>::nSubCycles() const"
-    );
-    return 0;
-}
-
-
-template<class CloudType>
-bool CML::CollisionModel<CloudType>::controlsWallInteraction() const
-{
-    notImplemented
-    (
-        "bool CML::CollisionModel<CloudType>::controlsWallInteraction()"
-    );
-    return false;
-}
-
-template<class CloudType>
-void CML::CollisionModel<CloudType>::collide()
-{
-    notImplemented("void CML::CollisionModel<CloudType>::collide()");
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -245,14 +208,8 @@ CML::CollisionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "CollisionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown collision model type " << modelType
+        FatalErrorInFunction
+            << "Unknown collision model type " << modelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid collision model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc() << exit(FatalError);

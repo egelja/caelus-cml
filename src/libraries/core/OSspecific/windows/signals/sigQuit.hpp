@@ -71,6 +71,7 @@ public:
 
     // Member functions
 
+        //- Activate SIGQUIT signal handler
         void set(const bool verbose);
 };
 

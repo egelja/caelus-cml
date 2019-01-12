@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak All rights reserved
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -44,6 +45,14 @@ Author
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+Ostream& operator<<
+(
+    Ostream&,
+    const BlockCoeff<scalar>&
+);
+
 
 /*---------------------------------------------------------------------------*\
                           Class BlockCoeff Declaration

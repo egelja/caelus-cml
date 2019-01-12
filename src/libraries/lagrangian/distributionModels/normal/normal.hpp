@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::normal
+    CML::distributionModels::normal
 
 Description
     A normal distribution model
@@ -81,7 +81,7 @@ public:
     // Constructors
 
         //- Construct from components
-        normal(const dictionary& dict, cachedRandom& rndGen);
+        normal(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         normal(const normal& p);

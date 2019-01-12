@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,10 +41,7 @@ bool CML::fileFormats::STARCDCore::readHeader
 {
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STARCDCore::readHeader(...)"
-        )
+        FatalErrorInFunction
             << "cannot read " << signature  << "  " << is.name()
             << abort(FatalError);
     }
@@ -101,10 +98,7 @@ bool CML::fileFormats::STARCDCore::readPoints
 {
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STARCDedgeFormat::readPoints(...)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << is.name()
             << exit(FatalError);
     }

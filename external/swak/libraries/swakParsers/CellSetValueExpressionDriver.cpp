@@ -179,42 +179,42 @@ tmp<scalarField> CellSetValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> CellSetValueExpressionDriver::makePointField() const
 // {
-//     notImplemented("CellSetValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField> CellSetValueExpressionDriver::makeFaceAreaMagField() const
 {
-    FatalErrorIn("CellSetValueExpressionDriver::makeFaceAreaField()")
+    FatalErrorInFunction
         << "cellSet knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<scalarField>(new scalarField(0));
 }
 
 tmp<scalarField> CellSetValueExpressionDriver::makeFaceFlipField() const
 {
-    FatalErrorIn("CellSetValueExpressionDriver::makeFaceFlipField()")
+    FatalErrorInFunction
         << "cellSet knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<scalarField>(new scalarField(0));
 }
 
 tmp<vectorField> CellSetValueExpressionDriver::makeFaceNormalField() const
 {
-    FatalErrorIn("CellSetValueExpressionDriver::makeFaceNormalField()")
+    FatalErrorInFunction
         << "cellSet knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<vectorField>(new vectorField(0));
 }
 
 tmp<vectorField> CellSetValueExpressionDriver::makeFaceAreaField() const
 {
-    FatalErrorIn("CellSetValueExpressionDriver::makeFaceAreaField()")
+    FatalErrorInFunction
         << "cellSet knows nothing about faces"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
     return tmp<vectorField>(new vectorField(0));
 }
 
@@ -260,11 +260,11 @@ tmp<scalarField> CellSetValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Cell size: " << cellSize << endl;
 
-        FatalErrorIn("CellSetValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
 
     return tmp<scalarField>(makeCellVolumeField());

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -54,7 +55,7 @@ struct sigaction CML::sigFpe::oldAction_;
 
 #ifdef LINUX
 
-void *(*CML::sigFpe::oldMallocHook_)(size_t, const void *) = NULL;
+void *(*CML::sigFpe::oldMallocHook_)(size_t, const void *) = nullptr;
 
 void* CML::sigFpe::nanMallocHook_(size_t size, const void *caller)
 {
@@ -100,12 +101,10 @@ void* CML::sigFpe::nanMallocHook_(size_t size, const void *caller)
 void CML::sigFpe::sigHandler(int)
 {
     // Reset old handling
-    if (sigaction(SIGFPE, &oldAction_, NULL) < 0)
+    if (sigaction(SIGFPE, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::sigHandler()"
-        )   << "Cannot reset SIGFPE trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGFPE trapping"
             << abort(FatalError);
     }
 
@@ -125,7 +124,7 @@ void CML::sigFpe::sigHandler(int)
 
 CML::sigFpe::sigFpe()
 {
-    oldAction_.sa_handler = NULL;
+    oldAction_.sa_handler = nullptr;
 }
 
 
@@ -138,12 +137,10 @@ CML::sigFpe::~sigFpe()
 #       ifdef LINUX_GNUC
 
         // Reset signal
-        if (oldAction_.sa_handler && sigaction(SIGFPE, &oldAction_, NULL) < 0)
+        if (oldAction_.sa_handler && sigaction(SIGFPE, &oldAction_, nullptr) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::sigFpe::~sigFpe()"
-            )   << "Cannot reset SIGFPE trapping"
+            FatalErrorInFunction
+                << "Cannot reset SIGFPE trapping"
                 << abort(FatalError);
         }
 
@@ -171,10 +168,8 @@ void CML::sigFpe::set(const bool verbose)
 {
     if (oldAction_.sa_handler)
     {
-        FatalErrorIn
-        (
-            "CML::sigFpe::set()"
-        )   << "Cannot call sigFpe::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigFpe::set() more than once"
             << abort(FatalError);
     }
 
@@ -198,10 +193,8 @@ void CML::sigFpe::set(const bool verbose)
         sigemptyset(&newAction.sa_mask);
         if (sigaction(SIGFPE, &newAction, &oldAction_) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::sigFpe::set()"
-            )   << "Cannot set SIGFPE trapping"
+            FatalErrorInFunction
+                << "Cannot set SIGFPE trapping"
                 << abort(FatalError);
         }
 
@@ -225,7 +218,7 @@ void CML::sigFpe::set(const bool verbose)
           | _EN_OVERFL,
             0,
             _ABORT_ON_ERROR,
-            NULL
+            nullptr
         );
 
 #       elif defined(__APPLE__)
@@ -236,10 +229,8 @@ void CML::sigFpe::set(const bool verbose)
         sigemptyset(&newAction.sa_mask);
         if (sigaction(SIGFPE, &newAction, &oldAction_) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::sigFpe::set()"
-            )   << "Cannot set SIGFPE trapping"
+            FatalErrorInFunction
+                << "Cannot set SIGFPE trapping"
                 << abort(FatalError);
         }
         _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);

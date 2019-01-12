@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,12 +34,10 @@ struct sigaction CML::sigSegv::oldAction_;
 void CML::sigSegv::sigHandler(int)
 {
     // Reset old handling
-    if (sigaction(SIGSEGV, &oldAction_, NULL) < 0)
+    if (sigaction(SIGSEGV, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::sigHandler()"
-        )   << "Cannot reset SIGSEGV trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGSEGV trapping"
             << abort(FatalError);
     }
 
@@ -57,7 +55,7 @@ void CML::sigSegv::sigHandler(int)
 
 CML::sigSegv::sigSegv()
 {
-    oldAction_.sa_handler = NULL;
+    oldAction_.sa_handler = nullptr;
 }
 
 
@@ -66,12 +64,10 @@ CML::sigSegv::sigSegv()
 CML::sigSegv::~sigSegv()
 {
     // Reset old handling
-    if (sigaction(SIGSEGV, &oldAction_, NULL) < 0)
+    if (sigaction(SIGSEGV, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::~sigSegv()"
-        )   << "Cannot reset SIGSEGV trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGSEGV trapping"
             << abort(FatalError);
     }
 }
@@ -83,10 +79,8 @@ void CML::sigSegv::set(const bool)
 {
     if (oldAction_.sa_handler)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::set()"
-        )   << "Cannot call sigSegv::set() more than once"
+        FatalErrorInFunction
+           << "Cannot call sigSegv::set() more than once"
             << abort(FatalError);
     }
 
@@ -96,10 +90,8 @@ void CML::sigSegv::set(const bool)
     sigemptyset(&newAction.sa_mask);
     if (sigaction(SIGSEGV, &newAction, &oldAction_) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::set()"
-        )   << "Cannot set SIGSEGV trapping"
+        FatalErrorInFunction
+            << "Cannot set SIGSEGV trapping"
             << abort(FatalError);
     }
 }

@@ -474,14 +474,8 @@ void CML::fieldMinMax::calcMinMaxFields
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "CML::fieldMinMax::calcMinMaxFields"
-                    "("
-                        "const word&, "
-                        "const modeType&"
-                    ")"
-                )   << "Unknown min/max mode: " << modeTypeNames_[mode_]
+                FatalErrorInFunction
+                    << "Unknown min/max mode: " << modeTypeNames_[mode_]
                     << exit(FatalError);
             }
         }

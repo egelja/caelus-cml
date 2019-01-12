@@ -73,8 +73,8 @@ void boundaryLayers::createLayerCells(const labelList& patchLabels)
     }
 
     //- create new faces at parallel boundaries
-    const Map<label>* otherProcPatchPtr(NULL);
-    const Map<label>* otherFaceProcPtr(NULL);
+    const Map<label>* otherProcPatchPtr(nullptr);
+    const Map<label>* otherFaceProcPtr(nullptr);
 
     if( Pstream::parRun() )
     {
@@ -242,10 +242,8 @@ void boundaryLayers::createLayerCells(const labelList& patchLabels)
         if( pKeyI < 0 || pKeyJ < 0 )
         {
             continue;
-            FatalErrorIn
-            (
-                "void boundaryLayers::createLayerCells(const labelList&)"
-            ) << "Patch key is negative at concave edge" << abort(FatalError);
+            FatalErrorInFunction
+                << "Patch key is negative at concave edge" << abort(FatalError);
         }
 
         if( pKeyI == pKeyJ )

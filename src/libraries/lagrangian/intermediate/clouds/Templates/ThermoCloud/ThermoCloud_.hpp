@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -121,7 +121,7 @@ protected:
         // Reference to the particle integration schemes
 
             //- Temperature integration
-            autoPtr<scalarIntegrationScheme> TIntegrator_;
+            autoPtr<integrationScheme> TIntegrator_;
 
 
         // Modelling options
@@ -245,7 +245,7 @@ public:
             // Integration schemes
 
                 //-Return reference to velocity integration
-                inline const scalarIntegrationScheme& TIntegrator() const;
+                inline const integrationScheme& TIntegrator() const;
 
 
             // Modelling options
@@ -433,7 +433,7 @@ CML::ThermoCloud<CloudType>::heatTransfer() const
 
 
 template<class CloudType>
-inline const CML::scalarIntegrationScheme&
+inline const CML::integrationScheme&
 CML::ThermoCloud<CloudType>::TIntegrator() const
 {
     return TIntegrator_;
@@ -453,11 +453,8 @@ CML::ThermoCloud<CloudType>::radAreaP()
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radAreaP()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -471,11 +468,8 @@ CML::ThermoCloud<CloudType>::radAreaP() const
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radAreaP()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -489,11 +483,8 @@ CML::ThermoCloud<CloudType>::radT4()
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radT4()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -507,11 +498,8 @@ CML::ThermoCloud<CloudType>::radT4() const
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radT4()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -525,11 +513,8 @@ CML::ThermoCloud<CloudType>::radAreaPT4()
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radAreaPT4()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -543,11 +528,8 @@ CML::ThermoCloud<CloudType>::radAreaPT4() const
 {
     if (!radiation_)
     {
-        FatalErrorIn
-        (
-            "inline CML::DimensionedField<CML::scalar, CML::volMesh> "
-            "CML::ThermoCloud<CloudType>::radAreaPT4()"
-        )   << "Radiation field requested, but radiation model not active"
+        FatalErrorInFunction
+            << "Radiation field requested, but radiation model not active"
             << abort(FatalError);
     }
 
@@ -741,7 +723,7 @@ template<class CloudType>
 inline CML::scalar CML::ThermoCloud<CloudType>::Tmax() const
 {
     scalar T = -GREAT;
-    scalar n = 0;
+    label n = 0;
     forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
     {
         const parcelType& p = iter();
@@ -767,7 +749,7 @@ template<class CloudType>
 inline CML::scalar CML::ThermoCloud<CloudType>::Tmin() const
 {
     scalar T = GREAT;
-    scalar n = 0;
+    label n = 0;
     forAllConstIter(typename ThermoCloud<CloudType>, *this, iter)
     {
         const parcelType& p = iter();
@@ -805,7 +787,7 @@ void CML::ThermoCloud<CloudType>::setModels()
 
     TIntegrator_.reset
     (
-        scalarIntegrationScheme::New
+        integrationScheme::New
         (
             "T",
             this->solution().integrationSchemes()
@@ -913,17 +895,17 @@ CML::ThermoCloud<CloudType>::ThermoCloud
         false
     ),
     thermoCloud(),
-    cloudCopyPtr_(NULL),
-    constProps_(this->particleProperties(), this->solution().active()),
+    cloudCopyPtr_(nullptr),
+    constProps_(this->particleProperties()),
     thermo_(thermo),
     T_(thermo.thermo().T()),
     p_(thermo.thermo().p()),
-    heatTransferModel_(NULL),
-    TIntegrator_(NULL),
+    heatTransferModel_(nullptr),
+    TIntegrator_(nullptr),
     radiation_(false),
-    radAreaP_(NULL),
-    radT4_(NULL),
-    radAreaPT4_(NULL),
+    radAreaP_(nullptr),
+    radT4_(nullptr),
+    radAreaPT4_(nullptr),
     hsTrans_
     (
         new DimensionedField<scalar, volMesh>
@@ -964,6 +946,7 @@ CML::ThermoCloud<CloudType>::ThermoCloud
         if (readFields)
         {
             parcelType::readFields(*this);
+            this->deleteLostParticles();
         }
     }
 
@@ -983,7 +966,7 @@ CML::ThermoCloud<CloudType>::ThermoCloud
 :
     CloudType(c, name),
     thermoCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     constProps_(c.constProps_),
     thermo_(c.thermo_),
     T_(c.T()),
@@ -991,9 +974,9 @@ CML::ThermoCloud<CloudType>::ThermoCloud
     heatTransferModel_(c.heatTransferModel_->clone()),
     TIntegrator_(c.TIntegrator_->clone()),
     radiation_(c.radiation_),
-    radAreaP_(NULL),
-    radT4_(NULL),
-    radAreaPT4_(NULL),
+    radAreaP_(nullptr),
+    radT4_(nullptr),
+    radAreaPT4_(nullptr),
     hsTrans_
     (
         new DimensionedField<scalar, volMesh>
@@ -1093,19 +1076,19 @@ CML::ThermoCloud<CloudType>::ThermoCloud
 :
     CloudType(mesh, name, c),
     thermoCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     constProps_(),
     thermo_(c.thermo()),
     T_(c.T()),
     p_(c.p()),
-    heatTransferModel_(NULL),
-    TIntegrator_(NULL),
+    heatTransferModel_(nullptr),
+    TIntegrator_(nullptr),
     radiation_(false),
-    radAreaP_(NULL),
-    radT4_(NULL),
-    radAreaPT4_(NULL),
-    hsTrans_(NULL),
-    hsCoeff_(NULL)
+    radAreaP_(nullptr),
+    radT4_(nullptr),
+    radAreaPT4_(nullptr),
+    hsTrans_(nullptr),
+    hsCoeff_(nullptr)
 {}
 
 
@@ -1232,10 +1215,9 @@ void CML::ThermoCloud<CloudType>::evolve()
 {
     if (this->solution().canEvolve())
     {
-        typename parcelType::template
-            TrackingData<ThermoCloud<CloudType> > td(*this);
+        typename parcelType::trackingData td(*this);
 
-        this->solve(td);
+        this->solve(*this, td);
     }
 }
 
@@ -1243,11 +1225,7 @@ void CML::ThermoCloud<CloudType>::evolve()
 template<class CloudType>
 void CML::ThermoCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
-    typedef typename particle::TrackingData<ThermoCloud<CloudType> > tdType;
-
-    tdType td(*this);
-
-    Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+    Cloud<parcelType>::autoMap(mapper);
 
     this->updateMesh();
 }

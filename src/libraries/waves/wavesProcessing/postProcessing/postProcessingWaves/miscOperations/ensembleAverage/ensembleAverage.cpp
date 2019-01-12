@@ -224,10 +224,7 @@ ensembleAverage::ensembleAverage
     }
     else
     {
-        FatalErrorIn
-        (
-            "ensembleAverage::ensembleAverage(const fvMesh& mesh, ...)"
-        )
+        FatalErrorInFunction
         << "    There is not an integer number of time steps per period.\n"
         << "    T = " << period_ << " s and " << "dt = " << deltaT_ << " s.\n"
         << "    Yielding a total of " << period_/deltaT_
@@ -257,7 +254,7 @@ void ensembleAverage::evaluate()
     }
     else
     {
-        notImplemented("Only scalars and vectors are supported.");
+        NotImplemented;
     }
 }
 

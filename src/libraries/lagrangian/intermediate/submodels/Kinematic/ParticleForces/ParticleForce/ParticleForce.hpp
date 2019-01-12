@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -147,6 +147,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -157,6 +158,7 @@ public:
             virtual forceSuSp calcNonCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -167,6 +169,7 @@ public:
             virtual scalar massAdd
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
             ) const;
 };
@@ -208,7 +211,6 @@ inline const CML::dictionary& CML::ParticleForce<CloudType>::coeffs() const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-
 template<class CloudType>
 CML::ParticleForce<CloudType>::ParticleForce
 (
@@ -221,20 +223,17 @@ CML::ParticleForce<CloudType>::ParticleForce
 :
     owner_(owner),
     mesh_(mesh),
-    coeffs_(readCoeffs ? dict : dictionary::null)
+    coeffs_
+    (
+        readCoeffs
+      ? dict.optionalSubDict(forceType + "Coeffs")
+      : dictionary::null
+    )
 {
-    if (readCoeffs && (coeffs_.dictName() != forceType))
+    if (readCoeffs && coeffs_.isNull())
     {
-        FatalIOErrorIn
+        FatalIOErrorInFunction
         (
-            "CML::ParticleForce<CloudType>::ParticleForce"
-            "("
-                "CloudType&, "
-                "const fvMesh&, "
-                "const dictionary&, "
-                "const word&, "
-                "const bool"
-            ")",
             dict
         )   << "Force " << forceType << " must be specified as a dictionary"
             << exit(FatalIOError);
@@ -269,6 +268,7 @@ template<class CloudType>
 CML::forceSuSp CML::ParticleForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType&,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
@@ -276,7 +276,7 @@ CML::forceSuSp CML::ParticleForce<CloudType>::calcCoupled
 ) const
 {
     forceSuSp value;
-    value.Su() = vector::zero;
+    value.Su() = Zero;
     value.Sp() = 0.0;
 
     return value;
@@ -287,6 +287,7 @@ template<class CloudType>
 CML::forceSuSp CML::ParticleForce<CloudType>::calcNonCoupled
 (
     const typename CloudType::parcelType&,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
@@ -294,7 +295,7 @@ CML::forceSuSp CML::ParticleForce<CloudType>::calcNonCoupled
 ) const
 {
     forceSuSp value;
-    value.Su() = vector::zero;
+    value.Su() = Zero;
     value.Sp() = 0.0;
 
     return value;
@@ -305,6 +306,7 @@ template<class CloudType>
 CML::scalar CML::ParticleForce<CloudType>::massAdd
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar mass
 ) const
 {
@@ -322,25 +324,25 @@ CML::ParticleForce<CloudType>::New
     CloudType& owner,
     const fvMesh& mesh,
     const dictionary& dict,
-    const word& forceType
+    const word& name
 )
 {
-    Info<< "    Selecting particle force " << forceType << endl;
-
+    word forceType = name;
     typename dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(forceType);
 
+    if (cstrIter == dictionaryConstructorTablePtr_->end() && dict.found("type"))
+    {
+        forceType = dict.lookupType<word>("type");
+        cstrIter = dictionaryConstructorTablePtr_->find(forceType);
+    }
+
+    Info<< "    Selecting particle force " << forceType << endl;
+
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "ParticleForce<CloudType>::New"
-            "("
-                "CloudType&, "
-                "const fvMesh&, "
-                "const dictionary&"
-            ")"
-        )   << "Unknown particle force type "
+        FatalErrorInFunction
+            << "Unknown particle force type "
             << forceType
             << ", constructor not in hash table" << nl << nl
             << "    Valid particle force types are:" << nl
@@ -363,24 +365,26 @@ CML::ParticleForce<CloudType>::New
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParticleForceModel(CloudType)                                     \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(ParticleForce<kinematicCloudType>, 0);\
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        ParticleForce<kinematicCloudType>,                                    \
-        dictionary                                                            \
+#define makeParticleForceModel(CloudType)                                      \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug                                        \
+        (ParticleForce<kinematicCloudType>, 0);                                \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        ParticleForce<kinematicCloudType>,                                     \
+        dictionary                                                             \
     );
 
 
-#define makeParticleForceModelType(SS, CloudType)                             \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);           \
-                                                                              \
-    ParticleForce<kinematicCloudType>::                                       \
-        adddictionaryConstructorToTable<SS<kinematicCloudType> >              \
+#define makeParticleForceModelType(SS, CloudType)                              \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);            \
+                                                                               \
+    ParticleForce<kinematicCloudType>::                                        \
+        adddictionaryConstructorToTable<SS<kinematicCloudType> >               \
         add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
 
 

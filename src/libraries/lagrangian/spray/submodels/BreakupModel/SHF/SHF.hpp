@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -130,7 +130,7 @@ public:
 
     // Member Functions
 
-        //- update the parcel properties
+        //- Update the parcel properties
         virtual bool update
         (
             const scalar dt,
@@ -275,7 +275,7 @@ bool CML::SHF<CloudType>::update
     scalar& massChild
 )
 {
-    cachedRandom& rndGen = this->owner().rndGen();
+    Random& rndGen = this->owner().rndGen();
 
     bool addChild = false;
 

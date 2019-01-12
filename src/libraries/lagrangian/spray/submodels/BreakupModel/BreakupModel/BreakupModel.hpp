@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,9 +56,10 @@ protected:
 
         scalar y0_;
         scalar yDot0_;
+
         scalar TABComega_;
         scalar TABCmu_;
-        scalar TABWeCrit_;
+        scalar TABtwoWeCrit_;
 
 
 public:
@@ -98,13 +99,7 @@ public:
         BreakupModel(const BreakupModel<CloudType>& bum);
 
         //- Construct and return a clone
-        virtual autoPtr<BreakupModel<CloudType> > clone() const
-        {
-            return autoPtr<BreakupModel<CloudType> >
-            (
-                new BreakupModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<BreakupModel<CloudType>> clone() const = 0;
 
 
     //- Destructor
@@ -146,9 +141,9 @@ public:
             return TABCmu_;
         }
 
-        inline const scalar& TABWeCrit() const
+        inline const scalar& TABtwoWeCrit() const
         {
-            return TABWeCrit_;
+            return TABtwoWeCrit_;
         }
 
 
@@ -179,7 +174,7 @@ public:
             const scalar tMom,
             scalar& dChild,
             scalar& massChild
-        );
+        ) = 0;
 };
 
 
@@ -189,28 +184,29 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeBreakupModel(CloudType)                                           \
-                                                                              \
-    typedef CloudType::sprayCloudType sprayCloudType;                         \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        BreakupModel<sprayCloudType>,                                         \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        BreakupModel<sprayCloudType>,                                         \
-        dictionary                                                            \
+#define makeBreakupModel(CloudType)                                            \
+                                                                               \
+    typedef CloudType::sprayCloudType sprayCloudType;                          \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        BreakupModel<sprayCloudType>,                                          \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        BreakupModel<sprayCloudType>,                                          \
+        dictionary                                                             \
     );
 
 
-#define makeBreakupModelType(SS, CloudType)                                   \
-                                                                              \
-    typedef CloudType::sprayCloudType sprayCloudType;                         \
-    defineNamedTemplateTypeNameAndDebug(SS<sprayCloudType>, 0);               \
-                                                                              \
-    BreakupModel<sprayCloudType>::                                            \
-        adddictionaryConstructorToTable<SS<sprayCloudType> >                  \
+#define makeBreakupModelType(SS, CloudType)                                    \
+                                                                               \
+    typedef CloudType::sprayCloudType sprayCloudType;                          \
+    defineNamedTemplateTypeNameAndDebug(SS<sprayCloudType>, 0);                \
+                                                                               \
+    BreakupModel<sprayCloudType>::                                             \
+        adddictionaryConstructorToTable<SS<sprayCloudType> >                   \
             add##SS##CloudType##sprayCloudType##ConstructorToTable_;
 
 
@@ -228,7 +224,7 @@ CML::BreakupModel<CloudType>::BreakupModel
     yDot0_(0.0),
     TABComega_(0.0),
     TABCmu_(0.0),
-    TABWeCrit_(0.0)
+    TABtwoWeCrit_(0.0)
 {}
 
 
@@ -244,7 +240,7 @@ CML::BreakupModel<CloudType>::BreakupModel
     yDot0_(bum.yDot0_),
     TABComega_(bum.TABComega_),
     TABCmu_(bum.TABCmu_),
-    TABWeCrit_(bum.TABWeCrit_)
+    TABtwoWeCrit_(bum.TABtwoWeCrit_)
 {}
 
 
@@ -259,20 +255,19 @@ CML::BreakupModel<CloudType>::BreakupModel
 :
     CloudSubModelBase<CloudType>(owner, dict, typeName, type),
     solveOscillationEq_(solveOscillationEq),
-    y0_(0.0),
-    yDot0_(0.0),
-    TABComega_(0.0),
-    TABCmu_(0.0),
-    TABWeCrit_(0.0)
+    y0_(this->coeffDict().template lookupOrDefault<scalar>("y0", 0.0)),
+    yDot0_(this->coeffDict().template lookupOrDefault<scalar>("yDot0", 0.0)),
+    TABComega_(8),
+    TABCmu_(5),
+    TABtwoWeCrit_(12)
 {
-    if (solveOscillationEq_)
+    if (solveOscillationEq_ && dict.found("TABCoeffs"))
     {
         const dictionary coeffs(dict.subDict("TABCoeffs"));
-        y0_ = coeffs.template lookupOrDefault<scalar>("y0", 0.0);
-        yDot0_ = coeffs.template lookupOrDefault<scalar>("yDot0", 0.0);
-        TABComega_ = coeffs.template lookupOrDefault<scalar>("Comega", 8.0);
-        TABCmu_ = coeffs.template lookupOrDefault<scalar>("Cmu", 10.0);
-        TABWeCrit_ = coeffs.template lookupOrDefault<scalar>("WeCrit", 12.0);
+        coeffs.lookup("Comega") >> TABComega_;
+        coeffs.lookup("Cmu") >> TABCmu_;
+        scalar WeCrit(readScalar(coeffs.lookup("WeCrit")));
+        TABtwoWeCrit_ = 2*WeCrit;
     }
 }
 
@@ -282,66 +277,6 @@ CML::BreakupModel<CloudType>::BreakupModel
 template<class CloudType>
 CML::BreakupModel<CloudType>::~BreakupModel()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-bool CML::BreakupModel<CloudType>::update
-(
-    const scalar dt,
-    const vector& g,
-    scalar& d,
-    scalar& tc,
-    scalar& ms,
-    scalar& nParticle,
-    scalar& KHindex,
-    scalar& y,
-    scalar& yDot,
-    const scalar d0,
-    const scalar rho,
-    const scalar mu,
-    const scalar sigma,
-    const vector& U,
-    const scalar rhoc,
-    const scalar muc,
-    const vector& Urel,
-    const scalar Urmag,
-    const scalar tMom,
-    scalar& dChild,
-    scalar& massChild
-)
-{
-    notImplemented
-    (
-        "bool CML::BreakupModel<CloudType>::update"
-        "("
-            "const scalar, "
-            "const vector&, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const vector&, "
-            "const scalar, "
-            "const scalar, "
-            "const vector&, "
-            "const scalar, "
-            "const scalar, "
-            "scalar&, "
-            "scalar&"
-        ");"
-    );
-
-    return false;
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -363,14 +298,8 @@ CML::BreakupModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "BreakupModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown BreakupModelType type "
+        FatalErrorInFunction
+            << "Unknown BreakupModelType type "
             << BreakupModelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid BreakupModel types are:" << nl

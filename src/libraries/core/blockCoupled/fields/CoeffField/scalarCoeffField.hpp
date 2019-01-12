@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2013 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -47,6 +48,20 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+Ostream& operator<<
+(
+    Ostream&,
+    const CoeffField<scalar>&
+);
+
+Ostream& operator<<
+(
+    Ostream&,
+    const tmp<CoeffField<scalar> >&
+);
+
 
 template<>
 class CoeffField<scalar>

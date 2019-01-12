@@ -40,7 +40,7 @@ namespace CML {
 
     label CellSetValueExpressionDriver::pointSize() const
     {
-        notImplemented("CellSetValueExpressionDriver::pointSize()");
+        NotImplemented;
         return 0;
     }
 

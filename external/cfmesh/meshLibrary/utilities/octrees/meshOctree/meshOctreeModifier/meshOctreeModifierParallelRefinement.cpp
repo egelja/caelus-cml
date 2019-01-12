@@ -56,11 +56,8 @@ void meshOctreeModifier::refineTreeForCoordinates
         (cpz >= levelLimiter) || (cpz < 0)
     )
     {
-        FatalErrorIn
-        (
-            "void meshOctree::refineTreeForCoordinates("
-            "const meshOctreeCubeCoordinates& cc)"
-        ) << "Trying to add an invalid cube!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Trying to add an invalid cube!" << abort(FatalError);
     }
     # endif
 
@@ -134,11 +131,8 @@ void meshOctreeModifier::refineTreeForCoordinates
         (cpz >= levelLimiter) || (cpz < 0)
     )
     {
-        FatalErrorIn
-        (
-            "void meshOctree::refineTreeForCoordinates("
-            "const meshOctreeCubeCoordinates& cc)"
-        ) << "Trying to add an invalid cube!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Trying to add an invalid cube!" << abort(FatalError);
     }
     # endif
 

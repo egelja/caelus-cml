@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -87,7 +87,7 @@ inline To& dynamicCast(From& r)
     }
     catch (std::bad_cast)
     {
-        FatalErrorIn("dynamicCast<To>(From&)")
+        FatalErrorInFunction
             << "Attempt to cast type " << typeid(r).name()
             << " to type " << typeid(To).name()
             << abort(FatalError);
@@ -108,7 +108,7 @@ inline To& refCast(From& r)
     }
     catch (std::bad_cast)
     {
-        FatalErrorIn("refCast<To>(From&)")
+        FatalErrorInFunction
             << "Attempt to cast type " << r.type()
             << " to type " << To::typeName
             << abort(FatalError);
@@ -130,7 +130,8 @@ inline bool isType(const Type& t)
 template<class TestType, class Type>
 inline bool isA(const Type& t)
 {
-    return dynamic_cast<const TestType*>(&t);
+    const Type* tPtr = &t;
+    return dynamic_cast<const TestType*>(tPtr);
 }
 
 

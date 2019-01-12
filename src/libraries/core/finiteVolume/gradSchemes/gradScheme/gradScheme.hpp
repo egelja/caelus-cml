@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -226,12 +226,8 @@ CML::tmp<CML::fv::gradScheme<Type> > CML::fv::gradScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "gradScheme<Type>::New"
-            "(const fvMesh& mesh, Istream& schemeData)",
-            schemeData
-        )   << "Grad scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Grad scheme not specified" << endl << endl
             << "Valid grad schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -244,12 +240,8 @@ CML::tmp<CML::fv::gradScheme<Type> > CML::fv::gradScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "gradScheme<Type>::New"
-            "(const fvMesh& mesh, Istream& schemeData)",
-            schemeData
-        )   << "Unknown grad scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown grad scheme " << schemeName << nl << nl
             << "Valid grad schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);

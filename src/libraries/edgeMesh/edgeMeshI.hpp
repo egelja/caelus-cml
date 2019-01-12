@@ -26,7 +26,7 @@ inline CML::edgeMesh::edgeMesh(const edgeMesh& em)
     fileFormats::edgeFormatsCore(),
     points_(em.points_),
     edges_(em.edges_),
-    pointEdgesPtr_(NULL)
+    pointEdgesPtr_(nullptr)
 {}
 
 

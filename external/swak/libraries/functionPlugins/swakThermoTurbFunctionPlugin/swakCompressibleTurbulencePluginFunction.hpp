@@ -36,7 +36,7 @@ Contributors/Copyright:
 
 #include "swakThermophysicalPluginFunction.hpp"
 
-#include "turbulenceModel.hpp"
+#include "compressibleTurbulenceModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,7 +48,7 @@ namespace CML
 \*---------------------------------------------------------------------------*/
 class swakCompressibleTurbulencePluginFunction
 :
-    public swakThermophysicalPluginFunction
+    public swakThermophysicalPluginFunction<swakFluidThermoType>
 {
     //- Disallow default bitwise assignment
     void operator=(const swakCompressibleTurbulencePluginFunction &);

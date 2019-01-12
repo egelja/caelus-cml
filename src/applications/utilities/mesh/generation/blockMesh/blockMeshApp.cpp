@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
     if (!meshDictIO.headerOk())
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Cannot open mesh description file\n    "
             << meshDictIO.objectPath()
             << nl
@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
     mesh.removeFiles();
     if (!mesh.write())
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Failed writing polyMesh."
             << exit(FatalError);
     }

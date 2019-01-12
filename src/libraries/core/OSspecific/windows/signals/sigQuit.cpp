@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,7 +43,7 @@ void CML::sigQuit::sigQuitHandler(int)
 
     if (SIG_ERR == success)
     {
-        FatalErrorIn("CML::sigQuit::sigQuitHandler()")   
+        FatalErrorInFunction   
             << "Cannot reset SIGBREAK trapping"
             << abort(FatalError);    
     }
@@ -77,7 +78,7 @@ CML::sigQuit::~sigQuit()
 
         if (SIG_ERR == success)
         {
-            FatalErrorIn("CML::sigQuit::~sigQuit()")
+            FatalErrorInFunction
                 << "Cannot reset SIGBREAK trapping"
                 << abort(FatalError);    
         }
@@ -91,7 +92,7 @@ void CML::sigQuit::set(const bool verbose)
 {
     if (SIG_DFL != oldAction_)
     {
-        FatalErrorIn("CML::sigQuit::set()")   
+        FatalErrorInFunction   
             << "Cannot call sigQuit::set() more than once"
             << abort(FatalError);
     }
@@ -102,8 +103,8 @@ void CML::sigQuit::set(const bool verbose)
     {
         oldAction_ = SIG_DFL;
 
-        // Not a FatalErrorIn or abort because fails under wine
-        WarningIn("CML::sigQuit::set()")
+        // Not a FatalErrorInFunction or abort because fails under wine
+        WarningInFunction
             << "Cannot set SIGBREAK trapping" << endl;
     }
 }

@@ -140,10 +140,8 @@ CML::fv::SwakSetValue<T>::SwakSetValue
     );
 
     if(this->verbose_) {
-        WarningIn(
-            string("SwakSetValue<") + pTraits<T>::typeName +
-            ">::SwakSetValue"
-        )    << "Fixing to the fields " << this->fieldNames_
+        WarningInFunction
+            << "Fixing to the fields " << this->fieldNames_
             << " to the values " << this->expressions_
             << " with the mask " << maskExpression_
             << " will be verbose. To switch this off set the "
@@ -169,7 +167,7 @@ bool CML::fv::SwakSetValue<T>::getMask(DynamicList<label> &cellIDs,const word &p
         !this->driver().
         FieldValueExpressionDriver::template resultIsTyp<volScalarField>(true)
     ) {
-        FatalErrorIn("SwakSetValue<scalar>::getMask")
+        FatalErrorInFunction
             << "Result of " << maskExpression_ << " is not a logical expression"
                 << endl
                 << exit(FatalError);
@@ -220,7 +218,7 @@ void CML::fv::SwakSetValue<T>::setValue
         !this->driver().
         FieldValueExpressionDriver::template resultIsTyp<typename SwakSetValue<T>::resultField>()
     ) {
-        FatalErrorIn("SwakSetValue<"+word(pTraits<T>::typeName)+">::setValue()")
+        FatalErrorInFunction
             << "Result of " << this->expressions_[fieldI] << " is not a "
                 << pTraits<T>::typeName
                 << endl
@@ -233,7 +231,7 @@ void CML::fv::SwakSetValue<T>::setValue
     );
 
     if(this->dimensions_[fieldI]!=eqn.psi().dimensions()) {
-        FatalErrorIn("SwakSetValue<T>::setValue")
+        FatalErrorInFunction
             << "Dimension " << this->dimensions_[fieldI] << " for field "
                 << eqn.psi().name() << " in " << this->name()
                 << " is not the required " << eqn.psi().dimensions()

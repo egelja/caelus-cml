@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -70,8 +70,8 @@ protected:
         //- Sherwood number as a function of Reynolds and Schmidt numbers
         scalar Sh(const scalar Re, const scalar Sc) const;
 
-        //- Calculate the carrier phase component volume fractions at cellI
-        tmp<scalarField> calcXc(const label cellI) const;
+        //- Calculate the carrier phase component volume fractions at celli
+        tmp<scalarField> calcXc(const label celli) const;
 
 
 public:
@@ -108,7 +108,7 @@ public:
         virtual void calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar Re,
             const scalar Pr,
             const scalar d,
@@ -117,7 +117,7 @@ public:
             const scalar Ts,
             const scalar pc,
             const scalar Tc,
-            const scalarField& Yl,
+            const scalarField& X,
             scalarField& dMassPC
         ) const;
 
@@ -131,10 +131,10 @@ public:
         ) const;
 
         //- Return vapourisation temperature
-        virtual scalar Tvap(const scalarField& Y) const;
+        virtual scalar Tvap(const scalarField& X) const;
 
         //- Return maximum/limiting temperature
-        virtual scalar TMax(const scalar p, const scalarField& Y) const;
+        virtual scalar TMax(const scalar p, const scalarField& X) const;
 };
 
 
@@ -150,7 +150,7 @@ using namespace CML::constant::mathematical;
 template<class CloudType>
 CML::tmp<CML::scalarField> CML::LiquidEvaporation<CloudType>::calcXc
 (
-    const label cellI
+    const label celli
 ) const
 {
     scalarField Xc(this->owner().thermo().carrier().Y().size());
@@ -158,8 +158,8 @@ CML::tmp<CML::scalarField> CML::LiquidEvaporation<CloudType>::calcXc
     forAll(Xc, i)
     {
         Xc[i] =
-            this->owner().thermo().carrier().Y()[i][cellI]
-           /this->owner().thermo().carrier().W(i);
+            this->owner().thermo().carrier().Y()[i][celli]
+           /this->owner().thermo().carrier().Wi(i);
     }
 
     return Xc/sum(Xc);
@@ -194,14 +194,8 @@ CML::LiquidEvaporation<CloudType>::LiquidEvaporation
 {
     if (activeLiquids_.size() == 0)
     {
-        WarningIn
-        (
-            "CML::LiquidEvaporation<CloudType>::LiquidEvaporation"
-            "("
-                "const dictionary& dict, "
-                "CloudType& owner"
-            ")"
-        )   << "Evaporation model selected, but no active liquids defined"
+        WarningInFunction
+            << "Evaporation model selected, but no active liquids defined"
             << nl << endl;
     }
     else
@@ -213,7 +207,7 @@ CML::LiquidEvaporation<CloudType>::LiquidEvaporation
         {
             Info<< "    " << activeLiquids_[i] << endl;
             liqToCarrierMap_[i] =
-                owner.composition().globalCarrierId(activeLiquids_[i]);
+                owner.composition().carrierId(activeLiquids_[i]);
         }
 
         // Determine mapping between model active liquids and global liquids
@@ -254,7 +248,7 @@ template<class CloudType>
 void CML::LiquidEvaporation<CloudType>::calculate
 (
     const scalar dt,
-    const label cellI,
+    const label celli,
     const scalar Re,
     const scalar Pr,
     const scalar d,
@@ -263,36 +257,17 @@ void CML::LiquidEvaporation<CloudType>::calculate
     const scalar Ts,
     const scalar pc,
     const scalar Tc,
-    const scalarField& Yl,
+    const scalarField& X,
     scalarField& dMassPC
 ) const
 {
-    // liquid volume fraction
-    const scalarField X(liquids_.X(Yl));
-
     // immediately evaporate mass that has reached critical condition
     if ((liquids_.Tc(X) - T) < SMALL)
     {
         if (debug)
         {
-            WarningIn
-            (
-                "void CML::LiquidEvaporation<CloudType>::calculate"
-                "("
-                    "const scalar, "
-                    "const label, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalarField&, "
-                    "scalarField&"
-                ") const"
-            )   << "Parcel reached critical conditions: "
+            WarningInFunction
+                << "Parcel reached critical conditions: "
                 << "evaporating all available mass" << endl;
         }
 
@@ -305,8 +280,8 @@ void CML::LiquidEvaporation<CloudType>::calculate
         return;
     }
 
-    // construct carrier phase species volume fractions for cell, cellI
-    const scalarField Xc(calcXc(cellI));
+    // construct carrier phase species volume fractions for cell, celli
+    const scalarField Xc(calcXc(celli));
 
     // calculate mass transfer of each specie in liquid
     forAll(activeLiquids_, i)
@@ -335,10 +310,10 @@ void CML::LiquidEvaporation<CloudType>::calculate
         const scalar kc = Sh*Dab/(d + ROOTVSMALL);
 
         // vapour concentration at surface [kmol/m3] at film temperature
-        const scalar Cs = pSat/(specie::RR*Ts);
+        const scalar Cs = pSat/(RR*Ts);
 
         // vapour concentration in bulk gas [kmol/m3] at film temperature
-        const scalar Cinf = Xc[gid]*pc/(specie::RR*Ts);
+        const scalar Cinf = Xc[gid]*pc/(RR*Ts);
 
         // molar flux of vapour [kmol/m2/s]
         const scalar Ni = max(kc*(Cs - Cinf), 0.0);
@@ -370,7 +345,7 @@ CML::scalar CML::LiquidEvaporation<CloudType>::dh
         }
         case (parent::etEnthalpyDifference):
         {
-            scalar hc = this->owner().composition().carrier().H(idc, T);
+            scalar hc = this->owner().composition().carrier().Ha(idc, p, T);
             scalar hp = liquids_.properties()[idl].h(p, T);
 
             dh = hc - hp;
@@ -378,16 +353,8 @@ CML::scalar CML::LiquidEvaporation<CloudType>::dh
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::LiquidEvaporation<CloudType>::dh"
-                "("
-                    "const label, "
-                    "const label, "
-                    "const scalar, "
-                    "const scalar"
-                ") const"
-            )   << "Unknown enthalpyTransfer type" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown enthalpyTransfer type" << abort(FatalError);
         }
     }
 
@@ -398,11 +365,9 @@ CML::scalar CML::LiquidEvaporation<CloudType>::dh
 template<class CloudType>
 CML::scalar CML::LiquidEvaporation<CloudType>::Tvap
 (
-    const scalarField& Y
+    const scalarField& X
 ) const
 {
-    const scalarField X(liquids_.X(Y));
-
     return liquids_.Tpt(X);
 }
 
@@ -411,11 +376,9 @@ template<class CloudType>
 CML::scalar CML::LiquidEvaporation<CloudType>::TMax
 (
     const scalar p,
-    const scalarField& Y
+    const scalarField& X
 ) const
 {
-    const scalarField X(liquids_.X(Y));
-
     return liquids_.pvInvert(p, X);
 }
 

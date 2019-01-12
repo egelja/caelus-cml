@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,7 +44,7 @@ CML::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
             IOobject::NO_WRITE
         )
     ),
-    mirrorMeshPtr_(NULL)
+    mirrorMeshPtr_(nullptr)
 {
     plane mirrorPlane(mirrorMeshDict_);
 
@@ -156,7 +156,7 @@ CML::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
 
         if (curPatch.coupled())
         {
-            WarningIn("mirrorFvMesh::mirrorFvMesh(const IOobject&)")
+            WarningInFunction
                 << "Found coupled patch " << curPatch.name() << endl
                 << "    Mirroring faces on coupled patches destroys"
                 << " the ordering. This might be fixed by running a dummy"

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,6 @@ namespace CML
 }
 
 
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 CML::coordinateSystem
@@ -49,11 +48,8 @@ CML::pointToPointPlanarInterpolation::calcCoordinateSystem
 {
     if (points.size() < 3)
     {
-        FatalErrorIn
-        (
-            "pointToPointPlanarInterpolation::calcCoordinateSystem"
-            "(const pointField&)"
-        )   << "Only " << points.size() << " provided." << nl
+        FatalErrorInFunction
+            << "Only " << points.size() << " provided." << nl
             << "Need at least three non-colinear points"
             << " to be able to interpolate."
             << exit(FatalError);
@@ -101,11 +97,8 @@ CML::pointToPointPlanarInterpolation::calcCoordinateSystem
     }
     if (index2 == -1)
     {
-        FatalErrorIn
-        (
-            "pointToPointPlanarInterpolation::calcCoordinateSystem"
-            "(const pointField&)"
-        )   << "Cannot find points that make valid normal." << nl
+        FatalErrorInFunction
+            << "Cannot find points that make valid normal." << nl
             << "Have so far points " << p0 << " and " << p1
             << "Need at least three points which are not in a line."
             << exit(FatalError);
@@ -116,7 +109,7 @@ CML::pointToPointPlanarInterpolation::calcCoordinateSystem
 
     if (debug)
     {
-        Info<< "pointToPointPlanarInterpolation::calcCoordinateSystem :"
+        InfoInFunction
             << " Used points " << p0 << ' ' << points[index1]
             << ' ' << points[index2]
             << " to define coordinate system with normal " << n << endl;
@@ -152,7 +145,7 @@ void CML::pointToPointPlanarInterpolation::calcWeights
 
         if (!fullMatch)
         {
-            FatalErrorIn("pointToPointPlanarInterpolation::calcWeights(..)")
+            FatalErrorInFunction
                 << "Did not find a corresponding sourcePoint for every face"
                 << " centre" << exit(FatalError);
         }
@@ -220,7 +213,7 @@ void CML::pointToPointPlanarInterpolation::calcWeights
         {
             localVertices[i] +=
                 perturb_
-               *(rndGen.position(bb.min(), bb.max())-bbMid);
+               *(rndGen.sampleAB<vector>(bb.min(), bb.max()) - bbMid);
         }
 
         // Determine triangulation
@@ -388,7 +381,7 @@ bool CML::pointToPointPlanarInterpolation::findTime
 
     if (lo == -1)
     {
-        //FatalErrorIn("findTime(..)")
+        //FatalErrorInFunction
         //    << "Cannot find starting sampling values for current time "
         //    << timeVal << nl
         //    << "Have sampling values for times "

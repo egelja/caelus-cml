@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2016 Applied CCM
+Copyright (C) 2016-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -70,7 +70,7 @@ public:
             order_ = readScalar(is);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearVanLeer(fvMesh const&, Istream&)", is)
+                FatalIOErrorInFunction(is)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

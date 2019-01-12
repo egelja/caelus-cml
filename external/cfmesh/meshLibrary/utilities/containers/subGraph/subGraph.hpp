@@ -125,11 +125,8 @@ inline void CML::subGraph<graphType>::checkIndex(const label i) const
 {
     if( (i < 0) || (i >= size_) )
     {
-        FatalErrorIn
-        (
-            "void CML::subGraph<graphType>::"
-            "checkIndex(const label i) const"
-        ) << "Row index " << i
+        FatalErrorInFunction
+            << "Row index " << i
             << " is not in range " << CML::label(0)
             << " and " << size_ << abort(FatalError);
     }

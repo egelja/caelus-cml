@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,6 +43,14 @@ namespace CML
 
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class refinementDistanceData;
+
+Istream& operator>>(Istream&, refinementDistanceData&);
+Ostream& operator<<(Ostream&, const refinementDistanceData&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class refinementDistanceData Declaration

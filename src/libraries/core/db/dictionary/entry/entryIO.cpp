@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -282,11 +282,7 @@ bool CML::entry::New(dictionary& parentDict, Istream& is)
                 }
                 else if (functionEntries::inputModeEntry::error())
                 {
-                    FatalIOErrorIn
-                    (
-                        "entry::New(const dictionary& parentDict, Istream&)",
-                        is
-                    )
+                    FatalIOErrorInFunction(is)
                         << "ERROR! duplicate entry: " << keyword
                         << exit(FatalIOError);
 
@@ -324,7 +320,7 @@ CML::autoPtr<CML::entry> CML::entry::New(Istream& is)
     // Get the next keyword and if invalid return false
     if (!getKeyword(keyword, is))
     {
-        return autoPtr<entry>(NULL);
+        return autoPtr<entry>(nullptr);
     }
     else // Keyword starts entry ...
     {

@@ -54,7 +54,7 @@ CML::PBiCGStab::PBiCGStab
     )
 {}
 
-CML::lduMatrix::solverPerformance CML::PBiCGStab::solve
+CML::solverPerformance CML::PBiCGStab::solve
 (
     scalarField& x,
     scalarField const& b,
@@ -62,7 +62,7 @@ CML::lduMatrix::solverPerformance CML::PBiCGStab::solve
 ) const
 {
     // --- Setup class containing solver performance data
-    lduMatrix::solverPerformance solverPerf
+    solverPerformance solverPerf
     (
         lduMatrix::preconditioner::getName(controlDict_) + typeName,
         fieldName_

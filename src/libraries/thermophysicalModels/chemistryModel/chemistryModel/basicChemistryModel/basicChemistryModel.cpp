@@ -33,49 +33,39 @@ namespace CML
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
 void CML::basicChemistryModel::correct()
-{
-    // do nothing
-}
+{}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::basicChemistryModel::basicChemistryModel(const fvMesh& mesh)
+CML::basicChemistryModel::basicChemistryModel(basicThermo& thermo)
 :
     IOdictionary
     (
         IOobject
         (
-            "chemistryProperties",
-            mesh.time().constant(),
-            mesh,
+            thermo.phasePropertyName("chemistryProperties"),
+            thermo.db().time().constant(),
+            thermo.db(),
             IOobject::MUST_READ_IF_MODIFIED,
             IOobject::NO_WRITE
         )
     ),
-    mesh_(mesh),
+    mesh_(thermo.p().mesh()),
     chemistry_(lookup("chemistry")),
     deltaTChemIni_(readScalar(lookup("initialChemicalTimeStep"))),
+    deltaTChemMax_(lookupOrDefault("maxChemicalTimeStep", GREAT)),
     deltaTChem_
     (
         IOobject
         (
-            "deltaTChem",
-            mesh.time().constant(),
-            mesh,
+            thermo.phasePropertyName("deltaTChem"),
+            mesh().time().constant(),
+            mesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        mesh,
+        mesh(),
         dimensionedScalar("deltaTChem0", dimTime, deltaTChemIni_)
     )
 {}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::basicChemistryModel::~basicChemistryModel()
-{}
-
-
-// ************************************************************************* //

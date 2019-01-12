@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,7 +37,7 @@ const CML::labelListList& CML::primitiveMesh::cellPoints() const
             {
                 // For checking calls:abort so we can quickly hunt down
                 // origin of call
-                FatalErrorIn("primitiveMesh::cellPoints()")
+                FatalErrorInFunction
                     << abort(FatalError);
             }
         }

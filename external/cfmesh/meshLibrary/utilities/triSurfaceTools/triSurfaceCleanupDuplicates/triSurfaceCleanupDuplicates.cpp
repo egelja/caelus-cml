@@ -58,7 +58,7 @@ void triSurfaceCleanupDuplicates::mergeIdentities()
 
     if( done_ )
     {
-        WarningIn("void triSurfaceCleanupDuplicates::mergeIdentities()")
+        WarningInFunction
             << "Operation is already performed" << endl;
         return;
     }

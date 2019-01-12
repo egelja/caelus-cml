@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +21,11 @@ License
 
 #include "cloudSolution.hpp"
 #include "Time.hpp"
+#include "localEulerDdtScheme.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::cloudSolution::cloudSolution
-(
-    const fvMesh& mesh,
-    const dictionary& dict
-)
+CML::cloudSolution::cloudSolution(const fvMesh& mesh, const dictionary& dict)
 :
     mesh_(mesh),
     dict_(dict),
@@ -38,6 +35,7 @@ CML::cloudSolution::cloudSolution
     maxCo_(0.3),
     iter_(1),
     trackTime_(0.0),
+    deltaTMax_(GREAT),
     coupled_(false),
     cellValueSourceCorrection_(false),
     maxTrackTime_(0.0),
@@ -51,10 +49,7 @@ CML::cloudSolution::cloudSolution
 }
 
 
-CML::cloudSolution::cloudSolution
-(
-    const cloudSolution& cs
-)
+CML::cloudSolution::cloudSolution(const cloudSolution& cs)
 :
     mesh_(cs.mesh_),
     dict_(cs.dict_),
@@ -64,6 +59,7 @@ CML::cloudSolution::cloudSolution
     maxCo_(cs.maxCo_),
     iter_(cs.iter_),
     trackTime_(cs.trackTime_),
+    deltaTMax_(cs.deltaTMax_),
     coupled_(cs.coupled_),
     cellValueSourceCorrection_(cs.cellValueSourceCorrection_),
     maxTrackTime_(cs.maxTrackTime_),
@@ -72,10 +68,7 @@ CML::cloudSolution::cloudSolution
 {}
 
 
-CML::cloudSolution::cloudSolution
-(
-    const fvMesh& mesh
-)
+CML::cloudSolution::cloudSolution(const fvMesh& mesh)
 :
     mesh_(mesh),
     dict_(dictionary::null),
@@ -85,6 +78,7 @@ CML::cloudSolution::cloudSolution
     maxCo_(GREAT),
     iter_(0),
     trackTime_(0.0),
+    deltaTMax_(GREAT),
     coupled_(false),
     cellValueSourceCorrection_(false),
     maxTrackTime_(0.0),
@@ -103,10 +97,35 @@ CML::cloudSolution::~cloudSolution()
 
 void CML::cloudSolution::read()
 {
-    dict_.lookup("transient") >> transient_;
+    // For transient runs the Lagrangian tracking may be transient or steady
+    transient_ = dict_.lookupOrDefault("transient", false);
+
+    // For LTS and steady-state runs the Lagrangian tracking cannot be transient
+    if (transient_)
+    {
+        if (fv::localEulerDdt::enabled(mesh_))
+        {
+            IOWarningInFunction(dict_)
+                << "Transient tracking is not supported for LTS"
+                   " simulations, switching to steady state tracking."
+                << endl;
+            transient_ = false;
+        }
+
+        if (mesh_.steady())
+        {
+            IOWarningInFunction(dict_)
+                << "Transient tracking is not supported for steady-state"
+                   " simulations, switching to steady state tracking."
+                << endl;
+            transient_ = false;
+        }
+    }
+
     dict_.lookup("coupled") >> coupled_;
     dict_.lookup("cellValueSourceCorrection") >> cellValueSourceCorrection_;
     dict_.readIfPresent("maxCo", maxCo_);
+    dict_.readIfPresent("deltaTMax", deltaTMax_);
 
     if (steadyState())
     {
@@ -145,7 +164,7 @@ void CML::cloudSolution::read()
             }
             else
             {
-                FatalErrorIn("void cloudSolution::read()")
+                FatalErrorInFunction
                     << "Invalid scheme " << scheme << ". Valid schemes are "
                     << "explicit and semiImplicit" << exit(FatalError);
             }
@@ -167,7 +186,7 @@ CML::scalar CML::cloudSolution::relaxCoeff(const word& fieldName) const
         }
     }
 
-    FatalErrorIn("scalar cloudSolution::relaxCoeff(const word&) const")
+    FatalErrorInFunction
         << "Field name " << fieldName << " not found in schemes"
         << abort(FatalError);
 
@@ -185,7 +204,7 @@ bool CML::cloudSolution::semiImplicit(const word& fieldName) const
         }
     }
 
-    FatalErrorIn("bool cloudSolution::semiImplicit(const word&) const")
+    FatalErrorInFunction
         << "Field name " << fieldName << " not found in schemes"
         << abort(FatalError);
 
@@ -222,6 +241,25 @@ bool CML::cloudSolution::canEvolve()
 bool CML::cloudSolution::output() const
 {
     return active_ && mesh_.time().outputTime();
+}
+
+
+CML::scalar CML::cloudSolution::deltaTMax(const scalar trackTime) const
+{
+    if (transient_)
+    {
+        return min(deltaTMax_, maxCo_*trackTime);
+    }
+    else
+    {
+        return min(deltaTMax_, trackTime);
+    }
+}
+
+
+CML::scalar CML::cloudSolution::deltaLMax(const scalar lRef) const
+{
+    return maxCo_*lRef;
 }
 
 

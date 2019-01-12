@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -82,13 +82,8 @@ maxwellSlipUFvPatchVectorField::maxwellSlipUFvPatchVectorField
      || mag(accommodationCoeff_) > 2.0
     )
     {
-        FatalIOErrorIn
-        (
-            "maxwellSlipUFvPatchScalarField::"
-            "maxwellSlipUFvPatchScalarField"
-            "(const fvPatch&, const scalarField&, const dictionary&)",
-            dict
-        )   << "unphysical accommodationCoeff_ specified"
+        FatalIOErrorInFunction(dict)
+            << "unphysical accommodationCoeff_ specified"
             << "(0 < accommodationCoeff_ <= 1)" << endl
             << exit(FatalError);
     }

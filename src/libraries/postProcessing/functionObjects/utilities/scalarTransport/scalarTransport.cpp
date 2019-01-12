@@ -26,7 +26,7 @@ License
 #include "fvmLaplacian.hpp"
 #include "fvmSup.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -233,7 +233,7 @@ void CML::scalarTransport::execute()
         }
         else
         {
-            FatalErrorIn("void CML::scalarTransport::execute()")
+            FatalErrorInFunction
                 << "Incompatible dimensions for phi: " << phi.dimensions() << nl
                 << "Dimensions should be " << dimMass/dimTime << " or "
                 << dimVolume/dimTime << endl;

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2015 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,9 +53,9 @@ bool haveAllTimes
 )
 {
     // Loop over all times
-    forAll(timeDirs, timeI)
+    forAll(timeDirs, timei)
     {
-        if (!masterTimeDirSet.found(timeDirs[timeI].name()))
+        if (!masterTimeDirSet.found(timeDirs[timei].name()))
         {
             return false;
         }
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
     {
         if (noLagrangian)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Cannot specify noLagrangian and lagrangianFields "
                 << "options together."
                 << exit(FatalError);
@@ -179,7 +180,7 @@ int main(int argc, char *argv[])
 
     if (!nProcs)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "No processor* directories found"
             << exit(FatalError);
     }
@@ -187,16 +188,16 @@ int main(int argc, char *argv[])
     // Create the processor databases
     PtrList<Time> databases(nProcs);
 
-    forAll(databases, procI)
+    forAll(databases, proci)
     {
         databases.set
         (
-            procI,
+            proci,
             new Time
             (
                 Time::controlDictName,
                 args.rootPath(),
-                args.caseName()/fileName(word("processor") + name(procI))
+                args.caseName()/fileName(word("processor") + name(proci))
             )
         );
     }
@@ -218,7 +219,7 @@ int main(int argc, char *argv[])
 
     if (timeDirs.empty())
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "No times selected"
             << exit(FatalError);
     }
@@ -238,9 +239,9 @@ int main(int argc, char *argv[])
 
 
     // Set all times on processor meshes equal to reconstructed mesh
-    forAll(databases, procI)
+    forAll(databases, proci)
     {
-        databases[procI].setTime(runTime);
+        databases[proci].setTime(runTime);
     }
 
 
@@ -280,10 +281,10 @@ int main(int argc, char *argv[])
     }
 
 
-    forAll(regionNames, regionI)
+    forAll(regionNames, regioni)
     {
-        const word& regionName = regionNames[regionI];
-        const word& regionDir = regionDirs[regionI];
+        const word& regionName = regionNames[regioni];
+        const word& regionDir = regionDirs[regioni];
 
         Info<< "\n\nReconstructing fields for mesh " << regionName << nl
             << endl;
@@ -324,25 +325,25 @@ int main(int argc, char *argv[])
         #include "checkFaceAddressingComp.hpp"
 
         // Loop over all times
-        forAll(timeDirs, timeI)
+        forAll(timeDirs, timei)
         {
-            if (newTimes && masterTimeDirSet.found(timeDirs[timeI].name()))
+            if (newTimes && masterTimeDirSet.found(timeDirs[timei].name()))
             {
-                Info<< "Skipping time " << timeDirs[timeI].name()
+                Info<< "Skipping time " << timeDirs[timei].name()
                     << endl << endl;
                 continue;
             }
 
 
             // Set time for global database
-            runTime.setTime(timeDirs[timeI], timeI);
+            runTime.setTime(timeDirs[timei], timei);
 
             Info<< "Time = " << runTime.timeName() << endl << endl;
 
             // Set time for all databases
-            forAll(databases, procI)
+            forAll(databases, proci)
             {
-                databases[procI].setTime(timeDirs[timeI], timeI);
+                databases[proci].setTime(timeDirs[timei], timei);
             }
 
             // Check if any new meshes need to be read.
@@ -358,7 +359,7 @@ int main(int argc, char *argv[])
             }
             else if (meshStat != procStat)
             {
-                WarningIn(args.executable())
+                WarningInFunction
                     << "readUpdate for the reconstructed mesh:"
                     << meshStat << nl
                     << "readUpdate for the processor meshes  :"
@@ -401,7 +402,8 @@ int main(int argc, char *argv[])
                     objects,
                     selectedFields
                 );
-                fvReconstructor.reconstructFvVolumeInternalFields<sphericalTensor>
+                fvReconstructor.reconstructFvVolumeInternalFields
+                <sphericalTensor>
                 (
                     objects,
                     selectedFields
@@ -482,12 +484,12 @@ int main(int argc, char *argv[])
                 const pointMesh& pMesh = pointMesh::New(mesh);
                 PtrList<pointMesh> pMeshes(procMeshes.meshes().size());
 
-                forAll(pMeshes, procI)
+                forAll(pMeshes, proci)
                 {
                     pMeshes.set
                     (
-                        procI,
-                        new pointMesh(procMeshes.meshes()[procI])
+                        proci,
+                        new pointMesh(procMeshes.meshes()[proci])
                     );
                 }
 
@@ -543,13 +545,13 @@ int main(int argc, char *argv[])
             {
                 HashTable<IOobjectList> cloudObjects;
 
-                forAll(databases, procI)
+                forAll(databases, proci)
                 {
                     fileNameList cloudDirs
                     (
                         readDir
                         (
-                            databases[procI].timePath()
+                            databases[proci].timePath()
                           / regionDir
                           / cloud::prefix,
                             fileName::DIRECTORY
@@ -568,15 +570,17 @@ int main(int argc, char *argv[])
                             // Do local scan for valid cloud objects
                             IOobjectList sprayObjs
                             (
-                                procMeshes.meshes()[procI],
-                                databases[procI].timeName(),
+                                procMeshes.meshes()[proci],
+                                databases[proci].timeName(),
                                 cloud::prefix/cloudDirs[i]
                             );
 
                             IOobject* positionsPtr =
                                 sprayObjs.lookup(word("positions"));
+                            IOobject* coordsPtr =
+                                sprayObjs.lookup(word("coordinates"));
 
-                            if (positionsPtr)
+                            if (coordsPtr || positionsPtr)
                             {
                                 cloudObjects.insert(cloudDirs[i], sprayObjs);
                             }
@@ -721,9 +725,9 @@ int main(int argc, char *argv[])
                 HashTable<label> fSetNames;
                 HashTable<label> pSetNames;
 
-                forAll(procMeshes.meshes(), procI)
+                forAll(procMeshes.meshes(), proci)
                 {
-                    const fvMesh& procMesh = procMeshes.meshes()[procI];
+                    const fvMesh& procMesh = procMeshes.meshes()[proci];
 
                     // Note: look at sets in current time only or between
                     // mesh and current time?. For now current time. This will
@@ -779,9 +783,9 @@ int main(int argc, char *argv[])
                     }
 
                     // Load sets
-                    forAll(procMeshes.meshes(), procI)
+                    forAll(procMeshes.meshes(), proci)
                     {
-                        const fvMesh& procMesh = procMeshes.meshes()[procI];
+                        const fvMesh& procMesh = procMeshes.meshes()[proci];
 
                         IOobjectList objects
                         (
@@ -792,7 +796,7 @@ int main(int argc, char *argv[])
 
                         // cellSets
                         const labelList& cellMap =
-                        procMeshes.cellProcAddressing()[procI];
+                            procMeshes.cellProcAddressing()[proci];
 
                         IOobjectList cSets
                         (
@@ -828,9 +832,13 @@ int main(int argc, char *argv[])
 
                         // faceSets
                         const labelList& faceMap =
-                        procMeshes.faceProcAddressing()[procI];
+                        procMeshes.faceProcAddressing()[proci];
 
-                        IOobjectList fSets(objects.lookupClass(faceSet::typeName));
+                        IOobjectList fSets
+                        (
+                            objects.lookupClass(faceSet::typeName)
+                        );
+
                         forAllConstIter(IOobjectList, fSets, iter)
                         {
                             // Load faceSet
@@ -859,9 +867,12 @@ int main(int argc, char *argv[])
                         }
                         // pointSets
                         const labelList& pointMap =
-                            procMeshes.pointProcAddressing()[procI];
+                            procMeshes.pointProcAddressing()[proci];
 
-                        IOobjectList pSets(objects.lookupClass(pointSet::typeName));
+                        IOobjectList pSets
+                        (
+                            objects.lookupClass(pointSet::typeName)
+                        );
                         forAllConstIter(IOobjectList, pSets, iter)
                         {
                             // Load pointSet
@@ -994,7 +1005,7 @@ int main(int argc, char *argv[])
 
             // For the first region of a multi-region case additionally
             // copy the "uniform" directory in the time directory
-            if (regionI == 0 && regionDir != word::null)
+            if (regioni == 0 && regionDir != word::null)
             {
                 fileName uniformDir0
                 (

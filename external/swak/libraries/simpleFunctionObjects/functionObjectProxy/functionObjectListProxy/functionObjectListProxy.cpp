@@ -65,7 +65,7 @@ functionObjectListProxy::functionObjectListProxy
         &&
         !dict.found("functions")
     ) {
-        FatalErrorIn("functionObjectListProxy::functionObjectListProxy")
+        FatalErrorInFunction
             << "No entry 'functions' in dictionary of " << name << endl
                 << exit(FatalError);
     }
@@ -84,7 +84,7 @@ functionObjectListProxy::functionObjectListProxy
         &&
         readBool(dict.lookup("readDuringConstruction"))
     ) {
-        WarningIn("functionObjectListProxy::functionObjectListProxy")
+        WarningInFunction
             << "For " << name << " the 'readDuringConstruction'-variable "
                 << " is ignored because this concrete class does not allow "
                 << " constructing the functionObjects during construction"

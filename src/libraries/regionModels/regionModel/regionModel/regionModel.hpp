@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,15 +43,11 @@ SourceFiles
 namespace CML
 {
 
-// Forward declaration of classes
-//class fvMesh;
-//class Time;
-
 namespace regionModels
 {
 
 /*---------------------------------------------------------------------------*\
-                       Class regionModel Declaration
+                         Class regionModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class regionModel
@@ -71,9 +67,6 @@ private:
 
         //- Construct region mesh and fields
         void constructMeshObjects();
-
-        //- Construct region mesh and dictionary
-        void constructMeshObjects(const dictionary& dict);
 
         //- Initialise the region
         void initialise();
@@ -104,6 +97,9 @@ protected:
         //- Model coefficients dictionary
         dictionary coeffs_;
 
+        //- Dictionary of output properties
+        autoPtr<IOdictionary> outputPropertiesPtr_;
+
 
         // Addressing
 
@@ -118,6 +114,16 @@ protected:
         word regionName_;
 
 
+        // Inter-region AMI interpolation caching
+
+            //- List of region names this region is coupled to
+            mutable wordList interRegionAMINames_;
+
+            //- List of AMI objects per coupled region
+            mutable PtrList<PtrList<AMIPatchToPatchInterpolation> >
+                interRegionAMI_;
+
+
     // Protected member functions
 
         //- Read control parameters from dictionary
@@ -125,6 +131,15 @@ protected:
 
         //- Read control parameters from dictionary
         virtual bool read(const dictionary& dict);
+
+        //- Create or return a new inter-region AMI object
+        virtual const AMIPatchToPatchInterpolation& interRegionAMI
+        (
+            const regionModel& nbrRegion,
+            const label regionPatchi,
+            const label nbrPatchi,
+            const bool flip
+        ) const;
 
 
 public:
@@ -136,7 +151,7 @@ public:
     // Constructors
 
         //- Construct null
-        regionModel(const fvMesh& mesh);
+        regionModel(const fvMesh& mesh, const word& regionType);
 
         //- Construct from mesh, region type and name
         regionModel
@@ -156,7 +171,6 @@ public:
             const dictionary& dict,
             bool readFields = true
         );
-
 
 
     //- Destructor
@@ -194,12 +208,22 @@ public:
             //- Return the solution dictionary
             inline const dictionary& solution() const;
 
+            //- Return const access to the output properties dictionary
+            inline const IOdictionary& outputProperties() const;
+
+            //- Return output properties dictionary
+            inline IOdictionary& outputProperties();
+
 
             // Addressing
 
-                //- Return true if patchI on the primary region is a coupled
+                //- Return true if patchi on the local region is a coupled
+                //  patch to the primary region
+                inline bool isCoupledPatch(const label regionPatchi) const;
+
+                //- Return true if patchi on the primary region is a coupled
                 //  patch to the local region
-                inline bool isRegionPatch(const label patchI) const;
+                inline bool isRegionPatch(const label primaryPatchi) const;
 
                 //- Return the list of patch IDs on the primary region coupled
                 //  to this region
@@ -215,11 +239,51 @@ public:
 
         // Helper
 
+            //- Return the coupled patch ID paired with coupled patch
+            //  regionPatchi
+            label nbrCoupledPatchID
+            (
+                const regionModel& nbrRegion,
+                const label regionPatchi
+            ) const;
+
+            //- Map patch field from another region model to local patch
+            template<class Type>
+            tmp<CML::Field<Type> > mapRegionPatchField
+            (
+                const regionModel& nbrRegion,
+                const label regionPatchi,
+                const label nbrPatchi,
+                const Field<Type>& nbrField,
+                const bool flip = false
+            ) const;
+
+            //- Map patch field from another region model to local patch
+            template<class Type>
+            tmp<Field<Type> > mapRegionPatchField
+            (
+                const regionModel& nbrRegion,
+                const word& fieldName,
+                const label regionPatchi,
+                const bool flip = false
+            ) const;
+
+            //- Map patch internal field from another region model to local
+            //  patch
+            template<class Type>
+            tmp<Field<Type> > mapRegionPatchInternalField
+            (
+                const regionModel& nbrRegion,
+                const word& fieldName,
+                const label regionPatchi,
+                const bool flip = false
+            ) const;
+
             //- Convert a local region field to the primary region
             template<class Type>
             void toPrimary
             (
-                const label regionPatchI,
+                const label regionPatchi,
                 List<Type>& regionField
             ) const;
 
@@ -227,7 +291,7 @@ public:
             template<class Type>
             void toRegion
             (
-                const label regionPatchI,
+                const label regionPatchi,
                 List<Type>& primaryFieldField
             ) const;
 
@@ -235,7 +299,7 @@ public:
             template<class Type, class CombineOp>
             void toPrimary
             (
-                const label regionPatchI,
+                const label regionPatchi,
                 List<Type>& regionField,
                 const CombineOp& cop
             ) const;
@@ -244,7 +308,7 @@ public:
             template<class Type, class CombineOp>
             void toRegion
             (
-                const label regionPatchI,
+                const label regionPatchi,
                 List<Type>& primaryFieldField,
                 const CombineOp& cop
             ) const;
@@ -252,20 +316,23 @@ public:
 
         // Evolution
 
+            //- Main driver routing to evolve the region - calls other evolves
+            virtual void evolve();
+
             //- Pre-evolve region
             virtual void preEvolveRegion();
 
             //- Evolve the region
             virtual void evolveRegion();
 
-            //- Evolve the film
-            virtual void evolve();
+            //- Post-evolve region
+            virtual void postEvolveRegion();
 
 
         // I-O
 
             //- Provide some feedback
-            virtual void info() const;
+            virtual void info();
 };
 
 
@@ -315,12 +382,10 @@ inline const CML::fvMesh& CML::regionModels::regionModel::regionMesh() const
     }
     else if (!regionMeshPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "inline const CML::fvMesh&"
-            "CML::regionModels::regionModel::regionMesh() const"
-        )<< "Region mesh not available" << abort(FatalError);
+        FatalErrorInFunction
+         << "Region mesh not available" << abort(FatalError);
     }
+
     return regionMeshPtr_();
 }
 
@@ -336,12 +401,10 @@ inline CML::fvMesh& CML::regionModels::regionModel::regionMesh()
     }
     else if (!regionMeshPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "inline CML::fvMesh&"
-            "CML::regionModels::regionModel::regionMesh()"
-        )<< "Region mesh not available" << abort(FatalError);
+        FatalErrorInFunction
+           << "Region mesh not available" << abort(FatalError);
     }
+
     return regionMeshPtr_();
 }
 
@@ -359,14 +422,59 @@ CML::regionModels::regionModel::solution() const
 }
 
 
+inline const CML::IOdictionary&
+CML::regionModels::regionModel::outputProperties() const
+{
+    if (!outputPropertiesPtr_.valid())
+    {
+        FatalErrorInFunction
+            << "outputProperties dictionary not available"
+            << abort(FatalError);
+    }
+
+    return outputPropertiesPtr_();
+}
+
+
+inline CML::IOdictionary&
+CML::regionModels::regionModel::outputProperties()
+{
+    if (!outputPropertiesPtr_.valid())
+    {
+        FatalErrorInFunction
+            << "outputProperties dictionary not available"
+            << abort(FatalError);
+    }
+
+    return outputPropertiesPtr_();
+}
+
+
+inline bool CML::regionModels::regionModel::isCoupledPatch
+(
+    const label regionPatchi
+) const
+{
+    forAll(intCoupledPatchIDs_, i)
+    {
+        if (intCoupledPatchIDs_[i] == regionPatchi)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 inline bool CML::regionModels::regionModel::isRegionPatch
 (
-    const label patchI
+    const label primaryPatchi
 ) const
 {
     forAll(primaryPatchIDs_, i)
     {
-        if (primaryPatchIDs_[i] == patchI)
+        if (primaryPatchIDs_[i] == primaryPatchi)
         {
             return true;
         }
@@ -410,28 +518,161 @@ inline CML::label CML::regionModels::regionModel::regionPatchID
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
+CML::tmp<CML::Field<Type> >
+CML::regionModels::regionModel::mapRegionPatchField
+(
+    const regionModel& nbrRegion,
+    const label regionPatchi,
+    const label nbrPatchi,
+    const Field<Type>& nbrField,
+    const bool flip
+) const
+{
+    int oldTag = UPstream::msgType();
+    UPstream::msgType() = oldTag + 1;
+
+    const AMIPatchToPatchInterpolation& ami =
+        interRegionAMI(nbrRegion, regionPatchi, nbrPatchi, flip);
+
+    tmp<Field<Type> > tresult(ami.interpolateToSource(nbrField));
+
+    UPstream::msgType() = oldTag;
+
+    return tresult;
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> >
+CML::regionModels::regionModel::mapRegionPatchField
+(
+    const regionModel& nbrRegion,
+    const word& fieldName,
+    const label regionPatchi,
+    const bool flip
+) const
+{
+    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+
+    const fvMesh& nbrRegionMesh = nbrRegion.regionMesh();
+
+    if (nbrRegionMesh.foundObject<fieldType>(fieldName))
+    {
+        const label nbrPatchi = nbrCoupledPatchID(nbrRegion, regionPatchi);
+
+        int oldTag = UPstream::msgType();
+        UPstream::msgType() = oldTag + 1;
+
+        const AMIPatchToPatchInterpolation& ami =
+            interRegionAMI(nbrRegion, regionPatchi, nbrPatchi, flip);
+
+        const fieldType& nbrField =
+            nbrRegionMesh.lookupObject<fieldType>(fieldName);
+
+        const Field<Type>& nbrFieldp = nbrField.boundaryField()[nbrPatchi];
+
+        tmp<Field<Type> > tresult(ami.interpolateToSource(nbrFieldp));
+
+        UPstream::msgType() = oldTag;
+
+        return tresult;
+    }
+    else
+    {
+        const polyPatch& p = regionMesh().boundaryMesh()[regionPatchi];
+
+        return
+            tmp<Field<Type> >
+            (
+                new Field<Type>
+                (
+                    p.size(),
+                    Zero
+                )
+            );
+    }
+}
+
+
+template<class Type>
+CML::tmp<CML::Field<Type> >
+CML::regionModels::regionModel::mapRegionPatchInternalField
+(
+    const regionModel& nbrRegion,
+    const word& fieldName,
+    const label regionPatchi,
+    const bool flip
+) const
+{
+    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+
+    const fvMesh& nbrRegionMesh = nbrRegion.regionMesh();
+
+    if (nbrRegionMesh.foundObject<fieldType>(fieldName))
+    {
+        const label nbrPatchi = nbrCoupledPatchID(nbrRegion, regionPatchi);
+
+        int oldTag = UPstream::msgType();
+        UPstream::msgType() = oldTag + 1;
+
+        const AMIPatchToPatchInterpolation& ami =
+            interRegionAMI(nbrRegion, regionPatchi, nbrPatchi, flip);
+
+        const fieldType& nbrField =
+            nbrRegionMesh.lookupObject<fieldType>(fieldName);
+
+        const fvPatchField<Type>& nbrFieldp =
+            nbrField.boundaryField()[nbrPatchi];
+
+        tmp<Field<Type> > tresult
+        (
+            ami.interpolateToSource(nbrFieldp.patchInternalField())
+        );
+
+        UPstream::msgType() = oldTag;
+
+        return tresult;
+    }
+    else
+    {
+        const polyPatch& p = regionMesh().boundaryMesh()[regionPatchi];
+
+        return
+            tmp<Field<Type> >
+            (
+                new Field<Type>
+                (
+                    p.size(),
+                    Zero
+                )
+            );
+    }
+}
+
+
+template<class Type>
 void CML::regionModels::regionModel::toPrimary
 (
-    const label regionPatchI,
+    const label regionPatchi,
     List<Type>& regionField
 ) const
 {
     forAll(intCoupledPatchIDs_, i)
     {
-        if (intCoupledPatchIDs_[i] == regionPatchI)
+        if (intCoupledPatchIDs_[i] == regionPatchi)
         {
             const mappedPatchBase& mpb =
                 refCast<const mappedPatchBase>
                 (
-                    regionMesh().boundaryMesh()[regionPatchI]
+                    regionMesh().boundaryMesh()[regionPatchi]
                 );
             mpb.reverseDistribute(regionField);
             return;
         }
     }
 
-    FatalErrorIn("const void toPrimary(const label, List<Type>&) const")
-        << "Region patch ID " << regionPatchI << " not found in region mesh"
+    FatalErrorInFunction
+        << "Region patch ID " << regionPatchi << " not found in region mesh"
         << abort(FatalError);
 }
 
@@ -439,26 +680,26 @@ void CML::regionModels::regionModel::toPrimary
 template<class Type>
 void CML::regionModels::regionModel::toRegion
 (
-    const label regionPatchI,
+    const label regionPatchi,
     List<Type>& primaryField
 ) const
 {
     forAll(intCoupledPatchIDs_, i)
     {
-        if (intCoupledPatchIDs_[i] == regionPatchI)
+        if (intCoupledPatchIDs_[i] == regionPatchi)
         {
             const mappedPatchBase& mpb =
                 refCast<const mappedPatchBase>
                 (
-                    regionMesh().boundaryMesh()[regionPatchI]
+                    regionMesh().boundaryMesh()[regionPatchi]
                 );
             mpb.distribute(primaryField);
             return;
         }
     }
 
-    FatalErrorIn("const void toRegion(const label, List<Type>&) const")
-        << "Region patch ID " << regionPatchI << " not found in region mesh"
+    FatalErrorInFunction
+        << "Region patch ID " << regionPatchi << " not found in region mesh"
         << abort(FatalError);
 }
 
@@ -466,34 +707,27 @@ void CML::regionModels::regionModel::toRegion
 template<class Type, class CombineOp>
 void CML::regionModels::regionModel::toPrimary
 (
-    const label regionPatchI,
+    const label regionPatchi,
     List<Type>& regionField,
     const CombineOp& cop
 ) const
 {
     forAll(intCoupledPatchIDs_, i)
     {
-        if (intCoupledPatchIDs_[i] == regionPatchI)
+        if (intCoupledPatchIDs_[i] == regionPatchi)
         {
             const mappedPatchBase& mpb =
                 refCast<const mappedPatchBase>
                 (
-                    regionMesh().boundaryMesh()[regionPatchI]
+                    regionMesh().boundaryMesh()[regionPatchi]
                 );
             mpb.reverseDistribute(regionField, cop);
             return;
         }
     }
 
-    FatalErrorIn
-    (
-        "const void toPrimary"
-        "("
-            "const label, "
-            "List<Type>&, "
-            "const CombineOp&"
-        ") const"
-    )   << "Region patch ID " << regionPatchI << " not found in region mesh"
+    FatalErrorInFunction
+        << "Region patch ID " << regionPatchi << " not found in region mesh"
         << abort(FatalError);
 }
 
@@ -501,29 +735,27 @@ void CML::regionModels::regionModel::toPrimary
 template<class Type, class CombineOp>
 void CML::regionModels::regionModel::toRegion
 (
-    const label regionPatchI,
+    const label regionPatchi,
     List<Type>& primaryField,
     const CombineOp& cop
 ) const
 {
     forAll(intCoupledPatchIDs_, i)
     {
-        if (intCoupledPatchIDs_[i] == regionPatchI)
+        if (intCoupledPatchIDs_[i] == regionPatchi)
         {
             const mappedPatchBase& mpb =
                 refCast<const mappedPatchBase>
                 (
-                    regionMesh().boundaryMesh()[regionPatchI]
+                    regionMesh().boundaryMesh()[regionPatchi]
                 );
             mpb.distribute(primaryField, cop);
             return;
         }
     }
 
-    FatalErrorIn
-    (
-        "const void toRegion(const label, List<Type>&, const CombineOp&) const"
-    )   << "Region patch ID " << regionPatchI << " not found in region mesh"
+    FatalErrorInFunction
+        << "Region patch ID " << regionPatchi << " not found in region mesh"
         << abort(FatalError);
 }
 

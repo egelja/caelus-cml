@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,19 +47,15 @@ void Pstream::exchange
 {
     if (!contiguous<T>())
     {
-        FatalErrorIn
-        (
-            "Pstream::exchange(..)"
-        )   << "Continuous data only." << CML::abort(FatalError);
+        FatalErrorInFunction
+            << "Continuous data only." << CML::abort(FatalError);
     }
 
     if (sendBufs.size() != UPstream::nProcs())
     {
-        FatalErrorIn
-        (
-            "Pstream::exchange(..)"
-        )   << "Size of list:" << sendBufs.size()
-            << " does not equal the number of processors:"
+        FatalErrorInFunction
+            << "Size of list " << sendBufs.size()
+            << " does not equal the number of processors "
             << UPstream::nProcs()
             << CML::abort(FatalError);
     }
@@ -84,18 +80,18 @@ void Pstream::exchange
         // ~~~~~~~~~~~~~~~
 
         recvBufs.setSize(sendBufs.size());
-        forAll(sizes, procI)
+        forAll(sizes, proci)
         {
             label nRecv = sizes[procI][UPstream::myProcNo()];
 
-            if (procI != Pstream::myProcNo() && nRecv > 0)
+            if (proci != Pstream::myProcNo() && nRecv > 0)
             {
-                recvBufs[procI].setSize(nRecv);
+                recvBufs[proci].setSize(nRecv);
                 UIPstream::read
                 (
                     UPstream::nonBlocking,
-                    procI,
-                    reinterpret_cast<char*>(recvBufs[procI].begin()),
+                    proci,
+                    reinterpret_cast<char*>(recvBufs[proci].begin()),
                     nRecv*sizeof(T),
                     tag
                 );
@@ -106,26 +102,26 @@ void Pstream::exchange
         // Set up sends
         // ~~~~~~~~~~~~
 
-        forAll(sendBufs, procI)
+        forAll(sendBufs, proci)
         {
-            if (procI != Pstream::myProcNo() && sendBufs[procI].size() > 0)
+            if (proci != Pstream::myProcNo() && sendBufs[proci].size() > 0)
             {
                 if
                 (
                    !UOPstream::write
                     (
                         UPstream::nonBlocking,
-                        procI,
-                        reinterpret_cast<const char*>(sendBufs[procI].begin()),
-                        sendBufs[procI].size()*sizeof(T),
+                        proci,
+                        reinterpret_cast<const char*>(sendBufs[proci].begin()),
+                        sendBufs[proci].size()*sizeof(T),
                         tag
                     )
                 )
                 {
-                    FatalErrorIn("Pstream::exchange(..)")
+                    FatalErrorInFunction
                         << "Cannot send outgoing message. "
-                        << "to:" << procI << " nBytes:"
-                        << label(sendBufs[procI].size()*sizeof(T))
+                        << "to:" << proci << " nBytes:"
+                        << label(sendBufs[proci].size()*sizeof(T))
                         << CML::abort(FatalError);
                 }
             }

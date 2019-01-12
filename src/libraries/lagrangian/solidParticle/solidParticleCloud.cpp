@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -59,12 +59,6 @@ CML::solidParticleCloud::solidParticleCloud
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool CML::solidParticleCloud::hasWallImpactDistance() const
-{
-    return true;
-}
-
-
 void CML::solidParticleCloud::move(const dimensionedVector& g)
 {
     const volScalarField& rho = mesh_.lookupObject<const volScalarField>("rho");
@@ -78,7 +72,7 @@ void CML::solidParticleCloud::move(const dimensionedVector& g)
     solidParticle::trackingData
         td(*this, rhoInterp, UInterp, nuInterp, g.value());
 
-    Cloud<solidParticle>::move(td, mesh_.time().deltaTValue());
+    Cloud<solidParticle>::move(*this, td, mesh_.time().deltaTValue());
 }
 
 

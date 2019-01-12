@@ -115,7 +115,7 @@ public:
             const polyMesh& mesh,
             scalar tol = minTetQuality,
             const bool report = false,
-            labelHashSet* setPtr = NULL
+            labelHashSet* setPtr = nullptr
         );
 
         //- Return the tet decomposition of the given face, with
@@ -125,15 +125,6 @@ public:
             const polyMesh& mesh,
             label fI,
             label cI
-        );
-
-        //- Return the tet decomposition of the given triangle of the given face
-        static tetIndices triangleTetIndices
-        (
-            const polyMesh& mesh,
-            label fI,
-            label cI,
-            const label tetPtI      // offset in face
         );
 
         //- Return the tet decomposition of the given cell, see

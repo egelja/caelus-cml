@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,6 +23,8 @@ License
 #include "ListOps.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+const CML::labelRanges CML::labelRanges::endLabelRanges_;
 
 const CML::labelRanges::const_iterator CML::labelRanges::endIter_;
 

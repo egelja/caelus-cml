@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ namespace surfaceFilmModels
 
 autoPtr<injectionModel> injectionModel::New
 (
-    const surfaceFilmModel& model,
+    surfaceFilmRegionModel& model,
     const dictionary& dict,
     const word& modelType
 )
@@ -46,10 +46,8 @@ autoPtr<injectionModel> injectionModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "injectionModel::New(const surfaceFilmModel&, const dictionary&)"
-        )   << "Unknown injectionModel type " << modelType
+        FatalErrorInFunction
+            << "Unknown injectionModel type " << modelType
             << nl << nl << "Valid injectionModel types are:" << nl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);

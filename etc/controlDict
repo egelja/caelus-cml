@@ -31,15 +31,27 @@ Documentation
 
 InfoSwitches
 {
+    // The default ASCII write precision
     writePrecision  6;
+
+    // Enable job info
     writeJobInfo    0;
+
     writeDictionaries 0;
+
+    // Write lagrangian "positions" file in v8.04 format (at earlier)
+    writeLagrangianPositions 1;
+
     allowSystemOperations   0;
+
+
 }
 
 
 OptimisationSwitches
 {
+    // On NFS mounted file system: maximum wait for files to appear/get
+    // updated. Set to 0 on distributed case.
     fileModificationSkew 10;
 
     //- Modification checking:
@@ -54,9 +66,9 @@ OptimisationSwitches
     nProcsSimpleSum 0;
 
     // Force dumping (at next timestep) upon signal (-1 to disable)
-    writeNowSignal              -1; //10;
+    writeNowSignal          -1; //10;
     // Force dumping (at next timestep) upon signal (-1 to disable) and exit
-    stopAtWriteNowSignal        -1;
+    stopAtWriteNowSignal    -1;
 }
 
 
@@ -65,7 +77,6 @@ DebugSwitches
     Analytical          0;
     APIdiffCoefFunc     0;
     Ar                  0;
-    BICCG               0;
     BirdCarreau         0;
     C10H22              0;
     C12H26              0;
@@ -96,7 +107,7 @@ DebugSwitches
     ChomiakInjector     0;
     Cloud<basicKinematicParcel> 0;
     Cloud<basicReactingParcel>  0;
-    Cloud<basicThermoParcel>    0;
+    Cloud<fluidThermoParcel>    0;
     Cloud<indexedParticle>  0;
     Cloud<parcel>           0;
     Cloud<passiveParticle>  0;
@@ -148,7 +159,6 @@ DebugSwitches
     HerschelBulkley     0;
     HrenyaSinclair      0;
     IC8H18              0;
-    ICCG                0;
     IDDESDelta          0;
     IDEA                0;
     IFstream            0;
@@ -164,9 +174,9 @@ DebugSwitches
     KRR4                0;
     KinematicCloud<basicKinematicParcel> 0;
     KinematicCloud<basicReactingParcel> 0;
-    KinematicCloud<basicThermoParcel>   0;
+    KinematicCloud<fluidThermoParcel>   0;
     KinematicParcel<basicReactingParcel> 0;
-    KinematicParcel<basicThermoParcel>  0;
+    KinematicParcel<fluidThermoParcel>  0;
     LESModel            0;
     LESdelta            0;
     LESfilter           0;
@@ -274,9 +284,9 @@ DebugSwitches
     TAB                 0;
     Table               0;
     ThermoCloud<basicReactingParcel>    0;
-    ThermoCloud<basicThermoParcel>      0;
+    ThermoCloud<fluidThermoParcel>      0;
     ThermoParcel<basicReactingParcel>   0;
-    ThermoParcel<basicThermoParcel>     0;
+    ThermoParcel<fluidThermoParcel>     0;
     UMIST               0;
     UMISTV              0;
     UpwindFitData<cubicUpwindFitPolynomial> 0;
@@ -315,9 +325,9 @@ DebugSwitches
     basicMixture        0;
     basicReactingCloud  0;
     basicReactingParcel 0;
-    basicThermo         0;
-    basicThermoCloud    0;
-    basicThermoParcel   0;
+    fluidThermo         0;
+    fluidThermoCloud    0;
+    fluidThermoParcel   0;
     biLinearFit         0;
     binaryAbsorptionEmission 0;
     blended             0;
@@ -806,6 +816,7 @@ DebugSwitches
     symmTensorAverageField 0;
     symmTensorField     0;
     symmetryPlane       0;
+    symmetry            0;
     syringePressure     0;
     tensorAverageField  0;
     tensorField         0;
@@ -901,60 +912,60 @@ DimensionedConstants
     {
         universal
         {
-            c               c [ 0 1 -1 0 0 0 0 ] 2.99792e+08;
-            G               G [ -1 3 -2 0 0 0 0 ] 6.67429e-11;
-            h               h [ 1 2 -1 0 0 0 0 ] 6.62607e-34;
+            c               c [0 1 -1 0 0 0 0] 2.99792e+08;
+            G               G [-1 3 -2 0 0 0 0] 6.67429e-11;
+            h               h [1 2 -1 0 0 0 0] 6.62607e-34;
         }
         electromagnetic
         {
-            e               e [ 0 0 1 0 0 1 0 ] 1.60218e-19;
+            e               e [0 0 1 0 0 1 0] 1.60218e-19;
         }
         atomic
         {
-            me              me [ 1 0 0 0 0 0 0 ] 9.10938e-31;
-            mp              mp [ 1 0 0 0 0 0 0 ] 1.67262e-27;
+            me              me [1 0 0 0 0 0 0] 9.10938e-31;
+            mp              mp [1 0 0 0 0 0 0] 1.67262e-27;
         }
         physicoChemical
         {
-            mu              mu [ 1 0 0 0 0 0 0 ] 1.66054e-27;
-            k               k [ 1 2 -2 -1 0 0 0 ] 1.38065e-23;
+            mu              mu [1 0 0 0 0 0 0] 1.66054e-27;
+            k               k [1 2 -2 -1 0 0 0] 1.38065e-23;
         }
         standard
         {
             //- Standard pressure [Pa]
-            Pstd            Pstd [ 1 -1 -2 0 0 0 0 ] 100000;
+            Pstd            Pstd [1 -1 -2 0 0 0 0] 100000;
             //- Standard temperature [degK]
-            Tstd            Tstd [ 0 0 0 1 0 0 0 ] 298.15;
+            Tstd            Tstd [0 0 0 1 0 0 0] 298.15;
         }
     }
     USCSCoeffs
     {
         universal
         {
-            c               c [ 0 1 -1 0 0 0 0 ] 9.83558e+08;
-            G               G [ -1 3 -2 0 0 0 0 ] 1.06909e-09;
-            h               h [ 1 2 -1 0 0 0 0 ] 1.57234e-32;
+            c               c [0 1 -1 0 0 0 0] 9.83558e+08;
+            G               G [-1 3 -2 0 0 0 0] 1.06909e-09;
+            h               h [1 2 -1 0 0 0 0] 1.57234e-32;
         }
         electromagnetic
         {
-            e               e [ 0 0 1 0 0 1 0 ] 1.60218e-19;
+            e               e [0 0 1 0 0 1 0] 1.60218e-19;
         }
         atomic
         {
-            me              me [ 1 0 0 0 0 0 0 ] 2.00825e-30;
-            mp              mp [ 1 0 0 0 0 0 0 ] 3.68746e-27;
+            me              me [1 0 0 0 0 0 0] 2.00825e-30;
+            mp              mp [1 0 0 0 0 0 0] 3.68746e-27;
         }
         physicoChemical
         {
-            mu              mu [ 1 0 0 0 0 0 0 ] 3.66083e-27;
-            k               k [ 1 2 -2 -1 0 0 0 ] 1.82012e-22;
+            mu              mu [1 0 0 0 0 0 0] 3.66083e-27;
+            k               k [1 2 -2 -1 0 0 0] 1.82012e-22;
         }
         standard
         {
             //- Standard pressure [lbm/ft^2]
-            Pstd            Pstd [ 1 -1 -2 0 0 0 0 ] 2088.6;
+            Pstd            Pstd [1 -1 -2 0 0 0 0] 2088.6;
             //- Standard temperature [degR]
-            Tstd            Tstd [ 0 0 0 1 0 0 0 ] 536.67;
+            Tstd            Tstd [0 0 0 1 0 0 0] 536.67;
         }
     }
 }

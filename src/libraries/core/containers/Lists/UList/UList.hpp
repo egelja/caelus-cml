@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
+Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,6 +41,7 @@ Description
 #include "uLabel.hpp"
 #include "restrict.hpp"
 #include "nullSingleton.hpp"
+#include "zero.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -192,12 +194,6 @@ public:
             inline void checkIndex(const label i) const;
 
 
-        //- Write the UList as a dictionary entry.
-        void writeEntry(Ostream&) const;
-
-        //- Write the UList as a dictionary entry with keyword.
-        void writeEntry(const word& keyword, Ostream&) const;
-
         //- Assign elements to those from UList.
         void assign(const UList<T>&);
 
@@ -216,7 +212,10 @@ public:
         inline operator const CML::List<T>&() const;
 
         //- Assignment of all entries to the given value
-        void operator=(const T&);
+        void operator=(const T& val);
+
+        //- Assignment of all entries to zero
+        void operator=(const zero);
 
 
     // STL type definitions
@@ -338,6 +337,19 @@ public:
         bool operator>=(const UList<T>&) const;
 
 
+    // Writing
+
+        //- Write the UList as a dictionary entry.
+        void writeEntry(Ostream&) const;
+
+        //- Write the List as a dictionary entry with keyword
+        void writeEntry(const word& keyword, Ostream& os) const;
+
+        //- Write the List, with line-breaks in ASCII if the list length
+        //- exceeds shortListLen.
+        //  Using '0' suppresses line-breaks entirely.
+        Ostream& writeList(Ostream& os, const label shortListLen=0) const;
+
     // Ostream operator
 
         // Write UList to Ostream.
@@ -438,7 +450,7 @@ inline void CML::UList<T>::checkStart(const label start) const
 {
     if (start<0 || (start && start>=size_))
     {
-        FatalErrorIn("UList<T>::checkStart(const label)")
+        FatalErrorInFunction
             << "start " << start << " out of range 0 ... " << max(size_-1, 0)
             << abort(FatalError);
     }
@@ -451,7 +463,7 @@ inline void CML::UList<T>::checkSize(const label size) const
 {
     if (size<0 || size>size_)
     {
-        FatalErrorIn("UList<T>::checkSize(const label)")
+        FatalErrorInFunction
             << "size " << size << " out of range 0 ... " << size_
             << abort(FatalError);
     }
@@ -464,13 +476,13 @@ inline void CML::UList<T>::checkIndex(const label i) const
 {
     if (!size_)
     {
-        FatalErrorIn("UList<T>::checkIndex(const label)")
+        FatalErrorInFunction
             << "attempt to access element from zero sized list"
             << abort(FatalError);
     }
     else if (i<0 || i>=size_)
     {
-        FatalErrorIn("UList<T>::checkIndex(const label)")
+        FatalErrorInFunction
             << "index " << i << " out of range 0 ... " << size_-1
             << abort(FatalError);
     }
@@ -789,7 +801,7 @@ void CML::UList<T>::assign(const UList<T>& a)
 {
     if (a.size_ != this->size_)
     {
-        FatalErrorIn("UList<T>::assign(const UList<T>&)")
+        FatalErrorInFunction
             << "ULists have different sizes: "
             << this->size_ << " " << a.size_
             << abort(FatalError);
@@ -826,6 +838,14 @@ void CML::UList<T>::operator=(const T& t)
     List_END_FOR_ALL
 }
 
+template<class T>
+void CML::UList<T>::operator=(const zero)
+{
+    List_ACCESS(T, (*this), vp);
+    List_FOR_ALL((*this), i)
+        List_ELEM((*this), vp, i) = Zero;
+    List_END_FOR_ALL
+}
 
 // * * * * * * * * * * * * * * STL Member Functions  * * * * * * * * * * * * //
 
@@ -834,7 +854,7 @@ void CML::UList<T>::swap(UList<T>& a)
 {
     if (a.size_ != this->size_)
     {
-        FatalErrorIn("UList<T>::swap(const UList<T>&)")
+        FatalErrorInFunction
             << "ULists have different sizes: "
             << this->size_ << " " << a.size_
             << abort(FatalError);
@@ -858,7 +878,7 @@ std::streamsize CML::UList<T>::byteSize() const
 {
     if (!contiguous<T>())
     {
-        FatalErrorIn("UList<T>::byteSize()")
+        FatalErrorInFunction
             << "Cannot return the binary size of a list of "
                "non-primitive elements"
             << abort(FatalError);
@@ -1023,6 +1043,80 @@ void CML::UList<T>::writeEntry(const word& keyword, Ostream& os) const
 
 
 template<class T>
+CML::Ostream& CML::UList<T>::writeList
+(
+    Ostream& os,
+    const label shortListLen
+) const
+{
+    const UList<T>& list = *this;
+
+    const label len = list.size();
+
+    // Write list contents depending on data format
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
+    {
+        if (contiguous<T>() && list.uniform())
+        {
+            // Two or more entries, and all entries have identical values.
+            os  << len << token::BEGIN_BLOCK << list[0] << token::END_BLOCK;
+        }
+        else if
+        (
+            len <= 1 || !shortListLen
+         || (len <= shortListLen && contiguous<T>())
+        )
+        {
+            // Size and start delimiter
+            os << len << token::BEGIN_LIST;
+
+            // Contents
+            for (label i=0; i < len; ++i)
+            {
+                if (i) os << token::SPACE;
+                os << list[i];
+            }
+
+            // End delimiter
+            os << token::END_LIST;
+        }
+        else
+        {
+            // Size and start delimiter
+            os << nl << len << nl << token::BEGIN_LIST << nl;
+
+            // Contents
+            for (label i=0; i < len; ++i)
+            {
+                os << list[i] << nl;
+            }
+
+            // End delimiter
+            os << token::END_LIST << nl;
+        }
+    }
+    else
+    {
+        // Contents are binary and contiguous
+        os << nl << len << nl;
+
+        if (len)
+        {
+            // write(...) includes surrounding start/end delimiters
+            os.write
+            (
+                reinterpret_cast<const char*>(list.cdata()),
+                list.byteSize()
+            );
+        }
+    }
+
+    os.check(FUNCTION_NAME);
+    return os;
+}
+
+
+template<class T>
 CML::Ostream& CML::operator<<(CML::Ostream& os, const CML::UList<T>& L)
 {
     // Write list contents depending on data format
@@ -1125,7 +1219,7 @@ CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
 
         if (s != L.size())
         {
-            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect length for UList. Read " << s
                 << " expected " << L.size()
                 << exit(FatalIOError);
@@ -1142,7 +1236,7 @@ CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
         // Set list length to that read
         if (s != L.size())
         {
-            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect length for UList. Read " << s
                 << " expected " << L.size()
                 << exit(FatalIOError);
@@ -1207,7 +1301,7 @@ CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected '(', found "
                 << firstToken.info()
                 << exit(FatalIOError);
@@ -1221,7 +1315,7 @@ CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
 
         if (sll.size() != L.size())
         {
-            FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect length for UList. Read " << sll.size()
                 << " expected " << L.size()
                 << exit(FatalIOError);
@@ -1242,7 +1336,7 @@ CML::Istream& CML::operator>>(Istream& is, UList<T>& L)
     }
     else
     {
-        FatalIOErrorIn("operator>>(Istream&, UList<T>&)", is)
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);

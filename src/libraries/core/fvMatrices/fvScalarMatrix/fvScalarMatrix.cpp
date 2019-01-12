@@ -93,7 +93,7 @@ CML::fvMatrix<CML::scalar>::solver
 
 
 template<>
-CML::lduMatrix::solverPerformance CML::fvMatrix<CML::scalar>::fvSolver::solve
+CML::solverPerformance CML::fvMatrix<CML::scalar>::fvSolver::solve
 (
     const dictionary& solverControls
 )
@@ -111,7 +111,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<CML::scalar>::fvSolver::solve
     // assign new solver controls
     solver_->read(solverControls);
 
-    lduMatrix::solverPerformance solverPerf = solver_->solve
+    solverPerformance solverPerf = solver_->solve
     (
         psi.internalField(),
         totalSource
@@ -130,7 +130,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<CML::scalar>::fvSolver::solve
 
 
 template<>
-CML::lduMatrix::solverPerformance CML::fvMatrix<CML::scalar>::solve
+CML::solverPerformance CML::fvMatrix<CML::scalar>::solve
 (
     const dictionary& solverControls
 )
@@ -152,7 +152,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<CML::scalar>::solve
     addBoundarySource(totalSource, false);
 
     // Solver call
-    lduMatrix::solverPerformance solverPerf = lduMatrix::solver::New
+    solverPerformance solverPerf = lduMatrix::solver::New
     (
         psi.name(),
         *this,

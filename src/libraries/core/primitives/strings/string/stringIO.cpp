@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -49,7 +49,7 @@ CML::Istream& CML::operator>>(Istream& is, string& s)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, string&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected string, found " << t.info()
             << exit(FatalIOError);
 

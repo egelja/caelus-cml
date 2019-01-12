@@ -64,10 +64,8 @@ stokesSecond::stokesSecond
     {
         if (debug_)
         {
-            WarningIn
-            (
-                "label stokesSecond::eta(point x, scalar time)"
-            ) << endl << "The validity of stokes second order is violated."
+            WarningInFunction
+              << endl << "The validity of stokes second order is violated."
             << endl << "a_1 < 4 a_2, being first and second order"
             << " amplitudes respectively." << endl << endl;
             Info << "a1 = " << H_/2.0 << " , a2 = "

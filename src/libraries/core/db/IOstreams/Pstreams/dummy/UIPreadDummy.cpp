@@ -47,20 +47,7 @@ CML::UIPstream::UIPstream
     clearAtEnd_(clearAtEnd),
     messageSize_(0)
 {
-    notImplemented
-    (
-        "UIPstream::UIPstream\n"
-        "(\n"
-            "const commsTypes,\n"
-            "const int,\n"
-            "DynamicList<char>&,\n"
-            "label&,\n"
-            "const int,\n"
-            "const bool,\n"
-            "streamFormat,\n"
-            "versionNumber\n"
-        ")"
-    );
+    NotImplemented;
 }
 
 
@@ -79,14 +66,7 @@ CML::UIPstream::UIPstream
     clearAtEnd_(true),
     messageSize_(0)
 {
-    notImplemented
-    (
-        "UIPstream::UIPstream\n"
-        "(\n"
-            "const int,\n"
-            "PstreamBuffers&\n"
-        ")"
-    );
+    NotImplemented;
 }
 
 
@@ -101,17 +81,7 @@ CML::label CML::UIPstream::read
     const int tag
 )
 {
-    notImplemented
-    (
-        "UIPstream::read"
-        "("
-            "const commsTypes,"
-            "const int fromProcNo,"
-            "char* buf,"
-            "const label bufSize,"
-            "const int tag"
-        ")"
-     );
+    NotImplemented;
 
      return 0;
 }

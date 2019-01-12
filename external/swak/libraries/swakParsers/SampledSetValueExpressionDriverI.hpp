@@ -37,7 +37,7 @@ namespace CML {
 
     label SampledSetValueExpressionDriver::pointSize() const
     {
-        FatalErrorIn("SampledSetValueExpressionDriver::pointSize()")
+        FatalErrorInFunction
         << "sampledSets are a collection of points. So the 'cell' functionality should be used"
             << endl
             << exit(FatalError);
@@ -193,7 +193,7 @@ namespace CML {
         }
 
         if(!result.valid()) {
-            FatalErrorIn("SampledSetValueExpressionDriver::sampleOrInterpolateInternal(const word &name)")
+            FatalErrorInFunction
                 << "No valid result"
                     << endl
                     << exit(FatalError);

@@ -104,12 +104,8 @@ bool CML::functionEntries::includeEntry::execute
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "functionEntries::includeEntry::includeEntry"
-            "(dictionary& parentDict, Istream&)",
-            is
-        )   << "Cannot open include file " << ifs.name()
+        FatalIOErrorInFunction(is)
+            << "Cannot open include file " << ifs.name()
             << " while reading dictionary " << parentDict.name()
             << exit(FatalIOError);
 
@@ -139,12 +135,8 @@ bool CML::functionEntries::includeEntry::execute
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "functionEntries::includeEntry::includeEntry"
-            "(dictionary& parentDict, primitiveEntry&, Istream&)",
-            is
-        )   << "Cannot open include file " << ifs.name()
+        FatalIOErrorInFunction(is)
+            << "Cannot open include file " << ifs.name()
             << " while reading dictionary " << parentDict.name()
             << exit(FatalIOError);
 

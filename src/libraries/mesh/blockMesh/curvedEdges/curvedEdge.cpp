@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,8 +64,8 @@ CML::curvedEdge::curvedEdge(const curvedEdge& c)
 
 CML::autoPtr<CML::curvedEdge> CML::curvedEdge::clone() const
 {
-    notImplemented("curvedEdge::clone() const");
-    return autoPtr<curvedEdge>(NULL);
+    NotImplemented;
+    return autoPtr<curvedEdge>(nullptr);
 }
 
 
@@ -89,7 +89,7 @@ CML::autoPtr<CML::curvedEdge> CML::curvedEdge::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalErrorIn("curvedEdge::New(const pointField&, Istream&)")
+        FatalErrorInFunction
             << "Unknown curvedEdge type "
             << edgeType << nl << nl
             << "Valid curvedEdge types are" << endl
@@ -131,7 +131,7 @@ CML::pointField CML::curvedEdge::appendEndPoints
 
 void CML::curvedEdge::operator=(const curvedEdge&)
 {
-    notImplemented("void curvedEdge::operator=(const curvedEdge&)");
+    NotImplemented;
 }
 
 

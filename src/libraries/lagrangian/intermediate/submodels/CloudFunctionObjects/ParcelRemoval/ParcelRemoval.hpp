@@ -114,36 +114,17 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
-            //- Post-evolve hook
-            virtual void postEvolve();
-
             //- Post-move hook
             virtual void postMove
             (
                 typename CloudType::parcelType& p,
-                const label cellI,
+                const label celli,
                 const scalar dt,
                 const point& position0,
                 bool& keepParticle
             );
 
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
 
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
-                bool& keepParticle
-            );
 };
 
 
@@ -170,7 +151,7 @@ CML::ParcelRemoval<CloudType>::ParcelRemoval
     (
         this->coeffDict().template lookupOrDefault<word>("alphaName", "alpha")
     ),
-    alphaPtr_(NULL),
+    alphaPtr_(nullptr),
     threshold_(readScalar(this->coeffDict().lookup("threshold")))
 {}
 
@@ -200,7 +181,7 @@ CML::ParcelRemoval<CloudType>::~ParcelRemoval()
 template<class CloudType>
 void CML::ParcelRemoval<CloudType>::preEvolve()
 {
-    if (alphaPtr_ == NULL)
+    if (alphaPtr_ == nullptr)
     {
         const fvMesh& mesh = this->owner().mesh();
         const volScalarField& alpha =
@@ -211,56 +192,27 @@ void CML::ParcelRemoval<CloudType>::preEvolve()
 }
 
 
-template<class CloudType>
-void CML::ParcelRemoval<CloudType>::postEvolve()
-{
-    // Do nothing
-}
+
 
 
 template<class CloudType>
 void CML::ParcelRemoval<CloudType>::postMove
 (
-    typename CloudType::parcelType& p,
-    const label cellI,
+    parcelType& p,
+    const label celli,
     const scalar dt,
     const point& position0,
     bool& keepParticle
 )
 {
     bool& active = p.active();
-    if (alphaPtr_->internalField()[cellI] < threshold_)
+    if (alphaPtr_->internalField()[celli] < threshold_)
     {
         keepParticle = false;
         active = false;
     }
 }
 
-
-template<class CloudType>
-void CML::ParcelRemoval<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParcelRemoval<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

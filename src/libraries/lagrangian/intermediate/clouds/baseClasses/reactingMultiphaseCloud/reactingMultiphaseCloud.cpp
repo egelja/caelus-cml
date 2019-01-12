@@ -35,7 +35,7 @@ CML::reactingMultiphaseCloud::reactingMultiphaseCloud()
 {}
 
 
-// * * * * * * * * * * * * * * * *  Destructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * *  Destructor   * * * * * * * * * * * * * * //
 
 CML::reactingMultiphaseCloud::~reactingMultiphaseCloud()
 {}

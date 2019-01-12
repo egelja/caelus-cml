@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,8 +29,7 @@ void CML::polyMesh::setInstance(const fileName& inst)
 {
     if (debug)
     {
-        Info<< "void polyMesh::setInstance(const fileName& inst) : "
-            << "Resetting file instance to " << inst << endl;
+        InfoInFunction << "Resetting file instance to " << inst << endl;
     }
 
     points_.writeOpt() = IOobject::AUTO_WRITE;
@@ -56,6 +55,12 @@ void CML::polyMesh::setInstance(const fileName& inst)
 
     cellZones_.writeOpt() = IOobject::AUTO_WRITE;
     cellZones_.instance() = inst;
+
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_->writeOpt() = IOobject::AUTO_WRITE;
+        tetBasePtIsPtr_->instance() = inst;
+    }
 }
 
 
@@ -63,8 +68,7 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
 {
     if (debug)
     {
-        Info<< "polyMesh::readUpdateState polyMesh::readUpdate() : "
-            << "Updating mesh based on saved data." << endl;
+        InfoInFunction << "Updating mesh based on saved data." << endl;
     }
 
     // Find the point and cell instance
@@ -181,12 +185,12 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
             wordList oldTypes = boundary_.types();
             wordList oldNames = boundary_.names();
 
-            forAll(oldTypes, patchI)
+            forAll(oldTypes, patchi)
             {
                 if
                 (
-                    oldTypes[patchI] != newTypes[patchI]
-                 || oldNames[patchI] != newNames[patchI]
+                    oldTypes[patchi] != newTypes[patchi]
+                 || oldNames[patchi] != newNames[patchi]
                 )
                 {
                     boundaryChanged = true;
@@ -197,30 +201,30 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
 
         if (boundaryChanged)
         {
-            WarningIn("polyMesh::readUpdateState polyMesh::readUpdate()")
+            WarningInFunction
                 << "Number of patches has changed.  This may have "
                 << "unexpected consequences.  Proceed with care." << endl;
 
             boundary_.clear();
             boundary_.setSize(newBoundary.size());
 
-            forAll(newBoundary, patchI)
+            forAll(newBoundary, patchi)
             {
-                boundary_.set(patchI, newBoundary[patchI].clone(boundary_));
+                boundary_.set(patchi, newBoundary[patchi].clone(boundary_));
             }
         }
         else
         {
-            forAll(boundary_, patchI)
+            forAll(boundary_, patchi)
             {
-                boundary_[patchI] = polyPatch
+                boundary_[patchi] = polyPatch
                 (
-                    newBoundary[patchI].name(),
-                    newBoundary[patchI].size(),
-                    newBoundary[patchI].start(),
-                    patchI,
+                    newBoundary[patchi].name(),
+                    newBoundary[patchi].size(),
+                    newBoundary[patchi].start(),
+                    patchi,
                     boundary_,
-                    newBoundary[patchI].type()
+                    newBoundary[patchi].type()
                 );
             }
         }
@@ -266,8 +270,8 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
 
         // Derived info
         bounds_ = boundBox(points_);
-        geometricD_ = Vector<label>::zero;
-        solutionD_ = Vector<label>::zero;
+        geometricD_ = Zero;
+        solutionD_ = Zero;
 
         // Zones
         pointZoneMesh newPointZones
@@ -384,6 +388,9 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
             cellZones_.set(czI, newCellZones[czI].clone(cellZones_));
         }
 
+        // Re-read tet base points
+        tetBasePtIsPtr_ = readTetBasePtIs();
+
 
         if (boundaryChanged)
         {
@@ -404,9 +411,12 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
 
         clearGeom();
 
-        points_.instance() = pointsInst;
 
-        points_ = pointIOField
+        label nOldPoints = points_.size();
+
+        points_.clear();
+
+        pointIOField newPoints
         (
             IOobject
             (
@@ -420,12 +430,35 @@ CML::polyMesh::readUpdateState CML::polyMesh::readUpdate()
             )
         );
 
+        if (nOldPoints != 0 && nOldPoints != newPoints.size())
+        {
+            FatalErrorInFunction
+                << "Point motion detected but number of points "
+                << newPoints.size() << " in "
+                << newPoints.objectPath() << " does not correspond to "
+                << " current " << nOldPoints
+                << exit(FatalError);
+        }
+
+        points_.transfer(newPoints);
+        points_.instance() = pointsInst;
+
+        // Re-read tet base points
+        autoPtr<labelIOList> newTetBasePtIsPtr = readTetBasePtIs();
+        if (newTetBasePtIsPtr.valid())
+        {
+            tetBasePtIsPtr_ = newTetBasePtIsPtr;
+        }
+
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
+
         // Derived info
         bounds_ = boundBox(points_);
 
         // Rotation can cause direction vector to change
-        geometricD_ = Vector<label>::zero;
-        solutionD_ = Vector<label>::zero;
+        geometricD_ = Zero;
+        solutionD_ = Zero;
 
         return polyMesh::POINTS_MOVED;
     }

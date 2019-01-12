@@ -49,17 +49,8 @@ CML::fvFieldReconstructor::fvFieldReconstructor
          || boundaryProcAddressing[procI].size() != procMesh.boundary().size()
         )
         {
-            FatalErrorIn
-            (
-                "fvFieldReconstructor::fvFieldReconstructor\n"
-                "(\n"
-                "   fvMesh&,\n"
-                "   const PtrList<fvMesh>&,\n"
-                "   const PtrList<labelIOList>&,\n"
-                "   const PtrList<labelIOList>&,\n"
-                "   const PtrList<labelIOList>&\n"
-                ")"
-            )   << "Size of maps does not correspond to size of mesh"
+            FatalErrorInFunction
+                << "Size of maps does not correspond to size of mesh"
                 << " for processor " << procI << endl
                 << "faceProcAddressing : " << faceProcAddressing[procI].size()
                 << " nFaces : " << procMesh.nFaces() << endl

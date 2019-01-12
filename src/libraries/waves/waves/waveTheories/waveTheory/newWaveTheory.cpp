@@ -58,10 +58,8 @@ autoPtr<waveTheory> waveTheory::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "waveTheory::New(const word&, const fvMesh&)"
-        )   << "Unknown wave theory type " << waveTheoryTypeName
+        FatalErrorInFunction
+            << "Unknown wave theory type " << waveTheoryTypeName
             << endl << endl
             << "Valid wave theories types are :" << endl
             << dictionaryConstructorTablePtr_->toc()

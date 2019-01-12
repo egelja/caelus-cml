@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,7 +52,7 @@ void CML::regionModels::singleLayerRegion::constructMeshObjects()
                 NO_WRITE
             ),
             regionMesh(),
-            dimensionedVector("zero", dimless, vector::zero),
+            dimensionedVector("zero", dimless, Zero),
             zeroGradientFvPatchField<vector>::typeName
         )
     );
@@ -91,8 +91,8 @@ void CML::regionModels::singleLayerRegion::initialise()
     volScalarField& magSf = magSfPtr_();
     forAll(intCoupledPatchIDs_, i)
     {
-        const label patchI = intCoupledPatchIDs_[i];
-        const polyPatch& pp = rbm[patchI];
+        const label patchi = intCoupledPatchIDs_[i];
+        const polyPatch& pp = rbm[patchi];
         const labelList& fCells = pp.faceCells();
 
         nBoundaryFaces += fCells.size();
@@ -105,7 +105,7 @@ void CML::regionModels::singleLayerRegion::initialise()
 
     if (nBoundaryFaces != regionMesh().nCells())
     {
-        FatalErrorIn("singleLayerRegion::initialise()")
+        FatalErrorInFunction
             << "Number of primary region coupled boundary faces not equal to "
             << "the number of cells in the local region" << nl << nl
             << "Number of cells = " << regionMesh().nCells() << nl
@@ -117,19 +117,19 @@ void CML::regionModels::singleLayerRegion::initialise()
     passivePatchIDs_.setSize(intCoupledPatchIDs_.size(), -1);
     forAll(intCoupledPatchIDs_, i)
     {
-        const label patchI = intCoupledPatchIDs_[i];
-        const polyPatch& ppIntCoupled = rbm[patchI];
+        const label patchi = intCoupledPatchIDs_[i];
+        const polyPatch& ppIntCoupled = rbm[patchi];
         if (ppIntCoupled.size() > 0)
         {
-            label cellId = rbm[patchI].faceCells()[0];
+            label cellId = rbm[patchi].faceCells()[0];
             const cell& cFaces = regionMesh().cells()[cellId];
 
-            label faceI = ppIntCoupled.start();
-            label faceO = cFaces.opposingFaceLabel(faceI, regionMesh().faces());
+            label facei = ppIntCoupled.start();
+            label faceO = cFaces.opposingFaceLabel(facei, regionMesh().faces());
 
-            label passivePatchI = rbm.whichPatch(faceO);
-            passivePatchIDs_[i] = passivePatchI;
-            const polyPatch& ppPassive = rbm[passivePatchI];
+            label passivePatchi = rbm.whichPatch(faceO);
+            passivePatchIDs_[i] = passivePatchi;
+            const polyPatch& ppPassive = rbm[passivePatchi];
             UIndirectList<scalar>(passiveMagSf, ppPassive.faceCells()) =
                 mag(ppPassive.faceAreas());
         }
@@ -153,11 +153,15 @@ bool CML::regionModels::singleLayerRegion::read()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::regionModels::singleLayerRegion::singleLayerRegion(const fvMesh& mesh)
+CML::regionModels::singleLayerRegion::singleLayerRegion
+(
+    const fvMesh& mesh,
+    const word& regionType
+)
 :
-    regionModel(mesh),
-    nHatPtr_(NULL),
-    magSfPtr_(NULL),
+    regionModel(mesh, regionType),
+    nHatPtr_(nullptr),
+    magSfPtr_(nullptr),
     passivePatchIDs_()
 {}
 
@@ -171,8 +175,8 @@ CML::regionModels::singleLayerRegion::singleLayerRegion
 )
 :
     regionModel(mesh, regionType, modelName, false),
-    nHatPtr_(NULL),
-    magSfPtr_(NULL),
+    nHatPtr_(nullptr),
+    magSfPtr_(nullptr),
     passivePatchIDs_()
 {
     if (active_)
@@ -200,7 +204,7 @@ const CML::volVectorField& CML::regionModels::singleLayerRegion::nHat() const
 {
     if (!nHatPtr_.valid())
     {
-        FatalErrorIn("const fvMesh& singleLayerRegion::nHat() const")
+        FatalErrorInFunction
             << "Region patch normal vectors not available"
             << abort(FatalError);
     }
@@ -213,7 +217,7 @@ const CML::volScalarField& CML::regionModels::singleLayerRegion::magSf() const
 {
     if (!magSfPtr_.valid())
     {
-        FatalErrorIn("const fvMesh& singleLayerRegion::magSf() const")
+        FatalErrorInFunction
             << "Region patch areas not available"
             << abort(FatalError);
     }

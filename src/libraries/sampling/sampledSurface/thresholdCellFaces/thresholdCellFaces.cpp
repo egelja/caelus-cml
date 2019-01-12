@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -275,7 +275,7 @@ CML::thresholdCellFaces::thresholdCellFaces
 
     if (lowerThreshold > upperThreshold)
     {
-        WarningIn("thresholdCellFaces::thresholdCellFaces(...)")
+        WarningInFunction
             << "lower > upper limit!  "
             << lowerThreshold << " > " << upperThreshold << endl;
     }

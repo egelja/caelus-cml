@@ -48,7 +48,7 @@ CML::polyTopoChange& CML::repatchPolyTopoChanger::meshMod()
 CML::repatchPolyTopoChanger::repatchPolyTopoChanger(polyMesh& mesh)
 :
     mesh_(mesh),
-    meshModPtr_(NULL)
+    meshModPtr_(nullptr)
 {}
 
 
@@ -61,10 +61,8 @@ void CML::repatchPolyTopoChanger::changePatches
 {
     if (meshModPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "repatchPolyTopoChanger::changePatches(const List<polyPatch*>&)"
-        )   << "Cannot change patches after having changed faces. " << nl
+        FatalErrorInFunction
+            << "Cannot change patches after having changed faces. " << nl
             << "Please call changePatches first."
             << exit(FatalError);
     }
@@ -90,14 +88,8 @@ void CML::repatchPolyTopoChanger::changePatchID
          || mesh_.isInternalFace(faceID)
         )
         {
-            FatalErrorIn
-            (
-                "void CML::repatchPolyTopoChanger::changePatchID\n"
-                "(\n"
-                "    const label faceID,\n"
-                "    const label patchID\n"
-                ")\n"
-            )   << "Error in definition.  faceID: " << faceID
+            FatalErrorInFunction
+                << "Error in definition.  faceID: " << faceID
                 << " patchID: " << patchID << ".  "
                 << "Labels out of range or internal face."
                 << abort(FatalError);
@@ -145,15 +137,8 @@ void CML::repatchPolyTopoChanger::setFaceZone
         // Check that the request is possible
         if (faceID > mesh_.faces().size())
         {
-            FatalErrorIn
-            (
-                "void CML::repatchPolyTopoChanger::setFaceZone"
-                "(\n"
-                "    const label faceID,\n"
-                "    const label zoneID,\n"
-                "    const bool flip\n"
-                ")\n"
-            )   << "Error in definition.  faceID: " << faceID
+            FatalErrorInFunction
+                << "Error in definition.  faceID: " << faceID
                 << "out of range."
                 << abort(FatalError);
         }
@@ -188,15 +173,8 @@ void CML::repatchPolyTopoChanger::changeAnchorPoint
         // Check that the request is possible
         if (faceID > mesh_.faces().size())
         {
-            FatalErrorIn
-            (
-                "void CML::repatchPolyTopoChanger::setFaceZone"
-                "(\n"
-                "    const label faceID,\n"
-                "    const label zoneID,\n"
-                "    const bool flip\n"
-                ")\n"
-            )   << "Error in definition.  faceID: " << faceID
+            FatalErrorInFunction
+                << "Error in definition.  faceID: " << faceID
                 << "out of range."
                 << abort(FatalError);
         }
@@ -206,14 +184,8 @@ void CML::repatchPolyTopoChanger::changeAnchorPoint
 
     if ((fp < 0) || (fp >= f.size()))
     {
-        FatalErrorIn
-        (
-            "void CML::repatchPolyTopoChanger::changeAnchorPoint"
-            "(\n"
-            "    const label faceID,\n"
-            "    const label fp\n"
-            ")\n"
-        )   << "Error in definition.  Face point: " << fp
+        FatalErrorInFunction
+            << "Error in definition.  Face point: " << fp
             << "indexes out of face " << f
             << abort(FatalError);
     }

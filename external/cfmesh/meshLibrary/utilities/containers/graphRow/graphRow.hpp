@@ -140,11 +140,8 @@ inline void CML::graphRow<graphType>::checkIndex(const label i) const
 {
     if( (i < 0) || (i >=data_.sizeOfRow(rowI_)) )
     {
-        FatalErrorIn
-        (
-            "void CML::graphRow<graphType>::"
-            "checkIndex(const label i) const"
-        ) << "Row index " << rowI_
+        FatalErrorInFunction
+            << "Row index " << rowI_
             << " is not in range " << CML::label(0)
             << " and " << data_.sizeOfRow(rowI_) << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,15 +20,15 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "basicThermo.hpp"
-#include "fvMesh.hpp"
-#include "HashTable.hpp"
 #include "zeroGradientFvPatchFields.hpp"
-#include "fixedEnthalpyFvPatchScalarField.hpp"
-#include "gradientEnthalpyFvPatchScalarField.hpp"
-#include "mixedEnthalpyFvPatchScalarField.hpp"
-#include "fixedInternalEnergyFvPatchScalarField.hpp"
-#include "gradientInternalEnergyFvPatchScalarField.hpp"
-#include "mixedInternalEnergyFvPatchScalarField.hpp"
+#include "fixedEnergyFvPatchScalarField.hpp"
+#include "gradientEnergyFvPatchScalarField.hpp"
+#include "mixedEnergyFvPatchScalarField.hpp"
+#include "fixedJumpFvPatchFields.hpp"
+#include "fixedJumpAMIFvPatchFields.hpp"
+#include "energyJumpFvPatchScalarField.hpp"
+#include "energyJumpAMIFvPatchScalarField.hpp"
+
 
 /* * * * * * * * * * * * * * * private static data * * * * * * * * * * * * * */
 
@@ -38,31 +38,36 @@ namespace CML
     defineRunTimeSelectionTable(basicThermo, fvMesh);
 }
 
+const CML::word CML::basicThermo::dictName("thermophysicalProperties");
+
+
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-CML::wordList CML::basicThermo::hBoundaryTypes()
+CML::wordList CML::basicThermo::heBoundaryBaseTypes()
 {
-    const volScalarField::GeometricBoundaryField& tbf = T_.boundaryField();
+    const volScalarField::GeometricBoundaryField& tbf =
+        this->T_.boundaryField();
 
-    wordList hbt = tbf.types();
+    wordList hbt(tbf.size(), word::null);
 
     forAll(tbf, patchi)
     {
-        if (isA<fixedValueFvPatchScalarField>(tbf[patchi]))
+        if (isA<fixedJumpFvPatchScalarField>(tbf[patchi]))
         {
-            hbt[patchi] = fixedEnthalpyFvPatchScalarField::typeName;
+            const fixedJumpFvPatchScalarField& pf =
+                dynamic_cast<const fixedJumpFvPatchScalarField&>(tbf[patchi]);
+
+            hbt[patchi] = pf.interfaceFieldType();
         }
-        else if
-        (
-            isA<zeroGradientFvPatchScalarField>(tbf[patchi])
-         || isA<fixedGradientFvPatchScalarField>(tbf[patchi])
-        )
+        else if (isA<fixedJumpAMIFvPatchScalarField>(tbf[patchi]))
         {
-            hbt[patchi] = gradientEnthalpyFvPatchScalarField::typeName;
-        }
-        else if (isA<mixedFvPatchScalarField>(tbf[patchi]))
-        {
-            hbt[patchi] = mixedEnthalpyFvPatchScalarField::typeName;
+            const fixedJumpAMIFvPatchScalarField& pf =
+                dynamic_cast<const fixedJumpAMIFvPatchScalarField&>
+                (
+                    tbf[patchi]
+                );
+
+            hbt[patchi] = pf.interfaceFieldType();
         }
     }
 
@@ -70,37 +75,18 @@ CML::wordList CML::basicThermo::hBoundaryTypes()
 }
 
 
-void CML::basicThermo::hBoundaryCorrection(volScalarField& h)
+CML::wordList CML::basicThermo::heBoundaryTypes()
 {
-    volScalarField::GeometricBoundaryField& hbf = h.boundaryField();
+    const volScalarField::GeometricBoundaryField& tbf =
+        this->T_.boundaryField();
 
-    forAll(hbf, patchi)
-    {
-        if (isA<gradientEnthalpyFvPatchScalarField>(hbf[patchi]))
-        {
-            refCast<gradientEnthalpyFvPatchScalarField>(hbf[patchi]).gradient()
-                = hbf[patchi].fvPatchField::snGrad();
-        }
-        else if (isA<mixedEnthalpyFvPatchScalarField>(hbf[patchi]))
-        {
-            refCast<mixedEnthalpyFvPatchScalarField>(hbf[patchi]).refGrad()
-                = hbf[patchi].fvPatchField::snGrad();
-        }
-    }
-}
-
-
-CML::wordList CML::basicThermo::eBoundaryTypes()
-{
-    const volScalarField::GeometricBoundaryField& tbf = T_.boundaryField();
-
-    wordList ebt = tbf.types();
+    wordList hbt = tbf.types();
 
     forAll(tbf, patchi)
     {
         if (isA<fixedValueFvPatchScalarField>(tbf[patchi]))
         {
-            ebt[patchi] = fixedInternalEnergyFvPatchScalarField::typeName;
+            hbt[patchi] = fixedEnergyFvPatchScalarField::typeName;
         }
         else if
         (
@@ -108,46 +94,78 @@ CML::wordList CML::basicThermo::eBoundaryTypes()
          || isA<fixedGradientFvPatchScalarField>(tbf[patchi])
         )
         {
-            ebt[patchi] = gradientInternalEnergyFvPatchScalarField::typeName;
+            hbt[patchi] = gradientEnergyFvPatchScalarField::typeName;
         }
         else if (isA<mixedFvPatchScalarField>(tbf[patchi]))
         {
-            ebt[patchi] = mixedInternalEnergyFvPatchScalarField::typeName;
+            hbt[patchi] = mixedEnergyFvPatchScalarField::typeName;
+        }
+        else if (isA<fixedJumpFvPatchScalarField>(tbf[patchi]))
+        {
+            hbt[patchi] = energyJumpFvPatchScalarField::typeName;
+        }
+        else if (isA<fixedJumpAMIFvPatchScalarField>(tbf[patchi]))
+        {
+            hbt[patchi] = energyJumpAMIFvPatchScalarField::typeName;
+        }
+        else if (tbf[patchi].type() == "energyRegionCoupledFvPatchScalarField")
+        {
+            hbt[patchi] = "energyRegionCoupledFvPatchScalarField";
         }
     }
 
-    return ebt;
+    return hbt;
 }
 
-
-void CML::basicThermo::eBoundaryCorrection(volScalarField& e)
-{
-    volScalarField::GeometricBoundaryField& ebf = e.boundaryField();
-
-    forAll(ebf, patchi)
-    {
-        if (isA<gradientInternalEnergyFvPatchScalarField>(ebf[patchi]))
-        {
-            refCast<gradientInternalEnergyFvPatchScalarField>(ebf[patchi])
-                .gradient() = ebf[patchi].fvPatchField::snGrad();
-        }
-        else if (isA<mixedInternalEnergyFvPatchScalarField>(ebf[patchi]))
-        {
-            refCast<mixedInternalEnergyFvPatchScalarField>(ebf[patchi])
-                .refGrad() = ebf[patchi].fvPatchField::snGrad();
-        }
-    }
-}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::basicThermo::basicThermo(const fvMesh& mesh)
+CML::volScalarField& CML::basicThermo::lookupOrConstruct
+(
+    const fvMesh& mesh,
+    const char* name
+) const
+{
+    if (!mesh.objectRegistry::foundObject<volScalarField>(name))
+    {
+        volScalarField* fPtr
+        (
+            new volScalarField
+            (
+                IOobject
+                (
+                    name,
+                    mesh.time().timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
+        );
+
+        // Transfer ownership of this object to the objectRegistry
+        fPtr->store(fPtr);
+    }
+
+    return const_cast<volScalarField&>
+    (
+        mesh.objectRegistry::lookupObject<volScalarField>(name)
+    );
+}
+
+
+CML::basicThermo::basicThermo
+(
+    const fvMesh& mesh,
+    const word& phaseName
+)
 :
     IOdictionary
     (
         IOobject
         (
-            "thermophysicalProperties",
+            phasePropertyName(dictName, phaseName),
             mesh.time().constant(),
             mesh,
             IOobject::MUST_READ_IF_MODIFIED,
@@ -155,83 +173,309 @@ CML::basicThermo::basicThermo(const fvMesh& mesh)
         )
     ),
 
-    p_
-    (
-        IOobject
-        (
-            "p",
-            mesh.time().timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    ),
+    phaseName_(phaseName),
 
-    psi_
-    (
-        IOobject
-        (
-            "psi",
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(0, -2, 2, 0, 0)
-    ),
+    p_(lookupOrConstruct(mesh, "p")),
 
     T_
     (
         IOobject
         (
-            "T",
+            phasePropertyName("T"),
             mesh.time().timeName(),
             mesh,
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh
-    ),
-
-    mu_
-    (
-        IOobject
-        (
-            "mu",
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(1, -1, -1, 0, 0)
     ),
 
     alpha_
     (
         IOobject
         (
-            "alpha",
+            phasePropertyName("thermo:alpha"),
             mesh.time().timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensionedScalar
+        (
+            "zero",
+            dimensionSet(1, -1, -1, 0, 0),
+            Zero
+        )
+    ),
+
+    dpdt_(lookupOrDefault<Switch>("dpdt", true))
+{}
+
+
+CML::basicThermo::basicThermo
+(
+    const fvMesh& mesh,
+    const dictionary& dict,
+    const word& phaseName
+)
+:
+    IOdictionary
+    (
+        IOobject
+        (
+            phasePropertyName(dictName, phaseName),
+            mesh.time().constant(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
+        dict
+    ),
+
+    phaseName_(phaseName),
+
+    p_(lookupOrConstruct(mesh, "p")),
+
+    T_
+    (
+        IOobject
+        (
+            phasePropertyName("T"),
+            mesh.time().timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    ),
+
+    alpha_
+    (
+        IOobject
+        (
+            phasePropertyName("thermo:alpha"),
+            mesh.time().timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        ),
         mesh,
-        dimensionSet(1, -1, -1, 0, 0)
+        dimensionedScalar
+        (
+            "zero",
+            dimensionSet(1, -1, -1, 0, 0),
+            Zero
+        )
     )
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
-CML::basicThermo::~basicThermo()
-{}
+CML::autoPtr<CML::basicThermo> CML::basicThermo::New
+(
+    const fvMesh& mesh,
+    const word& phaseName
+)
+{
+    return New<basicThermo>(mesh, phaseName);
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+const CML::basicThermo& CML::basicThermo::lookupThermo
+(
+    const fvPatchScalarField& pf
+)
+{
+    if (pf.db().foundObject<basicThermo>(dictName))
+    {
+        return pf.db().lookupObject<basicThermo>(dictName);
+    }
+    else
+    {
+        HashTable<const basicThermo*> thermos =
+            pf.db().lookupClass<basicThermo>();
+
+        for
+        (
+            HashTable<const basicThermo*>::iterator iter = thermos.begin();
+            iter != thermos.end();
+            ++iter
+        )
+        {
+            if
+            (
+                &(iter()->he().dimensionedInternalField())
+              == &(pf.dimensionedInternalField())
+            )
+            {
+                return *iter();
+            }
+        }
+    }
+
+    return pf.db().lookupObject<basicThermo>(dictName);
+}
+
+
+void CML::basicThermo::validate
+(
+    const string& app,
+    const word& a
+) const
+{
+    if (!(he().name() == phasePropertyName(a)))
+    {
+        FatalErrorInFunction
+            << "Supported energy type is " << phasePropertyName(a)
+            << ", thermodynamics package provides " << he().name()
+            << exit(FatalError);
+    }
+}
+
+void CML::basicThermo::validate
+(
+    const string& app,
+    const word& a,
+    const word& b
+) const
+{
+    if
+    (
+       !(
+            he().name() == phasePropertyName(a)
+         || he().name() == phasePropertyName(b)
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "Supported energy types are " << phasePropertyName(a)
+            << " and " << phasePropertyName(b)
+            << ", thermodynamics package provides " << he().name()
+            << exit(FatalError);
+    }
+}
+
+void CML::basicThermo::validate
+(
+    const string& app,
+    const word& a,
+    const word& b,
+    const word& c
+) const
+{
+    if
+    (
+       !(
+            he().name() == phasePropertyName(a)
+         || he().name() == phasePropertyName(b)
+         || he().name() == phasePropertyName(c)
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "Supported energy types are " << phasePropertyName(a)
+            << ", " << phasePropertyName(b)
+            << " and " << phasePropertyName(c)
+            << ", thermodynamics package provides " << he().name()
+            << exit(FatalError);
+    }
+}
+
+void CML::basicThermo::validate
+(
+    const string& app,
+    const word& a,
+    const word& b,
+    const word& c,
+    const word& d
+) const
+{
+    if
+    (
+       !(
+            he().name() == phasePropertyName(a)
+         || he().name() == phasePropertyName(b)
+         || he().name() == phasePropertyName(c)
+         || he().name() == phasePropertyName(d)
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "Supported energy types are " << phasePropertyName(a)
+            << ", " << phasePropertyName(b)
+            << ", " << phasePropertyName(c)
+            << " and " << phasePropertyName(d)
+            << ", thermodynamics package provides " << he().name()
+            << exit(FatalError);
+    }
+}
+
+
+CML::wordList CML::basicThermo::splitThermoName
+(
+    const word& thermoName,
+    const int nCmpt
+)
+{
+    wordList cmpts(nCmpt);
+
+    string::size_type beg=0, end=0, endb=0, endc=0;
+    int i = 0;
+
+    while
+    (
+        (endb = thermoName.find('<', beg)) != string::npos
+     || (endc = thermoName.find(',', beg)) != string::npos
+    )
+    {
+        if (endb == string::npos)
+        {
+            end = endc;
+        }
+        else if ((endc = thermoName.find(',', beg)) != string::npos)
+        {
+            end = min(endb, endc);
+        }
+        else
+        {
+            end = endb;
+        }
+
+        if (beg < end)
+        {
+            cmpts[i] = thermoName.substr(beg, end-beg);
+            cmpts[i++].replaceAll(">","");
+
+            // If the number of number of components in the name
+            // is greater than nCmpt return an empty list
+            if (i == nCmpt)
+            {
+                return wordList();
+            }
+        }
+        beg = end + 1;
+    }
+
+    // If the number of number of components in the name is not equal to nCmpt
+    // return an empty list
+    if (i + 1 != nCmpt)
+    {
+        return wordList();
+    }
+
+    if (beg < thermoName.size())
+    {
+        cmpts[i] = thermoName.substr(beg, string::npos);
+        cmpts[i].replaceAll(">","");
+    }
+
+    return cmpts;
+}
+
 
 CML::volScalarField& CML::basicThermo::p()
 {
@@ -245,204 +489,15 @@ const CML::volScalarField& CML::basicThermo::p() const
 }
 
 
-const CML::volScalarField& CML::basicThermo::psi() const
-{
-    return psi_;
-}
-
-
-CML::volScalarField& CML::basicThermo::h()
-{
-    notImplemented("basicThermo::h()");
-    return const_cast<volScalarField&>(volScalarField::null());
-}
-
-
-const CML::volScalarField& CML::basicThermo::h() const
-{
-    notImplemented("basicThermo::h() const");
-    return volScalarField::null();
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::h
-(
-    const scalarField& T,
-    const labelList& cells
-) const
-{
-    notImplemented
-    (
-        "basicThermo::h"
-        "(const scalarField& T, const labelList& cells) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::h
-(
-    const scalarField& T,
-    const label patchi
-) const
-{
-    notImplemented
-    (
-        "basicThermo::h"
-        "(const scalarField& T, const label patchi) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::volScalarField& CML::basicThermo::hs()
-{
-    notImplemented("basicThermo::hs()");
-    return const_cast<volScalarField&>(volScalarField::null());
-}
-
-
-const CML::volScalarField& CML::basicThermo::hs() const
-{
-    notImplemented("basicThermo::hs() const");
-    return volScalarField::null();
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::hs
-(
-    const scalarField& T,
-    const labelList& cells
-) const
-{
-    notImplemented
-    (
-        "basicThermo::hs"
-        "(const scalarField& T, const labelList& cells) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::hs
-(
-    const scalarField& T,
-    const label patchi
-) const
-{
-    notImplemented
-    (
-        "basicThermo::hs"
-        "(const scalarField& T, const label patchi) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::volScalarField> CML::basicThermo::hc() const
-{
-    notImplemented("basicThermo::hc()");
-    return volScalarField::null();
-}
-
-
-CML::volScalarField& CML::basicThermo::e()
-{
-    notImplemented("basicThermo::e()");
-    return const_cast<volScalarField&>(volScalarField::null());
-}
-
-
-const CML::volScalarField& CML::basicThermo::e() const
-{
-    notImplemented("basicThermo::e()");
-    return volScalarField::null();
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::e
-(
-    const scalarField& T,
-    const labelList& cells
-) const
-{
-    notImplemented
-    (
-        "basicThermo::e"
-        "(const scalarField& T, const labelList& cells) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::e
-(
-    const scalarField& T,
-    const label patchi
-) const
-{
-    notImplemented
-    (
-        "basicThermo::e"
-        "(const scalarField& T, const label patchi) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
 const CML::volScalarField& CML::basicThermo::T() const
 {
     return T_;
 }
 
 
-CML::tmp<CML::scalarField> CML::basicThermo::Cp
-(
-    const scalarField& T,
-    const label patchi
-) const
+CML::volScalarField& CML::basicThermo::T()
 {
-    notImplemented
-    (
-        "basicThermo::Cp"
-        "(const scalarField& T, const label patchi) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::volScalarField> CML::basicThermo::Cp() const
-{
-    notImplemented("basicThermo::Cp() const");
-    return volScalarField::null();
-}
-
-
-CML::tmp<CML::scalarField> CML::basicThermo::Cv
-(
-    const scalarField& T,
-    const label patchi
-) const
-{
-    notImplemented
-    (
-        "basicThermo::Cv"
-        "(const scalarField& T, const label patchi) const"
-    );
-    return tmp<scalarField>(NULL);
-}
-
-
-CML::tmp<CML::volScalarField> CML::basicThermo::Cv() const
-{
-    notImplemented("basicThermo::Cv() const");
-    return volScalarField::null();
-}
-
-
-const CML::volScalarField& CML::basicThermo::mu() const
-{
-    return mu_;
+    return T_;
 }
 
 
@@ -452,10 +507,13 @@ const CML::volScalarField& CML::basicThermo::alpha() const
 }
 
 
+const CML::scalarField& CML::basicThermo::alpha(const label patchi) const
+{
+    return alpha_.boundaryField()[patchi];
+}
+
+
 bool CML::basicThermo::read()
 {
     return regIOobject::read();
 }
-
-
-// ************************************************************************* //

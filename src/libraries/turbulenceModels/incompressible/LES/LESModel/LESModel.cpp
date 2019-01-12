@@ -127,16 +127,8 @@ autoPtr<LESModel> LESModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "LESModel::New"
-            "("
-                "const volVectorField&, "
-                "const surfaceScalarField& ,"
-                "transportModel&, "
-                "const word&"
-            ")"
-        )   << "Unknown LESModel type "
+        FatalErrorInFunction
+            << "Unknown LESModel type "
             << modelType << nl << nl
             << "Valid LESModel types:" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

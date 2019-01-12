@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -116,9 +116,9 @@ label findFace(const primitivePatch& pp, const labelList& meshF)
     // meshF vertices (in any order ;-)
     forAll(pFaces, i)
     {
-        label faceI = pFaces[i];
+        label facei = pFaces[i];
 
-        const face& f = pp[faceI];
+        const face& f = pp[facei];
 
         // Count uses of vertices of meshF for f
         label nMatched = 0;
@@ -133,7 +133,7 @@ label findFace(const primitivePatch& pp, const labelList& meshF)
 
         if (nMatched == meshF.size())
         {
-            return faceI;
+            return facei;
         }
     }
 
@@ -148,9 +148,9 @@ label findInternalFace(const primitiveMesh& mesh, const labelList& meshF)
 
     forAll(pFaces, i)
     {
-        label faceI = pFaces[i];
+        label facei = pFaces[i];
 
-        const face& f = mesh.faces()[faceI];
+        const face& f = mesh.faces()[facei];
 
         // Count uses of vertices of meshF for f
         label nMatched = 0;
@@ -165,7 +165,7 @@ label findInternalFace(const primitiveMesh& mesh, const labelList& meshF)
 
         if (nMatched == meshF.size())
         {
-            return faceI;
+            return facei;
         }
     }
     return -1;
@@ -186,10 +186,10 @@ bool correctOrientation(const pointField& points, const cellShape& shape)
     {
         const face& f = faces[i];
 
-        vector n(f.normal(points));
+        const vector a(f.area(points));
 
         // Check if vector from any point on face to cc points outwards
-        if (((points[f[0]] - cc) & n) < 0)
+        if (((points[f[0]] - cc) & a) < 0)
         {
             // Incorrectly oriented
             return false;
@@ -203,7 +203,7 @@ bool correctOrientation(const pointField& points, const cellShape& shape)
 void storeCellInZone
 (
     const label regPhys,
-    const label cellI,
+    const label celli,
     Map<label>& physToZone,
 
     labelList& zoneToPhys,
@@ -224,12 +224,12 @@ void storeCellInZone
         physToZone.insert(regPhys, zoneI);
 
         zoneToPhys[zoneI] = regPhys;
-        zoneCells[zoneI].append(cellI);
+        zoneCells[zoneI].append(celli);
     }
     else
     {
         // Existing zone for region
-        zoneCells[zoneFnd()].append(cellI);
+        zoneCells[zoneFnd()].append(celli);
     }
 }
 
@@ -253,7 +253,7 @@ scalar readMeshFormat(IFstream& inFile)
 
     if (asciiFlag != 0)
     {
-        FatalIOErrorIn("readMeshFormat(IFstream&)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Can only read ascii msh files."
             << exit(FatalIOError);
     }
@@ -264,7 +264,7 @@ scalar readMeshFormat(IFstream& inFile)
 
     if (tag != "$EndMeshFormat")
     {
-        FatalIOErrorIn("readMeshFormat(IFstream&)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Did not find $ENDNOD tag on line "
             << inFile.lineNumber() << exit(FatalIOError);
     }
@@ -291,7 +291,7 @@ void readPoints(IFstream& inFile, pointField& points, Map<label>& mshToFoam)
     points.setSize(nVerts);
     mshToFoam.resize(2*nVerts);
 
-    for (label pointI = 0; pointI < nVerts; pointI++)
+    for (label pointi = 0; pointi < nVerts; pointi++)
     {
         label mshLabel;
         scalar xVal, yVal, zVal;
@@ -302,13 +302,13 @@ void readPoints(IFstream& inFile, pointField& points, Map<label>& mshToFoam)
 
         lineStr >> mshLabel >> xVal >> yVal >> zVal;
 
-        point& pt = points[pointI];
+        point& pt = points[pointi];
 
         pt.x() = xVal;
         pt.y() = yVal;
         pt.z() = zVal;
 
-        mshToFoam.insert(mshLabel, pointI);
+        mshToFoam.insert(mshLabel, pointi);
     }
 
     Info<< "Vertices read:" << mshToFoam.size() << endl;
@@ -319,7 +319,7 @@ void readPoints(IFstream& inFile, pointField& points, Map<label>& mshToFoam)
 
     if (tag != "$ENDNOD" && tag != "$EndNodes")
     {
-        FatalIOErrorIn("readPoints(..)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Did not find $ENDNOD tag on line "
             << inFile.lineNumber() << exit(FatalIOError);
     }
@@ -392,7 +392,7 @@ void readPhysNames(IFstream& inFile, Map<word>& physicalNames)
 
     if (tag != "$EndPhysicalNames")
     {
-        FatalIOErrorIn("readPhysicalNames(..)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Did not find $EndPhysicalNames tag on line "
             << inFile.lineNumber() << exit(FatalIOError);
     }
@@ -445,7 +445,7 @@ void readCells
     // Storage for all cells. Too big. Shrink later
     cells.setSize(nElems);
 
-    label cellI = 0;
+    label celli = 0;
     label nTet = 0;
     label nPyr = 0;
     label nPrism = 0;
@@ -501,28 +501,28 @@ void readCells
 
             Map<label>::iterator regFnd = physToPatch.find(regPhys);
 
-            label patchI = -1;
+            label patchi = -1;
             if (regFnd == physToPatch.end())
             {
                 // New region. Allocate patch for it.
-                patchI = patchFaces.size();
+                patchi = patchFaces.size();
 
-                patchFaces.setSize(patchI + 1);
-                patchToPhys.setSize(patchI + 1);
+                patchFaces.setSize(patchi + 1);
+                patchToPhys.setSize(patchi + 1);
 
                 Info<< "Mapping region " << regPhys << " to Foam patch "
-                    << patchI << endl;
-                physToPatch.insert(regPhys, patchI);
-                patchToPhys[patchI] = regPhys;
+                    << patchi << endl;
+                physToPatch.insert(regPhys, patchi);
+                patchToPhys[patchi] = regPhys;
             }
             else
             {
                 // Existing patch for region
-                patchI = regFnd();
+                patchi = regFnd();
             }
 
             // Add triangle to correct patchFaces.
-            patchFaces[patchI].append(triPoints);
+            patchFaces[patchi].append(triPoints);
         }
         else if (elmType == MSHQUAD)
         {
@@ -534,35 +534,35 @@ void readCells
 
             Map<label>::iterator regFnd = physToPatch.find(regPhys);
 
-            label patchI = -1;
+            label patchi = -1;
             if (regFnd == physToPatch.end())
             {
                 // New region. Allocate patch for it.
-                patchI = patchFaces.size();
+                patchi = patchFaces.size();
 
-                patchFaces.setSize(patchI + 1);
-                patchToPhys.setSize(patchI + 1);
+                patchFaces.setSize(patchi + 1);
+                patchToPhys.setSize(patchi + 1);
 
                 Info<< "Mapping region " << regPhys << " to Foam patch "
-                    << patchI << endl;
-                physToPatch.insert(regPhys, patchI);
-                patchToPhys[patchI] = regPhys;
+                    << patchi << endl;
+                physToPatch.insert(regPhys, patchi);
+                patchToPhys[patchi] = regPhys;
             }
             else
             {
                 // Existing patch for region
-                patchI = regFnd();
+                patchi = regFnd();
             }
 
             // Add quad to correct patchFaces.
-            patchFaces[patchI].append(quadPoints);
+            patchFaces[patchi].append(quadPoints);
         }
         else if (elmType == MSHTET)
         {
             storeCellInZone
             (
                 regPhys,
-                cellI,
+                celli,
                 physToZone,
                 zoneToPhys,
                 zoneCells
@@ -574,7 +574,7 @@ void readCells
 
             renumber(mshToFoam, tetPoints);
 
-            cells[cellI++] = cellShape(tet, tetPoints);
+            cells[celli++] = cellShape(tet, tetPoints);
 
             nTet++;
         }
@@ -583,7 +583,7 @@ void readCells
             storeCellInZone
             (
                 regPhys,
-                cellI,
+                celli,
                 physToZone,
                 zoneToPhys,
                 zoneCells
@@ -595,7 +595,7 @@ void readCells
 
             renumber(mshToFoam, pyrPoints);
 
-            cells[cellI++] = cellShape(pyr, pyrPoints);
+            cells[celli++] = cellShape(pyr, pyrPoints);
 
             nPyr++;
         }
@@ -604,7 +604,7 @@ void readCells
             storeCellInZone
             (
                 regPhys,
-                cellI,
+                celli,
                 physToZone,
                 zoneToPhys,
                 zoneCells
@@ -616,13 +616,13 @@ void readCells
 
             renumber(mshToFoam, prismPoints);
 
-            cells[cellI] = cellShape(prism, prismPoints);
+            cells[celli] = cellShape(prism, prismPoints);
 
-            const cellShape& cell = cells[cellI];
+            const cellShape& cell = cells[celli];
 
             if (!keepOrientation && !correctOrientation(points, cell))
             {
-                Info<< "Inverting prism " << cellI << endl;
+                Info<< "Inverting prism " << celli << endl;
                 // Reorder prism.
                 prismPoints[0] = cell[0];
                 prismPoints[1] = cell[2];
@@ -631,10 +631,10 @@ void readCells
                 prismPoints[4] = cell[4];
                 prismPoints[5] = cell[5];
 
-                cells[cellI] = cellShape(prism, prismPoints);
+                cells[celli] = cellShape(prism, prismPoints);
             }
 
-            cellI++;
+            celli++;
 
             nPrism++;
         }
@@ -643,7 +643,7 @@ void readCells
             storeCellInZone
             (
                 regPhys,
-                cellI,
+                celli,
                 physToZone,
                 zoneToPhys,
                 zoneCells
@@ -657,13 +657,13 @@ void readCells
 
             renumber(mshToFoam, hexPoints);
 
-            cells[cellI] = cellShape(hex, hexPoints);
+            cells[celli] = cellShape(hex, hexPoints);
 
-            const cellShape& cell = cells[cellI];
+            const cellShape& cell = cells[celli];
 
             if (!keepOrientation && !correctOrientation(points, cell))
             {
-                Info<< "Inverting hex " << cellI << endl;
+                Info<< "Inverting hex " << celli << endl;
                 // Reorder hex.
                 hexPoints[0] = cell[4];
                 hexPoints[1] = cell[5];
@@ -674,10 +674,10 @@ void readCells
                 hexPoints[6] = cell[2];
                 hexPoints[7] = cell[3];
 
-                cells[cellI] = cellShape(hex, hexPoints);
+                cells[celli] = cellShape(hex, hexPoints);
             }
 
-            cellI++;
+            celli++;
 
             nHex++;
         }
@@ -695,17 +695,17 @@ void readCells
 
     if (tag != "$ENDELM" && tag != "$EndElements")
     {
-        FatalIOErrorIn("readCells(..)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Did not find $ENDELM tag on line "
             << inFile.lineNumber() << exit(FatalIOError);
     }
 
 
-    cells.setSize(cellI);
+    cells.setSize(celli);
 
-    forAll(patchFaces, patchI)
+    forAll(patchFaces, patchi)
     {
-        patchFaces[patchI].shrink();
+        patchFaces[patchi].shrink();
     }
 
 
@@ -719,7 +719,7 @@ void readCells
 
     if (cells.size() == 0)
     {
-        FatalIOErrorIn("readCells(..)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "No cells read from file " << inFile.name() << nl
             << "Does your file specify any 3D elements (hex=" << MSHHEX
             << ", prism=" << MSHPRISM << ", pyramid=" << MSHPYR
@@ -876,22 +876,22 @@ int main(int argc, char *argv[])
 
     wordList boundaryPatchNames(boundaryFaces.size());
 
-    forAll(boundaryPatchNames, patchI)
+    forAll(boundaryPatchNames, patchi)
     {
-        label physReg = patchToPhys[patchI];
+        label physReg = patchToPhys[patchi];
 
         Map<word>::const_iterator iter = physicalNames.find(physReg);
 
         if (iter != physicalNames.end())
         {
-            boundaryPatchNames[patchI] = iter();
+            boundaryPatchNames[patchi] = iter();
         }
         else
         {
-            boundaryPatchNames[patchI] = word("patch") + name(patchI);
+            boundaryPatchNames[patchi] = word("patch") + name(patchi);
         }
-        Info<< "Patch " << patchI << " gets name "
-            << boundaryPatchNames[patchI] << endl;
+        Info<< "Patch " << patchi << " gets name "
+            << boundaryPatchNames[patchi] << endl;
     }
     Info<< endl;
 
@@ -934,38 +934,38 @@ int main(int argc, char *argv[])
 
 
     // Go through all the patchFaces and find corresponding face in pp.
-    forAll(patchFaces, patchI)
+    forAll(patchFaces, patchi)
     {
-        const DynamicList<face>& pFaces = patchFaces[patchI];
+        const DynamicList<face>& pFaces = patchFaces[patchi];
 
-        Info<< "Finding faces of patch " << patchI << endl;
+        Info<< "Finding faces of patch " << patchi << endl;
 
         forAll(pFaces, i)
         {
             const face& f = pFaces[i];
 
             // Find face in pp using all vertices of f.
-            label patchFaceI = findFace(pp, f);
+            label patchFacei = findFace(pp, f);
 
-            if (patchFaceI != -1)
+            if (patchFacei != -1)
             {
-                label meshFaceI = pp.start() + patchFaceI;
+                label meshFacei = pp.start() + patchFacei;
 
-                repatcher.changePatchID(meshFaceI, patchI);
+                repatcher.changePatchID(meshFacei, patchi);
             }
             else
             {
                 // Maybe internal face? If so add to faceZone with same index
                 // - might be useful.
-                label meshFaceI = findInternalFace(mesh, f);
+                label meshFacei = findInternalFace(mesh, f);
 
-                if (meshFaceI != -1)
+                if (meshFacei != -1)
                 {
-                    zoneFaces[patchI].append(meshFaceI);
+                    zoneFaces[patchi].append(meshFacei);
                 }
                 else
                 {
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Could not match gmsh face " << f
                         << " to any of the interior or exterior faces"
                         << " that share the same 0th point" << endl;
@@ -1099,22 +1099,22 @@ int main(int argc, char *argv[])
     if (mesh.boundaryMesh()[defaultPatchID].size() == 0)
     {
         List<polyPatch*> newPatchPtrList((mesh.boundaryMesh().size() - 1));
-        label newPatchI = 0;
-        forAll(mesh.boundaryMesh(), patchI)
+        label newPatchi = 0;
+        forAll(mesh.boundaryMesh(), patchi)
         {
-            if (patchI != defaultPatchID)
+            if (patchi != defaultPatchID)
             {
-                const polyPatch& patch = mesh.boundaryMesh()[patchI];
+                const polyPatch& patch = mesh.boundaryMesh()[patchi];
 
-                newPatchPtrList[newPatchI] = patch.clone
+                newPatchPtrList[newPatchi] = patch.clone
                 (
                     mesh.boundaryMesh(),
-                    newPatchI,
+                    newPatchi,
                     patch.size(),
                     patch.start()
                 ).ptr();
 
-                newPatchI++;
+                newPatchi++;
             }
         }
         repatcher.changePatches(newPatchPtrList);

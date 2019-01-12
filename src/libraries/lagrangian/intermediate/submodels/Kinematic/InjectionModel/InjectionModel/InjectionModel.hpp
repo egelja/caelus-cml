@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2016-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -74,7 +75,7 @@ public:
     // Enumerations
 
         //- Parcel basis representation options
-        //  i.e constant number of particles OR constant mass per parcel
+        //- i.e constant number of particles OR constant mass per parcel
         enum parcelBasis
         {
             pbNumber,
@@ -93,7 +94,7 @@ protected:
             scalar SOI_;
 
             //- Total volume of particles introduced by this injector [m^3]
-            //  - scaled to ensure massTotal is achieved
+            //- Note: scaled to ensure massTotal is achieved
             scalar volumeTotal_;
 
             //- Total mass to inject [kg]
@@ -121,7 +122,7 @@ protected:
             parcelBasis parcelBasis_;
 
             //- nParticle to assign to parcels when the 'fixed' basis
-            //  is selected
+            //- is selected
             scalar nParticleFixed_;
 
             //- Continuous phase time at start of injection time step [s]
@@ -130,19 +131,21 @@ protected:
             //- Time at start of injection time step [s]
             scalar timeStep0_;
 
-            //- Volume that should have been injected, but would lead to
-            //  less than 1 particle per parcel
-            scalar delayedVolume_;
+            //- Minimum number of particles used to represent each parcel
+            //- default = 1
+            scalar minParticlesPerParcel_;
+
+            //- Optional injector ID
+            label injectorID_;
 
 
     // Protected Member Functions
 
         //- Additional flag to identify whether or not injection of parcelI is
         //  permitted
-        virtual bool validInjection(const label parcelI);
+        virtual bool validInjection(const label parcelI) = 0;
 
         //- Determine properties for next time step/injection interval
-        //  Return true if leads to valid injection
         virtual bool prepareForNextTimeStep
         (
             const scalar time,
@@ -155,9 +158,9 @@ protected:
         //  ensure that it lies in a cell and not edge/face
         virtual bool findCellAtPosition
         (
-            label& cellI,
-            label& tetFaceI,
-            label& tetPtI,
+            label& celli,
+            label& tetFacei,
+            label& tetPti,
             vector& position,
             bool errorOnNotFound = true
         );
@@ -217,13 +220,7 @@ public:
         InjectionModel(const InjectionModel<CloudType>& im);
 
         //- Construct and return a clone
-        virtual autoPtr<InjectionModel<CloudType> > clone() const
-        {
-            return autoPtr<InjectionModel<CloudType> >
-            (
-                new InjectionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<InjectionModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -271,22 +268,25 @@ public:
             //- Return mass of particles injected (cumulative)
             inline scalar massInjected() const;
 
+            //- Return injectorID
+            inline label injectorID() const;
+
             //- Return the end-of-injection time
-            virtual scalar timeEnd() const;
+            virtual scalar timeEnd() const = 0;
 
             //- Number of parcels to introduce relative to SOI
             virtual label parcelsToInject
             (
                 const scalar time0,
                 const scalar time1
-            );
+            ) = 0;
 
             //- Volume of parcels to introduce relative to SOI
             virtual scalar volumeToInject
             (
                 const scalar time0,
                 const scalar time1
-            );
+            ) = 0;
 
             //- Return the average parcel mass over the injection period
             virtual scalar averageParcelMass();
@@ -304,12 +304,21 @@ public:
         // Per-injection event functions
 
             //- Main injection loop
-            template<class TrackData>
-            void inject(TrackData& td);
+            template<class TrackCloudType>
+            void inject
+            (
+                TrackCloudType& cloud,
+                typename CloudType::parcelType::trackingData& td
+            );
 
             //- Main injection loop - steady-state
-            template<class TrackData>
-            void injectSteadyState(TrackData& td, const scalar trackTime);
+            template<class TrackCloudType>
+            void injectSteadyState
+            (
+                TrackCloudType& cloud,
+                typename CloudType::parcelType::trackingData& td,
+                const scalar trackTime
+            );
 
 
         // Injection geometry
@@ -322,9 +331,9 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
-            );
+                label& tetFacei,
+                label& tetPti
+            ) = 0;
 
             //- Set the parcel properties
             virtual void setProperties
@@ -333,10 +342,10 @@ public:
                 const label nParcels,
                 const scalar time,
                 parcelType& parcel
-            );
+            ) = 0;
 
             //- Flag to identify whether model fully describes the parcel
-            virtual bool fullyDescribed() const;
+            virtual bool fullyDescribed() const = 0;
 
 
         // I-O
@@ -352,29 +361,30 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeInjectionModel(CloudType)                                         \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        InjectionModel<kinematicCloudType>,                                   \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        InjectionModel<kinematicCloudType>,                                   \
-        dictionary                                                            \
+#define makeInjectionModel(CloudType)                                          \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        InjectionModel<kinematicCloudType>,                                    \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        InjectionModel<kinematicCloudType>,                                    \
+        dictionary                                                             \
     );
 
 
-#define makeInjectionModelType(SS, CloudType)                                 \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);           \
-                                                                              \
-    InjectionModel<kinematicCloudType>::                                      \
-        adddictionaryConstructorToTable<SS<kinematicCloudType> >              \
-        add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
+#define makeInjectionModelType(SS, CloudType)                                  \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);            \
+                                                                               \
+    CML::InjectionModel<kinematicCloudType>::                                  \
+        adddictionaryConstructorToTable<SS<kinematicCloudType> >               \
+            add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -408,6 +418,13 @@ CML::scalar CML::InjectionModel<CloudType>::massInjected() const
 
 
 template<class CloudType>
+CML::label CML::InjectionModel<CloudType>::injectorID() const
+{
+    return injectorID_;
+}
+
+
+template<class CloudType>
 CML::label CML::InjectionModel<CloudType>::nInjections() const
 {
     return nInjections_;
@@ -426,18 +443,6 @@ CML::label CML::InjectionModel<CloudType>::parcelsAddedTotal() const
 using namespace CML::constant::mathematical;
 
 // * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * * //
-
-template<class CloudType>
-bool CML::InjectionModel<CloudType>::validInjection(const label parcelI)
-{
-    notImplemented
-    (
-        "bool CML::InjectionModel<CloudType>::validInjection(const label)"
-    );
-
-    return false;
-}
-
 
 template<class CloudType>
 bool CML::InjectionModel<CloudType>::prepareForNextTimeStep
@@ -480,7 +485,7 @@ bool CML::InjectionModel<CloudType>::prepareForNextTimeStep
         }
         else
         {
-            // injection should have started, but not sufficient volume to
+            // Injection should have started, but not sufficient volume to
             // produce (at least) 1 parcel - hold value of timeStep0_
             validInjection = false;
         }
@@ -498,9 +503,9 @@ bool CML::InjectionModel<CloudType>::prepareForNextTimeStep
 template<class CloudType>
 bool CML::InjectionModel<CloudType>::findCellAtPosition
 (
-    label& cellI,
-    label& tetFaceI,
-    label& tetPtI,
+    label& celli,
+    label& tetFacei,
+    label& tetPti,
     vector& position,
     bool errorOnNotFound
 )
@@ -512,70 +517,69 @@ bool CML::InjectionModel<CloudType>::findCellAtPosition
     this->owner().mesh().findCellFacePt
     (
         position,
-        cellI,
-        tetFaceI,
-        tetPtI
+        celli,
+        tetFacei,
+        tetPti
     );
 
-    label procI = -1;
+    label proci = -1;
 
-    if (cellI >= 0)
+    if (celli >= 0)
     {
-        procI = Pstream::myProcNo();
+        proci = Pstream::myProcNo();
     }
 
-    reduce(procI, maxOp<label>());
+    reduce(proci, maxOp<label>());
 
     // Ensure that only one processor attempts to insert this Parcel
 
-    if (procI != Pstream::myProcNo())
+    if (proci != Pstream::myProcNo())
     {
-        cellI = -1;
-        tetFaceI = -1;
-        tetPtI = -1;
+        celli = -1;
+        tetFacei = -1;
+        tetPti = -1;
     }
 
     // Last chance - find nearest cell and try that one - the point is
     // probably on an edge
-    if (procI == -1)
+    if (proci == -1)
     {
-        cellI = this->owner().mesh().findNearestCell(position);
+        celli = this->owner().mesh().findNearestCell(position);
 
-        if (cellI >= 0)
+        if (celli >= 0)
         {
-            position += SMALL*(cellCentres[cellI] - position);
+            position += SMALL*(cellCentres[celli] - position);
 
-            if (this->owner().mesh().pointInCell(position, cellI))
+            this->owner().mesh().findCellFacePt
+            (
+                position,
+                celli,
+                tetFacei,
+                tetPti
+            );
+
+            if (celli > 0)
             {
-                procI = Pstream::myProcNo();
+                proci = Pstream::myProcNo();
             }
         }
 
-        reduce(procI, maxOp<label>());
+        reduce(proci, maxOp<label>());
 
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            cellI = -1;
-            tetFaceI = -1;
-            tetPtI = -1;
+            celli = -1;
+            tetFacei = -1;
+            tetPti = -1;
         }
     }
 
-    if (procI == -1)
+    if (proci == -1)
     {
         if (errorOnNotFound)
         {
-            FatalErrorIn
-            (
-                "CML::InjectionModel<CloudType>::findCellAtPosition"
-                "("
-                    "label&, "
-                    "label&, "
-                    "label&, "
-                    "vector&, "
-                    "bool"
-                ")"
-            )   << "Cannot find parcel injection cell. "
+            FatalErrorInFunction
+                << "Cannot find parcel injection cell. "
                 << "Parcel position = " << p0 << nl
                 << abort(FatalError);
         }
@@ -606,7 +610,7 @@ CML::scalar CML::InjectionModel<CloudType>::setNumberOfParticles
             scalar volumep = pi/6.0*pow3(diameter);
             scalar volumeTot = massTotal_/rho;
 
-            nP = (volumeFraction*volumeTot + delayedVolume_)/(parcels*volumep);
+            nP = volumeFraction*volumeTot/(parcels*volumep);
             break;
         }
         case pbNumber:
@@ -622,18 +626,9 @@ CML::scalar CML::InjectionModel<CloudType>::setNumberOfParticles
         default:
         {
             nP = 0.0;
-            FatalErrorIn
-            (
-                "CML::scalar "
-                "CML::InjectionModel<CloudType>::setNumberOfParticles"
-                "("
-                    "const label, "
-                    "const scalar, "
-                    "const scalar, "
-                    "const scalar"
-                ")"
-            )<< "Unknown parcelBasis type" << nl
-             << exit(FatalError);
+            FatalErrorInFunction
+                << "Unknown parcelBasis type" << nl
+                << exit(FatalError);
         }
     }
 
@@ -653,7 +648,7 @@ void CML::InjectionModel<CloudType>::postInjectCheck
     if (allParcelsAdded > 0)
     {
         Info<< nl
-            << "--> Cloud: " << this->owner().name()
+            << "Cloud: " << this->owner().name()
             << " injector: " << this->modelName() << nl
             << "    Added " << allParcelsAdded << " new parcels" << nl << endl;
     }
@@ -679,8 +674,8 @@ CML::InjectionModel<CloudType>::InjectionModel(CloudType& owner)
 :
     CloudSubModelBase<CloudType>(owner),
     SOI_(0.0),
-    volumeTotal_(0.0),
-    massTotal_(0.0),
+    volumeTotal_(this->template getModelProperty<scalar>("volumeTotal")),
+    massTotal_(0),
     massFlowRate_(owner.db().time(), "massFlowRate"),
     massInjected_(this->template getModelProperty<scalar>("massInjected")),
     nInjections_(this->template getModelProperty<label>("nInjections")),
@@ -692,7 +687,8 @@ CML::InjectionModel<CloudType>::InjectionModel(CloudType& owner)
     nParticleFixed_(0.0),
     time0_(0.0),
     timeStep0_(this->template getModelProperty<scalar>("timeStep0")),
-    delayedVolume_(0.0)
+    minParticlesPerParcel_(1),
+    injectorID_(-1)
 {}
 
 
@@ -707,8 +703,8 @@ CML::InjectionModel<CloudType>::InjectionModel
 :
     CloudSubModelBase<CloudType>(modelName, owner, dict, typeName, modelType),
     SOI_(0.0),
-    volumeTotal_(0.0),
-    massTotal_(0.0),
+    volumeTotal_(this->template getModelProperty<scalar>("volumeTotal")),
+    massTotal_(0),
     massFlowRate_(owner.db().time(), "massFlowRate"),
     massInjected_(this->template getModelProperty<scalar>("massInjected")),
     nInjections_(this->template getModelProperty<scalar>("nInjections")),
@@ -720,7 +716,12 @@ CML::InjectionModel<CloudType>::InjectionModel
     nParticleFixed_(0.0),
     time0_(owner.db().time().value()),
     timeStep0_(this->template getModelProperty<scalar>("timeStep0")),
-    delayedVolume_(0.0)
+    minParticlesPerParcel_
+    (
+        this->coeffDict().template
+            lookupOrDefault<scalar>("minParticlesPerParcel", 1)
+    ),
+    injectorID_(this->coeffDict().lookupOrDefault("injectorID", -1))
 {
     // Provide some info
     // - also serves to initialise mesh dimensions - needed for parallel runs
@@ -728,17 +729,27 @@ CML::InjectionModel<CloudType>::InjectionModel
     Info<< "    Constructing " << owner.mesh().nGeometricD() << "-D injection"
         << endl;
 
-    if (owner.solution().transient())
+    if (injectorID_ != -1)
     {
-        this->coeffDict().lookup("massTotal") >> massTotal_;
-        this->coeffDict().lookup("SOI") >> SOI_;
-        SOI_ = owner.db().time().userTimeToTime(SOI_);
+        Info<< "    injector ID: " << injectorID_ << endl;
     }
-    else
+
+    if (owner.solution().active())
     {
-        massFlowRate_.reset(this->coeffDict());
-        massTotal_ = massFlowRate_.value(owner.db().time().value());
+        if (owner.solution().transient())
+        {
+            this->coeffDict().lookup("massTotal") >> massTotal_;
+            this->coeffDict().lookup("SOI") >> SOI_;
+        }
+        else
+        {
+            massFlowRate_.reset(this->coeffDict());
+            massTotal_ = massFlowRate_.value(owner.db().time().value());
+            this->coeffDict().readIfPresent("SOI", SOI_);
+        }
     }
+
+    SOI_ = owner.db().time().userTimeToTime(SOI_);
 
     const word parcelBasisType = this->coeffDict().lookup("parcelBasisType");
 
@@ -762,16 +773,9 @@ CML::InjectionModel<CloudType>::InjectionModel
     }
     else
     {
-        FatalErrorIn
-        (
-            "CML::InjectionModel<CloudType>::InjectionModel"
-            "("
-                "const dictionary&, "
-                "CloudType&, "
-                "const word&"
-            ")"
-        )<< "parcelBasisType must be either 'number', 'mass' or 'fixed'" << nl
-         << exit(FatalError);
+        FatalErrorInFunction
+            << "parcelBasisType must be either 'number', 'mass' or 'fixed'"
+            << nl << exit(FatalError);
     }
 }
 
@@ -794,7 +798,8 @@ CML::InjectionModel<CloudType>::InjectionModel
     nParticleFixed_(im.nParticleFixed_),
     time0_(im.time0_),
     timeStep0_(im.timeStep0_),
-    delayedVolume_(im.delayedVolume_)
+    minParticlesPerParcel_(im.minParticlesPerParcel_),
+    injectorID_(im.injectorID_)
 {}
 
 
@@ -809,61 +814,7 @@ CML::InjectionModel<CloudType>::~InjectionModel()
 
 template<class CloudType>
 void CML::InjectionModel<CloudType>::updateMesh()
-{
-    // do nothing
-}
-
-
-template<class CloudType>
-CML::scalar CML::InjectionModel<CloudType>::timeEnd() const
-{
-    notImplemented
-    (
-        "CML::scalar CML::InjectionModel<CloudType>::timeEnd() const"
-    );
-
-    return 0.0;
-}
-
-
-template<class CloudType>
-CML::label CML::InjectionModel<CloudType>::parcelsToInject
-(
-    const scalar time0,
-    const scalar time1
-)
-{
-    notImplemented
-    (
-        "CML::label CML::InjectionModel<CloudType>::parcelsToInject"
-        "("
-            "const scalar, "
-            "const scalar"
-        ")"
-    );
-
-    return 0;
-}
-
-
-template<class CloudType>
-CML::scalar CML::InjectionModel<CloudType>::volumeToInject
-(
-    const scalar time0,
-    const scalar time1
-)
-{
-    notImplemented
-    (
-        "CML::scalar CML::InjectionModel<CloudType>::volumeToInject"
-        "("
-            "const scalar, "
-            "const scalar"
-        ")"
-    );
-
-    return 0.0;
-}
+{}
 
 
 template<class CloudType>
@@ -884,8 +835,12 @@ CML::scalar CML::InjectionModel<CloudType>::averageParcelMass()
 
 
 template<class CloudType>
-template<class TrackData>
-void CML::InjectionModel<CloudType>::inject(TrackData& td)
+template<class TrackCloudType>
+void CML::InjectionModel<CloudType>::inject
+(
+    TrackCloudType& cloud,
+    typename CloudType::parcelType::trackingData& td
+)
 {
     if (!this->active())
     {
@@ -902,11 +857,8 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
 
     if (prepareForNextTimeStep(time, newParcels, newVolumeFraction))
     {
-        scalar delayedVolume = 0;
-
         const scalar trackTime = this->owner().solution().trackTime();
         const polyMesh& mesh = this->owner().mesh();
-        typename TrackData::cloudType& cloud = td.cloud();
 
         // Duration of injection period during this timestep
         const scalar deltaT =
@@ -925,11 +877,11 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
 
                 // Determine the injection position and owner cell,
                 // tetFace and tetPt
-                label cellI = -1;
-                label tetFaceI = -1;
-                label tetPtI = -1;
+                label celli = -1;
+                label tetFacei = -1;
+                label tetPti = -1;
 
-                vector pos = vector::zero;
+                vector pos = Zero;
 
                 setPositionAndCell
                 (
@@ -937,12 +889,12 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
                     newParcels,
                     timeInj,
                     pos,
-                    cellI,
-                    tetFaceI,
-                    tetPtI
+                    celli,
+                    tetFacei,
+                    tetPti
                 );
 
-                if (cellI > -1)
+                if (celli > -1)
                 {
                     // Lagrangian timestep
                     const scalar dt = time - timeInj;
@@ -951,8 +903,7 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
                     meshTools::constrainToMeshCentre(mesh, pos);
 
                     // Create a new parcel
-                    parcelType* pPtr =
-                        new parcelType(mesh, pos, cellI, tetFaceI, tetPtI);
+                    parcelType* pPtr = new parcelType(mesh, pos, celli);
 
                     // Check/set new parcel thermo properties
                     cloud.setParcelThermoProperties(*pPtr, dt);
@@ -981,30 +932,22 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
                             pPtr->rho()
                         );
 
-                    if (pPtr->nParticle() >= 1.0)
-                    {
-                        parcelsAdded++;
-                        massAdded += pPtr->nParticle()*pPtr->mass();
+                    parcelsAdded ++;
 
-                        if (pPtr->move(td, dt))
-                        {
-                            td.cloud().addParticle(pPtr);
-                        }
-                        else
-                        {
-                            delete pPtr;
-                        }
+                    massAdded += pPtr->nParticle()*pPtr->mass();
+
+                    if (pPtr->move(cloud, td, dt))
+                    {
+                        pPtr->typeId() = injectorID_;
+                        cloud.addParticle(pPtr);
                     }
                     else
                     {
-                        delayedVolume += pPtr->nParticle()*pPtr->volume();
                         delete pPtr;
                     }
                 }
             }
         }
-
-        delayedVolume_ = delayedVolume;
     }
 
     postInjectCheck(parcelsAdded, massAdded);
@@ -1012,10 +955,11 @@ void CML::InjectionModel<CloudType>::inject(TrackData& td)
 
 
 template<class CloudType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::InjectionModel<CloudType>::injectSteadyState
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    typename CloudType::parcelType::trackingData& td,
     const scalar trackTime
 )
 {
@@ -1024,8 +968,14 @@ void CML::InjectionModel<CloudType>::injectSteadyState
         return;
     }
 
+    const scalar time = this->owner().db().time().value();
+
+    if (time < SOI_)
+    {
+        return;
+    }
+
     const polyMesh& mesh = this->owner().mesh();
-    typename TrackData::cloudType& cloud = td.cloud();
 
     massTotal_ = massFlowRate_.value(mesh.time().value());
 
@@ -1045,11 +995,11 @@ void CML::InjectionModel<CloudType>::injectSteadyState
 
         // Determine the injection position and owner cell,
         // tetFace and tetPt
-        label cellI = -1;
-        label tetFaceI = -1;
-        label tetPtI = -1;
+        label celli = -1;
+        label tetFacei = -1;
+        label tetPti = -1;
 
-        vector pos = vector::zero;
+        vector pos = Zero;
 
         setPositionAndCell
         (
@@ -1057,19 +1007,18 @@ void CML::InjectionModel<CloudType>::injectSteadyState
             newParcels,
             0.0,
             pos,
-            cellI,
-            tetFaceI,
-            tetPtI
+            celli,
+            tetFacei,
+            tetPti
         );
 
-        if (cellI > -1)
+        if (celli > -1)
         {
             // Apply corrections to position for 2-D cases
             meshTools::constrainToMeshCentre(mesh, pos);
 
             // Create a new parcel
-            parcelType* pPtr =
-                new parcelType(mesh, pos, cellI, tetFaceI, tetPtI);
+            parcelType* pPtr = new parcelType(mesh, pos, celli);
 
             // Check/set new parcel thermo properties
             cloud.setParcelThermoProperties(*pPtr, 0.0);
@@ -1093,8 +1042,10 @@ void CML::InjectionModel<CloudType>::injectSteadyState
                     pPtr->rho()
                 );
 
+            pPtr->typeId() = injectorID_;
+
             // Add the new parcel
-            td.cloud().addParticle(pPtr);
+            cloud.addParticle(pPtr);
 
             massAdded += pPtr->nParticle()*pPtr->mass();
             parcelsAdded++;
@@ -1106,76 +1057,15 @@ void CML::InjectionModel<CloudType>::injectSteadyState
 
 
 template<class CloudType>
-void CML::InjectionModel<CloudType>::setPositionAndCell
-(
-    const label parcelI,
-    const label nParcels,
-    const scalar time,
-    vector& position,
-    label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
-)
-{
-    notImplemented
-    (
-        "void CML::InjectionModel<CloudType>::setPositionAndCell"
-        "("
-            "const label, "
-            "const label, "
-            "const scalar, "
-            "vector&, "
-            "label&, "
-            "label&, "
-            "label&"
-        ")"
-    );
-}
-
-
-template<class CloudType>
-void CML::InjectionModel<CloudType>::setProperties
-(
-    const label parcelI,
-    const label nParcels,
-    const scalar time,
-    typename CloudType::parcelType& parcel
-)
-{
-    notImplemented
-    (
-        "void CML::InjectionModel<CloudType>::setProperties"
-        "("
-            "const label, "
-            "const label, "
-            "const scalar, "
-            "typename CloudType::parcelType&"
-        ")"
-    );
-}
-
-
-template<class CloudType>
-bool CML::InjectionModel<CloudType>::fullyDescribed() const
-{
-    notImplemented
-    (
-        "bool CML::InjectionModel<CloudType>::fullyDescribed() const"
-    );
-
-    return false;
-}
-
-
-template<class CloudType>
 void CML::InjectionModel<CloudType>::info(Ostream& os)
 {
-    os  << "    " << this->modelName() << ":" << nl
-        << "        number of parcels added     = " << parcelsAddedTotal_ << nl
-        << "        mass introduced             = " << massInjected_ << nl;
+    os  << "    Injector " << this->modelName() << ":" << nl
+        << "      - parcels added               = " << parcelsAddedTotal_ << nl
+        << "      - mass introduced             = " << massInjected_ << nl;
 
     if (this->outputTime())
     {
+        this->setModelProperty("volumeTotal", volumeTotal_);
         this->setModelProperty("massInjected", massInjected_);
         this->setModelProperty("nInjections", nInjections_);
         this->setModelProperty("parcelsAddedTotal", parcelsAddedTotal_);
@@ -1185,6 +1075,34 @@ void CML::InjectionModel<CloudType>::info(Ostream& os)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class CloudType>
+CML::autoPtr<CML::InjectionModel<CloudType> >
+CML::InjectionModel<CloudType>::New
+(
+    const dictionary& dict,
+    CloudType& owner
+)
+{
+    const word modelType(dict.lookup("injectionModel"));
+
+    Info<< "Selecting injection model " << modelType << endl;
+
+    typename dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(modelType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalErrorInFunction
+            << "Unknown injection model type "
+            << modelType << nl << nl
+            << "Valid injection model types are:" << nl
+            << dictionaryConstructorTablePtr_->sortedToc() << exit(FatalError);
+    }
+
+    return autoPtr<InjectionModel<CloudType>>(cstrIter()(dict, owner));
+}
+
 
 template<class CloudType>
 CML::autoPtr<CML::InjectionModel<CloudType> >
@@ -1203,16 +1121,8 @@ CML::InjectionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "InjectionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "const word&, "
-                "const word&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown injection model type "
+        FatalErrorInFunction
+            << "Unknown injection model type "
             << modelType << nl << nl
             << "Valid injection model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc() << exit(FatalError);

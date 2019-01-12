@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -96,7 +96,7 @@ pid_t CML::pgid()
 
 bool CML::env(const word& envName)
 {
-    return ::getenv(envName.c_str()) != NULL;
+    return ::getenv(envName.c_str()) != nullptr;
 }
 
 
@@ -172,7 +172,7 @@ CML::string CML::userName()
 {
     struct passwd* pw = ::getpwuid(::getuid());
 
-    if (pw != NULL)
+    if (pw != nullptr)
     {
         return pw->pw_name;
     }
@@ -194,7 +194,7 @@ CML::fileName CML::home()
 {
     char* env = ::getenv("HOME");
 
-    if (env != NULL)
+    if (env != nullptr)
     {
         return fileName(env);
     }
@@ -202,7 +202,7 @@ CML::fileName CML::home()
     {
         struct passwd* pw = ::getpwuid(getuid());
 
-        if (pw != NULL)
+        if (pw != nullptr)
         {
             return pw->pw_dir;
         }
@@ -226,7 +226,7 @@ CML::fileName CML::home(const string& userName)
     {
         char* env = ::getenv("HOME");
 
-        if (env != NULL)
+        if (env != nullptr)
         {
             return fileName(env);
         }
@@ -234,7 +234,7 @@ CML::fileName CML::home(const string& userName)
         pw = ::getpwuid(::getuid());
     }
 
-    if (pw != NULL)
+    if (pw != nullptr)
     {
         return pw->pw_dir;
     }
@@ -254,7 +254,7 @@ CML::fileName CML::cwd()
     }
     else
     {
-        FatalErrorIn("CML::cwd()")
+        FatalErrorInFunction
             << "Couldn't get the current working directory"
             << exit(FatalError);
 
@@ -438,7 +438,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
         {
             case EPERM:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "The filesystem containing " << pathName
                     << " does not support the creation of directories."
                     << exit(FatalError);
@@ -454,7 +454,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case EFAULT:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "" << pathName
                     << " points outside your accessible address space."
                     << exit(FatalError);
@@ -464,7 +464,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case EACCES:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "The parent directory does not allow write "
                        "permission to the process,"<< nl
                     << "or one of the directories in " << pathName
@@ -476,7 +476,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case ENAMETOOLONG:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "" << pathName << " is too long."
                     << exit(FatalError);
 
@@ -492,7 +492,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
                 }
                 else
                 {
-                    FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                    FatalErrorInFunction
                         << "Couldn't create directory " << pathName
                         << exit(FatalError);
 
@@ -502,7 +502,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case ENOTDIR:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "A component used as a directory in " << pathName
                     << " is not, in fact, a directory."
                     << exit(FatalError);
@@ -512,7 +512,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case ENOMEM:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "Insufficient kernel memory was available to make "
                        "directory " << pathName << '.'
                     << exit(FatalError);
@@ -522,7 +522,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case EROFS:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "" << pathName
                     << " refers to a file on a read-only filesystem."
                     << exit(FatalError);
@@ -532,7 +532,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case ELOOP:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "Too many symbolic links were encountered in resolving "
                     << pathName << '.'
                     << exit(FatalError);
@@ -542,7 +542,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             case ENOSPC:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "The device containing " << pathName
                     << " has no room for the new directory or "
                     << "the user's disk quota is exhausted."
@@ -553,7 +553,7 @@ bool CML::mkDir(const fileName& pathName, mode_t mode)
 
             default:
             {
-                FatalErrorIn("CML::mkDir(const fileName&, mode_t)")
+                FatalErrorInFunction
                     << "Couldn't create directory " << pathName
                     << exit(FatalError);
 
@@ -686,7 +686,7 @@ CML::fileNameList CML::readDir
     label nEntries = 0;
 
     // Attempt to open directory and set the structure pointer
-    if ((source = ::opendir(directory.c_str())) == NULL)
+    if ((source = ::opendir(directory.c_str())) == nullptr)
     {
         dirEntries.setSize(0);
 
@@ -700,7 +700,7 @@ CML::fileNameList CML::readDir
     else
     {
         // Read and parse all the entries in the directory
-        while ((list = ::readdir(source)) != NULL)
+        while ((list = ::readdir(source)) != nullptr)
         {
             fileName fName(list->d_name);
 
@@ -863,7 +863,7 @@ bool CML::ln(const fileName& src, const fileName& dst)
 
     if (exists(dst))
     {
-        WarningIn("ln(const fileName&, const fileName&)")
+        WarningInFunction
             << "destination " << dst << " already exists. Not linking."
             << endl;
         return false;
@@ -871,7 +871,7 @@ bool CML::ln(const fileName& src, const fileName& dst)
 
     if (src.isAbsolute() && !exists(src))
     {
-        WarningIn("ln(const fileName&, const fileName&)")
+        WarningInFunction
             << "source " << src << " does not exist." << endl;
         return false;
     }
@@ -882,7 +882,7 @@ bool CML::ln(const fileName& src, const fileName& dst)
     }
     else
     {
-        WarningIn("ln(const fileName&, const fileName&)")
+        WarningInFunction
             << "symlink from " << src << " to " << dst << " failed." << endl;
         return false;
     }
@@ -986,9 +986,9 @@ bool CML::rmDir(const fileName& directory)
     struct dirent *list;
 
     // Attempt to open directory and set the structure pointer
-    if ((source = ::opendir(directory.c_str())) == NULL)
+    if ((source = ::opendir(directory.c_str())) == nullptr)
     {
-        WarningIn("rmDir(const fileName&)")
+        WarningInFunction
             << "cannot open directory " << directory << endl;
 
         return false;
@@ -996,7 +996,7 @@ bool CML::rmDir(const fileName& directory)
     else
     {
         // Read and parse all the entries in the directory
-        while ((list = ::readdir(source)) != NULL)
+        while ((list = ::readdir(source)) != nullptr)
         {
             fileName fName(list->d_name);
 
@@ -1008,7 +1008,7 @@ bool CML::rmDir(const fileName& directory)
                 {
                     if (!rmDir(path))
                     {
-                        WarningIn("rmDir(const fileName&)")
+                        WarningInFunction
                             << "failed to remove directory " << fName
                             << " while removing directory " << directory
                             << endl;
@@ -1022,7 +1022,7 @@ bool CML::rmDir(const fileName& directory)
                 {
                     if (!rm(path))
                     {
-                        WarningIn("rmDir(const fileName&)")
+                        WarningInFunction
                             << "failed to remove file " << fName
                             << " while removing directory " << directory
                             << endl;
@@ -1038,7 +1038,7 @@ bool CML::rmDir(const fileName& directory)
 
         if (!rm(directory))
         {
-            WarningIn("rmDir(const fileName&)")
+            WarningInFunction
                 << "failed to remove directory " << directory << endl;
 
             ::closedir(source);
@@ -1063,10 +1063,8 @@ void CML::fdClose(const int fd)
 {
     if (close(fd) != 0)
     {
-        FatalErrorIn
-        (
-            "fdClose(const int fd)"
-        )   << "close error on " << fd << endl
+        FatalErrorInFunction
+            << "close error on " << fd << endl
             << abort(FatalError);
     }
 }
@@ -1084,12 +1082,10 @@ bool CML::ping
     struct sockaddr_in destAddr;      // will hold the destination addr
     u_int addr;
 
-    if ((hostPtr = ::gethostbyname(destName.c_str())) == NULL)
+    if ((hostPtr = ::gethostbyname(destName.c_str())) == nullptr)
     {
-        FatalErrorIn
-        (
-            "CML::ping(const string&, ...)"
-        )   << "gethostbyname error " << h_errno << " for host " << destName
+        FatalErrorInFunction
+            << "gethostbyname error " << h_errno << " for host " << destName
             << abort(FatalError);
     }
 
@@ -1100,10 +1096,8 @@ bool CML::ping
     sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
-        FatalErrorIn
-        (
-            "CML::ping(const string&, const label)"
-        )   << "socket error"
+        FatalErrorInFunction
+            << "socket error"
             << abort(FatalError);
     }
 
@@ -1185,7 +1179,7 @@ void* CML::dlOpen(const fileName& lib, const bool check)
 
     if (!handle && check)
     {
-        WarningIn("dlOpen(const fileName&, const bool)")
+        WarningInFunction
             << "dlopen error : " << ::dlerror()
             << endl;
     }
@@ -1233,7 +1227,7 @@ void* CML::dlSym(void* handle, const std::string& symbol)
 
     if (error)
     {
-        WarningIn("dlSym(void*, const std::string&)")
+        WarningInFunction
             << "Cannot lookup symbol " << symbol << " : " << error
             << endl;
     }
@@ -1277,7 +1271,7 @@ static int collectLibsCallback
 )
 {
 #ifdef darwin
-    WarningIn("collectLibsCallback")
+    WarningInFunction
         << "Not yet implemented for Mac OS X"
             << CML::endl;
 #else
@@ -1293,7 +1287,7 @@ CML::fileNameList CML::dlLoaded()
 {
     DynamicList<fileName> libs;
 #ifdef darwin
-    WarningIn("dlLoaded")
+    WarningInFunction
         << "Not yet implemented for Mac OS X"
             << endl;
 #else
@@ -1307,37 +1301,6 @@ CML::fileNameList CML::dlLoaded()
     }
     return libs;
 }
-
-
-void CML::osRandomSeed(const label seed)
-{
-#ifdef USE_RANDOM
-    srandom((unsigned int)seed);
-#else
-    srand48(seed);
-#endif
-}
-
-
-CML::label CML::osRandomInteger()
-{
-#ifdef USE_RANDOM
-    return random();
-#else
-    return lrand48();
-#endif
-}
-
-
-CML::scalar CML::osRandomDouble()
-{
-#ifdef USE_RANDOM
-    return (scalar)random()/INT_MAX;
-#else
-    return drand48();
-#endif
-}
-
 
 std::string CML::toUnixPath(const std::string & path)
 {

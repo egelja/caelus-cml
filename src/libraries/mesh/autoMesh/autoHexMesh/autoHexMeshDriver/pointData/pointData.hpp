@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,6 +42,14 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class pointData;
+
+Istream& operator>>(Istream&, pointData&);
+Ostream& operator<<(Ostream&, const pointData&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class pointData Declaration
@@ -143,6 +151,13 @@ public:
                 const scalar tol,
                 TrackingData& td
             );
+
+    // Member Operators
+
+        // Needed for List IO
+        inline bool operator==(const pointData&) const;
+        inline bool operator!=(const pointData&) const;
+
 
     // IOstream Operators
 

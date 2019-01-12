@@ -141,8 +141,7 @@ void CML::calcTypes::randomise::writeRandomField
 
         forAll(field, cellI)
         {
-            Type rndPert;
-            rand.randomise(rndPert);
+            Type rndPert = rand.sample01<Type>();
             rndPert = 2.0*rndPert - pTraits<Type>::one;
             rndPert /= mag(rndPert);
             field[cellI] += pertMag*rndPert;

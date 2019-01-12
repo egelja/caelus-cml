@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -75,7 +75,7 @@ CML::label CML::dictionaryEntry::endLineNumber() const
 
 CML::ITstream& CML::dictionaryEntry::stream() const
 {
-    FatalIOErrorIn("ITstream& primitiveEntry::stream() const", *this)
+    FatalIOErrorInFunction(*this)
         << "Attempt to return dictionary entry as a primitive"
         << abort(FatalIOError);
 

@@ -70,13 +70,8 @@ cellShape create3DCellShape
     // Checking
     if (faceLabels.size() != curModel.nFaces())
     {
-        FatalErrorIn
-        (
-            "create3DCellShape(const label cellIndex, "
-            "const labelList& faceLabels, const labelListList& faces, "
-            "const labelList& owner, const labelList& neighbour, "
-            "const label fluentCellModelID)"
-        )   << "Number of face labels not equal to"
+        FatalErrorInFunction
+            << "Number of face labels not equal to"
             << "number of face in the model. "
             << "Number of face labels: " << faceLabels.size()
             << " number of faces in model: " << curModel.nFaces()
@@ -109,13 +104,8 @@ cellShape create3DCellShape
         }
         else
         {
-            FatalErrorIn
-            (
-                "create3DCellShape(const label cellIndex, "
-                "const labelList& faceLabels, const labelListList& faces, "
-                "const labelList& owner, const labelList& neighbour, "
-                "const label fluentCellModelID)"
-            )   << "face " << curFaceLabel
+            FatalErrorInFunction
+                << "face " << curFaceLabel
                 << " does not belong to cell " << cellIndex
                 << ". Face owner: " << owner[curFaceLabel] << " neighbour: "
                 << neighbour[curFaceLabel]
@@ -172,13 +162,8 @@ cellShape create3DCellShape
 
     if (!found)
     {
-        FatalErrorIn
-        (
-            "create3DCellShape(const label cellIndex, "
-            "const labelList& faceLabels, const labelListList& faces, "
-            "const labelList& owner, const labelList& neighbour, "
-            "const label fluentCellModelID)"
-        )   << "Cannot find match for first face. "
+        FatalErrorInFunction
+            << "Cannot find match for first face. "
             << "cell model: " << curModel.name() << " first model face: "
             << firstModelFace << " Mesh faces: " << localFaces
             << abort(FatalError);
@@ -267,13 +252,8 @@ cellShape create3DCellShape
         if (!found)
         {
             // A model face is not matched. Shape detection failed
-            FatalErrorIn
-            (
-                "create3DCellShape(const label cellIndex, "
-                "const labelList& faceLabels, const labelListList& faces, "
-                "const labelList& owner, const labelList& neighbour, "
-                "const label fluentCellModelID)"
-            )   << "Cannot find match for face "
+            FatalErrorInFunction
+                << "Cannot find match for face "
                 << modelFaceI
                 << ".\nModel: " << curModel.name() << " model face: "
                 << curModelFace << " Mesh faces: " << localFaces

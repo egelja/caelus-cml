@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,11 +29,11 @@ void CML::processorMeshes::read()
 {
     forAll(databases_, procI)
     {
-        meshes_.set(procI, NULL);
-        pointProcAddressing_.set(procI, NULL);
-        faceProcAddressing_.set(procI, NULL);
-        cellProcAddressing_.set(procI, NULL);
-        boundaryProcAddressing_.set(procI, NULL);
+        meshes_.set(procI, nullptr);
+        pointProcAddressing_.set(procI, nullptr);
+        faceProcAddressing_.set(procI, nullptr);
+        cellProcAddressing_.set(procI, nullptr);
+        boundaryProcAddressing_.set(procI, nullptr);
     }
 
     forAll(databases_, procI)
@@ -171,7 +171,7 @@ CML::fvMesh::readUpdateState CML::processorMeshes::readUpdate()
         }
         else if (stat != procStat)
         {
-            FatalErrorIn("processorMeshes::readUpdate()")
+            FatalErrorInFunction
                 << "Processor " << procI
                 << " has a different polyMesh at time "
                 << databases_[procI].timeName()
@@ -234,7 +234,7 @@ void CML::processorMeshes::reconstructPoints(fvMesh& mesh)
 
         if (pointProcAddressingI.size() != procPoints.size())
         {
-            FatalErrorIn("processorMeshes")
+            FatalErrorInFunction
                 << "problem :"
                 << " pointProcAddressingI:" << pointProcAddressingI.size()
                 << " procPoints:" << procPoints.size()

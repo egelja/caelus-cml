@@ -17,6 +17,7 @@ caelus_inc = [
 'lagrangian/basic/lnInclude',
 'lagrangian/distributionModels/lnInclude',
 'lagrangian/intermediate/lnInclude',
+'lagrangian/turbulence/lnInclude',
 'turbulenceModels',
 'turbulenceModels/incompressible/LES/lnInclude',
 'turbulenceModels/LES/LESdeltas/lnInclude',
@@ -28,10 +29,7 @@ caelus_inc = [
 'thermophysicalModels/reactionThermo/lnInclude',
 'thermophysicalModels/SLGThermo/lnInclude',
 'thermophysicalModels/radiationModels/lnInclude',
-'thermophysicalModels/properties/liquidProperties/lnInclude',
-'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-'thermophysicalModels/properties/solidProperties/lnInclude',
-'thermophysicalModels/properties/solidMixtureProperties/lnInclude'
+'thermophysicalModels/thermophysicalProperties/lnInclude'
 ]
 
 caelus_libs = [
@@ -39,11 +37,8 @@ caelus_libs = [
 'lagrangian',
 'distributionModels',
 'specie',
-'basicThermophysicalModels',
-'liquidProperties',
-'liquidMixtureProperties',
-'solidProperties',
-'solidMixtureProperties',
+'fluidThermophysicalModels',
+'thermophysicalProperties',
 'reactionThermophysicalModels',
 'SLGThermo',
 'radiationModels',

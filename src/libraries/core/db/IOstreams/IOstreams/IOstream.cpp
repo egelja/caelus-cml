@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,7 +44,7 @@ CML::IOstream::formatEnum(const word& format)
     }
     else
     {
-        WarningIn("IOstream::formatEnum(const word&)")
+        WarningInFunction
             << "bad format specifier '" << format << "', using 'ascii'"
             << endl;
 
@@ -73,7 +73,7 @@ CML::IOstream::compressionEnum(const word& compression)
     }
     else
     {
-        WarningIn("IOstream::compressionEnum(const word&)")
+        WarningInFunction
             << "bad compression specifier '" << compression
             << "', using 'uncompressed'"
             << endl;
@@ -89,10 +89,8 @@ bool CML::IOstream::check(const char* operation) const
 {
     if (bad())
     {
-        FatalIOErrorIn
-        (
-            "IOstream::check(const char*) const", *this
-        )   << "error in IOstream " << name() << " for operation " << operation
+        FatalIOErrorInFunction(*this)
+            << "error in IOstream " << name() << " for operation " << operation
             << exit(FatalIOError);
     }
 
@@ -104,10 +102,8 @@ void CML::IOstream::fatalCheck(const char* operation) const
 {
     if (bad())
     {
-        FatalIOErrorIn
-        (
-            "IOstream::fatalCheck(const char*) const", *this
-        )   << "error in IOstream " << name() << " for operation " << operation
+        FatalIOErrorInFunction(*this)
+            << "error in IOstream " << name() << " for operation " << operation
             << exit(FatalIOError);
     }
 }

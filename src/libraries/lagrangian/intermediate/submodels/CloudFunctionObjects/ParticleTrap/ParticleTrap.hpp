@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,16 +22,18 @@ Class
     CML::ParticleTrap
 
 Description
-    Traps particles within a given phase fraction for multi-phase cases
+    Traps particles within a given phase fraction for multi-phase cases.
 
     Model is activated using:
+    \verbatim
+    particleTrap1
+    {
+        type        particleTrap;
+        alpha       alpha;      // name of the volume fraction field
+        threshold   0.95;       // alpha value below which model is active
+    }
+    \endverbatim
 
-        particleTrap1
-        {
-            type        particleTrap;
-            alphaName   alpha;      // name volume fraction field
-            threshold   0.95;       // alpha value below which model is active
-        }
 
 
 \*---------------------------------------------------------------------------*/
@@ -125,27 +127,8 @@ public:
             virtual void postMove
             (
                 typename CloudType::parcelType& p,
-                const label cellI,
                 const scalar dt,
                 const point& position0,
-                bool& keepParticle
-            );
-
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
-
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 };
@@ -169,10 +152,10 @@ CML::ParticleTrap<CloudType>::ParticleTrap
     CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
     alphaName_
     (
-        this->coeffDict().template lookupOrDefault<word>("alphaName", "alpha")
+        this->coeffDict().template lookupOrDefault<word>("alpha", "alpha")
     ),
-    alphaPtr_(NULL),
-    gradAlphaPtr_(NULL),
+    alphaPtr_(nullptr),
+    gradAlphaPtr_(nullptr),
     threshold_(readScalar(this->coeffDict().lookup("threshold")))
 {}
 
@@ -186,7 +169,7 @@ CML::ParticleTrap<CloudType>::ParticleTrap
     CloudFunctionObject<CloudType>(pt),
     alphaName_(pt.alphaName_),
     alphaPtr_(pt.alphaPtr_),
-    gradAlphaPtr_(NULL),
+    gradAlphaPtr_(nullptr),
     threshold_(pt.threshold_)
 {}
 
@@ -203,7 +186,7 @@ CML::ParticleTrap<CloudType>::~ParticleTrap()
 template<class CloudType>
 void CML::ParticleTrap<CloudType>::preEvolve()
 {
-    if (alphaPtr_ == NULL)
+    if (alphaPtr_ == nullptr)
     {
         const fvMesh& mesh = this->owner().mesh();
         const volScalarField& alpha =
@@ -233,16 +216,15 @@ void CML::ParticleTrap<CloudType>::postEvolve()
 template<class CloudType>
 void CML::ParticleTrap<CloudType>::postMove
 (
-    typename CloudType::parcelType& p,
-    const label cellI,
+    parcelType& p,
     const scalar,
     const point&,
     bool&
 )
 {
-    if (alphaPtr_->internalField()[cellI] < threshold_)
+    if (alphaPtr_->internalField()[p.cell()] < threshold_)
     {
-        const vector& gradAlpha = gradAlphaPtr_()[cellI];
+        const vector& gradAlpha = gradAlphaPtr_()[p.cell()];
         vector nHat = gradAlpha/mag(gradAlpha);
         scalar nHatU = nHat & p.U();
 
@@ -251,32 +233,6 @@ void CML::ParticleTrap<CloudType>::postMove
             p.U() -= 2*nHat*nHatU;
         }
     }
-}
-
-
-template<class CloudType>
-void CML::ParticleTrap<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParticleTrap<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
 }
 
 

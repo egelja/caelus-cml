@@ -25,7 +25,7 @@ License
 #include "coarsePBiCGStab.hpp"
 #include "SubField.hpp"
 
-CML::lduMatrix::solverPerformance CML::GAMGSolver::solve
+CML::solverPerformance CML::GAMGSolver::solve
 (
     scalarField& psi,
     const scalarField& source,
@@ -33,7 +33,7 @@ CML::lduMatrix::solverPerformance CML::GAMGSolver::solve
 ) const
 {
     // Setup class containing solver performance data
-    lduMatrix::solverPerformance solverPerf(typeName, fieldName_);
+    solverPerformance solverPerf(typeName, fieldName_);
 
     // Calculate A.psi used to calculate the initial residual
     scalarField Apsi(psi.size());
@@ -430,14 +430,13 @@ void CML::GAMGSolver::solveCoarsestLevel
 {
     if (directSolveCoarsest_)
     {
-        coarsestCorrField = coarsestSource;
-        coarsestLUMatrixPtr_->solve(coarsestCorrField);
+        coarsestLUMatrixPtr_->solve(coarsestCorrField, coarsestSource);
     }
     else
     {
         const label coarsestLevel = matrixLevels_.size() - 1;
         coarsestCorrField = 0;
-        lduMatrix::solverPerformance coarseSolverPerf;
+        solverPerformance coarseSolverPerf;
 
         if (matrixLevels_[coarsestLevel].asymmetric())
         {

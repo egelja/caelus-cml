@@ -253,7 +253,7 @@ autoPtr<SimpleDistribution<Type> > distributionFunctionObject::setData(
 
         if(dist.maxNrBins()>binNrMax) {
             scalar newBinSize=binSize*(1.1*dist.maxNrBins())/binNrMax;
-            WarningIn("distributionFunctionObject::setData")
+            WarningInFunction
                 << "Number of bin " << dist.maxNrBins()
                     << " exceeds allowed number "
                     << binNrMax << ". Increasing binSize from " << binSize
@@ -305,7 +305,7 @@ autoPtr<SimpleDistribution<Type> > distributionFunctionObject::setDataScalar(
 
         if(dist.maxNrBins()>binNrMax) {
             scalar newBinSize=binSize*(1.1*dist.maxNrBins())/binNrMax;
-            WarningIn("distributionFunctionObject::setDataScalar")
+            WarningInFunction
                 << "Number of bin " << dist.maxNrBins()
                     << " exceeds allowed number "
                     << binNrMax << ". Increasing binSize from " << binSize

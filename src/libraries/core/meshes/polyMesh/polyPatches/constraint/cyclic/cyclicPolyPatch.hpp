@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -357,10 +357,8 @@ public:
             }
             else
             {
-                FatalErrorIn
-                (
-                    "cyclicPolyPatch::transformGlobalFace(const label) const"
-                )   << "Face " << facei << " not in patch " << name()
+                FatalErrorInFunction
+                    << "Face " << facei << " not in patch " << name()
                     << exit(FatalError);
                 return -1;
             }

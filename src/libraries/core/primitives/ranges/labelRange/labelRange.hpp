@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -191,8 +191,11 @@ public:
 
 
 private:
-
-        //- const_iterator returned by end(), cend()
+    
+    //- const labelRange held by endIter_
+       static const labelRange endLabelRange_;
+    
+    //- const_iterator returned by end(), cend()
         static const const_iterator endIter_;
 
 };

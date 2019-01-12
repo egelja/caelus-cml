@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -162,16 +162,8 @@ CML::cyclicACMIFvsPatchField<Type>::cyclicACMIFvsPatchField
 {
     if (!isA<cyclicACMIFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "cyclicACMIFvsPatchField<Type>::cyclicACMIFvsPatchField\n"
-            "("
-                "const cyclicACMIFvsPatchField<Type>&, "
-                "const fvPatch&, "
-                "const DimensionedField<Type, surfaceMesh>&, "
-                "const fvPatchFieldMapper&"
-            ")"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()
@@ -193,16 +185,8 @@ CML::cyclicACMIFvsPatchField<Type>::cyclicACMIFvsPatchField
 {
     if (!isA<cyclicACMIFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "cyclicACMIFvsPatchField<Type>::cyclicACMIFvsPatchField"
-            "("
-                "const fvPatch&, "
-                "const Field<Type>&, "
-                "const dictionary&"
-            ")",
-            dict
-        )   << "patch " << this->patch().index() << " not cyclicACMI type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not cyclicACMI type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }

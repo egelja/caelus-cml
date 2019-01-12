@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -344,7 +344,7 @@ const CML::entry* CML::dictionary::lookupEntryPtr
         }
         else
         {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -388,7 +388,7 @@ CML::entry* CML::dictionary::lookupEntryPtr
         }
         else
         {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -405,13 +405,10 @@ const CML::entry& CML::dictionary::lookupEntry
 {
     const entry* entryPtr = lookupEntryPtr(keyword, recursive, patternMatch);
 
-    if (entryPtr == NULL)
+    if (entryPtr == nullptr)
     {
-        FatalIOErrorIn
-        (
-            "dictionary::lookupEntry(const word&, bool, bool) const",
-            *this
-        )   << "keyword " << keyword << " is undefined in dictionary "
+        FatalIOErrorInFunction(*this)
+            << "keyword " << keyword << " is undefined in dictionary "
             << name()
             << exit(FatalIOError);
     }
@@ -487,12 +484,8 @@ const CML::entry* CML::dictionary::lookupScopedEntryPtr
                     // Go to parent
                     if (&dictPtr->parent_ == &dictionary::null)
                     {
-                        FatalIOErrorIn
-                        (
-                            "dictionary::lookupScopedEntryPtr"
-                            "(const word&, bool, bool)",
-                            *this
-                        )   << "No parent of current dictionary"
+                        FatalIOErrorInFunction(*this)
+                            << "No parent of current dictionary"
                             << " when searching for "
                             << keyword.substr(begVar, keyword.size()-begVar)
                             << exit(FatalIOError);
@@ -521,12 +514,8 @@ const CML::entry* CML::dictionary::lookupScopedEntryPtr
 
                 if (!entPtr)
                 {
-                    FatalIOErrorIn
-                    (
-                        "dictionary::lookupScopedEntryPtr"
-                        "(const word&, bool, bool)",
-                        *this
-                    )   << "keyword " << firstWord
+                    FatalIOErrorInFunction(*this)
+                        << "keyword " << firstWord
                         << " is undefined in dictionary "
                         << name() << endl
                         << "Valid keywords are " << keys()
@@ -544,7 +533,7 @@ const CML::entry* CML::dictionary::lookupScopedEntryPtr
                 }
                 else
                 {
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
@@ -560,7 +549,7 @@ bool CML::dictionary::substituteScopedKeyword(const word& keyword)
     const entry* ePtr = lookupScopedEntryPtr(varName, true, true);
 
     // If defined insert its entries into this dictionary
-    if (ePtr != NULL)
+    if (ePtr != nullptr)
     {
         const dictionary& addDict = ePtr->dict();
 
@@ -602,7 +591,7 @@ const CML::dictionary* CML::dictionary::subDictPtr(const word& keyword) const
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -611,13 +600,10 @@ const CML::dictionary& CML::dictionary::subDict(const word& keyword) const
 {
     const entry* entryPtr = lookupEntryPtr(keyword, false, true);
 
-    if (entryPtr == NULL)
+    if (entryPtr == nullptr)
     {
-        FatalIOErrorIn
-        (
-            "dictionary::subDict(const word& keyword) const",
-            *this
-        )   << "keyword " << keyword << " is undefined in dictionary "
+        FatalIOErrorInFunction(*this)
+            << "keyword " << keyword << " is undefined in dictionary "
             << name()
             << exit(FatalIOError);
     }
@@ -629,13 +615,10 @@ CML::dictionary& CML::dictionary::subDict(const word& keyword)
 {
     entry* entryPtr = lookupEntryPtr(keyword, false, true);
 
-    if (entryPtr == NULL)
+    if (entryPtr == nullptr)
     {
-        FatalIOErrorIn
-        (
-            "dictionary::subDict(const word& keyword)",
-            *this
-        )   << "keyword " << keyword << " is undefined in dictionary "
+        FatalIOErrorInFunction(*this)
+            << "keyword " << keyword << " is undefined in dictionary "
             << name()
             << exit(FatalIOError);
     }
@@ -651,15 +634,12 @@ CML::dictionary CML::dictionary::subOrEmptyDict
 {
     const entry* entryPtr = lookupEntryPtr(keyword, false, true);
 
-    if (entryPtr == NULL)
+    if (entryPtr == nullptr)
     {
         if (mustRead)
         {
-            FatalIOErrorIn
-            (
-                "dictionary::subOrEmptyDict(const word& keyword, const bool)",
-                *this
-            )   << "keyword " << keyword << " is undefined in dictionary "
+            FatalIOErrorInFunction(*this)
+                << "keyword " << keyword << " is undefined in dictionary "
                 << name()
                 << exit(FatalIOError);
             return entryPtr->dict();
@@ -672,6 +652,24 @@ CML::dictionary CML::dictionary::subOrEmptyDict
     else
     {
         return entryPtr->dict();
+    }
+}
+
+
+const CML::dictionary& CML::dictionary::optionalSubDict
+(
+    const word& keyword
+) const
+{
+    const entry* entryPtr = lookupEntryPtr(keyword, false, true);
+
+    if (entryPtr)
+    {
+        return entryPtr->dict();
+    }
+    else
+    {
+        return *this;
     }
 }
 
@@ -755,7 +753,7 @@ bool CML::dictionary::add(entry* entryPtr, bool mergeEntry)
             }
             else
             {
-                IOWarningIn("dictionary::add(entry*, bool)", (*this))
+                IOWarningInFunction((*this))
                     << "problem replacing entry "<< entryPtr->keyword()
                     << " in dictionary " << name() << endl;
 
@@ -784,7 +782,7 @@ bool CML::dictionary::add(entry* entryPtr, bool mergeEntry)
     }
     else
     {
-        IOWarningIn("dictionary::add(entry*, bool)", (*this))
+        IOWarningInFunction((*this))
             << "attempt to add entry "<< entryPtr->keyword()
             << " which already exists in dictionary " << name()
             << endl;
@@ -921,11 +919,8 @@ bool CML::dictionary::changeKeyword
 
     if (iter()->keyword().isPattern())
     {
-        FatalIOErrorIn
-        (
-            "dictionary::changeKeyword(const word&, const word&, bool)",
-            *this
-        )   << "Old keyword "<< oldKeyword
+        FatalIOErrorInFunction(*this)
+            << "Old keyword "<< oldKeyword
             << " is a pattern."
             << "Pattern replacement not yet implemented."
             << exit(FatalIOError);
@@ -962,11 +957,8 @@ bool CML::dictionary::changeKeyword
         }
         else
         {
-            IOWarningIn
-            (
-                "dictionary::changeKeyword(const word&, const word&, bool)",
-                *this
-            )   << "cannot rename keyword "<< oldKeyword
+            IOWarningInFunction(*this)
+                << "cannot rename keyword "<< oldKeyword
                 << " to existing keyword " << newKeyword
                 << " in dictionary " << name() << endl;
             return false;
@@ -997,7 +989,7 @@ bool CML::dictionary::merge(const dictionary& dict)
     // Check for assignment to self
     if (this == &dict)
     {
-        FatalIOErrorIn("dictionary::merge(const dictionary&)", *this)
+        FatalIOErrorInFunction(*this)
             << "attempted merge to self for dictionary " << name()
             << abort(FatalIOError);
     }
@@ -1078,7 +1070,7 @@ void CML::dictionary::operator=(const dictionary& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalIOErrorIn("dictionary::operator=(const dictionary&)", *this)
+        FatalIOErrorInFunction(*this)
             << "attempted assignment to self for dictionary " << name()
             << abort(FatalIOError);
     }
@@ -1101,7 +1093,7 @@ void CML::dictionary::operator+=(const dictionary& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalIOErrorIn("dictionary::operator+=(const dictionary&)", *this)
+        FatalIOErrorInFunction(*this)
             << "attempted addition assignment to self for dictionary " << name()
             << abort(FatalIOError);
     }
@@ -1118,7 +1110,7 @@ void CML::dictionary::operator|=(const dictionary& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalIOErrorIn("dictionary::operator|=(const dictionary&)", *this)
+        FatalIOErrorInFunction(*this)
             << "attempted assignment to self for dictionary " << name()
             << abort(FatalIOError);
     }
@@ -1138,7 +1130,7 @@ void CML::dictionary::operator<<=(const dictionary& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalIOErrorIn("dictionary::operator<<=(const dictionary&)", *this)
+        FatalIOErrorInFunction(*this)
             << "attempted assignment to self for dictionary " << name()
             << abort(FatalIOError);
     }

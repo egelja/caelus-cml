@@ -60,19 +60,22 @@ swakPsiChemistryModelPluginFunction::swakPsiChemistryModelPluginFunction(
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const psiChemistryModel &swakPsiChemistryModelPluginFunction::chemistryInternal(
+const  swakPsiChemistryModelPluginFunction::ChemistryModelType &swakPsiChemistryModelPluginFunction::chemistryInternal(
     const fvMesh &reg
 )
 {
-    static HashPtrTable<psiChemistryModel> chemistry_;
+    static HashPtrTable<swakPsiChemistryModelPluginFunction::ChemistryModelType> chemistry_;
 
-    if(reg.foundObject<psiChemistryModel>("chemistryProperties")) {
+    typedef swakPsiChemistryModelPluginFunction::ChemistryModelType::reactionThermo rThermo;
+    static HashPtrTable<rThermo> thermo_;
+
+    if(reg.foundObject< swakPsiChemistryModelPluginFunction::ChemistryModelType>("chemistryProperties")) {
         if(debug) {
             Info << "swakPsiChemistryModelPluginFunction::chemistryInternal: "
                 << "already in memory" << endl;
         }
         // Somebody else already registered this
-        return reg.lookupObject<psiChemistryModel>("chemistryProperties");
+        return reg.lookupObject< swakPsiChemistryModelPluginFunction::ChemistryModelType>("chemistryProperties");
     }
     if(!chemistry_.found(reg.name())) {
         if(debug) {
@@ -81,16 +84,36 @@ const psiChemistryModel &swakPsiChemistryModelPluginFunction::chemistryInternal(
         }
 
         // Create it ourself because nobody registered it
-        chemistry_.set(
+        if(reg.foundObject<rThermo>("thermophysicalProperties")) {
+            chemistry_.set(
                 reg.name(),
-                psiChemistryModel::New(reg).ptr()
-        );
+                swakPsiChemistryModelPluginFunction::ChemistryModelType::New(
+                    const_cast<rThermo&>(
+                        reg.lookupObject<rThermo>("thermophysicalProperties")
+                    )
+                ).ptr()
+            );
+        } else {
+            thermo_.set(
+                reg.name(),
+                rThermo::New(
+                    reg
+                ).ptr()
+            );
+            chemistry_.set(
+                reg.name(),
+                swakPsiChemistryModelPluginFunction::ChemistryModelType::New(
+                    const_cast<rThermo&>(
+                        *thermo_[reg.name()]
+                    )
+                ).ptr()
+            );
+        }
 
         Info << "Created chemistry model. Calculating to get values ..."
             << endl;
 
         chemistry_[reg.name()]->solve(
-            reg.time().value(),
             reg.time().deltaT().value()
         );
         //        chemistry_[reg.name()]->calculate();
@@ -101,15 +124,37 @@ const psiChemistryModel &swakPsiChemistryModelPluginFunction::chemistryInternal(
 
 void swakPsiChemistryModelPluginFunction::updateChemistry(const scalar dt)
 {
-    const_cast<psiChemistryModel&>(
+    const_cast< swakPsiChemistryModelPluginFunction::ChemistryModelType&>(
         chemistry()
     ).solve(
-        mesh().time().value(),
         dt
     );
 }
 
-const psiChemistryModel &swakPsiChemistryModelPluginFunction::chemistry()
+tmp<volScalarField> swakPsiChemistryModelPluginFunction::wrapDimField(
+        const DimensionedField<scalar,volMesh> &dimField
+)
+{
+    tmp<volScalarField> result(
+            new volScalarField(
+                IOobject(
+                    dimField.name(),
+                    mesh().time().timeName(),
+                    mesh(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                mesh(),
+                dimensionedScalar(dimField.name(),dimField.dimensions(),0),
+                "zeroGradient"
+            )
+    );
+    result->internalField() = dimField;
+
+    return result;
+}
+
+const  swakPsiChemistryModelPluginFunction::ChemistryModelType &swakPsiChemistryModelPluginFunction::chemistry()
 {
     return chemistryInternal(mesh());
 }
@@ -144,8 +189,7 @@ defineTypeNameAndDebug(swakPsiChemistryModelPluginFunction_ ## funcName,0);  \
 addNamedToRunTimeSelectionTable(FieldValuePluginFunction,swakPsiChemistryModelPluginFunction_ ## funcName,name,psiChem_ ## funcName);
 
 concreteChemistryFunction(tc,volScalarField);
-concreteChemistryFunction(Sh,volScalarField);
-concreteChemistryFunction(dQ,volScalarField);
+concreteChemistryFunction(Qdot,volScalarField);
 
 class swakPsiChemistryModelPluginFunction_RR
 : public swakPsiChemistryModelPluginFunction
@@ -169,9 +213,9 @@ public:
 
         result().setObjectResult(
             autoPtr<volScalarField>(
-                new volScalarField(
+                wrapDimField(
                     chemistry().RR(specI)
-                )
+                ).ptr()
             )
         );
     }
@@ -202,7 +246,7 @@ public:
     void doEvaluation() {
         autoPtr<volScalarField> pSum(
             new volScalarField(
-                0*chemistry().RR(0)
+                0*wrapDimField(chemistry().RR(0))
             )
         );
 
@@ -212,7 +256,7 @@ public:
             specI<chemistry().thermo().composition().species().size();
             specI++
         ) {
-            summe+=chemistry().RR(specI);
+            summe+=wrapDimField(chemistry().RR(specI));
         }
 
         result().setObjectResult(
@@ -241,7 +285,7 @@ public:
     void doEvaluation() {
         autoPtr<volScalarField> pSum(
             new volScalarField(
-                0*chemistry().RR(0)
+                0*wrapDimField(chemistry().RR(0))
             )
         );
 
@@ -251,7 +295,7 @@ public:
             specI<chemistry().thermo().composition().species().size();
             specI++
         ) {
-            const volScalarField &RR=chemistry().RR(specI);
+            const volScalarField &RR=wrapDimField(chemistry().RR(specI));
             forAll(summe,cellI) {
                 if(RR[cellI]>0) {
                     summe[cellI]+=RR[cellI];

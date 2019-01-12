@@ -244,10 +244,8 @@ void polyMeshGenModifier::reorderProcBoundaryFaces()
     if( shift == 0 )
         return;
     if( shift < 0 )
-        FatalErrorIn
-        (
-            "void polyMeshGenModifier::reorderProcBoundaryFaces()"
-        ) << "Missing some faces!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Missing some faces!" << abort(FatalError);
 
     labelLongList newFaceLabel(faces.size(), -1);
 

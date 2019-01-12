@@ -23,7 +23,7 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-#include "hhuCombustionThermo.hpp"
+#include "psiuReactionThermo.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -97,13 +97,14 @@ void CML::mixedUnburntEnthalpyFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    const hhuCombustionThermo& thermo = db().lookupObject<hhuCombustionThermo>
+    const psiuReactionThermo& thermo = db().lookupObject<psiuReactionThermo>
     (
-        "thermophysicalProperties"
+        basicThermo::dictName
     );
 
     const label patchi = patch().index();
 
+    const scalarField& pw = thermo.p().boundaryField()[patchi];
     mixedFvPatchScalarField& Tw = refCast<mixedFvPatchScalarField>
     (
         const_cast<fvPatchScalarField&>(thermo.Tu().boundaryField()[patchi])
@@ -112,12 +113,12 @@ void CML::mixedUnburntEnthalpyFvPatchScalarField::updateCoeffs()
     Tw.evaluate();
 
     valueFraction() = Tw.valueFraction();
-    refValue() = thermo.hu(Tw.refValue(), patchi);
-    refGrad() = thermo.Cp(Tw, patchi)*Tw.refGrad()
+    refValue() = thermo.heu(pw, Tw.refValue(), patchi);
+    refGrad() = thermo.Cp(pw, Tw, patchi)*Tw.refGrad()
       + patch().deltaCoeffs()*
         (
-            thermo.hu(Tw, patchi)
-          - thermo.hu(Tw, patch().faceCells())
+            thermo.heu(pw, Tw, patchi)
+          - thermo.heu(pw, Tw, patch().faceCells())
         );
 
     mixedFvPatchScalarField::updateCoeffs();
@@ -134,5 +135,3 @@ namespace CML
         mixedUnburntEnthalpyFvPatchScalarField
     );
 }
-
-// ************************************************************************* //

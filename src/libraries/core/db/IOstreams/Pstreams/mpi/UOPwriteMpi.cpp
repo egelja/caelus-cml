@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -119,12 +119,8 @@ bool CML::UOPstream::write
     }
     else
     {
-        FatalErrorIn
-        (
-            "UOPstream::write"
-            "(const int fromProcNo, char* buf, std::streamsize bufSize"
-            ", const int)"
-        )   << "Unsupported communications type "
+        FatalErrorInFunction
+            << "Unsupported communications type "
             << UPstream::commsTypeNames[commsType]
             << CML::abort(FatalError);
     }
@@ -132,7 +128,5 @@ bool CML::UOPstream::write
     return !transferFailed;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // ************************************************************************* //

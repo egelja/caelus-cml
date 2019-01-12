@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2013 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -320,10 +321,8 @@ inline void CoeffField<Type>::checkSize(const UList<Type2>& f) const
 {
     if (f.size() != this->size())
     {
-        FatalErrorIn
-        (
-            "void CoeffField<Type>::checkSize(const Field<Type2>& f) const"
-        )   << "Incorrect field size: " << f.size()
+        FatalErrorInFunction
+            << "Incorrect field size: " << f.size()
             << " local size: " << size()
             << abort(FatalError);
     }
@@ -339,11 +338,8 @@ CoeffField<Type>::toScalar()
         // Debug check: demotion
         if (linearCoeffPtr_ || squareCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "CoeffField<Type>::scalarTypeField& "
-                "CoeffField<Type>::toScalar()"
-            )   << "Detected demotion to scalar.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to scalar.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -364,11 +360,8 @@ CoeffField<Type>::toLinear()
         // Debug check: demotion
         if (squareCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "CoeffField<Type>::linearTypeField& "
-                "CoeffField<Type>::toLinear()"
-            )   << "Detected demotion to linear.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to linear.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -419,9 +412,9 @@ CoeffField<Type>::toSquare()
 template<class Type>
 CoeffField<Type>::CoeffField(const label size)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr),
     size_(size)
 {}
 
@@ -430,9 +423,9 @@ template<class Type>
 CoeffField<Type>::CoeffField(const CoeffField<Type>& f)
 :
     refCount(),
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr),
     size_(f.size())
 {
     if (f.scalarCoeffPtr_)
@@ -453,9 +446,9 @@ CoeffField<Type>::CoeffField(const CoeffField<Type>& f)
 template<class Type>
 CoeffField<Type>::CoeffField(Istream& is)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr),
     size_(0)
 {
     // Read keyword and pick up allocated field
@@ -498,11 +491,8 @@ CoeffField<Type>::CoeffField(Istream& is)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CoeffField<Type>::CoeffField(Istream& is)",
-            is
-        )   << "invalid keyword while reading: " << key
+        FatalIOErrorInFunction(is)
+            << "invalid keyword while reading: " << key
             << exit(FatalIOError);
     }
 }
@@ -620,7 +610,7 @@ void CoeffField<Type>::checkActive() const
 
     if (nActive > 1)
     {
-        FatalErrorIn("void CML::CoeffField<Type>::checkActive() const")
+        FatalErrorInFunction
             << "Activation/deactivation error.  nActive = " << nActive
             << abort(FatalError);
     }
@@ -633,11 +623,8 @@ CoeffField<Type>::asScalar() const
 {
     if (not scalarCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "CoeffField<Type>::scalarTypeField& "
-            "CoeffField<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -653,11 +640,8 @@ CoeffField<Type>::asLinear() const
 {
     if (not linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "CoeffField<Type>::linearTypeField& "
-            "CoeffField<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -673,11 +657,8 @@ CoeffField<Type>::asSquare() const
 {
     if (not squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "CoeffField<Type>::squareTypeField& "
-            "CoeffField<Type>::asSquare()"
-        )   << "Requested square but active type is: "
+        FatalErrorInFunction
+            << "Requested square but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -693,11 +674,8 @@ CoeffField<Type>::asScalar()
 {
     if (linearCoeffPtr_ || squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "CoeffField<Type>::scalarTypeField& "
-            "CoeffField<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -718,11 +696,8 @@ CoeffField<Type>::asLinear()
 {
     if (squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "CoeffField<Type>::linearTypeField& "
-            "CoeffField<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -771,11 +746,8 @@ CoeffField<Type>::component(const direction dir) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "tmp<CoeffField<Type>::scalarTypeField>"
-            "CoeffField<Type>::component(const direction dir) const"
-        )   << "Field not allocated."
+        FatalErrorInFunction
+            << "Field not allocated."
             << abort(FatalError);
     }
 
@@ -842,16 +814,8 @@ void CoeffField<Type>::getSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::getSubset\n"
-            "(\n"
-            "    CoeffField<Type>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -901,15 +865,8 @@ void CoeffField<Type>::getSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::getSubset\n"
-            "(\n"
-            "    CoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -960,16 +917,8 @@ void CoeffField<Type>::setSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::setSubset\n"
-            "(\n"
-            "     const CoeffField<Type>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -1019,15 +968,8 @@ void CoeffField<Type>::setSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::setSubset\n"
-            "(\n"
-            "    const CoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -1150,15 +1092,8 @@ void CoeffField<Type>::addSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::addSubset\n"
-            "(\n"
-            "    const CoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -1322,15 +1257,8 @@ void CoeffField<Type>::subtractSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::CoeffField<Type>::subtractSubset\n"
-            "(\n"
-            "    const CoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -1490,7 +1418,7 @@ void CoeffField<Type>::operator=(const CoeffField<Type>& f)
 {
     if (this == &f)
     {
-        FatalErrorIn("CoeffField<Type>::operator=(const CoeffField<Type>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -1498,10 +1426,8 @@ void CoeffField<Type>::operator=(const CoeffField<Type>& f)
     // Check field sizes
     if (f.size() != this->size())
     {
-        FatalErrorIn
-        (
-            "void CoeffField<Type>::operator=(const CoeffField<Type>& f)"
-        )   << "Incorrect field size: " << f.size()
+        FatalErrorInFunction
+            << "Incorrect field size: " << f.size()
             << " local size: " << size()
             << abort(FatalError);
     }
@@ -1530,7 +1456,7 @@ void CoeffField<Type>::operator=(const tmp<CoeffField<Type> >& tf)
 {
     if (this == &(tf()))
     {
-        FatalErrorIn("CoeffField<Type>::operator=(const tmp<CoeffField>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -1559,11 +1485,8 @@ void CML::CoeffField<Type>::operator op(const CoeffField<Type>& f)           \
 {                                                                             \
     if (f.size() != this->size())                                             \
     {                                                                         \
-        FatalErrorIn                                                          \
-        (                                                                     \
-            "void CoeffField<tensor>::operator "                              \
-            "op(const CoeffField<tensor>& f)"                                 \
-        )   << "Incorrect field size: " << f.size()                           \
+        FatalErrorInFunction                                                  \
+            << "Incorrect field size: " << f.size()                           \
             << " local size: " << size()                                      \
             << abort(FatalError);                                             \
     }                                                                         \

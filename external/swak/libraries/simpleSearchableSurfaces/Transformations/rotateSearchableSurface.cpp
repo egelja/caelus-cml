@@ -55,10 +55,10 @@ CML::rotateSearchableSurface::rotateSearchableSurface
     vector to(dict.lookup("rotateTo"));
 
     if(mag(from)<SMALL || mag(to)<SMALL) {
-        FatalErrorIn("rotateSearchableSurface::rotateSearchableSurface")
+        FatalErrorInFunction
             << "Vector " << from << " or " << to << " close to zero"
-                << endl
-                << abort(FatalError);
+            << endl
+            << abort(FatalError);
     }
 
     from/=mag(from);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -239,7 +239,7 @@ void simpleMarkFeatures
     {
         if (faceZones.size() > 0)
         {
-            WarningIn("simpleMarkFeatures(..)")
+            WarningInFunction
                 << "Detected " << faceZones.size()
                 << " faceZones. These will not be preserved."
                 << endl;

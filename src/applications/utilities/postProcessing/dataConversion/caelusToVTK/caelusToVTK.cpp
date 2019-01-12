@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -144,7 +144,7 @@ Note
 #include "stringListOps.hpp"
 
 #include "vtkMesh.hpp"
-#include "readFields.hpp"
+#include "readFields_vtk.hpp"
 #include "writeFuns.hpp"
 
 #include "internalWriter.hpp"
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
 
     if (binary && (sizeof(floatScalar) != 4 || sizeof(label) != 4))
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "floatScalar and/or label are not 4 bytes in size" << nl
             << "Hence cannot use binary VTK format. Please use -ascii"
             << exit(FatalError);
@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
 
     if (nearCellValue)
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Using neighbouring cell value instead of patch value"
             << nl << endl;
     }
@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 
     if (noPointValues)
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Outputting cell values only" << nl << endl;
     }
 
@@ -1098,8 +1098,9 @@ int main(int argc, char *argv[])
             );
 
             IOobject* positionsPtr = sprayObjs.lookup(word("positions"));
+            IOobject* coordsPtr = sprayObjs.lookup(word("coordinates"));
 
-            if (positionsPtr)
+            if (positionsPtr || coordsPtr)
             {
                 wordList labelNames(sprayObjs.names(labelIOField::typeName));
                 Info<< "        labels            :";
@@ -1232,7 +1233,7 @@ int main(int argc, char *argv[])
                     );
                     if (system(cmd.c_str()) == -1)
                     {
-                        WarningIn(args.executable())
+                        WarningInFunction
                             << "Could not execute command " << cmd << endl;
                     }
                 }

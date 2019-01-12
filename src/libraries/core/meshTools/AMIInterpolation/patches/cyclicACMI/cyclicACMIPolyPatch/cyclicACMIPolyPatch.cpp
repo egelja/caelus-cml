@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -123,7 +123,7 @@ void CML::cyclicACMIPolyPatch::setNeighbourFaceAreas() const
     }
     else
     {
-        WarningIn("cyclicACMIPolyPatch::setNeighbourFaceAreas() const")
+        WarningInFunction
             << "Target mask size differs to that of the neighbour patch\n"
             << "    May occur when decomposing." << endl;
     }
@@ -245,18 +245,8 @@ CML::cyclicACMIPolyPatch::cyclicACMIPolyPatch
 
     if (nonOverlapPatchName_ == name)
     {
-        FatalIOErrorIn
-        (
-            "cyclicACMIPolyPatch::cyclicACMIPolyPatch"
-            "("
-                "const word&, "
-                "const dictionary&, "
-                "const label, "
-                "const polyBoundaryMesh&, "
-                "const word&"
-            ")",
-            dict
-        )   << "Non-overlapping patch name " << nonOverlapPatchName_
+        FatalIOErrorInFunction(dict)
+            << "Non-overlapping patch name " << nonOverlapPatchName_
             << " cannot be the same as this patch " << name
             << exit(FatalIOError);
     }
@@ -310,16 +300,8 @@ CML::cyclicACMIPolyPatch::cyclicACMIPolyPatch
 
     if (nonOverlapPatchName_ == name())
     {
-        FatalErrorIn
-        (
-            "const cyclicACMIPolyPatch& "
-            "const polyBoundaryMesh&, "
-            "const label, "
-            "const label, "
-            "const label, "
-            "const word&, "
-            "const word&"
-        )   << "Non-overlapping patch name " << nonOverlapPatchName_
+        FatalErrorInFunction
+            << "Non-overlapping patch name " << nonOverlapPatchName_
             << " cannot be the same as this patch " << name()
             << exit(FatalError);
     }
@@ -374,7 +356,7 @@ CML::label CML::cyclicACMIPolyPatch::nonOverlapPatchID() const
 
         if (nonOverlapPatchID_ == -1)
         {
-            FatalErrorIn("cyclicPolyAMIPatch::neighbPatchID() const")
+            FatalErrorInFunction
                 << "Illegal non-overlapping patch name " << nonOverlapPatchName_
                 << nl << "Valid patch names are "
                 << this->boundaryMesh().names()
@@ -383,7 +365,7 @@ CML::label CML::cyclicACMIPolyPatch::nonOverlapPatchID() const
 
         if (nonOverlapPatchID_ < index())
         {
-            FatalErrorIn("cyclicPolyAMIPatch::neighbPatchID() const")
+            FatalErrorInFunction
                 << "Boundary ordering error: " << type()
                 << " patch must be defined prior to its non-overlapping patch"
                 << nl
@@ -420,11 +402,8 @@ CML::label CML::cyclicACMIPolyPatch::nonOverlapPatchID() const
 
         if (!ok)
         {
-            FatalErrorIn
-            (
-                "CML::label "
-                "CML::cyclicACMIPolyPatch::nonOverlapPatchID() const"
-            )   << "Inconsistent ACMI patches " << name() << " and "
+            FatalErrorInFunction
+                << "Inconsistent ACMI patches " << name() << " and "
                 << noPp.name() << ".  Patches should have identical topology"
                 << exit(FatalError);
         }

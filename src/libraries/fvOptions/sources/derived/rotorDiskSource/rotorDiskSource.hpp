@@ -680,7 +680,7 @@ void CML::fv::rotorDiskSource::writeField
 
         if (cells_.size() != values.size())
         {
-            FatalErrorIn("") << "cells_.size() != values_.size()"
+            FatalErrorInFunction << "cells_.size() != values_.size()"
                 << abort(FatalError);
         }
 

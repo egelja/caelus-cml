@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,7 +72,7 @@ void CML::circleSet::calcSamples
     }
     else
     {
-        WarningIn(funcName)
+        WarningInFunction
             << "Unable to find cell at point id " << 0
             << " at location " << startPoint_ << endl;
     }
@@ -88,7 +88,7 @@ void CML::circleSet::calcSamples
 
     if (mag(axis1 & circleAxis_) > SMALL)
     {
-        WarningIn(funcName)
+        WarningInFunction
             << "Vector defined by (startPoint - origin) not orthogonal to "
             << "circleAxis:" << nl
             << "    startPoint - origin = " << axis1 << nl
@@ -120,7 +120,7 @@ void CML::circleSet::calcSamples
         }
         else
         {
-            WarningIn(funcName)
+            WarningInFunction
                 << "Unable to find cell at point id " << nPoint
                 << " at location " << pt << endl;
         }

@@ -178,10 +178,8 @@ bool workflowControls::stopAfterCurrentStep() const
         returnReduce(writeSuccess, minOp<bool>());
 
         if( !writeSuccess )
-            FatalErrorIn
-            (
-                "bool workflowControls::stopAfterCurrentStep() const"
-            ) << "Mesh was not written on disk" << exit(FatalError);
+            FatalErrorInFunction
+              << "Mesh was not written on disk" << exit(FatalError);
 
 
         std::string message("Stopping after step ");
@@ -212,10 +210,8 @@ bool workflowControls::runAfterCurrentStep() const
         }
         catch(...)
         {
-            FatalErrorIn
-            (
-                "bool workflowControls::restartAfterCurrentStep() const"
-            ) << "Mesh cannot be loaded. Exitting..." << exit(FatalError);
+            FatalErrorInFunction
+              << "Mesh cannot be loaded. Exitting..." << exit(FatalError);
         }
     }
 
@@ -303,10 +299,8 @@ bool workflowControls::runCurrentStep(const word& stepName)
         for(it=workflowSteps_.begin();it!=workflowSteps_.end();++it)
             toc.append(it->first);
 
-        FatalErrorIn
-        (
-            "void workflowControls::setCurrentStep(const word&)"
-        ) << "Step " << stepName << " is not a valid name."
+        FatalErrorInFunction
+          << "Step " << stepName << " is not a valid name."
           << " Valid step names are " << toc << exit(FatalError);
     }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,10 +37,8 @@ void CML::fvPatchMapper::calcAddressing() const
      || weightsPtr_
     )
     {
-        FatalErrorIn
-        (
-            "void fvPatchMapper::calcAddressing() const)"
-        )   << "Addressing already calculated"
+        FatalErrorInFunction
+            << "Addressing already calculated"
             << abort(FatalError);
     }
 
@@ -90,11 +88,8 @@ void CML::fvPatchMapper::calcAddressing() const
         {
             if (min(addr) < 0)
             {
-                //FatalErrorIn
-                WarningIn
-                (
-                    "void fvPatchMapper::calcAddressing() const"
-                )   << "Unmapped entry in patch mapping for patch "
+                WarningInFunction
+                    << "Unmapped entry in patch mapping for patch "
                     << patch_.index() << " named " << patch_.name()
                     //<< abort(FatalError);
                     << endl;
@@ -191,10 +186,8 @@ void CML::fvPatchMapper::calcAddressing() const
             {
                 if (min(addr[i]) < 0)
                 {
-                    FatalErrorIn
-                    (
-                        "void fvPatchMapper::calcAddressing() const"
-                    )   << "Error in patch mapping for patch "
+                    FatalErrorInFunction
+                        << "Error in patch mapping for patch "
                         << patch_.index() << " named " << patch_.name()
                         << abort(FatalError);
                 }
@@ -226,9 +219,9 @@ CML::fvPatchMapper::fvPatchMapper
     faceMap_(faceMap),
     sizeBeforeMapping_(faceMap.oldPatchSizes()[patch_.index()]),
     hasUnmapped_(false),
-    directAddrPtr_(NULL),
-    interpolationAddrPtr_(NULL),
-    weightsPtr_(NULL)
+    directAddrPtr_(nullptr),
+    interpolationAddrPtr_(nullptr),
+    weightsPtr_(nullptr)
 {}
 
 
@@ -246,10 +239,8 @@ const CML::labelUList& CML::fvPatchMapper::directAddressing() const
 {
     if (!direct())
     {
-        FatalErrorIn
-        (
-            "const labelUList& fvPatchMapper::directAddressing() const"
-        )   << "Requested direct addressing for an interpolative mapper."
+        FatalErrorInFunction
+            << "Requested direct addressing for an interpolative mapper."
             << abort(FatalError);
     }
 
@@ -266,10 +257,8 @@ const CML::labelListList& CML::fvPatchMapper::addressing() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const labelListList& fvPatchMapper::addressing() const"
-        )   << "Requested interpolative addressing for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative addressing for a direct mapper."
             << abort(FatalError);
     }
 
@@ -286,10 +275,8 @@ const CML::scalarListList& CML::fvPatchMapper::weights() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const scalarListList& fvPatchMapper::weights() const"
-        )   << "Requested interpolative weights for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative weights for a direct mapper."
             << abort(FatalError);
     }
 

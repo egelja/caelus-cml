@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,6 +56,7 @@ namespace CML
 class token;
 Istream& operator>>(Istream&, token&);
 Ostream& operator<<(Ostream&, const token&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class token Declaration

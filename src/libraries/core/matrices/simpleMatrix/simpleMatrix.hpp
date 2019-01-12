@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -205,8 +205,8 @@ CML::Field<Type> CML::simpleMatrix<Type>::solve() const
 {
     scalarSquareMatrix tmpMatrix = *this;
     Field<Type> sourceSol = source_;
-    
-    scalarSquareMatrix::solve(tmpMatrix, sourceSol);
+
+    CML::solve(tmpMatrix, sourceSol);
 
     return sourceSol;
 }
@@ -218,7 +218,7 @@ CML::Field<Type> CML::simpleMatrix<Type>::LUsolve() const
     scalarSquareMatrix luMatrix = *this;
     Field<Type> sourceSol = source_;
 
-    scalarSquareMatrix::LUsolve(luMatrix, sourceSol);
+    CML::LUsolve(luMatrix, sourceSol);
 
     return sourceSol;
 }
@@ -231,21 +231,21 @@ void CML::simpleMatrix<Type>::operator=(const simpleMatrix<Type>& m)
 {
     if (this == &m)
     {
-        FatalErrorIn("simpleMatrix<Type>::operator=(const simpleMatrix<Type>&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }
 
-    if (n() != m.n())
+    if (m() != m.m())
     {
-        FatalErrorIn("simpleMatrix<Type>::operator=(const simpleMatrix<Type>&)")
+        FatalErrorInFunction
             << "Different size matrices"
             << abort(FatalError);
     }
 
     if (source_.size() != m.source_.size())
     {
-        FatalErrorIn("simpleMatrix<Type>::operator=(const simpleMatrix<Type>&)")
+        FatalErrorInFunction
             << "Different size source vectors"
             << abort(FatalError);
     }
@@ -314,9 +314,4 @@ CML::Ostream& CML::operator<<
 }
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

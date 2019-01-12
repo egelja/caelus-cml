@@ -286,7 +286,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("binaryOperationSearchableSurface::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

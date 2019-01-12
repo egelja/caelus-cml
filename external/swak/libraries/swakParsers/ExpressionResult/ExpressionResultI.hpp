@@ -31,7 +31,7 @@ namespace CML {
     ExpressionResult::ExpressionResult(const Field<Type>  &f)
         :
         valType_("None"),
-        valPtr_(NULL),
+        valPtr_(nullptr),
         isPoint_(false),
         isSingleValue_(true),
         noReset_(false),
@@ -47,7 +47,7 @@ namespace CML {
     ExpressionResult::ExpressionResult(autoPtr<Type> o)
         :
         valType_("None"),
-        valPtr_(NULL),
+        valPtr_(nullptr),
         isPoint_(false),
         isSingleValue_(true),
         noReset_(false),
@@ -62,7 +62,7 @@ namespace CML {
     ExpressionResult::ExpressionResult(const dimensioned<Type>  &f)
         :
         valType_("None"),
-        valPtr_(NULL),
+        valPtr_(nullptr),
         isPoint_(false),
         isSingleValue_(true),
         noReset_(false),
@@ -81,7 +81,7 @@ namespace CML {
     )
         :
         valType_("None"),
-        valPtr_(NULL),
+        valPtr_(nullptr),
         isPoint_(false),
         isSingleValue_(true),
         noReset_(false),
@@ -215,22 +215,22 @@ namespace CML {
             << keep << ")" << endl;
 
         if(valType_!=pTraits<Type>::typeName) {
-            FatalErrorIn("tmp<Field<Type> > ExpressionResult::getResult()")
+            FatalErrorInFunction
                 << "The expected return type " << pTraits<Type>::typeName
-                    << " is different from the stored result type "
-                    << valType_ << "\n" << endl
-                    << exit(FatalError);
+                << " is different from the stored result type "
+                << valType_ << "\n" << endl
+                << exit(FatalError);
         }
 
         tmp<Field<Type> > result;
 
-        if(valPtr_==NULL) {
-            FatalErrorIn("ExpressionResult::getResult(bool keep)")
+        if(valPtr_==nullptr) {
+            FatalErrorInFunction
                 << "Trying to build a tmp from a NULL-pointer. "
-                    << "This will not work (in reality this "
-                    << "error message should never appear)"
-                    << endl
-                    << exit(FatalError);
+                << "This will not work (in reality this "
+                << "error message should never appear)"
+                << endl
+                << exit(FatalError);
 
         }
 
@@ -241,7 +241,7 @@ namespace CML {
         if(keep) {
             valPtr_=new Field<Type>(*(static_cast<Field<Type>*>(valPtr_)));
         } else {
-            valPtr_=NULL;
+            valPtr_=nullptr;
             clearResult();
         }
 
@@ -254,11 +254,11 @@ namespace CML {
         Pbug << "getObjectResult: " << keep << endl;
 
         if(valType_!=pTraits<Type>::typeName) {
-            FatalErrorIn("tmp<Type> ExpressionResult::getObjectResult()")
+            FatalErrorInFunction
                 << "The expected return type " << pTraits<Type>::typeName
-                    << " is different from the stored result type "
-                    << valType_ << "\n" << endl
-                    << exit(FatalError);
+                << " is different from the stored result type "
+                << valType_ << "\n" << endl
+                << exit(FatalError);
         }
 
         tmp<Type> result(
@@ -318,10 +318,10 @@ namespace CML {
             }
 
             if(mag(minVal-maxVal)>SMALL) {
-                WarningIn("ExpressionResult::getUniformInternal(const label size,bool noWarn)")
+                WarningInFunction
                     << "The minimum value " << minVal << " and the maximum "
-                        << maxVal << " differ. I will use the average " << avg
-                        << endl;
+                    << maxVal << " differ. I will use the average " << avg
+                    << endl;
             }
         }
         result.setResult(avg,size);
@@ -332,11 +332,11 @@ namespace CML {
     inline Type ExpressionResult::getReduced(BinOp<Type> op,Type initial)
     {
         if(valType_!=pTraits<Type>::typeName) {
-            FatalErrorIn("ExpressionResult::getReduced(BinOp<Type> op,Type initial)")
+            FatalErrorInFunction
                 << "The expected return type " << pTraits<Type>::typeName
-                    << " is different from the stored result type "
-                    << valType_ << "\n" << endl
-                    << exit(FatalError);
+                << " is different from the stored result type "
+                << valType_ << "\n" << endl
+                << exit(FatalError);
         }
 
         Type result=initial;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +21,6 @@ License
 
 #include "cellPointWeight.hpp"
 #include "polyMesh.hpp"
-#include "tetPointRef.hpp"
 #include "polyMeshTetDecomposition.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -30,39 +29,36 @@ int CML::cellPointWeight::debug(debug::debugSwitch("cellPointWeight", 0));
 
 CML::scalar CML::cellPointWeight::tol(SMALL);
 
-// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void CML::cellPointWeight::findTetrahedron
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI
+    const label celli
 )
 {
     if (debug)
     {
         Pout<< nl << "CML::cellPointWeight::findTetrahedron" << nl
             << "position = " << position << nl
-            << "cellI = " << cellI << endl;
+            << "celli = " << celli << endl;
     }
 
     List<tetIndices> cellTets = polyMeshTetDecomposition::cellTetIndices
     (
         mesh,
-        cellI
+        celli
     );
 
-    const faceList& pFaces = mesh.faces();
-    const scalar cellVolume = mesh.cellVolumes()[cellI];
+    const scalar cellVolume = mesh.cellVolumes()[celli];
 
     forAll(cellTets, tetI)
     {
         const tetIndices& tetIs = cellTets[tetI];
 
-        const face& f = pFaces[tetIs.face()];
-
         // Barycentric coordinates of the position
-        scalar det = tetIs.tet(mesh).barycentric(position, weights_);
+        scalar det = tetIs.tet(mesh).pointToBarycentric(position, weights_);
 
         if (mag(det/cellVolume) > tol)
         {
@@ -78,9 +74,8 @@ void CML::cellPointWeight::findTetrahedron
              && (u + v + w < 1 + tol)
             )
             {
-                faceVertices_[0] = f[tetIs.faceBasePt()];
-                faceVertices_[1] = f[tetIs.facePtA()];
-                faceVertices_[2] = f[tetIs.facePtB()];
+
+                faceVertices_ = tetIs.faceTriIs(mesh);
 
                 return;
             }
@@ -114,23 +109,19 @@ void CML::cellPointWeight::findTetrahedron
             << "    Tetrahedron search failed; using closest tet to point "
             << position << nl
             << "    cell: "
-            << cellI << nl
+            << celli << nl
             << endl;
     }
 
 
     const tetIndices& tetIs = cellTets[nearestTetI];
 
-    const face& f = pFaces[tetIs.face()];
-
     // Barycentric coordinates of the position, ignoring if the
     // determinant is suitable.  If not, the return from barycentric
     // to weights_ is safe.
-    tetIs.tet(mesh).barycentric(position, weights_);
+    weights_ = tetIs.tet(mesh).pointToBarycentric(position);
 
-    faceVertices_[0] = f[tetIs.faceBasePt()];
-    faceVertices_[1] = f[tetIs.facePtA()];
-    faceVertices_[2] = f[tetIs.facePtB()];
+    faceVertices_ = tetIs.faceTriIs(mesh);
 }
 
 
@@ -138,35 +129,33 @@ void CML::cellPointWeight::findTriangle
 (
     const polyMesh& mesh,
     const vector& position,
-    const label faceI
+    const label facei
 )
 {
     if (debug)
     {
         Pout<< "\nbool CML::cellPointWeight::findTriangle" << nl
             << "position = " << position << nl
-            << "faceI = " << faceI << endl;
+            << "facei = " << facei << endl;
     }
 
     List<tetIndices> faceTets = polyMeshTetDecomposition::faceTetIndices
     (
         mesh,
-        faceI,
-        mesh.faceOwner()[faceI]
+        facei,
+        mesh.faceOwner()[facei]
     );
 
-    const scalar faceAreaSqr = magSqr(mesh.faceAreas()[faceI]);
-
-    const face& f =  mesh.faces()[faceI];
+    const scalar faceAreaSqr = magSqr(mesh.faceAreas()[facei]);
 
     forAll(faceTets, tetI)
     {
         const tetIndices& tetIs = faceTets[tetI];
 
-        List<scalar> triWeights(3);
-
         // Barycentric coordinates of the position
-        scalar det = tetIs.faceTri(mesh).barycentric(position, triWeights);
+        barycentric2D triWeights;
+        const scalar det =
+            tetIs.faceTri(mesh).pointToBarycentric(position, triWeights);
 
         if (0.25*mag(det)/faceAreaSqr > tol)
         {
@@ -186,9 +175,7 @@ void CML::cellPointWeight::findTriangle
                 weights_[2] = triWeights[1];
                 weights_[3] = triWeights[2];
 
-                faceVertices_[0] = f[tetIs.faceBasePt()];
-                faceVertices_[1] = f[tetIs.facePtA()];
-                faceVertices_[2] = f[tetIs.facePtB()];
+                faceVertices_ = tetIs.faceTriIs(mesh);
 
                 return;
             }
@@ -221,7 +208,7 @@ void CML::cellPointWeight::findTriangle
             << "    Triangle search failed; using closest tri to point "
             << position << nl
             << "    face: "
-            << faceI << nl
+            << facei << nl
             << endl;
     }
 
@@ -231,9 +218,8 @@ void CML::cellPointWeight::findTriangle
     // determinant is suitable.  If not, the return from barycentric
     // to triWeights is safe.
 
-    List<scalar> triWeights(3);
-
-    tetIs.faceTri(mesh).barycentric(position, triWeights);
+    const barycentric2D triWeights =
+        tetIs.faceTri(mesh).pointToBarycentric(position);
 
     // Weight[0] is for the cell centre.
     weights_[0] = 0;
@@ -241,9 +227,7 @@ void CML::cellPointWeight::findTriangle
     weights_[2] = triWeights[1];
     weights_[3] = triWeights[2];
 
-    faceVertices_[0] = f[tetIs.faceBasePt()];
-    faceVertices_[1] = f[tetIs.facePtA()];
-    faceVertices_[2] = f[tetIs.facePtB()];
+    faceVertices_ = tetIs.faceTriIs(mesh);
 }
 
 
@@ -253,23 +237,21 @@ CML::cellPointWeight::cellPointWeight
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI,
-    const label faceI
+    const label celli,
+    const label facei
 )
 :
-    cellI_(cellI),
-    weights_(4),
-    faceVertices_(3)
+    celli_(celli)
 {
-    if (faceI < 0)
+    if (facei < 0)
     {
         // Face data not supplied
-        findTetrahedron(mesh, position, cellI);
+        findTetrahedron(mesh, position, celli);
     }
     else
     {
         // Face data supplied
-        findTriangle(mesh, position, faceI);
+        findTriangle(mesh, position, facei);
     }
 }
 

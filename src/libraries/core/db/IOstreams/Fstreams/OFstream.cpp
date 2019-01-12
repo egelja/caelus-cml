@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -41,7 +41,7 @@ CML::OFstreamAllocator::OFstreamAllocator
     IOstream::compressionType compression
 )
 :
-    ofPtr_(NULL)
+    ofPtr_(nullptr)
 {
     if (pathname.empty())
     {
@@ -137,7 +137,7 @@ std::ostream& CML::OFstream::stdStream()
 {
     if (!ofPtr_)
     {
-        FatalErrorIn("OFstream::stdStream()")
+        FatalErrorInFunction
             << "No stream allocated." << abort(FatalError);
     }
     return *ofPtr_;
@@ -148,7 +148,7 @@ const std::ostream& CML::OFstream::stdStream() const
 {
     if (!ofPtr_)
     {
-        FatalErrorIn("OFstreamAllocator::stdStream() const")
+        FatalErrorInFunction
             << "No stream allocated." << abort(FatalError);
     }
     return *ofPtr_;

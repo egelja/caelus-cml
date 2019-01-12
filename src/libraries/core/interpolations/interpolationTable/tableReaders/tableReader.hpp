@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -128,10 +128,8 @@ CML::autoPtr<CML::tableReader<Type> > CML::tableReader<Type>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "tableReader::New(const dictionary&)"
-        )   << "Unknown reader type " << readerType
+        FatalErrorInFunction
+            << "Unknown reader type " << readerType
             << nl << nl
             << "Valid reader types : " << nl
             << dictionaryConstructorTablePtr_->sortedToc()

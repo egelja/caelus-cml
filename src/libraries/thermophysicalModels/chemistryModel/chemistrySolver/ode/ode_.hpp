@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,8 +26,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef ode__H
-#define ode__H
+#ifndef ode__HPP
+#define ode__HPP
 
 #include "chemistrySolver.hpp"
 #include "ODESolver.hpp"
@@ -41,134 +41,102 @@ namespace CML
                             Class ode Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class ODEChemistryType>
+template<class ChemistryModel>
 class ode
 :
-    public chemistrySolver<ODEChemistryType>
+    public chemistrySolver<ChemistryModel>
 {
-    // Private data
 
-        dictionary coeffsDict_;
-        const word solverName_;
-        autoPtr<ODESolver> odeSolver_;
+    dictionary coeffsDict_;
 
-        // Model constants
+    mutable autoPtr<ODESolver> odeSolver_;
 
-            scalar eps_;
+    // Solver data
+    mutable scalarField cTp_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("ODE");
+    TypeName("ode");
 
 
-    // Constructors
-
-        //- Construct from components
-        ode
-        (
-            const fvMesh& mesh,
-            const word& ODEModeNewlName,
-            const word& thermoType
-        );
+    //- Construct from thermo
+    ode(typename ChemistryModel::reactionThermo& thermo);
 
 
     //- Destructor
-    virtual ~ode();
+    virtual ~ode()
+    {}
 
 
     // Member Functions
 
-        virtual scalar solve
-        (
-            scalarField& c,
-            const scalar T,
-            const scalar p,
-            const scalar t0,
-            const scalar dt
-        ) const;
+    //- Update the concentrations and return the chemical time
+    virtual void solve
+    (
+        scalarField& c,
+        scalar& T,
+        scalar& p,
+        scalar& deltaT,
+        scalar& subDeltaT
+    ) const;
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-#include "ODEChemistryModel.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class ODEChemistryType>
-CML::ode<ODEChemistryType>::ode
-(
-    const fvMesh& mesh,
-    const word& ODEModelName,
-    const word& thermoType
-)
+template<class ChemistryModel>
+CML::ode<ChemistryModel>::ode(typename ChemistryModel::reactionThermo& thermo)
 :
-    chemistrySolver<ODEChemistryType>(mesh, ODEModelName, thermoType),
+    chemistrySolver<ChemistryModel>(thermo),
     coeffsDict_(this->subDict("odeCoeffs")),
-    solverName_(coeffsDict_.lookup("solver")),
-    odeSolver_(ODESolver::New(solverName_, *this)),
-    eps_(readScalar(coeffsDict_.lookup("eps")))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-template<class ODEChemistryType>
-CML::ode<ODEChemistryType>::~ode()
+    odeSolver_(ODESolver::New(*this, coeffsDict_)),
+    cTp_(this->nEqns())
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class ODEChemistryType>
-CML::scalar CML::ode<ODEChemistryType>::solve
+template<class ChemistryModel>
+void CML::ode<ChemistryModel>::solve
 (
     scalarField& c,
-    const scalar T,
-    const scalar p,
-    const scalar t0,
-    const scalar dt
+    scalar& T,
+    scalar& p,
+    scalar& deltaT,
+    scalar& subDeltaT
 ) const
 {
-    label nSpecie = this->nSpecie();
-    scalarField c1(this->nEqns(), 0.0);
-
-    // copy the concentration, T and P to the total solve-vector
-    for (label i = 0; i < nSpecie; i++)
+    // Reset the size of the ODE system to the simplified size when mechanism
+    // reduction is active
+    if (odeSolver_->resize())
     {
-        c1[i] = c[i];
-    }
-    c1[nSpecie] = T;
-    c1[nSpecie+1] = p;
-
-    scalar dtEst = dt;
-
-    odeSolver_->solve
-    (
-        *this,
-        t0,
-        t0 + dt,
-        c1,
-        eps_,
-        dtEst
-    );
-
-    forAll(c, i)
-    {
-        c[i] = max(0.0, c1[i]);
+        odeSolver_->resizeField(cTp_);
     }
 
-    return dtEst;
+    const label nSpecie = this->nSpecie();
+
+    // Copy the concentration, T and P to the total solve-vector
+    for (int i=0; i<nSpecie; i++)
+    {
+        cTp_[i] = c[i];
+    }
+    cTp_[nSpecie] = T;
+    cTp_[nSpecie+1] = p;
+
+    odeSolver_->solve(0, deltaT, cTp_, subDeltaT);
+
+    for (int i=0; i<nSpecie; i++)
+    {
+        c[i] = max(0.0, cTp_[i]);
+    }
+    T = cTp_[nSpecie];
+    p = cTp_[nSpecie+1];
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

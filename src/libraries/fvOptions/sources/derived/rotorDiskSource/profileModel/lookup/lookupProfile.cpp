@@ -116,14 +116,8 @@ CML::lookupProfile::lookupProfile
     }
     else
     {
-        FatalErrorIn
-        (
-            "CML::lookupProfile::lookupProfile"
-            "("
-                "const dictionary&, "
-                "const word&"
-            ")"
-        )   << "No profile data specified" << exit(FatalError);
+        FatalErrorInFunction
+            << "No profile data specified" << exit(FatalError);
     }
 }
 

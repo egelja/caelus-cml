@@ -44,7 +44,7 @@ namespace CML
 void meshOctreeAddressing::calcGlobalPointLabels() const
 {
     if( !Pstream::parRun() )
-        FatalErrorIn("void meshOctreeAddressing::calcGlobalPointLabels() const")
+        FatalErrorInFunction
             << "Cannot calculate global labels! Exitting" << exit(FatalError);
 
     const VRWGraph& nodeLabels = this->nodeLabels();
@@ -176,12 +176,9 @@ void meshOctreeAddressing::calcGlobalPointLabels() const
             const label leafI = globalToLocalLeaf[receivedLabels[counter++]];
 
             if( nodeLabels.sizeOfRow(leafI) == 0 )
-                FatalErrorIn
-                (
-                   "void meshOctreeAddressing::"
-                    "calcGlobalPointLabels() const"
-                ) << "1. Leaf " << leafI << " is not used in the mesh!"
-                 << " Exitting.." << abort(FatalError);
+                FatalErrorInFunction
+                   << "1. Leaf " << leafI << " is not used in the mesh!"
+                   << " Exitting.." << abort(FatalError);
 
             for(label i=0;i<8;++i)
             {
@@ -199,11 +196,8 @@ void meshOctreeAddressing::calcGlobalPointLabels() const
                 label& gpl = globalPointLabel[nI];
 
                 if( (gpl != -1) && (gpl != globalLabel) )
-                    FatalErrorIn
-                    (
-                        "void meshOctreeAddressing::"
-                        "calcGlobalPointLabels() const"
-                    ) << "Wrong global label for point " << nI
+                    FatalErrorInFunction
+                      << "Wrong global label for point " << nI
                       << " Exitting.." << abort(FatalError);
 
                 gpl = globalLabel;
@@ -260,11 +254,8 @@ void meshOctreeAddressing::calcGlobalPointLabels() const
             const label leafI = globalToLocalLeaf[receivedLabels[counter++]];
 
             if( nodeLabels.sizeOfRow(leafI) == 0 )
-                FatalErrorIn
-                (
-                   "void meshOctreeAddressing::"
-                    "calcGlobalPointLabels() const"
-                ) << "2. Leaf " << leafI << " is not used in the mesh!"
+                FatalErrorInFunction
+                 << "2. Leaf " << leafI << " is not used in the mesh!"
                  << " Exitting.." << abort(FatalError);
 
             for(label i=0;i<8;++i)
@@ -283,11 +274,8 @@ void meshOctreeAddressing::calcGlobalPointLabels() const
                 label & gpl = globalPointLabel[nI];
 
                 if( (gpl != -1) && (gpl != globalLabel) )
-                    FatalErrorIn
-                    (
-                        "void meshOctreeAddressing::"
-                        "calcGlobalPointLabels() const"
-                    ) << "Wrong global label for point " << nI
+                    FatalErrorInFunction
+                      << "Wrong global label for point " << nI
                       << " Exitting.." << abort(FatalError);
 
                 gpl = globalLabel;
@@ -333,7 +321,7 @@ void meshOctreeAddressing::calcGlobalPointLabels() const
 void meshOctreeAddressing::calcGlobalFaceLabels() const
 {
     if( !Pstream::parRun() )
-        FatalErrorIn("void meshOctreeAddressing::calcGlobalFaceLabels() const")
+        FatalErrorInFunction
             << "Cannot calculate global labels! Exitting" << exit(FatalError);
 
     FatalError << "Not implemented" << exit(FatalError);
@@ -342,7 +330,7 @@ void meshOctreeAddressing::calcGlobalFaceLabels() const
 void meshOctreeAddressing::calcGlobalLeafLabels() const
 {
     if( !Pstream::parRun() )
-        FatalErrorIn("void meshOctreeAddressing::calcGlobalLeafLabels() const")
+        FatalErrorInFunction
             << "Cannot calculate global labels! Exitting" << exit(FatalError);
 
     //- allocate the memory
@@ -480,7 +468,7 @@ void meshOctreeAddressing::calcGlobalLeafLabels() const
     help::exchangeMap(exchangeLabels, rLabels, Pstream::scheduled);
 
     if( rLeaves.size() != rLabels.size() )
-        FatalErrorIn("void meshOctreeAddressing::calcGlobalLeafLabels() const")
+        FatalErrorInFunction
             << "Invalid list size!" << abort(FatalError);
 
     //- set the labels to the leaves originating from other processors

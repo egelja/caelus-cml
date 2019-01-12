@@ -103,8 +103,8 @@ public:
             virtual void setParcelProperties
             (
                 parcelType& p,
-                const label filmCellI
-             ) const;
+                const label filmCelli
+            ) const;
 
 
         // I-O
@@ -176,16 +176,12 @@ void CML::NoSurfaceFilm<CloudType>::setParcelProperties
     parcelType&,
     const label
 ) const
-{
-    // do nothing
-}
+{}
 
 
 template<class CloudType>
 void CML::NoSurfaceFilm<CloudType>::info(Ostream&)
-{
-    // do nothing
-}
+{}
 
 
 // ************************************************************************* //

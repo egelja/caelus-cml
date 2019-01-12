@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -272,7 +272,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(iF.name()),
     setAverage_(false),
     perturb_(0),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -299,7 +299,7 @@ timeVaryingMappedFixedValueFvPatchField
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
     mapMethod_(ptf.mapMethod_),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -311,7 +311,7 @@ timeVaryingMappedFixedValueFvPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -337,7 +337,7 @@ timeVaryingMappedFixedValueFvPatchField
             "planarInterpolation"
         )
     ),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -353,17 +353,8 @@ timeVaryingMappedFixedValueFvPatchField
      && mapMethod_ != "nearest"
     )
     {
-        FatalIOErrorIn
-        (
-            "timeVaryingMappedFixedValueFvPatchField<Type>::\n"
-            "timeVaryingMappedFixedValueFvPatchField\n"
-            "(\n"
-            "    const fvPatch&\n"
-            "    const DimensionedField<Type, volMesh>&\n"
-            "    const dictionary&\n"
-            ")\n",
-            dict
-        )   << "mapMethod should be one of 'planarInterpolation'"
+        FatalIOErrorInFunction(dict)
+            << "mapMethod should be one of 'planarInterpolation'"
             << ", 'nearest'" << exit(FatalIOError);
     }
 
@@ -397,7 +388,7 @@ timeVaryingMappedFixedValueFvPatchField
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
     mapMethod_(ptf.mapMethod_),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
     startSampledValues_(ptf.startSampledValues_),
@@ -409,7 +400,7 @@ timeVaryingMappedFixedValueFvPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -427,7 +418,7 @@ timeVaryingMappedFixedValueFvPatchField
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
     mapMethod_(ptf.mapMethod_),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
     startSampledValues_(ptf.startSampledValues_),
@@ -439,7 +430,7 @@ timeVaryingMappedFixedValueFvPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -565,10 +556,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
 
     if (!foundTime)
     {
-        FatalErrorIn
-        (
-            "timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()"
-        )   << "Cannot find starting sampling values for current time "
+        FatalErrorInFunction
+            << "Cannot find starting sampling values for current time "
             << this->db().time().value() << nl
             << "Have sampling values for times "
             << pointToPointPlanarInterpolation::timeNames(sampleTimes_) << nl
@@ -631,11 +620,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
 
             if (vals.size() != mapperPtr_().sourceSize())
             {
-                FatalErrorIn
-                (
-                    "timeVaryingMappedFixedValueFvPatchField<Type>::"
-                    "checkTable()"
-                )   << "Number of values (" << vals.size()
+                FatalErrorInFunction
+                    << "Number of values (" << vals.size()
                     << ") differs from the number of points ("
                     <<  mapperPtr_().sourceSize()
                     << ") in file " << vals.objectPath() << exit(FatalError);
@@ -689,11 +675,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
 
             if (vals.size() != mapperPtr_().sourceSize())
             {
-                FatalErrorIn
-                (
-                    "timeVaryingMappedFixedValueFvPatchField<Type>::"
-                    "checkTable()"
-                )   << "Number of values (" << vals.size()
+                FatalErrorInFunction
+                    << "Number of values (" << vals.size()
                     << ") differs from the number of points ("
                     <<  mapperPtr_().sourceSize()
                     << ") in file " << vals.objectPath() << exit(FatalError);

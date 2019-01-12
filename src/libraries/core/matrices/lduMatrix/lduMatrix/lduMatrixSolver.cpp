@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
@@ -69,10 +69,8 @@ CML::autoPtr<CML::lduMatrix::solver> CML::lduMatrix::solver::New
 
         if (constructorIter == symMatrixConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "lduMatrix::solver::New", solverControls
-            )   << "Unknown symmetric matrix solver " << name << nl << nl
+            FatalIOErrorInFunction(solverControls)
+                << "Unknown symmetric matrix solver " << name << nl << nl
                 << "Valid symmetric matrix solvers are :" << endl
                 << symMatrixConstructorTablePtr_->sortedToc()
                 << exit(FatalIOError);
@@ -98,10 +96,8 @@ CML::autoPtr<CML::lduMatrix::solver> CML::lduMatrix::solver::New
 
         if (constructorIter == asymMatrixConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "lduMatrix::solver::New", solverControls
-            )   << "Unknown asymmetric matrix solver " << name << nl << nl
+            FatalIOErrorInFunction(solverControls)
+                << "Unknown asymmetric matrix solver " << name << nl << nl
                 << "Valid asymmetric matrix solvers are :" << endl
                 << asymMatrixConstructorTablePtr_->sortedToc()
                 << exit(FatalIOError);
@@ -122,14 +118,12 @@ CML::autoPtr<CML::lduMatrix::solver> CML::lduMatrix::solver::New
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "lduMatrix::solver::New", solverControls
-        )   << "cannot solve incomplete matrix, "
+        FatalIOErrorInFunction(solverControls)
+            << "cannot solve incomplete matrix, "
                "no diagonal or off-diagonal coefficient"
             << exit(FatalIOError);
 
-        return autoPtr<lduMatrix::solver>(NULL);
+        return autoPtr<lduMatrix::solver>(nullptr);
     }
 }
 
@@ -158,7 +152,7 @@ CML::lduMatrix::solver::solver
 
     if (maxIter_ < minIter_)
     {
-        FatalErrorIn("lduMatrix::solver")
+        FatalErrorInFunction
             << "maxIter < minIter : Check linear solver controls in fvSolution and make sure to set maxIter value to be larger or equal to minIter"
             << abort(FatalError);
     }

@@ -1,14 +1,14 @@
 volScalarField rAU(1.0/UEqn.A());
 
-rho = thermo->rho();
+rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 rho.relax();
-volScalarField R = ( thermo->Cp() - thermo->Cv() )();
+volScalarField R = ( thermo.Cp() - thermo.Cv() )();
 R.correctBoundaryConditions();
 T.relax();
-thermo->rho() = thermo->rho() - psi*p;
-thermo->rho()->correctBoundaryConditions();
+thermo.rho() = thermo.rho() - psi*p;
+thermo.rho().correctBoundaryConditions();
 
 volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p));
 
@@ -17,7 +17,7 @@ if (pimple.nCorrPISO() <= 1)
     tUEqn.clear();
 }
 
-#include "compressibleFlux.hpp"
+#include "compressibleFlux_cpbnsLTS.hpp"
 
 while (pimple.correctNonOrthogonal())
 {
@@ -36,15 +36,15 @@ while (pimple.correctNonOrthogonal())
     }
 }
 
-thermo->rho() = thermo->rho() + psi*p;
-thermo->rho()->correctBoundaryConditions();
+thermo.rho() = thermo.rho() + psi*p;
+thermo.rho().correctBoundaryConditions();
 
 #include "rhoEqn.hpp"
 #include "compressibleContinuityErrs.hpp"
 
 p.relax();
 
-rho = thermo->rho();
+rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 rho.relax();

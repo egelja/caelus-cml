@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         while (pimple.loop())
         {
             #include "alphaControls.hpp"
-            #include "alphaEqnSubCycle.hpp"
+            #include "alphaEqnSubCycle_isoVoF.hpp"
 
             mixture.correct();
             interface.correct();

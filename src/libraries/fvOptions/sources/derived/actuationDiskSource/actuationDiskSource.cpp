@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -48,25 +48,25 @@ void CML::fv::actuationDiskSource::checkData() const
 {
     if (magSqr(diskArea_) <= VSMALL)
     {
-        FatalErrorIn("CML::fv::actuationDiskSource::checkData()")
+        FatalErrorInFunction
            << "diskArea is approximately zero"
            << exit(FatalIOError);
     }
     if (Cp_ <= VSMALL || Ct_ <= VSMALL)
     {
-        FatalErrorIn("CML::fv::actuationDiskSource::checkData()")
+        FatalErrorInFunction
            << "Cp and Ct must be greater than zero"
            << exit(FatalIOError);
     }
     if (mag(diskDir_) < VSMALL)
     {
-        FatalErrorIn("CML::fv::actuationDiskSource::checkData()")
+        FatalErrorInFunction
            << "disk direction vector is approximately zero"
            << exit(FatalIOError);
     }
     if (returnReduce(upstreamCellId_, maxOp<label>()) == -1)
     {
-        FatalErrorIn("CML::fv::actuationDiskSource::checkData()")
+        FatalErrorInFunction
            << "upstream location " << upstreamPoint_  << " not found in mesh"
            << exit(FatalIOError);
     }

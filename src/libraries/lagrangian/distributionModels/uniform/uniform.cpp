@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,7 @@ namespace CML
 CML::distributionModels::uniform::uniform
 (
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 :
     distributionModel(typeName, dict, rndGen),
@@ -67,7 +67,7 @@ CML::distributionModels::uniform::~uniform()
 
 CML::scalar CML::distributionModels::uniform::sample() const
 {
-    return rndGen_.position<scalar>(minValue_, maxValue_);
+    return rndGen_.scalarAB(minValue_, maxValue_);
 }
 
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -215,10 +215,10 @@ BlockConstraint<Type>::BlockConstraint
     fixedComponents_(fixedCmpts),
     matrixCoeffsSet_(false),
     diagCoeff_(),
-    upperCoeffsOwnerPtr_(NULL),
-    upperCoeffsNeighbourPtr_(NULL),
-    lowerCoeffsOwnerPtr_(NULL),
-    lowerCoeffsNeighbourPtr_(NULL)
+    upperCoeffsOwnerPtr_(nullptr),
+    upperCoeffsNeighbourPtr_(nullptr),
+    lowerCoeffsOwnerPtr_(nullptr),
+    lowerCoeffsNeighbourPtr_(nullptr)
 {}
 
 
@@ -230,10 +230,10 @@ BlockConstraint<Type>::BlockConstraint(const BlockConstraint& e)
     value_(e.value_),
     fixedComponents_(e.fixedComponents_),
     matrixCoeffsSet_(false),
-    upperCoeffsOwnerPtr_(NULL),
-    upperCoeffsNeighbourPtr_(NULL),
-    lowerCoeffsOwnerPtr_(NULL),
-    lowerCoeffsNeighbourPtr_(NULL)
+    upperCoeffsOwnerPtr_(nullptr),
+    upperCoeffsNeighbourPtr_(nullptr),
+    lowerCoeffsOwnerPtr_(nullptr),
+    lowerCoeffsNeighbourPtr_(nullptr)
 {}
 
 
@@ -245,10 +245,10 @@ BlockConstraint<Type>::BlockConstraint(Istream& is)
     value_(pTraits<Type>(is)),
     fixedComponents_(pTraits<Type>(is)),
     matrixCoeffsSet_(false),
-    upperCoeffsOwnerPtr_(NULL),
-    upperCoeffsNeighbourPtr_(NULL),
-    lowerCoeffsOwnerPtr_(NULL),
-    lowerCoeffsNeighbourPtr_(NULL)
+    upperCoeffsOwnerPtr_(nullptr),
+    upperCoeffsNeighbourPtr_(nullptr),
+    lowerCoeffsOwnerPtr_(nullptr),
+    lowerCoeffsNeighbourPtr_(nullptr)
 {}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -270,10 +270,8 @@ const BlockCoeff<Type>& BlockConstraint<Type>::diagCoeff() const
 {
     if (matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "const BlockCoeff<Type>& BlockConstraint<Type>::diagCoeff() const"
-        )   << "matrix coefficients not set"
+        FatalErrorInFunction
+            << "matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -286,10 +284,8 @@ const Type& BlockConstraint<Type>::b() const
 {
     if (matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "Type BlockConstraint<Type>::b() const"
-        )   << "matrix coefficients not set"
+        FatalErrorInFunction
+            << "matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -302,11 +298,8 @@ const CoeffField<Type>& BlockConstraint<Type>::upperCoeffsOwner() const
 {
     if (not upperCoeffsOwnerPtr_ || not matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "const CoeffField<Type>& BlockConstraint<Type>::"
-            "upperCoeffsOwner() const"
-        )   << "upper matrix coefficients not set"
+        FatalErrorInFunction
+            << "upper matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -319,11 +312,8 @@ const CoeffField<Type>& BlockConstraint<Type>::upperCoeffsNeighbour() const
 {
     if (not upperCoeffsNeighbourPtr_ || not matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "const CoeffField<Type>& BlockConstraint<Type>::"
-            "upperCoeffsNeighbour() const"
-        )   << "upper matrix coefficients not set"
+        FatalErrorInFunction
+            << "upper matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -336,11 +326,8 @@ const CoeffField<Type>& BlockConstraint<Type>::lowerCoeffsOwner() const
 {
     if (not lowerCoeffsOwnerPtr_ || not matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "const CoeffField<Type>& BlockConstraint<Type>::"
-            "lowerCoeffsOwner() const"
-        )   << "lower matrix coefficients not set"
+        FatalErrorInFunction
+            << "lower matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -353,11 +340,8 @@ const CoeffField<Type>& BlockConstraint<Type>::lowerCoeffsNeighbour() const
 {
     if (not lowerCoeffsNeighbourPtr_ || not matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "const CoeffField<Type>& BlockConstraint<Type>::"
-            "lowerCoeffsNeighbour() const"
-        )   << "lower matrix coefficients not set"
+        FatalErrorInFunction
+            << "lower matrix coefficients not set"
             << abort(FatalError);
     }
 
@@ -420,10 +404,8 @@ void BlockConstraint<Type>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "BlockConstraint::operator=(const BlockConstraint&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -463,15 +445,8 @@ void BlockConstraint<Type>::setMatrix
 {
     if (matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "void BlockConstraint<Type>::setMatrix\n"
-            "(\n"
-            "    const BlockLduMatrix<Type>& matrix,\n"
-            "    const TypeField& x,\n"
-            "    const TypeField& b\n"
-            ")"
-        )   << "matrix coefficients already set"
+        FatalErrorInFunction
+            << "matrix coefficients already set"
             << abort(FatalError);
     }
 
@@ -670,11 +645,8 @@ void BlockConstraint<Type>::reconstructMatrix
 {
     if (not matrixCoeffsSet_)
     {
-        FatalErrorIn
-        (
-            "void BlockConstraint<Type>::reconstructMatrix("
-            "BlockLduMatrix<Type>& matrix)"
-        )   << "matrix coefficients not set"
+        FatalErrorInFunction
+            << "matrix coefficients not set"
             << abort(FatalError);
     }
 

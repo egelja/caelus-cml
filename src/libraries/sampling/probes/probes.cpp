@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -104,7 +104,7 @@ void CML::probes::findElements(const fvMesh& mesh)
         {
             if (Pstream::master())
             {
-                WarningIn("findElements::findElements(const fvMesh&)")
+                WarningInFunction
                     << "Did not find location " << location
                     << " in any cell. Skipping location." << endl;
             }
@@ -113,7 +113,7 @@ void CML::probes::findElements(const fvMesh& mesh)
         {
             if (Pstream::master())
             {
-                WarningIn("probes::findElements(const fvMesh&)")
+                WarningInFunction
                     << "Did not find location " << location
                     << " in any face. Skipping location." << endl;
             }
@@ -123,7 +123,7 @@ void CML::probes::findElements(const fvMesh& mesh)
             // Make sure location not on two domains.
             if (elementList_[probeI] != -1 && elementList_[probeI] != cellI)
             {
-                WarningIn("probes::findElements(const fvMesh&)")
+                WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
                     << " cell " << elementList_[probeI]
@@ -137,7 +137,7 @@ void CML::probes::findElements(const fvMesh& mesh)
 
             if (faceList_[probeI] != -1 && faceList_[probeI] != faceI)
             {
-                WarningIn("probes::findElements(const fvMesh&)")
+                WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
                     << " cell " << faceList_[probeI]
@@ -338,7 +338,7 @@ void CML::probes::read(const dictionary& dict)
     {
         if (!fixedLocations_ && interpolationScheme_ != "cell")
         {
-            WarningIn("void CML::probes::read(const dictionary&)")
+            WarningInFunction
                 << "Only cell interpolation can be applied when "
                 << "not using fixedLocations.  InterpolationScheme "
                 << "entry will be ignored";

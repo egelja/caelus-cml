@@ -25,7 +25,7 @@ License
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "IOobjectList.hpp"
-#include "turbulenceModel.hpp"
+#include "compressibleTurbulenceModel.hpp"
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -137,7 +137,6 @@ void CML::totalFlowRateAdvectiveDiffusiveFvPatchScalarField::rmap
 
 void CML::totalFlowRateAdvectiveDiffusiveFvPatchScalarField::updateCoeffs()
 {
-
     if (this->updated())
     {
         return;
@@ -154,7 +153,7 @@ void CML::totalFlowRateAdvectiveDiffusiveFvPatchScalarField::updateCoeffs()
     const fvsPatchField<scalar>& phip =
         patch().lookupPatchField<surfaceScalarField, scalar>(phiName_);
 
-    const scalarField alphap = turbulence.alphaEff()().boundaryField()[patchI];
+    const scalarField alphap(turbulence.alphaEff(patchI));
 
     refValue() = 1.0;
     refGrad() = 0.0;

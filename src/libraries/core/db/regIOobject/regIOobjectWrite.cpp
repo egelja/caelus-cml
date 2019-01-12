@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,7 @@ bool CML::regIOobject::writeObject
 {
     if (!good())
     {
-        SeriousErrorIn("regIOobject::write()")
+        SeriousErrorInFunction
             << "bad object " << name()
             << endl;
 
@@ -47,7 +47,7 @@ bool CML::regIOobject::writeObject
 
     if (instance().empty())
     {
-        SeriousErrorIn("regIOobject::write()")
+        SeriousErrorInFunction
             << "instance undefined for object " << name()
             << endl;
 

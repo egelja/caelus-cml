@@ -27,7 +27,7 @@ void CML::enrichedPatch::completePointMap() const
 {
     if (pointMapComplete_)
     {
-        FatalErrorIn("void enrichedPatch::completePointMap() const")
+        FatalErrorInFunction
             << "Point map already completed"
             << abort(FatalError);
     }

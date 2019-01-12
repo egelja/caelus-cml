@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -255,7 +255,7 @@ CML::List<CML::instant> CML::timeSelector::select0
 
     if (timeDirs.empty())
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "No time specified or available, selecting 'constant'"
             << endl;
 

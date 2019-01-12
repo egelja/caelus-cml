@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -67,11 +67,8 @@ void CML::booleanSurface::checkIncluded
 
         if (!usesIncluded)
         {
-            FatalErrorIn
-            (
-                "booleanSurface::checkIncluded(const intersectedSurface&"
-                ", const labelList&, const label)"
-            )   << "None of the faces reachable from face " << includedFace
+            FatalErrorInFunction
+                << "None of the faces reachable from face " << includedFace
                 << " connects to the intersection."
                 << exit(FatalError);
         }
@@ -111,11 +108,8 @@ CML::label CML::booleanSurface::findEdge
             return edgeLabels[edgeLabelI];
         }
     }
-    FatalErrorIn
-    (
-        "booleanSurface::findEdge(const edgeList&, const labelList&"
-        ", const edge&)"
-    )   << "Cannot find edge " << e << " in edges " << edgeLabels
+    FatalErrorInFunction
+        << "Cannot find edge " << e << " in edges " << edgeLabels
         << abort(FatalError);
 
     return -1;
@@ -210,12 +204,8 @@ void CML::booleanSurface::propagateEdgeSide
 
     if (((eFaces.size() % 2) == 1) && (eFaces.size() != 1))
     {
-        FatalErrorIn
-        (
-            "booleanSurface::propagateEdgeSide(const triSurface&,"
-            "const label, const label, const label, const label,"
-            " labelList&)"
-        )   << "Don't know how to handle edges with odd number of faces"
+        FatalErrorInFunction
+            << "Don't know how to handle edges with odd number of faces"
             << endl
             << "edge:" << edgeI << " vertices:" << surf.edges()[edgeI]
             << " coming from face:" << prevFaceI
@@ -444,11 +434,8 @@ CML::booleanSurface::booleanSurface
 
     if (cutSurf1FaceI == -1)
     {
-        FatalErrorIn
-        (
-           "booleanSurface(const triSurfaceSearch&"
-            ", const label, const triSurfaceSearch&, const label)"
-        )   << "Did not find face with label " << includeFace1
+        FatalErrorInFunction
+            << "Did not find face with label " << includeFace1
             << " in intersectedSurface."
             << exit(FatalError);
     }
@@ -463,11 +450,8 @@ CML::booleanSurface::booleanSurface
     }
     if (cutSurf2FaceI == -1)
     {
-        FatalErrorIn
-        (
-           "booleanSurface(const triSurfaceSearch&"
-            ", const label, const triSurfaceSearch&, const label)"
-        )   << "Did not find face with label " << includeFace2
+        FatalErrorInFunction
+            << "Did not find face with label " << includeFace2
             << " in intersectedSurface."
             << exit(FatalError);
     }
@@ -724,7 +708,7 @@ CML::booleanSurface::booleanSurface
 
                 if (eFaces.size() == 1)
                 {
-                    WarningIn("booleanSurface::booleanSurface")
+                    WarningInFunction
                         << "surf1 is open surface at edge " << edgeI
                         << " verts:" << surf1.edges()[edgeI]
                         << " connected to faces " << eFaces << endl;
@@ -740,7 +724,7 @@ CML::booleanSurface::booleanSurface
 
                 if (eFaces.size() == 1)
                 {
-                    WarningIn("booleanSurface::booleanSurface")
+                    WarningInFunction
                         << "surf2 is open surface at edge " << edgeI
                         << " verts:" << surf2.edges()[edgeI]
                         << " connected to faces " << eFaces << endl;
@@ -998,12 +982,8 @@ CML::booleanSurface::booleanSurface
     {
         if (side[faceI] == UNVISITED)
         {
-            FatalErrorIn
-            (
-                "booleanSurface::booleanSurface"
-                "(const triSurfaceSearch&, const triSurfaceSearch&"
-                ", const label booleanOp)"
-            )   << "Face " << faceI << " has not been reached by walking from"
+            FatalErrorInFunction
+                << "Face " << faceI << " has not been reached by walking from"
                 << " nearest point " << minHit.rawPoint()
                 << " nearest face " << minFaceI << exit(FatalError);
         }

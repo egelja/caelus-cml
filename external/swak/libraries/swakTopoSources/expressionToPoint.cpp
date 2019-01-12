@@ -74,10 +74,10 @@ void CML::expressionToPoint::combine(topoSet& set, const bool add) const
     }
     driver.parse(expression_);
     if(!driver.resultIsTyp<pointScalarField>(true)) {
-        FatalErrorIn("CML::expressionToPoint::combine(topoSet& set, const bool add) const")
+        FatalErrorInFunction
             << "Expression " << expression_ << " does not evaluate to a logical expression"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
     }
     const pointScalarField &condition=driver.getResult<pointScalarField>();
 

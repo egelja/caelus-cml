@@ -140,59 +140,46 @@ public:
         inline scalar& mDot();
 
 
+    // Friend Operators
+
+        friend bool operator==
+        (
+            const kinematicParcelInjectionData& a,
+            const kinematicParcelInjectionData& b
+        )
+        {
+            NotImplemented;
+
+            return false;
+        }
+
+        friend bool operator!=
+        (
+            const kinematicParcelInjectionData& a,
+            const kinematicParcelInjectionData& b
+        )
+        {
+            NotImplemented;
+
+            return false;
+        }
+
+
     // I-O
 
-        // Friend Operators
+        //- Ostream operator
+        friend Ostream& operator<<
+        (
+            Ostream& os,
+            const kinematicParcelInjectionData& data
+        );
 
-            friend bool operator==
-            (
-                const kinematicParcelInjectionData& a,
-                const kinematicParcelInjectionData& b
-            )
-            {
-                notImplemented
-                (
-                    "operator=="
-                    "("
-                        "const kinematicParcelInjectionData&, "
-                        "const kinematicParcelInjectionData&"
-                    ")"
-                );
-
-                return false;
-            }
-
-            friend bool operator!=
-            (
-                const kinematicParcelInjectionData& a,
-                const kinematicParcelInjectionData& b
-            )
-            {
-                notImplemented
-                (
-                    "operator=="
-                    "("
-                        "const kinematicParcelInjectionData&, "
-                        "const kinematicParcelInjectionData&"
-                    ")"
-                );
-
-                return false;
-            }
-
-            //- Ostream operator
-            friend Ostream& operator<<
-            (
-                Ostream& os,
-                const kinematicParcelInjectionData& data
-            );
-
-            //- Istream operator
-            friend Istream& operator>>
-            (
-                Istream& is,
-                kinematicParcelInjectionData& data
-            );
+        //- Istream operator
+        friend Istream& operator>>
+        (
+            Istream& is,
+            kinematicParcelInjectionData& data
+        );
 };
 
 

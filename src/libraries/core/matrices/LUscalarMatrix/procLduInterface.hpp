@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,6 +41,13 @@ namespace CML
 
 class lduInterfaceField;
 
+// Forward declaration of friend functions and operators
+
+class procLduInterface;
+
+Ostream& operator<<(Ostream&, const procLduInterface&);
+
+
 /*---------------------------------------------------------------------------*\
                            Class procLduInterface Declaration
 \*---------------------------------------------------------------------------*/
@@ -79,8 +86,8 @@ public:
 
         autoPtr<procLduInterface> clone()
         {
-            notImplemented("procLduInterface::clone()");
-            return autoPtr<procLduInterface>(NULL);
+            NotImplemented;
+            return autoPtr<procLduInterface>(nullptr);
         }
 
         static autoPtr<procLduInterface> New(Istream& is)

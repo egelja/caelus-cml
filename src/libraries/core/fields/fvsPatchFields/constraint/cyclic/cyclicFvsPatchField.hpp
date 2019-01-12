@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -158,16 +158,8 @@ cyclicFvsPatchField<Type>::cyclicFvsPatchField
 {
     if (!isA<cyclicFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "cyclicFvsPatchField<Type>::cyclicFvsPatchField\n"
-            "(\n"
-            "    const cyclicFvsPatchField<Type>& ptf,\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, surfaceMesh>& iF,\n"
-            "    const fvPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()
@@ -189,16 +181,8 @@ cyclicFvsPatchField<Type>::cyclicFvsPatchField
 {
     if (!isA<cyclicFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "cyclicFvsPatchField<Type>::cyclicFvsPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, surfaceMesh>& iF,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not cyclic type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not cyclic type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,7 +61,7 @@ void CML::fvSchemes::read(const dictionary& dict)
     {
         // For backward compatibility.
         // The timeScheme will be deprecated with warning or removed
-        WarningIn("fvSchemes::read()")
+        WarningInFunction
             << "Using deprecated 'timeScheme' instead of 'ddtSchemes'"
             << nl << endl;
 
@@ -81,7 +81,7 @@ void CML::fvSchemes::read(const dictionary& dict)
         }
         else
         {
-            FatalIOErrorIn("fvSchemes::read()", dict.lookup("timeScheme"))
+            FatalIOErrorInFunction(dict.lookup("timeScheme"))
                 << "\n    Only EulerImplicit, BackwardDifferencing and "
                    "SteadyState\n    are supported by the old timeScheme "
                    "specification.\n    Please use ddtSchemes instead."
@@ -121,7 +121,7 @@ void CML::fvSchemes::read(const dictionary& dict)
     {
         // For backward compatibility.
         // The timeScheme will be deprecated with warning or removed
-        WarningIn("fvSchemes::read()")
+        WarningInFunction
             << "Using deprecated 'timeScheme' instead of 'd2dt2Schemes'"
             << nl << endl;
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -98,7 +98,7 @@ public:
             const vector& injectionPos,
             const scalar pAmbient,
             const scalar chi,
-            cachedRandom& rndGen
+            Random& rndGen
         ) const;
 };
 
@@ -177,7 +177,7 @@ void CML::NoAtomization<CloudType>::update
     const vector& injectionPos,
     const scalar pAmbient,
     const scalar chi,
-    cachedRandom& rndGen
+    Random& rndGen
 ) const
 {}
 

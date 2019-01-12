@@ -105,7 +105,7 @@ void spectralMethodsLeastSquaresBased::solve
     // Create the least-squares right and left hand sides
     label N(A.size());
 
-    scalarSquareMatrix AtA(N, 0.0);
+    SquareMatrix<scalar> AtA(N, N);
     scalarField Atb(N, 0.0);
 
     // Fill the matrix elements
@@ -123,7 +123,7 @@ void spectralMethodsLeastSquaresBased::solve
     }
 
     // Solve the square system
-    CML::scalarSquareMatrix::LUsolve(AtA, Atb);
+    CML::LUsolve(AtA, Atb);
 
     // Return solution in input field
     b = Atb;

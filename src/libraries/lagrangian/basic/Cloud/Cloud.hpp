@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -74,17 +75,11 @@ class Cloud
 {
     // Private data
 
+        //- Reference to the mesh database
         const polyMesh& polyMesh_;
 
-        //- Temporary storage for addressing. Used in findTris.
-        mutable DynamicList<label> labels_;
-
-        //- Count of how many tracking rescue corrections have been
-        //  applied
-        mutable label nTrackingRescues_;
-
-        //- Does the cell have wall faces
-        mutable autoPtr<PackedBoolList> cellWallFacesPtr_;
+        //- Temporary storage for the global particle positions
+        mutable autoPtr<vectorField> globalPositionsPtr_;
 
 
     // Private Member Functions
@@ -95,14 +90,17 @@ class Cloud
         //- Initialise cloud on IO constructor
         void initCloud(const bool checkClass);
 
-        //- Find all cells which have wall faces
-        void calcCellWallFaces() const;
-
         //- Read cloud properties dictionary
         void readCloudUniformProperties();
 
         //- Write cloud properties dictionary
         void writeCloudUniformProperties() const;
+
+
+protected:
+
+        //- Geometry type
+        cloud::geometryType geometryType_;
 
 
 public:
@@ -132,25 +130,9 @@ public:
         Cloud
         (
             const polyMesh& mesh,
-            const IDLList<ParticleType>& particles
-        );
-
-        //- Construct from mesh, cloud name, and a list of particles
-        Cloud
-        (
-            const polyMesh& mesh,
             const word& cloudName,
             const IDLList<ParticleType>& particles
         );
-
-        //- Construct from mesh by reading from file
-        //  Optionally disable checking of class name for post-processing
-        Cloud
-        (
-            const polyMesh& mesh,
-            const bool checkClass = true
-        );
-
 
         //- Construct from mesh by reading from file with given cloud instance
         //  Optionally disable checking of class name for post-processing
@@ -172,44 +154,11 @@ public:
                 return polyMesh_;
             }
 
+            //- Return the number of particles in the cloud
             label size() const
             {
                 return IDLList<ParticleType>::size();
             };
-
-            DynamicList<label>& labels()
-            {
-                return labels_;
-            }
-
-            //- Return nTrackingRescues
-            label nTrackingRescues() const
-            {
-                return nTrackingRescues_;
-            }
-
-            //- Increment the nTrackingRescues counter
-            void trackingRescue() const
-            {
-                nTrackingRescues_++;
-                if (cloud::debug && size() && (nTrackingRescues_ % size() == 0))
-                {
-                    Pout<< "    " << nTrackingRescues_
-                        << " tracking rescues " << endl;
-                }
-            }
-
-            //- Whether each cell has any wall faces (demand driven data)
-            const PackedBoolList& cellHasWallFaces() const;
-
-            //- Switch to specify if particles of the cloud can return
-            //  non-zero wall distance values.  By default, assume
-            //  that they can't (default for wallImpactDistance in
-            //  particle is 0.0).
-            virtual bool hasWallImpactDistance() const
-            {
-                return false;
-            }
 
 
             // Iterators
@@ -258,18 +207,24 @@ public:
             //- Remove particle from cloud and delete
             void deleteParticle(ParticleType&);
 
+            //- Remove lost particles from cloud and delete
+            void deleteLostParticles();
+
             //- Reset the particles
             void cloudReset(const Cloud<ParticleType>& c);
 
             //- Move the particles
-            //  passing the TrackingData to the track function
-            template<class TrackData>
-            void move(TrackData& td, const scalar trackTime);
+            template<class TrackCloudType>
+            void move
+            (
+                TrackCloudType& cloud,
+                typename ParticleType::trackingData& td,
+                const scalar trackTime
+            );
 
             //- Remap the cells of particles corresponding to the
             //  mesh topology change
-            template<class TrackData>
-            void autoMap(TrackData& td, const mapPolyMesh&);
+            void autoMap(const mapPolyMesh&);
 
 
         // Read
@@ -297,10 +252,6 @@ public:
                 const CompactIOField<Field<DataType>, DataType>& data
             ) const;
 
-            //- Read the field data for the cloud of particles. Dummy at
-            //  this level.
-            virtual void readFields();
-
 
         // Write
 
@@ -319,6 +270,10 @@ public:
 
             //- Write positions to \<cloudName\>_positions.obj file
             void writePositions() const;
+
+            //- Call this before a topology change. Stores the particles global
+            //  positions in the database for use during mapping.
+            void storeGlobalPositions() const;
 
 
     // Ostream Operator
@@ -353,12 +308,12 @@ void CML::Cloud<ParticleType>::checkPatches() const
 {
     const polyBoundaryMesh& pbm = polyMesh_.boundaryMesh();
     bool ok = true;
-    forAll(pbm, patchI)
+    forAll(pbm, patchi)
     {
-        if (isA<cyclicAMIPolyPatch>(pbm[patchI]))
+        if (isA<cyclicAMIPolyPatch>(pbm[patchi]))
         {
             const cyclicAMIPolyPatch& cami =
-                refCast<const cyclicAMIPolyPatch>(pbm[patchI]);
+                refCast<const cyclicAMIPolyPatch>(pbm[patchi]);
 
             if (cami.owner())
             {
@@ -369,7 +324,7 @@ void CML::Cloud<ParticleType>::checkPatches() const
 
     if (!ok)
     {
-        FatalErrorIn("void CML::Cloud<ParticleType>::initCloud(const bool)")
+        FatalErrorInFunction
             << "Particle tracking across AMI patches is only currently "
             << "supported for cases where the AMI patches reside on a "
             << "single processor" << abort(FatalError);
@@ -377,58 +332,7 @@ void CML::Cloud<ParticleType>::checkPatches() const
 }
 
 
-template<class ParticleType>
-void CML::Cloud<ParticleType>::calcCellWallFaces() const
-{
-    cellWallFacesPtr_.reset(new PackedBoolList(pMesh().nCells(), false));
-
-    PackedBoolList& cellWallFaces = cellWallFacesPtr_();
-
-    const polyBoundaryMesh& patches = polyMesh_.boundaryMesh();
-
-    forAll(patches, patchI)
-    {
-        if (isA<wallPolyPatch>(patches[patchI]))
-        {
-            const polyPatch& patch = patches[patchI];
-
-            const labelList& pFaceCells = patch.faceCells();
-
-            forAll(pFaceCells, pFCI)
-            {
-                cellWallFaces[pFaceCells[pFCI]] = true;
-            }
-        }
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class ParticleType>
-CML::Cloud<ParticleType>::Cloud
-(
-    const polyMesh& pMesh,
-    const IDLList<ParticleType>& particles
-)
-:
-    cloud(pMesh),
-    IDLList<ParticleType>(),
-    polyMesh_(pMesh),
-    labels_(),
-    nTrackingRescues_(),
-    cellWallFacesPtr_()
-{
-    checkPatches();
-
-    // Ask for the tetBasePtIs to trigger all processors to build
-    // them, otherwise, if some processors have no particles then
-    // there is a comms mismatch.
-    polyMesh_.tetBasePtIs();
-
-    IDLList<ParticleType>::operator=(particles);
-}
-
 
 template<class ParticleType>
 CML::Cloud<ParticleType>::Cloud
@@ -441,9 +345,8 @@ CML::Cloud<ParticleType>::Cloud
     cloud(pMesh, cloudName),
     IDLList<ParticleType>(),
     polyMesh_(pMesh),
-    labels_(),
-    nTrackingRescues_(),
-    cellWallFacesPtr_()
+    globalPositionsPtr_(),
+    geometryType_(cloud::geometryType::COORDINATES)
 {
     checkPatches();
 
@@ -452,24 +355,14 @@ CML::Cloud<ParticleType>::Cloud
     // there is a comms mismatch.
     polyMesh_.tetBasePtIs();
 
-    IDLList<ParticleType>::operator=(particles);
+    if (particles.size())
+    {
+        IDLList<ParticleType>::operator=(particles);
+    }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class ParticleType>
-const CML::PackedBoolList& CML::Cloud<ParticleType>::cellHasWallFaces()
-const
-{
-    if (!cellWallFacesPtr_.valid())
-    {
-        calcCellWallFaces();
-    }
-
-    return cellWallFacesPtr_();
-}
-
 
 template<class ParticleType>
 void CML::Cloud<ParticleType>::addParticle(ParticleType* pPtr)
@@ -486,9 +379,28 @@ void CML::Cloud<ParticleType>::deleteParticle(ParticleType& p)
 
 
 template<class ParticleType>
+void CML::Cloud<ParticleType>::deleteLostParticles()
+{
+    forAllIter(typename Cloud<ParticleType>, *this, pIter)
+    {
+        ParticleType& p = pIter();
+
+        if (p.cell() == -1)
+        {
+            WarningInFunction
+                << "deleting lost particle at position " << p.position()
+                << endl;
+
+            deleteParticle(p);
+        }
+    }
+}
+
+
+template<class ParticleType>
 void CML::Cloud<ParticleType>::cloudReset(const Cloud<ParticleType>& c)
 {
-    // Reset particle cound and particles only
+    // Reset particle count and particles only
     // - not changing the cloud object registry or reference to the polyMesh
     ParticleType::particleCount_ = 0;
     IDLList<ParticleType>::operator=(c);
@@ -496,17 +408,19 @@ void CML::Cloud<ParticleType>::cloudReset(const Cloud<ParticleType>& c)
 
 
 template<class ParticleType>
-template<class TrackData>
-void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
+template<class TrackCloudType>
+void CML::Cloud<ParticleType>::move
+(
+    TrackCloudType& cloud,
+    typename ParticleType::trackingData& td,
+    const scalar trackTime
+)
 {
     const polyBoundaryMesh& pbm = pMesh().boundaryMesh();
     const globalMeshData& pData = polyMesh_.globalData();
 
     // Which patches are processor patches
     const labelList& procPatches = pData.processorPatches();
-
-    // Indexing of patches into the procPatches list
-    const labelList& procPatchIndices = pData.processorPatchIndices();
 
     // Indexing of equivalent patch on neighbour processor into the
     // procPatches list on the neighbour
@@ -526,14 +440,10 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     // Initialise the stepFraction moved for the particles
     forAllIter(typename Cloud<ParticleType>, *this, pIter)
     {
-        pIter().stepFraction() = 0;
+        pIter().reset();
     }
 
-    // Reset nTrackingRescues
-    nTrackingRescues_ = 0;
-
-
-    // List of lists of particles to be transferred for all of the
+    // List of lists of particles to be transfered for all of the
     // neighbour processors
     List<IDLList<ParticleType> > particleTransferLists
     (
@@ -550,6 +460,9 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     // Allocate transfer buffers
     PstreamBuffers pBufs(Pstream::nonBlocking);
 
+    // Clear the global positions as there are about to change
+    globalPositionsPtr_.clear();
+
     // While there are particles to transfer
     while (true)
     {
@@ -565,40 +478,47 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             ParticleType& p = pIter();
 
             // Move the particle
-            bool keepParticle = p.move(td, trackTime);
+            bool keepParticle = p.move(cloud, td, trackTime);
 
             // If the particle is to be kept
             // (i.e. it hasn't passed through an inlet or outlet)
             if (keepParticle)
             {
-                // If we are running in parallel and the particle is on a
-                // boundary face
-                if (Pstream::parRun() && td.switchProcessor && p.face() >= pMesh().nInternalFaces())
-
+                if (td.switchProcessor)
                 {
-                    label patchI = pbm.whichPatch(p.face());
-
-                    // ... and the face is on a processor patch
-                    // prepare it for transfer
-                    if (procPatchIndices[patchI] != -1)
+                    #ifdef FULLDEBUG
+                    if
+                    (
+                        !Pstream::parRun()
+                     || !p.onBoundaryFace()
+                     || procPatchNeighbours[p.patch()] < 0
+                    )
                     {
-                        label n = neighbourProcIndices
-                        [
-                            refCast<const processorPolyPatch>
-                            (
-                                pbm[patchI]
-                            ).neighbProcNo()
-                        ];
-
-                        p.prepareForParallelTransfer(patchI, td);
-
-                        particleTransferLists[n].append(this->remove(&p));
-
-                        patchIndexTransferLists[n].append
-                        (
-                            procPatchNeighbours[patchI]
-                        );
+                        FatalErrorInFunction
+                            << "Switch processor flag is true when no parallel "
+                            << "transfer is possible. This is a bug."
+                            << exit(FatalError);
                     }
+                    #endif
+
+                    const label patchi = p.patch();
+
+                    const label n = neighbourProcIndices
+                    [
+                        refCast<const processorPolyPatch>
+                        (
+                            pbm[patchi]
+                        ).neighbProcNo()
+                    ];
+
+                    p.prepareForParallelTransfer();
+
+                    particleTransferLists[n].append(this->remove(&p));
+
+                    patchIndexTransferLists[n].append
+                    (
+                        procPatchNeighbours[patchi]
+                    );
                 }
             }
             else
@@ -633,10 +553,11 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             }
         }
 
-        // Start sending. Sets number of bytes transferred
-        labelListList allNTrans(Pstream::nProcs());
 
+        // Start sending. Sets number of bytes transferred
+        labelListList  allNTrans(Pstream::nProcs());
         pBufs.finishedSends(allNTrans);
+
 
         bool transferred = false;
 
@@ -644,7 +565,7 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
         {
             forAll(allNTrans[i], j)
             {
-                if (allNTrans[i][j])
+                if (allNTrans[i][i])
                 {
                     transferred = true;
                     break;
@@ -683,99 +604,41 @@ void CML::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
                 {
                     ParticleType& newp = newpIter();
 
-                    label patchI = procPatches[receivePatchIndex[pI++]];
+                    label patchi = procPatches[receivePatchIndex[pI++]];
 
-                    newp.correctAfterParallelTransfer(patchI, td);
+                    newp.correctAfterParallelTransfer(patchi, td);
 
                     addParticle(newParticles.remove(&newp));
                 }
             }
         }
     }
-
-    if (cloud::debug)
-    {
-        reduce(nTrackingRescues_, sumOp<label>());
-
-        if (nTrackingRescues_ > 0)
-        {
-            Info<< nTrackingRescues_ << " tracking rescue corrections" << endl;
-        }
-    }
 }
 
 
 template<class ParticleType>
-template<class TrackData>
-void CML::Cloud<ParticleType>::autoMap
-(
-    TrackData& td,
-    const mapPolyMesh& mapper
-)
+void CML::Cloud<ParticleType>::autoMap(const mapPolyMesh& mapper)
 {
-    if (cloud::debug)
+    if (!globalPositionsPtr_.valid())
     {
-        Info<< "Cloud<ParticleType>::autoMap(TrackData&, const mapPolyMesh&) "
-            << "for lagrangian cloud " << cloud::name() << endl;
+        FatalErrorInFunction
+            << "Global positions are not available. "
+            << "Cloud::storeGlobalPositions has not been called."
+            << exit(FatalError);
     }
-
-    const labelList& reverseCellMap = mapper.reverseCellMap();
-    const labelList& reverseFaceMap = mapper.reverseFaceMap();
-
-    // Reset stored data that relies on the mesh
-//    polyMesh_.clearCellTree();
-    cellWallFacesPtr_.clear();
 
     // Ask for the tetBasePtIs to trigger all processors to build
     // them, otherwise, if some processors have no particles then
     // there is a comms mismatch.
     polyMesh_.tetBasePtIs();
 
+    const vectorField& positions = globalPositionsPtr_();
 
-    forAllIter(typename Cloud<ParticleType>, *this, pIter)
+    label i = 0;
+    forAllIter(typename Cloud<ParticleType>, *this, iter)
     {
-        ParticleType& p = pIter();
-
-        if (reverseCellMap[p.cell()] >= 0)
-        {
-            p.cell() = reverseCellMap[p.cell()];
-
-            if (p.face() >= 0 && reverseFaceMap[p.face()] >= 0)
-            {
-                p.face() = reverseFaceMap[p.face()];
-            }
-            else
-            {
-                p.face() = -1;
-            }
-
-            p.initCellFacePt();
-        }
-        else
-        {
-            label trackStartCell = mapper.mergedCell(p.cell());
-
-            if (trackStartCell < 0)
-            {
-                trackStartCell = 0;
-                p.cell() = 0;
-            }
-            else
-            {
-                p.cell() = trackStartCell;
-            }
-
-            vector pos = p.position();
-
-            const_cast<vector&>(p.position()) =
-                polyMesh_.cellCentres()[trackStartCell];
-
-            p.stepFraction() = 0;
-
-            p.initCellFacePt();
-
-            p.track(pos, td);
-        }
+        iter().autoMap(positions[i], mapper);
+        ++i;
     }
 }
 
@@ -796,6 +659,27 @@ void CML::Cloud<ParticleType>::writePositions() const
     }
 
     pObj.flush();
+}
+
+
+template<class ParticleType>
+void CML::Cloud<ParticleType>::storeGlobalPositions() const
+{
+    // Store the global positions for later use by autoMap. It would be
+    // preferable not to need this. If the mapPolyMesh object passed to autoMap
+    // had a copy of the old mesh then the global positions could be recovered
+    // within autoMap, and this pre-processing would not be necessary.
+
+    globalPositionsPtr_.reset(new vectorField(this->size()));
+
+    vectorField& positions = globalPositionsPtr_();
+
+    label i = 0;
+    forAllConstIter(typename Cloud<ParticleType>, *this, iter)
+    {
+        positions[i] = iter().position();
+        ++ i;
+    }
 }
 
 
@@ -829,6 +713,16 @@ void CML::Cloud<ParticleType>::readCloudUniformProperties()
     if (dictObj.headerOk())
     {
         const IOdictionary uniformPropsDict(dictObj);
+
+        // Fall back to positions mode if the entry is not present for
+        // backwards compatibility
+        geometryType_ =
+            cloud::geometryTypeNames.lookupOrDefault
+            (
+                "geometry",
+                uniformPropsDict,
+                cloud::geometryType::POSITIONS
+            );
 
         const word procName("processor" + CML::name(Pstream::myProcNo()));
         if (uniformPropsDict.found(procName))
@@ -867,6 +761,12 @@ void CML::Cloud<ParticleType>::writeCloudUniformProperties() const
     Pstream::listCombineGather(np, maxEqOp<label>());
     Pstream::listCombineScatter(np);
 
+    uniformPropsDict.add
+    (
+        "geometry",
+        cloud::geometryTypeNames[geometryType_]
+    );
+
     forAll(np, i)
     {
         word procName("processor" + CML::name(i));
@@ -888,17 +788,12 @@ void CML::Cloud<ParticleType>::initCloud(const bool checkClass)
 {
     readCloudUniformProperties();
 
-    IOPosition<Cloud<ParticleType> > ioP(*this);
+    IOPosition<Cloud<ParticleType> > ioP(*this, geometryType_);
 
     if (ioP.headerOk())
     {
         ioP.readData(*this, checkClass);
         ioP.close();
-
-        if (this->size())
-        {
-            readFields();
-        }
     }
     else
     {
@@ -910,40 +805,17 @@ void CML::Cloud<ParticleType>::initCloud(const bool checkClass)
         }
     }
 
+    // Always operate in coordinates mode after reading
+    geometryType_ = cloud::geometryType::COORDINATES;
+
     // Ask for the tetBasePtIs to trigger all processors to build
     // them, otherwise, if some processors have no particles then
     // there is a comms mismatch.
     polyMesh_.tetBasePtIs();
-
-    forAllIter(typename Cloud<ParticleType>, *this, pIter)
-    {
-        ParticleType& p = pIter();
-
-        p.initCellFacePt();
-    }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class ParticleType>
-CML::Cloud<ParticleType>::Cloud
-(
-    const polyMesh& pMesh,
-    const bool checkClass
-)
-:
-    cloud(pMesh),
-    polyMesh_(pMesh),
-    labels_(),
-    nTrackingRescues_(),
-    cellWallFacesPtr_()
-{
-    checkPatches();
-
-    initCloud(checkClass);
-}
-
 
 template<class ParticleType>
 CML::Cloud<ParticleType>::Cloud
@@ -955,9 +827,8 @@ CML::Cloud<ParticleType>::Cloud
 :
     cloud(pMesh, cloudName),
     polyMesh_(pMesh),
-    labels_(),
-    nTrackingRescues_(),
-    cellWallFacesPtr_()
+    globalPositionsPtr_(),
+    geometryType_(cloud::geometryType::COORDINATES)
 {
     checkPatches();
 
@@ -996,11 +867,8 @@ void CML::Cloud<ParticleType>::checkFieldIOobject
 {
     if (data.size() != c.size())
     {
-        FatalErrorIn
-        (
-            "void Cloud<ParticleType>::checkFieldIOobject"
-            "(const Cloud<ParticleType>&, const IOField<DataType>&) const"
-        )   << "Size of " << data.name()
+        FatalErrorInFunction
+            << "Size of " << data.name()
             << " field " << data.size()
             << " does not match the number of particles " << c.size()
             << abort(FatalError);
@@ -1018,24 +886,13 @@ void CML::Cloud<ParticleType>::checkFieldFieldIOobject
 {
     if (data.size() != c.size())
     {
-        FatalErrorIn
-        (
-            "void Cloud<ParticleType>::checkFieldFieldIOobject"
-            "("
-                "const Cloud<ParticleType>&, "
-                "const CompactIOField<Field<DataType>, DataType>&"
-            ") const"
-        )   << "Size of " << data.name()
+        FatalErrorInFunction
+            << "Size of " << data.name()
             << " field " << data.size()
             << " does not match the number of particles " << c.size()
             << abort(FatalError);
     }
 }
-
-
-template<class ParticleType>
-void CML::Cloud<ParticleType>::readFields()
-{}
 
 
 template<class ParticleType>
@@ -1078,12 +935,9 @@ CML::Ostream& CML::operator<<(Ostream& os, const Cloud<ParticleType>& pc)
     pc.writeData(os);
 
     // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const Cloud<ParticleType>&)");
-
+    os.check(FUNCTION_NAME);
     return os;
 }
-
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

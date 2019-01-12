@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -67,10 +67,8 @@ void CML::faceSelections::faceZoneSelection::select
 
     if (readID == -1)
     {
-        FatalErrorIn
-        (
-            "faceSelections::faceZoneSelection::select(labelList&) const"
-        )   << "Cannot find faceZone " << zoneName_ << nl << "Valid zones are "
+        FatalErrorInFunction
+            << "Cannot find faceZone " << zoneName_ << nl << "Valid zones are "
             << mesh_.faceZones().names()
             << exit(FatalError);
     }
@@ -88,10 +86,8 @@ void CML::faceSelections::faceZoneSelection::select
         }
         else if (faceToZoneID[faceI] != zoneID)
         {
-            FatalErrorIn
-            (
-                "faceSelections::faceZoneSelection::select(labelList&) const"
-            )   << "Face " << faceI << " already in faceZone "
+            FatalErrorInFunction
+                << "Face " << faceI << " already in faceZone "
                 << faceToZoneID[faceI]
                 << exit(FatalError);
         }

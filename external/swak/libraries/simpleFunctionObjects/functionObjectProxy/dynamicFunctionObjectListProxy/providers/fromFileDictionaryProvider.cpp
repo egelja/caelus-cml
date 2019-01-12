@@ -60,7 +60,7 @@ namespace CML
         fileName fn=fileName_.expand();
         std::ifstream in(fn.c_str());
         if(!in.good()) {
-            FatalErrorIn("fromFileDictionaryProvider::getDictionaryText()")
+            FatalErrorInFunction
                 << "The file " << fn << " does not exist"
                     << endl
                     << exit(FatalError);

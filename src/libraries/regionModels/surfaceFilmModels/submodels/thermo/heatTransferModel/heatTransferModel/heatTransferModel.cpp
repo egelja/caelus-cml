@@ -39,21 +39,21 @@ defineRunTimeSelectionTable(heatTransferModel, dictionary);
 
 heatTransferModel::heatTransferModel
 (
-    const surfaceFilmModel& owner
+    surfaceFilmRegionModel& film
 )
 :
-    filmSubModelBase(owner)
+    filmSubModelBase(film)
 {}
 
 
 heatTransferModel::heatTransferModel
 (
-    const word& type,
-    const surfaceFilmModel& owner,
+    const word& modelType,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    filmSubModelBase(type, owner, dict)
+    filmSubModelBase(film, dict, typeName, modelType)
 {}
 
 

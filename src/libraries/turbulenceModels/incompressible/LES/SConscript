@@ -11,7 +11,7 @@ vanDriestDelta/vanDriestDelta.cpp
 LESModel/LESModel.cpp
 GenEddyVisc/GenEddyVisc.cpp
 GenSGSStress/GenSGSStress.cpp
-laminar/laminar.cpp
+laminar/LESLaminar.cpp
 kOmegaSSTDES/kOmegaSSTDES.cpp
 kOmegaSSTDDES/kOmegaSSTDDES.cpp
 SpalartAllmarasDES/SpalartAllmarasDES.cpp

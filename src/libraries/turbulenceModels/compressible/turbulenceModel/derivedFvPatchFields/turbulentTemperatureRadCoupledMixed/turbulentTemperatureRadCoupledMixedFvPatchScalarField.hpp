@@ -24,31 +24,45 @@ Class
 
 Description
     Mixed boundary condition for temperature and radiation heat transfer
-    to be used for in multiregion cases
+    to be used for in multiregion cases. Optional thin thermal layer
+    resistances can be specified through thicknessLayers and kappaLayers
+    entries.
 
-    Example usage:
-        myInterfacePatchName
-        {
-            type compressible::turbulentTemperatureRadCoupledMixed;
-            TNbr        T;      // name of T field on neighbour region
-            K           lookup;
-            KName       K;
-            QrNbr       Qr; // or none. Name of Qr field on neighbour region
-            Qr          Qr; // or none. Name of Qr field on local region
-            value       uniform 300;
-        }
+    The thermal conductivity \c kappa can either be retrieved from various
+    possible sources, as detailed in the class temperatureCoupledBase.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        Tnbr         | name of the field    | no | T
+        qrNbr      | name of the radiative flux in the nbr region | no | none
+        qr         | name of the radiative flux in this region | no | none
+        thicknessLayers | list of thicknesses per layer [m] | no |
+        kappaLayers  | list of thermal conductivites per layer [W/m/K] | no |
+        kappaMethod  | inherited from temperatureCoupledBase | inherited |
+        kappa        | inherited from temperatureCoupledBase | inherited |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        Tnbr            T;
+        qrNbr           qr; // or none. Name of qr field on neighbour region
+        qr              qr; // or none. Name of qr field on local region
+        thicknessLayers (0.1 0.2 0.3 0.4);
+        kappaLayers     (1 2 3 4);
+        kappaMethod     lookup;
+        kappa           kappa;
+        value           uniform 300;
+    }
+    \endverbatim
 
     Needs to be on underlying mapped(Wall)FvPatch.
 
-     Note: K : heat conduction at patch. Gets supplied how to lookup/calculate
-     K:
-    - 'lookup' : lookup volScalarField (or volSymmTensorField) with name
-    - 'basicThermo' : use basicThermo and compressible::RASmodel to calculate K
-    - 'solidThermo' : use basicSolidThermo K()
-    - 'directionalSolidThermo' directionalK()
-
-    Note: runs in parallel with arbitrary decomposition. Uses mapped
-    functionality to calculate exchange.
+See also
+    CML::temperatureCoupledBase
 
 SourceFiles
     turbulentTemperatureRadCoupledMixedFvPatchScalarField.cpp
@@ -60,6 +74,7 @@ SourceFiles
 
 #include "mixedFvPatchFields.hpp"
 #include "temperatureCoupledBase.hpp"
+#include "scalarList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -82,11 +97,20 @@ class turbulentTemperatureRadCoupledMixedFvPatchScalarField
         //- Name of field on the neighbour region
         const word TnbrName_;
 
-         //- Name of the radiative heat flux in the neighbout region
-        const word QrNbrName_;
+         //- Name of the radiative heat flux in the neighbor region
+        const word qrNbrName_;
 
         //- Name of the radiative heat flux in local region
-        const word QrName_;
+        const word qrName_;
+
+        //- Thickness of layers
+        scalarList thicknessLayers_;
+
+        //- Conductivity of layers
+        scalarList kappaLayers_;
+
+        //- Total contact resistance
+        scalar contactRes_;
 
 
 public:

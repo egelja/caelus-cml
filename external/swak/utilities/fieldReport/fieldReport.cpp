@@ -551,9 +551,9 @@ int main(int argc, char *argv[])
     doSets=args.options().found("doSets");
 
     if (!args.options().found("time") && !args.options().found("latestTime")) {
-        FatalErrorIn("main()")
+        FatalErrorInFunction
             << args.executable()
-                << ": time/latestTime option is required" << endl
+            << ": time/latestTime option is required" << endl
             << exit(FatalError);
     }
 
@@ -595,21 +595,21 @@ int main(int argc, char *argv[])
         //        found = found || reportAField<pointScalarField>(fieldName,mesh);
 
         if(!found) {
-            WarningIn(args.executable())
+            WarningInFunction
                 << "No field " << fieldName << " found at "
-                    << mesh.time().timeName()
-                    << endl;
+                << mesh.time().timeName()
+                << endl;
         } else {
             if(csv.valid()) {
                 if(oldCsvHeader=="") {
                     csv().write(csvHeader.c_str());
                 } else if(csvHeader!=oldCsvHeader) {
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Current and old CSV-header differ. "
-                            << "Probably the field changed the data-type"
-                            << endl
-                            << "Current: " << csvHeader << endl
-                            << "Old: " << oldCsvHeader << endl;
+                        << "Probably the field changed the data-type"
+                        << endl
+                        << "Current: " << csvHeader << endl
+                        << "Old: " << oldCsvHeader << endl;
                 }
                 csv().write(csvText.c_str());
                 csvText="";

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,8 +89,6 @@ public:
     // Member Functions
 
         // Access
-
-            virtual bool hasWallImpactDistance() const;
 
             inline const fvMesh& mesh() const;
 

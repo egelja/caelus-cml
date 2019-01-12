@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,18 +20,15 @@ License
 Class
     CML::veryInhomogeneousMixture
 
-Description
-    CML::veryInhomogeneousMixture
-
 SourceFiles
     veryInhomogeneousMixture.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef veryInhomogeneousMixture_H
-#define veryInhomogeneousMixture_H
+#ifndef veryInhomogeneousMixture_HPP
+#define veryInhomogeneousMixture_HPP
 
-#include "basicMultiComponentMixture.hpp"
+#include "basicCombustionMixture.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,32 +42,31 @@ namespace CML
 template<class ThermoType>
 class veryInhomogeneousMixture
 :
-    public basicMultiComponentMixture
+    public basicCombustionMixture
 {
-    // Private data
 
-        static const int nSpecies_ = 3;
-        static const char* specieNames_[3];
+    static const int nSpecies_ = 3;
+    static const char* specieNames_[3];
 
-        dimensionedScalar stoicRatio_;
+    dimensionedScalar stoicRatio_;
 
-        ThermoType fuel_;
-        ThermoType oxidant_;
-        ThermoType products_;
+    ThermoType fuel_;
+    ThermoType oxidant_;
+    ThermoType products_;
 
-        mutable ThermoType mixture_;
+    mutable ThermoType mixture_;
 
-        //- Mixture fraction
-        volScalarField& ft_;
+    //- Mixture fraction
+    volScalarField& ft_;
 
-        //- Fuel mass fraction
-        volScalarField& fu_;
+    //- Fuel mass fraction
+    volScalarField& fu_;
 
-        //- Regress variable
-        volScalarField& b_;
+    //- Regress variable
+    volScalarField& b_;
 
-        //- Construct as copy (not implemented)
-        veryInhomogeneousMixture(const veryInhomogeneousMixture<ThermoType>&);
+    //- Construct as copy (not implemented)
+    veryInhomogeneousMixture(const veryInhomogeneousMixture<ThermoType>&);
 
 
 public:
@@ -79,10 +75,13 @@ public:
     typedef ThermoType thermoType;
 
 
-    // Constructors
-
-        //- Construct from dictionary and mesh
-        veryInhomogeneousMixture(const dictionary&, const fvMesh&);
+    //- Construct from dictionary, mesh and phase name
+    veryInhomogeneousMixture
+    (
+        const dictionary&,
+        const fvMesh&,
+        const word&
+    );
 
 
     //- Destructor
@@ -92,125 +91,79 @@ public:
 
     // Member functions
 
-        const dimensionedScalar& stoicRatio() const
-        {
-            return stoicRatio_;
-        }
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "veryInhomogeneousMixture<" + ThermoType::typeName() + '>';
+    }
 
-        const ThermoType& mixture(const scalar, const scalar) const;
+    const dimensionedScalar& stoicRatio() const
+    {
+        return stoicRatio_;
+    }
 
-        const ThermoType& cellMixture(const label celli) const
-        {
-            return mixture(ft_[celli], fu_[celli]);
-        }
+    const ThermoType& mixture(const scalar, const scalar) const;
 
-        const ThermoType& patchFaceMixture
+    const ThermoType& cellMixture(const label celli) const
+    {
+        return mixture(ft_[celli], fu_[celli]);
+    }
+
+    const ThermoType& patchFaceMixture
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture
         (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            return mixture
-            (
-                ft_.boundaryField()[patchi][facei],
-                fu_.boundaryField()[patchi][facei]
-            );
-        }
+            ft_.boundaryField()[patchi][facei],
+            fu_.boundaryField()[patchi][facei]
+        );
+    }
 
-        const ThermoType& cellReactants(const label celli) const
-        {
-            return mixture(ft_[celli], ft_[celli]);
-        }
+    const ThermoType& cellReactants(const label celli) const
+    {
+        return mixture(ft_[celli], ft_[celli]);
+    }
 
-        const ThermoType& patchFaceReactants
+    const ThermoType& patchFaceReactants
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture
         (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            return mixture
-            (
-                ft_.boundaryField()[patchi][facei],
-                ft_.boundaryField()[patchi][facei]
-            );
-        }
+            ft_.boundaryField()[patchi][facei],
+            ft_.boundaryField()[patchi][facei]
+        );
+    }
 
-        const ThermoType& cellProducts(const label celli) const
-        {
-            scalar ft = ft_[celli];
-            return mixture(ft, fres(ft, stoicRatio().value()));
-        }
+    const ThermoType& cellProducts(const label celli) const
+    {
+        scalar ft = ft_[celli];
+        return mixture(ft, fres(ft, stoicRatio().value()));
+    }
 
-        const ThermoType& patchFaceProducts
-        (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            scalar ft = ft_.boundaryField()[patchi][facei];
-            return mixture(ft, fres(ft, stoicRatio().value()));
-        }
+    const ThermoType& patchFaceProducts
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        scalar ft = ft_.boundaryField()[patchi][facei];
+        return mixture(ft, fres(ft, stoicRatio().value()));
+    }
 
-        //- Read dictionary
-        void read(const dictionary&);
+    //- Read dictionary
+    void read(const dictionary&);
 
-        //- Return thermo based on index
-        const ThermoType& getLocalThermo(const label specieI) const;
+    //- Return thermo based on index
+    const ThermoType& getLocalThermo(const label speciei) const;
 
-
-        // Per specie properties
-
-            //- Number of moles []
-            virtual scalar nMoles(const label specieI) const;
-
-            //- Molecular weight [kg/kmol]
-            virtual scalar W(const label specieI) const;
-
-
-        // Per specie thermo properties
-
-            //- Heat capacity at constant pressure [J/(kg K)]
-            virtual scalar Cp(const label specieI, const scalar T) const;
-
-            //- Heat capacity at constant volume [J/(kg K)]
-            virtual scalar Cv(const label specieI, const scalar T) const;
-
-            //- Enthalpy [J/kg]
-            virtual scalar H(const label specieI, const scalar T) const;
-
-            //- Sensible enthalpy [J/kg]
-            virtual scalar Hs(const label specieI, const scalar T) const;
-
-            //- Chemical enthalpy [J/kg]
-            virtual scalar Hc(const label specieI) const;
-
-            //- Entropy [J/(kg K)]
-            virtual scalar S(const label specieI, const scalar T) const;
-
-            //- Internal energy [J/kg]
-            virtual scalar E(const label specieI, const scalar T) const;
-
-            //- Gibbs free energy [J/kg]
-            virtual scalar G(const label specieI, const scalar T) const;
-
-            //- Helmholtz free energy [J/kg]
-            virtual scalar A(const label specieI, const scalar T) const;
-
-
-        // Per specie transport properties
-
-            //- Dynamic viscosity [kg/m/s]
-            virtual scalar mu(const label specieI, const scalar T) const;
-
-            //- Thermal conductivity [W/m/K]
-            virtual scalar kappa(const label specieI, const scalar T) const;
-
-            //- Thermal diffusivity [kg/m/s]
-            virtual scalar alpha(const label specieI, const scalar T) const;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
@@ -220,7 +173,11 @@ public:
 
 template<class ThermoType>
 const char* CML::veryInhomogeneousMixture<ThermoType>::specieNames_[3] =
-    {"ft", "fu", "b"};
+{
+    "ft",
+    "fu",
+    "b"
+};
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -229,14 +186,16 @@ template<class ThermoType>
 CML::veryInhomogeneousMixture<ThermoType>::veryInhomogeneousMixture
 (
     const dictionary& thermoDict,
-    const fvMesh& mesh
+    const fvMesh& mesh,
+    const word& phaseName
 )
 :
-    basicMultiComponentMixture
+    basicCombustionMixture
     (
         thermoDict,
         speciesTable(nSpecies_, specieNames_),
-        mesh
+        mesh,
+        phaseName
     ),
 
     stoicRatio_(thermoDict.lookup("stoichiometricAirFuelMassRatio")),
@@ -271,9 +230,9 @@ const ThermoType& CML::veryInhomogeneousMixture<ThermoType>::mixture
         scalar ox = 1 - ft - (ft - fu)*stoicRatio().value();
         scalar pr = 1 - fu - ox;
 
-        mixture_ = fu/fuel_.W()*fuel_;
-        mixture_ += ox/oxidant_.W()*oxidant_;
-        mixture_ += pr/products_.W()*products_;
+        mixture_ = fu*fuel_;
+        mixture_ += ox*oxidant_;
+        mixture_ += pr*products_;
 
         return mixture_;
     }
@@ -295,31 +254,25 @@ void CML::veryInhomogeneousMixture<ThermoType>::read
 template<class ThermoType>
 const ThermoType& CML::veryInhomogeneousMixture<ThermoType>::getLocalThermo
 (
-    const label specieI
+    const label speciei
 ) const
 {
-    if (specieI == 0)
+    if (speciei == 0)
     {
         return fuel_;
     }
-    else if (specieI == 1)
+    else if (speciei == 1)
     {
         return oxidant_;
     }
-    else if (specieI == 2)
+    else if (speciei == 2)
     {
         return products_;
     }
     else
     {
-        FatalErrorIn
-        (
-            "const ThermoType& CML::veryInhomogeneousMixture<ThermoType>::"
-            "getLocalThermo"
-            "("
-                "const label "
-            ") const"
-        )   << "Unknown specie index " << specieI << ". Valid indices are 0..2"
+        FatalErrorInFunction
+            << "Unknown specie index " << speciei << ". Valid indices are 0..2"
             << abort(FatalError);
 
         return fuel_;
@@ -327,160 +280,4 @@ const ThermoType& CML::veryInhomogeneousMixture<ThermoType>::getLocalThermo
 }
 
 
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::nMoles
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).nMoles();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::W
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).W();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::Cp
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Cp(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::Cv
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Cv(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::H
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).H(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::Hs
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Hs(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::Hc
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).Hc();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::S
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).S(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::E
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).E(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::G
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).G(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::A
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).A(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::mu
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).mu(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::kappa
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).kappa(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::veryInhomogeneousMixture<ThermoType>::alpha
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).alpha(T);
-}
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

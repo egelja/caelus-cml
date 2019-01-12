@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2015 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -159,16 +159,8 @@ CML::autoPtr<CML::BlockLduSmoother<Type> > CML::BlockLduSmoother<Type>::New
 
     if (constructorIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "autoPtr<BlockLduSmoother> BlockLduSmoother::New\n"
-            "(\n"
-            "    const BlockLduMatrix<Type>& matrix,\n"
-            "    const dictionary& dict,\n"
-            "    const word keyword\n"
-            ")",
-            dict
-        )   << "Unknown matrix smoother " << smootherName
+        FatalIOErrorInFunction(dict)
+            << "Unknown matrix smoother " << smootherName
             << endl << endl
             << "Valid matrix smoothers are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

@@ -23,7 +23,7 @@ Class
 Description
     General set of labels of mesh quantity (points, cells, faces).
 
-    Contains various 'notImplemented' functions, but I do not want to make
+    Contains various 'NotImplemented' functions, but I do not want to make
     this class abstract since it is quite handy to work on topoSets.
 
 SourceFiles
@@ -215,8 +215,8 @@ public:
         //- Clone
         autoPtr<topoSet> clone() const
         {
-            notImplemented("autoPtr<topoSet> clone() const");
-            return autoPtr<topoSet>(NULL);
+            NotImplemented;
+            return autoPtr<topoSet>(nullptr);
         }
 
 

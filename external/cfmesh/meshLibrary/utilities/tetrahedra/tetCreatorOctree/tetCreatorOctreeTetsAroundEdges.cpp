@@ -234,11 +234,8 @@ void tetCreatorOctree::createTetsAroundEdges()
                             }
 
                             if( pos == -1 )
-                                FatalErrorIn
-                                (
-                                    "void tetCreatorOctree::"
-                                    "createTetsAroundEdges()"
-                                ) << "Cannot find cube position"
+                                FatalErrorInFunction
+                                  << "Cannot find cube position"
                                   << abort(FatalError);
 
                             # ifdef DEBUGTets

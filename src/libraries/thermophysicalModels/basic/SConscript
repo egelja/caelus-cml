@@ -3,40 +3,34 @@
 from build import build_lib
 Import('env')
 
-target = 'basicThermophysicalModels'
+target = 'fluidThermophysicalModels'
 
 sources = Split("""
-mixtures/basicMixture/basicMixture.cpp
-mixtures/basicMixture/basicMixtures.cpp
 basicThermo/basicThermo.cpp
-basicThermo/basicThermoNew.cpp
-psiThermo/basicPsiThermo/basicPsiThermo.cpp
-psiThermo/basicPsiThermo/basicPsiThermoNew.cpp
-psiThermo/hPsiThermo/hPsiThermos.cpp
-psiThermo/hsPsiThermo/hsPsiThermos.cpp
-psiThermo/ePsiThermo/ePsiThermos.cpp
-rhoThermo/basicRhoThermo/basicRhoThermo.cpp
-rhoThermo/basicRhoThermo/basicRhoThermoNew.cpp
-rhoThermo/hRhoThermo/hRhoThermos.cpp
-rhoThermo/hsRhoThermo/hsRhoThermos.cpp
-derivedFvPatchFields/fixedEnthalpy/fixedEnthalpyFvPatchScalarField.cpp
-derivedFvPatchFields/gradientEnthalpy/gradientEnthalpyFvPatchScalarField.cpp
-derivedFvPatchFields/mixedEnthalpy/mixedEnthalpyFvPatchScalarField.cpp
-derivedFvPatchFields/fixedInternalEnergy/fixedInternalEnergyFvPatchScalarField.cpp
-derivedFvPatchFields/gradientInternalEnergy/gradientInternalEnergyFvPatchScalarField.cpp
-derivedFvPatchFields/mixedInternalEnergy/mixedInternalEnergyFvPatchScalarField.cpp
-derivedFvPatchFields/wallHeatTransfer/wallHeatTransferFvPatchScalarField.cpp
+fluidThermo/fluidThermo.cpp
+psiThermo/psiThermo.cpp
+psiThermo/psiThermos.cpp
+rhoThermo/rhoThermo.cpp
+rhoThermo/rhoThermos.cpp
+rhoThermo/liquidThermo.cpp
+derivedFvPatchFields/fixedEnergy/fixedEnergyFvPatchScalarField.cpp
+derivedFvPatchFields/gradientEnergy/gradientEnergyFvPatchScalarField.cpp
+derivedFvPatchFields/mixedEnergy/mixedEnergyFvPatchScalarField.cpp
+derivedFvPatchFields/energyJump/energyJump/energyJumpFvPatchScalarField.cpp
+derivedFvPatchFields/energyJump/energyJumpAMI/energyJumpAMIFvPatchScalarField.cpp
 derivedFvPatchFields/isentropicTotalTemperature/isentropicTotalTemperatureFvPatchScalarField.cpp
 derivedFvPatchFields/temperatureDirectedInletOutletVelocity/temperatureDirectedInletOutletVelocityFvPatchVectorField.cpp
 """)
 
 caelus_inc = [
-'thermophysicalModels/specie/lnInclude'
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/thermophysicalProperties/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'specie'
+'specie',
+'thermophysicalProperties'
 ]
 
 build_lib(env,

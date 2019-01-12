@@ -335,11 +335,11 @@ void CloudValueExpressionDriver::scan_begin ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_!=NULL) {
-        FatalErrorIn("CloudValueExpressionDriver::scan_begin")
+    if(scanner_!=nullptr) {
+        FatalErrorInFunction
             << "Already existing scanner " << getHex(scanner_)
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -363,17 +363,17 @@ void CloudValueExpressionDriver::scan_end ()
        Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_==NULL) {
-        FatalErrorIn("CloudValueExpressionDriver::scan_end")
+    if(scanner_==nullptr) {
+        FatalErrorInFunction
             << "Uninitialized Scanner. Can't delete it"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
     yylex_destroy(scanner_);
 
-    scanner_=NULL;
+    scanner_=nullptr;
 //	    fclose (yyin);
 //    yy_delete_buffer(bufferCloud);
 }

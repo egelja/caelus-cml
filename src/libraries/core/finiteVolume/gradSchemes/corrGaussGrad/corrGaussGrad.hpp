@@ -66,7 +66,7 @@ public:
     {}
 
     CorrGaussGrad(fvMesh const& mesh, Istream& is) : gradScheme<Type>(mesh),
-        tinterpScheme_(NULL),
+        tinterpScheme_(nullptr),
         corrIter_(0)
     {
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::surfaceFilmModel
+    CML::regionModels::surfaceFilmModel
 
 Description
     Base class for surface film models
@@ -33,14 +33,8 @@ SourceFiles
 #ifndef surfaceFilmModel_H
 #define surfaceFilmModel_H
 
-#include "singleLayerRegion.hpp"
-
-#include "dimensionedVector.hpp"
 #include "runTimeSelectionTables.hpp"
-#include "volFieldsFwd.hpp"
-#include "DimensionedField.hpp"
-#include "labelList.hpp"
-#include "NamedEnum.hpp"
+#include "volFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,34 +42,13 @@ namespace CML
 {
 namespace regionModels
 {
-namespace surfaceFilmModels
-{
 
 /*---------------------------------------------------------------------------*\
                       Class surfaceFilmModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class surfaceFilmModel
-:
-    public singleLayerRegion
 {
-public:
-
-    // Data types
-
-        //- Enumeration listing the possible thermo types
-        enum thermoModelType
-        {
-            tmConstant,
-            tmSingleComponent
-        };
-
-        //- Named enumeration for the thermoType
-        static const NamedEnum<thermoModelType, 2> thermoModelTypeNames_;
-
-
-private:
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -85,28 +58,13 @@ private:
         void operator=(const surfaceFilmModel&);
 
 
-protected:
-
-    // Protected data
-
-
-        //- Acceleration due to gravity [m/s2]
-        const dimensionedVector& g_;
-
-        //- Thermo type
-        thermoModelType thermoModel_;
-
-
-    // Protected member functions
-
-        //- Read control parameters from dictionary
-        virtual bool read();
-
-
 public:
 
     //- Runtime type information
     TypeName("surfaceFilmModel");
+
+    //- Reference temperature for enthalpy
+    static const dimensionedScalar Tref;
 
 
     // Declare runtime constructor selection table
@@ -119,20 +77,15 @@ public:
              (
                 const word& modelType,
                 const fvMesh& mesh,
-                const dimensionedVector& g
+                const dimensionedVector& g,
+                const word& regionType
              ),
-             (modelType, mesh, g)
+             (modelType, mesh, g, regionType)
          );
 
-    // Constructors
 
-        //- Construct from type name, mesh and gravity vector
-        surfaceFilmModel
-        (
-            const word& modelType,
-            const fvMesh& mesh,
-            const dimensionedVector& g
-        );
+    //- Constructor
+    surfaceFilmModel();
 
 
     // Selectors
@@ -141,7 +94,8 @@ public:
         static autoPtr<surfaceFilmModel> New
         (
             const fvMesh& mesh,
-            const dimensionedVector& g
+            const dimensionedVector& g,
+            const word& regionType = "surfaceFilm"
         );
 
 
@@ -151,107 +105,38 @@ public:
 
     // Member Functions
 
-        // Access
-
-            //- Return the accleration due to gravity
-            inline const dimensionedVector& g() const;
-
-            //- Return the thermo type
-            inline const thermoModelType& thermoModel() const;
-
-            //- External hook to add sources to the film
-            virtual void addSources
-            (
-                const label patchI,
-                const label faceI,
-                const scalar massSource,
-                const vector& momentumSource,
-                const scalar pressureSource,
-                const scalar energySource
-            ) = 0;
-
-
         // Solution parameters
 
             //- Courant number evaluation
-            virtual scalar CourantNumber() const;
+            virtual scalar CourantNumber() const = 0;
 
 
-        // Fields
+        // Primary region source fields
 
-            //- Return the film thickness [m]
-            virtual const volScalarField& delta() const = 0;
+            //- Return total mass source - Eulerian phase only
+            virtual tmp<DimensionedField<scalar, volMesh> > Srho() const = 0;
 
-            //- Return the film velocity [m/s]
-            virtual const volVectorField& U() const = 0;
+            //- Return mass source for specie i - Eulerian phase only
+            virtual tmp<DimensionedField<scalar, volMesh> > Srho
+            (
+                const label i
+            ) const = 0;
 
-            //- Return the film surface velocity [m/s]
-            virtual const volVectorField& Us() const = 0;
-
-            //- Return the film wall velocity [m/s]
-            virtual const volVectorField& Uw() const = 0;
-
-            //- Return the film density [kg/m3]
-            virtual const volScalarField& rho() const = 0;
-
-            //- Return the film mean temperature [K]
-            virtual const volScalarField& T() const = 0;
-
-            //- Return the film surface temperature [K]
-            virtual const volScalarField& Ts() const = 0;
-
-            //- Return the film wall temperature [K]
-            virtual const volScalarField& Tw() const = 0;
-
-            //- Return the film specific heat capacity [J/kg/K]
-            virtual const volScalarField& Cp() const = 0;
-
-            //- Return the film thermal conductivity [W/m/K]
-            virtual const volScalarField& kappa() const = 0;
-
-            //- Return the film surface tension [N/m]
-            virtual const volScalarField& sigma() const = 0;
+            //- Return enthalpy source - Eulerian phase only
+            virtual tmp<DimensionedField<scalar, volMesh> > Sh() const = 0;
 
 
-            // Transfer fields - to the primary region
+        // Evolution
 
-                //- Return mass transfer source - Eulerian phase only
-                virtual tmp<volScalarField> primaryMassTrans() const = 0;
-
-                //- Return the film mass available for transfer
-                virtual const volScalarField& cloudMassTrans() const = 0;
-
-                //- Return the parcel diameters originating from film
-                virtual const volScalarField& cloudDiameterTrans() const = 0;
-
-
-        // Source fields
-
-            // Mapped into primary region
-
-                //- Return total mass source - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh> > Srho() const;
-
-                //- Return mass source for specie i - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh> > Srho
-                (
-                    const label i
-                ) const;
-
-                //- Return enthalpy source - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh> > Sh() const;
+            //- Main driver routing to evolve the region - calls other evolves
+            virtual void evolve() = 0;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace surfaceFilmModels
 } // End namespace regionModels
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "surfaceFilmModelI.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

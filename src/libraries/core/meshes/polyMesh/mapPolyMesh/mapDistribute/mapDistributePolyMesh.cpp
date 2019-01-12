@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,7 +45,7 @@ void CML::mapDistributePolyMesh::calcPatchSizes()
 
         if (min(oldPatchSizes_) < 0)
         {
-            FatalErrorIn("mapDistributePolyMesh::calcPatchSizes()")
+            FatalErrorInFunction
                 << "Calculated negative old patch size:" << oldPatchSizes_ << nl
                 << "Error in mapping data" << abort(FatalError);
         }

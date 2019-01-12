@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -139,6 +139,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -179,14 +180,8 @@ CML::NonSphereDragForce<CloudType>::NonSphereDragForce
 {
     if (phi_ <= 0 || phi_ > 1)
     {
-        FatalErrorIn
-        (
-            "NonSphereDrag<CloudType>::NonSphereDrag"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Ratio of surface of sphere having same volume as particle to "
+        FatalErrorInFunction
+            << "Ratio of surface of sphere having same volume as particle to "
             << "actual surface area of particle (phi) must be greater than 0 "
             << "and less than or equal to 1" << exit(FatalError);
     }
@@ -221,13 +216,14 @@ template<class CloudType>
 CML::forceSuSp CML::NonSphereDragForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     value.Sp() = mass*0.75*muc*CdRe(Re)/(p.rho()*sqr(p.d()));
 

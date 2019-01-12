@@ -20,8 +20,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "alphatFilmWFFvPatchScalarField.hpp"
-#include "RASModel.hpp"
-#include "surfaceFilmModel.hpp"
+#include "compressibleRASModel.hpp"
+#include "surfaceFilmRegionModel.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"
@@ -130,60 +130,60 @@ void alphatFilmWallFunctionFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel modelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel modelType;
 
     // Since we're inside initEvaluate/evaluate there might be processor
     // comms underway. Change the tag we use.
     int oldTag = UPstream::msgType();
     UPstream::msgType() = oldTag+1;
 
-    bool ok =
-        db().objectRegistry::foundObject<modelType>("surfaceFilmProperties");
+    bool foundFilm =
+        db().time().foundObject<modelType>("surfaceFilmProperties");
 
-    if (!ok)
+    if (!foundFilm)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return;
     }
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     // Retrieve phase change mass from surface film model
     const modelType& filmModel =
-        db().objectRegistry::lookupObject<modelType>("surfaceFilmProperties");
+        db().time().lookupObject<modelType>("surfaceFilmProperties");
 
-    const label filmPatchI = filmModel.regionPatchID(patchI);
+    const label filmPatchi = filmModel.regionPatchID(patchi);
 
     tmp<volScalarField> mDotFilm(filmModel.primaryMassTrans());
-    scalarField mDotFilmp = mDotFilm().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, mDotFilmp);
+    scalarField mDotFilmp = mDotFilm().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, mDotFilmp);
 
     // Retrieve RAS turbulence model
-    const RASModel& rasModel = db().lookupObject<RASModel>("RASProperties");
+    const RASModel& turbModel = db().lookupObject<RASModel>("RASProperties");
 
-    const scalarField& y = rasModel.y()[patchI];
-    const scalarField& rhow = rasModel.rho().boundaryField()[patchI];
-    const tmp<volScalarField> tk = rasModel.k();
+    const scalarField& y = turbModel.y()[patchi];
+    const scalarField& rhow = turbModel.rho().boundaryField()[patchi];
+    const tmp<volScalarField> tk = turbModel.k();
     const volScalarField& k = tk();
-    const scalarField& muw = rasModel.mu().boundaryField()[patchI];
-    const scalarField& alphaw = rasModel.alpha().boundaryField()[patchI];
+    const scalarField& muw = turbModel.mu().boundaryField()[patchi];
+    const scalarField& alphaw = turbModel.alpha().boundaryField()[patchi];
 
     const scalar Cmu25 = pow(Cmu_, 0.25);
 
     // Populate alphat field values
     scalarField& alphat = *this;
-    forAll(alphat, faceI)
+    forAll(alphat, facei)
     {
-        label faceCellI = patch().faceCells()[faceI];
+        label faceCelli = patch().faceCells()[facei];
 
-        scalar uTau = Cmu25*sqrt(k[faceCellI]);
+        scalar uTau = Cmu25*sqrt(k[faceCelli]);
 
-        scalar yPlus = y[faceI]*uTau/(muw[faceI]/rhow[faceI]);
+        scalar yPlus = y[facei]*uTau/(muw[facei]/rhow[facei]);
 
-        scalar Pr = muw[faceI]/alphaw[faceI];
+        scalar Pr = muw[facei]/alphaw[facei];
 
         scalar factor = 0.0;
-        scalar mStar = mDotFilmp[faceI]/(y[faceI]*uTau);
+        scalar mStar = mDotFilmp[facei]/(y[facei]*uTau);
         if (yPlus > yPlusCrit_)
         {
             scalar expTerm = exp(min(50.0, yPlusCrit_*mStar*Pr));
@@ -198,11 +198,11 @@ void alphatFilmWallFunctionFvPatchScalarField::updateCoeffs()
             factor = mStar/(expTerm - 1.0 + ROOTVSMALL);
         }
 
-        scalar dx = patch().deltaCoeffs()[faceI];
+        scalar dx = patch().deltaCoeffs()[facei];
 
-        scalar alphaEff = dx*rhow[faceI]*uTau*factor;
+        scalar alphaEff = dx*rhow[facei]*uTau*factor;
 
-        alphat[faceI] = max(alphaEff - alphaw[faceI], 0.0);
+        alphat[facei] = max(alphaEff - alphaw[facei], 0.0);
     }
 
     // Restore tag
@@ -210,7 +210,6 @@ void alphatFilmWallFunctionFvPatchScalarField::updateCoeffs()
 
     fixedValueFvPatchScalarField::updateCoeffs();
 }
-
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

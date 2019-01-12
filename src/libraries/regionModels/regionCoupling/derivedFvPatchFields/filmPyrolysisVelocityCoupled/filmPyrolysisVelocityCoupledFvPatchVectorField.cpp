@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,7 +23,7 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "surfaceFields.hpp"
 #include "pyrolysisModel.hpp"
-#include "surfaceFilmModel.hpp"
+#include "surfaceFilmRegionModel.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -35,9 +35,10 @@ filmPyrolysisVelocityCoupledFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(p, iF),
+    filmRegionName_("surfaceFilmProperties"),
+    pyrolysisRegionName_("pyrolysisProperties"),
     phiName_("phi"),
-    rhoName_("rho"),
-    deltaWet_(1e-6)
+    rhoName_("rho")
 {}
 
 
@@ -51,9 +52,10 @@ filmPyrolysisVelocityCoupledFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(ptf, p, iF, mapper),
+    filmRegionName_(ptf.filmRegionName_),
+    pyrolysisRegionName_(ptf.pyrolysisRegionName_),
     phiName_(ptf.phiName_),
-    rhoName_(ptf.rhoName_),
-    deltaWet_(ptf.deltaWet_)
+    rhoName_(ptf.rhoName_)
 {}
 
 
@@ -65,13 +67,18 @@ filmPyrolysisVelocityCoupledFvPatchVectorField
     const dictionary& dict
 )
 :
-    fixedValueFvPatchVectorField(p, iF),
+    fixedValueFvPatchVectorField(p, iF, dict),
+    filmRegionName_
+    (
+        dict.lookupOrDefault<word>("filmRegion", "surfaceFilmProperties")
+    ),
+    pyrolysisRegionName_
+    (
+        dict.lookupOrDefault<word>("pyrolysisRegion", "pyrolysisProperties")
+    ),
     phiName_(dict.lookupOrDefault<word>("phi", "phi")),
-    rhoName_(dict.lookupOrDefault<word>("rho", "rho")),
-    deltaWet_(dict.lookupOrDefault<scalar>("deltaWet", 1e-6))
-{
-    fvPatchVectorField::operator=(vectorField("value", dict, p.size()));
-}
+    rhoName_(dict.lookupOrDefault<word>("rho", "rho"))
+{}
 
 
 CML::filmPyrolysisVelocityCoupledFvPatchVectorField::
@@ -81,9 +88,10 @@ filmPyrolysisVelocityCoupledFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(fpvpvf),
+    filmRegionName_(fpvpvf.filmRegionName_),
+    pyrolysisRegionName_(fpvpvf.pyrolysisRegionName_),
     phiName_(fpvpvf.phiName_),
-    rhoName_(fpvpvf.rhoName_),
-    deltaWet_(fpvpvf.deltaWet_)
+    rhoName_(fpvpvf.rhoName_)
 {}
 
 
@@ -95,9 +103,10 @@ filmPyrolysisVelocityCoupledFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(fpvpvf, iF),
+    filmRegionName_(fpvpvf.filmRegionName_),
+    pyrolysisRegionName_(fpvpvf.pyrolysisRegionName_),
     phiName_(fpvpvf.phiName_),
-    rhoName_(fpvpvf.rhoName_),
-    deltaWet_(fpvpvf.deltaWet_)
+    rhoName_(fpvpvf.rhoName_)
 {}
 
 
@@ -110,7 +119,9 @@ void CML::filmPyrolysisVelocityCoupledFvPatchVectorField::updateCoeffs()
         return;
     }
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel filmModelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel
+        filmModelType;
+
     typedef regionModels::pyrolysisModels::pyrolysisModel pyrModelType;
 
     // Since we're inside initEvaluate/evaluate there might be processor
@@ -118,65 +129,48 @@ void CML::filmPyrolysisVelocityCoupledFvPatchVectorField::updateCoeffs()
     int oldTag = UPstream::msgType();
     UPstream::msgType() = oldTag+1;
 
-    bool filmOk =
-        db().objectRegistry::foundObject<filmModelType>
-        (
-            "surfaceFilmProperties"
-        );
+    bool foundFilm = db().time().foundObject<filmModelType>(filmRegionName_);
 
+    bool foundPyrolysis =
+        db().time().foundObject<pyrModelType>(pyrolysisRegionName_);
 
-    bool pyrOk =
-        db().objectRegistry::foundObject<pyrModelType>
-        (
-            "pyrolysisProperties"
-        );
-
-    if (!filmOk || !pyrOk)
+    if (!foundFilm || !foundPyrolysis)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return;
     }
 
     vectorField& Up = *this;
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     // Retrieve film model
     const filmModelType& filmModel =
-        db().objectRegistry::lookupObject<filmModelType>
-        (
-            "surfaceFilmProperties"
-        );
+        db().time().lookupObject<filmModelType>(filmRegionName_);
 
-    const label filmPatchI = filmModel.regionPatchID(patchI);
+    const label filmPatchi = filmModel.regionPatchID(patchi);
 
-    scalarField deltaFilm = filmModel.delta().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, deltaFilm);
+    scalarField alphaFilm = filmModel.alpha().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, alphaFilm);
 
-    vectorField UFilm = filmModel.Us().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, UFilm);
-
+    vectorField UFilm = filmModel.Us().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, UFilm);
 
     // Retrieve pyrolysis model
     const pyrModelType& pyrModel =
-        db().objectRegistry::lookupObject<pyrModelType>
-        (
-            "pyrolysisProperties"
-        );
+        db().time().lookupObject<pyrModelType>(pyrolysisRegionName_);
 
-    const label pyrPatchI = pyrModel.regionPatchID(patchI);
+    const label pyrPatchi = pyrModel.regionPatchID(patchi);
 
-    scalarField phiPyr = pyrModel.phiGas().boundaryField()[pyrPatchI];
-    pyrModel.toPrimary(pyrPatchI, phiPyr);
+    scalarField phiPyr = pyrModel.phiGas().boundaryField()[pyrPatchi];
+    pyrModel.toPrimary(pyrPatchi, phiPyr);
 
 
     const surfaceScalarField& phi =
         db().lookupObject<surfaceScalarField>(phiName_);
 
     if (phi.dimensions() == dimVelocity*dimArea)
-    {
-        // do nothing
-    }
+    {}
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
@@ -185,10 +179,8 @@ void CML::filmPyrolysisVelocityCoupledFvPatchVectorField::updateCoeffs()
     }
     else
     {
-        FatalErrorIn
-        (
-            "filmPyrolysisVelocityCoupledFvPatchVectorField::updateCoeffs()"
-        )   << "Unable to process flux field phi with dimensions "
+        FatalErrorInFunction
+            << "Unable to process flux field phi with dimensions "
             << phi.dimensions() << nl
             << "    on patch " << patch().name()
             << " of field " << dimensionedInternalField().name()
@@ -199,19 +191,9 @@ void CML::filmPyrolysisVelocityCoupledFvPatchVectorField::updateCoeffs()
     const scalarField UAvePyr(-phiPyr/patch().magSf());
     const vectorField& nf = patch().nf();
 
-    forAll(deltaFilm, i)
-    {
-        if (deltaFilm[i] > deltaWet_)
-        {
-            // velocity set by film
-            Up[i] = UFilm[i];
-        }
-        else
-        {
-            // velocity set by pyrolysis model
-            Up[i] = UAvePyr[i]*nf[i];
-        }
-    }
+
+    // Evaluate velocity
+    Up = alphaFilm*UFilm + (1.0 - alphaFilm)*UAvePyr*nf;
 
     // Restore tag
     UPstream::msgType() = oldTag;
@@ -226,9 +208,22 @@ void CML::filmPyrolysisVelocityCoupledFvPatchVectorField::write
 ) const
 {
     fvPatchVectorField::write(os);
+    writeEntryIfDifferent<word>
+    (
+        os,
+        "filmRegion",
+        "surfaceFilmProperties",
+        filmRegionName_
+    );
+    writeEntryIfDifferent<word>
+    (
+        os,
+        "pyrolysisRegion",
+        "pyrolysisProperties",
+        pyrolysisRegionName_
+    );
     writeEntryIfDifferent<word>(os, "phi", "phi", phiName_);
     writeEntryIfDifferent<word>(os, "rho", "rho", rhoName_);
-    os.writeKeyword("deltaWet") << deltaWet_ << token::END_STATEMENT << nl;
     writeEntry("value", os);
 }
 

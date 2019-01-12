@@ -35,7 +35,7 @@ CML::sprayCloud::sprayCloud()
 {}
 
 
-// * * * * * * * * * * * * * * * *  Destructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * *  Destructor   * * * * * * * * * * * * * * //
 
 CML::sprayCloud::~sprayCloud()
 {}

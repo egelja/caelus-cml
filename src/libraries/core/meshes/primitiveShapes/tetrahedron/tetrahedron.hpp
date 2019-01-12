@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -17,6 +17,16 @@ License
     You should have received a copy of the GNU General Public License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
+Class
+    CML::tetrahedron
+
+Description
+    A tetrahedron primitive.
+
+    Ordering of edges needs to be the same for a tetrahedron
+    class, a tetrahedron cell shape model and a tetCell.
+
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef tetrahedron_HPP
@@ -25,19 +35,18 @@ License
 #include "point.hpp"
 #include "primitiveFieldsFwd.hpp"
 #include "pointHit.hpp"
-#include "cachedRandom.hpp"
 #include "Random.hpp"
 #include "FixedList.hpp"
 #include "UList.hpp"
 #include "triPointRef.hpp"
+#include "boundBox.hpp"
+#include "barycentric.hpp"
 
 namespace CML
 {
 
 class Istream;
 class Ostream;
-class tetPoints;
-class plane;
 
 // Forward declaration of friend functions and operators
 
@@ -57,82 +66,18 @@ inline Ostream& operator<<
     const tetrahedron<Point, PointRef>&
 );
 
-typedef tetrahedron<point, const point&> tetPointRef;
+/*---------------------------------------------------------------------------*\
+                           class tetrahedron Declaration
+\*---------------------------------------------------------------------------*/
 
 template<class Point, class PointRef>
 class tetrahedron
 {
-public:
-
-    // Public typedefs
-
-        //- Storage type for tets originating from intersecting tets.
-        //  (can possibly be smaller than 200)
-        typedef FixedList<tetPoints, 200> tetIntersectionList;
-
-
-        // Classes for use in sliceWithPlane. What to do with decomposition
-        // of tet.
-
-            //- Dummy
-            class dummyOp
-            {
-            public:
-                inline void operator()(const tetPoints&);
-            };
-
-            //- Sum resulting volumes
-            class sumVolOp
-            {
-            public:
-                scalar vol_;
-
-                inline sumVolOp();
-
-                inline void operator()(const tetPoints&);
-            };
-
-            //- Store resulting tets
-            class storeOp
-            {
-                tetIntersectionList& tets_;
-                label& nTets_;
-
-            public:
-                inline storeOp(tetIntersectionList&, label&);
-
-                inline void operator()(const tetPoints&);
-            };
-
 private:
 
     // Private data
 
         PointRef a_, b_, c_, d_;
-
-        inline static point planeIntersection
-        (
-            const FixedList<scalar, 4>&,
-            const tetPoints&,
-            const label,
-            const label
-        );
-
-        template<class TetOp>
-        inline static void decomposePrism
-        (
-            const FixedList<point, 6>& points,
-            TetOp& op
-        );
-
-        template<class AboveTetOp, class BelowTetOp>
-        inline static void tetSliceWithPlane
-        (
-            const plane& pl,
-            const tetPoints& tet,
-            AboveTetOp& aboveOp,
-            BelowTetOp& belowOp
-        );
 
 
 public:
@@ -182,7 +127,7 @@ public:
             inline const Point& d() const;
 
             //- Return i-th face
-            inline triPointRef tri(const label faceI) const;
+            inline triPointRef tri(const label facei) const;
 
         // Properties
 
@@ -216,45 +161,26 @@ public:
             //  uniform distribution
             inline Point randomPoint(Random& rndGen) const;
 
-            //- Return a random point in the tetrahedron from a
-            //  uniform distribution
-            inline Point randomPoint(cachedRandom& rndGen) const;
+            //- Calculate the point from the given barycentric coordinates.
+            inline Point barycentricToPoint(const barycentric& bary) const;
 
-            //- Calculate the barycentric coordinates of the given
-            //  point, in the same order as a, b, c, d.  Returns the
-            //  determinant of the solution.
-            inline scalar barycentric
+            //- Calculate the barycentric coordinates from the given point
+            inline barycentric pointToBarycentric(const point& pt) const;
+
+            //- Calculate the barycentric coordinates from the given point.
+            //  Returns the determinant.
+            inline scalar pointToBarycentric
             (
                 const point& pt,
-                List<scalar>& bary
+                barycentric& bary
             ) const;
 
-            //- Return nearest point to p on  tetrahedron. Is p itself
+            //- Return nearest point to p on tetrahedron. Is p itself
             //  if inside.
             inline pointHit nearestPoint(const point& p) const;
 
             //- Return true if point is inside tetrahedron
             inline bool inside(const point& pt) const;
-
-            //- Decompose tet into tets above and below plane
-            template<class AboveTetOp, class BelowTetOp>
-            inline void sliceWithPlane
-            (
-                const plane& pl,
-                AboveTetOp& aboveOp,
-                BelowTetOp& belowOp
-            ) const;
-
-            //- Decompose tet into tets inside and outside other tet
-            inline void tetOverlap
-            (
-                const tetrahedron<Point, PointRef>& tetB,
-                tetIntersectionList& insideTets,
-                label& nInside,
-                tetIntersectionList& outsideTets,
-                label& nOutside
-            ) const;
-
 
             //- Return (min)containment sphere, i.e. the smallest sphere with
             //  all points inside. Returns pointHit with:
@@ -275,6 +201,9 @@ public:
             void gradNiGradNi(tensorField& buffer) const;
 
             void gradNiGradNj(tensorField& buffer) const;
+
+            //- Calculate the bounding box
+            boundBox bounds() const;
 
 
     // IOstream operators
@@ -304,107 +233,18 @@ public:
 #include "scalarField.hpp"
 
 template<class Point, class PointRef>
-void CML::tetrahedron<Point, PointRef>::tetOverlap
-(
-    const tetrahedron<Point, PointRef>& tetB,
-    tetIntersectionList& insideTets,
-    label& nInside,
-    tetIntersectionList& outsideTets,
-    label& nOutside
-) const
-{
-    // Work storage
-    tetIntersectionList cutInsideTets;
-    label nCutInside = 0;
-
-    nInside = 0;
-    storeOp inside(insideTets, nInside);
-    storeOp cutInside(cutInsideTets, nCutInside);
-
-    nOutside = 0;
-    storeOp outside(outsideTets, nOutside);
-
-
-    // Cut tetA with all inwards pointing faces of tetB. Any tets remaining
-    // in aboveTets are inside tetB.
-
-    {
-        // face0
-        plane pl0(tetB.b_, tetB.d_, tetB.c_);
-
-        // Cut and insert subtets into cutInsideTets (either by getting
-        // an index from freeSlots or by appending to insideTets) or
-        // insert into outsideTets
-        sliceWithPlane(pl0, cutInside, outside);
-    }
-
-    if (nCutInside == 0)
-    {
-        nInside = nCutInside;
-        return;
-    }
-
-    {
-        // face1
-        plane pl1(tetB.a_, tetB.c_, tetB.d_);
-
-        nInside = 0;
-
-        for (label i = 0; i < nCutInside; i++)
-        {
-            cutInsideTets[i].tet().sliceWithPlane(pl1, inside, outside);
-        }
-
-        if (nInside == 0)
-        {
-            return;
-        }
-    }
-
-    {
-        // face2
-        plane pl2(tetB.a_, tetB.d_, tetB.b_);
-
-        nCutInside = 0;
-
-        for (label i = 0; i < nInside; i++)
-        {
-            insideTets[i].tet().sliceWithPlane(pl2, cutInside, outside);
-        }
-
-        if (nCutInside == 0)
-        {
-            nInside = nCutInside;
-            return;
-        }
-    }
-
-    {
-        // face3
-        plane pl3(tetB.a_, tetB.b_, tetB.c_);
-
-        nInside = 0;
-
-        for (label i = 0; i < nCutInside; i++)
-        {
-            cutInsideTets[i].tet().sliceWithPlane(pl3, inside, outside);
-        }
-    }
-}
-
-
-// (Probably very inefficient) minimum containment sphere calculation.
-// From http://www.imr.sandia.gov/papers/imr11/shewchuk2.pdf:
-// Sphere ctr is smallest one of
-// - tet circumcentre
-// - triangle circumcentre
-// - edge mids
-template<class Point, class PointRef>
 CML::pointHit CML::tetrahedron<Point, PointRef>::containmentSphere
 (
     const scalar tol
 ) const
 {
+    // (Probably very inefficient) minimum containment sphere calculation.
+    // From http://www.imr.sandia.gov/papers/imr11/shewchuk2.pdf:
+    // Sphere ctr is smallest one of
+    // - tet circumcentre
+    // - triangle circumcentre
+    // - edge mids
+
     const scalar fac = 1 + tol;
 
     // Halve order of tolerance for comparisons of sqr.
@@ -699,6 +539,16 @@ void CML::tetrahedron<Point, PointRef>::gradNiGradNj
 }
 
 
+template<class Point, class PointRef>
+CML::boundBox CML::tetrahedron<Point, PointRef>::bounds() const
+{
+    return
+        boundBox
+        (
+            min(a(), min(b(), min(c(), d()))),
+            max(a(), max(b(), max(c(), d())))
+        );
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

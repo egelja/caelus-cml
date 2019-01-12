@@ -746,11 +746,8 @@ void CML::Distribution<Type>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::Distribution<Type>::operator="
-            "(const CML::Distribution<Type>&)"
-        )   << "Attempted assignment to self"
+        FatalErrorInFunction
+            << "Attempted assignment to self"
             << abort(FatalError);
     }
 

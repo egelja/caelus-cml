@@ -163,11 +163,11 @@ protected:
     // Protected Member Functions
 
         //- Construct and return an IFstream for the object.
-        //  The results is NULL if the stream construction failed
+        //  The results is nullptr if the stream construction failed
         Istream* objectStream();
 
         //- Construct and return an IFstream for the object given the
-        //  exact file. The results is NULL if the stream construction failed
+        //  exact file. The results is nullptr if the stream construction failed
         Istream* objectStream(const fileName&);
 
         //- Set the object state to bad
@@ -190,6 +190,15 @@ public:
             fileName& local,
             word& name
         );
+
+        template<class Name>
+        static inline word groupName(Name name, const word& group);
+
+        //- Return group (extension part of name)
+        static word group(const word& name);
+
+        //- Return member (name without the extension)
+        static word member(const word& name);
 
 
     // Constructors
@@ -316,6 +325,12 @@ public:
 
 
         // Path components
+
+            //- Return group (extension part of name)
+            word group() const;
+
+            //- Return member (name without the extension)
+            word member() const;
 
             const fileName& rootPath() const;
 

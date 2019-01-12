@@ -85,10 +85,8 @@ CML::polynomialFunction::polynomialFunction(const label order)
 {
     if (this->empty())
     {
-        FatalErrorIn
-        (
-            "polynomialFunction::polynomialFunction(const label order)"
-        )   << "polynomialFunction coefficients are invalid (empty)"
+        FatalErrorInFunction
+            << "polynomialFunction coefficients are invalid (empty)"
             << nl << exit(FatalError);
     }
 }
@@ -110,10 +108,8 @@ CML::polynomialFunction::polynomialFunction(const UList<scalar>& coeffs)
 {
     if (this->empty())
     {
-        FatalErrorIn
-        (
-            "polynomialFunction::polynomialFunction(const UList<scalar>&)"
-        )   << "polynomialFunction coefficients are invalid (empty)"
+        FatalErrorInFunction
+            << "polynomialFunction coefficients are invalid (empty)"
             << nl << exit(FatalError);
     }
 }
@@ -127,10 +123,8 @@ CML::polynomialFunction::polynomialFunction(Istream& is)
 {
     if (this->empty())
     {
-        FatalErrorIn
-        (
-            "polynomialFunction::polynomialFunction(Istream&)"
-        )   << "polynomialFunction coefficients are invalid (empty)"
+        FatalErrorInFunction
+            << "polynomialFunction coefficients are invalid (empty)"
             << nl << exit(FatalError);
     }
 }
@@ -188,14 +182,8 @@ CML::scalar CML::polynomialFunction::integrate
 
     if (logActive_)
     {
-        FatalErrorIn
-        (
-            "scalar polynomialFunction::integrate"
-            "("
-                "const scalar, "
-                "const scalar"
-            ") const"
-        )   << "Cannot integrate polynomial with logarithmic coefficients"
+        FatalErrorInFunction
+            << "Cannot integrate polynomial with logarithmic coefficients"
             << nl << abort(FatalError);
     }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ Description
     but they are local to a cell.
 
 SourceFiles
-    isoSurfaceCell.C
+    isoSurfaceCell.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -849,7 +849,7 @@ void CML::isoSurfaceCell::generateTriPoints
 
     if (countNotFoundTets > 0)
     {
-        WarningIn("CML::isoSurfaceCell::generateTriPoints")
+        WarningInFunction
             << "Could not find " << countNotFoundTets
             << " tet base points, which may lead to inverted triangles."
             << endl;

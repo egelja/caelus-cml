@@ -90,7 +90,7 @@ labelList triSurfFacets::findPatches(const word& patchName) const
     # ifdef DEBUGtriSurf
     if(patchIDs.empty())
     {
-        WarningIn("triSurfFacets::findPatches(const word&)")
+        WarningInFunction
             << "Cannot find any patch names matching " << patchName << endl;
     }
     # endif

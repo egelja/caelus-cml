@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -274,11 +274,8 @@ CML::scalar CML::solution::fieldRelaxationFactor(const word& name) const
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CML::solution::fieldRelaxationFactor(const word&)",
-            fieldRelaxDict_
-        )   << "Cannot find variable relaxation factor for '" << name
+        FatalIOErrorInFunction(fieldRelaxDict_)
+            << "Cannot find variable relaxation factor for '" << name
             << "' or a suitable default value."
             << exit(FatalIOError);
 
@@ -304,11 +301,8 @@ CML::scalar CML::solution::equationRelaxationFactor(const word& name) const
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CML::solution::eqnRelaxationFactor(const word&)",
-            eqnRelaxDict_
-        )   << "Cannot find equation relaxation factor for '" << name
+        FatalIOErrorInFunction(eqnRelaxDict_)
+            << "Cannot find equation relaxation factor for '" << name
             << "' or a suitable default value."
             << exit(FatalIOError);
 
@@ -334,7 +328,7 @@ const CML::dictionary& CML::solution::solverDict(const word& name) const
 {
     if (debug)
     {
-        InfoIn("solution::solverDict(const word&)")
+        InfoInFunction
             << "Lookup solver for " << name << endl;
     }
 
@@ -346,7 +340,7 @@ const CML::dictionary& CML::solution::solver(const word& name) const
 {
     if (debug)
     {
-        InfoIn("solution::solver(const word&)")
+        InfoInFunction
             << "Lookup solver for " << name << endl;
     }
 

@@ -93,7 +93,7 @@ class turbulentInletFvPatchField
         //- Random number generator
         Random ranGen_;
 
-        //- Fluctuation scake
+        //- Fluctuation scale
         Type fluctuationScale_;
 
         //- Reference field
@@ -380,7 +380,7 @@ void turbulentInletFvPatchField<Type>::updateCoeffs()
 
         forAll(patchField, facei)
         {
-            ranGen_.randomise(randomField[facei]);
+            randomField[facei] = ranGen_.sample01<Type>();
         }
 
         // Correction-factor to compensate for the loss of RMS fluctuation

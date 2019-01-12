@@ -23,7 +23,7 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-#include "hhuCombustionThermo.hpp"
+#include "psiuReactionThermo.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -93,23 +93,24 @@ void CML::gradientUnburntEnthalpyFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    const hhuCombustionThermo& thermo = db().lookupObject<hhuCombustionThermo>
+    const psiuReactionThermo& thermo = db().lookupObject<psiuReactionThermo>
     (
-        "thermophysicalProperties"
+        basicThermo::dictName
     );
 
     const label patchi = patch().index();
 
+    const scalarField& pw = thermo.p().boundaryField()[patchi];
     fvPatchScalarField& Tw =
         const_cast<fvPatchScalarField&>(thermo.Tu().boundaryField()[patchi]);
 
     Tw.evaluate();
 
-    gradient() = thermo.Cp(Tw, patchi)*Tw.snGrad()
+    gradient() = thermo.Cp(pw, Tw, patchi)*Tw.snGrad()
       + patch().deltaCoeffs()*
         (
-            thermo.hu(Tw, patchi)
-          - thermo.hu(Tw, patch().faceCells())
+            thermo.heu(pw, Tw, patchi)
+          - thermo.heu(pw, Tw, patch().faceCells())
         );
 
     fixedGradientFvPatchScalarField::updateCoeffs();
@@ -126,5 +127,3 @@ namespace CML
         gradientUnburntEnthalpyFvPatchScalarField
     );
 }
-
-// ************************************************************************* //

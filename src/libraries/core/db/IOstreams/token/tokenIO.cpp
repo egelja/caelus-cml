@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,7 +53,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const token& t)
     {
         case token::UNDEFINED:
             os << "UNDEFINED";
-            WarningIn("Ostream& operator<<(Ostream&, const token&)")
+            WarningInFunction
                 << "Undefined token" << endl;
         break;
 
@@ -88,13 +88,13 @@ CML::Ostream& CML::operator<<(Ostream& os, const token& t)
 
         case token::ERROR:
             os << "ERROR";
-            WarningIn("Ostream& operator<<(Ostream&, const token&)")
+            WarningInFunction
                 << "Error token" << endl;
         break;
 
         default:
             os << "UNKNOWN";
-            SeriousErrorIn("Ostream& operator<<(Ostream&, const token&)")
+            SeriousErrorInFunction
                 << "Unknown token"
                 << endl;
     }

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2015 OpenFOAM Foundation
+Copyright (C) 2015-2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -35,7 +36,6 @@ SourceFiles
 
 #include "PtrList.hpp"
 #include "fvMesh.hpp"
-#include "passiveParticleCloud.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,7 +45,7 @@ namespace CML
 class mapDistributePolyMesh;
 class mapDistributeBase;
 class IOobjectList;
-class passiveParticleCloud;
+class passivePositionParticleCloud;
 
 /*---------------------------------------------------------------------------*\
                     Class parLagrangianRedistributor Declaration
@@ -108,7 +108,7 @@ public:
         //- Redistribute and write lagrangian positions
         autoPtr<mapDistributeBase> redistributeLagrangianPositions
         (
-            passiveParticleCloud& cloud
+            passivePositionParticleCloud& cloud
         ) const;
 
         //- Read, redistribute and write lagrangian positions
@@ -149,7 +149,7 @@ public:
         template<class Container>
         static void readLagrangianFields
         (
-            const passiveParticleCloud& cloud,
+            const passivePositionParticleCloud& cloud,
             const IOobjectList& objects,
             const HashSet<word>& selectedFields
         );
@@ -159,7 +159,7 @@ public:
         void redistributeStoredLagrangianFields
         (
             const mapDistributeBase& map,
-            passiveParticleCloud& cloud
+            passivePositionParticleCloud& cloud
         ) const;
 
 };
@@ -176,6 +176,7 @@ public:
 #include "mapDistributePolyMesh.hpp"
 #include "cloud_.hpp"
 #include "CompactIOField.hpp"
+#include "passivePositionParticleCloud.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -251,7 +252,7 @@ void CML::parLagrangianRedistributor::redistributeLagrangianFields
                     IOobject::NO_WRITE,
                     false
                 ),
-                0
+                label(0)
             );
 
             map.distribute(field);
@@ -337,7 +338,7 @@ void CML::parLagrangianRedistributor::redistributeLagrangianFieldFields
                     IOobject::NO_WRITE,
                     false
                 ),
-                0
+                label(0)
             );
 
             // Distribute
@@ -369,7 +370,7 @@ void CML::parLagrangianRedistributor::redistributeLagrangianFieldFields
 template<class Container>
 void CML::parLagrangianRedistributor::readLagrangianFields
 (
-    const passiveParticleCloud& cloud,
+    const passivePositionParticleCloud& cloud,
     const IOobjectList& objects,
     const HashSet<word>& selectedFields
 )
@@ -405,7 +406,7 @@ void CML::parLagrangianRedistributor::readLagrangianFields
                     IOobject::READ_IF_PRESENT,
                     IOobject::NO_WRITE
                 ),
-                0
+                label(0)
             );
 
             fieldPtr->store();
@@ -418,7 +419,7 @@ template<class Container>
 void CML::parLagrangianRedistributor::redistributeStoredLagrangianFields
 (
     const mapDistributeBase& map,
-    passiveParticleCloud& cloud
+    passivePositionParticleCloud& cloud
 ) const
 {
     HashTable<Container*> fields

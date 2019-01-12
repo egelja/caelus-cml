@@ -1,3 +1,5 @@
+// Solve the Momentum equation
+
 MRF.correctBoundaryVelocity(U);
 
 tmp<fvVectorMatrix> tUEqn
@@ -6,14 +8,13 @@ tmp<fvVectorMatrix> tUEqn
   + MRF.DDt(rho, U)
   + turbulence->divDevRhoReff(U)
  ==
-    fvOptions(rho,U)
+    fvOptions(rho, U)
 );
-
 fvVectorMatrix& UEqn = tUEqn();
 
-fvOptions.constrain(UEqn);
-
 UEqn.relax();
+
+fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {

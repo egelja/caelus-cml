@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,11 +40,11 @@ addToRunTimeSelectionTable(phaseChangeModel, noPhaseChange, dictionary);
 
 noPhaseChange::noPhaseChange
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary&
 )
 :
-    phaseChangeModel(owner)
+    phaseChangeModel(film)
 {}
 
 
@@ -56,6 +56,12 @@ noPhaseChange::~noPhaseChange()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+bool noPhaseChange::active() const
+{
+    return false;
+}
+
+
 void noPhaseChange::correctModel
 (
     const scalar,
@@ -63,9 +69,7 @@ void noPhaseChange::correctModel
     scalarField&,
     scalarField&
 )
-{
-    // do nothing
-}
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

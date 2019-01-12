@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -143,11 +143,8 @@ CML::coordinateSystem::coordinateSystem
 
         if (index < 0)
         {
-            FatalErrorIn
-            (
-                "coordinateSystem::coordinateSystem"
-                "(const objectRegistry&, const dictionary&):"
-            )   << "could not find coordinate system: " << key << nl
+            FatalErrorInFunction
+                << "could not find coordinate system: " << key << nl
                 << "available coordinate systems: " << lst.toc() << nl << nl
                 << exit(FatalError);
         }

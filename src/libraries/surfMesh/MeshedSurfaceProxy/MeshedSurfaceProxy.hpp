@@ -227,10 +227,8 @@ void CML::MeshedSurfaceProxy<Face>::write
 
     if (mfIter == writefileExtensionMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "MeshedSurfaceProxy::write(const fileName&)"
-        )   << "Unknown file extension " << ext << nl << nl
+        FatalErrorInFunction
+            << "Unknown file extension " << ext << nl << nl
             << "Valid types are :" << endl
             << writeTypes()
             << exit(FatalError);

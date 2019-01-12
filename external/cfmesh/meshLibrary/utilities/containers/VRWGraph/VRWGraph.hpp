@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -45,7 +46,13 @@ SourceFiles
 namespace CML
 {
 
+// Forward declaration of friend functions and operators
+
 class VRWGraphModifier;
+class VRWGraph;
+
+Ostream& operator<<(Ostream&, const VRWGraph&);
+
 
 class rowElement
 {
@@ -271,21 +278,15 @@ inline void CML::VRWGraph::checkIndex(const label i, const label j) const
 {
     if( (i < 0) || (i >= rows_.size()) )
     {
-        FatalErrorIn
-        (
-            "void CML::VRWGraph<T,width>::"
-            "checkIndex(const label i, const label j) const"
-        ) << "Row index " << i
+        FatalErrorInFunction
+            << "Row index " << i
             << " is not in range " << 0
             << " and " << rows_.size() << abort(FatalError);
     }
 
     if( (j < 0) || (j >= rows_[i].size()) )
-        FatalErrorIn
-        (
-            "void CML::VRWGraph<T,width>::"
-            "checkIndex(label const, const label) const"
-        ) << "Column index " << j
+        FatalErrorInFunction
+            << "Column index " << j
             << " is not in range " << 0
             << " and " << rows_[i].size() << abort(FatalError);
 }
@@ -395,11 +396,8 @@ void CML::VRWGraph::setSizeAndColumnWidth
 )
 {
     if( rows_.size() != 0 )
-        FatalErrorIn
-        (
-            "void CML::VRWGraph::setSizeAndColumnWidth"
-            "(const label size, const label rcWidth)"
-        ) << "This function should be used for empty graphs, only!"
+        FatalErrorInFunction
+            << "This function should be used for empty graphs, only!"
             << exit(FatalError);
 
     data_.setSize(newNumRows * rcWidth);
@@ -449,11 +447,8 @@ inline void CML::VRWGraph::setRowSize(const label rowI, const label newSize)
 {
     # ifdef FULLDEBUG
     if( (rowI < 0) || (rowI >= rows_.size()) )
-        FatalErrorIn
-        (
-            "void CML::VRWGraph<T,width>::"
-            "checkIndex(const label rowI, const label size) const"
-        ) << "Row index " << CML::label(rowI)
+        FatalErrorInFunction
+            << "Row index " << CML::label(rowI)
             << " is not in range " << CML::label(0)
             << " and " << rows_.size() << abort(FatalError);
     # endif
@@ -614,10 +609,8 @@ inline void CML::VRWGraph::mergeGraphs(const List<VRWGraph>& graphParts)
     forAll(graphParts, i)
     {
         if( nRows != graphParts[i].size() )
-            FatalErrorIn
-            (
-                "inline void CML::VRWGraph::mergeGraphs(const List<VRWGraph>&)"
-            ) << "Cannot merge graphs" << abort(FatalError);
+            FatalErrorInFunction
+                << "Cannot merge graphs" << abort(FatalError);
     }
 
     //- find the number of elements in each row

@@ -207,11 +207,8 @@ void CML::slidingInterface::decoupleInterface
         {
             if (newFaceLabels.size() < 3)
             {
-                FatalErrorIn
-                (
-                    "void slidingInterface::decoupleInterface("
-                    "polyTopoChange& ref) const"
-                )   << "Face " << curFaceID << " reduced to less than "
+                FatalErrorInFunction
+                    << "Face " << curFaceID << " reduced to less than "
                     << "3 points.  Topological/cutting error." << nl
                     << "Old face: " << oldFace << " new face: " << newFaceLabels
                     << abort(FatalError);
@@ -337,11 +334,8 @@ void CML::slidingInterface::decoupleInterface
         {
             if (newFaceLabels.size() < 3)
             {
-                FatalErrorIn
-                (
-                    "void slidingInterface::decoupleInterface("
-                    "polyTopoChange& ref) const"
-                )   << "Face " << curFaceID << " reduced to less than "
+                FatalErrorInFunction
+                    << "Face " << curFaceID << " reduced to less than "
                     << "3 points.  Topological/cutting error." << nl
                     << "Old face: " << oldFace << " new face: " << newFaceLabels
                     << abort(FatalError);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,7 +79,7 @@ CML::UPstream::commsStruct::commsStruct
     }
     if (notI != allNotBelow_.size())
     {
-        FatalErrorIn("commsStruct") << "problem!" << CML::abort(FatalError);
+        FatalErrorInFunction << "problem!" << CML::abort(FatalError);
     }
 }
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -247,6 +247,12 @@ public:
             return parent_;
         }
 
+        //- Return whether this dictionary is null
+        bool isNull() const
+        {
+            return this == &null;
+        }
+
         //- Return the top of the tree
         const dictionary& topDict() const;
 
@@ -274,7 +280,7 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer if present
-            //  otherwise return NULL.
+            //  otherwise return nullptr.
             //  If recursive, search parent dictionaries.
             //  If patternMatch, use regular expressions
             const entry* lookupEntryPtr
@@ -285,7 +291,7 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer for manipulation
-            //  if present otherwise return NULL.
+            //  if present otherwise return nullptr.
             //  If recursive, search parent dictionaries.
             //  If patternMatch, use regular expressions.
             entry* lookupEntryPtr
@@ -367,7 +373,7 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer if present
-            //  otherwise return NULL. Allows scoping using '.'
+            //  otherwise return nullptr. Allows scoping using '.'
             const entry* lookupScopedEntryPtr
             (
                 const word&,
@@ -379,7 +385,7 @@ public:
             bool isDict(const word&) const;
 
             //- Find and return a sub-dictionary pointer if present
-            //  otherwise return NULL.
+            //  otherwise return nullptr.
             const dictionary* subDictPtr(const word&) const;
 
             //- Find and return a sub-dictionary
@@ -395,6 +401,10 @@ public:
                 const word&,
                 const bool mustRead = false
             ) const;
+
+            //- Find and return a sub-dictionary if found
+            //  otherwise return this dictionary
+            const dictionary& optionalSubDict(const word&) const;
 
             //- Return the table of contents
             wordList toc() const;
@@ -573,13 +583,10 @@ T CML::dictionary::lookupType
 {
     const entry* entryPtr = lookupEntryPtr(keyword, recursive, patternMatch);
 
-    if (entryPtr == NULL)
+    if (entryPtr == nullptr)
     {
-        FatalIOErrorIn
-        (
-           "CML::dictionary::lookupType(const word&, bool, bool) const",
-            *this
-        )   << "keyword " << keyword << " is undefined in dictionary "
+        FatalIOErrorInFunction(*this)
+            << "keyword " << keyword << " is undefined in dictionary "
             << name()
             << exit(FatalIOError);
     }

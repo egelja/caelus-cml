@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -113,7 +113,7 @@ bool CML::polyMeshZipUpCells(polyMesh& mesh)
                 }
                 else if (edgeUsage[edgeI] != 2)
                 {
-                    WarningIn("void polyMeshZipUpCells(polyMesh& mesh)")
+                    WarningInFunction
                         << "edge " << cellEdges[edgeI] << " in cell " << cellI
                         << " used " << edgeUsage[edgeI] << " times. " << nl
                         << "Should be 1 or 2 - serious error "
@@ -490,7 +490,7 @@ bool CML::polyMeshZipUpCells(polyMesh& mesh)
                     {
                         if (orderedEdge[checkI] == orderedEdge[checkJ])
                         {
-                            WarningIn("void polyMeshZipUpCells(polyMesh& mesh)")
+                            WarningInFunction
                                 << "Duplicate point found in edge to insert. "
                                 << nl << "Point: " << orderedEdge[checkI]
                                 << " edge: " << orderedEdge << endl;
@@ -684,13 +684,7 @@ bool CML::polyMeshZipUpCells(polyMesh& mesh)
                                 {
                                     if (newFace[checkI] == newFace[checkJ])
                                     {
-                                        WarningIn
-                                        (
-                                            "void polyMeshZipUpCells"
-                                            "("
-                                                "polyMesh& mesh"
-                                            ")"
-                                        )
+                                        WarningInFunction
                                             << "Duplicate point found "
                                             << "in the new face. " << nl
                                             << "Point: "
@@ -725,7 +719,7 @@ bool CML::polyMeshZipUpCells(polyMesh& mesh)
             labelList toc(problemCells.toc());
             sort(toc);
 
-            FatalErrorIn("void polyMeshZipUpCells(polyMesh& mesh)")
+            FatalErrorInFunction
                 << "Found " << problemCells.size() << " problem cells." << nl
                 << "Cells: " << toc
                 << abort(FatalError);
@@ -777,7 +771,7 @@ bool CML::polyMeshZipUpCells(polyMesh& mesh)
 
     if (nChangedFacesInMesh > 0)
     {
-        FatalErrorIn("void polyMeshZipUpCells(polyMesh& mesh)")
+        FatalErrorInFunction
             << "cell zip-up failed after 100 cycles.  Probable problem "
             << "with the original mesh"
             << abort(FatalError);

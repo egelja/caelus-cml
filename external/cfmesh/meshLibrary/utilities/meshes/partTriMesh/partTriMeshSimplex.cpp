@@ -107,11 +107,8 @@ partTriMeshSimplex::partTriMeshSimplex
             } break;
             default:
             {
-                FatalErrorIn
-                (
-                    "partTriMeshSimplex::partTriMeshSimplex("
-                    "(const partTriMesh& tm, const label pI)"
-                ) << "Point " << pI << " is not present in triangle" << tri
+                FatalErrorInFunction
+                    << "Point " << pI << " is not present in triangle" << tri
                     << abort(FatalError);
             }
         }

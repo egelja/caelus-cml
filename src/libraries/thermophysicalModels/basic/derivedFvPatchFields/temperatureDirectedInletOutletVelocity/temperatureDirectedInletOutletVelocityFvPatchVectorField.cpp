@@ -230,11 +230,8 @@ void temperatureDirectedInletOutletVelocityFvPatchVectorField::updateCoeffs()
     }
     else
     {
-        FatalErrorIn
-        (
-            "temperatureDirectedInletOutletVelocityFvPatchVectorField::"
-            "updateCoeffs()"
-        )   << "dimensions of phi are not correct"
+        FatalErrorInFunction
+            << "dimensions of phi are not correct"
             << "\n    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()
             << " in file " << this->dimensionedInternalField().objectPath()
@@ -271,4 +268,3 @@ makePatchTypeField
 );
 
 }
-

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -301,7 +301,7 @@ CML::PairCollisionRecord<Type>::PairCollisionRecord()
 :
     origProcOfOther_(0),
     origIdOfOther_(-1),
-    data_(pTraits<Type>::zero)
+    data_(Zero)
 {}
 
 
@@ -357,11 +357,7 @@ void CML::PairCollisionRecord<Type>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::PairCollisionRecord<Type>::operator="
-            "(const CML::PairCollisionRecord<Type>&)"
-        )
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }

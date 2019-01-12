@@ -38,7 +38,7 @@ namespace CML
 CML::distributionModels::fixedValue::fixedValue
 (
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 :
     distributionModel(typeName, dict, rndGen),

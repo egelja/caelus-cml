@@ -27,7 +27,8 @@ CML::memInfo::memInfo()
 :
     peak_(-1),
     size_(-1),
-    rss_(-1)
+    rss_(-1),
+    swap_(0)
 {
     update();
 }
@@ -45,6 +46,9 @@ const CML::memInfo& CML::memInfo::update()
 {
     // reset to invalid values first
     peak_ = size_ = rss_ = -1;
+    swap_ = 0;
+
+    #ifndef darwin
     IFstream is("/proc/" + name(pid()) + "/status");
 
     while (is.good())
@@ -58,18 +62,54 @@ const CML::memInfo& CML::memInfo::update()
         {
             if (!strcmp(tag, "VmPeak:"))
             {
-                peak_ = value;
+                peak_ = int(value);
             }
             else if (!strcmp(tag, "VmSize:"))
             {
-                size_ = value;
+                size_ = int(value);
             }
             else if (!strcmp(tag, "VmRSS:"))
             {
-                rss_ = value;
+                rss_ = int(value);
+            }
+            else if (!strcmp(tag, "VmSwap:"))
+            {
+                swap_ = int(value);
+            }
+            else if (!strcmp(tag, "VmSwap:"))
+            {
+                swap_ = value;
             }
         }
     }
+    #else
+    int mib[2];
+    int64_t physical_memory;
+    mib[0] = CTL_HW;
+    mib[1] = HW_MEMSIZE;
+    unsigned long length = sizeof(int64_t);
+    sysctl(mib, 2, &physical_memory, &length, NULL, 0);
+
+    struct task_basic_info t_info;
+    mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+    task_info
+    (
+        mach_task_self(),
+        TASK_BASIC_INFO,
+        (task_info_t)&t_info,
+        &t_info_count
+    );
+
+    size_ = int(t_info.virtual_size*0.0009765625);
+    peak_ = size_;
+    rss_ = int(t_info.resident_size*0.0009765625);
+    
+    if (rss_ > int(physical_memory*0.0009765625))
+    {
+        swap_ = rss_ - int(physical_memory*0.0009765625);
+    }
+
+    #endif
 
     return *this;
 }
@@ -80,6 +120,18 @@ bool CML::memInfo::valid() const
     return peak_ != -1;
 }
 
+
+bool CML::memInfo::swapping() const
+{
+    if (swap_ > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
@@ -104,7 +156,7 @@ CML::Istream& CML::operator>>(Istream& is, memInfo& m)
 CML::Ostream& CML::operator<<(Ostream& os, const memInfo& m)
 {
     os  << token::BEGIN_LIST
-        << m.peak_ << token::SPACE << m.size_ << token::SPACE << m.rss_
+        << m.peak() << token::SPACE << m.size() << token::SPACE << m.rss()
         << token::END_LIST;
 
     // Check state of Ostream

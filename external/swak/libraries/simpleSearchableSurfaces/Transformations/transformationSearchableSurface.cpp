@@ -63,7 +63,7 @@ CML::transformationSearchableSurface::transformationSearchableSurface
             false
         )
         :
-        NULL
+        nullptr
     ),
     delegate_(
         searchableSurface::New
@@ -165,7 +165,7 @@ CML::transformationSearchableSurface::coordinates() const
 //     point& linePoint
 // ) const
 // {
-//     notImplemented
+//     NotImplemented
 //     (
 //         "transformationSearchableSurface::findNearest"
 //         "(const linePointRef&, treeBoundBox&, point&)"
@@ -403,10 +403,7 @@ CML::tmp<CML::pointField> CML::transformationSearchableSurface::points() const
 
 bool CML::transformationSearchableSurface::overlaps(const boundBox& bb) const
 {
-    notImplemented
-        (
-            "CML::transformationSearchableSurface::overlaps(const boundBox&) const"
-        );
+    NotImplemented;
 
     return false;
 }

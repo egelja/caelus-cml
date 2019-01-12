@@ -92,15 +92,7 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
 {
     if (mag(z_) < SMALL)
     {
-        FatalErrorIn
-        (
-            "atmBoundaryLayerInletEpsilonFvPatchScalarField"
-            "("
-                "const fvPatch&, "
-                "const DimensionedField<scalar, volMesh>&, "
-                "const dictionary&"
-            ")"
-        )
+        FatalErrorInFunction
             << "magnitude of z vector must be greater than zero"
             << abort(FatalError);
     }

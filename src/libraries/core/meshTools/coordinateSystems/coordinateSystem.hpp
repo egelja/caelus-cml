@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -74,6 +74,14 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class coordinateSystem;
+
+bool operator!=(const coordinateSystem&, const coordinateSystem&);
+Ostream& operator<<(Ostream&, const coordinateSystem&);
+
 
 /*---------------------------------------------------------------------------*\
                      Class coordinateSystem Declaration

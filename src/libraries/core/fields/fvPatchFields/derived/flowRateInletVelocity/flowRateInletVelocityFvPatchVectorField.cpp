@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
- Copyright (C) 2011-2012 OpenFOAM Foundation
+ Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,14 +84,8 @@ flowRateInletVelocityFvPatchVectorField
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "flowRateInletVelocityFvPatchVectorField::"
-            "flowRateInletVelocityFvPatchVectorField"
-            "(const fvPatch&, const DimensionedField<vector, volMesh>&,"
-            " const dictionary&)",
-            dict
-        )   << "Please supply either 'volumetricFlowRate' or"
+        FatalIOErrorInFunction(dict)
+            << "Please supply either 'volumetricFlowRate' or"
             << " 'massFlowRate' and 'rho'" << exit(FatalIOError);
     }
 
@@ -175,10 +169,8 @@ void CML::flowRateInletVelocityFvPatchVectorField::updateCoeffs()
             // Use constant density
             if (rhoInlet_ < 0)
             {
-                FatalErrorIn
-                (
-                    "flowRateInletVelocityFvPatchVectorField::updateCoeffs()"
-                )   << "Did not find registered density field " << rhoName_
+                FatalErrorInFunction
+                    << "Did not find registered density field " << rhoName_
                     << " and no constant density 'rhoInlet' specified"
                     << exit(FatalError);
             }

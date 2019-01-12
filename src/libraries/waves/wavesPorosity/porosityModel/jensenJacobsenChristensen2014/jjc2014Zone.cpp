@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright Niels G. Jacobsen, Deltares.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -33,11 +34,8 @@ void CML::jjc2014Zone::checkNegativeResistance(dimensionedVector& resist)
 
     if (minCmpt < 0)
     {
-        FatalErrorIn
-        (
-            "CML::jjc2014Zone::jjc2014Zone::adjustNegativeResistance"
-            "(dimensionedVector&)"
-        )   << "negative resistances! " << resist
+        FatalErrorInFunction
+            << "negative resistances! " << resist
             << exit(FatalError);
     }
 }
@@ -70,25 +68,17 @@ CML::jjc2014Zone::jjc2014Zone
 
     if (!foundZone && Pstream::master())
     {
-        FatalErrorIn
-        (
-            "CML::jjc2014Zone::jjc2014Zone"
-            "(const fvMesh&, const word&, const dictionary&)"
-        )   << "cannot find porous cellZone " << name_
+        FatalErrorInFunction
+            << "cannot find porous cellZone " << name_
             << exit(FatalError);
     }
 
     // porosity
     if (porosity_ <= 0.0 || porosity_ > 1.0)
     {
-        FatalIOErrorIn
-        (
-                "CML::jjc2014Zone::jjc2014Zone"
-                "(const fvMesh&, const word&, const dictionary&)",
-                dict_
-        )
-        << "out-of-range porosity value " << porosity_
-        << exit(FatalIOError);
+        FatalIOErrorInFunction(dict_)
+            << "out-of-range porosity value " << porosity_
+            << exit(FatalIOError);
     }
 
     // local-to-global transformation tensor
@@ -98,14 +88,10 @@ CML::jjc2014Zone::jjc2014Zone
 
     if (D_.dimensions() != d.dimensions())
     {
-        FatalIOErrorIn
-        (
-            "CML::jjc2014Zone::jjc2014Zone"
-            "(const fvMesh&, const word&, const dictionary&)",
-            dict_
-        )   << "incorrect dimensions for d: " << d.dimensions()
-        << " should be " << D_.dimensions()
-        << exit(FatalIOError);
+        FatalIOErrorInFunction(dict_)
+            << "incorrect dimensions for d: " << d.dimensions()
+            << " should be " << D_.dimensions()
+            << exit(FatalIOError);
     }
 
     checkNegativeResistance(d);
@@ -120,14 +106,10 @@ CML::jjc2014Zone::jjc2014Zone
 
     if (F_.dimensions() != f.dimensions())
     {
-        FatalIOErrorIn
-        (
-            "CML::jjc2014Zone::jjc2014Zone"
-            "(const fvMesh&, const word&, const dictionary&)",
-            dict_
-        )   << "incorrect dimensions for f: " << f.dimensions()
-        << " should be " << F_.dimensions()
-        << exit(FatalIOError);
+        FatalIOErrorInFunction(dict_)
+            << "incorrect dimensions for f: " << f.dimensions()
+            << " should be " << F_.dimensions()
+            << exit(FatalIOError);
     }
 
     checkNegativeResistance(f);
@@ -144,12 +126,8 @@ CML::jjc2014Zone::jjc2014Zone
      && magSqr(F_.value()) <= VSMALL
     )
     {
-        FatalIOErrorIn
-        (
-            "CML::jjc2014Zone::jjc2014Zone"
-            "(const fvMesh&, const word&, const dictionary&)",
-            dict_
-        )   << "neither powerLaw (C0/C1) "
+        FatalIOErrorInFunction(dict_)
+            << "neither powerLaw (C0/C1) "
                "nor Darcy-Forchheimer law (d/f) specified"
             << exit(FatalIOError);
     }

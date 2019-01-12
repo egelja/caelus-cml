@@ -120,10 +120,8 @@ void stokesSecondProperties::set(Ostream& os)
     {
         Info << a1 << tab << 4.0*a2 << endl;
 
-        WarningIn
-        (
-            "void stokesSecondProperties::set(Ostream& os)"
-        ) << endl << "The validity of Stokes second order is violated." << endl
+        WarningInFunction
+          << endl << "The validity of Stokes second order is violated." << endl
           << endl;
     }
 }

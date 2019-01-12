@@ -40,7 +40,7 @@ namespace CML {
 
     label CellZoneValueExpressionDriver::pointSize() const
     {
-        notImplemented("CellZoneValueExpressionDriver::pointSize()");
+        NotImplemented;
         return 0;
     }
 

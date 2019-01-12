@@ -65,10 +65,8 @@ void meshUntangler::cutRegion::tieBreak(const DynList<label, 8>& f)
         return;
 
         Info << "Face vertices " << fvertices << endl;
-        FatalErrorIn
-        (
-            "void meshUntangler::cutRegion::tieBreak(const face& f)"
-        ) << "Number of created faces is not 1 but "
+        FatalErrorInFunction
+            << "Number of created faces is not 1 but "
             << fvertices.size() << abort(FatalError);
     }
 

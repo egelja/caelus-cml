@@ -28,7 +28,7 @@ License
 
 CML::cellShape CML::tetCell::tetCellShape() const
 {
-    static const cellModel* tetModelPtr_ = NULL;
+    static const cellModel* tetModelPtr_ = nullptr;
 
     if (!tetModelPtr_)
     {

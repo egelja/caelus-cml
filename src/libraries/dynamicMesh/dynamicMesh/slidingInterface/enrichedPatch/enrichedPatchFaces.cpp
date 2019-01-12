@@ -38,15 +38,8 @@ void CML::enrichedPatch::calcEnrichedFaces
 {
     if (enrichedFacesPtr_)
     {
-        FatalErrorIn
-        (
-            "void enrichedPatch::calcEnrichedFaces\n"
-            "(\n"
-            "    const labelListList& pointsIntoMasterEdges,\n"
-            "    const labelListList& pointsIntoSlaveEdges,\n"
-            "    const pointField& projectedSlavePoints\n"
-            ")"
-        )   << "Enriched faces already calculated."
+        FatalErrorInFunction
+            << "Enriched faces already calculated."
             << abort(FatalError);
     }
 
@@ -151,15 +144,8 @@ void CML::enrichedPatch::calcEnrichedFaces
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void enrichedPatch::calcEnrichedFaces\n"
-                        "(\n"
-                        "    const labelListList& pointsIntoMasterEdges,\n"
-                        "    const labelListList& pointsIntoSlaveEdges,\n"
-                        "    const pointField& projectedSlavePoints\n"
-                        ")"
-                    )   << "Zero length edge in slave patch for face " << i
+                    FatalErrorInFunction
+                        << "Zero length edge in slave patch for face " << i
                         << ".  This is not allowed."
                         << abort(FatalError);
                 }
@@ -180,15 +166,8 @@ void CML::enrichedPatch::calcEnrichedFaces
                     // Check weights: all new points should be on the edge
                     if (min(edgePointWeights) < 0 || max(edgePointWeights) > 1)
                     {
-                        FatalErrorIn
-                        (
-                            "void enrichedPatch::calcEnrichedFaces\n"
-                            "(\n"
-                            "    const labelListList& pointsIntoMasterEdges,\n"
-                            "    const labelListList& pointsIntoSlaveEdges,\n"
-                            "    const pointField& projectedSlavePoints\n"
-                            ")"
-                        )   << "Invalid point edge weights.  Some of points are"
+                        FatalErrorInFunction
+                            << "Invalid point edge weights.  Some of points are"
                             << " not on the edge for edge " << curEdges[i]
                             << " of face " << faceI << " in slave patch." << nl
                             << "Min weight: " << min(edgePointWeights)
@@ -302,15 +281,8 @@ void CML::enrichedPatch::calcEnrichedFaces
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void enrichedPatch::calcEnrichedFaces\n"
-                        "(\n"
-                        "    const labelListList& pointsIntoMasterEdges,\n"
-                        "    const labelListList& pointsIntoSlaveEdges,\n"
-                        "    const pointField& projectedSlavePoints\n"
-                        ")"
-                    )   << "Zero length edge in master patch for face " << i
+                    FatalErrorInFunction
+                        << "Zero length edge in master patch for face " << i
                         << ".  This is not allowed."
                         << abort(FatalError);
                 }
@@ -331,15 +303,8 @@ void CML::enrichedPatch::calcEnrichedFaces
                     // Check weights: all new points should be on the edge
                     if (min(edgePointWeights) < 0 || max(edgePointWeights) > 1)
                     {
-                        FatalErrorIn
-                        (
-                            "void enrichedPatch::calcEnrichedFaces\n"
-                            "(\n"
-                            "    const labelListList& pointsIntoMasterEdges,\n"
-                            "    const labelListList& pointsIntoSlaveEdges,\n"
-                            "    const pointField& projectedSlavePoints\n"
-                            ")"
-                        )   << "Invalid point edge weights.  Some of points are"
+                        FatalErrorInFunction
+                            << "Invalid point edge weights.  Some of points are"
                             << " not on the edge for edge " << curEdges[i]
                             << " of face " << faceI << " in master patch." << nl
                             << "Min weight: " << min(edgePointWeights)
@@ -399,15 +364,8 @@ void CML::enrichedPatch::calcEnrichedFaces
         }
         else
         {
-            FatalErrorIn
-            (
-                "void enrichedPatch::calcEnrichedFaces\n"
-                "(\n"
-                "    const labelListList& pointsIntoMasterEdges,\n"
-                "    const labelListList& pointsIntoSlaveEdges,\n"
-                "    const pointField& projectedSlavePoints\n"
-                ")"
-            )   << "Error in enriched patch support"
+            FatalErrorInFunction
+                << "Error in enriched patch support"
                 << abort(FatalError);
         }
     }
@@ -420,7 +378,7 @@ const CML::faceList& CML::enrichedPatch::enrichedFaces() const
 {
     if (!enrichedFacesPtr_)
     {
-        FatalErrorIn("const faceList& enrichedPatch::enrichedFaces() const")
+        FatalErrorInFunction
             << "Enriched faces not available yet.  Please use "
             << "void enrichedPatch::calcEnrichedFaces\n"
             << "(\n"

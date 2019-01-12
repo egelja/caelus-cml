@@ -176,19 +176,15 @@ void triSurfAddressing::calculateFacetEdges() const
         forAllRow(faceEdges, triI, feI)
         {
             if( facets_[triI][feI] < 0 || facets_[triI][feI] >= points_.size() )
-                FatalErrorIn
-                (
-                    "void triSurfAddressing::calculateFacetEdges() const"
-                ) << "Invalid entry in triangle " << triI
+                FatalErrorInFunction
+                  << "Invalid entry in triangle " << triI
                   << " " << facets_[triI] << abort(FatalError);
 
             const label edgeI = faceEdges(triI, feI);
 
             if( edgeI < 0 || edgeI >= edges.size() )
-                FatalErrorIn
-                (
-                    "void triSurfAddressing::calculateFacetEdges() const"
-                ) << "Invalid entry in face " << triI << " "
+                FatalErrorInFunction
+                     << "Invalid entry in face " << triI << " "
                      << facets_[triI] << " edges "
                      << faceEdges[triI] << abort(FatalError);
         }
@@ -311,15 +307,15 @@ triSurfAddressing::triSurfAddressing
 :
     points_(points),
     facets_(triangles),
-    pointFacetsPtr_(NULL),
-    edgesPtr_(NULL),
-    facetEdgesPtr_(NULL),
-    edgeFacetsPtr_(NULL),
-    pointEdgesPtr_(NULL),
-    facetFacetsEdgesPtr_(NULL),
-    pointNormalsPtr_(NULL),
-    facetNormalsPtr_(NULL),
-    facetCentresPtr_(NULL)
+    pointFacetsPtr_(nullptr),
+    edgesPtr_(nullptr),
+    facetEdgesPtr_(nullptr),
+    edgeFacetsPtr_(nullptr),
+    pointEdgesPtr_(nullptr),
+    facetFacetsEdgesPtr_(nullptr),
+    pointNormalsPtr_(nullptr),
+    facetNormalsPtr_(nullptr),
+    facetCentresPtr_(nullptr)
 
 {}
 

@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2015-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,25 +23,33 @@ Class
     CML::ConeNozzleInjection
 
 Description
-    Cone injection
+    Cone injection.
 
-    - User specifies
+    User specifies:
       - time of start of injection
       - injector position
       - direction (along injection axis)
       - parcel flow rate
       - inner and outer half-cone angles
 
-    - Parcel diameters obtained by size distribution model
+    Properties:
+      - Parcel diameters obtained by size distribution model.
 
-    - Parcel velocity is calculated as:
+      - Parcel velocity is calculated as:
+        - Constant velocity:
+          \verbatim
+          U = \<specified by user\>
+          \endverbatim
 
-        - Constant velocity
-            U = <specified by user>
-        - Pressure driven velocity
-            U = sqrt(2*(Pinj - Pamb)/rho)
-        - Flow rate and discharge
-            U = V_dot/(A*Cd)
+        - Pressure driven velocity:
+          \verbatim
+          U = sqrt(2*(Pinj - Pamb)/rho)
+          \endverbatim
+
+        - Flow rate and discharge:
+          \verbatim
+          U = V_dot/(A*Cd)
+          \endverbatim
 
 
 \*---------------------------------------------------------------------------*/
@@ -49,6 +58,7 @@ Description
 #define ConeNozzleInjection_H
 
 #include "InjectionModel.hpp"
+#include "Enum.hpp"
 #include "TimeDataEntry.hpp"
 #include "mathematicalConstants.hpp"
 #include "distributionModel.hpp"
@@ -77,19 +87,24 @@ class ConeNozzleInjection
 public:
 
     //- Injection method enumeration
-    enum injectionMethod
+    enum class injectionMethod
     {
         imPoint,
-        imDisc
+        imDisc,
+        imMovingPoint
     };
 
+    static const Enum<injectionMethod> injectionMethodNames;
+
     //- Flow type enumeration
-    enum flowType
+    enum class flowType
     {
         ftConstantVelocity,
         ftPressureDrivenVelocity,
         ftFlowRateAndDischarge
     };
+
+    static const Enum<flowType> flowTypeNames;
 
 
 private:
@@ -111,6 +126,9 @@ private:
         //- Injection duration [s]
         scalar duration_;
 
+        //- Position relative to SOI []
+        TimeDataEntry<vector> positionVsTime_;
+
         //- Injector position [m]
         vector position_;
 
@@ -118,10 +136,10 @@ private:
         label injectorCell_;
 
         //- Index of tet face for injector cell
-        label tetFaceI_;
+        label tetFacei_;
 
         //- Index of tet point for injector cell
-        label tetPtI_;
+        label tetPti_;
 
         //- Injector direction []
         vector direction_;
@@ -139,7 +157,7 @@ private:
         const TimeDataEntry<scalar> thetaOuter_;
 
         //- Parcel size PDF model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
 
         // Tangential vectors to the direction vector
@@ -150,7 +168,7 @@ private:
             //- Second tangential vector
             vector tanVec2_;
 
-            //- injection vector orthogonal to direction
+            //- Injection vector orthogonal to direction
             vector normal_;
 
 
@@ -233,8 +251,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -263,35 +281,57 @@ public:
 
 using namespace CML::constant;
 
+
+template<class CloudType>
+const CML::Enum
+<
+    typename CML::ConeNozzleInjection<CloudType>::injectionMethod
+>
+CML::ConeNozzleInjection<CloudType>::injectionMethodNames
+{
+    { injectionMethod::imPoint, "point" },
+    { injectionMethod::imDisc, "disc" },
+    { injectionMethod::imMovingPoint, "movingPoint" }
+};
+
+template<class CloudType>
+const CML::Enum
+<
+    typename CML::ConeNozzleInjection<CloudType>::flowType
+>
+CML::ConeNozzleInjection<CloudType>::flowTypeNames
+{
+    { flowType::ftConstantVelocity, "constantVelocity" },
+    { flowType::ftPressureDrivenVelocity, "pressureDrivenVelocity" },
+    { flowType::ftFlowRateAndDischarge, "flowRateAndDischarge" }
+};
+
+
 // * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
 void CML::ConeNozzleInjection<CloudType>::setInjectionMethod()
 {
-    word injectionMethodType = this->coeffDict().lookup("injectionMethod");
-    if (injectionMethodType == "disc")
+    switch (injectionMethod_)
     {
-        injectionMethod_ = imDisc;
-    }
-    else if (injectionMethodType == "point")
-    {
-        injectionMethod_ = imPoint;
-
-        // Set/cache the injector cell
-        this->findCellAtPosition
-        (
-            injectorCell_,
-            tetFaceI_,
-            tetPtI_,
-            position_,
-            false
-        );
-    }
-    else
-    {
-        FatalErrorIn("CML::InjectionModel<CloudType>::setInjectionMethod()")
-            << "injectionMethod must be either 'point' or 'disc'"
-            << exit(FatalError);
+        case injectionMethod::imPoint:
+        case injectionMethod::imDisc:
+        {
+            position_ = this->coeffDict().lookup("position");
+            break;
+        }
+        case injectionMethod::imMovingPoint:
+        {
+            positionVsTime_.reset(this->coeffDict());
+            break;
+        }
+        default:
+        {
+            FatalErrorInFunction
+                << "Unhandled injection method "
+                << injectionMethodNames[injectionMethod_]
+                << exit(FatalError);
+        }
     }
 }
 
@@ -299,28 +339,30 @@ void CML::ConeNozzleInjection<CloudType>::setInjectionMethod()
 template<class CloudType>
 void CML::ConeNozzleInjection<CloudType>::setFlowType()
 {
-    word flowType = this->coeffDict().lookup("flowType");
-    if (flowType == "constantVelocity")
+    switch (flowType_)
     {
-        this->coeffDict().lookup("UMag") >> UMag_;
-        flowType_ = ftConstantVelocity;
-    }
-    else if (flowType == "pressureDrivenVelocity")
-    {
-        Pinj_.reset(this->coeffDict());
-        flowType_ = ftPressureDrivenVelocity;
-    }
-    else if (flowType == "flowRateAndDischarge")
-    {
-        Cd_.reset(this->coeffDict());
-        flowType_ = ftFlowRateAndDischarge;
-    }
-    else
-    {
-        FatalErrorIn("CML::InjectionModel<CloudType>::setFlowType()")
-            << "flowType must be either 'constantVelocity', "
-            <<"'pressureDrivenVelocity' or 'flowRateAndDischarge'"
-            << exit(FatalError);
+        case flowType::ftConstantVelocity:
+        {
+            this->coeffDict().lookup("UMag") >> UMag_;
+            break;
+        }
+        case flowType::ftPressureDrivenVelocity:
+        {
+            Pinj_.reset(this->coeffDict());
+            break;
+        }
+        case flowType::ftFlowRateAndDischarge:
+        {
+            Cd_.reset(this->coeffDict());
+            break;
+        }
+        default:
+        {
+            FatalErrorInFunction
+                << "Unhandled flow type "
+                << flowTypeNames[flowType_]
+                << exit(FatalError);
+        }
     }
 }
 
@@ -336,15 +378,19 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
 )
 :
     InjectionModel<CloudType>(dict, owner, modelName, typeName),
-    injectionMethod_(imPoint),
-    flowType_(ftConstantVelocity),
+    injectionMethod_
+    (
+        injectionMethodNames.lookup("injectionMethod", this->coeffDict())
+    ),
+    flowType_(flowTypeNames.lookup("flowType", this->coeffDict())),
     outerDiameter_(readScalar(this->coeffDict().lookup("outerDiameter"))),
     innerDiameter_(readScalar(this->coeffDict().lookup("innerDiameter"))),
     duration_(readScalar(this->coeffDict().lookup("duration"))),
-    position_(this->coeffDict().lookup("position")),
+    positionVsTime_(owner.db().time(), "position"),
+    position_(vector::zero),
     injectorCell_(-1),
-    tetFaceI_(-1),
-    tetPtI_(-1),
+    tetFacei_(-1),
+    tetPti_(-1),
     direction_(this->coeffDict().lookup("direction")),
     parcelsPerSecond_
     (
@@ -379,15 +425,15 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
     ),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
         )
     ),
-    tanVec1_(vector::zero),
-    tanVec2_(vector::zero),
-    normal_(vector::zero),
+    tanVec1_(Zero),
+    tanVec2_(Zero),
+    normal_(Zero),
 
     UMag_(0.0),
     Cd_(owner.db().time(), "Cd"),
@@ -395,16 +441,11 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
 {
     if (innerDiameter_ >= outerDiameter_)
     {
-        FatalErrorIn
-        (
-            "CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection"
-            "("
-                "const dictionary&, "
-                "CloudType&, "
-                "const word&"
-            ")"
-        )<< "innerNozzleDiameter >= outerNozzleDiameter" << nl
-         << exit(FatalError);
+        FatalErrorInFunction
+            << "Inner diameter must be less than the outer diameter:" << nl
+            << "    innerDiameter: " << innerDiameter_ << nl
+            << "    outerDiameter: " << outerDiameter_
+            << exit(FatalError);
     }
 
     duration_ = owner.db().time().userTimeToTime(duration_);
@@ -413,25 +454,12 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
 
     setFlowType();
 
-    cachedRandom& rndGen = this->owner().rndGen();
-
     // Normalise direction vector
     direction_ /= mag(direction_);
 
     // Determine direction vectors tangential to direction
-    vector tangent = vector::zero;
-    scalar magTangent = 0.0;
-
-    while(magTangent < SMALL)
-    {
-        vector v = rndGen.sample01<vector>();
-
-        tangent = v - (v & direction_)*direction_;
-        magTangent = mag(tangent);
-    }
-
-    tanVec1_ = tangent/magTangent;
-    tanVec2_ = direction_^tanVec1_;
+    tanVec1_ = normalised(perpendicular(direction_));
+    tanVec2_ = normalised(direction_ ^ tanVec1_);
 
     // Set total volume to inject
     this->volumeTotal_ = flowRateProfile_.integrate(0.0, duration_);
@@ -452,10 +480,11 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
     outerDiameter_(im.outerDiameter_),
     innerDiameter_(im.innerDiameter_),
     duration_(im.duration_),
+    positionVsTime_(im.positionVsTime_),
     position_(im.position_),
     injectorCell_(im.injectorCell_),
-    tetFaceI_(im.tetFaceI_),
-    tetPtI_(im.tetPtI_),
+    tetFacei_(im.tetFacei_),
+    tetPti_(im.tetPti_),
     direction_(im.direction_),
     parcelsPerSecond_(im.parcelsPerSecond_),
     flowRateProfile_(im.flowRateProfile_),
@@ -463,7 +492,7 @@ CML::ConeNozzleInjection<CloudType>::ConeNozzleInjection
     thetaOuter_(im.thetaOuter_),
     sizeDistribution_(im.sizeDistribution_().clone().ptr()),
     tanVec1_(im.tanVec1_),
-    tanVec2_(im.tanVec1_),
+    tanVec2_(im.tanVec2_),
     normal_(im.normal_),
     UMag_(im.UMag_),
     Cd_(im.Cd_),
@@ -483,22 +512,24 @@ CML::ConeNozzleInjection<CloudType>::~ConeNozzleInjection()
 template<class CloudType>
 void CML::ConeNozzleInjection<CloudType>::updateMesh()
 {
-    // Set/cache the injector cells
+    // Set/cache the injector cell info for static methods
+
     switch (injectionMethod_)
     {
-        case imPoint:
+        case injectionMethod::imPoint:
         {
             this->findCellAtPosition
             (
                 injectorCell_,
-                tetFaceI_,
-                tetPtI_,
+                tetFacei_,
+                tetPti_,
                 position_
             );
+            break;
         }
         default:
         {
-            // do nothing
+            // Do nothing for the other methods
         }
     }
 }
@@ -552,32 +583,46 @@ void CML::ConeNozzleInjection<CloudType>::setPositionAndCell
 (
     const label,
     const label,
-    const scalar,
+    const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
-    cachedRandom& rndGen = this->owner().rndGen();
+    Random& rndGen = this->owner().rndGen();
 
-    scalar beta = mathematical::twoPi*rndGen.sample01<scalar>();
+    scalar beta = mathematical::twoPi*rndGen.globalScalar01();
     normal_ = tanVec1_*cos(beta) + tanVec2_*sin(beta);
 
     switch (injectionMethod_)
     {
-        case imPoint:
+        case injectionMethod::imPoint:
         {
             position = position_;
             cellOwner = injectorCell_;
-            tetFaceI = tetFaceI_;
-            tetPtI = tetPtI_;
+            tetFacei = tetFacei_;
+            tetPti = tetPti_;
 
             break;
         }
-        case imDisc:
+        case injectionMethod::imMovingPoint:
         {
-            scalar frac = rndGen.sample01<scalar>();
+            position = positionVsTime_.value(time - this->SOI_);
+
+            this->findCellAtPosition
+            (
+                cellOwner,
+                tetFacei,
+                tetPti,
+                position
+            );
+
+            break;
+        }
+        case injectionMethod::imDisc:
+        {
+            scalar frac = rndGen.globalScalar01();
             scalar dr = outerDiameter_ - innerDiameter_;
             scalar r = 0.5*(innerDiameter_ + frac*dr);
             position = position_ + r*normal_;
@@ -585,28 +630,18 @@ void CML::ConeNozzleInjection<CloudType>::setPositionAndCell
             this->findCellAtPosition
             (
                 cellOwner,
-                tetFaceI,
-                tetPtI,
-                position,
-                false
+                tetFacei,
+                tetPti,
+                position
             );
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "void CML::ConeNozzleInjection<CloudType>::setPositionAndCell"
-                "("
-                    "const label, "
-                    "const label, "
-                    "const scalar, "
-                    "vector&, "
-                    "label&, "
-                    "label&"
-                ")"
-            )<< "Unknown injectionMethod type" << nl
-             << exit(FatalError);
+            FatalErrorInFunction
+                << "Unhandled injection method "
+                << injectionMethodNames[injectionMethod_]
+                << exit(FatalError);
         }
     }
 }
@@ -621,9 +656,9 @@ void CML::ConeNozzleInjection<CloudType>::setProperties
     typename CloudType::parcelType& parcel
 )
 {
-    cachedRandom& rndGen = this->owner().rndGen();
+    Random& rndGen = this->owner().rndGen();
 
-    // set particle velocity
+    // Set particle velocity
     const scalar deg2Rad = mathematical::pi/180.0;
 
     scalar t = time - this->SOI_;
@@ -642,12 +677,12 @@ void CML::ConeNozzleInjection<CloudType>::setProperties
 
     switch (flowType_)
     {
-        case ftConstantVelocity:
+        case flowType::ftConstantVelocity:
         {
             parcel.U() = UMag_*dirVec;
             break;
         }
-        case ftPressureDrivenVelocity:
+        case flowType::ftPressureDrivenVelocity:
         {
             scalar pAmbient = this->owner().pAmbient();
             scalar rho = parcel.rho();
@@ -655,7 +690,7 @@ void CML::ConeNozzleInjection<CloudType>::setProperties
             parcel.U() = UMag*dirVec;
             break;
         }
-        case ftFlowRateAndDischarge:
+        case flowType::ftFlowRateAndDischarge:
         {
             scalar Ao = 0.25*mathematical::pi*outerDiameter_*outerDiameter_;
             scalar Ai = 0.25*mathematical::pi*innerDiameter_*innerDiameter_;
@@ -670,10 +705,14 @@ void CML::ConeNozzleInjection<CloudType>::setProperties
         }
         default:
         {
+            FatalErrorInFunction
+                << "Unhandled injection method "
+                << flowTypeNames[flowType_]
+                << exit(FatalError);
         }
     }
 
-    // set particle diameter
+    // Set particle diameter
     parcel.d() = sizeDistribution_->sample();
 }
 

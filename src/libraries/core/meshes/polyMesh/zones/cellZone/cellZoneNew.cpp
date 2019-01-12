@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,12 +46,8 @@ CML::autoPtr<CML::cellZone> CML::cellZone::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "cellZone::New(const word&, const dictionary&, "
-            "const label, const cellZoneMesh&)",
-            dict
-        )   << "Unknown cellZone type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown cellZone type "
             << zoneType << nl << nl
             << "Valid cellZone types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

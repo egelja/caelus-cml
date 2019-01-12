@@ -205,7 +205,7 @@ public:
                 return
                     tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
                     (
-                        NULL
+                        nullptr
                     );
             }
         }

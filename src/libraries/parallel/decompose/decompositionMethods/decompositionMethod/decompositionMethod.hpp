@@ -125,21 +125,14 @@ public:
                 const scalarField& pointWeights
             )
             {
-                notImplemented
-                (
-                    "decompositionMethod:decompose(const pointField&"
-                    ", const scalarField&)"
-                );
+                NotImplemented;
                 return labelList(0);
             }
 
             //- Like decompose but with uniform weights on the points
             virtual labelList decompose(const pointField&)
             {
-                notImplemented
-                (
-                    "decompositionMethod:decompose(const pointField&)"
-                );
+                NotImplemented;
                 return labelList(0);
             }
 

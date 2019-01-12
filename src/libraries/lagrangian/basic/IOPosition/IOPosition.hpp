@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +22,7 @@ Class
     CML::IOPosition
 
 Description
-    Helper IO class to read and write particle positions
+    Helper IO class to read and write particle coordinates (positions).
 
 SourceFiles
     IOPosition.cpp
@@ -31,6 +32,7 @@ SourceFiles
 #ifndef IOPosition_H
 #define IOPosition_H
 
+#include "cloud_.hpp"
 #include "regIOobject.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -47,8 +49,9 @@ class IOPosition
 :
     public regIOobject
 {
-
     // Private data
+
+        cloud::geometryType geometryType_;
 
         //- Reference to the cloud
         const CloudType& cloud_;
@@ -62,21 +65,24 @@ public:
         virtual const word& type() const
         {
             return Cloud<typename CloudType::particleType>::typeName;
-            //cloud_.type();
         }
 
 
     // Constructors
 
         //- Construct from cloud
-        IOPosition(const CloudType&);
+        IOPosition
+        (
+            const CloudType& c,
+            cloud::geometryType geomType = cloud::geometryType::COORDINATES
+        );
 
 
     // Member functions
-    
+
         //- Inherit readData from regIOobject
         using regIOobject::readData;
-    
+
         virtual void readData(CloudType& c, bool checkClass);
 
         virtual bool write() const;
@@ -89,22 +95,28 @@ public:
 
 } // End namespace CML
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::IOPosition<CloudType>::IOPosition(const CloudType& c)
+CML::IOPosition<CloudType>::IOPosition
+(
+    const CloudType& c,
+    cloud::geometryType geomType
+)
 :
     regIOobject
     (
         IOobject
         (
-            "positions",
+            cloud::geometryTypeNames[geomType],
             c.time().timeName(),
             c,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
     ),
+    geometryType_(geomType),
     cloud_(c)
 {}
 
@@ -130,14 +142,26 @@ bool CML::IOPosition<CloudType>::writeData(Ostream& os) const
 {
     os  << cloud_.size() << nl << token::BEGIN_LIST << nl;
 
-    forAllConstIter(typename CloudType, cloud_, iter)
+    switch (geometryType_)
     {
-        const typename CloudType::particleType& p = iter();
-
-        // Prevent writing additional fields
-        p.write(os, false);
-
-        os  << nl;
+        case cloud::geometryType::COORDINATES:
+        {
+            forAllConstIter(typename CloudType, cloud_, iter)
+            {
+                iter().writeCoordinates(os);
+                os  << nl;
+            }
+            break;
+        }
+        case cloud::geometryType::POSITIONS:
+        {
+            forAllConstIter(typename CloudType, cloud_, iter)
+            {
+                iter().writePosition(os);
+                os  << nl;
+            }
+            break;
+        }
     }
 
     os  << token::END_LIST << endl;
@@ -155,31 +179,39 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
 
     token firstToken(is);
 
+    const bool newFormat = (geometryType_ == cloud::geometryType::COORDINATES);
+
     if (firstToken.isLabel())
     {
         label s = firstToken.labelToken();
 
         // Read beginning of contents
-        is.readBeginList("IOPosition<CloudType>::readData(CloudType, bool)");
+        is.readBeginList(FUNCTION_NAME);
 
         for (label i=0; i<s; i++)
         {
-            // Do not read any fields, position only
-            c.append(new typename CloudType::particleType(mesh, is, false));
+            // Read position only
+            c.append
+            (
+                new typename CloudType::particleType
+                (
+                    mesh,
+                    is,
+                    false,
+                    newFormat
+                )
+            );
         }
 
         // Read end of contents
-        is.readEndList("IOPosition<CloudType>::readData(CloudType, bool)");
+        is.readEndList(FUNCTION_NAME);
     }
     else if (firstToken.isPunctuation())
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "void IOPosition<CloudType>::readData(CloudType&, bool)",
-                is
-            )   << "incorrect first token, '(', found "
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found "
                 << firstToken.info() << exit(FatalIOError);
         }
 
@@ -193,26 +225,24 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
         )
         {
             is.putBack(lastToken);
-            // Do not read any fields, position only
-            c.append(new typename CloudType::particleType(mesh, is, false));
+
+            // Read position only
+            c.append
+            (
+                new typename CloudType::particleType(mesh, is, false, newFormat)
+            );
             is  >> lastToken;
         }
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "void IOPosition<ParticleType>::readData(CloudType&, bool)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info() << exit(FatalIOError);
     }
 
     // Check state of IOstream
-    is.check
-    (
-        "void IOPosition<CloudType>::readData(CloudType&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 

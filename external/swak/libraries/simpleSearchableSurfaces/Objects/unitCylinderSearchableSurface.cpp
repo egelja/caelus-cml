@@ -169,10 +169,10 @@ void CML::unitCylinderSearchableSurface::findLineAll
     }
 
     if(cnt!=nr) {
-        FatalErrorIn("CML::unitCylinderSearchableSurface::findLineAll")
+        FatalErrorInFunction
             << "Expected number of hits " << nr << " does not match the actual "
-                << cnt << endl
-                << abort(FatalError);
+            << cnt << endl
+            << abort(FatalError);
     }
 
     for(label i=0;i<nr-1;i++) {
@@ -236,10 +236,7 @@ CML::unitCylinderSearchableSurface::coordinates() const
 
 bool CML::unitCylinderSearchableSurface::overlaps(const boundBox& bb) const
 {
-    notImplemented
-        (
-            "CML::unitCylinderSearchableSurface::overlaps(const boundBox&) const"
-        );
+    NotImplemented;
 
     return false;
 }

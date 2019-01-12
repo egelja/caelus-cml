@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -49,11 +49,8 @@ CML::regionModels::regionModel1D::nMagSf() const
 {
     if (!nMagSfPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "inline const CML::surfaceScalarField&"
-            "CML::regionModel1Ds::regionModel1D::nMagSf() const"
-        )<< "Face normal areas not available" << abort(FatalError);
+        FatalErrorInFunction
+         << "Face normal areas not available" << abort(FatalError);
     }
 
     return nMagSfPtr_();

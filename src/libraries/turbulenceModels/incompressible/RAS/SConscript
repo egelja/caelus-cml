@@ -7,7 +7,7 @@ target = 'incompressibleRASModels'
 
 sources = Split("""
 RASModel/RASModel.cpp
-laminar/laminar.cpp
+laminar/RASLaminar.cpp
 realizableKE/realizableKE.cpp
 kEpsilon/kEpsilon.cpp
 SpalartAllmaras/SpalartAllmaras.cpp

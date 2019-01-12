@@ -88,7 +88,7 @@ public:
 
     // Member Functions
 
-        //- update the parcel diameter
+        //- Update the parcel diameter
         virtual bool update
         (
             const scalar dt,
@@ -284,7 +284,7 @@ bool CML::ReitzKHRT<CloudType>::update
             // reduce the diameter according to the rate-equation
             d = (fraction*dc + d)/(1.0 + fraction);
 
-            //scalar ms0 = rho*pow3(dc)*mathematicalConstant::pi/6.0;
+            // scalar ms0 = rho*pow3(dc)*mathematicalConstant::pi/6.0;
             scalar ms0 = mass0*(1.0 - pow3(d/d0));
             ms += ms0;
 

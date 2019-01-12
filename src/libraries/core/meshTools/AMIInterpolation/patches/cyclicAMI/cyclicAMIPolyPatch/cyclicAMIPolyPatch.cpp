@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,18 +52,18 @@ CML::vector CML::cyclicAMIPolyPatch::findFaceNormalMaxRadius
 
     const scalarField magRadSqr(magSqr(n));
 
-    label faceI = findMax(magRadSqr);
+    label facei = findMax(magRadSqr);
 
     if (debug)
     {
         Info<< "findFaceMaxRadius(const pointField&) : patch: " << name() << nl
-            << "    rotFace  = " << faceI << nl
-            << "    point    = " << faceCentres[faceI] << nl
-            << "    distance = " << CML::sqrt(magRadSqr[faceI])
+            << "    rotFace  = " << facei << nl
+            << "    point    = " << faceCentres[facei] << nl
+            << "    distance = " << CML::sqrt(magRadSqr[facei])
             << endl;
     }
 
-    return n[faceI];
+    return n[facei];
 }
 
 
@@ -118,7 +118,7 @@ void CML::cyclicAMIPolyPatch::calcTransforms
 {
     if (transform() != neighbPatch().transform())
     {
-        FatalErrorIn("cyclicAMIPolyPatch::calcTransforms()")
+        FatalErrorInFunction
             << "Patch " << name()
             << " has transform type " << transformTypeNames[transform()]
             << ", neighbour patch " << nbrPatchName_
@@ -187,17 +187,7 @@ void CML::cyclicAMIPolyPatch::calcTransforms
 
                 if (areaError > matchTolerance())
                 {
-                    WarningIn
-                    (
-                        "void CML::cyclicAMIPolyPatch::calcTransforms"
-                        "("
-                            "const primitivePatch&, "
-                            "const pointField&, "
-                            "const vectorField&, "
-                            "const pointField&, "
-                            "const vectorField&"
-                        ")"
-                    )
+                    WarningInFunction
                         << "Patch areas are not consistent within "
                         << 100*matchTolerance()
                         << " % indicating a possible error in the specified "
@@ -497,11 +487,11 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     rotationAngleDefined_(false),
     rotationAngle_(0.0),
     separationVector_(vector::zero),
-    AMIPtr_(NULL),
+    AMIPtr_(nullptr),
     AMIReverse_(false),
     AMIRequireMatch_(true),
     AMILowWeightCorrection_(-1.0),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(fileName("surface"))
 {
     // Neighbour patch might not be valid yet so no transformation
@@ -526,26 +516,17 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     rotationAngleDefined_(false),
     rotationAngle_(0.0),
     separationVector_(vector::zero),
-    AMIPtr_(NULL),
+    AMIPtr_(nullptr),
     AMIReverse_(dict.lookupOrDefault<bool>("flipNormals", false)),
     AMIRequireMatch_(true),
     AMILowWeightCorrection_(dict.lookupOrDefault("lowWeightCorrection", -1.0)),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(dict.subOrEmptyDict("surface"))
 {
     if (nbrPatchName_ == name)
     {
-        FatalIOErrorIn
-        (
-            "cyclicAMIPolyPatch::cyclicAMIPolyPatch"
-            "("
-                "const word&, "
-                "const dictionary&, "
-                "const label, "
-                "const polyBoundaryMesh&"
-            ")",
-            dict
-        )   << "Neighbour patch name " << nbrPatchName_
+        FatalIOErrorInFunction(dict)
+            << "Neighbour patch name " << nbrPatchName_
             << " cannot be the same as this patch " << name
             << exit(FatalIOError);
     }
@@ -571,17 +552,8 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
             scalar magRot = mag(rotationAxis_);
             if (magRot < SMALL)
             {
-                FatalIOErrorIn
-                (
-                    "cyclicAMIPolyPatch::cyclicAMIPolyPatch"
-                    "("
-                        "const word&, "
-                        "const dictionary&, "
-                        "const label, "
-                        "const polyBoundaryMesh&"
-                    ")",
-                    dict
-                )   << "Illegal rotationAxis " << rotationAxis_ << endl
+                FatalIOErrorInFunction(dict)
+                    << "Illegal rotationAxis " << rotationAxis_ << endl
                     << "Please supply a non-zero vector."
                     << exit(FatalIOError);
             }
@@ -619,11 +591,11 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     rotationAngleDefined_(pp.rotationAngleDefined_),
     rotationAngle_(pp.rotationAngle_),
     separationVector_(pp.separationVector_),
-    AMIPtr_(NULL),
+    AMIPtr_(nullptr),
     AMIReverse_(pp.AMIReverse_),
     AMIRequireMatch_(pp.AMIRequireMatch_),
     AMILowWeightCorrection_(pp.AMILowWeightCorrection_),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(pp.surfDict_)
 {
     // Neighbour patch might not be valid yet so no transformation
@@ -649,24 +621,17 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     rotationAngleDefined_(pp.rotationAngleDefined_),
     rotationAngle_(pp.rotationAngle_),
     separationVector_(pp.separationVector_),
-    AMIPtr_(NULL),
+    AMIPtr_(nullptr),
     AMIReverse_(pp.AMIReverse_),
     AMIRequireMatch_(pp.AMIRequireMatch_),
     AMILowWeightCorrection_(pp.AMILowWeightCorrection_),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(pp.surfDict_)
 {
     if (nbrPatchName_ == name())
     {
-        FatalErrorIn
-        (
-            "const cyclicAMIPolyPatch& "
-            "const polyBoundaryMesh&, "
-            "const label, "
-            "const label, "
-            "const label, "
-            "const word&"
-        )   << "Neighbour patch name " << nbrPatchName_
+        FatalErrorInFunction
+            << "Neighbour patch name " << nbrPatchName_
             << " cannot be the same as this patch " << name()
             << exit(FatalError);
     }
@@ -693,11 +658,11 @@ CML::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     rotationAngleDefined_(pp.rotationAngleDefined_),
     rotationAngle_(pp.rotationAngle_),
     separationVector_(pp.separationVector_),
-    AMIPtr_(NULL),
+    AMIPtr_(nullptr),
     AMIReverse_(pp.AMIReverse_),
     AMIRequireMatch_(pp.AMIRequireMatch_),
     AMILowWeightCorrection_(pp.AMILowWeightCorrection_),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(pp.surfDict_)
 {}
 
@@ -718,7 +683,7 @@ CML::label CML::cyclicAMIPolyPatch::neighbPatchID() const
 
         if (nbrPatchID_ == -1)
         {
-            FatalErrorIn("cyclicPolyAMIPatch::neighbPatchID() const")
+            FatalErrorInFunction
                 << "Illegal neighbourPatch name " << nbrPatchName_
                 << nl << "Valid patch names are "
                 << this->boundaryMesh().names()
@@ -734,7 +699,7 @@ CML::label CML::cyclicAMIPolyPatch::neighbPatchID() const
 
         if (nbrPatch.neighbPatchName() != name())
         {
-            WarningIn("cyclicAMIPolyPatch::neighbPatchID() const")
+            WarningInFunction
                 << "Patch " << name()
                 << " specifies neighbour patch " << neighbPatchName()
                 << nl << " but that in return specifies "
@@ -788,10 +753,7 @@ const CML::AMIPatchToPatchInterpolation& CML::cyclicAMIPolyPatch::AMI() const
 {
     if (!owner())
     {
-        FatalErrorIn
-        (
-            "const AMIPatchToPatchInterpolation& cyclicAMIPolyPatch::AMI()"
-        )
+        FatalErrorInFunction
             << "AMI interpolator only available to owner patch"
             << abort(FatalError);
     }

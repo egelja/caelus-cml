@@ -114,7 +114,7 @@ uniformTotalPressureFvPatchScalarField
     (
         ptf.pressure_.valid()
       ? ptf.pressure_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -136,7 +136,7 @@ uniformTotalPressureFvPatchScalarField
     (
         ptf.pressure_.valid()
       ? ptf.pressure_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -195,7 +195,7 @@ void CML::uniformTotalPressureFvPatchScalarField::updateCoeffs
     }
     else
     {
-        FatalErrorIn("uniformTotalPressureFvPatchScalarField::updateCoeffs()")
+        FatalErrorInFunction
             << " rho or psi set inconsitently, rho = " << rhoName_
             << ", psi = " << psiName_ << ".\n"
             << "    Set either rho or psi or neither depending on the "

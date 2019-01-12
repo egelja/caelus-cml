@@ -12,7 +12,8 @@ extrudeToRegionMesh.cpp
 """)
 
 caelus_inc = [
-'dynamicMesh/dynamicMesh/lnInclude'
+'dynamicMesh/dynamicMesh/lnInclude',
+'mesh/extrudeModel/lnInclude'
 ]
 
 caelus_libs = [

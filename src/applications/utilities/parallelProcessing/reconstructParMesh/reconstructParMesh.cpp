@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -226,7 +226,7 @@ autoPtr<mapPolyMesh> mergeSharedPoints
 
     if (returnReduce(pointToMaster.size(), sumOp<label>()) == 0)
     {
-        return autoPtr<mapPolyMesh>(NULL);
+        return autoPtr<mapPolyMesh>(nullptr);
     }
 
     polyTopoChange meshMod(mesh);
@@ -264,7 +264,7 @@ autoPtr<mapPolyMesh> mergeSharedPoints
             }
             else
             {
-                FatalErrorIn("fvMeshDistribute::mergeSharedPoints()")
+                FatalErrorInFunction
                     << "Problem. oldPointI:" << oldPointI
                     << " newPointI:" << newPointI << abort(FatalError);
             }
@@ -297,7 +297,7 @@ boundBox procBounds
 
         if (pointsInstance != databases[procI].timeName())
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Your time was specified as " << databases[procI].timeName()
                 << " but there is no polyMesh/points in that time." << endl
                 << "(there is a points file in " << pointsInstance
@@ -494,7 +494,7 @@ int main(int argc, char *argv[])
 
     if (runTime.writeFormat() == IOstream::ASCII && mergeTol < writeTol)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Your current settings specify ASCII writing with "
             << IOstream::defaultPrecision() << " digits precision." << endl
             << "Your merging tolerance (" << mergeTol << ") is finer than this."
@@ -723,7 +723,7 @@ int main(int argc, char *argv[])
 
             if (!masterMesh.write())
             {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Failed writing polyMesh."
                     << exit(FatalError);
             }

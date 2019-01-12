@@ -192,11 +192,8 @@ void CML::fieldToCell::applyToSet
 
     if (!fieldObject.headerOk())
     {
-        WarningIn
-        (
-            "fieldToCell::applyToSet(const topoSetSource::setAction"
-            ", topoSet& set)"
-        )   << "Cannot read field " << fieldName_
+        WarningInFunction
+            << "Cannot read field " << fieldName_
             << " from time " << mesh().time().timeName() << endl;
     }
     else if (fieldObject.headerClassName() == "volScalarField")
@@ -223,11 +220,8 @@ void CML::fieldToCell::applyToSet
     }
     else
     {
-        WarningIn
-        (
-            "fieldToCell::applyToSet(const topoSetSource::setAction"
-            ", topoSet& set)"
-        )   << "Cannot handle fields of type " << fieldObject.headerClassName()
+        WarningInFunction
+            << "Cannot handle fields of type " << fieldObject.headerClassName()
             << endl;
     }
 }

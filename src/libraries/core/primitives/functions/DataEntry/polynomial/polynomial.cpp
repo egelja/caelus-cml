@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -55,10 +55,8 @@ CML::polynomial::polynomial(const word& entryName, const dictionary& dict)
 
     if (!coeffs_.size())
     {
-        FatalErrorIn
-        (
-            "CML::polynomial::polynomial(const word&, const dictionary&)"
-        )   << "polynomial coefficients for entry " << this->name_
+        FatalErrorInFunction
+            << "polynomial coefficients for entry " << this->name_
             << " are invalid (empty)" << nl << exit(FatalError);
     }
 
@@ -75,10 +73,8 @@ CML::polynomial::polynomial(const word& entryName, const dictionary& dict)
     {
         if (!canIntegrate_)
         {
-            WarningIn
-            (
-                "CML::polynomial::polynomial(const word&, const dictionary&)"
-            )   << "Polynomial " << this->name_ << " cannot be integrated"
+            WarningInFunction
+                << "Polynomial " << this->name_ << " cannot be integrated"
                 << endl;
         }
     }
@@ -98,11 +94,8 @@ CML::polynomial::polynomial
 {
     if (!coeffs_.size())
     {
-        FatalErrorIn
-        (
-            "CML::polynomial::polynomial"
-            "(const word&, const List<Tuple2<scalar, scalar> >&)"
-        )   << "polynomial coefficients for entry " << this->name_
+        FatalErrorInFunction
+            << "polynomial coefficients for entry " << this->name_
             << " are invalid (empty)" << nl << exit(FatalError);
     }
 
@@ -119,11 +112,8 @@ CML::polynomial::polynomial
     {
         if (!canIntegrate_)
         {
-            WarningIn
-            (
-                "CML::polynomial::polynomial"
-                "(const word&, const List<Tuple2<scalar, scalar> >&)"
-            )   << "Polynomial " << this->name_ << " cannot be integrated"
+            WarningInFunction
+                << "Polynomial " << this->name_ << " cannot be integrated"
                 << endl;
         }
     }

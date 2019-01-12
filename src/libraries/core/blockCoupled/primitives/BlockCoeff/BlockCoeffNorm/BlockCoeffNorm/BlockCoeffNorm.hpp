@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2013 K. Jareteg
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -157,14 +158,8 @@ BlockCoeffNorm<Type>::New
 
     if (constructorIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "autoPtr<BlockCoeffNorm> BlockCoeffNorm::New\n"
-            "(\n"
-            "    const dictionary& dict\n"
-            ")",
-            dict
-        )   << "Unknown norm " << normName
+        FatalIOErrorInFunction(dict)
+            << "Unknown norm " << normName
             << endl << endl
             << "Valid matrix norms are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

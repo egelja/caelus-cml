@@ -73,13 +73,7 @@ CML::label CML::globalIndexAndTransform::encodeTransformIndex
 {
     if (permutationIndices.size() != transforms_.size())
     {
-        FatalErrorIn
-        (
-            "CML::label encodeTransformIndex"
-            "("
-                "const List<label>& permutationIndices,"
-            ") const"
-        )
+        FatalErrorInFunction
             << "permutationIndices " << permutationIndices
             << "are of a different size to the number of independent transforms"
             << abort(FatalError);
@@ -93,13 +87,7 @@ CML::label CML::globalIndexAndTransform::encodeTransformIndex
     {
         if (mag(permutationIndices[b]) > 1)
         {
-            FatalErrorIn
-            (
-                "CML::label encodeTransformIndex"
-                "("
-                "const List<label>& permutationIndices,"
-                ") const"
-            )
+            FatalErrorInFunction
                 << "permutationIndices " << permutationIndices
                 << "are illegal, they must all be only -1, 0 or +1"
                 << abort(FatalError);
@@ -169,10 +157,8 @@ CML::globalIndexAndTransform::decodeTransformIndex
     t /= 3;
     if (t != 0)
     {
-        FatalErrorIn
-        (
-            "globalIndexAndTransform::decodeTransformIndex(const label)"
-        )   << "transformIndex : " << transformIndex
+        FatalErrorInFunction
+            << "transformIndex : " << transformIndex
             << " has more than 3 fields."
             << abort(FatalError);
     }
@@ -217,7 +203,7 @@ CML::label CML::globalIndexAndTransform::addToTransformIndex
             if (sign == 0)
             {
                 // sent from patch without a transformation. Do nothing.
-                FatalErrorIn("globalIndexAndTransform::addToTransformIndex(..)")
+                FatalErrorInFunction
                     << "patch:" << mesh_.boundaryMesh()[patchI].name()
                     << " transform:" << matchTransI << " sign:" << sign
                     << "  current transforms:" << permutation
@@ -225,16 +211,8 @@ CML::label CML::globalIndexAndTransform::addToTransformIndex
             }
             else if (sign == permutation[matchTransI])
             {
-                FatalErrorIn
-                (
-                    "CML::label "
-                    "CML::globalIndexAndTransform::addToTransformIndex\n"
-                    "(\n"
-                        "const label,\n"
-                        "const label,\n"
-                        "const bool\n"
-                    ") const\n"
-                )   << "More than one patch accessing the same transform "
+                FatalErrorInFunction
+                    << "More than one patch accessing the same transform "
                     << "but not of the same sign." << endl
                     << "patch:" << mesh_.boundaryMesh()[patchI].name()
                     << " transform:" << matchTransI << " sign:" << sign
@@ -345,15 +323,7 @@ CML::labelPair CML::globalIndexAndTransform::encode
 {
     if (transformIndex < 0 || transformIndex >= base_)
     {
-        FatalErrorIn
-        (
-            "CML::labelPair CML::globalIndexAndTransform::encode"
-            "("
-                "const label procI, "
-                "const label index, "
-                "const label transformIndex"
-            ")"
-        )
+        FatalErrorInFunction
             << "TransformIndex " << transformIndex
             << " is outside allowed range of 0 to "
             << base_ - 1
@@ -362,15 +332,7 @@ CML::labelPair CML::globalIndexAndTransform::encode
 
     if (procI > labelMax/base_)
     {
-        FatalErrorIn
-        (
-            "CML::labelPair CML::globalIndexAndTransform::encode"
-            "("
-                "const label procI, "
-                "const label index, "
-                "const label transformIndex"
-            ")"
-        )
+        FatalErrorInFunction
             << "Overflow : encoding processor " << procI << " in base " << base_
             << " exceeds capability of label (" << labelMax
             << "). Please recompile with larger datatype for label."
@@ -489,14 +451,7 @@ CML::labelList CML::globalIndexAndTransform::transformIndicesForPatches
                 // transform.
                 if (permutation[matchTransI] != sign)
                 {
-                    FatalErrorIn
-                    (
-                        "const CML::List<CML::vectorTensorTransform>& "
-                        "CML::globalIndexAndTransform::transformsForPatches"
-                        "("
-                            "const labelList& patchIs"
-                        ") const"
-                    )
+                    FatalErrorInFunction
                         << "More than one patch accessing the same transform "
                         << "but not of the same sign."
                         << exit(FatalError);
@@ -626,14 +581,7 @@ CML::labelList CML::globalIndexAndTransform::transformIndicesForPatches
         }
         default:
         {
-            FatalErrorIn
-            (
-                "const CML::List<CML::vectorTensorTransform>& "
-                "CML::globalIndexAndTransform::transformsForPatches"
-                "("
-                    "const labelList& patchIs"
-                ") const"
-            )
+            FatalErrorInFunction
                 << "Only 1-3 transforms are possible."
                 << exit(FatalError);
         }

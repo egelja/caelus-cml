@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -182,7 +182,7 @@ public:
         virtual tmp<surfaceInterpolationScheme<Type> > 
         interpScheme() const
         {
-            FatalErrorIn("convectionScheme::interpScheme() const")
+            FatalErrorInFunction
             << "Current scheme does not implement interpScheme() function" 
             << abort(FatalError);
             // Dummy return - the code should have failed before the return
@@ -300,12 +300,8 @@ tmp<convectionScheme<Type> > convectionScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "convectionScheme<Type>::New"
-            "(const fvMesh&, const surfaceScalarField&, Istream&)",
-            schemeData
-        )   << "Convection scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Convection scheme not specified" << endl << endl
             << "Valid convection schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -318,12 +314,8 @@ tmp<convectionScheme<Type> > convectionScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "convectionScheme<Type>::New"
-            "(const fvMesh&, const surfaceScalarField&, Istream&)",
-            schemeData
-        )   << "Unknown convection scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown convection scheme " << schemeName << nl << nl
             << "Valid convection schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -355,14 +347,8 @@ tmp<convectionScheme<Type> > convectionScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "convectionScheme<Type>::New"
-               "(const fvMesh&, "
-               "const typename multivariateSurfaceInterpolationScheme<Type>"
-               "::fieldTable&, const surfaceScalarField&, Istream&)",
-            schemeData
-        )   << "Convection scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Convection scheme not specified" << endl << endl
             << "Valid convection schemes are :" << endl
             << MultivariateConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -375,14 +361,8 @@ tmp<convectionScheme<Type> > convectionScheme<Type>::New
 
     if (cstrIter == MultivariateConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "convectionScheme<Type>::New"
-            "(const fvMesh&, "
-            "const typename multivariateSurfaceInterpolationScheme<Type>"
-            "::fieldTable&, const surfaceScalarField&, Istream&)",
-            schemeData
-        )   << "Unknown convection scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown convection scheme " << schemeName << nl << nl
             << "Valid convection schemes are :" << endl
             << MultivariateConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -406,10 +386,8 @@ void convectionScheme<Type>::operator=(const convectionScheme<Type>& cs)
 {
     if (this == &cs)
     {
-        FatalErrorIn
-        (
-            "convectionScheme<Type>::operator=(const convectionScheme<Type>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 }

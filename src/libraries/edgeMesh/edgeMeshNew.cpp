@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,11 +34,8 @@ CML::autoPtr<CML::edgeMesh> CML::edgeMesh::New
 
     if (cstrIter == fileExtensionConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "edgeMesh<Face>::New(const fileName&, const word&) : "
-            "constructing edgeMesh"
-        )   << "Unknown file extension " << ext << nl << nl
+        FatalErrorInFunction
+            << "Unknown file extension " << ext << nl << nl
             << "Valid types are :" << nl
             << fileExtensionConstructorTablePtr_->sortedToc()
             << exit(FatalError);

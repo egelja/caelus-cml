@@ -163,10 +163,8 @@ void sphereRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void sphereRefinement::operator=(const dictionary& d)"
-        ) << "Entry centre is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry centre is not specified!" << exit(FatalError);
         centre_ = vector::zero;
     }
 
@@ -177,10 +175,8 @@ void sphereRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void sphereRefinement::operator=(const dictionary& d)"
-        ) << "Entry radius is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry radius is not specified!" << exit(FatalError);
         radius_ = -1.0;
     }
 }

@@ -43,6 +43,7 @@ namespace CML
 class string;
 template<class T> class List;
 
+
 /*---------------------------------------------------------------------------*\
                            Class regExp Declaration
 \*---------------------------------------------------------------------------*/
@@ -63,6 +64,8 @@ class regExp
         void operator=(const regExp&);
 
 public:
+
+    // Static Member Functions
 
         //- Is character a regular expression meta-character?
         //  any character: '.' \n
@@ -95,8 +98,7 @@ public:
         regExp(const std::string&, const bool ignoreCase=false);
 
     // Destructor
-
-        ~regExp();
+    ~regExp();
 
 
     // Member functions

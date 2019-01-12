@@ -61,9 +61,7 @@ initialization/initPotentialFlow/initPotentialFlowFunctionObject.cpp
 update/updateSimple/updateSimpleFunctionObject.cpp
 update/recalcPhi/recalcPhiFunctionObject.cpp
 update/correctThermo/correctThermoFunctionObject.cpp
-update/recalcThermoE/recalcThermoEFunctionObject.cpp
-update/recalcThermoH/recalcThermoHFunctionObject.cpp
-update/recalcThermoHs/recalcThermoHsFunctionObject.cpp
+update/recalcThermoHe/recalcThermoHeFunctionObject.cpp
 """)
 
 caelus_inc = [
@@ -72,10 +70,7 @@ caelus_inc = [
 'thermophysicalModels/reactionThermo/lnInclude',
 'thermophysicalModels/specie/lnInclude',
 'thermophysicalModels/SLGThermo/lnInclude',
-'thermophysicalModels/properties/solidMixtureProperties/lnInclude',
-'thermophysicalModels/properties/liquidMixtureProperties/lnInclude',
-'thermophysicalModels/properties/solidProperties/lnInclude',
-'thermophysicalModels/properties/liquidProperties/lnInclude',
+'thermophysicalModels/thermophysicalProperties/lnInclude',
 'regionModels/regionModel/lnInclude',
 'regionModels/surfaceFilmModels/lnInclude',
 'turbulenceModels',
@@ -87,7 +82,7 @@ caelus_libs = [
 'core',
 'swakParsers',
 'sampling',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'SLGThermo',
 'incompressibleTransportModels',
 'compressibleTurbulenceModel',

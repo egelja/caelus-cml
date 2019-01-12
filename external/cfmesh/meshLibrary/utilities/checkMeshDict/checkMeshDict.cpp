@@ -41,10 +41,8 @@ void checkMeshDict::checkBasicSettings() const
     const scalar maxCellSize = readScalar(meshDict_.lookup("maxCellSize"));
 
     if( maxCellSize < 0 )
-        FatalErrorIn
-        (
-            "void checkMeshDict::checkBasicSettings() const"
-        ) << "maxCellSize is negative! Cannot generate the mesh!!"
+        FatalErrorInFunction
+          << "maxCellSize is negative! Cannot generate the mesh!!"
           << exit(FatalError);
 
     //- check if boundaryCellSize makes sense
@@ -86,10 +84,8 @@ void checkMeshDict::checkBasicSettings() const
 
         if( mcs < 0 )
         {
-            FatalErrorIn
-            (
-                "void checkMeshDict::checkBasicSettings() const"
-            ) << "Minimum cell size for automatic refinement is negative!!"
+            FatalErrorInFunction
+              << "Minimum cell size for automatic refinement is negative!!"
               << exit(FatalError);
         }
 
@@ -193,10 +189,8 @@ void checkMeshDict::checkLocalRefinementLevel() const
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkLocalRefinementLevel() const"
-                    ) << "Cannot read keyword"
+                    FatalErrorInFunction
+                      << "Cannot read keyword"
                       << " additionalRefinementLevels or cellSize"
                       << "for " << entries[dictI] << exit(FatalError);
                 }
@@ -219,10 +213,8 @@ void checkMeshDict::checkLocalRefinementLevel() const
         }
         else
         {
-            FatalErrorIn
-            (
-                "void checkMeshDict::checkLocalRefinementLevel() const"
-            ) << "Cannot read localRefinement" << exit(FatalError);
+            FatalErrorInFunction
+                << "Cannot read localRefinement" << exit(FatalError);
         }
     }
 }
@@ -381,19 +373,15 @@ void checkMeshDict::checkSurfaceRefinements() const
                     const fileName fName(dict.lookup("surfaceFile"));
 
                     if( !isFile(fName) )
-                        FatalErrorIn
-                        (
-                        "void checkMeshDict::checkSurfaceRefinements() const"
-                        ) << "Surface file " << fName
+                        FatalErrorInFunction
+                          << "Surface file " << fName
                           << " does not exist or is not readable!!"
                           << exit(FatalError);
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkSurfaceRefinements() const"
-                    ) << "Missing surfaceFile for entry "
+                    FatalErrorInFunction
+                      << "Missing surfaceFile for entry "
                       << surfaceSources[surfI] << exit(FatalError);
                 }
 
@@ -402,11 +390,8 @@ void checkMeshDict::checkSurfaceRefinements() const
                     const scalar cs = readScalar(dict.lookup("cellSize"));
 
                     if( cs < VSMALL )
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::"
-                            "checkSurfaceRefinements() const"
-                        ) << "Cell size for entry " << surfaceSources[surfI]
+                        FatalErrorInFunction
+                          << "Cell size for entry " << surfaceSources[surfI]
                           << " is extremely small or negative!!"
                           << exit(FatalError);
                 }
@@ -417,21 +402,16 @@ void checkMeshDict::checkSurfaceRefinements() const
 
                     if( nLev < 0 )
                     {
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::"
-                            "checkSurfaceRefinements() const"
-                        ) << "Number refinement levels for entry "
+                        FatalErrorInFunction
+                          << "Number refinement levels for entry "
                           << surfaceSources[surfI] << " is negative!!"
                           << exit(FatalError);
                     }
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkSurfaceRefinements() const"
-                    ) << "Missing cellSize or additionalRefinementLevels"
+                    FatalErrorInFunction
+                      << "Missing cellSize or additionalRefinementLevels"
                       << " for entry " << surfaceSources[surfI]
                       << exit(FatalError);
                 }
@@ -453,10 +433,8 @@ void checkMeshDict::checkSurfaceRefinements() const
             }
             else
             {
-                FatalErrorIn
-                (
-                    "void checkMeshDict::checkSurfaceRefinements() const"
-                ) << "Dictionary " << surfaceSources[surfI]
+                FatalErrorInFunction
+                  << "Dictionary " << surfaceSources[surfI]
                   << " does not exist!!"
                   << exit(FatalError);
             }
@@ -484,19 +462,15 @@ void checkMeshDict::checkEdgeMeshRefinements() const
                     const fileName fName(dict.lookup("edgeFile"));
 
                     if( !isFile(fName) )
-                        FatalErrorIn
-                        (
-                        "void checkMeshDict::checkEdgeMeshRefinements() const"
-                        ) << "Edge mesh file " << fName
+                        FatalErrorInFunction
+                          << "Edge mesh file " << fName
                           << " does not exist or is not readable!!"
                           << exit(FatalError);
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkEdgeMeshRefinements() const"
-                    ) << "Missing edgeFilw for entry "
+                    FatalErrorInFunction
+                      << "Missing edgeFilw for entry "
                       << edgeMeshSources[emI] << exit(FatalError);
                 }
 
@@ -505,11 +479,8 @@ void checkMeshDict::checkEdgeMeshRefinements() const
                     const scalar cs = readScalar(dict.lookup("cellSize"));
 
                     if( cs < VSMALL )
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::"
-                            "checkEdgeMeshRefinements() const"
-                        ) << "Cell size for entry " << edgeMeshSources[emI]
+                        FatalErrorInFunction
+                          << "Cell size for entry " << edgeMeshSources[emI]
                           << " is extremely small or negative!!"
                           << exit(FatalError);
                 }
@@ -520,21 +491,16 @@ void checkMeshDict::checkEdgeMeshRefinements() const
 
                     if( nLev < 0 )
                     {
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::"
-                            "checkEdgeMeshRefinements() const"
-                        ) << "Number refinement levels for entry "
+                        FatalErrorInFunction
+                          << "Number refinement levels for entry "
                           << edgeMeshSources[emI] << " is negative!!"
                           << exit(FatalError);
                     }
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkEdgeMeshRefinements() const"
-                    ) << "Missing cellSize or additionalRefinementLevels"
+                    FatalErrorInFunction
+                      << "Missing cellSize or additionalRefinementLevels"
                       << " for entry " << edgeMeshSources[emI]
                       << exit(FatalError);
                 }
@@ -556,10 +522,8 @@ void checkMeshDict::checkEdgeMeshRefinements() const
             }
             else
             {
-                FatalErrorIn
-                (
-                    "void checkMeshDict::checkEdgeMeshRefinements() const"
-                ) << "Dictionary " << edgeMeshSources[emI]
+                FatalErrorInFunction
+                  << "Dictionary " << edgeMeshSources[emI]
                   << " does not exist!!"
                   << exit(FatalError);
             }
@@ -650,10 +614,8 @@ void checkMeshDict::checkBoundaryLayers() const
                     readLabel(optParams.lookup("nSmoothNormals"));
 
                 if( nSmoothNormals < 0 )
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkBoundaryLayers() const"
-                    ) << "nSmoothNormals must not be negative!"
+                    FatalErrorInFunction
+                      << "nSmoothNormals must not be negative!"
                       << exit(FatalError);
             }
 
@@ -663,10 +625,8 @@ void checkMeshDict::checkBoundaryLayers() const
                     readScalar(optParams.lookup("featureSizeFactor"));
 
                 if( featureSizeFactor >= 1.0 || featureSizeFactor < 0.0 )
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkBoundaryLayers() const"
-                    ) << "Feature size factor is out"
+                    FatalErrorInFunction
+                      << "Feature size factor is out"
                       << " of a valid range 0 to 1" << exit(FatalError);
             }
 
@@ -676,10 +636,8 @@ void checkMeshDict::checkBoundaryLayers() const
                     readScalar(optParams.lookup("relThicknessTol"));
 
                 if( relThicknessTol >= 1.0 || relThicknessTol < 0.0 )
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkBoundaryLayers() const"
-                    ) << "Relative thickness tolerance is out"
+                    FatalErrorInFunction
+                      << "Relative thickness tolerance is out"
                       << " of a valid range 0 to 1" << exit(FatalError);
             }
 
@@ -689,10 +647,8 @@ void checkMeshDict::checkBoundaryLayers() const
                     readLabel(optParams.lookup("maxNumIterations"));
 
                 if( maxNumIterations < 0 )
-                    FatalErrorIn
-                    (
-                        "void checkMeshDict::checkBoundaryLayers() const"
-                    ) << "maxNumIterations must not be negative!"
+                    FatalErrorInFunction
+                      << "maxNumIterations must not be negative!"
                       << exit(FatalError);
             }
         }
@@ -717,19 +673,15 @@ void checkMeshDict::checkRenameBoundary() const
                     const word& pName = patchNames[patchI];
 
                     if( !patchDicts.isDict(pName) )
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::checkRenameBoundary() const"
-                        ) << "Entry " << pName
+                        FatalErrorInFunction
+                          << "Entry " << pName
                           << " is not a dictionary" << exit(FatalError);
 
                     const dictionary dict = patchDicts.subDict(pName);
 
                     if( !dict.found("newName") )
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::checkRenameBoundary() const"
-                        ) << "Dictionary " << pName
+                        FatalErrorInFunction
+                          << "Dictionary " << pName
                           << " does not contain a newName keyword"
                           << exit(FatalError);
                 }
@@ -748,10 +700,8 @@ void checkMeshDict::checkRenameBoundary() const
                     const dictionary dict = patchesToRename[patchI].dict();
 
                     if( !dict.found("newName") )
-                        FatalErrorIn
-                        (
-                            "void checkMeshDict::checkRenameBoundary() const"
-                        ) << "Dictionary " << pName
+                        FatalErrorInFunction
+                          << "Dictionary " << pName
                           << " does not contain a newName keyword"
                           << exit(FatalError);
                 }

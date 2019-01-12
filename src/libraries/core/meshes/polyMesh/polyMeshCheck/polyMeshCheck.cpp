@@ -94,10 +94,8 @@ bool CML::polyMesh::checkFaceOrthogonality
                 if (detailedReport && errorNonOrth == 0)
                 {
                     // Non-orthogonality greater than 90 deg
-                    WarningIn
-                    (
-                        "bool CML::polyMesh::checkFaceOrthogonality(...) const"
-                    )   << "Severe non-orthogonality for face "
+                    WarningInFunction
+                        << "Severe non-orthogonality for face "
                         << facei
                         << " between cells " << own[facei]
                         << " and " << nei[facei]
@@ -226,20 +224,16 @@ bool CML::polyMesh::checkFaceSkewness
                 // Non-orthogonality greater than 90 deg
                 if (isInternalFace(facei))
                 {
-                    WarningIn
-                    (
-                        "bool CML::polyMesh::checkFaceSkewness(...) const"
-                    )   << "Severe skewness " << skew[facei]
+                    WarningInFunction
+                        << "Severe skewness " << skew[facei]
                         << " for face " << facei
                         << " between cells " << own[facei]
                         << " and " << nei[facei];
                 }
                 else
                 {
-                    WarningIn
-                    (
-                        "bool CML::polyMesh::checkFaceSkewness(...) const"
-                    )   << "Severe skewness " << skew[facei]
+                    WarningInFunction
+                        << "Severe skewness " << skew[facei]
                         << " for boundary face " << facei
                         << " on cell " << own[facei];
                 }
@@ -325,10 +319,8 @@ bool CML::polyMesh::checkEdgeAlignment
         }
         else if (directions[cmpt] != 0)
         {
-            FatalErrorIn
-            (
-                "bool CML::polyMesh::checkEdgeAlignment(...) const"
-            )   << "directions should contain 0 or 1 but is now " << directions
+            FatalErrorInFunction
+                << "directions should contain 0 or 1 but is now " << directions
                 << exit(FatalError);
         }
     }
@@ -838,7 +830,7 @@ bool CML::polyMesh::checkMeshMotion
         cellVols,       // vols
         report,         // report
         detailedReport, // detailedReport
-        NULL            // setPtr
+        nullptr         // setPtr
     );
 
 
@@ -848,7 +840,7 @@ bool CML::polyMesh::checkMeshMotion
         fAreas,
         report,         // report
         detailedReport, // detailedReport,
-        NULL            // setPtr
+        nullptr         // setPtr
     );
     error = error || areaError;
 
@@ -861,7 +853,7 @@ bool CML::polyMesh::checkMeshMotion
         report,         // report,
         detailedReport, // detailedReport,
         -SMALL,         // minPyrVol
-        NULL            // setPtr
+        nullptr         // setPtr
     );
     error = error || pyrVolError;
 
@@ -873,7 +865,7 @@ bool CML::polyMesh::checkMeshMotion
         cellCtrs,
         report,         // report
         detailedReport, // detailedReport
-        NULL            // setPtr
+        nullptr         // setPtr
     );
     error = error || nonOrthoError;
 

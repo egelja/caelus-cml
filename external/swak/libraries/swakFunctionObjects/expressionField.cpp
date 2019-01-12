@@ -49,9 +49,9 @@ CML::expressionField::expressionField
     if (!isA<fvMesh>(obr_))
     {
         active_=false;
-        WarningIn("expressionField::expressionField")
+        WarningInFunction
             << "Not a fvMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
     read(dict);
     write();
@@ -116,10 +116,10 @@ void CML::expressionField::read(const dictionary& dict)
             dimensions_.reset(dict.lookup("dimension"));
             setDimensions_=true;
         } else {
-            WarningIn("CML::expressionField::read(const dictionary& dict)")
+            WarningInFunction
                 << "No entry 'dimension' in " << dict.name() << " for field " << name_ << endl
-                    << "Not resetting the dimensions of the field" << nl
-                    << endl;
+                << "Not resetting the dimensions of the field" << nl
+                << endl;
             dimensions_.reset(dimless);
             setDimensions_=false;
         }
@@ -223,11 +223,11 @@ void CML::expressionField::write()
                 driver.getResult<pointSphericalTensorField>()
             );
         } else {
-            WarningIn("CML::expressionField::execute()")
+            WarningInFunction
                 << "Expression '" << expression_
-                    << "' evaluated to an unsupported type "
-                    << driver.typ()
-                    << endl;
+                << "' evaluated to an unsupported type "
+                << driver.typ()
+                << endl;
         }
     }
 

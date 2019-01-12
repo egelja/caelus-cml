@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -241,8 +241,8 @@ CML::cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField
 :
     coupledPointPatchField<Type>(p, iF),
     cyclicAMIPatch_(refCast<const cyclicAMIPointPatch>(p)),
-    ppiPtr_(NULL),
-    nbrPpiPtr_(NULL)
+    ppiPtr_(nullptr),
+    nbrPpiPtr_(nullptr)
 {}
 
 
@@ -256,21 +256,13 @@ CML::cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField
 :
     coupledPointPatchField<Type>(p, iF, dict),
     cyclicAMIPatch_(refCast<const cyclicAMIPointPatch>(p)),
-    ppiPtr_(NULL),
-    nbrPpiPtr_(NULL)
+    ppiPtr_(nullptr),
+    nbrPpiPtr_(nullptr)
 {
     if (!isType<cyclicAMIPointPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField\n"
-            "(\n"
-            "    const pointPatch&,\n"
-            "    const DimensionedField<Type, pointMesh>&,\n"
-            "    const dictionary&\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not cyclicAMI type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not cyclicAMI type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -288,21 +280,13 @@ CML::cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField
 :
     coupledPointPatchField<Type>(ptf, p, iF, mapper),
     cyclicAMIPatch_(refCast<const cyclicAMIPointPatch>(p)),
-    ppiPtr_(NULL),
-    nbrPpiPtr_(NULL)
+    ppiPtr_(nullptr),
+    nbrPpiPtr_(nullptr)
 {
     if (!isType<cyclicAMIPointPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField\n"
-            "(\n"
-            "    const cyclicAMIPointPatchField<Type>&,\n"
-            "    const pointPatch&,\n"
-            "    const DimensionedField<Type, pointMesh>&,\n"
-            "    const pointPatchFieldMapper&\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()
@@ -320,8 +304,8 @@ CML::cyclicAMIPointPatchField<Type>::cyclicAMIPointPatchField
 :
     coupledPointPatchField<Type>(ptf, iF),
     cyclicAMIPatch_(ptf.cyclicAMIPatch_),
-    ppiPtr_(NULL),
-    nbrPpiPtr_(NULL)
+    ppiPtr_(nullptr),
+    nbrPpiPtr_(nullptr)
 {}
 
 

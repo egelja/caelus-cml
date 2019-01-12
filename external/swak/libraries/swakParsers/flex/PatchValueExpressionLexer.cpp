@@ -338,14 +338,14 @@ struct yy_buffer_state
  * future we want to put the buffer states in a more general
  * "scanner state".
  *
- * Returns the top of the stack, or NULL.
+ * Returns the top of the stack, or nullptr.
  */
 #define YY_CURRENT_BUFFER ( yyg->yy_buffer_stack \
                           ? yyg->yy_buffer_stack[yyg->yy_buffer_stack_top] \
-                          : NULL)
+                          : nullptr)
 
 /* Same as previous macro, but useful when we know that the buffer stack is not
- * NULL or when we need an lvalue. For internal use only.
+ * nullptr or when we need an lvalue. For internal use only.
  */
 #define YY_CURRENT_BUFFER_LVALUE yyg->yy_buffer_stack[yyg->yy_buffer_stack_top]
 
@@ -14068,7 +14068,7 @@ void parserPatchpush_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscann
 /* %endif */
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
-	if (new_buffer == NULL)
+	if (new_buffer == nullptr)
 		return;
 
 	parserPatchensure_buffer_stack(yyscanner);
@@ -14109,7 +14109,7 @@ void parserPatchpop_buffer_state (yyscan_t yyscanner)
 		return;
 
 	parserPatch_delete_buffer(YY_CURRENT_BUFFER ,yyscanner);
-	YY_CURRENT_BUFFER_LVALUE = NULL;
+	YY_CURRENT_BUFFER_LVALUE = nullptr;
 	if (yyg->yy_buffer_stack_top > 0)
 		--yyg->yy_buffer_stack_top;
 
@@ -14532,14 +14532,14 @@ void parserPatchset_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
 int parserPatchlex_init(yyscan_t* ptr_yy_globals)
 
 {
-    if (ptr_yy_globals == NULL){
+    if (ptr_yy_globals == nullptr){
         errno = EINVAL;
         return 1;
     }
 
-    *ptr_yy_globals = (yyscan_t) parserPatchalloc ( sizeof( struct yyguts_t ), NULL );
+    *ptr_yy_globals = (yyscan_t) parserPatchalloc ( sizeof( struct yyguts_t ), nullptr );
 
-    if (*ptr_yy_globals == NULL){
+    if (*ptr_yy_globals == nullptr){
         errno = ENOMEM;
         return 1;
     }
@@ -14565,14 +14565,14 @@ int parserPatchlex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_glo
 
     parserPatchset_extra (yy_user_defined, &dummy_yyguts);
 
-    if (ptr_yy_globals == NULL){
+    if (ptr_yy_globals == nullptr){
         errno = EINVAL;
         return 1;
     }
 	
     *ptr_yy_globals = (yyscan_t) parserPatchalloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
 	
-    if (*ptr_yy_globals == NULL){
+    if (*ptr_yy_globals == nullptr){
         errno = ENOMEM;
         return 1;
     }
@@ -14605,7 +14605,7 @@ static int yy_init_globals (yyscan_t yyscanner)
 
     yyg->yy_start_stack_ptr = 0;
     yyg->yy_start_stack_depth = 0;
-    yyg->yy_start_stack =  NULL;
+    yyg->yy_start_stack =  nullptr;
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
@@ -14632,17 +14632,17 @@ int parserPatchlex_destroy  (yyscan_t yyscanner)
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
 		parserPatch_delete_buffer(YY_CURRENT_BUFFER ,yyscanner );
-		YY_CURRENT_BUFFER_LVALUE = NULL;
+		YY_CURRENT_BUFFER_LVALUE = nullptr;
 		parserPatchpop_buffer_state(yyscanner);
 	}
 
 	/* Destroy the stack itself. */
 	parserPatchfree(yyg->yy_buffer_stack ,yyscanner);
-	yyg->yy_buffer_stack = NULL;
+	yyg->yy_buffer_stack = nullptr;
 
     /* Destroy the start condition stack. */
         parserPatchfree(yyg->yy_start_stack ,yyscanner );
-        yyg->yy_start_stack = NULL;
+        yyg->yy_start_stack = nullptr;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
      * parserPatchlex() is called, initialization will occur. */
@@ -14651,7 +14651,7 @@ int parserPatchlex_destroy  (yyscan_t yyscanner)
 /* %if-reentrant */
     /* Destroy the main struct (reentrant only). */
     parserPatchfree ( yyscanner , yyscanner );
-    yyscanner = NULL;
+    yyscanner = nullptr;
 /* %endif */
     return 0;
 }
@@ -14724,11 +14724,11 @@ void PatchValueExpressionDriver::scan_begin ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_!=NULL) {
-        FatalErrorIn("PatchValueExpressionDriver::scan_begin")
+    if(scanner_!=nullptr) {
+        FatalErrorInFunction
             << "Already existing scanner " << getHex(scanner_)
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -14752,17 +14752,17 @@ void PatchValueExpressionDriver::scan_end ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_==NULL) {
-        FatalErrorIn("PatchValueExpressionDriver::scan_end")
+    if(scanner_==nullptr) {
+        FatalErrorInFunction
             << "Uninitialized Scanner. Can't delete it"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
     parserPatchlex_destroy(scanner_);
 
-    scanner_=NULL;
+    scanner_=nullptr;
 //	    fclose (yyin);
     //    parserPatch_delete_buffer(bufferPatch,scanner_);
 }

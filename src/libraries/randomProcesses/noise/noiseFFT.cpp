@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -57,10 +57,8 @@ CML::noiseFFT::noiseFFT(const fileName& pFileName, const label skip)
     // Check pFile stream is OK
     if (!pFile.good())
     {
-        FatalErrorIn
-        (
-            "noiseFFT::noiseFFT(const fileName& pFileName, const label skip)"
-        )   << "Cannot read file " << pFileName
+        FatalErrorInFunction
+            << "Cannot read file " << pFileName
             << exit(FatalError);
     }
 
@@ -74,11 +72,8 @@ CML::noiseFFT::noiseFFT(const fileName& pFileName, const label skip)
 
             if (!pFile.good() || pFile.eof())
             {
-                FatalErrorIn
-                (
-                    "noiseFFT::noiseFFT(const fileName& pFileName, "
-                    "const label skip)"
-                )   << "Number of points in file " << pFileName
+                FatalErrorInFunction
+                    << "Number of points in file " << pFileName
                     << " is less than the number to be skipped = " << skip
                     << exit(FatalError);
             }
@@ -134,7 +129,7 @@ CML::tmp<CML::scalarField> CML::noiseFFT::window
 
     if ((N + ni*windowOffset) > size())
     {
-        FatalErrorIn("noiseFFT::window(const label N, const label n) const")
+        FatalErrorInFunction
             << "Requested window is outside set of data" << endl
             << "number of data = " << size() << endl
             << "size of window = " << N << endl
@@ -213,7 +208,7 @@ CML::graph CML::noiseFFT::meanPf
 {
     if (N > size())
     {
-        FatalErrorIn("noiseFFT::meanPf(const label N, const label nw) const")
+        FatalErrorInFunction
             << "Requested window is outside set of data" << endl
             << "number of data = " << size() << endl
             << "size of window = " << N << endl
@@ -259,7 +254,7 @@ CML::graph CML::noiseFFT::RMSmeanPf
 {
     if (N > size())
     {
-        FatalErrorIn("noiseFFT::RMSmeanPf(const label N, const label nw) const")
+        FatalErrorInFunction
             << "Requested window is outside set of data" << endl
             << "number of data = " << size() << endl
             << "size of window = " << N << endl

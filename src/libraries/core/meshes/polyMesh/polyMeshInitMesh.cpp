@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -58,7 +58,7 @@ void CML::polyMesh::initMesh()
     {
         if (owner_[facei] < 0)
         {
-            FatalErrorIn("polyMesh::initMesh()")
+            FatalErrorInFunction
                 << "Illegal cell label " << owner_[facei]
                 << " in neighbour addressing for face " << facei
                 << exit(FatalError);
@@ -71,7 +71,7 @@ void CML::polyMesh::initMesh()
     {
         if (neighbour_[facei] < 0)
         {
-            FatalErrorIn("polyMesh::initMesh()")
+            FatalErrorInFunction
                 << "Illegal cell label " << neighbour_[facei]
                 << " in neighbour addressing for face " << facei
                 << exit(FatalError);
@@ -125,7 +125,7 @@ void CML::polyMesh::initMesh(cellList& c)
         {
             if (cellfaces[faceI] < 0)
             {
-                FatalErrorIn("polyMesh::initMesh(cellList&)")
+                FatalErrorInFunction
                     << "Illegal face label " << cellfaces[faceI]
                     << " in cell " << cellI
                     << exit(FatalError);

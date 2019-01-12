@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,11 +52,8 @@ CML::autoPtr<CML::topoSet> CML::topoSet::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "topoSet::New(const word&, "
-            "const polyMesh&, const word&, readOption, writeOption)"
-        )   << "Unknown set type " << setType
+        FatalErrorInFunction
+            << "Unknown set type " << setType
             << endl << endl
             << "Valid set types : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -81,11 +78,8 @@ CML::autoPtr<CML::topoSet> CML::topoSet::New
 
     if (cstrIter == sizeConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "topoSet::New(const word&, "
-            "const polyMesh&, const word&, const label, writeOption)"
-        )   << "Unknown set type " << setType
+        FatalErrorInFunction
+            << "Unknown set type " << setType
             << endl << endl
             << "Valid set types : " << endl
             << sizeConstructorTablePtr_->sortedToc()
@@ -110,11 +104,8 @@ CML::autoPtr<CML::topoSet> CML::topoSet::New
 
     if (cstrIter == setConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "topoSet::New(const word&, "
-            "const polyMesh&, const word&, const topoSet&, writeOption)"
-        )   << "Unknown set type " << setType
+        FatalErrorInFunction
+            << "Unknown set type " << setType
             << endl << endl
             << "Valid set types : " << endl
             << setConstructorTablePtr_->sortedToc()
@@ -147,10 +138,8 @@ void CML::topoSet::topoSet::updateLabels(const labelList& map)
     {
         if ((iter.key() < 0) || (iter.key() > map.size()))
         {
-            FatalErrorIn
-            (
-                "topoSet::updateLabels(const labelList&, labelHashSet)"
-            )   << "Illegal content " << iter.key() << " of set:" << name()
+            FatalErrorInFunction
+                << "Illegal content " << iter.key() << " of set:" << name()
                 << " of type " << type() << endl
                 << "Value should be between 0 and " << map.size()-1
                 << abort(FatalError);
@@ -191,7 +180,7 @@ void CML::topoSet::topoSet::check(const label maxLabel)
     {
         if ((iter.key() < 0) || (iter.key() > maxLabel))
         {
-            FatalErrorIn("topoSet::check(const label)")
+            FatalErrorInFunction
                 << "Illegal content " << iter.key() << " of set:" << name()
                 << " of type " << type() << endl
                 << "Value should be between 0 and " << maxLabel
@@ -509,7 +498,7 @@ void CML::topoSet::deleteSet(const topoSet& set)
 
 void CML::topoSet::sync(const polyMesh&)
 {
-    notImplemented("topoSet::sync(const polyMesh&)");
+    NotImplemented;
 }
 
 
@@ -551,10 +540,7 @@ void CML::topoSet::writeDebug(Ostream& os, const label maxLen) const
 //    const label
 //) const
 //{
-//    notImplemented
-//    (
-//        "topoSet::writeDebug(Ostream&, const primitiveMesh&, const label)"
-//    );
+//    NotImplemented;
 //}
 
 
@@ -566,14 +552,14 @@ bool CML::topoSet::writeData(Ostream& os) const
 
 void CML::topoSet::updateMesh(const mapPolyMesh&)
 {
-    notImplemented("topoSet::updateMesh(const mapPolyMesh&)");
+    NotImplemented;
 }
 
 
 ////- Return max index+1.
 //label topoSet::maxSize(const polyMesh&) const
 //{
-//    notImplemented("topoSet::maxSize(const polyMesh&)");
+//    NotImplemented;
 //
 //    return -1;
 //}

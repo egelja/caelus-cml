@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -305,7 +305,7 @@ void CML::AMIMethod<SourcePatch, TargetPatch>::checkPatches() const
 
         if (!bbTgtInf.contains(bbSrc))
         {
-            WarningIn("AMIMethod<SourcePatch, TargetPatch>::checkPatches()")
+            WarningInFunction
                 << "Source and target patch bounding boxes are not similar"
                 << nl
                 << "    source box span     : " << bbSrc.span() << nl
@@ -345,18 +345,7 @@ bool CML::AMIMethod<SourcePatch, TargetPatch>::initialise
     }
     else if (!tgtPatch_.size())
     {
-        WarningIn
-        (
-            "void CML::AMIMethod<SourcePatch, TargetPatch>::initialise"
-            "("
-                "labelListList&, "
-                "scalarListList&, "
-                "labelListList&, "
-                "scalarListList&, "
-                "label&, "
-                "label&"
-            ")"
-        )
+        WarningInFunction
             << srcPatch_.size() << " source faces but no target faces" << endl;
 
         return false;
@@ -386,18 +375,8 @@ bool CML::AMIMethod<SourcePatch, TargetPatch>::initialise
         {
             if (requireMatch_)
             {
-                FatalErrorIn
-                (
-                    "void CML::AMIMethod<SourcePatch, TargetPatch>::initialise"
-                    "("
-                        "labelListList&, "
-                        "scalarListList&, "
-                        "labelListList&, "
-                        "scalarListList&, "
-                        "label&, "
-                        "label&"
-                    ")"
-                )   << "Unable to find initial target face"
+                FatalErrorInFunction
+                    << "Unable to find initial target face"
                     << abort(FatalError);
             }
 
@@ -649,20 +628,8 @@ CML::AMIMethod<SourcePatch, TargetPatch>::New
 
     if (cstrIter == componentsConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "AMIMethod<SourcePatch, TargetPatch>::New"
-            "("
-                "const word&, "
-                "const SourcePatch&, "
-                "const TargetPatch&, "
-                "const scalarField&, "
-                "const scalarField&, "
-                "const faceAreaIntersect::triangulationMode&, "
-                "const bool, "
-                "const bool"
-            ")"
-        )   << "Unknown AMIMethod type "
+        FatalErrorInFunction
+            << "Unknown AMIMethod type "
             << methodName << nl << nl
             << "Valid AMIMethod types are:" << nl
             << componentsConstructorTablePtr_->sortedToc() << exit(FatalError);

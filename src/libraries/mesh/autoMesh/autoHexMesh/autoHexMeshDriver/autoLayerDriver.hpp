@@ -189,8 +189,22 @@ class autoLayerDriver
                     const indirectPrimitivePatch& pp,
                     pointField& patchDisp,
                     labelList& patchNLayers,
-                    List<extrudeMode>& extrudeStatus
+                    List<extrudeMode>& extrudeStatus,
+                    label& nIdealAddedCells
                 ) const;
+
+                //- Helper function to make a pointVectorField with correct
+                //  bcs for layer addition:
+                //  - numLayers > 0         : fixedValue
+                //  - numLayers == 0        : fixedValue (always zero)
+                //  - processor             : calculated (so free to move)
+                //  - cyclic/wedge/symmetry : slip
+                //  - other                 : slip
+                static tmp<pointVectorField> makeLayerDisplacementField
+                (
+                    const pointMesh& pMesh,
+                    const labelList& numLayers
+                );
 
                 //- Grow no-extrusion layer.
                 void growNoExtrusion
@@ -220,12 +234,7 @@ class autoLayerDriver
                 (
                     const indirectPrimitivePatch& pp,
                     const labelList& patchIDs,
-
-                    const scalarField& patchExpansionRatio,
-                    const bool relativeSizes,
-                    const scalarField& patchFinalLayerThickness,
-                    const scalarField& patchMinThickness,
-
+                    const layerParameters& layerParams,
                     const labelList& cellLevel,
                     const labelList& patchNLayers,
                     const scalar edge0Len,
@@ -441,7 +450,6 @@ class autoLayerDriver
                     const PackedBoolList& isMasterEdge,
                     const labelList& meshEdges,
                     const scalar minCosLayerTermination,
-                    scalarField& field,
                     List<extrudeMode>& extrudeStatus,
                     pointField& patchDisp,
                     labelList& patchNLayers
@@ -454,10 +462,12 @@ class autoLayerDriver
                     const label nSmoothNormals,
                     const label nSmoothSurfaceNormals,
                     const scalar minMedianAxisAngleCos,
+                    const scalar featureAngle,
 
                     pointVectorField& dispVec,
                     pointScalarField& medialRatio,
-                    pointScalarField& medialDist
+                    pointScalarField& medialDist,
+                    pointVectorField& medialVec
                 ) const;
 
                 //- Main routine to shrink mesh
@@ -478,6 +488,7 @@ class autoLayerDriver
                     const pointVectorField& dispVec,
                     const pointScalarField& medialRatio,
                     const pointScalarField& medialDist,
+                    const pointVectorField& medialVec,
 
                     List<extrudeMode>& extrudeStatus,
                     pointField& patchDisp,
@@ -562,6 +573,8 @@ void CML::autoLayerDriver::averageNeighbours
     Field<Type>& average
 )
 {
+    const pointField& pts = mesh.points();
+
     average = pTraits<Type>::zero;
 
     forAll(edges, edgeI)
@@ -570,7 +583,18 @@ void CML::autoLayerDriver::averageNeighbours
         {
             const edge& e = edges[edgeI];
             //scalar eWeight = edgeWeights[edgeI];
-            scalar eWeight =  1.0;
+            //scalar eWeight =  1.0;
+            scalar eMag = max
+            (
+                VSMALL,
+                mag
+                (
+                    pts[meshPoints[e[1]]]
+                  - pts[meshPoints[e[0]]]
+                )
+            );
+            scalar eWeight = 1.0/eMag;
+
             label v0 = e[0];
             label v1 = e[1];
 

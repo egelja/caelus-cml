@@ -31,7 +31,7 @@ Description
 
     The strain rate is defined by:
 
-        mag(symm(grad(U)))
+        sqrt(2.0)*mag(symm(grad(U)))
 
 
 SourceFiles
@@ -44,9 +44,11 @@ SourceFiles
 #define viscosityModel_H
 
 #include "IOdictionary.hpp"
+#include "Switch.hpp"
 #include "typeInfo.hpp"
 #include "runTimeSelectionTables.hpp"
 #include "volFieldsFwd.hpp"
+#include "volFields.hpp"
 #include "surfaceFieldsFwd.hpp"
 #include "dimensionedScalar.hpp"
 #include "tmp.hpp"
@@ -63,26 +65,34 @@ namespace CML
 
 class viscosityModel
 {
+private:
+
+    //- Disallow copy construct
+    viscosityModel(const viscosityModel&);
+
+    //- Disallow default bitwise assignment
+    void operator=(const viscosityModel&);
 
 protected:
 
-    // Protected data
+    word name_;
 
-        word name_;
-        dictionary viscosityProperties_;
+    dictionary viscosityProperties_;
 
-        const volVectorField& U_;
-        const surfaceScalarField& phi_;
+    //- Switch for printing model coefficients
+    const Switch printCoeffs_;
 
+    //- Switch for outputing shear strain rate
+    const Switch outputShearStrainRate_;
 
-    // Private Member Functions
+    const volVectorField& U_;
+    const surfaceScalarField& phi_;
 
-        //- Disallow copy construct
-        viscosityModel(const viscosityModel&);
+    //- Shear Strain Rate field 
+    volScalarField ssr_;
 
-        //- Disallow default bitwise assignment
-        void operator=(const viscosityModel&);
-
+    //- Print model coefficients
+    virtual void printCoeffs();
 
 public:
 
@@ -91,44 +101,41 @@ public:
 
 
     // Declare run-time constructor selection table
-
-        declareRunTimeSelectionTable
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        viscosityModel,
+        dictionary,
         (
-            autoPtr,
-            viscosityModel,
-            dictionary,
-            (
-                const word& name,
-                const dictionary& viscosityProperties,
-                const volVectorField& U,
-                const surfaceScalarField& phi
-            ),
-            (name, viscosityProperties, U, phi)
-        );
+            const word& name,
+            const dictionary& viscosityProperties,
+            const volVectorField& U,
+            const surfaceScalarField& phi
+        ),
+        (name, viscosityProperties, U, phi)
+    );
 
 
     // Selectors
 
-        //- Return a reference to the selected viscosity model
-        static autoPtr<viscosityModel> New
-        (
-            const word& name,
-            const dictionary& viscosityProperties,
-            const volVectorField& U,
-            const surfaceScalarField& phi
-        );
+    //- Return a reference to the selected viscosity model
+    static autoPtr<viscosityModel> New
+    (
+        const word& name,
+        const dictionary& viscosityProperties,
+        const volVectorField& U,
+        const surfaceScalarField& phi
+    );
 
 
-    // Constructors
-
-        //- Construct from components
-        viscosityModel
-        (
-            const word& name,
-            const dictionary& viscosityProperties,
-            const volVectorField& U,
-            const surfaceScalarField& phi
-        );
+    //- Construct from components
+    viscosityModel
+    (
+        const word& name,
+        const dictionary& viscosityProperties,
+        const volVectorField& U,
+        const surfaceScalarField& phi
+    );
 
 
     //- Destructor
@@ -138,23 +145,26 @@ public:
 
     // Member Functions
 
-        //- Return the phase transport properties dictionary
-        const dictionary& viscosityProperties() const
-        {
-            return viscosityProperties_;
-        }
+    //- Return the phase transport properties dictionary
+    const dictionary& viscosityProperties() const
+    {
+        return viscosityProperties_;
+    }
 
-        //- Return the strain rate
-        tmp<volScalarField> strainRate() const;
+    //- Return the shear strain rate
+    const volScalarField& strainRate() const
+    {
+        return ssr_;
+    }
 
-        //- Return the laminar viscosity
-        virtual tmp<volScalarField> nu() const = 0;
+    //- Return the laminar viscosity
+    virtual tmp<volScalarField> nu() const = 0;
 
-        //- Correct the laminar viscosity
-        virtual void correct() = 0;
+    //- Correct the laminar viscosity
+    virtual void correct();
 
-        //- Read transportProperties dictionary
-        virtual bool read(const dictionary& viscosityProperties) = 0;
+    //- Read transportProperties dictionary
+    virtual bool read(const dictionary& viscosityProperties) = 0;
 };
 
 

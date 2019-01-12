@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,7 +19,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "BirdCarreau.hpp"
+#include "CarreauYasudaCross.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "surfaceFields.hpp"
 
@@ -29,11 +29,11 @@ namespace CML
 {
 namespace viscosityModels
 {
-    defineTypeNameAndDebug(BirdCarreau, 0);
+    defineTypeNameAndDebug(CarreauYasudaCross, 0);
     addToRunTimeSelectionTable
     (
         viscosityModel,
-        BirdCarreau,
+        CarreauYasudaCross,
         dictionary
     );
 }
@@ -43,18 +43,25 @@ namespace viscosityModels
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 CML::tmp<CML::volScalarField>
-CML::viscosityModels::BirdCarreau::calcNu() const
+CML::viscosityModels::CarreauYasudaCross::calcNu() const
 {
+    dimensionedScalar tone("tone", dimTime, 1.0);
+    dimensionedScalar rtone("rtone", dimless/dimTime, 1.0);
+
+    tmp<volScalarField> sr(strainRate());
+
     return
-        nuInf_
-      + (nu0_ - nuInf_)
-       *pow(scalar(1) + sqr(k_*strainRate()), (n_ - 1.0)/2.0);
+    (
+      (muInf_ + (mu0_ - muInf_)*pow(scalar(1) + pow(lambda_*
+      max(sr(), dimensionedScalar("VSMALL", dimless/dimTime, VSMALL)), a_), (n_ - 1.0)/a_))
+      /rhoRef_
+    );
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::viscosityModels::BirdCarreau::BirdCarreau
+CML::viscosityModels::CarreauYasudaCross::CarreauYasudaCross
 (
     const word& name,
     const dictionary& viscosityProperties,
@@ -63,11 +70,13 @@ CML::viscosityModels::BirdCarreau::BirdCarreau
 )
 :
     viscosityModel(name, viscosityProperties, U, phi),
-    BirdCarreauCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
-    nu0_(BirdCarreauCoeffs_.lookup("nu0")),
-    nuInf_(BirdCarreauCoeffs_.lookup("nuInf")),
-    k_(BirdCarreauCoeffs_.lookup("k")),
-    n_(BirdCarreauCoeffs_.lookup("n")),
+    CarreauYasudaCrossCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
+    mu0_(CarreauYasudaCrossCoeffs_.lookup("mu0")),
+    muInf_(CarreauYasudaCrossCoeffs_.lookup("muInf")),
+    lambda_(CarreauYasudaCrossCoeffs_.lookup("lambda")),
+    n_(CarreauYasudaCrossCoeffs_.lookup("n")),
+    a_(CarreauYasudaCrossCoeffs_.lookup("a")),
+    rhoRef_(CarreauYasudaCrossCoeffs_.lookup("rhoRef")),
     nu_
     (
         IOobject
@@ -85,19 +94,31 @@ CML::viscosityModels::BirdCarreau::BirdCarreau
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-bool CML::viscosityModels::BirdCarreau::read
+void CML::viscosityModels::CarreauYasudaCross::correct()
+{
+    viscosityModel::correct();
+    nu_.storePrevIter();
+    nu_ = calcNu();
+    // Explicitly relax
+    nu_.relax();
+}
+
+
+bool CML::viscosityModels::CarreauYasudaCross::read
 (
     const dictionary& viscosityProperties
 )
 {
     viscosityModel::read(viscosityProperties);
 
-    BirdCarreauCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
+    CarreauYasudaCrossCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
 
-    BirdCarreauCoeffs_.lookup("nu0") >> nu0_;
-    BirdCarreauCoeffs_.lookup("nuInf") >> nuInf_;
-    BirdCarreauCoeffs_.lookup("k") >> k_;
-    BirdCarreauCoeffs_.lookup("n") >> n_;
+    CarreauYasudaCrossCoeffs_.lookup("mu0") >> mu0_;
+    CarreauYasudaCrossCoeffs_.lookup("muInf") >> muInf_;
+    CarreauYasudaCrossCoeffs_.lookup("lambda") >> lambda_;
+    CarreauYasudaCrossCoeffs_.lookup("n") >> n_;
+    CarreauYasudaCrossCoeffs_.lookup("a") >> a_;
+    CarreauYasudaCrossCoeffs_.lookup("rhoRef") >> rhoRef_;
 
     return true;
 }

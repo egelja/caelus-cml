@@ -46,23 +46,25 @@ namespace viscosityModels
 CML::tmp<CML::volScalarField>
 CML::viscosityModels::powerLaw::calcNu() const
 {
+    dimensionedScalar tone("tone", dimTime, 1.0);
+
     return max
     (
-        nuMin_,
+        muMin_,
         min
         (
-            nuMax_,
+            muMax_,
             k_*pow
             (
                 max
                 (
-                    dimensionedScalar("one", dimTime, 1.0)*strainRate(),
+                    tone*strainRate(),
                     dimensionedScalar("VSMALL", dimless, VSMALL)
                 ),
                 n_.value() - scalar(1.0)
             )
         )
-    );
+    )/rhoRef_;
 }
 
 
@@ -80,8 +82,9 @@ CML::viscosityModels::powerLaw::powerLaw
     powerLawCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
     k_(powerLawCoeffs_.lookup("k")),
     n_(powerLawCoeffs_.lookup("n")),
-    nuMin_(powerLawCoeffs_.lookup("nuMin")),
-    nuMax_(powerLawCoeffs_.lookup("nuMax")),
+    muMin_(powerLawCoeffs_.lookup("muMin")),
+    muMax_(powerLawCoeffs_.lookup("muMax")),
+    rhoRef_(powerLawCoeffs_.lookup("rhoRef")),
     nu_
     (
         IOobject
@@ -99,6 +102,16 @@ CML::viscosityModels::powerLaw::powerLaw
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+
+void CML::viscosityModels::powerLaw::correct()
+{
+    viscosityModel::correct();
+    nu_.storePrevIter();
+    nu_ = calcNu();
+    nu_.relax();
+}
+
+
 bool CML::viscosityModels::powerLaw::read
 (
     const dictionary& viscosityProperties
@@ -110,8 +123,9 @@ bool CML::viscosityModels::powerLaw::read
 
     powerLawCoeffs_.lookup("k") >> k_;
     powerLawCoeffs_.lookup("n") >> n_;
-    powerLawCoeffs_.lookup("nuMin") >> nuMin_;
-    powerLawCoeffs_.lookup("nuMax") >> nuMax_;
+    powerLawCoeffs_.lookup("muMin") >> muMin_;
+    powerLawCoeffs_.lookup("muMax") >> muMax_;
+    powerLawCoeffs_.lookup("rhoRef") >> rhoRef_;
 
     return true;
 }

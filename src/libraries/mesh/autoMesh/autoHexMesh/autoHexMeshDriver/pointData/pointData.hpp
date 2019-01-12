@@ -144,6 +144,13 @@ public:
                 TrackingData& td
             );
 
+    // Member Operators
+
+        // Needed for List IO
+        inline bool operator==(const pointData&) const;
+        inline bool operator!=(const pointData&) const;
+
+
     // IOstream Operators
 
         friend Ostream& operator<<(Ostream&, const pointData&);

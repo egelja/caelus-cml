@@ -5,17 +5,22 @@ import utils
 from variables import caelus_vars, init_dependent_vars
 from compiler import update_compiler_settings
 from environment import dump_environment
+from utils import TempFileMunge_caelus
 
 ### Initialize toolsets based on operating system
 ostype = utils.ostype()
 tools = ['default']
 if ostype == 'windows':
-    tools += ['mingw']
+    tools += ['mingw_caelus']
 
 ### Base SCons environment
 env = Environment(variables = caelus_vars,
                   tools = tools,
                   ENV = os.environ)
+
+if ostype == 'windows':
+    env['TEMPFILE']       = TempFileMunge_caelus
+
 Help(caelus_vars.GenerateHelpText(env))
 init_dependent_vars(env)
 update_compiler_settings(env)

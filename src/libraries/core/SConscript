@@ -770,6 +770,7 @@ src_core = Split("""
     fields/fvPatchFields/derived/flowRateInletVelocity/flowRateInletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/movingWallVelocity/movingWallVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/outletInlet/outletInletFvPatchFields.cpp
+    fields/fvPatchFields/derived/outletMappedUniformInlet/outletMappedUniformInletFvPatchFields.cpp
     fields/fvPatchFields/derived/pressureDirectedInletOutletVelocity/pressureDirectedInletOutletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/pressureDirectedInletVelocity/pressureDirectedInletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/pressureInletOutletVelocity/pressureInletOutletVelocityFvPatchVectorField.cpp

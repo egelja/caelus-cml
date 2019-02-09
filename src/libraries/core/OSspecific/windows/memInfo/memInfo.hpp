@@ -117,6 +117,13 @@ public:
         return rss_;
     }
 
+    //- Access the stored swap value
+    //  The value is stored from the previous update()
+    int swap() const
+    {
+        return swap_;
+    }
+
     //- True if the memory information appears valid
     bool valid() const;
 	

@@ -41,6 +41,9 @@ int main(int argc, char *argv[])
     memInfo mem;
 
     Info<< memTags << mem << endl;
+    Info<< "Swap is = "<<mem.swap()<<endl;
+    Info<< "RSS is = "<<mem.rss()<<endl;
+
     List<vector> lst(n, vector::one);
 
     Info<< "allocate " << n << " vectors" << nl

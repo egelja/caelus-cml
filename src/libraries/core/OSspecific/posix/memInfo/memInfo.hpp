@@ -118,6 +118,13 @@ public:
                 return rss_;
             }
 
+            //- Access the stored swap value (VmRSS in /proc/\<pid\>/status)
+            //  The value is stored from the previous update()
+            int swap() const
+            {
+                return swap_;
+            }
+
             //- True if the memory information appears valid
             bool valid() const;
 

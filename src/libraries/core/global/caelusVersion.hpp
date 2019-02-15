@@ -50,6 +50,7 @@ namespace CML
 {
     extern const char* const CAELUSversion;
     extern const char* const CAELUSbuild;
+    extern const char* const CAELUStag;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

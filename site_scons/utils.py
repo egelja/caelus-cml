@@ -149,6 +149,24 @@ def get_git_branch():
     else:
         return stdout.strip()
 
+def get_git_tag():
+    """Return the closest annotated tag
+
+    Returns:
+        str: Name of the closest annotated tag 
+    """
+    import shlex
+    from subprocess import Popen, PIPE
+    shell = True if ostype() == "windows" else False
+    cmdline = shlex.split("git describe --tags --abbrev=0")
+    cmd = Popen(cmdline, stdout=PIPE, stderr=PIPE, shell=shell)
+    stdout, stderr = cmd.communicate()
+    if stderr:
+        # Encountered some error, so return empty string
+        return ''
+    else:
+        return stdout.strip()
+
 def tag_build_version(target, source, env):
     """Tag the build version for dependency tracking"""
     cver = env['PROJECT_VERSION']
@@ -168,10 +186,11 @@ def tag_build_version(target, source, env):
 
 def tag_user_build_version(target, source, env):
     """Tag the build version for tracking of the users library/application"""
+    tag    = get_git_tag()
     branch = get_git_branch()
     gitver = get_git_version()
     if gitver:
-        build_str = "%s-%s"%(branch, gitver)
+        build_str = "%s-%s-%s"%(branch, tag, gitver)
     else:
         build_str = branch
     output = True
@@ -187,6 +206,12 @@ def stamp_caelus_version(target, source, env):
     """Generate Caelus global.cpp file"""
     cver = env['PROJECT_VERSION']
     gitver = get_git_version()
+    tag    = get_git_tag()
+    if tag:
+        tag_str = "%s"%(tag)
+    else:
+        tag_str = 'NOTAG'
+
     if gitver:
         build_str = "%s-%s"%(cver, gitver[:12])
     else:
@@ -194,22 +219,32 @@ def stamp_caelus_version(target, source, env):
     data = open(source[0].abspath).read()
     data_out = data.replace(
         'VERSION_STRING', cver).replace(
-            'BUILD_STRING',build_str)
+            'BUILD_STRING',build_str).replace(
+            'TAG_STRING',tag_str)
+
     with open(target[0].abspath, 'w') as fh:
         fh.write(data_out)
 
 def stamp_user_version(target, source, env):
     """Generate user version.hpp file"""
+    tag    = get_git_tag()
     branch = get_git_branch()
     gitver = get_git_version()
+
+    if tag:
+        tag_str = "%s"%(tag)
+    else:
+        tag_str = 'NOTAG'
+
     if gitver:
-        build_str = "%s-%s"%(branch, gitver[:12])
+        build_str = "%s-%s-%s"%(branch, tag, gitver[:12])
     else:
         build_str = branch
     data = open(source[0].abspath).read()
     data_out = data.replace(
         'BRANCH_STRING', branch).replace(
-            'BUILD_STRING',build_str)
+            'TAG_STRING', tag_str).replace(
+            'BUILD_STRING', build_str)
     with open(target[0].abspath, 'w') as fh:
         fh.write(data_out)
 

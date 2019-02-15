@@ -32,6 +32,7 @@ Description
 
 const char* const CML::CAELUSversion = "VERSION_STRING";
 const char* const CML::CAELUSbuild = "BUILD_STRING";
+const char* const CML::CAELUStag = "TAG_STRING";
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Setup an error handler for the global new operator

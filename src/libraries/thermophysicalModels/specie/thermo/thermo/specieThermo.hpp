@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2011-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,6 +31,7 @@ Description
 #ifndef specieThermo_HPP
 #define specieThermo_HPP
 
+#include "IOmanip.hpp"
 #include "thermodynamicConstants.hpp"
 using namespace CML::constant::thermodynamic;
 
@@ -97,12 +98,13 @@ class thermo
     //  and dF(p, T)/dT
     inline scalar T
     (
-        scalar f,
-        scalar p,
-        scalar T0,
+        const scalar f,
+        const scalar p,
+        const scalar T0,
         scalar (thermo::*F)(const scalar, const scalar) const,
         scalar (thermo::*dFdT)(const scalar, const scalar) const,
-        scalar (thermo::*limit)(const scalar) const
+        scalar (thermo::*limit)(const scalar) const,
+        const bool diagnostics = false
     ) const
     {
         if (T0 < 0)
@@ -117,15 +119,46 @@ class thermo
         scalar Ttol = T0*tol_;
         int    iter = 0;
 
+        if (diagnostics)
+        {
+            const unsigned int width = IOstream::defaultPrecision() + 8;
+
+            InfoInFunction
+                << "Energy -> temperature conversion failed to converge:" << endl;
+            Pout<< setw(width) << "iter"
+                << setw(width) << "Test"
+                << setw(width) << "e/h"
+                << setw(width) << "Cv/p"
+                << setw(width) << "Tnew"
+                << endl;
+        }
+
         do
         {
             Test = Tnew;
             Tnew =
                 (this->*limit)
                 (Test - ((this->*F)(p, Test) - f)/(this->*dFdT)(p, Test));
-    
+
+            if (diagnostics)
+            {
+                const unsigned int width = IOstream::defaultPrecision() + 8;
+
+                Pout<< setw(width) << iter
+                    << setw(width) << Test
+                    << setw(width) << ((this->*F)(p, Test))
+                    << setw(width) << ((this->*dFdT)(p, Test))
+                    << setw(width) << Tnew
+                    << endl;
+            }
+
             if (iter++ > maxIter_)
             {
+                if (!diagnostics)
+                {
+                    T(f, p, T0, F, dFdT, limit, true);
+                }
+
                 FatalErrorInFunction
                     << "Maximum number of iterations exceeded: " << maxIter_
                     << abort(FatalError);

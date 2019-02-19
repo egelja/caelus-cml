@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2011-2019 OpenFOAM Foundation
 Copyright (C) 2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
@@ -610,6 +610,16 @@ public:
             trackingData& td
         );
 
+        //- As above, but does not change the master patch. Needed in order for
+        //  ACMI to be able to delegate a hit to the non-overlap patch.
+        template<class TrackCloudType>
+        void hitFaceNoChangeToMasterPatch
+        (
+            const vector& direction,
+            TrackCloudType& cloud,
+            trackingData& td
+        );
+
         //- Convenience function. Combines trackToFace and hitFace
         template<class TrackCloudType>
         scalar trackToAndHitFace
@@ -1143,6 +1153,28 @@ void CML::particle::hitFace
         Info << "Particle " << origId() << nl << FUNCTION_NAME << nl << endl;
     }
 
+    if (onBoundaryFace())
+    {
+        changeToMasterPatch();
+    }
+
+    hitFaceNoChangeToMasterPatch(direction, cloud, td);
+}
+
+
+template<class TrackCloudType>
+void CML::particle::hitFaceNoChangeToMasterPatch
+(
+    const vector& direction,
+    TrackCloudType& cloud,
+    trackingData& td
+)
+{
+    if (debug)
+    {
+        Info << "Particle " << origId() << nl << FUNCTION_NAME << nl << endl;
+    }
+
     typename TrackCloudType::particleType& p =
         static_cast<typename TrackCloudType::particleType&>(*this);
     typename TrackCloudType::particleType::trackingData& ttd =
@@ -1158,8 +1190,6 @@ void CML::particle::hitFace
     }
     else if (onBoundaryFace())
     {
-        changeToMasterPatch();
-
         if (!p.hitPatch(cloud, ttd))
         {
             const polyPatch& patch = mesh_.boundaryMesh()[p.patch()];
@@ -1386,6 +1416,9 @@ void CML::particle::hitCyclicACMIPatch
     const vector& direction
 )
 {
+    typename TrackCloudType::particleType& p =
+        static_cast<typename TrackCloudType::particleType&>(*this);
+
     const cyclicACMIPolyPatch& cpp =
         static_cast<const cyclicACMIPolyPatch&>(mesh_.boundaryMesh()[patch()]);
 
@@ -1416,7 +1449,7 @@ void CML::particle::hitCyclicACMIPatch
         // Move to the face associated with the non-overlap patch and redo the
         // face interaction.
         tetFacei_ = facei_ = cpp.nonOverlapPatch().start() + localFacei;
-        hitFace(direction, cloud, td);
+        p.hitFaceNoChangeToMasterPatch(direction, cloud, td);
     }
 }
 

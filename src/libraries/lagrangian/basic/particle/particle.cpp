@@ -445,7 +445,8 @@ void CML::particle::locate
     // through each tet from the cell centre. If a tet contains the position
     // then the track will end with a single trackToTri.
     const class cell& c = mesh_.cells()[celli_];
-    label minF = 1, minTetFacei = -1, minTetPti = -1;
+    scalar minF = VGREAT;
+    label minTetFacei = -1, minTetPti = -1;
     forAll(c, cellTetFacei)
     {
         const class face& f = mesh_.faces()[c[cellTetFacei]];
@@ -776,7 +777,7 @@ CML::scalar CML::particle::trackToStationaryTri
     scalar muH = std::isnormal(detA) && detA <= 0 ? VGREAT : 1/detA;
     for (label i = 0; i < 4; ++ i)
     {
-        if (std::isnormal(Tx1[i]) && Tx1[i] < 0)
+        if (Tx1[i] < - detA*SMALL)
         {
             scalar mu = - y0[i]/Tx1[i];
 
@@ -926,7 +927,11 @@ CML::scalar CML::particle::trackToMovingTri
 
         for (label j = 0; j < 3; ++j)
         {
-            if (mu.type(j) == rootType::real && hitEqn[i].derivative(mu[j]) < 0)
+            if
+            (
+                mu.type(j) == rootType::real
+              && hitEqn[i].derivative(mu[j]) < - detA[0]*SMALL
+            )
             {
                 if (debug)
                 {

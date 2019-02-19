@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2018 OpenFOAM Foundation
+Copyright (C) 2012-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -164,7 +164,9 @@ public:
     //- Return Cp departure [J/(kg K]
     inline scalar Cp(scalar p, scalar T) const
     {
-        return 0;
+        return
+            sqr(p/(rho(p, T)*T))/this->R()
+          - sqr(Pstd/(rho(Pstd, T)*T))/this->R();
     }
 
     //- Return internal energy departure [J/kg]

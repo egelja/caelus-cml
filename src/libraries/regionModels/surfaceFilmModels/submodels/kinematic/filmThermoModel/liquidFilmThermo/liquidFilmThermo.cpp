@@ -23,6 +23,7 @@ License
 #include "demandDrivenData.hpp"
 #include "thermoSingleLayer.hpp"
 #include "SLGThermo.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -247,7 +248,7 @@ tmp<volScalarField> liquidFilmThermo::rho() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimDensity, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -295,7 +296,7 @@ tmp<volScalarField> liquidFilmThermo::mu() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimPressure*dimTime, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -343,7 +344,7 @@ tmp<volScalarField> liquidFilmThermo::sigma() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimMass/sqr(dimTime), 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -391,7 +392,7 @@ tmp<volScalarField> liquidFilmThermo::Cp() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimEnergy/dimMass/dimTemperature, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -439,7 +440,7 @@ tmp<volScalarField> liquidFilmThermo::kappa() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimPower/dimLength/dimTemperature, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 

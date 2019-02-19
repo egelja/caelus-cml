@@ -11,7 +11,7 @@ surfaceScalarField phiHbyA
 (
     "phiHbyA",
     (fvc::interpolate(HbyA) & mesh.Sf())
-  + rAUf*fvc::ddtCorr(U, phi)
+  + MRF.zeroFilter(rAUf*fvc::ddtCorr(U, phi))
 );
 
 MRF.makeRelative(phiHbyA);

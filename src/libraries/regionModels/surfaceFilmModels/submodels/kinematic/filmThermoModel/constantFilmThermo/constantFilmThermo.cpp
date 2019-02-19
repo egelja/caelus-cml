@@ -20,6 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "constantFilmThermo.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -295,7 +296,7 @@ tmp<volScalarField> constantFilmThermo::mu() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimPressure*dimTime, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -322,7 +323,7 @@ tmp<volScalarField> constantFilmThermo::sigma() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimMass/sqr(dimTime), 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -349,7 +350,7 @@ tmp<volScalarField> constantFilmThermo::Cp() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimEnergy/dimMass/dimTemperature, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -376,7 +377,7 @@ tmp<volScalarField> constantFilmThermo::kappa() const
             ),
             film().regionMesh(),
             dimensionedScalar("0", dimPower/dimLength/dimTemperature, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 

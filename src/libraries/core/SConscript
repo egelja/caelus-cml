@@ -728,6 +728,7 @@ src_core = Split("""
     fields/fvPatchFields/basic/calculated/calculatedFvPatchFields.cpp
     fields/fvPatchFields/basic/coupled/coupledFvPatchFields.cpp
     fields/fvPatchFields/basic/directionMixed/directionMixedFvPatchFields.cpp
+    fields/fvPatchFields/basic/extrapolatedCalculated/extrapolatedCalculatedFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedGradient/fixedGradientFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedValue/fixedValueFvPatchFields.cpp
     fields/fvPatchFields/basic/generic/genericFvPatchFields.cpp

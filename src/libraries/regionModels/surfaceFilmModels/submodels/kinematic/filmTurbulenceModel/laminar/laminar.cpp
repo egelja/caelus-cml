@@ -27,6 +27,7 @@ License
 #include "volFields.hpp"
 #include "fvmSup.hpp"
 #include "kinematicSingleLayer.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -79,7 +80,7 @@ tmp<volVectorField> laminar::Us() const
             ),
             filmModel_.regionMesh(),
             dimensionedVector("zero", dimVelocity, Zero),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 

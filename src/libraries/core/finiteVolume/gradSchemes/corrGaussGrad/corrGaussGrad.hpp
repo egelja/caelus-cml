@@ -136,7 +136,7 @@ public:
 }
 }
 
-#include "zeroGradientFvPatchField.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 template<class Type> CML::tmp
 <
@@ -178,7 +178,7 @@ CML::fv::CorrGaussGrad<Type>::gradf
                 ssf.dimensions()/dimLength,
                 pTraits<GradType>::zero
             ),
-            zeroGradientFvPatchField<GradType>::typeName
+            extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
     );
 

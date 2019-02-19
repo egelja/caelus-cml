@@ -50,7 +50,6 @@ License
 #include "Random.hpp"
 #include "searchableSurfaces.hpp"
 #include "treeBoundBox.hpp"
-#include "zeroGradientFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -2426,8 +2425,7 @@ void CML::meshRefinement::dumpRefinementLevel() const
                 false
             ),
             mesh_,
-            dimensionedScalar("zero", dimless, 0),
-            zeroGradientFvPatchScalarField::typeName
+            dimensionedScalar("zero", dimless, 0)
         );
 
         const labelList& cellLevel = meshCutter_.cellLevel();

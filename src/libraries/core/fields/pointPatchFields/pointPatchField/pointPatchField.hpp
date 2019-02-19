@@ -61,6 +61,9 @@ template<class Type>
 class pointPatchField;
 
 template<class Type>
+class calculatedPointPatchField;
+
+template<class Type>
 Ostream& operator<<
 (
     Ostream&,
@@ -96,6 +99,7 @@ class pointPatchField
 public:
 
     typedef pointPatch Patch;
+    typedef calculatedPointPatchField<Type> Calculated;
 
 
     //- Runtime type information

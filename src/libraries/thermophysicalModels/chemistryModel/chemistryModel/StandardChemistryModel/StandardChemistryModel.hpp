@@ -37,6 +37,7 @@ Description
 #include "volFields.hpp"
 #include "simpleMatrix.hpp"
 #include "uniformField.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -589,7 +590,7 @@ CML::StandardChemistryModel<ReactionThermo, ThermoType>::tc() const
             ),
             this->mesh(),
             dimensionedScalar("zero", dimTime, SMALL),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -662,8 +663,7 @@ CML::StandardChemistryModel<ReactionThermo, ThermoType>::Qdot() const
                 false
             ),
             this->mesh_,
-            dimensionedScalar("zero", dimEnergy/dimVolume/dimTime, 0),
-            zeroGradientFvPatchScalarField::typeName
+            dimensionedScalar("zero", dimEnergy/dimVolume/dimTime, 0)
         )
     );
 

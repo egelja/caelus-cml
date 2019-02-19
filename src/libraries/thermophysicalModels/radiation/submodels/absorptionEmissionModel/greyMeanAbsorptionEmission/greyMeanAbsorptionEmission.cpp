@@ -22,7 +22,7 @@ License
 #include "greyMeanAbsorptionEmission.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "unitConversion.hpp"
-#include "zeroGradientFvPatchFields.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 #include "basicSpecieMixture.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -200,7 +200,7 @@ CML::radiation::greyMeanAbsorptionEmission::aCont(const label bandI) const
             ),
             mesh(),
             dimensionedScalar("a", dimless/dimLength, 0.0),
-            zeroGradientFvPatchVectorField::typeName
+            extrapolatedCalculatedFvPatchVectorField::typeName
         )
     );
 

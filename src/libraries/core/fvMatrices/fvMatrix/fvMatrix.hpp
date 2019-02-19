@@ -1073,7 +1073,7 @@ tmp<fvMatrix<Type> > operator*
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "calculatedFvPatchFields.hpp"
-#include "zeroGradientFvPatchFields.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 #include "coupledFvPatchFields.hpp"
 #include "UIndirectList.hpp"
 
@@ -1780,7 +1780,7 @@ CML::tmp<CML::volScalarField> CML::fvMatrix<Type>::A() const
             ),
             psi_.mesh(),
             dimensions_/psi_.dimensions()/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -1809,7 +1809,7 @@ CML::fvMatrix<Type>::H() const
             ),
             psi_.mesh(),
             dimensions_/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& Hphi = tHphi();
@@ -1875,7 +1875,7 @@ CML::tmp<CML::volScalarField> CML::fvMatrix<Type>::H1() const
             ),
             psi_.mesh(),
             dimensions_/(dimVol*psi_.dimensions()),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     volScalarField& H1_ = tH1();
@@ -2004,7 +2004,7 @@ CML::fvMatrix<Type>::Ac() const
             ),
             psi_.mesh(),
             dimensions_/(psi_.dimensions()*dimVol),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -2034,7 +2034,7 @@ CML::fvMatrix<Type>::spai0() const
             ),
             psi_.mesh(),
             dimensions_/(psi_.dimensions()*dimVol),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -2065,7 +2065,7 @@ CML::fvMatrix<Type>::R() const
             ),
             psi_.mesh(),
             dimensions_/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -3410,7 +3410,7 @@ CML::operator&
             ),
             psi.mesh(),
             M.dimensions()/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& Mphi = tMphi();

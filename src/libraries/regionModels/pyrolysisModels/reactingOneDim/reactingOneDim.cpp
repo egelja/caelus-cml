@@ -21,7 +21,6 @@ License
 
 #include "reactingOneDim.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "zeroGradientFvPatchFields.hpp"
 #include "surfaceInterpolate.hpp"
 #include "fvm.hpp"
 #include "fvcDiv.hpp"

@@ -64,6 +64,9 @@ template<class Type>
 class fvPatchField;
 
 template<class Type>
+class calculatedFvPatchField;
+
+template<class Type>
 class fvMatrix;
 
 template<class Type>
@@ -104,6 +107,7 @@ class fvPatchField
 public:
 
     typedef fvPatch Patch;
+    typedef calculatedFvPatchField<Type> Calculated;
 
 
     //- Runtime type information

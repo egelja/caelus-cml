@@ -31,6 +31,7 @@ Description
 
 #include "calc.hpp"
 #include "fvc.hpp"
+#include "zeroGradientFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

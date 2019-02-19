@@ -1,83 +1,85 @@
-    Info<< "Reading thermophysical properties\n" << endl;
+Info<< "Reading thermophysical properties\n" << endl;
 
-    autoPtr<rhoThermo> pThermo(rhoThermo::New(mesh));
-    rhoThermo& thermo = pThermo();
-    thermo.validate(args.executable(), "h", "e");
+autoPtr<rhoThermo> pThermo(rhoThermo::New(mesh));
+rhoThermo& thermo = pThermo();
+thermo.validate(args.executable(), "h", "e");
 
-    volScalarField& p = thermo.p();
+volScalarField& p = thermo.p();
 
-    const volScalarField& psi = thermo.psi();
+const volScalarField& psi = thermo.psi();
 
-    volScalarField rho
+volScalarField rho
+(
+    IOobject
     (
-        IOobject
-        (
-            "rho",
-            runTime.timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        thermo.rho()
-    );
+        "rho",
+        runTime.timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    thermo.rho()
+);
 
-    Info<< "Reading field T\n" << endl;
-    volScalarField T
+Info<< "Reading field T\n" << endl;
+volScalarField T
+(
+    IOobject
     (
-        IOobject
-        (
-            "T",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
+        "T",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh
+);
 
-    Info<< "Reading field U\n" << endl;
-    volVectorField U
+Info<< "Reading field U\n" << endl;
+volVectorField U
+(
+    IOobject
     (
-        IOobject
-        (
-            "U",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
+        "U",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh
+);
 
-    #include "compressibleCreatePhi.hpp"
+#include "compressibleCreatePhi.hpp"
 
-    dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
-    dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
+mesh.setFluxRequired(p.name());
 
-    Info<< "Creating turbulence model\n" << endl;
-    autoPtr<compressible::turbulenceModel> turbulence
+dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
+dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
+
+Info<< "Creating turbulence model\n" << endl;
+autoPtr<compressible::turbulenceModel> turbulence
+(
+    compressible::turbulenceModel::New
     (
-        compressible::turbulenceModel::New
-        (
-            rho,
-            U,
-            phi,
-            thermo
-        )
-    );
+        rho,
+        U,
+        phi,
+        thermo
+    )
+);
 
-    surfaceScalarField phiHat
-    (
-        "phiHat",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
+surfaceScalarField phiHat
+(
+    "phiHat",
+    fvc::interpolate(psi)
+   *(
+        (fvc::interpolate(U) & mesh.Sf())
+    )
+);
 
-    volScalarField dpdt("dpdt", fvc::ddt(p));
+volScalarField dpdt("dpdt", fvc::ddt(p));
 
-    volScalarField Ek("Ek", 0.5*magSqr(U));
+volScalarField Ek("Ek", 0.5*magSqr(U));
 
-    volScalarField EkMatDer("EkMatDer", fvc::ddt(rho,Ek)+fvc::div(phi,Ek));
+volScalarField EkMatDer("EkMatDer", fvc::ddt(rho,Ek)+fvc::div(phi,Ek));
 

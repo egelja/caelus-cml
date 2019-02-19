@@ -552,6 +552,17 @@ CML::ITstream& CML::fvSchemes::laplacianScheme(const word& name) const
 }
 
 
+void CML::fvSchemes::setFluxRequired(const word& name) const
+{
+    if (debug)
+    {
+        Info<< "Setting fluxRequired for " << name << endl;
+    }
+
+    fluxRequired_.add(name, true);
+}
+
+
 bool CML::fvSchemes::fluxRequired(const word& name) const
 {
     if (debug)

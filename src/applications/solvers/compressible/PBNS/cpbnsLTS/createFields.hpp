@@ -1,68 +1,70 @@
-    #include "createRDeltaT.hpp"    
+#include "createRDeltaT.hpp"    
 
-    Info<< "Reading thermophysical properties\n" << endl;
+Info<< "Reading thermophysical properties\n" << endl;
 
-    autoPtr<rhoThermo> pThermo(rhoThermo::New(mesh));
-    rhoThermo& thermo = pThermo();
-    thermo.validate(args.executable(), "h", "e");
+autoPtr<rhoThermo> pThermo(rhoThermo::New(mesh));
+rhoThermo& thermo = pThermo();
+thermo.validate(args.executable(), "h", "e");
 
-    volScalarField& p = thermo.p();
+volScalarField& p = thermo.p();
 
-    const volScalarField& psi = thermo.psi();
-    volScalarField& T = const_cast<volScalarField&>(thermo.T());
+const volScalarField& psi = thermo.psi();
+volScalarField& T = const_cast<volScalarField&>(thermo.T());
 
-    volScalarField rho
+volScalarField rho
+(
+    IOobject
     (
-        IOobject
-        (
-            "rho",
-            runTime.timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        thermo.rho()
-    );
+        "rho",
+        runTime.timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    thermo.rho()
+);
 
-    Info<< "Reading field U\n" << endl;
-    volVectorField U
+Info<< "Reading field U\n" << endl;
+volVectorField U
+(
+    IOobject
     (
-        IOobject
-        (
-            "U",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
+        "U",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh
+);
 
-    #include "compressibleCreatePhi.hpp"
+#include "compressibleCreatePhi.hpp"
 
-    dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
-    dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
+mesh.setFluxRequired(p.name());
 
-    Info<< "Creating turbulence model\n" << endl;
-    autoPtr<compressible::turbulenceModel> turbulence
+dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
+dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
+
+Info<< "Creating turbulence model\n" << endl;
+autoPtr<compressible::turbulenceModel> turbulence
+(
+    compressible::turbulenceModel::New
     (
-        compressible::turbulenceModel::New
-        (
-            rho,
-            U,
-            phi,
-            thermo
-        )
-    );
+        rho,
+        U,
+        phi,
+        thermo
+    )
+);
 
-    tmp<surfaceScalarField> Uf = phi/fvc::interpolate(rho);
+tmp<surfaceScalarField> Uf = phi/fvc::interpolate(rho);
 
-    surfaceScalarField phiHat
-    (
-        "phiHat",
-        fvc::interpolate(psi)
-       *(
-            (fvc::interpolate(U) & mesh.Sf())
-        )
-    );
+surfaceScalarField phiHat
+(
+    "phiHat",
+    fvc::interpolate(psi)
+   *(
+        (fvc::interpolate(U) & mesh.Sf())
+    )
+);
 

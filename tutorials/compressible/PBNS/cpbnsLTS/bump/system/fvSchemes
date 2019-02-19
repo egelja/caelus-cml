@@ -48,11 +48,5 @@ snGradSchemes
     default           skewCorrected corrected;
 }
 
-fluxRequired
-{
-    default           no;
-    p;
-}
-
 
 // ************************************************************************* //

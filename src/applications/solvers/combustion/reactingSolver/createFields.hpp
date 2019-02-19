@@ -58,6 +58,8 @@ const label inertIndex(composition.species()[inertSpecie]);
 
 #include "compressibleCreatePhi.hpp"
 
+mesh.setFluxRequired(p.name());
+
 dimensionedScalar rhoMax(pimple.dict().lookup("rhoMax"));
 dimensionedScalar rhoMin(pimple.dict().lookup("rhoMin"));
 

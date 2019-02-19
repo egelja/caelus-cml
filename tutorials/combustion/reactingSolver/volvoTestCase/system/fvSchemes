@@ -53,11 +53,5 @@ snGradSchemes
     default         skewCorrected corrected;  // uncorrected in laminarFlame1D
 }
 
-fluxRequired
-{
-    default         no;
-    p               ;
-}
-
 
 // ************************************************************************* //

@@ -22,6 +22,7 @@ License
 #include "thermoSingleLayer.hpp"
 #include "fvcDiv.hpp"
 #include "fvcLaplacian.hpp"
+#include "fvcFlux.hpp"
 #include "fvm.hpp"
 #include "zeroGradientFvPatchFields.hpp"
 #include "mixedFvPatchFields.hpp"
@@ -535,7 +536,22 @@ thermoSingleLayer::thermoSingleLayer
         hs_ == hs(T_);
 
         deltaRho_ == delta_*rho_;
-        phi_ = fvc::interpolate(deltaRho_*U_) & regionMesh().Sf();
+
+        surfaceScalarField phi0
+        (
+            IOobject
+            (
+                "phi",
+                time().timeName(),
+                regionMesh(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            fvc::flux(deltaRho_*U_)
+        );
+
+        phi_ == phi0;
 
         // Evaluate viscosity from user-model
         viscosity_->correct(pPrimary_, T_);

@@ -623,7 +623,7 @@ localEulerDdtScheme<Type>::fvcDdtUfCorr
     fluxFieldType phiUf0(mesh().Sf() & Uf.oldTime());
     fluxFieldType phiCorr
     (
-        phiUf0 - (fvc::interpolate(U.oldTime()) & mesh().Sf())
+        phiUf0 - fvc::dotInterpolate(mesh().Sf(), U.oldTime())
     );
 
     return tmp<fluxFieldType>
@@ -655,7 +655,7 @@ localEulerDdtScheme<Type>::fvcDdtPhiCorr
 
     fluxFieldType phiCorr
     (
-        phi.oldTime() - (fvc::interpolate(U.oldTime()) & mesh().Sf())
+        phi.oldTime() - fvc::dotInterpolate(mesh().Sf(), U.oldTime())
     );
 
     return tmp<fluxFieldType>
@@ -684,21 +684,21 @@ localEulerDdtScheme<Type>::fvcDdtUfCorr
     const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
 )
 {
+    const surfaceScalarField rDeltaT(fvc::interpolate(localRDeltaT()));
+
     if
     (
         U.dimensions() == dimVelocity
      && Uf.dimensions() == dimDensity*dimVelocity
     )
     {
-        const surfaceScalarField rDeltaT(fvc::interpolate(localRDeltaT()));
-
         GeometricField<Type, fvPatchField, volMesh> rhoU0
         (
             rho.oldTime()*U.oldTime()
         );
 
         fluxFieldType phiUf0(mesh().Sf() & Uf.oldTime());
-        fluxFieldType phiCorr(phiUf0 - (fvc::interpolate(rhoU0) & mesh().Sf()));
+        fluxFieldType phiCorr(phiUf0 - fvc::dotInterpolate(mesh().Sf(), rhoU0));
 
         return tmp<fluxFieldType>
         (
@@ -743,14 +743,14 @@ localEulerDdtScheme<Type>::fvcDdtPhiCorr
     const fluxFieldType& phi
 )
 {
+    const surfaceScalarField rDeltaT(fvc::interpolate(localRDeltaT()));
+
     if
     (
         U.dimensions() == dimVelocity
      && phi.dimensions() == rho.dimensions()*dimVelocity*dimArea
     )
     {
-        dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
-
         GeometricField<Type, fvPatchField, volMesh> rhoU0
         (
             rho.oldTime()*U.oldTime()
@@ -758,7 +758,7 @@ localEulerDdtScheme<Type>::fvcDdtPhiCorr
 
         fluxFieldType phiCorr
         (
-            phi.oldTime() - (fvc::interpolate(rhoU0) & mesh().Sf())
+            phi.oldTime() - fvc::dotInterpolate(mesh().Sf(), rhoU0)
         );
 
         return tmp<fluxFieldType>

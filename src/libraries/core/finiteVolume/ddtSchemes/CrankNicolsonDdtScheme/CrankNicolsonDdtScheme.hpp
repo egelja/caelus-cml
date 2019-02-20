@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2015 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -644,8 +644,10 @@ CrankNicolsonDdtScheme<Type>::CrankNicolsonDdtScheme
         const scalar ocCoeff = firstToken.number();
         if (ocCoeff < 0 || ocCoeff > 1)
         {
-            FatalErrorInFunction
-                << "Off-centreing coefficient = " << ocCoeff
+            FatalIOErrorInFunction
+            (
+                is
+            )   << "Off-centreing coefficient = " << ocCoeff
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
         }
@@ -1622,7 +1624,11 @@ CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr
             this->fvcDdtPhiCoeff(U.oldTime(), phi.oldTime())
            *(
                 (rDtCoef*phi.oldTime() + offCentre_(dphidt0()))
-              - (fvc::interpolate(rDtCoef*U.oldTime() + offCentre_(ddt0())) & mesh().Sf())
+              - fvc::dotInterpolate
+                (
+                    mesh().Sf(),
+                    rDtCoef*U.oldTime() + offCentre_(ddt0())
+                )
             )
         )
     );
@@ -1790,7 +1796,11 @@ CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr
                 this->fvcDdtPhiCoeff(rhoU0, phi.oldTime())
                *(
                     (rDtCoef*phi.oldTime() + offCentre_(dphidt0()))
-                  - (fvc::interpolate(rDtCoef*rhoU0 + offCentre_(ddt0())) & mesh().Sf())
+                  - fvc::dotInterpolate
+                    (
+                        mesh().Sf(),
+                        rDtCoef*rhoU0 + offCentre_(ddt0())
+                    )
                 )
             )
         );

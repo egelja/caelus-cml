@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     U.correctBoundaryConditions();
 
     Info<< "Interpolated U error = "
-        << (sqrt(sum(sqr((fvc::interpolate(U) & mesh.Sf()) - phi)))
+        << (sqrt(sum(sqr(fvc::flux(U) - phi)))
           /sum(mesh.magSf())).value()
         << endl;
 

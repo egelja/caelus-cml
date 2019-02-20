@@ -136,11 +136,11 @@ void CML::displacementSBRStressFvMotionSolver::solve()
         (
             Df
            *(
+               fvc::dotInterpolate
                (
-                   cellDisplacement_.mesh().Sf()
-                 & fvc::interpolate(gradCd.T() - gradCd)
+                   cellDisplacement_.mesh().Sf(),
+                   gradCd.T() - gradCd
                )
-
                // Solid-body rotation "lambda" term
              - cellDisplacement_.mesh().Sf()*fvc::interpolate(tr(gradCd))
             )

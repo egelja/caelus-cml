@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,8 +25,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef createPhi_H
-#define createPhi_H
+#ifndef createPhi_HPP
+#define createPhi_HPP
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +42,7 @@ surfaceScalarField phi
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    linearInterpolate(U) & mesh.Sf()
+    fvc::flux(U)
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

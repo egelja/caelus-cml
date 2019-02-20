@@ -361,15 +361,15 @@ tmp<ddtScheme<Type> > ddtScheme<Type>::New
 {
     if (fv::debug)
     {
-        Info<< "ddtScheme<Type>::New(const fvMesh&, Istream&) : "
-               "constructing ddtScheme<Type>"
-            << endl;
+        InfoInFunction << "Constructing ddtScheme<Type>" << endl;
     }
 
     if (schemeData.eof())
     {
-        FatalIOErrorInFunction(schemeData)
-            << "Ddt scheme not specified" << endl << endl
+        FatalIOErrorInFunction
+        (
+            schemeData
+        )   << "Ddt scheme not specified" << endl << endl
             << "Valid ddt schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -382,8 +382,10 @@ tmp<ddtScheme<Type> > ddtScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorInFunction(schemeData)
-            << "Unknown ddt scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction
+        (
+            schemeData
+        )   << "Unknown ddt scheme " << schemeName << nl << nl
             << "Valid ddt schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -512,7 +514,7 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
     tmp<surfaceScalarField> tddtCouplingCoeff = scalar(1)
       - min
         (
-            mag(phi - (mesh().Sf() & fvc::interpolate(U)))
+            mag(phi - fvc::dotInterpolate(mesh().Sf(),U))
            /(mag(phi) + dimensionedScalar("small", phi.dimensions(), VSMALL)),
            //(rDeltaT*mesh().magSf()/mesh().deltaCoeffs()),
             scalar(1)

@@ -955,6 +955,7 @@ src_core = Split("""
     finiteVolume/convectionSchemes/deferredCorrectionScheme/deferredCorrectionScheme.cpp
     finiteVolume/laplacianSchemes/laplacianScheme/laplacianSchemes.cpp
     finiteVolume/laplacianSchemes/gaussLaplacianScheme/gaussLaplacianSchemes.cpp
+    finiteVolume/fvc/fvcFlux.cpp
     finiteVolume/fvc/fvcMeshPhi.cpp
     finiteVolume/fvc/fvcSmooth/fvcSmooth.cpp
     cfdTools/general/findRefCell/findRefCell.cpp

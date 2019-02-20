@@ -41,13 +41,13 @@
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        fvc::interpolate(U) & mesh.Sf()
+        fvc::flux(U)
     );
 
     if (args.optionFound("initialiseUBCs"))
     {
         U.correctBoundaryConditions();
-        phi = fvc::interpolate(U) & mesh.Sf();
+        phi = fvc::flux(U);
     }
 
 

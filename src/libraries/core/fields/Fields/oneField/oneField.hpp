@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -51,6 +51,11 @@ class oneField
 
 public:
 
+    // Public typedefs
+
+        typedef oneField FieldType;
+
+
     // Constructors
 
         //- Construct null
@@ -60,10 +65,15 @@ public:
 
     // Member Operators
 
-        inline scalar operator[](const label) const;
+        inline one operator[](const label) const;
 
         inline oneField field() const;
 };
+
+
+inline const oneField& operator*(const oneField&, const oneField&);
+
+inline const oneField& operator/(const oneField&, const oneField&);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

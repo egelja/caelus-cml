@@ -61,26 +61,18 @@ CML::vector CML::targetCoeffTrim::calcCoeffs
 
     scalar coeff1 = alpha_*sqr(rotor_.omega())*mathematical::pi;
 
-    vector cf(vector::zero);
+    vector cf(Zero);
     forAll(cells, i)
     {
-        label cellI = cells[i];
+        label celli = cells[i];
 
-        vector fc = force[cellI];
-        vector mc = fc^(C[cellI] - origin);
+        vector fc = force[celli];
+        vector mc = fc^(C[celli] - origin);
 
         if (useCoeffs_)
         {
             scalar radius = x[i].x();
-	    scalar coeff2 = coeff1*pow4(radius);
-	    if ( rotor_.compressible() )
-	    {
-		coeff2 *= rho[cellI];
-	    }
-	    else
-	    {
-		coeff2 *= rotor_.rhoRef();
-	    }
+            scalar coeff2 = rho[celli]*coeff1*pow4(radius);
 
             // add to coefficient vector
             cf[0] += (fc & yawAxis)/(coeff2 + ROOTVSMALL);
@@ -120,6 +112,8 @@ void CML::targetCoeffTrim::correctTrim
         Info<< type() << ":" << nl
             << "    solving for target trim " << calcType << nl;
 
+        const scalar rhoRef = rotor_.rhoRef();
+
         // Iterate to find new pitch angles to achieve target force
         scalar err = GREAT;
         label iter = 0;
@@ -154,7 +148,7 @@ void CML::targetCoeffTrim::correctTrim
             }
 
             // Calculate the change in pitch angle vector
-            vector dt = inv(J) & (target_ - old);
+            vector dt = inv(J) & (target_/rhoRef - old);
 
             // Update pitch angles
             vector thetaNew = theta_ + relax_*dt;
@@ -180,9 +174,9 @@ void CML::targetCoeffTrim::correctTrim
         }
 
         Info<< "    current and target " << calcType << nl
-            << "        thrust  = " << old[0] << ", " << target_[0] << nl
-            << "        pitch   = " << old[1] << ", " << target_[1] << nl
-            << "        roll    = " << old[2] << ", " << target_[2] << nl
+            << "        thrust  = " << old[0]*rhoRef << ", " << target_[0] << nl
+            << "        pitch   = " << old[1]*rhoRef << ", " << target_[1] << nl
+            << "        roll    = " << old[2]*rhoRef << ", " << target_[2] << nl
             << "    new pitch angles [deg]:" << nl
             << "        theta0  = " << radToDeg(theta_[0]) << nl
             << "        theta1c = " << radToDeg(theta_[1]) << nl
@@ -203,8 +197,8 @@ CML::targetCoeffTrim::targetCoeffTrim
     trimModel(rotor, dict, typeName),
     calcFrequency_(-1),
     useCoeffs_(true),
-    target_(vector::zero),
-    theta_(vector::zero),
+    target_(Zero),
+    theta_(Zero),
     nIter_(50),
     tol_(1e-8),
     relax_(1.0),

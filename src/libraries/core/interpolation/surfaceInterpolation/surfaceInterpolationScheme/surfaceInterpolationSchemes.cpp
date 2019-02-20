@@ -28,20 +28,20 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeBaseSurfaceInterpolationScheme(Type)                              \
-                                                                              \
-defineNamedTemplateTypeNameAndDebug(surfaceInterpolationScheme<Type>, 0);     \
-                                                                              \
-defineTemplateRunTimeSelectionTable                                           \
-(                                                                             \
-    surfaceInterpolationScheme<Type>,                                         \
-    Mesh                                                                      \
-);                                                                            \
-                                                                              \
-defineTemplateRunTimeSelectionTable                                           \
-(                                                                             \
-    surfaceInterpolationScheme<Type>,                                         \
-    MeshFlux                                                                  \
+#define makeBaseSurfaceInterpolationScheme(Type)                               \
+                                                                               \
+defineNamedTemplateTypeNameAndDebug(surfaceInterpolationScheme<Type>, 0);      \
+                                                                               \
+defineTemplateRunTimeSelectionTable                                            \
+(                                                                              \
+    surfaceInterpolationScheme<Type>,                                          \
+    Mesh                                                                       \
+);                                                                             \
+                                                                               \
+defineTemplateRunTimeSelectionTable                                            \
+(                                                                              \
+    surfaceInterpolationScheme<Type>,                                          \
+    MeshFlux                                                                   \
 );
 
 makeBaseSurfaceInterpolationScheme(scalar)
@@ -54,5 +54,45 @@ makeBaseSurfaceInterpolationScheme(tensor)
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
+
+template<>
+CML::tmp
+<
+    CML::GeometricField
+    <
+        typename CML::innerProduct<CML::vector, CML::scalar>::type,
+        CML::fvsPatchField,
+        CML::surfaceMesh
+    >
+>
+CML::surfaceInterpolationScheme<CML::scalar>::dotInterpolate
+(
+    const surfaceVectorField& Sf,
+    const GeometricField<scalar, fvPatchField, volMesh>&
+) const
+{
+    NotImplemented;
+
+    return
+        tmp
+        <
+            GeometricField
+            <
+                typename innerProduct<vector, scalar>::type,
+                fvsPatchField,
+                surfaceMesh
+            >
+        >
+        (
+            GeometricField
+            <
+                typename innerProduct<vector, scalar>::type,
+                fvsPatchField,
+                surfaceMesh
+            >::null()
+        );
+}
+
 
 // ************************************************************************* //

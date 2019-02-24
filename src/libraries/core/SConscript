@@ -792,6 +792,7 @@ src_core = Split("""
     fields/fvPatchFields/derived/maxwellSlipU/maxwellSlipUFvPatchVectorField.cpp
     fields/fvPatchFields/derived/smoluchowskiJumpT/smoluchowskiJumpTFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedRho/fixedRhoFvPatchScalarField.cpp
+    fields/fvPatchFields/derived/waveTransmissive/waveTransmissiveFvPatchFields.cpp
     fields/fvsPatchFields/fvsPatchField/fvsPatchFields.cpp
     fields/fvsPatchFields/basic/calculated/calculatedFvsPatchFields.cpp
     fields/fvsPatchFields/basic/coupled/coupledFvsPatchFields.cpp

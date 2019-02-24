@@ -1,21 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2016 Applied CCM
+Copyright (C) 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
-    This file is part of CAELUS.
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -24,7 +24,7 @@ License
 
 namespace CML
 {
-namespace incompressible
+namespace compressible
 {
 namespace LESModels
 {
@@ -32,18 +32,12 @@ namespace LESModels
 defineTypeNameAndDebug(kOmegaSSTDES, 0);
 addToRunTimeSelectionTable(LESModel, kOmegaSSTDES, dictionary);
 
-tmp<volScalarField> kOmegaSSTDES::CDkOmega() const
-{
-    return (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_;
-}
-
-
-tmp<volScalarField> kOmegaSSTDES::F1() const
+tmp<volScalarField> kOmegaSSTDES::F1(volScalarField const& CDkOmega) const
 {
     tmp<volScalarField> CDkOmegaPlus = max
     (
-        CDkOmega(),
-        dimensionedScalar("1.0e-10", dimless/sqr(dimTime), 1.0e-10)
+        CDkOmega,
+        dimensionedScalar("1.0e-10", dimDensity/sqr(dimTime), 1.0e-10)
     );
 
     tmp<volScalarField> arg1 = min
@@ -51,20 +45,21 @@ tmp<volScalarField> kOmegaSSTDES::F1() const
         max
         (
             (scalar(1)/betaStar_)*sqrt(k_)/(omega_*y_),
-            scalar(500)*nu()/(sqr(y_)*omega_)
+            scalar(500)*(mu()/rho_)/(sqr(y_)*omega_)
         ),
-        (4*alphaOmega2_)*k_/(CDkOmegaPlus*sqr(y_))
+        (4*rho_*alphaOmega2_)*k_/(CDkOmegaPlus*sqr(y_))
     );
 
     return tanh(pow4(arg1));
 }
+
 
 tmp<volScalarField> kOmegaSSTDES::F2() const
 {
     tmp<volScalarField> arg2 = max
     (
         (scalar(2)/betaStar_)*sqrt(k_)/(omega_*y_),
-        scalar(500)*nu()/(sqr(y_)*omega_)
+        scalar(500)*(mu()/rho_)/(sqr(y_)*omega_)
     );
 
     return tanh(sqr(arg2));
@@ -80,16 +75,16 @@ tmp<volScalarField> kOmegaSSTDES::FDES() const
     return max(Lt()/(CDES_*delta()),scalar(1.0));
 }
 
-
 kOmegaSSTDES::kOmegaSSTDES
 (
-    volVectorField const & U,
+    volScalarField const& rho,
+    volVectorField const& U,
     surfaceScalarField const& phi,
-    transportModel& transport,
+    basicThermo const& thermophysicalModel,
     word const& turbulenceModelName,
     word const& modelName
 ) :
-    LESModel(modelName, U, phi, transport, turbulenceModelName),
+    LESModel(modelName, rho, U, phi, thermophysicalModel, turbulenceModelName),
     curvatureCorrection_
     (
         coeffDict_.lookupOrDefault<Switch>("curvatureCorrection", false)
@@ -128,6 +123,15 @@ kOmegaSSTDES::kOmegaSSTDES
             "alphaOmega2",
             coeffDict_,
             0.856
+        )
+    ),
+    Prt_ 
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "Prt",
+            coeffDict_,
+            0.9
         )
     ),
     gamma1_
@@ -282,11 +286,24 @@ kOmegaSSTDES::kOmegaSSTDES
         ),
         mesh_
     ),
-    nuSgs_
+    muSgs_
     (
         IOobject
         (
-            "nuSgs",
+            "muSgs",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+    yStar_(pow(0.09,0.25)*pow(k_,0.5)*y_*rho/mu()),
+    alphaSgs_
+    (
+        IOobject
+        (
+            "alphaSgs",
             runTime_.timeName(),
             mesh_,
             IOobject::MUST_READ,
@@ -302,25 +319,64 @@ kOmegaSSTDES::kOmegaSSTDES
             runTime_.timeName(),
             mesh_,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
         dimensionedScalar("one", dimless, 1)
+    ),
+    Fd_
+    (
+        IOobject
+        (
+            "Fd",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("fd", dimless, 1),
+        calculatedFvPatchScalarField::typeName
     )
 {
-    bound(k_, kMin_);
-    bound(omega_, dimensionedScalar("zero", omega_.dimensions(), 0.0));
+    bound(k_, dimensionedScalar("kMin",k_.dimensions(),0.0));
+    bound(omega_,dimensionedScalar("omegaMin",omega_.dimensions(),0.0));
 
-    nuSgs_ =
-    (
-        a1_*k_
-      / max
+    if (damped_)
+    {
+        Info << "Buffer layer damping enabled" << endl;
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_*rho_/mu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        muSgs_ =
         (
-            a1_*omega_,
-            F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
-        )
-    );
-    nuSgs_.correctBoundaryConditions();
+            rho_*a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );        
+        muSgs_ *= Fd_;
+    }
+    else
+    {
+        muSgs_ =
+        (
+            rho_*a1_*k_
+          / max
+            (
+                a1_*omega_,
+                F2()*sqrt(2.0)*mag(symm(fvc::grad(U_)))
+            )
+        );
+    }
+    
+    muSgs_.correctBoundaryConditions();
+
+    alphaSgs_ = muSgs_/Prt_;
+    alphaSgs_.correctBoundaryConditions();
 
     if (curvatureCorrection_)
     {
@@ -330,40 +386,53 @@ kOmegaSSTDES::kOmegaSSTDES
     printCoeffs();
 }
 
-
 tmp<volSymmTensorField> kOmegaSSTDES::B() const
 {
-    return ((2.0/3.0)*I)*k_ - nuSgs_*twoSymm(fvc::grad(U_));
-}
-
-
-tmp<volSymmTensorField> kOmegaSSTDES::devReff() const
-{
-    return -nuEff()*dev(twoSymm(fvc::grad(U_)));
-}
-
-
-tmp<fvVectorMatrix> kOmegaSSTDES::divDevReff(volVectorField& U) const
-{
-    return
+    return tmp<volSymmTensorField>
     (
-      - fvm::laplacian(nuEff(), U)
-      - fvc::div(nuEff()*dev(T(fvc::grad(U))))
+        new volSymmTensorField
+        (
+            IOobject
+            (
+                "B",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            ((2.0/3.0)*I)*k_ - (muSgs_/rho_)*twoSymm(fvc::grad(U_)),
+            k_.boundaryField().types()
+        )
     );
 }
 
-tmp<fvVectorMatrix> kOmegaSSTDES::divDevRhoReff
-(
-    volScalarField const& rho,
-    volVectorField& U
-) const
-{
-    volScalarField muEff("muEff", rho*nuEff());
 
+tmp<volSymmTensorField> kOmegaSSTDES::devRhoBeff() const
+{
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
+        (
+            IOobject
+            (
+                "devRhoBeff",
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+           -muEff()*dev(twoSymm(fvc::grad(U_)))
+        )
+    );
+}
+
+
+tmp<fvVectorMatrix> kOmegaSSTDES::divDevRhoBeff(volVectorField& U) const
+{
     return
     (
-      - fvm::laplacian(muEff, U)
-      - fvc::div(muEff*dev(T(fvc::grad(U))))
+      - fvm::laplacian(muEff(), U)
+      - fvc::div(muEff()*dev2(T(fvc::grad(U))))
     );
 }
 
@@ -372,10 +441,12 @@ bool kOmegaSSTDES::read()
     if (LESModel::read())
     {
         curvatureCorrection_.readIfPresent("curvatureCorrection",coeffDict());
+        damped_.readIfPresent("damped", coeffDict());
         alphaK1_.readIfPresent(coeffDict());
         alphaK2_.readIfPresent(coeffDict());
         alphaOmega1_.readIfPresent(coeffDict());
         alphaOmega2_.readIfPresent(coeffDict());
+        Prt_.readIfPresent(coeffDict());
         gamma1_.readIfPresent(coeffDict());
         gamma2_.readIfPresent(coeffDict());
         beta1_.readIfPresent(coeffDict());
@@ -384,7 +455,6 @@ bool kOmegaSSTDES::read()
         a1_.readIfPresent(coeffDict());
         c1_.readIfPresent(coeffDict());
         kappa_.readIfPresent(coeffDict());
-        CDES_.readIfPresent(coeffDict());
         Cr1_.readIfPresent(coeffDict());
         Cr2_.readIfPresent(coeffDict());
         Cr3_.readIfPresent(coeffDict());
@@ -400,34 +470,41 @@ bool kOmegaSSTDES::read()
 }
 
 
-void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
+void kOmegaSSTDES::correct()
 {
-    LESModel::correct(gradU);
 
     if (mesh_.changing())
     {
         y_.correct();
-        y_.boundaryField() = max(y_.boundaryField(), VSMALL);
     }
 
-    volScalarField const S2(2*magSqr(symm(fvc::grad(U_))));
-    volScalarField const Omega(2*magSqr(skew(fvc::grad(U_))));
-    volScalarField G(GName(), nuSgs_*S2);
+    LESModel::correct();
+
+    volScalarField divU(fvc::div(phi_/fvc::interpolate(rho_)));
+
+    if (mesh_.moving())
+    {
+        divU += fvc::div(mesh_.phi());
+    }
+
+    volTensorField const gradU(fvc::grad(U_));
+    volScalarField const S2(2*magSqr(dev(symm(gradU))));
+    volScalarField G(GName(), muSgs_*(gradU && dev(twoSymm(gradU))));
 
     // Update omega and G at the wall
     omega_.boundaryField().updateCoeffs();
 
     volScalarField const CDkOmega
     (
-        (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
+        (2*rho_*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
     );
 
-    volScalarField const F1(this->F1());
+    volScalarField const F1(this->F1(CDkOmega));
 
-    dimensionedScalar nuSgsMin
+    dimensionedScalar muSgsMin
     (
-        "nuSgsMin",
-        k_.dimensions()/omega_.dimensions(),
+        "muSgsMin", 
+        muSgs_.dimensions(), 
         SMALL
      );
 
@@ -446,7 +523,8 @@ void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
         );
         volScalarField const sqrD(0.5*(sqrS + sqrOmega + smallOmega));
         volScalarField const rStar(sqrt(sqrS)/sqrt(sqrOmega+smallOmega));
-        volSymmTensorField const DSijDt(fvc::DDt(this->phi_,Sij));
+        surfaceScalarField const u(this->phi_/fvc::interpolate(rho_));
+        volSymmTensorField const DSijDt(fvc::DDt(u,Sij));
         volScalarField const rTilda
         (  
             (scalar(2.0)/sqr(sqrD))*(Omegaij && (Sij & DSijDt))
@@ -461,46 +539,64 @@ void kOmegaSSTDES::correct(tmp<volTensorField> const& gradU)
         fr1_ = max(scalar(0.0), scalar(1.0) + Cscale_*(frTilda - scalar(1.0)));
     }
 
+    volScalarField const rhoGammaF1(rho_*gamma(F1));
+
     // Turbulent frequency equation
     tmp<fvScalarMatrix> omegaEqn
     (
-        fvm::ddt(omega_)
+        fvm::ddt(rho_, omega_)
       + fvm::div(phi_, omega_)
       - fvm::laplacian(DomegaEff(F1), omega_)
      ==
-        gamma(F1)* min(fr1_*G, c1_*betaStar_*k_*omega_)/(nuSgs_ + nuSgsMin)
-      - fvm::Sp(beta(F1)*omega_, omega_)
-      + 2*(1-F1)*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
+        rhoGammaF1*min(fr1_*G, c1_*rho_*betaStar_*k_*omega_)/(muSgs_ + muSgsMin)
+      - fvm::SuSp((2.0/3.0)*rhoGammaF1*divU, omega_)
+      - fvm::Sp(beta(F1)*rho_*omega_, omega_)
+      + 2*(1-F1)*rho_*alphaOmega2_*(fvc::grad(k_)&fvc::grad(omega_))/omega_
     );
 
     omegaEqn().relax();
-    omegaEqn().boundaryManipulate(omega_.boundaryField());
-    mesh_.updateFvMatrix(omegaEqn());
-    omegaEqn().solve();
 
-    bound(omega_, dimensionedScalar("zero", omega_.dimensions(), 0.0));
+    omegaEqn().boundaryManipulate(omega_.boundaryField());
+
+    solve(omegaEqn);
+    bound(omega_,dimensionedScalar("omegaMin",omega_.dimensions(),0.0));
 
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
     (
-        fvm::ddt(k_)
+        fvm::ddt(rho_, k_)
       + fvm::div(phi_, k_)
       - fvm::laplacian(DkEff(F1), k_)
      ==
-        min(fr1_*G, c1_*betaStar_*k_*omega_)
-      - fvm::Sp(betaStar_*omega_*FDES(), k_)
+        min(fr1_*G, c1_*rho_*betaStar_*k_*omega_)
+      - fvm::SuSp(2.0/3.0*rho_*divU, k_)
+        - fvm::Sp(betaStar_*rho_*FDES()*omega_, k_)
     );
 
     kEqn().relax();
-    mesh_.updateFvMatrix(kEqn());
-    kEqn().solve();
+    solve(kEqn);
+    bound(k_,dimensionedScalar("kMin",k_.dimensions(),0.0));
+
+    if (damped_)
+    {
+        yStar_ = pow(0.09,0.25)*pow(k_,0.5)*y_*rho_/mu();
+        Fd_ = scalar(0.1) + (scalar(1) - scalar(0.1)*tanh(pow(0.03*yStar_,4)))
+            * (scalar(0.9)+scalar(0.1)*tanh(pow(0.005*yStar_,8)));
+        Fd_.correctBoundaryConditions();
+        muSgs_ = rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        muSgs_ *= Fd_;
+    }
+    else
+    {
+        muSgs_ = rho_*a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
+        muSgs_.correctBoundaryConditions();
+    }
     
-    bound(k_, kMin_);
+    muSgs_.correctBoundaryConditions();
 
-
-    // Re-calculate viscosity
-    nuSgs_ = a1_*k_/max(a1_*omega_, F2()*sqrt(S2));
-    nuSgs_.correctBoundaryConditions();
+    // Re-calculate thermal diffusivity
+    alphaSgs_ = muSgs_/Prt_;
+    alphaSgs_.correctBoundaryConditions();
 }
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014-2016 Applied CCM 
+Copyright (C) 2016 Applied CCM 
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,30 +18,23 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Description
-    DES implementation of the k-omega-SST turbulence model for incompressible
+    DES implementation of the k-omega-SST turbulence model for compressible
     flows (SST-2003).
-    
-Author(s)
-    Chris Sideroff
+
+Author
     Aleksandar Jemcov
-    Darrin Stephens
     
-Contact
-    Aleks Jemcov: a.jemcov@appliedccm.com
-    Chris Sideroff: c.sideroff@appliedccm.ca
-    Darrin Stephens: d.stephens@appliedccm.com.au
 \*---------------------------------------------------------------------------*/
 
-#ifndef kOmegaSSTDES_HPP
-#define kOmegaSSTDES_HPP
+#ifndef compressiblekOmegaSSTDES_HPP
+#define compressiblekOmegaSSTDES_HPP
 
 #include "LESModel.hpp"
-#include "volFields.hpp"
 #include "wallDist.hpp"
 
 namespace CML
 {
-namespace incompressible
+namespace compressible
 {
 namespace LESModels
 {
@@ -49,16 +42,13 @@ namespace LESModels
 class kOmegaSSTDES : public LESModel
 {
 
-    // Disallow default bitwise copy construct and assignment
-    kOmegaSSTDES(const kOmegaSSTDES&);
-    kOmegaSSTDES& operator=(kOmegaSSTDES const&);
-        
 protected:
 
     // Protected data
 
     //- Curvature correction on/off flag
     Switch curvatureCorrection_;
+    Switch damped_;
 
     // Model coefficients
     dimensionedScalar alphaK1_;
@@ -66,6 +56,8 @@ protected:
 
     dimensionedScalar alphaOmega1_;
     dimensionedScalar alphaOmega2_;
+
+    dimensionedScalar Prt_;
 
     dimensionedScalar gamma1_;
     dimensionedScalar gamma2_;
@@ -94,11 +86,14 @@ protected:
     // Fields
     volScalarField k_;
     volScalarField omega_;
-    volScalarField nuSgs_;
+    volScalarField muSgs_;
+    volScalarField yStar_;
+    volScalarField alphaSgs_;
     volScalarField fr1_;
+    volScalarField Fd_;
 
-    tmp<volScalarField> CDkOmega() const;
-    tmp<volScalarField> F1() const;
+
+    tmp<volScalarField> F1(volScalarField const& CDkOmega) const;
     tmp<volScalarField> F2() const;
 
     tmp<volScalarField> Lt() const;
@@ -134,33 +129,43 @@ protected:
         return blend(F1, gamma1_, gamma2_);
     }
 
+
 public:
 
     //- Runtime type information
     TypeName("kOmegaSSTDES");
+
 
     // Constructors
 
     //- Construct from components
     kOmegaSSTDES
     (
+        volScalarField const& rho,
         volVectorField const& U,
         surfaceScalarField const& phi,
-        transportModel& transport,
+        basicThermo const& thermophysicalModel,
         word const& turbulenceModelName = turbulenceModel::typeName,
         word const& modelName = typeName
     );
 
+
     //- Destructor
-    virtual ~kOmegaSSTDES()
-    {}
+    virtual ~kOmegaSSTDES() {}
+
 
     // Member Functions
 
-    //- Return the SGS viscosity
-    virtual tmp<volScalarField> nuSgs() const
+    //- Return the turbulence viscosity
+    virtual tmp<volScalarField> muSgs() const
     {
-        return nuSgs_;
+        return muSgs_;
+    }
+
+    //- Return the turbulent thermal diffusivity
+    virtual tmp<volScalarField> alphaSgs() const
+    {
+        return alphaSgs_;
     }
 
     //- Return the effective diffusivity for k
@@ -168,7 +173,7 @@ public:
     {
         return tmp<volScalarField>
         (
-            new volScalarField("DkEff", alphaK(F1)*nuSgs_ + nu())
+            new volScalarField("DkEff", alphaK(F1)*muSgs_ + mu())
         );
     }
 
@@ -177,7 +182,7 @@ public:
     {
         return tmp<volScalarField>
         (
-            new volScalarField("DomegaEff", alphaOmega(F1)*nuSgs_ + nu())
+            new volScalarField("DomegaEff", alphaOmega(F1)*muSgs_ + mu())
         );
     }
 
@@ -212,24 +217,17 @@ public:
         );
     }
 
-    //- Return the sub-grid stress tensor
+    //- Return the Reynolds stress tensor
     virtual tmp<volSymmTensorField> B() const;
 
     //- Return the effective stress tensor including the laminar stress
-    virtual tmp<volSymmTensorField> devReff() const;
+    virtual tmp<volSymmTensorField> devRhoBeff() const;
 
     //- Return the source term for the momentum equation
-    virtual tmp<fvVectorMatrix> divDevReff(volVectorField& U) const;
-
-    //- Return the source term for the momentum equation
-    virtual tmp<fvVectorMatrix> divDevRhoReff
-    (
-        volScalarField const& rho,
-        volVectorField& U
-    ) const;
+    virtual tmp<fvVectorMatrix> divDevRhoBeff(volVectorField& U) const;
 
     //- Solve the turbulence equations and correct the turbulence viscosity
-    virtual void correct(tmp<volTensorField> const& gradU);
+    virtual void correct();
 
     //- Read RASProperties dictionary
     virtual bool read();

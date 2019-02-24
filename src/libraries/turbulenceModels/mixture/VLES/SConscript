@@ -1,0 +1,29 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'mixtureVLESModels'
+
+sources = Split("""
+VLESModel/mxVLESModel.cpp
+laminar/mxVLESLaminar.cpp
+kOmegaSST/mxVLESkOmegaSST.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels',
+'transportModels/incompressible/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'incompressibleTransportModels',
+'mixtureTurbulenceModel'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

@@ -54,6 +54,10 @@ subdirs = Split("""
     turbulenceModels/compressible/RAS
     turbulenceModels/compressible/LES
     turbulenceModels/compressible/VLES
+    turbulenceModels/mixture/turbulenceModel
+    turbulenceModels/mixture/RAS
+    turbulenceModels/mixture/LES
+    turbulenceModels/mixture/VLES
     turbulenceModels/derivedFvPatchFields
     combustionModels
     regionModels/regionModel

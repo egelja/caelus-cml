@@ -54,7 +54,7 @@ copyright = u'2018, Applied CCM Pty Ltd and Applied CCM Canada'
 # built documents.
 #
 # The short X.Y version.
-version = '8.04'
+version = '9.04'
 # The full version, including alpha/beta/rc tags.
 release = '1.0'
 
@@ -266,7 +266,7 @@ texinfo_documents = [
 epub_title = u'Caelus Theory Guide'
 epub_author = u'Applied CCM Pty Ltd and Applied CCM Canada'
 epub_publisher = u'Applied CCM Pty Ltd'
-epub_copyright = u'2016, Applied CCM Pty Ltd and Applied CCM Canada'
+epub_copyright = u'2014-2019, Applied CCM Pty Ltd and Applied CCM Canada'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

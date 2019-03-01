@@ -20,7 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 
-#include "kOmegaSSTIDDES.hpp"
+#include "compressiblekOmegaSSTIDDES.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
 namespace CML
@@ -149,7 +149,7 @@ kOmegaSSTIDDES::kOmegaSSTIDDES
     volScalarField const& rho,
     volVectorField const& U,
     surfaceScalarField const& phi,
-    basicThermo const& thermophysicalModel,
+    fluidThermo const& thermophysicalModel,
     word const& turbulenceModelName,
     word const& modelName
 ) :

@@ -38,7 +38,7 @@ Author: C. Sideroff
 #ifndef compressiblekOmegaSSTDDES_HPP
 #define compressiblekOmegaSSTDDES_HPP
 
-#include "kOmegaSSTDES.hpp"
+#include "compressiblekOmegaSSTDES.hpp"
 
 namespace CML
 {
@@ -105,7 +105,7 @@ public:
         volScalarField const& rho,
         volVectorField const& U,
         surfaceScalarField const& phi,
-        basicThermo const& thermophysicalModel,
+        fluidThermo const& thermophysicalModel,
         word const& turbulenceModelName = turbulenceModel::typeName,
         word const& modelName = typeName
     );

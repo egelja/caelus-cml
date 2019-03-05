@@ -41,7 +41,7 @@ namespace CML
 
 #define makeSolidChemistrySolverType(SS, Schem, Comp, SThermo, GThermo)        \
                                                                                \
-    typedef SS<Schem<Comp, SThermo, GThermo> >                                 \
+    typedef SS<Schem<Comp, SThermo, GThermo>>                                  \
         SS##Schem##Comp##SThermo##GThermo;                                     \
                                                                                \
     defineTemplateTypeNameAndDebugWithName                                     \
@@ -49,7 +49,7 @@ namespace CML
         SS##Schem##Comp##SThermo##GThermo,                                     \
         (#SS"<" + word(Schem<Comp, SThermo, GThermo>::typeName_())             \
       + "<"#Comp"," + SThermo::typeName()                                      \
-      + ","  + GThermo::typeName() + "> >").c_str(),                           \
+      + ","  + GThermo::typeName() + ">>").c_str(),                            \
         0                                                                      \
     );                                                                         \
                                                                                \

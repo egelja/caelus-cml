@@ -4,11 +4,13 @@ rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 rho.relax();
+rho.correctBoundaryConditions(); // DWS Added
 volScalarField R = ( thermo.Cp() - thermo.Cv() )();
 R.correctBoundaryConditions();
 T.relax();
-thermo.rho() = thermo.rho() - psi*p;
-thermo.rho().correctBoundaryConditions();
+//thermo.rho() = thermo.rho() - psi*p;
+//thermo.rho().correctBoundaryConditions();
+
 
 volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p));
 
@@ -36,8 +38,8 @@ while (pimple.correctNonOrthogonal())
     }
 }
 
-thermo.rho() = thermo.rho() + psi*p;
-thermo.rho().correctBoundaryConditions();
+//thermo.rho() = thermo.rho() + psi*p;
+//thermo.rho().correctBoundaryConditions();
 
 #include "rhoEqn.hpp"
 #include "compressibleContinuityErrs.hpp"
@@ -48,6 +50,7 @@ rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 rho.relax();
+rho.correctBoundaryConditions(); //DWS -added
 T.relax();
 Info<< "rho max/min : " << max(rho).value()
     << " " << min(rho).value() << endl;

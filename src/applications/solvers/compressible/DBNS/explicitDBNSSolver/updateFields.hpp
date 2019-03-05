@@ -10,7 +10,7 @@ p.correctBoundaryConditions();
 
 thermo.correct();
 
-rho.boundaryField() = thermo.rho().boundaryField();
+rho.boundaryField() = thermo.rho()().boundaryField();
 
 rhoU.boundaryField() = rho.boundaryField()*U.boundaryField();
 

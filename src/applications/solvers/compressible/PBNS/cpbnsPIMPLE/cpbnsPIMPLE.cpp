@@ -31,7 +31,7 @@ Author
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
-#include "rhoThermo.hpp"
+#include "psiThermo.hpp"
 #include "compressibleTurbulenceModel.hpp"
 #include "fvcSmooth.hpp"
 #include "pimpleControl.hpp"

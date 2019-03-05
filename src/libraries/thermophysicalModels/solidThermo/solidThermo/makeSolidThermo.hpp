@@ -71,7 +71,7 @@ defineTemplateTypeNameAndDebugWithName                                         \
     (                                                                          \
         #Cthermo"<"#Mixture"<"                                                 \
       + Transport##Type##Thermo##EqnOfState##Specie::typeName()                \
-      + "> >"                                                                  \
+      + ">>"                                                                   \
     ).c_str(),                                                                 \
     0                                                                          \
 );                                                                             \
@@ -125,7 +125,7 @@ defineTemplateTypeNameAndDebugWithName                                         \
     (                                                                          \
         #Cthermo"<"#Mixture"<"                                                 \
       + SolidPhysicsType::typeName()                                           \
-      + "> >"                                                                  \
+      + ">>"                                                                   \
     ).c_str(),                                                                 \
     0                                                                          \
 );                                                                             \

@@ -46,7 +46,7 @@ Author
 
 \*---------------------------------------------------------------------------*/
 #include "fvCFD.hpp"
-#include "rhoThermo.hpp"
+#include "psiThermo.hpp"
 #include "compressibleTurbulenceModel.hpp"
 #include "bound.hpp"
 #include "numericFlux.hpp"

@@ -561,7 +561,7 @@ typename Table::iterator CML::basicThermo::lookupThermo
                 word(thermoTypeDict.lookup("type")) + '<'
               + word(thermoTypeDict.lookup("mixture")) + '<'
               + word(thermoTypeDict.lookup("properties")) + ','
-              + word(thermoTypeDict.lookup("energy")) + "> >"
+              + word(thermoTypeDict.lookup("energy")) + ">>"
             );
 
             return lookupThermo<Thermo, Table>
@@ -595,8 +595,8 @@ typename Table::iterator CML::basicThermo::lookupThermo
               + word(thermoTypeDict.lookup("transport")) + '<'
               + word(thermoTypeDict.lookup("thermo")) + '<'
               + word(thermoTypeDict.lookup("equationOfState")) + '<'
-              + word(thermoTypeDict.lookup("specie")) + "> >,"
-              + word(thermoTypeDict.lookup("energy")) + "> > >"
+              + word(thermoTypeDict.lookup("specie")) + ">>,"
+              + word(thermoTypeDict.lookup("energy")) + ">>>"
             );
 
             return lookupThermo<Thermo, Table>

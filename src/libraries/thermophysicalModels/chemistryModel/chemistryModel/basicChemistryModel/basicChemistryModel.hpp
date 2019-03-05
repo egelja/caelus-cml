@@ -220,10 +220,10 @@ CML::autoPtr<ChemistryModel> CML::basicChemistryModel::New
         FatalErrorInFunction
             << "Template parameter based chemistry solver selection is no "
             << "longer supported. Please create a chemistryType dictionary"
-            << "instead." << endl << endl << "For example, the entry:" << endl
+            << " instead." << endl << endl << "For example, the entry:" << endl
             << "    chemistrySolver ode<StandardChemistryModel<"
             << "rhoChemistryModel,sutherlandspecie<janaf<perfectGas>,"
-            << "sensibleInternalEnergy> >" << endl << endl << "becomes:" << endl
+            << "sensibleInternalEnergy>>" << endl << endl << "becomes:" << endl
             << "    chemistryType" << endl << "    {" << endl
             << "        solver ode;" << endl << "        method standard;"
             << endl << "    }" << exit(FatalError);
@@ -264,7 +264,7 @@ CML::autoPtr<ChemistryModel> CML::basicChemistryModel::New
     const word chemSolverCompThermoName =
         solverName + '<' + methodName + '<'
       + ChemistryModel::reactionThermo::typeName + ','
-      + thermo.thermoName() + "> >";
+      + thermo.thermoName() + ">>";
 
     typename cstrTableType::iterator cstrIter =
         cstrTable->find(chemSolverCompThermoName);

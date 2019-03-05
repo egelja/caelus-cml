@@ -42,4 +42,8 @@ graphFormat     raw;
 
 runTimeModifiable yes;
 
+debugSwitches
+{
+    fluidThermo         1;
+}
 // ************************************************************************* //

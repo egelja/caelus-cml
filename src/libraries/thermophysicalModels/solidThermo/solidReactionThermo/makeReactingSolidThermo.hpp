@@ -63,7 +63,7 @@ defineTemplateTypeNameAndDebugWithName                                         \
     (                                                                          \
         #Cthermo"<"#Mixture"<"                                                 \
       + ThermoPhys::typeName()                                                 \
-      + "> >"                                                                  \
+      + ">>"                                                                   \
     ).c_str(),                                                                 \
     0                                                                          \
 );                                                                             \

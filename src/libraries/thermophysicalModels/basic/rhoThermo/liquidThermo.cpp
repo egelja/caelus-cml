@@ -32,7 +32,7 @@ namespace CML
 defineTemplateTypeNameAndDebugWithName
 (
     heRhoThermopureMixtureliquidProperties,
-    "heRhoThermo<pureMixture<liquid,sensibleInternalEnergy> >",
+    "heRhoThermo<pureMixture<liquid,sensibleInternalEnergy>>",
     0
 );
 
@@ -61,7 +61,7 @@ addToRunTimeSelectionTable
 defineTemplateTypeNameAndDebugWithName
 (
     heRhoThermopureMixtureEnthalpyliquidProperties,
-    "heRhoThermo<pureMixture<liquid,sensibleEnthalpy> >",
+    "heRhoThermo<pureMixture<liquid,sensibleEnthalpy>>",
     0
 );
 

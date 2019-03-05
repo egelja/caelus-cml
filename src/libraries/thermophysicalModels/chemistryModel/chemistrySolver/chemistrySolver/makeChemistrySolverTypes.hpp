@@ -35,13 +35,13 @@ License
 
 #define makeChemistrySolverType(SS, Comp, Thermo)                              \
                                                                                \
-    typedef SS<StandardChemistryModel<Comp, Thermo> > SS##Comp##Thermo;        \
+    typedef SS<StandardChemistryModel<Comp, Thermo>> SS##Comp##Thermo;         \
                                                                                \
     defineTemplateTypeNameAndDebugWithName                                     \
     (                                                                          \
         SS##Comp##Thermo,                                                      \
         (#SS"<" + word(StandardChemistryModel<Comp, Thermo>::typeName_()) + "<"\
-        + word(Comp::typeName_()) + "," + Thermo::typeName() + "> >").c_str(), \
+        + word(Comp::typeName_()) + "," + Thermo::typeName() + ">>").c_str(),  \
         0                                                                      \
     );                                                                         \
                                                                                \
@@ -50,13 +50,13 @@ License
         add##SS##Comp##Thermo##thermo##ConstructorTo##BasicChemistryModel##Comp\
 ##Table_; \
                                                                                \
-    typedef SS<TDACChemistryModel<Comp, Thermo> > TDAC##SS##Comp##Thermo;      \
+    typedef SS<TDACChemistryModel<Comp, Thermo>> TDAC##SS##Comp##Thermo;       \
                                                                                \
     defineTemplateTypeNameAndDebugWithName                                     \
     (                                                                          \
         TDAC##SS##Comp##Thermo,                                                \
         (#SS"<" + word(TDACChemistryModel<Comp, Thermo>::typeName_()) + "<"    \
-        + word(Comp::typeName_()) + "," + Thermo::typeName() + "> >").c_str(), \
+        + word(Comp::typeName_()) + "," + Thermo::typeName() + ">>").c_str(),  \
         0                                                                      \
     );                                                                         \
                                                                                \

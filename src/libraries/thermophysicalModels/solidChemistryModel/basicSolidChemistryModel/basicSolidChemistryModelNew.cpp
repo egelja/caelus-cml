@@ -83,7 +83,7 @@ CML::basicSolidChemistryModel::New(solidReactionThermo& thermo)
         word(solidThermoTypeDict.lookup("transport")) + '<'
       + word(solidThermoTypeDict.lookup("thermo")) + '<'
       + word(solidThermoTypeDict.lookup("equationOfState")) + '<'
-      + word(solidThermoTypeDict.lookup("specie")) + "> >,"
+      + word(solidThermoTypeDict.lookup("specie")) + ">>,"
       + word(solidThermoTypeDict.lookup("energy")) + ">"
     );
 
@@ -93,7 +93,7 @@ CML::basicSolidChemistryModel::New(solidReactionThermo& thermo)
         word(gasThermoTypeDict.lookup("transport")) + '<'
       + word(gasThermoTypeDict.lookup("thermo")) + '<'
       + word(gasThermoTypeDict.lookup("equationOfState")) + '<'
-      + word(gasThermoTypeDict.lookup("specie")) + "> >,"
+      + word(gasThermoTypeDict.lookup("specie")) + ">>,"
       + word(gasThermoTypeDict.lookup("energy")) + ">"
     );
 
@@ -103,7 +103,7 @@ CML::basicSolidChemistryModel::New(solidReactionThermo& thermo)
         word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
       + word(chemistryTypeDict.lookup("chemistryThermo")) + '<'
       + typeName + ','
-      + solidThermoTypeName + ',' + gasThermoTypeName + "> >"
+      + solidThermoTypeName + ',' + gasThermoTypeName + ">>"
     );
 
     Info<< "chemistryTypeName " << chemistryTypeName << endl;

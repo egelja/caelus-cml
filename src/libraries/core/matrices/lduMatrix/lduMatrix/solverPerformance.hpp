@@ -86,7 +86,7 @@ public:
     // Static data
 
     // Declare name of the class and its debug switch
-    ClassName("SolverPerformance");
+    ClassName("solverPerformance");
 
     //- Construct null
     solverPerformance()

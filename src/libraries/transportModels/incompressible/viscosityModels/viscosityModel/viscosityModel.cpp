@@ -22,6 +22,7 @@ License
 #include "viscosityModel.hpp"
 #include "fvcGrad.hpp"
 
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
@@ -92,7 +93,7 @@ bool CML::viscosityModel::read(const dictionary& viscosityProperties)
 void CML::viscosityModel::correct()
 {   
     //- Shear Strain Rate
-    ssr_ = sqrt(2.0)*mag(symm(fvc::grad(U_)));
+    ssr_.internalField() = sqrt(2.0)*mag(symm(fvc::grad(U_)));
 }
 
 

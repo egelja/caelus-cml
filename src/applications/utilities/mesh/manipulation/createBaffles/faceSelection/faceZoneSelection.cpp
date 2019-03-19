@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2015 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,18 +77,18 @@ void CML::faceSelections::faceZoneSelection::select
 
     forAll(fZone, i)
     {
-        label faceI = fZone[i];
+        label facei = fZone[i];
 
-        if (faceToZoneID[faceI] == -1)
+        if (faceToZoneID[facei] == -1)
         {
-            faceToZoneID[faceI] = zoneID;
-            faceToFlip[faceI] = fZone.flipMap()[i];
+            faceToZoneID[facei] = zoneID;
+            faceToFlip[facei] = fZone.flipMap()[i];
         }
-        else if (faceToZoneID[faceI] != zoneID)
+        else if (faceToZoneID[facei] != zoneID)
         {
             FatalErrorInFunction
-                << "Face " << faceI << " already in faceZone "
-                << faceToZoneID[faceI]
+                << "Face " << facei << " already in faceZone "
+                << faceToZoneID[facei]
                 << exit(FatalError);
         }
     }

@@ -1,6 +1,9 @@
-/*---------------------------------------------------------------------------*
-Caelus 9.04
-Web:   www.caelus-cml.com
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  dev
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,11 +17,11 @@ FoamFile
 
 solvers
 {
-    T
+    h
     {
         solver           PCG;
         smoother         GaussSeidel;
-        preconditioner   SSGS;
+        preconditioner   DIC;
         tolerance        1e-06;
         relTol           0;
     }
@@ -28,7 +31,7 @@ nNonOrthCorr        0;
 
 relaxationFactors
 {
-    T       1;
+    h       1;
 }
 
 // ************************************************************************* //

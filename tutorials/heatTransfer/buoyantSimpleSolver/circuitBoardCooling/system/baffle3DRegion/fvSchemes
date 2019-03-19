@@ -1,6 +1,9 @@
-/*---------------------------------------------------------------------------*
-Caelus 9.04
-Web:   www.caelus-cml.com
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  dev
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -29,8 +32,8 @@ gradSchemes
 
 laplacianSchemes
 {
-    default         none;
-    laplacian(K,T)  Gauss linear uncorrected;
+    default             none;
+    laplacian(alpha,h)  Gauss linear uncorrected;
 }
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2015 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -90,11 +90,11 @@ void CML::faceSelection::select
 {
     if (flip_)
     {
-        forAll(faceToZoneID, faceI)
+        forAll(faceToZoneID, facei)
         {
-            if (faceToZoneID[faceI] == zoneID)
+            if (faceToZoneID[facei] == zoneID)
             {
-                faceToFlip[faceI] = !faceToFlip[faceI];
+                faceToFlip[facei] = !faceToFlip[facei];
             }
         }
     }

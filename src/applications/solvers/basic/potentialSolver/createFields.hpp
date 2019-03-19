@@ -60,3 +60,5 @@
         pRefCell,
         pRefValue
     );
+
+    mesh.setFluxRequired(p.name());

@@ -1067,29 +1067,29 @@ inline void CML::particle::patchData(vector& n, vector& U) const
 template<class TrackCloudType>
 void CML::particle::readFields(TrackCloudType& c)
 {
-    const bool valid = c.size();
+    if (!c.size())
+    {
+        return;
+    }
 
     IOobject procIO(c.fieldIOobject("origProcId", IOobject::MUST_READ));
 
-    bool haveFile = procIO.headerOk();
-
-    IOField<label> origProcId(procIO, valid && haveFile);
-    c.checkFieldIOobject(c, origProcId);
-    IOField<label> origId
-    (
-        c.fieldIOobject("origId", IOobject::MUST_READ),
-        valid && haveFile
-    );
-    c.checkFieldIOobject(c, origId);
-
-    label i = 0;
-    forAllIter(typename TrackCloudType, c, iter)
+    if (procIO.headerOk())
     {
-        particle& p = iter();
+        IOField<label> origProcId(procIO);
+        c.checkFieldIOobject(c, origProcId);
+        IOField<label> origId(c.fieldIOobject("origId", IOobject::MUST_READ));
+        c.checkFieldIOobject(c, origId);
 
-        p.origProc_ = origProcId[i];
-        p.origId_ = origId[i];
-        i++;
+        label i = 0;
+        forAllIter(typename TrackCloudType, c, iter)
+        {
+            particle& p = iter();
+
+            p.origProc_ = origProcId[i];
+            p.origId_ = origId[i];
+            i++;
+        }
     }
 }
 

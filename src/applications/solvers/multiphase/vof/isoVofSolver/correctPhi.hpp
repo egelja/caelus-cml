@@ -30,6 +30,8 @@
         pcorrTypes
     );
 
+    mesh.setFluxRequired(pcorr.name());
+
     dimensionedScalar rAUf("(1|A(U))", dimTime/rho.dimensions(), 1.0);
 
     adjustPhi(phi, U, pcorr);

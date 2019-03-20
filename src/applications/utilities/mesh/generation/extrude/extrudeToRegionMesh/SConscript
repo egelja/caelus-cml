@@ -7,7 +7,6 @@ Import('env')
 target = 'extrudeToRegionMesh'
 
 sources = Split("""
-createShellMesh.cpp
 extrudeToRegionMesh.cpp
 """)
 

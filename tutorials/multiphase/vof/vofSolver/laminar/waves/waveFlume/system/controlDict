@@ -49,6 +49,8 @@ maxAlphaCo      0.5;
 
 maxDeltaT       1;
 
+libs ();
+
 functions
 {
     #includeIfPresent "../waveGaugesNProbes/surfaceElevation_controlDict";

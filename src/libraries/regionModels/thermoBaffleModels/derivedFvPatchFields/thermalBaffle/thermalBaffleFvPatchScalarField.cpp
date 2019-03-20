@@ -89,12 +89,10 @@ thermalBaffleFvPatchScalarField
     const fvMesh& thisMesh = patch().boundaryMesh().mesh();
 
     typedef regionModels::thermalBaffleModels::thermalBaffleModel baffle;
-
     if (thisMesh.name() == polyMesh::defaultRegion)
     {
         const word regionName =
             dict_.lookupOrDefault<word>("regionName", "none");
-
         const word baffleName("3DBaffle" + regionName);
 
         if
@@ -125,7 +123,7 @@ thermalBaffleFvPatchScalarField
 :
     turbulentTemperatureRadCoupledMixedFvPatchScalarField(ptf, iF),
     owner_(ptf.owner_),
-    baffle_(),
+    baffle_(ptf.baffle_),
     dict_(ptf.dict_),
     extrudeMeshPtr_()
 {}

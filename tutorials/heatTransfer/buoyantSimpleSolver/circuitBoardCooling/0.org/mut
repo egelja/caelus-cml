@@ -42,10 +42,6 @@ boundaryField
     {
         type            empty;
     }
-    "baffle1Wall.*"
-    {
-        type           calculated;
-    }
 }
 
 

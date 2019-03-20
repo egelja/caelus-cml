@@ -12,12 +12,28 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 0 0 1 0 0 0 ];
+dimensions      [0 0 0 1 0 0 0];
 
 internalField   uniform 300;
 
 boundaryField
 {
+    bottom
+    {
+        type                compressible::thermalBaffle;
+        kappaMethod         solidThermo;
+        value               uniform 300;
+    }
+    side
+    {
+        type                zeroGradient;
+    }
+    top
+    {
+        type                compressible::thermalBaffle;
+        kappaMethod         solidThermo;
+        value               uniform 300;
+    }
 }
 
 

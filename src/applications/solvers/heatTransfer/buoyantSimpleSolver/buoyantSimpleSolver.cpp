@@ -29,6 +29,7 @@ Description
 #include "fvCFD.hpp"
 #include "rhoThermo.hpp"
 #include "compressibleRASModel.hpp"
+#include "radiationModel.hpp"
 #include "fixedGradientFvPatchFields.hpp"
 #include "fvIOoptionList.hpp"
 #include "simpleControl.hpp"
@@ -40,8 +41,6 @@ int main(int argc, char *argv[])
     #include "createMesh.hpp"
     #include "readGravitationalAcceleration.hpp"
     #include "createFields.hpp"
-    #include "createMRF.hpp"
-    #include "createFvOptions.hpp"
     #include "initContinuityErrs.hpp"
 
     simpleControl simple(mesh);

@@ -168,8 +168,7 @@ inline void cellLimitedGrad<Type, Limiter>::limitFaceCmpt
 // Foundation version limits the limtier to be < 1 by clipping but is then not
 // differentiable and so no longer conforms to the basic principles of this kind
 // of limiter function.
-//    limiter = min(limiter, Limiter::limiter(r));
-    limiter = Limiter::limiter(r);
+    limiter = min(limiter, Limiter::limiter(r));
 }
 
 

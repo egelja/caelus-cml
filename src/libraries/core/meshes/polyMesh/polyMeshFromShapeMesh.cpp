@@ -523,8 +523,10 @@ CML::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     if (debug)
     {
@@ -801,8 +803,10 @@ CML::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     if (debug)
     {

@@ -99,19 +99,19 @@ class ParticleErosion
             typedef typename CloudType::parcelType parcelType;
 
 
-        //- Particle erosion field
+        //- Particle eroded volume field
         autoPtr<volScalarField> QPtr_;
 
         //- List of patch indices to post-process
         labelList patchIDs_;
 
-        //- Plastic flow stress - typical metal value = 2.7 GPa
+        //- Plastic flow stress
         scalar p_;
 
-        //- Ratio between depth of contact and length of cut - default=2
+        //- Ratio between depth of contact and length of cut. Default 2.
         scalar psi_;
 
-        //- Ratio of normal and tangential forces - default=2
+        //- Ratio of normal and tangential forces. Default 2.
         scalar K_;
 
 

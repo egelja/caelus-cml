@@ -57,7 +57,7 @@ void CML::reconstructLagrangianPositions
 
             // Inverting sign if necessary and subtracting 1 from
             // faceProcAddressing
-            const label mappedTetFace = mag(faceMap[ppi.tetFace()]) - 1;
+            label mappedTetFace = mag(faceMap[ppi.tetFace()]) - 1;
 
             lagrangianPositions.append
             (
@@ -74,16 +74,6 @@ void CML::reconstructLagrangianPositions
     }
 
     IOPosition<Cloud<passiveParticle> >(lagrangianPositions).write();
-
-    // Force writing of "positions" too, if specified via the InfoSwitch
-    if (particle::writeLagrangianPositions)
-    {
-        IOPosition<Cloud<passiveParticle>>
-        (
-            lagrangianPositions,
-            cloud::geometryType::POSITIONS
-        ).write();
-    }
 }
 
 

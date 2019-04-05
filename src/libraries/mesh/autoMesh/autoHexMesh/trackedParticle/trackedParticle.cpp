@@ -73,11 +73,10 @@ CML::trackedParticle::trackedParticle
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    particle(mesh, is, readFields, newFormat)
+    particle(mesh, is, readFields)
 {
     if (readFields)
     {
@@ -211,12 +210,24 @@ void CML::trackedParticle::hitCyclicACMIPatch
 (
     Cloud<trackedParticle>&,
     trackingData& td,
-    const vector&
+    const vector& direction
 )
 {
     // Remove particle
     td.keepParticle = false;
 }
+
+
+//void CML::trackedParticle::hitCyclicRepeatAMIPatch
+//(
+//    Cloud<trackedParticle>&,
+//    trackingData& td,
+//    const vector&
+//)
+//{
+//    // Remove particle
+//    td.keepParticle = false;
+//}
 
 
 void CML::trackedParticle::hitProcessorPatch

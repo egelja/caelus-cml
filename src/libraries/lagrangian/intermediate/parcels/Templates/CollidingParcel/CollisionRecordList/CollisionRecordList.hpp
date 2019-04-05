@@ -78,6 +78,7 @@ class CollisionRecordList
         //- List of active wall collisions
         DynamicList<WallCollisionRecord<WallType> > wallRecords_;
 
+
 public:
 
     // Constructors

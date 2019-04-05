@@ -34,11 +34,10 @@ CML::cloudSolution::cloudSolution(const fvMesh& mesh, const dictionary& dict)
     calcFrequency_(1),
     maxCo_(0.3),
     iter_(1),
-    trackTime_(0.0),
-    deltaTMax_(GREAT),
+    trackTime_(0),
     coupled_(false),
     cellValueSourceCorrection_(false),
-    maxTrackTime_(0.0),
+    maxTrackTime_(0),
     resetSourcesOnStartup_(true),
     schemes_()
 {
@@ -49,7 +48,10 @@ CML::cloudSolution::cloudSolution(const fvMesh& mesh, const dictionary& dict)
 }
 
 
-CML::cloudSolution::cloudSolution(const cloudSolution& cs)
+CML::cloudSolution::cloudSolution
+(
+    const cloudSolution& cs
+)
 :
     mesh_(cs.mesh_),
     dict_(cs.dict_),
@@ -59,7 +61,6 @@ CML::cloudSolution::cloudSolution(const cloudSolution& cs)
     maxCo_(cs.maxCo_),
     iter_(cs.iter_),
     trackTime_(cs.trackTime_),
-    deltaTMax_(cs.deltaTMax_),
     coupled_(cs.coupled_),
     cellValueSourceCorrection_(cs.cellValueSourceCorrection_),
     maxTrackTime_(cs.maxTrackTime_),
@@ -68,7 +69,10 @@ CML::cloudSolution::cloudSolution(const cloudSolution& cs)
 {}
 
 
-CML::cloudSolution::cloudSolution(const fvMesh& mesh)
+CML::cloudSolution::cloudSolution
+(
+    const fvMesh& mesh
+)
 :
     mesh_(mesh),
     dict_(dictionary::null),
@@ -77,11 +81,10 @@ CML::cloudSolution::cloudSolution(const fvMesh& mesh)
     calcFrequency_(0),
     maxCo_(GREAT),
     iter_(0),
-    trackTime_(0.0),
-    deltaTMax_(GREAT),
+    trackTime_(0),
     coupled_(false),
     cellValueSourceCorrection_(false),
-    maxTrackTime_(0.0),
+    maxTrackTime_(0),
     resetSourcesOnStartup_(false),
     schemes_()
 {}
@@ -125,7 +128,6 @@ void CML::cloudSolution::read()
     dict_.lookup("coupled") >> coupled_;
     dict_.lookup("cellValueSourceCorrection") >> cellValueSourceCorrection_;
     dict_.readIfPresent("maxCo", maxCo_);
-    dict_.readIfPresent("deltaTMax", deltaTMax_);
 
     if (steadyState())
     {
@@ -190,7 +192,7 @@ CML::scalar CML::cloudSolution::relaxCoeff(const word& fieldName) const
         << "Field name " << fieldName << " not found in schemes"
         << abort(FatalError);
 
-    return 1.0;
+    return 1;
 }
 
 
@@ -214,12 +216,7 @@ bool CML::cloudSolution::semiImplicit(const word& fieldName) const
 
 bool CML::cloudSolution::solveThisStep() const
 {
-    return
-        active_
-     && (
-            mesh_.time().outputTime()
-         || (mesh_.time().timeIndex() % calcFrequency_ == 0)
-        );
+    return active_ && (mesh_.time().timeIndex() % calcFrequency_ == 0);
 }
 
 
@@ -241,25 +238,6 @@ bool CML::cloudSolution::canEvolve()
 bool CML::cloudSolution::output() const
 {
     return active_ && mesh_.time().outputTime();
-}
-
-
-CML::scalar CML::cloudSolution::deltaTMax(const scalar trackTime) const
-{
-    if (transient_)
-    {
-        return min(deltaTMax_, maxCo_*trackTime);
-    }
-    else
-    {
-        return min(deltaTMax_, trackTime);
-    }
-}
-
-
-CML::scalar CML::cloudSolution::deltaLMax(const scalar lRef) const
-{
-    return maxCo_*lRef;
 }
 
 

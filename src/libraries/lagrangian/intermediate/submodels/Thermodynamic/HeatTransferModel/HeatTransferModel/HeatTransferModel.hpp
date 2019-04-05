@@ -203,7 +203,6 @@ CML::HeatTransferModel<CloudType>::HeatTransferModel
 {}
 
 
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -217,19 +216,6 @@ template<class CloudType>
 const CML::Switch& CML::HeatTransferModel<CloudType>::BirdCorrection() const
 {
     return BirdCorrection_;
-}
-
-
-template<class CloudType>
-CML::scalar CML::HeatTransferModel<CloudType>::Nu
-(
-    const scalar Re,
-    const scalar Pr
-) const
-{
-    NotImplemented;
-
-    return 0.0;
 }
 
 

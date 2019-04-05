@@ -251,6 +251,7 @@ CML::CloudFunctionObject<CloudType>::CloudFunctionObject
     {
         outputDir_ = outputDir_/relPath;
     }
+    outputDir_.clean();
 }
 
 

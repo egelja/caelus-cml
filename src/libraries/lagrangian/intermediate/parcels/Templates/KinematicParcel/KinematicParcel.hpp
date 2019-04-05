@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2018 OpenFOAM Foundation
-Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -328,7 +327,7 @@ public:
           + " typeId"
           + " nParticle"
           + " d"
-          + " dTarget"
+          + " dTarget "
           + " (Ux Uy Uz)"
           + " rho"
           + " age"
@@ -380,8 +379,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -1512,9 +1510,8 @@ bool CML::KinematicParcel<ParcelType>::move
     ttd.switchProcessor = false;
     ttd.keepParticle = true;
 
-    const cloudSolution& solution = cloud.solution();
     const scalarField& cellLengthScale = cloud.cellLengthScale();
-    const scalar maxCo = solution.maxCo();
+    const scalar maxCo = cloud.solution().maxCo();
 
     while (ttd.keepParticle && !ttd.switchProcessor && p.stepFraction() < 1)
     {
@@ -1562,7 +1559,7 @@ bool CML::KinematicParcel<ParcelType>::move
 
             p.calcDispersion(cloud, ttd, dt);
 
-            if (solution.cellValueSourceCorrection())
+            if (cloud.solution().cellValueSourceCorrection())
             {
                 p.cellValueSourceCorrection(cloud, ttd, dt);
             }
@@ -1690,11 +1687,10 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     active_(false),
     typeId_(0),
     nParticle_(0.0),
@@ -1743,35 +1739,64 @@ void CML::KinematicParcel<ParcelType>::readFields(CloudType& c)
 
     ParcelType::readFields(c);
 
-    IOField<label> active(c.fieldIOobject("active", IOobject::MUST_READ));
+    IOField<label> active
+    (
+        c.fieldIOobject("active", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, active);
 
-    IOField<label> typeId(c.fieldIOobject("typeId", IOobject::MUST_READ));
+    IOField<label> typeId
+    (
+        c.fieldIOobject("typeId", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, typeId);
 
-    IOField<scalar>
-        nParticle(c.fieldIOobject("nParticle", IOobject::MUST_READ));
+    IOField<scalar> nParticle
+    (
+        c.fieldIOobject("nParticle", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, nParticle);
 
-    IOField<scalar> d(c.fieldIOobject("d", IOobject::MUST_READ));
+    IOField<scalar> d
+    (
+        c.fieldIOobject("d", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, d);
 
-    IOField<scalar> dTarget(c.fieldIOobject("dTarget", IOobject::MUST_READ));
+    IOField<scalar> dTarget
+    (
+        c.fieldIOobject("dTarget", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, dTarget);
 
-    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ));
+    IOField<vector> U
+    (
+        c.fieldIOobject("U", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, U);
 
-    IOField<scalar> rho(c.fieldIOobject("rho", IOobject::MUST_READ));
+    IOField<scalar> rho
+    (
+        c.fieldIOobject("rho", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, rho);
 
-    IOField<scalar> age(c.fieldIOobject("age", IOobject::MUST_READ));
+    IOField<scalar> age
+    (
+        c.fieldIOobject("age", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, age);
 
-    IOField<scalar> tTurb(c.fieldIOobject("tTurb", IOobject::MUST_READ));
+    IOField<scalar> tTurb
+    (
+        c.fieldIOobject("tTurb", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tTurb);
 
-    IOField<vector> UTurb(c.fieldIOobject("UTurb", IOobject::MUST_READ));
+    IOField<vector> UTurb
+    (
+        c.fieldIOobject("UTurb", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, UTurb);
 
     label i = 0;
@@ -1802,7 +1827,7 @@ void CML::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> active(c.fieldIOobject("active", IOobject::NO_READ), np);
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);

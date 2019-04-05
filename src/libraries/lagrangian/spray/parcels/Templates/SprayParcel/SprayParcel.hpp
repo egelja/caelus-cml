@@ -241,8 +241,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -1083,14 +1082,14 @@ void CML::SprayParcel<ParcelType>::calcBreakup
     const scalar dt
 )
 {
-    auto& breakup = cloud.breakup();
+    const typename TrackCloudType::parcelType& p =
+        static_cast<const typename TrackCloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType::trackingData& ttd =
+        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);
 
-    if (!breakup.active())
-    {
-        return;
-    }
+    const typename TrackCloudType::forceType& forces = cloud.forces();
 
-    if (breakup.solveOscillationEq())
+    if (cloud.breakup().solveOscillationEq())
     {
         solveTABEq(cloud, td, dt);
     }
@@ -1107,12 +1106,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
     scalar Urmag = mag(Urel);
     scalar Re = this->Re(rhoAv, this->U(), td.Uc(), this->d(), muAv);
 
-    const typename TrackCloudType::parcelType& p =
-        static_cast<const typename TrackCloudType::parcelType&>(*this);
-    typename TrackCloudType::parcelType::trackingData& ttd =
-        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);
     const scalar mass = p.mass();
-    const typename TrackCloudType::forceType& forces = cloud.forces();
     const forceSuSp Fcp = forces.calcCoupled(p, ttd, dt, mass, Re, muAv);
     const forceSuSp Fncp = forces.calcNonCoupled(p, ttd, dt, mass, Re, muAv);
     this->tMom() = mass/(Fcp.Sp() + Fncp.Sp() + ROOTVSMALL);
@@ -1123,7 +1117,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
     scalar dChild = 0.0;
     if
     (
-        breakup.update
+        cloud.breakup().update
         (
             dt,
             g,
@@ -1340,11 +1334,10 @@ CML::SprayParcel<ParcelType>::SprayParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     d0_(0.0),
     position0_(Zero),
     sigma_(0.0),
@@ -1439,34 +1432,58 @@ void CML::SprayParcel<ParcelType>::readFields
     IOField<scalar> mu(c.fieldIOobject("mu", IOobject::MUST_READ));
     c.checkFieldIOobject(c, mu);
 
-    IOField<scalar> liquidCore(c.fieldIOobject
+    IOField<scalar> liquidCore
     (
-        "liquidCore", IOobject::MUST_READ)
+        c.fieldIOobject("liquidCore", IOobject::MUST_READ)
     );
     c.checkFieldIOobject(c, liquidCore);
 
-    IOField<scalar> KHindex(c.fieldIOobject("KHindex", IOobject::MUST_READ));
+    IOField<scalar> KHindex
+    (
+        c.fieldIOobject("KHindex", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, KHindex);
 
-    IOField<scalar> y(c.fieldIOobject("y", IOobject::MUST_READ));
+    IOField<scalar> y
+    (
+        c.fieldIOobject("y", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, y);
 
-    IOField<scalar> yDot(c.fieldIOobject("yDot", IOobject::MUST_READ));
+    IOField<scalar> yDot
+    (
+        c.fieldIOobject("yDot", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, yDot);
 
-    IOField<scalar> tc(c.fieldIOobject("tc", IOobject::MUST_READ));
+    IOField<scalar> tc
+    (
+        c.fieldIOobject("tc", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tc);
 
-    IOField<scalar> ms(c.fieldIOobject("ms", IOobject::MUST_READ));
+    IOField<scalar> ms
+    (
+        c.fieldIOobject("ms", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, ms);
 
-    IOField<scalar> injector(c.fieldIOobject("injector", IOobject::MUST_READ));
+    IOField<scalar> injector
+    (
+        c.fieldIOobject("injector", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, injector);
 
-    IOField<scalar> tMom(c.fieldIOobject("tMom", IOobject::MUST_READ));
+    IOField<scalar> tMom
+    (
+        c.fieldIOobject("tMom", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tMom);
 
-    IOField<scalar> user(c.fieldIOobject("user", IOobject::MUST_READ));
+    IOField<scalar> user
+    (
+        c.fieldIOobject("user", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, user);
 
     label i = 0;

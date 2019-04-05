@@ -269,8 +269,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -382,7 +381,7 @@ public:
 
         // I-O
 
-            //- Read - composition supplied
+            //- Read
             template<class CloudType, class CompositionType>
             static void readFields
             (
@@ -394,7 +393,7 @@ public:
             template<class CloudType>
             static void readFields(CloudType& c);
 
-            //- Write - composition supplied
+            //- Write
             template<class CloudType, class CompositionType>
             static void writeFields
             (
@@ -402,7 +401,7 @@ public:
                 const CompositionType& compModel
             );
 
-            //- Write - no composition
+            //- Write - composition supplied
             template<class CloudType>
             static void writeFields(const CloudType& c);
 
@@ -600,7 +599,7 @@ inline CML::ReactingParcel<ParcelType>::trackingData::trackingData
             cloud.p()
         )
     ),
-	pc_(Zero)
+    pc_(Zero)
 {}
 
 
@@ -1212,11 +1211,10 @@ CML::ReactingParcel<ParcelType>::ReactingParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     mass0_(0.0),
     Y_(0)
 {

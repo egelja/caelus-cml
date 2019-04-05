@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2018 OpenFOAM Foundation
-Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,7 +21,7 @@ Class
     CML::IOPosition
 
 Description
-    Helper IO class to read and write particle coordinates (positions).
+    Helper IO class to read and write particle positions
 
 SourceFiles
     IOPosition.cpp
@@ -49,9 +48,8 @@ class IOPosition
 :
     public regIOobject
 {
-    // Private data
 
-        cloud::geometryType geometryType_;
+    // Private data
 
         //- Reference to the cloud
         const CloudType& cloud_;
@@ -71,11 +69,7 @@ public:
     // Constructors
 
         //- Construct from cloud
-        IOPosition
-        (
-            const CloudType& c,
-            cloud::geometryType geomType = cloud::geometryType::COORDINATES
-        );
+        IOPosition(const CloudType&);
 
 
     // Member functions
@@ -99,24 +93,19 @@ public:
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::IOPosition<CloudType>::IOPosition
-(
-    const CloudType& c,
-    cloud::geometryType geomType
-)
+CML::IOPosition<CloudType>::IOPosition(const CloudType& c)
 :
     regIOobject
     (
         IOobject
         (
-            cloud::geometryTypeNames[geomType],
+            "positions",
             c.time().timeName(),
             c,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
     ),
-    geometryType_(geomType),
     cloud_(c)
 {}
 
@@ -142,26 +131,10 @@ bool CML::IOPosition<CloudType>::writeData(Ostream& os) const
 {
     os  << cloud_.size() << nl << token::BEGIN_LIST << nl;
 
-    switch (geometryType_)
+    forAllConstIter(typename CloudType, cloud_, iter)
     {
-        case cloud::geometryType::COORDINATES:
-        {
-            forAllConstIter(typename CloudType, cloud_, iter)
-            {
-                iter().writeCoordinates(os);
-                os  << nl;
-            }
-            break;
-        }
-        case cloud::geometryType::POSITIONS:
-        {
-            forAllConstIter(typename CloudType, cloud_, iter)
-            {
-                iter().writePosition(os);
-                os  << nl;
-            }
-            break;
-        }
+        iter().writePosition(os);
+        os  << nl;
     }
 
     os  << token::END_LIST << endl;
@@ -179,8 +152,6 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
 
     token firstToken(is);
 
-    const bool newFormat = (geometryType_ == cloud::geometryType::COORDINATES);
-
     if (firstToken.isLabel())
     {
         label s = firstToken.labelToken();
@@ -191,16 +162,7 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
         for (label i=0; i<s; i++)
         {
             // Read position only
-            c.append
-            (
-                new typename CloudType::particleType
-                (
-                    mesh,
-                    is,
-                    false,
-                    newFormat
-                )
-            );
+            c.append(new typename CloudType::particleType(mesh, is, false));
         }
 
         // Read end of contents
@@ -210,8 +172,10 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorInFunction(is)
-                << "incorrect first token, '(', found "
+            FatalIOErrorInFunction
+            (
+                is
+            )   << "incorrect first token, '(', found "
                 << firstToken.info() << exit(FatalIOError);
         }
 
@@ -227,17 +191,16 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
             is.putBack(lastToken);
 
             // Read position only
-            c.append
-            (
-                new typename CloudType::particleType(mesh, is, false, newFormat)
-            );
+            c.append(new typename CloudType::particleType(mesh, is, false));
             is  >> lastToken;
         }
     }
     else
     {
-        FatalIOErrorInFunction(is)
-            << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction
+        (
+            is
+        )   << "incorrect first token, expected <int> or '(', found "
             << firstToken.info() << exit(FatalIOError);
     }
 

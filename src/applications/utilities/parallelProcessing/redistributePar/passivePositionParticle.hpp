@@ -60,11 +60,10 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields,
-            bool newFormat
+            bool readFields
         )
         :
-            passiveParticle(mesh, is, readFields, newFormat),
+            passiveParticle(mesh, is, readFields),
             position_(position())
         {}
 
@@ -99,8 +98,7 @@ public:
             {
                 return autoPtr<passivePositionParticle>
                 (
-                    // Read in old format
-                    new passivePositionParticle(mesh_, is, true, false)
+                    new passivePositionParticle(mesh_, is, true)
                 );
             }
         };
@@ -116,7 +114,17 @@ public:
         {
             // Copy data into old format structure. Exact opposite of
             // particleIO.C reading old format.
-            particle::positionsCompat804 p;
+            struct oldParticle
+            {
+                vector position;
+                label celli;
+                label facei;
+                scalar stepFraction;
+                label tetFacei;
+                label tetPti;
+                label origProc;
+                label origId;
+            } p;
 
             p.position = ppi.position_;
             p.celli = ppi.cell();
@@ -142,8 +150,7 @@ public:
             {
                 const std::size_t sizeofFields
                 (
-                    sizeof(particle::positionsCompat804)
-                  - offsetof(particle::positionsCompat804, position)
+                    sizeof(oldParticle) - offsetof(oldParticle, position)
                 );
 
                 os.write

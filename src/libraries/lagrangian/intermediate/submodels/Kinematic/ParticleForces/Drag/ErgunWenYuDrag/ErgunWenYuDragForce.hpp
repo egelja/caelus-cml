@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2017 OpenFOAM Foundation
+Copyright (C) 2013-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -23,13 +23,20 @@ Class
 Description
     Ergun-Wen-Yu drag model for solid spheres.
 
+    Reference:
+    \verbatim
+        Gidaspow, D. (1994).
+        Multiphase flow and fluidization: continuum and kinetic theory
+        descriptions.
+        Academic press.
+    \endverbatim
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef ErgunWenYuDragForce_HPP
 #define ErgunWenYuDragForce_HPP
 
-#include "ParticleForce.hpp"
-#include "volFieldsFwd.hpp"
+#include "WenYuDragForce.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,20 +50,8 @@ namespace CML
 template<class CloudType>
 class ErgunWenYuDragForce
 :
-    public ParticleForce<CloudType>
+    public WenYuDragForce<CloudType>
 {
-    // Private Data
-
-        //- Reference to the carrier volume fraction field
-        const volScalarField& alphac_;
-
-
-    // Private Member Functions
-
-        //- Drag coefficient multiplied by Reynolds number
-        scalar CdRe(const scalar Re) const;
-
-
 public:
 
     //- Runtime type information
@@ -110,27 +105,6 @@ public:
 } // End namespace CML
 
 
-#include "volFields.hpp"
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class CloudType>
-CML::scalar CML::ErgunWenYuDragForce<CloudType>::CdRe
-(
-    const scalar Re
-) const
-{
-    if (Re > 1000.0)
-    {
-        return 0.44*Re;
-    }
-    else
-    {
-        return 24.0*(1.0 + 0.15*pow(Re, 0.687));
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -141,14 +115,7 @@ CML::ErgunWenYuDragForce<CloudType>::ErgunWenYuDragForce
     const dictionary& dict
 )
 :
-    ParticleForce<CloudType>(owner, mesh, dict, typeName, true),
-    alphac_
-    (
-        this->mesh().template lookupObject<volScalarField>
-        (
-            this->coeffs().lookup("alphac")
-        )
-    )
+    WenYuDragForce<CloudType>(owner, mesh, dict, typeName)
 {}
 
 
@@ -158,14 +125,7 @@ CML::ErgunWenYuDragForce<CloudType>::ErgunWenYuDragForce
     const ErgunWenYuDragForce<CloudType>& df
 )
 :
-    ParticleForce<CloudType>(df),
-    alphac_
-    (
-        this->mesh().template lookupObject<volScalarField>
-        (
-            this->coeffs().lookup("alphac")
-        )
-    )
+    WenYuDragForce<CloudType>(df)
 {}
 
 
@@ -189,25 +149,25 @@ CML::forceSuSp CML::ErgunWenYuDragForce<CloudType>::calcCoupled
     const scalar muc
 ) const
 {
-    scalar alphac(alphac_[p.cell()]);
+    const scalar alphac =
+        this->alphacInterp().interpolate
+        (
+            p.coordinates(),
+            p.currentTetIndices()
+        );
 
     if (alphac < 0.8)
     {
         return forceSuSp
         (
             Zero,
-            (mass/p.rho())
-           *(150.0*(1.0 - alphac)/alphac + 1.75*Re)*muc/(alphac*sqr(p.d()))
+            mass/p.rho()*(150*(1 - alphac)/alphac + 1.75*Re)
+           *muc/(alphac*sqr(p.d()))
         );
     }
     else
     {
-        return forceSuSp
-        (
-            Zero,
-            (mass/p.rho())
-           *0.75*CdRe(alphac*Re)*muc*pow(alphac, -2.65)/(alphac*sqr(p.d()))
-        );
+        return WenYuDragForce<CloudType>::calcCoupled(p, td, dt, mass, Re, muc);
     }
 }
 

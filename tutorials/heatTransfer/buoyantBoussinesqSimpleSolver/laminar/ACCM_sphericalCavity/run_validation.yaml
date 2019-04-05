@@ -1,6 +1,7 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: no
       remove_mesh: no
       preserve: [ "s-cavity-pv.png" ]

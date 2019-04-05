@@ -1,6 +1,7 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: no
       remove_mesh: yes
 
@@ -14,6 +15,7 @@ tasks:
   - run_command:
       cmd_name: cpbnsPIMPLE
       parallel: True
+      num_ranks: 4
 
   - run_command:
       cmd_name: reconstructPar

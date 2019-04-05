@@ -1,6 +1,7 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: no
       remove_mesh: yes
 
@@ -29,6 +30,7 @@ tasks:
   - run_command:
       cmd_name: vofLPTSolver
       parallel: True
+      num_ranks: 10
 
   - process_logs:
       log_file: vofLPTSolver.log

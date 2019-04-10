@@ -48,7 +48,6 @@ CML::Istream& CML::regIOobject::readStream()
     // Construct object stream and read header if not already constructed
     if (!isPtr_)
     {
-
         fileName objPath;
         if (watchIndex_ != -1)
         {
@@ -243,8 +242,9 @@ bool CML::regIOobject::read()
             ok = readData(fromAbove);
         }
 
-        // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        // Send to my downstairs neighbours. Note reverse order not
+        // nessecary here - just for consistency reasons.
+        forAllReverse(myComm.below(), belowI)
         {
             OPstream toBelow
             (

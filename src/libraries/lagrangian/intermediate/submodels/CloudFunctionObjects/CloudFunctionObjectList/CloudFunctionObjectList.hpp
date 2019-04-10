@@ -88,7 +88,7 @@ public:
             //- Return const access to the cloud owner
             inline const CloudType& owner() const;
 
-            //- Return refernce to the cloud owner
+            //- Return references to the cloud owner
             inline CloudType& owner();
 
             //- Return the forces dictionary

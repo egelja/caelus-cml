@@ -27,6 +27,7 @@ License
 
 #include "SphereDragForce.hpp"
 #include "NonSphereDragForce.hpp"
+#include "SchillerNaumannDragForce.hpp"
 #include "WenYuDragForce.hpp"
 #include "ErgunWenYuDragForce.hpp"
 #include "PlessisMasliyahDragForce.hpp"
@@ -52,6 +53,7 @@ License
     makeParticleForceModel(CloudType);                                         \
     makeParticleForceModelType(SphereDragForce, CloudType);                    \
     makeParticleForceModelType(NonSphereDragForce, CloudType);                 \
+    makeParticleForceModelType(SchillerNaumannDragForce, CloudType);           \
     makeParticleForceModelType(WenYuDragForce, CloudType);                     \
     makeParticleForceModelType(ErgunWenYuDragForce, CloudType);                \
     makeParticleForceModelType(PlessisMasliyahDragForce, CloudType);           \

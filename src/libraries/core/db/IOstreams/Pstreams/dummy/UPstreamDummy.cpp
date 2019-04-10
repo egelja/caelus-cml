@@ -55,6 +55,15 @@ void CML::reduce(scalar&, const sumOp<scalar>&, const int)
 {}
 
 
+void CML::UPstream::allToAll
+(
+    const labelUList& sendData,
+    labelUList& recvData,
+    const label communicator
+)
+{
+    recvData.assugb(sendData);
+}
 
 CML::label CML::UPstream::nRequests()
 {

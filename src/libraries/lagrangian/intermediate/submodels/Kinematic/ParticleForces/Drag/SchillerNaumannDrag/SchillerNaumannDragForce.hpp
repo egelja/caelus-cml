@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2019 OpenFOAM Foundation
+Copyright (C) 2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -18,25 +18,24 @@ License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::WenYuDragForce
+    CML::SchillerNaumannDragForce
 
 Description
-    Wen-Yu drag model for spheres.
+    Schiller-Naumann drag model for spheres.
 
     Reference:
     \verbatim
-        Gidaspow, D. (1994).
-        Multiphase flow and fluidization: continuum and kinetic theory
-        descriptions.
-        Academic press.
+        Naumann, Z., & Schiller, L. (1935).
+        A drag coefficient correlation.
+        Z Ver Deutsch Ing, 77, 318-323.
     \endverbatim
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef WenYuDragForce_HPP
-#define WenYuDragForce_HPP
+#ifndef SchillerNaumannDragForce_HPP
+#define SchillerNaumannDragForce_HPP
 
-#include "DenseDragForce.hpp"
+#include "ParticleForce.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,54 +43,51 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                       Class WenYuDragForce Declaration
+                       Class SchillerNaumannDragForce Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
-class WenYuDragForce
+class SchillerNaumannDragForce
 :
-    public DenseDragForce<CloudType>
+    public ParticleForce<CloudType>
 {
 public:
 
+    // Static Member Functions
+
+        //- Drag coefficient multiplied by Reynolds number
+        static scalar CdRe(const scalar Re);
+
+
     //- Runtime type information
-    TypeName("WenYuDrag");
+    TypeName("SchillerNaumannDrag");
 
 
     // Constructors
 
         //- Construct from mesh
-        WenYuDragForce
+        SchillerNaumannDragForce
         (
             CloudType& owner,
             const fvMesh& mesh,
             const dictionary& dict
         );
 
-        //- Construct from mesh
-        WenYuDragForce
-        (
-            CloudType& owner,
-            const fvMesh& mesh,
-            const dictionary& dict,
-            const word& typeName
-        );
-
         //- Construct copy
-        WenYuDragForce(const WenYuDragForce<CloudType>& df);
+        SchillerNaumannDragForce(const SchillerNaumannDragForce<CloudType>& df);
 
         //- Construct and return a clone
         virtual autoPtr<ParticleForce<CloudType>> clone() const
         {
             return autoPtr<ParticleForce<CloudType>>
             (
-                new WenYuDragForce<CloudType>(*this)
+                new SchillerNaumannDragForce<CloudType>(*this)
             );
         }
 
 
     //- Destructor
-    virtual ~WenYuDragForce();
+    virtual ~SchillerNaumannDragForce();
 
 
     // Member Functions
@@ -110,60 +106,62 @@ public:
             ) const;
 };
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
 
-#include "SchillerNaumannDragForce.hpp"
+// * * * * * * * * * * * * *  Static Member Functions  * * * * * * * * * * * //
+
+template<class CloudType>
+CML::scalar CML::SchillerNaumannDragForce<CloudType>::CdRe(const scalar Re)
+{
+    if (Re > 1000.0)
+    {
+        return 0.44*Re;
+    }
+    else
+    {
+        return 24.0*(1.0 + 0.15*pow(Re, 0.687));
+    }
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::WenYuDragForce<CloudType>::WenYuDragForce
+CML::SchillerNaumannDragForce<CloudType>::SchillerNaumannDragForce
 (
     CloudType& owner,
     const fvMesh& mesh,
     const dictionary& dict
 )
 :
-    DenseDragForce<CloudType>(owner, mesh, dict, typeName)
+    ParticleForce<CloudType>(owner, mesh, dict, typeName, false)
 {}
 
 
 template<class CloudType>
-CML::WenYuDragForce<CloudType>::WenYuDragForce
+CML::SchillerNaumannDragForce<CloudType>::SchillerNaumannDragForce
 (
-    CloudType& owner,
-    const fvMesh& mesh,
-    const dictionary& dict,
-    const word& typeName
+    const SchillerNaumannDragForce<CloudType>& df
 )
 :
-    DenseDragForce<CloudType>(owner, mesh, dict, typeName)
-{}
-
-
-template<class CloudType>
-CML::WenYuDragForce<CloudType>::WenYuDragForce
-(
-    const WenYuDragForce<CloudType>& df
-)
-:
-    DenseDragForce<CloudType>(df)
+    ParticleForce<CloudType>(df)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::WenYuDragForce<CloudType>::~WenYuDragForce()
+CML::SchillerNaumannDragForce<CloudType>::~SchillerNaumannDragForce()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::forceSuSp CML::WenYuDragForce<CloudType>::calcCoupled
+CML::forceSuSp CML::SchillerNaumannDragForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
     const typename CloudType::parcelType::trackingData& td,
@@ -173,19 +171,7 @@ CML::forceSuSp CML::WenYuDragForce<CloudType>::calcCoupled
     const scalar muc
 ) const
 {
-    const scalar alphac =
-        this->alphacInterp().interpolate
-        (
-            p.coordinates(),
-            p.currentTetIndices()
-        );
-    const scalar CdRe = SchillerNaumannDragForce<CloudType>::CdRe(alphac*Re);
-
-    return forceSuSp
-    (
-        Zero,
-        0.75*(mass/p.rho())*CdRe*muc*pow(alphac, -2.65)/(alphac*sqr(p.d()))
-    );
+    return forceSuSp(Zero, mass*0.75*muc*CdRe(Re)/(p.rho()*sqr(p.d())));
 }
 
 

@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2018 OpenFOAM Foundation
-Copyright (C) 2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,14 +33,6 @@ CML::label CML::particle::particleCount_ = 0;
 namespace CML
 {
     defineTypeNameAndDebug(particle, 0);
-    bool particle::writeLagrangianCoordinates
-    (
-        debug::infoSwitch("writeLagrangianCoordinates", 1)
-    );
-    bool particle::writeLagrangianPositions
-    (
-        debug::infoSwitch("writeLagrangianPositions", 0)
-    );
 }
 
 
@@ -522,14 +513,14 @@ void CML::particle::locate
         if (nWarnings < maxNWarnings)
         {
             WarningInFunction << boundaryMsg << endl;
-            ++nWarnings;
+            ++ nWarnings;
         }
         if (nWarnings == maxNWarnings)
         {
             WarningInFunction
                 << "Suppressing any further warnings about particles being "
                 << "located outside of the mesh." << endl;
-            ++nWarnings;
+            ++ nWarnings;
         }
     }
 }
@@ -1237,19 +1228,6 @@ void CML::particle::autoMap
         position,
         nullptr,
         mapper.reverseCellMap()[celli_],
-        true,
-        "Particle mapped to a location outside of the mesh."
-    );
-}
-
-
-void CML::particle::relocate(const point& position)
-{
-    locate
-    (
-        position,
-        nullptr,
-        celli_,
         true,
         "Particle mapped to a location outside of the mesh."
     );

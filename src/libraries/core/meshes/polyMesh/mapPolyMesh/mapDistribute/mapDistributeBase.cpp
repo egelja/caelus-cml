@@ -448,12 +448,10 @@ void CML::mapDistributeBase::exchangeAddressing
     }
 
     subMap_.setSize(Pstream::nProcs());
-    labelListList sendSizes;
     Pstream::exchange<labelList, label>
     (
         wantedRemoteElements,
         subMap_,
-        sendSizes,
         tag
     );
 
@@ -527,12 +525,10 @@ void CML::mapDistributeBase::exchangeAddressing
     }
 
     subMap_.setSize(Pstream::nProcs());
-    labelListList sendSizes;
     Pstream::exchange<labelList, label>
     (
         wantedRemoteElements,
         subMap_,
-        sendSizes,
         tag
     );
 

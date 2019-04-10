@@ -344,9 +344,6 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
     {
         // Particles in collision
 
-        // Force coefficient
-        scalar forceCoeff = this->forceCoeff(pA, pB);
-
         vector rHat_AB = r_AB/(r_AB_mag + VSMALL);
 
         vector U_AB = pA.U() - pB.U();
@@ -375,8 +372,6 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
                 *overlapArea(dAEff/2.0, dBEff/2.0, r_AB_mag)
                 *rHat_AB;
         }
-
-        fN_AB *= forceCoeff;
 
         pA.f() += fN_AB;
         pB.f() += -fN_AB;
@@ -431,8 +426,6 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
             {
                 fT_AB = - kT*tangentialOverlap_AB - etaT*USlip_AB;
             }
-
-            fT_AB *= forceCoeff;
 
             pA.f() += fT_AB;
             pB.f() += -fT_AB;

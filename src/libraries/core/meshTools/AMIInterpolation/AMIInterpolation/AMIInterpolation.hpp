@@ -2053,6 +2053,10 @@ const
     // Source face addresses that intersect target face tgtFacei
     const labelList& addr = tgtAddress_[tgtFacei];
 
+    pointHit nearest;
+    nearest.setDistance(GREAT);
+    label nearestFacei = -1;
+
     forAll(addr, i)
     {
         const label srcFacei = addr[i];
@@ -2062,29 +2066,20 @@ const
 
         if (ray.hit())
         {
-            tgtPoint = ray.rawPoint();
-
+            // tgtPoint = ray.rawPoint();
             return srcFacei;
+        }
+        else if (ray.distance() < nearest.distance())
+        {
+            nearest = ray;
+            nearestFacei = srcFacei;
         }
     }
 
-    // No hit registered - try with face normal instead of input normal
-    forAll(addr, i)
+    if (nearest.hit() || nearest.eligibleMiss())
     {
-        label srcFacei = addr[i];
-        const face& f = srcPatch[srcFacei];
-
-        vector nFace(-srcPatch.faceNormals()[srcFacei]);
-        nFace += tgtPatch.faceNormals()[tgtFacei];
-
-        pointHit ray = f.ray(tgtPoint, nFace, srcPoints);
-
-        if (ray.hit())
-        {
-            tgtPoint = ray.rawPoint();
-
-            return srcFacei;
-        }
+        // tgtPoint = nearest.rawPoint();
+        return nearestFacei;
     }
 
     return -1;
@@ -2104,6 +2099,10 @@ const
 {
     const pointField& tgtPoints = tgtPatch.points();
 
+    pointHit nearest;
+    nearest.setDistance(GREAT);
+    label nearestFacei = -1;
+
     // Target face addresses that intersect source face srcFacei
     const labelList& addr = srcAddress_[srcFacei];
 
@@ -2116,29 +2115,20 @@ const
 
         if (ray.hit())
         {
-            srcPoint = ray.rawPoint();
-
+            // srcPoint = ray.rawPoint();
             return tgtFacei;
+        }
+        else if (ray.distance() < nearest.distance())
+        {
+            nearest = ray;
+            nearestFacei = tgtFacei;
         }
     }
 
-    // No hit registered - try with face normal instead of input normal
-    forAll(addr, i)
+    if (nearest.hit() || nearest.eligibleMiss())
     {
-        label tgtFacei = addr[i];
-        const face& f = tgtPatch[tgtFacei];
-
-        vector nFace(-srcPatch.faceNormals()[srcFacei]);
-        nFace += tgtPatch.faceNormals()[tgtFacei];
-
-        pointHit ray = f.ray(srcPoint, n, tgtPoints);
-
-        if (ray.hit())
-        {
-            srcPoint = ray.rawPoint();
-
-            return tgtFacei;
-        }
+        // srcPoint = nearest.rawPoint();
+        return nearestFacei;
     }
 
     return -1;

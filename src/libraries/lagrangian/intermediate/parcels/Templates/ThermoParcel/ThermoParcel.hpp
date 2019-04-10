@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2017 OpenFOAM Foundation
-Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -329,8 +328,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -704,15 +702,17 @@ inline CML::ThermoParcel<ParcelType>::trackingData::trackingData
             Cp_
         )
     ),
-//    kappaInterp_
-//    (
-//        interpolation<scalar>::New
-//        (
-//            cloud.solution().interpolationSchemes(),
-//            kappa_
-//        )
-//    ),
-    GInterp_(nullptr)
+    kappaInterp_
+    (
+        interpolation<scalar>::New
+        (
+            cloud.solution().interpolationSchemes(),
+            kappa_
+        )
+    ),
+    GInterp_(nullptr),
+    Tc_(Zero),
+    Cpc_(Zero)
 {
     if (cloud.radiation())
     {
@@ -857,21 +857,17 @@ void CML::ThermoParcel<ParcelType>::cellValueSourceCorrection
     const scalar dt
 )
 {
-    const label celli = this->cell();
-    const scalar massCell = this->massCell(td);
+    td.Uc() += cloud.UTrans()[this->cell()]/this->massCell(td);
 
-    td.Uc() += cloud.UTrans()[celli]/massCell;
-
-
-    const scalar CpMean = td.CpInterp().psi()[celli];
-    td.Tc() += cloud.hsTrans()[celli]/(CpMean*massCell);
+    const scalar CpMean = td.CpInterp().psi()[this->cell()];
+    td.Tc() += cloud.hsTrans()[this->cell()]/(CpMean*this->massCell(td));
 
     if (td.Tc() < cloud.constProps().TMin())
     {
         if (debug)
         {
             WarningInFunction
-                << "Limiting observed temperature in cell " << celli
+                << "Limiting observed temperature in cell " << this->cell()
                 << " to " << cloud.constProps().TMin() <<  nl << endl;
         }
 
@@ -1143,11 +1139,10 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     T_(0.0),
     Cp_(0.0)
 {

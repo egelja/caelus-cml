@@ -1,7 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2011-2017 OpenFOAM Foundation
-Copyright (C) 2016-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -75,7 +74,7 @@ public:
     // Enumerations
 
         //- Parcel basis representation options
-        //- i.e constant number of particles OR constant mass per parcel
+        //  i.e constant number of particles OR constant mass per parcel
         enum parcelBasis
         {
             pbNumber,
@@ -94,7 +93,7 @@ protected:
             scalar SOI_;
 
             //- Total volume of particles introduced by this injector [m^3]
-            //- Note: scaled to ensure massTotal is achieved
+            // - scaled to ensure massTotal is achieved
             scalar volumeTotal_;
 
             //- Total mass to inject [kg]
@@ -122,7 +121,7 @@ protected:
             parcelBasis parcelBasis_;
 
             //- nParticle to assign to parcels when the 'fixed' basis
-            //- is selected
+            //  is selected
             scalar nParticleFixed_;
 
             //- Continuous phase time at start of injection time step [s]
@@ -130,13 +129,6 @@ protected:
 
             //- Time at start of injection time step [s]
             scalar timeStep0_;
-
-            //- Minimum number of particles used to represent each parcel
-            //- default = 1
-            scalar minParticlesPerParcel_;
-
-            //- Optional injector ID
-            label injectorID_;
 
 
     // Protected Member Functions
@@ -267,9 +259,6 @@ public:
 
             //- Return mass of particles injected (cumulative)
             inline scalar massInjected() const;
-
-            //- Return injectorID
-            inline label injectorID() const;
 
             //- Return the end-of-injection time
             virtual scalar timeEnd() const = 0;
@@ -414,13 +403,6 @@ template<class CloudType>
 CML::scalar CML::InjectionModel<CloudType>::massInjected() const
 {
     return massInjected_;
-}
-
-
-template<class CloudType>
-CML::label CML::InjectionModel<CloudType>::injectorID() const
-{
-    return injectorID_;
 }
 
 
@@ -674,8 +656,8 @@ CML::InjectionModel<CloudType>::InjectionModel(CloudType& owner)
 :
     CloudSubModelBase<CloudType>(owner),
     SOI_(0.0),
-    volumeTotal_(this->template getModelProperty<scalar>("volumeTotal")),
-    massTotal_(0),
+    volumeTotal_(0.0),
+    massTotal_(0.0),
     massFlowRate_(owner.db().time(), "massFlowRate"),
     massInjected_(this->template getModelProperty<scalar>("massInjected")),
     nInjections_(this->template getModelProperty<label>("nInjections")),
@@ -686,9 +668,7 @@ CML::InjectionModel<CloudType>::InjectionModel(CloudType& owner)
     parcelBasis_(pbNumber),
     nParticleFixed_(0.0),
     time0_(0.0),
-    timeStep0_(this->template getModelProperty<scalar>("timeStep0")),
-    minParticlesPerParcel_(1),
-    injectorID_(-1)
+    timeStep0_(this->template getModelProperty<scalar>("timeStep0"))
 {}
 
 
@@ -703,8 +683,8 @@ CML::InjectionModel<CloudType>::InjectionModel
 :
     CloudSubModelBase<CloudType>(modelName, owner, dict, typeName, modelType),
     SOI_(0.0),
-    volumeTotal_(this->template getModelProperty<scalar>("volumeTotal")),
-    massTotal_(0),
+    volumeTotal_(0.0),
+    massTotal_(0.0),
     massFlowRate_(owner.db().time(), "massFlowRate"),
     massInjected_(this->template getModelProperty<scalar>("massInjected")),
     nInjections_(this->template getModelProperty<scalar>("nInjections")),
@@ -715,13 +695,7 @@ CML::InjectionModel<CloudType>::InjectionModel
     parcelBasis_(pbNumber),
     nParticleFixed_(0.0),
     time0_(owner.db().time().value()),
-    timeStep0_(this->template getModelProperty<scalar>("timeStep0")),
-    minParticlesPerParcel_
-    (
-        this->coeffDict().template
-            lookupOrDefault<scalar>("minParticlesPerParcel", 1)
-    ),
-    injectorID_(this->coeffDict().lookupOrDefault("injectorID", -1))
+    timeStep0_(this->template getModelProperty<scalar>("timeStep0"))
 {
     // Provide some info
     // - also serves to initialise mesh dimensions - needed for parallel runs
@@ -729,27 +703,17 @@ CML::InjectionModel<CloudType>::InjectionModel
     Info<< "    Constructing " << owner.mesh().nGeometricD() << "-D injection"
         << endl;
 
-    if (injectorID_ != -1)
+    if (owner.solution().transient())
     {
-        Info<< "    injector ID: " << injectorID_ << endl;
+        this->coeffDict().lookup("massTotal") >> massTotal_;
+        this->coeffDict().lookup("SOI") >> SOI_;
+        SOI_ = owner.db().time().userTimeToTime(SOI_);
     }
-
-    if (owner.solution().active())
+    else
     {
-        if (owner.solution().transient())
-        {
-            this->coeffDict().lookup("massTotal") >> massTotal_;
-            this->coeffDict().lookup("SOI") >> SOI_;
-        }
-        else
-        {
-            massFlowRate_.reset(this->coeffDict());
-            massTotal_ = massFlowRate_.value(owner.db().time().value());
-            this->coeffDict().readIfPresent("SOI", SOI_);
-        }
+        massFlowRate_.reset(this->coeffDict());
+        massTotal_ = massFlowRate_.value(owner.db().time().value());
     }
-
-    SOI_ = owner.db().time().userTimeToTime(SOI_);
 
     const word parcelBasisType = this->coeffDict().lookup("parcelBasisType");
 
@@ -797,9 +761,7 @@ CML::InjectionModel<CloudType>::InjectionModel
     parcelBasis_(im.parcelBasis_),
     nParticleFixed_(im.nParticleFixed_),
     time0_(im.time0_),
-    timeStep0_(im.timeStep0_),
-    minParticlesPerParcel_(im.minParticlesPerParcel_),
-    injectorID_(im.injectorID_)
+    timeStep0_(im.timeStep0_)
 {}
 
 
@@ -938,7 +900,6 @@ void CML::InjectionModel<CloudType>::inject
 
                     if (pPtr->move(cloud, td, dt))
                     {
-                        pPtr->typeId() = injectorID_;
                         cloud.addParticle(pPtr);
                     }
                     else
@@ -964,13 +925,6 @@ void CML::InjectionModel<CloudType>::injectSteadyState
 )
 {
     if (!this->active())
-    {
-        return;
-    }
-
-    const scalar time = this->owner().db().time().value();
-
-    if (time < SOI_)
     {
         return;
     }
@@ -1042,8 +996,6 @@ void CML::InjectionModel<CloudType>::injectSteadyState
                     pPtr->rho()
                 );
 
-            pPtr->typeId() = injectorID_;
-
             // Add the new parcel
             cloud.addParticle(pPtr);
 
@@ -1059,13 +1011,12 @@ void CML::InjectionModel<CloudType>::injectSteadyState
 template<class CloudType>
 void CML::InjectionModel<CloudType>::info(Ostream& os)
 {
-    os  << "    Injector " << this->modelName() << ":" << nl
-        << "      - parcels added               = " << parcelsAddedTotal_ << nl
-        << "      - mass introduced             = " << massInjected_ << nl;
+    os  << "    " << this->modelName() << ":" << nl
+        << "        number of parcels added     = " << parcelsAddedTotal_ << nl
+        << "        mass introduced             = " << massInjected_ << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
-        this->setModelProperty("volumeTotal", volumeTotal_);
         this->setModelProperty("massInjected", massInjected_);
         this->setModelProperty("nInjections", nInjections_);
         this->setModelProperty("parcelsAddedTotal", parcelsAddedTotal_);

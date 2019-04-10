@@ -201,7 +201,7 @@ CML::wordList CML::PatchInteractionModel<CloudType>::interactionTypeNames_
 (
     IStringStream
     (
-        "(rebound stick escape)"
+        "(none rebound stick escape)"
     )()
 );
 

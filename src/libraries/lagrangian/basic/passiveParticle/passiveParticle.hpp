@@ -85,11 +85,10 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         )
         :
-            particle(mesh, is, readFields, newFormat)
+            particle(mesh, is, readFields)
         {}
 
         //- Construct as copy
@@ -103,30 +102,6 @@ public:
         {
             return autoPtr<particle>(new passiveParticle(*this));
         }
-
-
-        //- Factory class to read-construct particles used for
-        //  parallel transfer
-        class iNew
-        {
-            const polyMesh& mesh_;
-
-        public:
-
-            iNew(const polyMesh& mesh)
-            :
-                mesh_(mesh)
-            {}
-
-            autoPtr<passiveParticle> operator()(Istream& is) const
-            {
-                return autoPtr<passiveParticle>
-                (
-                    new passiveParticle(mesh_, is, true)
-                );
-            }
-        };
-
 };
 
 

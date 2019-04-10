@@ -87,7 +87,7 @@ public:
 
         // Access
 
-            //- whole mesh
+            //- Whole mesh
             const fvMesh& baseMesh() const
             {
                 return baseMesh_;

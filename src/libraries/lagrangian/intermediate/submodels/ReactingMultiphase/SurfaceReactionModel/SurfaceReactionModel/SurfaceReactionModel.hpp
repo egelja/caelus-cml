@@ -230,34 +230,6 @@ CML::SurfaceReactionModel<CloudType>::~SurfaceReactionModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::scalar CML::SurfaceReactionModel<CloudType>::calculate
-(
-    const scalar,
-    const label,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalarField&,
-    const scalarField&,
-    const scalarField&,
-    const scalarField&,
-    const scalar,
-    scalarField&,
-    scalarField&,
-    scalarField&,
-    scalarField&
-) const
-{
-    NotImplemented;
-
-    return 0.0;
-}
-
-
-template<class CloudType>
 void CML::SurfaceReactionModel<CloudType>::addToSurfaceReactionMass
 (
     const scalar dMass
@@ -275,7 +247,7 @@ void CML::SurfaceReactionModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer surface reaction  = " << massTotal << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

@@ -110,7 +110,7 @@ protected:
         (
             const label filmPatchi,
             const label primaryPatchi,
-            const regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel
+            const regionModels::surfaceFilmModels::surfaceFilmRegionModel&
         );
 
         //- Set the individual parcel properties
@@ -513,7 +513,7 @@ void CML::SurfaceFilmModel<CloudType>::info(Ostream& os)
     os  << "    Parcels absorbed into film      = " << nTransTotal << nl
         << "    New film detached parcels       = " << nInjectTotal << endl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setModelProperty("nParcelsTransferred", nTransTotal);
         this->setModelProperty("nParcelsInjected", nInjectTotal);

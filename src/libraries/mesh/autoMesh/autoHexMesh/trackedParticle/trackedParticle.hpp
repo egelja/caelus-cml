@@ -42,6 +42,7 @@ namespace CML
 
 class trackedParticleCloud;
 
+
 // Forward declaration of friend functions and operators
 
 class trackedParticle;
@@ -148,8 +149,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct and return a clone
@@ -247,7 +247,7 @@ public:
 
             //- Overridable function to handle the particle hitting a
             //  symmetry plane
-//            void hitSymmetryPlanePatch(Cloud<trackedParticle>&, trackingData);
+//            void hitSymmetryPlanePatch(Cloud<trackedParticle>&, trackingData&);
 
             //- Overridable function to handle the particle hitting a
             //  symmetry patch
@@ -271,6 +271,16 @@ public:
                 trackingData&,
                 const vector&
             );
+
+            //- Overridable function to handle the particle hitting a
+            //  cyclicRepeatAMI
+//            void hitCyclicRepeatAMIPatch
+//            (
+//                const vector&,
+//                const scalar,
+//                Cloud<trackedParticle>&,
+//                trackingData&
+//            );
 
             //- Overridable function to handle the particle hitting a
             //- processorPatch

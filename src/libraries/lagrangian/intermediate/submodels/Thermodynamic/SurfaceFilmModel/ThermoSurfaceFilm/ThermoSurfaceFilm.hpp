@@ -164,7 +164,7 @@ protected:
             //- Absorb parcel into film
             void absorbInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
                 const label facei,
@@ -184,7 +184,7 @@ protected:
             //- Parcel interaction with dry surface
             void drySplashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
                 const label facei,
@@ -194,7 +194,7 @@ protected:
             //- Parcel interaction with wetted surface
             void wetSplashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 parcelType& p,
                 const polyPatch& pp,
                 const label facei,
@@ -204,7 +204,7 @@ protected:
             //- Bai parcel splash interaction model
             void splashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
                 const label facei,
@@ -579,7 +579,7 @@ void CML::ThermoSurfaceFilm<CloudType>::wetSplashInteraction
         const scalar epsilon = 0.993 - theta*(1.76 - theta*(1.56 - theta*0.49));
 
         // Update parcel velocity
-        U = -epsilon*(Un) + 5/7*(Ut);
+        U = -epsilon*(Un) + 5.0/7.0*(Ut);
 
         keepParticle = true;
         return;

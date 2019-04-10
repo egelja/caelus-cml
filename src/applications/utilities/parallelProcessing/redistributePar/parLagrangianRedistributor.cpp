@@ -183,7 +183,7 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
 
 
     // Start sending. Sets number of bytes transferred
-    labelListList allNTrans(Pstream::nProcs());
+    labelList allNTrans(Pstream::nProcs());
     pBufs.finishedSends(allNTrans);
 
 
@@ -206,7 +206,7 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
         // Retrieve from receive buffers
         forAll(allNTrans, procI)
         {
-            label nRec = allNTrans[procI][Pstream::myProcNo()];
+            label nRec = allNTrans[procI];
 
             if (nRec)
             {
@@ -232,18 +232,8 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
             }
         }
 
-        // Write coordinates file
-        IOPosition<passivePositionParticleCloud>(lagrangianPositions).write();
 
-        // Optionally write positions file in 804 format and earlier
-        if (particle::writeLagrangianPositions)
-        {
-            IOPosition<passivePositionParticleCloud>
-            (
-                 lagrangianPositions,
-                 cloud::geometryType::POSITIONS
-             ).write();
-        }
+        IOPosition<passivePositionParticleCloud>(lagrangianPositions).write();
 
         // Restore cloud name
         lpi.rename(cloudName);

@@ -29,7 +29,6 @@ License
 #include "NoInteraction.hpp"
 #include "Rebound.hpp"
 #include "StandardWallInteraction.hpp"
-#include "MultiInteraction.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,8 +39,7 @@ License
     makePatchInteractionModelType(LocalInteraction, CloudType);                \
     makePatchInteractionModelType(NoInteraction, CloudType);                   \
     makePatchInteractionModelType(Rebound, CloudType);                         \
-    makePatchInteractionModelType(StandardWallInteraction, CloudType);         \
-    makePatchInteractionModelType(MultiInteraction, CloudType);
+    makePatchInteractionModelType(StandardWallInteraction, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

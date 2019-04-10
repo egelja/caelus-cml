@@ -238,7 +238,7 @@ void CML::DevolatilisationModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer devolatilisation  = " << massTotal << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

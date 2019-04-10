@@ -207,8 +207,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -661,11 +660,10 @@ CML::CollidingParcel<ParcelType>::CollidingParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     f_(Zero),
     angularMomentum_(Zero),
     torque_(Zero),
@@ -716,7 +714,10 @@ void CML::CollidingParcel<ParcelType>::readFields(CloudType& c)
     );
     c.checkFieldIOobject(c, angularMomentum);
 
-    IOField<vector> torque(c.fieldIOobject("torque", IOobject::MUST_READ));
+    IOField<vector> torque
+    (
+        c.fieldIOobject("torque", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, torque);
 
     labelFieldCompactIOField collisionRecordsPairAccessed
@@ -801,7 +802,7 @@ void CML::CollidingParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<vector> f(c.fieldIOobject("f", IOobject::NO_READ), np);
     IOField<vector> angularMomentum

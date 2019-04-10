@@ -41,6 +41,7 @@ namespace CML
 
 class findCellParticleCloud;
 
+
 // Forward declaration of friend functions and operators
 
 class findCellParticle;
@@ -141,8 +142,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct and return a clone

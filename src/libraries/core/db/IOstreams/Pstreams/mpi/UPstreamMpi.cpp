@@ -39,9 +39,6 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 // NOTE:
 // valid parallel options vary between implementations, but flag common ones.
 // if they are not removed by MPI_Init(), the subsequent argument processing
@@ -54,7 +51,6 @@ void CML::UPstream::addValidParOptions(HashTable<string>& validParOptions)
     validParOptions.insert("p4amslave", "");
     validParOptions.insert("p4yourname", "hostname");
     validParOptions.insert("machinefile", "machine file");
-//	validParOptions.insert("np_user", "number of users processors");
 }
 
 
@@ -89,13 +85,13 @@ bool CML::UPstream::init(int& argc, char**& argv)
             << " myProcNo:" << myProcNo_ << endl;
     }
 
-	if (numprocs <= 1)
-	{
-	    FatalErrorInFunction
-	        << "bool IPstream::init(int& argc, char**& argv) : "
-	           "attempt to run parallel on 1 processor"
-	        << CML::abort(FatalError);
-	}
+    if (numprocs <= 1)
+    {
+        FatalErrorInFunction
+            << "bool IPstream::init(int& argc, char**& argv) : "
+               "attempt to run parallel on 1 processor"
+            << CML::abort(FatalError);
+    }
 
 	procIDs_.setSize(numprocs);
 
@@ -492,6 +488,51 @@ void CML::reduce(scalar& Value, const sumOp<scalar>& bop, const int tag)
     }
 }
 
+void CML::UPstream::allToAll
+(
+    const labelUList& sendData,
+    labelUList& recvData
+)
+{
+    label np = nProcs();
+
+    if (sendData.size() != np || recvData.size() != np)
+    {
+        FatalErrorInFunction
+            << "Size of sendData " << sendData.size()
+            << " or size of recvData " << recvData.size()
+            << " is not equal to the number of processors in the domain "
+            << np
+            << CML::abort(FatalError);
+    }
+
+    if (!UPstream::parRun())
+    {
+        recvData.assign(sendData);
+    }
+    else
+    {
+        if
+        (
+            MPI_Alltoall
+            (
+                const_cast<label*>(sendData.begin()),
+                sizeof(label),
+                MPI_BYTE,
+                recvData.begin(),
+                sizeof(label),
+                MPI_BYTE,
+                MPI_COMM_WORLD
+            )
+        )
+        {
+            FatalErrorInFunction
+                << "MPI_Alltoall failed for " << sendData
+                << " on communicator " << MPI_COMM_WORLD
+                << CML::abort(FatalError);
+        }
+    }
+}
 
 CML::label CML::UPstream::nRequests()
 {

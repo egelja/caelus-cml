@@ -25,13 +25,15 @@ Description
     Traps particles within a given phase fraction for multi-phase cases
 
     Model is activated using:
+    \verbatim
+    ParcelRemoval
+    {
+        type        parcelRemoval;
+        alphaName   alpha1;      // name volume fraction field
+        threshold   0.95;       // alpha value below which model is active
+    }
+    \endverbatim
 
-        ParcelRemoval
-        {
-            type        parcelRemoval;
-            alphaName   alpha1;      // name volume fraction field
-            threshold   0.95;       // alpha value below which model is active
-        }
 
 
 \*---------------------------------------------------------------------------*/
@@ -114,17 +116,17 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
+            //- Post-evolve hook
+            virtual void postEvolve();
+
             //- Post-move hook
             virtual void postMove
             (
                 typename CloudType::parcelType& p,
-                const label celli,
                 const scalar dt,
                 const point& position0,
                 bool& keepParticle
             );
-
-
 };
 
 
@@ -192,27 +194,28 @@ void CML::ParcelRemoval<CloudType>::preEvolve()
 }
 
 
-
+template<class CloudType>
+void CML::ParcelRemoval<CloudType>::postEvolve()
+{
+}
 
 
 template<class CloudType>
 void CML::ParcelRemoval<CloudType>::postMove
 (
     parcelType& p,
-    const label celli,
-    const scalar dt,
-    const point& position0,
+    const scalar,
+    const point&,
     bool& keepParticle
 )
 {
     bool& active = p.active();
-    if (alphaPtr_->internalField()[celli] < threshold_)
+    if (alphaPtr_->internalField()[p.cell()] < threshold_)
     {
         keepParticle = false;
         active = false;
     }
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

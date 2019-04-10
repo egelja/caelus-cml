@@ -40,13 +40,7 @@ const std::size_t CML::particle::sizeofFields_
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::particle::particle
-(
-    const polyMesh& mesh,
-    Istream& is,
-    bool readFields,
-    bool newFormat
-)
+CML::particle::particle(const polyMesh& mesh, Istream& is, bool readFields)
 :
     mesh_(mesh),
     coordinates_(),
@@ -60,87 +54,26 @@ CML::particle::particle
     origProc_(Pstream::myProcNo()),
     origId_(-1)
 {
-    if (newFormat)
+    if (is.format() == IOstream::ASCII)
     {
-        if (is.format() == IOstream::ASCII)
+        is  >> coordinates_ >> celli_ >> tetFacei_ >> tetPti_;
+
+        if (readFields)
         {
-            is  >> coordinates_ >> celli_ >> tetFacei_ >> tetPti_;
-            if (readFields)
-            {
-                is  >> facei_ >> stepFraction_ >> behind_ >> nBehind_
-                    >> origProc_ >> origId_;
-            }
-        }
-        else
-        {
-            if (readFields)
-            {
-                is.read(reinterpret_cast<char*>(&coordinates_), sizeofFields_);
-            }
-            else
-            {
-                is.read(reinterpret_cast<char*>(&coordinates_), sizeofPosition_);
-            }
+            is  >> facei_ >> stepFraction_ >> behind_ >> nBehind_
+                >> origProc_ >> origId_;
         }
     }
     else
     {
-        positionsCompat804 p;
-
-        if (is.format() == IOstream::ASCII)
+        if (readFields)
         {
-            is >> p.position >> p.celli;
-
-            if (readFields)
-            {
-                is  >> p.facei
-                    >> p.stepFraction
-                    >> p.tetFacei
-                    >> p.tetPti
-                    >> p.origProc
-                    >> p.origId;
-            }
+            is.read(reinterpret_cast<char*>(&coordinates_), sizeofFields_);
         }
         else
         {
-            if (readFields)
-            {
-                // Read whole struct
-                const size_t s =
-                (
-                    sizeof(positionsCompat804)
-                  - offsetof(positionsCompat804, position)
-                );
-                is.read(reinterpret_cast<char*>(&p.position), s);
-            }
-            else
-            {
-                // Read only position and cell
-                const size_t s =
-                (
-                    offsetof(positionsCompat804, facei)
-                  - offsetof(positionsCompat804, position)
-                );
-                is.read(reinterpret_cast<char*>(&p.position), s);
-            }
+            is.read(reinterpret_cast<char*>(&coordinates_), sizeofPosition_);
         }
-
-        if (readFields)
-        {
-            // Note: other position-based properties are set using locate(...)
-            stepFraction_ = p.stepFraction;
-            origProc_ = p.origProc;
-            origId_ = p.origId;
-        }
-
-        locate
-        (
-            p.position,
-            nullptr,
-            p.celli,
-            false,
-            "Particle initialised with a location outside of the mesh."
-        );
     }
 
     // Check state of Istream
@@ -148,7 +81,7 @@ CML::particle::particle
 }
 
 
-void CML::particle::writeCoordinates(Ostream& os) const
+void CML::particle::writePosition(Ostream& os) const
 {
     if (os.format() == IOstream::ASCII)
     {
@@ -160,33 +93,6 @@ void CML::particle::writeCoordinates(Ostream& os) const
     else
     {
         os.write(reinterpret_cast<const char*>(&coordinates_), sizeofPosition_);
-    }
-
-    // Check state of Ostream
-    os.check(FUNCTION_NAME);
-}
-
-
-void CML::particle::writePosition(Ostream& os) const
-{
-    if (os.format() == IOstream::ASCII)
-    {
-        os  << position() << token::SPACE << celli_;
-    }
-    else
-    {
-        positionsCompat804 p;
-
-        const size_t s =
-        (
-            offsetof(positionsCompat804, facei)
-          - offsetof(positionsCompat804, position)
-        );
-
-        p.position = position();
-        p.celli = celli_;
-
-        os.write(reinterpret_cast<const char*>(&p.position), s);
     }
 
     // Check state of Ostream

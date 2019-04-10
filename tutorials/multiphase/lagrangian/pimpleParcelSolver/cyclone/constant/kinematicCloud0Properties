@@ -108,6 +108,9 @@ subModels
     // Wall interaction model
     patchInteractionModel standardWallInteraction;
 
+    // StochasticCollision model
+    stochasticCollisionModel none;
+
     // Surface film
     surfaceFilmModel none;
 

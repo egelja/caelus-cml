@@ -24,7 +24,7 @@ License
 #include "makeParcelCloudFunctionObjects.hpp"
 
 // Kinematic
-#include "makeThermoParcelForces.hpp" // thermo variant
+#include "makeParcelForces.hpp"
 #include "makeParcelDispersionModels.hpp"
 #include "makeParcelInjectionModels.hpp"
 #include "makeParcelPatchInteractionModels.hpp"
@@ -40,7 +40,7 @@ namespace CML
     makeParcelCloudFunctionObjects(basicThermoCloud);
 
     // Kinematic sub-models
-    makeThermoParcelForces(basicThermoCloud);
+    makeParcelForces(basicThermoCloud);
     makeParcelDispersionModels(basicThermoCloud);
     makeParcelInjectionModels(basicThermoCloud);
     makeParcelPatchInteractionModels(basicThermoCloud);

@@ -1,7 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2011-2016 OpenFOAM Foundation
-Copyright (C) 2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -57,21 +56,6 @@ class PairModel
 
         //- The coefficients dictionary
         const dictionary coeffDict_;
-
-        //- Time to bleed-in collision forces; default = 0 (no delay)
-        scalar forceRampTime_;
-
-
-protected:
-
-    // Protected Member Functions
-
-        //- Return the force coefficient based on the forceRampTime_
-        scalar forceCoeff
-        (
-            typename CloudType::parcelType& pA,
-            typename CloudType::parcelType& pB
-        ) const;
 
 
 public:
@@ -186,11 +170,7 @@ CML::PairModel<CloudType>::PairModel
 :
     dict_(dict),
     owner_(owner),
-    coeffDict_(dict.subDict(type + "Coeffs")),
-    forceRampTime_
-    (
-        this->coeffDict().template lookupOrDefault<scalar>("forceRampTime", -1)
-    )
+    coeffDict_(dict.subDict(type + "Coeffs"))
 {}
 
 
@@ -222,22 +202,6 @@ template<class CloudType>
 const CML::dictionary& CML::PairModel<CloudType>::coeffDict() const
 {
     return coeffDict_;
-}
-
-
-template<class CloudType>
-CML::scalar CML::PairModel<CloudType>::forceCoeff
-(
-    typename CloudType::parcelType& pA,
-    typename CloudType::parcelType& pB
-) const
-{
-    if (forceRampTime_ < 0)
-    {
-        return 1;
-    }
-
-    return min(min(pA.age(), pB.age())/forceRampTime_, 1);
 }
 
 

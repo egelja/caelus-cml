@@ -26,8 +26,6 @@ License
 #include "emptyFvsPatchFields.hpp"
 #include "fvsPatchFields.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
 
@@ -60,9 +58,9 @@ void writeSurfFields
 
     DynamicList<floatScalar> pField(3*mesh.nFaces());
 
-    for (label faceI = 0; faceI < mesh.nFaces(); faceI++)
+    for (label facei = 0; facei < mesh.nFaces(); facei++)
     {
-        writeFuns::insert(fc[faceI], pField);
+        writeFuns::insert(fc[facei], pField);
     }
 
     writeFuns::write(str, binary, pField);
@@ -71,25 +69,25 @@ void writeSurfFields
         << "FIELD attributes " << surfVectorFields.size() << std::endl;
 
     // surfVectorFields
-    forAll(surfVectorFields, fieldI)
+    forAll(surfVectorFields, fieldi)
     {
-        const surfaceVectorField& svf = surfVectorFields[fieldI];
+        const surfaceVectorField& svf = surfVectorFields[fieldi];
 
         str << svf.name() << " 3 "
             << mesh.nFaces() << " float" << std::endl;
 
         DynamicList<floatScalar> fField(3*mesh.nFaces());
 
-        for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
+        for (label facei = 0; facei < mesh.nInternalFaces(); facei++)
         {
-            writeFuns::insert(svf[faceI], fField);
+            writeFuns::insert(svf[facei], fField);
         }
 
-        forAll(svf.boundaryField(), patchI)
+        forAll(svf.boundaryField(), patchi)
         {
-            const fvsPatchVectorField& pf = svf.boundaryField()[patchI];
+            const fvsPatchVectorField& pf = svf.boundaryField()[patchi];
 
-            const fvPatch& pp = mesh.boundary()[patchI];
+            const fvPatch& pp = mesh.boundary()[patchi];
 
             if (isA<emptyFvsPatchVectorField>(pf))
             {
@@ -111,9 +109,6 @@ void writeSurfFields
         writeFuns::write(str, binary, fField);
     }
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 

@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011-2017 OpenFOAM Foundation
-Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -140,8 +139,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct and return a clone

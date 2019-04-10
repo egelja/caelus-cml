@@ -319,8 +319,7 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         );
 
         //- Construct as a copy
@@ -430,7 +429,7 @@ public:
 
         // I-O
 
-            //- Read - composition supplied
+            //- Read
             template<class CloudType, class CompositionType>
             static void readFields
             (
@@ -442,7 +441,7 @@ public:
             template<class CloudType>
             static void readFields(CloudType& c);
 
-            //- Write - composition supplied
+            //- Write
             template<class CloudType, class CompositionType>
             static void writeFields
             (
@@ -450,7 +449,7 @@ public:
                 const CompositionType& compModel
             );
 
-            //- Read - no composition
+            //- Read - composition supplied
             template<class CloudType>
             static void writeFields(const CloudType& c);
 
@@ -838,6 +837,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     const CompositionModel<reactingCloudType>& composition =
         cloud.composition();
 
+
     // Define local properties at beginning of timestep
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -954,6 +954,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
         Cs
     );
 
+
     // Surface reactions
     // ~~~~~~~~~~~~~~~~~
 
@@ -985,6 +986,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
         Sh,
         dhsTrans
     );
+
 
     // 2. Update the parcel properties due to change in mass
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1184,6 +1186,10 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
     // Check that model is active
     if (!cloud.devolatilisation().active())
     {
+        if (canCombust != -1)
+        {
+            canCombust = 1;
+        }
         return;
     }
 
@@ -1389,11 +1395,10 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    ParcelType(mesh, is, readFields, newFormat),
+    ParcelType(mesh, is, readFields),
     YGas_(0),
     YLiquid_(0),
     YSolid_(0),

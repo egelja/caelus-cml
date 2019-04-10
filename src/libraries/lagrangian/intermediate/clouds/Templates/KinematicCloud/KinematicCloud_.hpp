@@ -176,7 +176,6 @@ protected:
         //- Cell occupancy information for each parcel, (demand driven)
         autoPtr<List<DynamicList<parcelType*> > > cellOccupancyPtr_;
 
-
         //- Cell length scale
         scalarField cellLengthScale_;
 
@@ -1885,7 +1884,6 @@ void CML::KinematicCloud<CloudType>::patchData
 ) const
 {
     p.patchData(nw, Up);
-    Up /= p.mesh().time().deltaTValue();
 
     // If this is a wall patch, then there may be a non-zero tangential velocity
     // component; the lid velocity in a lid-driven cavity case, for example. We

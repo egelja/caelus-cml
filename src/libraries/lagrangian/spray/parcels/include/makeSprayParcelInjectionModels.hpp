@@ -26,7 +26,6 @@ License
 
 #include "CellZoneInjection.hpp"
 #include "ConeInjection.hpp"
-#include "ConeNozzleInjection.hpp"
 #include "FieldActivatedInjection.hpp"
 #include "InflationInjection.hpp"
 #include "ManualInjection.hpp"
@@ -42,7 +41,6 @@ License
                                                                                \
     makeInjectionModelType(CellZoneInjection, CloudType);                      \
     makeInjectionModelType(ConeInjection, CloudType);                          \
-    makeInjectionModelType(ConeNozzleInjection, CloudType);                    \
     makeInjectionModelType(FieldActivatedInjection, CloudType);                \
     makeInjectionModelType(InflationInjection, CloudType);                     \
     makeInjectionModelType(ManualInjection, CloudType);                        \

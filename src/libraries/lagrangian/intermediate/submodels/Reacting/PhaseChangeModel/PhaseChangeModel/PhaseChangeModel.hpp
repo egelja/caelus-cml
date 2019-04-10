@@ -365,7 +365,7 @@ void CML::PhaseChangeModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer phase change      = " << massTotal << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;

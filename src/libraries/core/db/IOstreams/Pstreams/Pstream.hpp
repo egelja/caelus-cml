@@ -118,8 +118,11 @@ public:
 
             //- Like above but switches between linear/tree communication
             template<class T>
-            static void scatter(T& Value, const int tag = Pstream::msgType());
-
+            static void scatter
+            (
+                T& Value,
+                const int tag = Pstream::msgType()
+            );
 
         // Combine variants. Inplace combine values from processors.
         // (Uses construct from Istream instead of <<)
@@ -277,20 +280,39 @@ public:
 
         // Exchange
 
-            //- Exchange data. Sends sendData, receives into recvData, sets
-            //  sizes (not bytes). sizes[p0][p1] is what processor p0 has
-            //  sent to p1. Continuous data only.
-            //  If block=true will wait for all transfers to finish.
+            //- Helper: exchange contiguous data. Sends sendData, receives into
+            //  recvData. If block=true will wait for all transfers to finish.
             template<class Container, class T>
             static void exchange
             (
-                const List<Container >&,
-                List<Container >&,
-                labelListList& sizes,
+                const UList<Container>& sendData,
+                const labelUList& recvSizes,
+                List<Container>& recvData,
                 const int tag = UPstream::msgType(),
                 const bool block = true
             );
 
+            //- Helper: exchange sizes of sendData. sendData is the data per
+            //  processor (in the communicator). Returns sizes of sendData
+            //  on the sending processor.
+            template<class Container>
+            static void exchangeSizes
+            (
+                const Container& sendData,
+                labelList& sizes
+            );
+
+            //- Exchange contiguous data. Sends sendData, receives into
+            //  recvData. Determines sizes to receive.
+            //  If block=true will wait for all transfers to finish.
+            template<class Container, class T>
+            static void exchange
+            (
+                const UList<Container>& sendData,
+                List<Container>& recvData,
+                const int tag = UPstream::msgType(),
+                const bool block = true
+            );
 };
 
 
@@ -374,7 +396,13 @@ void Pstream::gather
             }
             else
             {
-                OPstream toAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                OPstream toAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 toAbove << Value;
             }
         }
@@ -383,7 +411,12 @@ void Pstream::gather
 
 
 template <class T, class BinaryOp>
-void Pstream::gather(T& Value, const BinaryOp& bop, const int tag)
+void Pstream::gather
+(
+    T& Value,
+    const BinaryOp& bop,
+    const int tag
+)
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
@@ -409,7 +442,7 @@ void Pstream::scatter
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo()];
 
-        // Reveive from up
+        // Receive from up
         if (myComm.above() != -1)
         {
             if (contiguous<T>())
@@ -425,13 +458,21 @@ void Pstream::scatter
             }
             else
             {
-                IPstream fromAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                IPstream fromAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 fromAbove >> Value;
             }
         }
 
-        // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        // Send to my downstairs neighbours. Note reverse order (compared to
+        // receiving). This is to make sure to send to the critical path
+        // (only when using a tree schedule!) first.
+        forAllReverse(myComm.below(), belowI)
         {
             if (contiguous<T>())
             {
@@ -530,7 +571,13 @@ void Pstream::combineGather
             }
             else
             {
-                IPstream fromBelow(UPstream::scheduled, belowID, 0, tag);
+                IPstream fromBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
                 T value(fromBelow);
 
                 if (debug & 2)
@@ -565,7 +612,13 @@ void Pstream::combineGather
             }
             else
             {
-                OPstream toAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                OPstream toAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 toAbove << Value;
             }
         }
@@ -574,15 +627,32 @@ void Pstream::combineGather
 
 
 template <class T, class CombineOp>
-void Pstream::combineGather(T& Value, const CombineOp& cop, const int tag)
+void Pstream::combineGather
+(
+    T& Value,
+    const CombineOp& cop,
+    const int tag
+)
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
-        combineGather(UPstream::linearCommunication(), Value, cop, tag);
+        combineGather
+        (
+            UPstream::linearCommunication(),
+            Value,
+            cop,
+            tag
+        );
     }
     else
     {
-        combineGather(UPstream::treeCommunication(), Value, cop, tag);
+        combineGather
+        (
+            UPstream::treeCommunication(),
+            Value,
+            cop,
+            tag
+        );
     }
 }
 
@@ -600,7 +670,7 @@ void Pstream::combineScatter
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo()];
 
-        // Reveive from up
+        // Receive from up
         if (myComm.above() != -1)
         {
             if (contiguous<T>())
@@ -616,7 +686,13 @@ void Pstream::combineScatter
             }
             else
             {
-                IPstream fromAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                IPstream fromAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 Value = T(fromAbove);
             }
 
@@ -628,7 +704,7 @@ void Pstream::combineScatter
         }
 
         // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        forAllReverse(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
 
@@ -650,7 +726,13 @@ void Pstream::combineScatter
             }
             else
             {
-                OPstream toBelow(UPstream::scheduled, belowID, 0, tag);
+                OPstream toBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
                 toBelow << Value;
             }
         }
@@ -659,7 +741,11 @@ void Pstream::combineScatter
 
 
 template <class T>
-void Pstream::combineScatter(T& Value, const int tag)
+void Pstream::combineScatter
+(
+    T& Value,
+    const int tag
+)
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
@@ -670,10 +756,6 @@ void Pstream::combineScatter(T& Value, const int tag)
         combineScatter(UPstream::treeCommunication(), Value, tag);
     }
 }
-
-
-// Same thing but for whole list at a time
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 template <class T, class CombineOp>
@@ -721,7 +803,13 @@ void Pstream::listCombineGather
             }
             else
             {
-                IPstream fromBelow(UPstream::scheduled, belowID, 0, tag);
+                IPstream fromBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
                 List<T> receivedValues(fromBelow);
 
                 if (debug & 2)
@@ -759,7 +847,13 @@ void Pstream::listCombineGather
             }
             else
             {
-                OPstream toAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                OPstream toAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 toAbove << Values;
             }
         }
@@ -777,11 +871,23 @@ void Pstream::listCombineGather
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
-        listCombineGather(UPstream::linearCommunication(), Values, cop, tag);
+        listCombineGather
+        (
+            UPstream::linearCommunication(),
+            Values,
+            cop,
+            tag
+        );
     }
     else
     {
-        listCombineGather(UPstream::treeCommunication(), Values, cop, tag);
+        listCombineGather
+        (
+            UPstream::treeCommunication(),
+            Values,
+            cop,
+            tag
+        );
     }
 }
 
@@ -799,7 +905,7 @@ void Pstream::listCombineScatter
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo()];
 
-        // Reveive from up
+        // Receive from up
         if (myComm.above() != -1)
         {
             if (contiguous<T>())
@@ -815,7 +921,13 @@ void Pstream::listCombineScatter
             }
             else
             {
-                IPstream fromAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                IPstream fromAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 fromAbove >> Values;
             }
 
@@ -827,7 +939,7 @@ void Pstream::listCombineScatter
         }
 
         // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        forAllReverse(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
 
@@ -849,7 +961,13 @@ void Pstream::listCombineScatter
             }
             else
             {
-                OPstream toBelow(UPstream::scheduled, belowID, 0, tag);
+                OPstream toBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
                 toBelow << Values;
             }
         }
@@ -858,23 +976,31 @@ void Pstream::listCombineScatter
 
 
 template <class T>
-void Pstream::listCombineScatter(List<T>& Values, const int tag)
+void Pstream::listCombineScatter
+(
+    List<T>& Values,
+    const int tag
+)
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
-        listCombineScatter(UPstream::linearCommunication(), Values, tag);
+        listCombineScatter
+        (
+            UPstream::linearCommunication(),
+            Values,
+            tag
+        );
     }
     else
     {
-        listCombineScatter(UPstream::treeCommunication(), Values, tag);
+        listCombineScatter
+        (
+            UPstream::treeCommunication(),
+            Values,
+            tag
+        );
     }
 }
-
-
-
-
-// Same thing but for sparse list (map)
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 template <class Container, class CombineOp>
@@ -896,7 +1022,13 @@ void Pstream::mapCombineGather
         {
             label belowID = myComm.below()[belowI];
 
-            IPstream fromBelow(UPstream::scheduled, belowID, 0, tag);
+            IPstream fromBelow
+            (
+                UPstream::scheduled,
+                belowID,
+                0,
+                tag
+            );
             Container receivedValues(fromBelow);
 
             if (debug & 2)
@@ -936,7 +1068,13 @@ void Pstream::mapCombineGather
                     << " data:" << Values << endl;
             }
 
-            OPstream toAbove(UPstream::scheduled, myComm.above(), 0, tag);
+            OPstream toAbove
+            (
+                UPstream::scheduled,
+                myComm.above(),
+                0,
+                tag
+            );
             toAbove << Values;
         }
     }
@@ -953,11 +1091,23 @@ void Pstream::mapCombineGather
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
-        mapCombineGather(UPstream::linearCommunication(), Values, cop, tag);
+        mapCombineGather
+        (
+            UPstream::linearCommunication(),
+            Values,
+            cop,
+            tag
+        );
     }
     else
     {
-        mapCombineGather(UPstream::treeCommunication(), Values, cop, tag);
+        mapCombineGather
+        (
+            UPstream::treeCommunication(),
+            Values,
+            cop,
+            tag
+        );
     }
 }
 
@@ -975,10 +1125,16 @@ void Pstream::mapCombineScatter
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo()];
 
-        // Reveive from up
+        // Receive from up
         if (myComm.above() != -1)
         {
-            IPstream fromAbove(UPstream::scheduled, myComm.above(), 0, tag);
+            IPstream fromAbove
+            (
+                UPstream::scheduled,
+                myComm.above(),
+                0,
+                tag
+            );
             fromAbove >> Values;
 
             if (debug & 2)
@@ -989,7 +1145,7 @@ void Pstream::mapCombineScatter
         }
 
         // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        forAllReverse(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
 
@@ -998,7 +1154,13 @@ void Pstream::mapCombineScatter
                 Pout<< " sending to " << belowID << " data:" << Values << endl;
             }
 
-            OPstream toBelow(UPstream::scheduled, belowID, 0, tag);
+            OPstream toBelow
+            (
+                UPstream::scheduled,
+                belowID,
+                0,
+                tag
+            );
             toBelow << Values;
         }
     }
@@ -1006,15 +1168,29 @@ void Pstream::mapCombineScatter
 
 
 template <class Container>
-void Pstream::mapCombineScatter(Container& Values, const int tag)
+void Pstream::mapCombineScatter
+(
+    Container& Values,
+    const int tag
+)
 {
     if (UPstream::nProcs() < UPstream::nProcsSimpleSum)
     {
-        mapCombineScatter(UPstream::linearCommunication(), Values, tag);
+        mapCombineScatter
+        (
+            UPstream::linearCommunication(),
+            Values,
+            tag
+        );
     }
     else
     {
-        mapCombineScatter(UPstream::treeCommunication(), Values, tag);
+        mapCombineScatter
+        (
+            UPstream::treeCommunication(),
+            Values,
+            tag
+        );
     }
 }
 
@@ -1083,7 +1259,13 @@ void Pstream::gatherList
             }
             else
             {
-                IPstream fromBelow(UPstream::scheduled, belowID, 0, tag);
+                IPstream fromBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
                 fromBelow >> Values[belowID];
 
                 if (debug & 2)
@@ -1144,7 +1326,13 @@ void Pstream::gatherList
             }
             else
             {
-                OPstream toAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                OPstream toAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
                 toAbove << Values[UPstream::myProcNo()];
 
                 forAll(belowLeaves, leafI)
@@ -1201,7 +1389,7 @@ void Pstream::scatterList
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo()];
 
-        // Reveive from up
+        // Receive from up
         if (myComm.above() != -1)
         {
             const labelList& notBelowLeaves = myComm.allNotBelow();
@@ -1226,7 +1414,13 @@ void Pstream::scatterList
             }
             else
             {
-                IPstream fromAbove(UPstream::scheduled, myComm.above(), 0, tag);
+                IPstream fromAbove
+                (
+                    UPstream::scheduled,
+                    myComm.above(),
+                    0,
+                    tag
+                );
 
                 forAll(notBelowLeaves, leafI)
                 {
@@ -1244,7 +1438,7 @@ void Pstream::scatterList
         }
 
         // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        forAllReverse(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
             const labelList& notBelowLeaves = comms[belowID].allNotBelow();
@@ -1269,7 +1463,13 @@ void Pstream::scatterList
             }
             else
             {
-                OPstream toBelow(UPstream::scheduled, belowID, 0, tag);
+                OPstream toBelow
+                (
+                    UPstream::scheduled,
+                    belowID,
+                    0,
+                    tag
+                );
 
                 // Send data destined for all other processors below belowID
                 forAll(notBelowLeaves, leafI)
@@ -1319,13 +1519,12 @@ namespace CML
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//template <template<class> class ListType, class T>
 template <class Container, class T>
 void Pstream::exchange
 (
-    const List<Container>& sendBufs,
+    const UList<Container>& sendBufs,
+    const labelUList& recvSizes,
     List<Container>& recvBufs,
-    labelListList& sizes,
     const int tag,
     const bool block
 )
@@ -1339,23 +1538,15 @@ void Pstream::exchange
     if (sendBufs.size() != UPstream::nProcs())
     {
         FatalErrorInFunction
-            << "Size of list:" << sendBufs.size()
-            << " does not equal the number of processors:"
+            << "Size of list " << sendBufs.size()
+            << " does not equal the number of processors "
             << UPstream::nProcs()
             << CML::abort(FatalError);
     }
 
-    sizes.setSize(UPstream::nProcs());
-    labelList& nsTransPs = sizes[UPstream::myProcNo()];
-    nsTransPs.setSize(UPstream::nProcs());
+    recvBufs.setSize(sendBufs.size());
 
-    forAll(sendBufs, procI)
-    {
-        nsTransPs[procI] = sendBufs[procI].size();
-    }
-
-    // Send sizes across. Note: blocks.
-    combineReduce(sizes, UPstream::listEq(), tag);
+    recvBufs.setSize(sendBufs.size());
 
     if (Pstream::parRun())
     {
@@ -1364,19 +1555,18 @@ void Pstream::exchange
         // Set up receives
         // ~~~~~~~~~~~~~~~
 
-        recvBufs.setSize(sendBufs.size());
-        forAll(sizes, procI)
+        forAll(recvSizes, proci)
         {
-            label nRecv = sizes[procI][UPstream::myProcNo()];
+            label nRecv = recvSizes[proci];
 
-            if (procI != Pstream::myProcNo() && nRecv > 0)
+            if (proci != Pstream::myProcNo() && nRecv > 0)
             {
-                recvBufs[procI].setSize(nRecv);
+                recvBufs[proci].setSize(nRecv);
                 UIPstream::read
                 (
                     UPstream::nonBlocking,
-                    procI,
-                    reinterpret_cast<char*>(recvBufs[procI].begin()),
+                    proci,
+                    reinterpret_cast<char*>(recvBufs[proci].begin()),
                     nRecv*sizeof(T),
                     tag
                 );
@@ -1387,26 +1577,26 @@ void Pstream::exchange
         // Set up sends
         // ~~~~~~~~~~~~
 
-        forAll(sendBufs, procI)
+        forAll(sendBufs, proci)
         {
-            if (procI != Pstream::myProcNo() && sendBufs[procI].size() > 0)
+            if (proci != Pstream::myProcNo() && sendBufs[proci].size() > 0)
             {
                 if
                 (
                    !UOPstream::write
                     (
                         UPstream::nonBlocking,
-                        procI,
-                        reinterpret_cast<const char*>(sendBufs[procI].begin()),
-                        sendBufs[procI].size()*sizeof(T),
+                        proci,
+                        reinterpret_cast<const char*>(sendBufs[proci].begin()),
+                        sendBufs[proci].size()*sizeof(T),
                         tag
                     )
                 )
                 {
                     FatalErrorInFunction
                         << "Cannot send outgoing message. "
-                        << "to:" << procI << " nBytes:"
-                        << label(sendBufs[procI].size()*sizeof(T))
+                        << "to:" << proci << " nBytes:"
+                        << label(sendBufs[proci].size()*sizeof(T))
                         << CML::abort(FatalError);
                 }
             }
@@ -1427,13 +1617,49 @@ void Pstream::exchange
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Container>
+void Pstream::exchangeSizes
+(
+    const Container& sendBufs,
+    labelList& recvSizes
+)
+{
+    if (sendBufs.size() != UPstream::nProcs())
+    {
+        FatalErrorInFunction
+            << "Size of container " << sendBufs.size()
+            << " does not equal the number of processors "
+            << UPstream::nProcs()
+            << CML::abort(FatalError);
+    }
+
+    labelList sendSizes(sendBufs.size());
+    forAll(sendBufs, proci)
+    {
+        sendSizes[proci] = sendBufs[proci].size();
+    }
+    recvSizes.setSize(sendSizes.size());
+    allToAll(sendSizes, recvSizes);
+}
+
+
+template<class Container, class T>
+void Pstream::exchange
+(
+    const UList<Container>& sendBufs,
+    List<Container>& recvBufs,
+    const int tag,
+    const bool block
+)
+{
+    labelList recvSizes;
+    exchangeSizes(sendBufs, recvSizes);
+
+    exchange<Container, T>(sendBufs, recvSizes, recvBufs, tag, block);
+}
+
 
 } // End namespace CML
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
-
 // ************************************************************************* //
+#endif

@@ -289,8 +289,10 @@ CML::polyMesh::polyMesh(const IOobject& io, const bool defectCorr, const scalar 
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     if (exists(owner_.objectPath()))
     {
@@ -472,8 +474,10 @@ CML::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if the faces and cells are valid
     forAll(faces_, facei)
@@ -624,8 +628,10 @@ CML::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if faces are valid
     forAll(faces_, facei)
@@ -1057,21 +1063,41 @@ const CML::labelList& CML::polyMesh::faceNeighbour() const
 // Return old mesh motion points
 const CML::pointField& CML::polyMesh::oldPoints() const
 {
+    if (!moving_)
+    {
+        return points_;
+    }
+
     if (oldPointsPtr_.empty())
     {
-        if (debug)
-        {
-            WarningInFunction
-                << "Old points not available.  Forcing storage of old points"
-                << endl;
-        }
-
-        oldPointsPtr_.reset(new pointField(points_));
-        curMotionTimeIndex_ = time().timeIndex();
+        FatalErrorInFunction
+            << "Old points have not been stored"
+            << exit(FatalError);
     }
 
     return oldPointsPtr_();
 }
+
+
+const CML::pointField& CML::polyMesh::oldCellCentres() const
+{
+    storeOldCellCentres_ = true;
+
+    if (!moving_)
+    {
+        return cellCentres();
+    }
+
+    if (oldCellCentresPtr_.empty())
+    {
+        FatalErrorInFunction
+            << "Old cell centres have not been stored"
+            << exit(FatalError);
+    }
+
+    return oldCellCentresPtr_();
+}
+
 
 
 CML::tmp<CML::scalarField> CML::polyMesh::movePoints
@@ -1088,12 +1114,16 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
 
     moving(true);
 
-    // Pick up old points
+    // Pick up old points and cell centres
     if (curMotionTimeIndex_ != time().timeIndex())
     {
-        // Mesh motion in the new time step
         oldPointsPtr_.clear();
         oldPointsPtr_.reset(new pointField(points_));
+        if (storeOldCellCentres_)
+        {
+            oldCellCentresPtr_.clear();
+            oldCellCentresPtr_.reset(new pointField(cellCentres()));
+        }
         curMotionTimeIndex_ = time().timeIndex();
     }
 
@@ -1176,8 +1206,9 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
 // Reset motion by deleting old points
 void CML::polyMesh::resetMotion() const
 {
-    curMotionTimeIndex_ = 0;
+    curMotionTimeIndex_ = -1;
     oldPointsPtr_.clear();
+    oldCellCentresPtr_.clear();
 }
 
 

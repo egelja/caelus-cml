@@ -26,7 +26,6 @@ License
 
 CML::surfaceMeshWriter::surfaceMeshWriter
 (
-    const vtkMesh& vMesh,
     const bool binary,
     const indirectPrimitivePatch& pp,
     const word& name,
@@ -46,9 +45,9 @@ CML::surfaceMeshWriter::surfaceMeshWriter
     // Write topology
     label nFaceVerts = 0;
 
-    forAll(pp, faceI)
+    forAll(pp, facei)
     {
-        nFaceVerts += pp[faceI].size() + 1;
+        nFaceVerts += pp[facei].size() + 1;
     }
 
     os_ << "POINTS " << pp.nPoints() << " float" << std::endl;
@@ -62,19 +61,15 @@ CML::surfaceMeshWriter::surfaceMeshWriter
 
     DynamicList<label> vertLabels(nFaceVerts);
 
-    forAll(pp, faceI)
+    forAll(pp, facei)
     {
-        const face& f = pp.localFaces()[faceI];
+        const face& f = pp.localFaces()[facei];
 
         vertLabels.append(f.size());
         writeFuns::insert(f, vertLabels);
     }
     writeFuns::write(os_, binary_, vertLabels);
 }
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 
 
 // ************************************************************************* //

@@ -1,7 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2011-2019 OpenFOAM Foundation
-Copyright (C) 2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -128,20 +127,6 @@ public:
     };
 
 
-    //- Old particle positions content for Caelus-8.04 and earlier
-    struct positionsCompat804
-    {
-        vector position;
-        label celli;
-        label facei;
-        scalar stepFraction;
-        label tetFacei;
-        label tetPti;
-        label origProc;
-        label origId;
-    };
-
-
 private:
 
     // Private data
@@ -188,6 +173,8 @@ private:
         //- Local particle id on originating processor
         label origId_;
 
+
+private:
 
     // Private Member Functions
 
@@ -341,6 +328,16 @@ protected:
         template<class TrackCloudType>
         void hitCyclicACMIPatch(TrackCloudType&, trackingData&, const vector&);
 
+        //- Overridable function to handle the particle hitting an
+        //  cyclicRepeatAMIPolyPatch
+//        template<class TrackCloudType>
+//        void hitCyclicRepeatAMIPatch
+//        (
+//            TrackCloudType&,
+//            trackingData&,
+//            const vector&
+//        );
+
         //- Overridable function to handle the particle hitting a processorPatch
         template<class TrackCloudType>
         void hitProcessorPatch(TrackCloudType&, trackingData&);
@@ -368,14 +365,6 @@ public:
         //- Cumulative particle counter - used to provide unique ID
         static label particleCount_;
 
-        //- Write particle coordinates file (v8.04 and later)
-        //- Default is true
-        static bool writeLagrangianCoordinates;
-
-        //- Write particle positions file (v8.04 format and earlier)
-        //- Default is false
-        static bool writeLagrangianPositions;
-
 
     // Constructors
 
@@ -399,18 +388,12 @@ public:
         );
 
         //- Construct from Istream
-        particle
-        (
-            const polyMesh& mesh,
-            Istream&,
-            bool readFields = true,
-            bool newFormat = true
-        );
+        particle(const polyMesh& mesh, Istream&, bool readFields = true);
 
         //- Construct as a copy
         particle(const particle& p);
 
-        //- Construct as a copy with reference to a new mesh
+        //- Construct as a copy with references to a new mesh
         particle(const particle& p, const polyMesh& mesh);
 
         //- Construct a clone
@@ -466,20 +449,11 @@ public:
             //- Return current tet face particle is in
             inline label tetFace() const;
 
-            //- Return current tet face particle is in for manipulation
-            inline label& tetFace();
-
             //- Return current tet face particle is in
             inline label tetPt() const;
 
-            //- Return current tet face particle is in for manipulation
-            inline label& tetPt();
-
             //- Return current face particle is on otherwise -1
             inline label face() const;
-
-            //- Return current face particle is on for manipulation
-            inline label& face();
 
             //- Return the fraction of time-step completed
             inline scalar stepFraction() const;
@@ -610,17 +584,7 @@ public:
             trackingData& td
         );
 
-        //- As above, but does not change the master patch. Needed in order for
-        //  ACMI to be able to delegate a hit to the non-overlap patch.
-        template<class TrackCloudType>
-        void hitFaceNoChangeToMasterPatch
-        (
-            const vector& direction,
-            TrackCloudType& cloud,
-            trackingData& td
-        );
-
-        //- Convenience function. Combines trackToFace and hitFace
+        //- Convenience function. Cobines trackToFace and hitFace
         template<class TrackCloudType>
         scalar trackToAndHitFace
         (
@@ -694,10 +658,6 @@ public:
         //- Map after a topology change
         void autoMap(const vector& position, const mapPolyMesh& mapper);
 
-        //- Set the addressing based on the provided position and current cell
-        //  Used for e.g. redistributePar
-        void relocate(const point& position);
-
 
     // I-O
 
@@ -709,11 +669,8 @@ public:
         template<class TrackCloudType>
         static void writeFields(const TrackCloudType& c);
 
-        //- Write the particle barycentric coordinates and cell info
-        void writeCoordinates(Ostream&) const;
-
         //- Write the particle position and cell
-        virtual void writePosition(Ostream&) const;
+        void writePosition(Ostream&) const;
 
 
     // Friend Operators
@@ -733,7 +690,7 @@ public:
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-inline void CML::particle::stationaryTetGeometry
+void CML::particle::stationaryTetGeometry
 (
     vector& centre,
     vector& base,
@@ -773,13 +730,8 @@ inline void CML::particle::movingTetGeometry
     const triFace triIs(currentTetIndices().faceTriIs(mesh_));
     const pointField& ptsOld = mesh_.oldPoints();
     const pointField& ptsNew = mesh_.points();
-
-    // !!! <-- We would be better off using mesh_.cellCentres() here. However,
-    // we need to put a mesh_.oldCellCentres() method in for this to work. The
-    // values obtained from the mesh and those obtained from the cell do not
-    // necessarily match. See mantis #1993.
-    const vector ccOld = mesh_.cells()[celli_].centre(ptsOld, mesh_.faces());
-    const vector ccNew = mesh_.cells()[celli_].centre(ptsNew, mesh_.faces());
+    const vector ccOld = mesh_.oldCellCentres()[celli_];
+    const vector ccNew = mesh_.cellCentres()[celli_];
 
     // Old and new points and cell centres are not sub-cycled. If we are sub-
     // cycling, then we have to account for the timestep change here by
@@ -849,20 +801,12 @@ inline CML::label CML::particle::cell() const
     return celli_;
 }
 
-
 inline CML::label& CML::particle::cell()
 {
     return celli_;
 }
 
-
 inline CML::label CML::particle::tetFace() const
-{
-    return tetFacei_;
-}
-
-
-inline CML::label& CML::particle::tetFace()
 {
     return tetFacei_;
 }
@@ -874,19 +818,7 @@ inline CML::label CML::particle::tetPt() const
 }
 
 
-inline CML::label& CML::particle::tetPt()
-{
-    return tetPti_;
-}
-
-
 inline CML::label CML::particle::face() const
-{
-    return facei_;
-}
-
-
-inline CML::label& CML::particle::face()
 {
     return facei_;
 }
@@ -1023,7 +955,7 @@ inline void CML::particle::reset()
 }
 
 
-inline void CML::particle::patchData(vector& n, vector& U) const
+void CML::particle::patchData(vector& n, vector& U) const
 {
     if (!onBoundaryFace())
     {
@@ -1097,24 +1029,10 @@ void CML::particle::readFields(TrackCloudType& c)
 template<class TrackCloudType>
 void CML::particle::writeFields(const TrackCloudType& c)
 {
-    const label np = c.size();
+    label np = c.size();
 
-    if (writeLagrangianCoordinates)
-    {
-        IOPosition<TrackCloudType> ioP(c);
-        ioP.write();
-    }
-
-    // Optionally write positions file in v1706 format and earlier
-    if (writeLagrangianPositions)
-    {
-        IOPosition<TrackCloudType> ioP
-        (
-            c,
-            cloud::geometryType::POSITIONS
-        );
-        ioP.write();
-    }
+    IOPosition<TrackCloudType> ioP(c);
+    ioP.write();
 
     IOField<label> origProc
     (
@@ -1132,7 +1050,7 @@ void CML::particle::writeFields(const TrackCloudType& c)
     {
         origProc[i] = iter().origProc_;
         origId[i] = iter().origId_;
-        ++i;
+        i++;
     }
 
     origProc.write();
@@ -1142,28 +1060,6 @@ void CML::particle::writeFields(const TrackCloudType& c)
 
 template<class TrackCloudType>
 void CML::particle::hitFace
-(
-    const vector& direction,
-    TrackCloudType& cloud,
-    trackingData& td
-)
-{
-    if (debug)
-    {
-        Info << "Particle " << origId() << nl << FUNCTION_NAME << nl << endl;
-    }
-
-    if (onBoundaryFace())
-    {
-        changeToMasterPatch();
-    }
-
-    hitFaceNoChangeToMasterPatch(direction, cloud, td);
-}
-
-
-template<class TrackCloudType>
-void CML::particle::hitFaceNoChangeToMasterPatch
 (
     const vector& direction,
     TrackCloudType& cloud,
@@ -1190,6 +1086,8 @@ void CML::particle::hitFaceNoChangeToMasterPatch
     }
     else if (onBoundaryFace())
     {
+        changeToMasterPatch();
+
         if (!p.hitPatch(cloud, ttd))
         {
             const polyPatch& patch = mesh_.boundaryMesh()[p.patch()];
@@ -1218,6 +1116,10 @@ void CML::particle::hitFaceNoChangeToMasterPatch
             {
                 p.hitCyclicAMIPatch(cloud, ttd, direction);
             }
+//            else if (isA<cyclicRepeatAMIPolyPatch>(patch))
+//            {
+//                p.hitCyclicRepeatAMIPatch(cloud, ttd, direction);
+//            }
             else if (isA<processorPolyPatch>(patch))
             {
                 p.hitProcessorPatch(cloud, ttd);
@@ -1360,7 +1262,6 @@ void CML::particle::hitCyclicAMIPatch
             << "Particle lost across " << cyclicAMIPolyPatch::typeName
             << " patches " << cpp.name() << " and " << receiveCpp.name()
             << " at position " << pos << endl;
-        return;
     }
 
     // Set the topology
@@ -1416,9 +1317,6 @@ void CML::particle::hitCyclicACMIPatch
     const vector& direction
 )
 {
-    typename TrackCloudType::particleType& p =
-        static_cast<typename TrackCloudType::particleType&>(*this);
-
     const cyclicACMIPolyPatch& cpp =
         static_cast<const cyclicACMIPolyPatch&>(mesh_.boundaryMesh()[patch()]);
 
@@ -1449,9 +1347,22 @@ void CML::particle::hitCyclicACMIPatch
         // Move to the face associated with the non-overlap patch and redo the
         // face interaction.
         tetFacei_ = facei_ = cpp.nonOverlapPatch().start() + localFacei;
-        p.hitFaceNoChangeToMasterPatch(direction, cloud, td);
+        hitFace(direction, cloud, td);
     }
 }
+
+
+//template<class TrackCloudType>
+//void CML::particle::hitCyclicRepeatAMIPatch
+//(
+//    TrackCloudType& cloud,
+//    trackingData& td,
+//    const vector& direction
+//)
+//{
+//
+//    hitCyclicAMIPatch(cloud, td, direction);
+//}
 
 
 template<class TrackCloudType>

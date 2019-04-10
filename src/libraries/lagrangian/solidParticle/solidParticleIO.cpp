@@ -36,11 +36,10 @@ CML::solidParticle::solidParticle
 (
     const polyMesh& mesh,
     Istream& is,
-    bool readFields,
-    bool newFormat
+    bool readFields
 )
 :
-    particle(mesh, is, readFields, newFormat)
+    particle(mesh, is, readFields)
 {
     if (readFields)
     {

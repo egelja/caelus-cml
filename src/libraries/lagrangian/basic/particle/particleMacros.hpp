@@ -35,9 +35,6 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-//- Define a static 'propertyList' for particle properties
-//  The property list is space-delimited with brackets for vector groupings
-// \sa AddToPropertyList
 #define DefinePropertyList(str)                                                \
                                                                                \
     static string propertyList_;                                               \
@@ -48,9 +45,6 @@ namespace CML
     }
 
 
-//- Add to existing static 'propertyList' for particle properties
-//  The property list is space-delimited with brackets for vector groupings
-// \sa DefinePropertyList
 #define AddToPropertyList(ParcelType, str)                                     \
                                                                                \
     static string propertyList_;                                               \

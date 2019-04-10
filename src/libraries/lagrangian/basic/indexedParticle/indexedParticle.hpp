@@ -77,11 +77,10 @@ public:
         (
             const polyMesh& mesh,
             Istream& is,
-            bool readFields = true,
-            bool newFormat = true
+            bool readFields = true
         )
         :
-            particle(mesh, is, readFields, newFormat)
+            particle(mesh, is, readFields)
         {}
 
         //- Construct as a copy

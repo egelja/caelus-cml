@@ -38,6 +38,7 @@ caelus_libs = [
 'sampling',
 'lagrangian',
 'lagrangianIntermediate',
+'lagrangianTurbulence',
 'regionModels',
 'surfaceFilmModels'
 ]

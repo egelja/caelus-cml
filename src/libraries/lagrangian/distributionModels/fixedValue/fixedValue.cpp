@@ -26,11 +26,11 @@ License
 
 namespace CML
 {
-    namespace distributionModels
-    {
-        defineTypeNameAndDebug(fixedValue, 0);
-        addToRunTimeSelectionTable(distributionModel, fixedValue, dictionary);
-    }
+namespace distributionModels
+{
+    defineTypeNameAndDebug(fixedValue, 0);
+    addToRunTimeSelectionTable(distributionModel, fixedValue, dictionary);
+}
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

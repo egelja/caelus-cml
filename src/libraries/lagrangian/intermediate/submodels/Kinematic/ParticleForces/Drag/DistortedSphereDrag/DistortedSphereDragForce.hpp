@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014-2017 OpenFOAM Foundation
+Copyright (C) 2014-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -21,14 +21,13 @@ Class
     CML::DistortedSphereDragForce
 
 Description
-    Drag model based on assumption of distorted spheres according to:
+    Drag model for distorted spheres.
 
+    Reference:
     \verbatim
-        "Effects of Drop Drag and Breakup on Fuel Sprays"
-        Liu, A.B., Mather, D., Reitz, R.D.,
-        SAE Paper 930072,
-        SAE Transactions, Vol. 102, Section 3, Journal of Engines, 1993,
-        pp. 63-95
+        Liu, A. B., Mather, D., & Reitz, R. D. (1993).
+        Modeling the effects of drop drag and breakup on fuel sprays.
+        SAE Transactions, 83-95.
     \endverbatim
 
 \*---------------------------------------------------------------------------*/
@@ -42,6 +41,7 @@ Description
 
 namespace CML
 {
+
 /*---------------------------------------------------------------------------*\
                        Class DistortedSphereDragForce Declaration
 \*---------------------------------------------------------------------------*/
@@ -51,12 +51,6 @@ class DistortedSphereDragForce
 :
     public ParticleForce<CloudType>
 {
-    // Private Member Functions
-
-        //- Drag coefficient multiplied by Reynolds number
-        scalar CdRe(const scalar Re) const;
-
-
 public:
 
     //- Runtime type information
@@ -110,25 +104,6 @@ public:
 } // End namespace CML
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class CloudType>
-CML::scalar CML::DistortedSphereDragForce<CloudType>::CdRe
-(
-    const scalar Re
-) const
-{
-    if (Re > 1000.0)
-    {
-        return 0.424*Re;
-    }
-    else
-    {
-        return 24.0*(1.0 + (1.0/6.0)*pow(Re, 2.0/3.0));
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -173,14 +148,16 @@ CML::forceSuSp CML::DistortedSphereDragForce<CloudType>::calcCoupled
     const scalar muc
 ) const
 {
-    forceSuSp value(Zero, 0.0);
-
     // Limit the drop distortion to y=0 (sphere) and y=1 (disk)
-    scalar y = min(max(p.y(), 0), 1);
+    const scalar y = min(max(p.y(), 0), 1);
 
-    value.Sp() = mass*0.75*muc*CdRe(Re)*(1 + 2.632*y)/(p.rho()*sqr(p.d()));
+    const scalar CdRe = SphereDragForce<CloudType>::CdRe(Re);
 
-    return value;
+    return forceSuSp
+    (
+        Zero,
+        mass*0.75*muc*CdRe*(1 + 2.632*y)/(p.rho()*sqr(p.d()))
+    );
 }
 
 

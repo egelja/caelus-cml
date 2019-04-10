@@ -78,7 +78,7 @@ Description
     \endverbatim
 
 SourceFiles
-    ParticleCollector.C
+    ParticleCollector.cpp
 
 \*---------------------------------------------------------------------------*/
 

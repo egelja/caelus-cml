@@ -146,20 +146,20 @@ void CML::patchWriter::write
     const PtrList<GeometricField<Type, fvPatchField, volMesh> >& flds
 )
 {
-    forAll(flds, fieldI)
+    forAll(flds, fieldi)
     {
-        const GeometricField<Type, fvPatchField, volMesh>& fld = flds[fieldI];
+        const GeometricField<Type, fvPatchField, volMesh>& fld = flds[fieldi];
 
-        os_ << fld.name() << ' ' << pTraits<Type>::nComponents << ' '
+        os_ << fld.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
             << nFaces_ << " float" << std::endl;
 
         DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nFaces_);
 
         forAll(patchIDs_, j)
         {
-            label patchI = patchIDs_[j];
+            label patchi = patchIDs_[j];
 
-            const fvPatchField<Type>& pfld = fld.boundaryField()[patchI];
+            const fvPatchField<Type>& pfld = fld.boundaryField()[patchi];
 
             if (nearCellValue_)
             {
@@ -181,21 +181,21 @@ void CML::patchWriter::write
     const PtrList<GeometricField<Type, pointPatchField, pointMesh> >& flds
 )
 {
-    forAll(flds, fieldI)
+    forAll(flds, fieldi)
     {
         const GeometricField<Type, pointPatchField, pointMesh>& fld =
-            flds[fieldI];
+            flds[fieldi];
 
-        os_ << fld.name() << ' ' << pTraits<Type>::nComponents << ' '
+        os_ << fld.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
             << nPoints_ << " float" << std::endl;
 
         DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nPoints_);
 
         forAll(patchIDs_, j)
         {
-            label patchI = patchIDs_[j];
+            label patchi = patchIDs_[j];
 
-            const pointPatchField<Type>& pfld = fld.boundaryField()[patchI];
+            const pointPatchField<Type>& pfld = fld.boundaryField()[patchi];
 
             writeFuns::insert(pfld.patchInternalField()(), fField);
         }
@@ -211,20 +211,20 @@ void CML::patchWriter::write
     const PtrList<GeometricField<Type, fvPatchField, volMesh> >& flds
 )
 {
-    forAll(flds, fieldI)
+    forAll(flds, fieldi)
     {
-        const GeometricField<Type, fvPatchField, volMesh>& fld = flds[fieldI];
+        const GeometricField<Type, fvPatchField, volMesh>& fld = flds[fieldi];
 
-        os_ << fld.name() << ' ' << pTraits<Type>::nComponents << ' '
+        os_ << fld.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
             << nPoints_ << " float" << std::endl;
 
         DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nPoints_);
 
         forAll(patchIDs_, j)
         {
-            label patchI = patchIDs_[j];
+            label patchi = patchIDs_[j];
 
-            const fvPatchField<Type>& pfld = fld.boundaryField()[patchI];
+            const fvPatchField<Type>& pfld = fld.boundaryField()[patchi];
 
             if (nearCellValue_)
             {
@@ -249,9 +249,6 @@ void CML::patchWriter::write
         writeFuns::write(os_, binary_, fField);
     }
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

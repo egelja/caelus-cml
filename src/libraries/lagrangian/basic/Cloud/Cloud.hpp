@@ -75,7 +75,7 @@ class Cloud
 {
     // Private data
 
-        //- Reference to the mesh database
+        //- Reference to the mesh
         const polyMesh& polyMesh_;
 
         //- Temporary storage for the global particle positions
@@ -95,12 +95,6 @@ class Cloud
 
         //- Write cloud properties dictionary
         void writeCloudUniformProperties() const;
-
-
-protected:
-
-        //- Geometry type
-        cloud::geometryType geometryType_;
 
 
 public:
@@ -345,15 +339,15 @@ CML::Cloud<ParticleType>::Cloud
     cloud(pMesh, cloudName),
     IDLList<ParticleType>(),
     polyMesh_(pMesh),
-    globalPositionsPtr_(),
-    geometryType_(cloud::geometryType::COORDINATES)
+    globalPositionsPtr_()
 {
     checkPatches();
 
-    // Ask for the tetBasePtIs to trigger all processors to build
-    // them, otherwise, if some processors have no particles then
-    // there is a comms mismatch.
+    // Ask for the tetBasePtIs and oldCellCentres to trigger all processors to
+    // build them, otherwise, if some processors have no particles then there
+    // is a comms mismatch.
     polyMesh_.tetBasePtIs();
+    polyMesh_.oldCellCentres();
 
     if (particles.size())
     {
@@ -555,7 +549,7 @@ void CML::Cloud<ParticleType>::move
 
 
         // Start sending. Sets number of bytes transferred
-        labelListList  allNTrans(Pstream::nProcs());
+        labelList allNTrans(Pstream::nProcs());
         pBufs.finishedSends(allNTrans);
 
 
@@ -563,13 +557,10 @@ void CML::Cloud<ParticleType>::move
 
         forAll(allNTrans, i)
         {
-            forAll(allNTrans[i], j)
+            if (allNTrans[i])
             {
-                if (allNTrans[i][i])
-                {
-                    transferred = true;
-                    break;
-                }
+                transferred = true;
+                break;
             }
         }
         reduce(transferred, orOp<bool>());
@@ -584,7 +575,7 @@ void CML::Cloud<ParticleType>::move
         {
             label neighbProci = neighbourProcs[i];
 
-            label nRec = allNTrans[neighbProci][Pstream::myProcNo()];
+            label nRec = allNTrans[neighbProci];
 
             if (nRec)
             {
@@ -638,7 +629,7 @@ void CML::Cloud<ParticleType>::autoMap(const mapPolyMesh& mapper)
     forAllIter(typename Cloud<ParticleType>, *this, iter)
     {
         iter().autoMap(positions[i], mapper);
-        ++i;
+        ++ i;
     }
 }
 
@@ -714,16 +705,6 @@ void CML::Cloud<ParticleType>::readCloudUniformProperties()
     {
         const IOdictionary uniformPropsDict(dictObj);
 
-        // Fall back to positions mode if the entry is not present for
-        // backwards compatibility
-        geometryType_ =
-            cloud::geometryTypeNames.lookupOrDefault
-            (
-                "geometry",
-                uniformPropsDict,
-                cloud::geometryType::POSITIONS
-            );
-
         const word procName("processor" + CML::name(Pstream::myProcNo()));
         if (uniformPropsDict.found(procName))
         {
@@ -761,12 +742,6 @@ void CML::Cloud<ParticleType>::writeCloudUniformProperties() const
     Pstream::listCombineGather(np, maxEqOp<label>());
     Pstream::listCombineScatter(np);
 
-    uniformPropsDict.add
-    (
-        "geometry",
-        cloud::geometryTypeNames[geometryType_]
-    );
-
     forAll(np, i)
     {
         word procName("processor" + CML::name(i));
@@ -788,7 +763,7 @@ void CML::Cloud<ParticleType>::initCloud(const bool checkClass)
 {
     readCloudUniformProperties();
 
-    IOPosition<Cloud<ParticleType> > ioP(*this, geometryType_);
+    IOPosition<Cloud<ParticleType> > ioP(*this);
 
     if (ioP.headerOk())
     {
@@ -804,9 +779,6 @@ void CML::Cloud<ParticleType>::initCloud(const bool checkClass)
                 << "Assuming the initial cloud contains 0 particles." << endl;
         }
     }
-
-    // Always operate in coordinates mode after reading
-    geometryType_ = cloud::geometryType::COORDINATES;
 
     // Ask for the tetBasePtIs to trigger all processors to build
     // them, otherwise, if some processors have no particles then
@@ -827,10 +799,12 @@ CML::Cloud<ParticleType>::Cloud
 :
     cloud(pMesh, cloudName),
     polyMesh_(pMesh),
-    globalPositionsPtr_(),
-    geometryType_(cloud::geometryType::COORDINATES)
+    globalPositionsPtr_()
 {
     checkPatches();
+
+    polyMesh_.tetBasePtIs();
+    polyMesh_.oldCellCentres();
 
     initCloud(checkClass);
 }

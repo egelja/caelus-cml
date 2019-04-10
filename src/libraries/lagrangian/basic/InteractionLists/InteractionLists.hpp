@@ -720,15 +720,7 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
         if (isA<wallPolyPatch>(patch))
         {
-            const scalarField areaFraction(patch.areaFraction());
-
-            forAll(areaFraction, facei)
-            {
-                if (areaFraction[facei] > 0.5)
-                {
-                    localWallFaces.append(facei + patch.start());
-                }
-            }
+            localWallFaces.append(identity(patch.size()) + patch.start());
         }
     }
 
@@ -736,12 +728,10 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
     forAll(wallFaceBbs, i)
     {
-        wallFaceBbs[i] =
-            treeBoundBox
-            (
-                mesh_.points(),
-                mesh_.faces()[localWallFaces[i]]
-            );
+        wallFaceBbs[i] = treeBoundBox
+        (
+            mesh_.faces()[localWallFaces[i]].points(mesh_.points())
+        );
     }
 
     // IAndT: index and transform
@@ -1250,15 +1240,6 @@ void CML::InteractionLists<ParticleType>::buildMap
         nSend[proci]++;
     }
 
-    // Send over how many I need to receive
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    labelListList sendSizes(Pstream::nProcs());
-
-    sendSizes[Pstream::myProcNo()] = nSend;
-
-    combineReduce(sendSizes, UPstream::listEq());
-
     // 2. Size sendMap
     labelListList sendMap(Pstream::nProcs());
 
@@ -1277,6 +1258,11 @@ void CML::InteractionLists<ParticleType>::buildMap
         sendMap[proci][nSend[proci]++] = i;
     }
 
+    // 4. Send over how many I need to receive
+    labelList recvSizes;
+    Pstream::exchangeSizes(sendMap, recvSizes);
+
+
     // Determine receive map
     // ~~~~~~~~~~~~~~~~~~~~~
 
@@ -1294,7 +1280,7 @@ void CML::InteractionLists<ParticleType>::buildMap
     {
         if (proci != Pstream::myProcNo())
         {
-            label nRecv = sendSizes[proci][Pstream::myProcNo()];
+            label nRecv = recvSizes[proci];
 
             constructMap[proci].setSize(nRecv);
 
@@ -1498,7 +1484,7 @@ template<class ParticleType>
 CML::InteractionLists<ParticleType>::InteractionLists(const polyMesh& mesh)
 :
     mesh_(mesh),
-    cloud_(mesh_, "NULL_Cloud", IDLList<ParticleType>()),
+    cloud_(mesh_, "nullptr_Cloud", IDLList<ParticleType>()),
     writeCloud_(false),
     cellMapPtr_(),
     wallFaceMapPtr_(),

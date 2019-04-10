@@ -9,7 +9,7 @@ fieldAverage
 	enabled         true;
 	timeStart       50;
 	resetFields     1;
-	outputControl   outputTime;
+	writeControl   outputTime;
 	fields
 	(
 		U

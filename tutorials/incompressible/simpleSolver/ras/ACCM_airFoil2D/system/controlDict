@@ -57,7 +57,7 @@ functions
         CofR            (0 0 0);
         rhoName         rhoInf;
         rhoInf          2.15527;
-        outputControl   timeStep;
-        outputInterval  50;
+        writeControl    timeStep;
+        writeInterval   50;
     }
 }

@@ -54,12 +54,12 @@ functions
 	{
 		type			forces;
 
-        functionObjectLibs		("libforces.so");
-        patches     			( wall );
+        functionObjectLibs	("libforces.so");
+        patches     		( wall );
         CofR      			(0 0 0);
-        rhoName         		rhoInf;
-        rhoInf          		1.2084;
-        outputControl   		timeStep;
-        outputInterval  		50;
+        rhoName         	rhoInf;
+        rhoInf          	1.2084;
+        writeControl   		timeStep;
+        writeInterval  		50;
      }
 }

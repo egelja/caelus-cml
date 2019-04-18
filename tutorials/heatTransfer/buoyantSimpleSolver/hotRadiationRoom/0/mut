@@ -7,30 +7,38 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      T;
+    location    "0";
+    object      mut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 1 0 0 0];
+dimensions      [1 -1 -1 0 0 0 0];
 
-internalField   uniform 300;
+internalField   uniform 0;
 
 boundaryField
 {
+    box
+    {
+        type            mutkWallFunction;
+        value           uniform 0;
+    }
     floor
     {
-        type            fixedValue;
-        value           uniform 300;
+        type            mutkWallFunction;
+        value           uniform 0;
     }
     ceiling
     {
-        type            fixedValue;
-        value           uniform 300;
+        type            mutkWallFunction;
+        value           uniform 0;
     }
     fixedWalls
     {
-        type            zeroGradient;
+        type            mutkWallFunction;
+        value           uniform 0;
     }
 }
+
 
 // ************************************************************************* //

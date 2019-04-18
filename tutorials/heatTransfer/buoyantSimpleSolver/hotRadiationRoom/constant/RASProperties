@@ -7,40 +7,19 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
-    object      controlDict;
+    location    "constant";
+    object      RASProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     buoyantSimpleSolver;
 
-startFrom       latestTime;
 
-startTime       0;
+RASModel        kEpsilon;
 
-stopAt          endTime;
+turbulence      on;
 
-endTime         1000;
+printCoeffs     on;
 
-deltaT          1;
-
-writeControl    timeStep;
-
-writeInterval   100;
-
-purgeWrite      0;
-
-writeFormat     ascii;
-
-writePrecision  6;
-
-writeCompression true;
-
-timeFormat      general;
-
-timePrecision   6;
-
-runTimeModifiable true;
 
 
 // ************************************************************************* //

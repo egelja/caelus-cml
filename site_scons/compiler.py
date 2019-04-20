@@ -110,7 +110,7 @@ def update_compiler_settings(env):
     keys = _compiler_map.keys()
     cname = os.path.basename(cxx)
     for k in keys:
-        if k in cname:
+        if k == cname:
             cname = k
             break
     cflags = _compiler_flags_map[_compiler_map[cname]]

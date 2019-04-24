@@ -159,7 +159,7 @@ def generate(env):
     env['CXX'] = 'g++'
     # Enable TEMFILE only for gcc versions that support @ indirection
     # since long command lines still can work if a custom spawner is used
-    version_major, version_minor = map(int, env["CCVERSION"].split("."))[0:2]
+    version_major, version_minor = list(map(int, env["CCVERSION"].split(".")))[0:2]
     if version_major >= 4 and version_minor >= 1:
         env['_MINGW_USE_TEMPFILE'] = True
     else:

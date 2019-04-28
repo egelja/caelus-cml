@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,7 +36,7 @@ const CML::labelListList& CML::primitiveMesh::edgeFaces() const
             {
                 // For checking calls:abort so we can quickly hunt down
                 // origin of call
-                FatalErrorIn("primitiveMesh::edgeFaces()")
+                FatalErrorInFunction
                     << abort(FatalError);
             }
         }

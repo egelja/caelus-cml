@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 V. Vukcevic
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -149,14 +150,8 @@ BlockLduSystem<blockType, sourceType>::BlockLduSystem
 {
     if (ldu.lduAddr().size() != s.size())
     {
-        FatalErrorIn
-        (
-            "BlockLduSystem::BlockLduSystem\n"
-            "(\n"
-            "    const lduMesh& ldu,"
-            "    const Field<sourceType>& s,"
-            ")\n"
-        )   << "Sizes of ldu addressing and source field are not the same."
+        FatalErrorInFunction
+            << "Sizes of ldu addressing and source field are not the same."
             << abort(FatalError);
     }
 }
@@ -174,14 +169,8 @@ BlockLduSystem<blockType, sourceType>::BlockLduSystem
 {
     if (this->lduAddr().size() != s.size())
     {
-        FatalErrorIn
-        (
-            "BlockLduSystem::BlockLduSystem\n"
-            "(\n"
-            "    const BlockLduMatrix<blockType>& bm,"
-            "    const Field<sourceType>& s,"
-            ")\n"
-        )   << "Sizes of block matrix and source field are not the same."
+        FatalErrorInFunction
+            << "Sizes of block matrix and source field are not the same."
             << abort(FatalError);
     }
 }
@@ -231,11 +220,8 @@ void BlockLduSystem<blockType, sourceType>::operator=
 {
     if (this == &bs)
     {
-        FatalErrorIn
-        (
-            "void BlockLduSystem<blockType, sourceType>::operator="
-            "(const BlockLduSystem<blockType, sourceType>& bs)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 

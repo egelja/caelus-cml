@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,11 +27,11 @@ License
 
 namespace CML
 {
-    namespace distributionModels
-    {
-        defineTypeNameAndDebug(normal, 0);
-        addToRunTimeSelectionTable(distributionModel, normal, dictionary);
-    }
+namespace distributionModels
+{
+    defineTypeNameAndDebug(normal, 0);
+    addToRunTimeSelectionTable(distributionModel, normal, dictionary);
+}
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -39,7 +39,7 @@ namespace CML
 CML::distributionModels::normal::normal
 (
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 :
     distributionModel(typeName, dict, rndGen),
@@ -51,7 +51,7 @@ CML::distributionModels::normal::normal
 {
     if (minValue_ < 0)
     {
-        FatalErrorIn("normal::normal(const dictionary&, Random&)")
+        FatalErrorInFunction
             << "Minimum value must be greater than zero. "
             << "Supplied minValue = " << minValue_
             << abort(FatalError);
@@ -59,7 +59,7 @@ CML::distributionModels::normal::normal
 
     if (maxValue_ < minValue_)
     {
-        FatalErrorIn("normal::normal(const dictionary&, Random&)")
+        FatalErrorInFunction
             << "Maximum value is smaller than the minimum value:"
             << "    maxValue = " << maxValue_ << ", minValue = " << minValue_
             << abort(FatalError);

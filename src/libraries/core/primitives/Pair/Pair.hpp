@@ -109,7 +109,7 @@ public:
         {
             if (first() == second())
             {
-                FatalErrorIn("Pair<Type>::other(const Type&) const")
+                FatalErrorInFunction
                     << "Call to other only valid for Pair with differing"
                     << " elements:" << *this << abort(FatalError);
             }
@@ -121,7 +121,7 @@ public:
             {
                 if (second() != a)
                 {
-                    FatalErrorIn("Pair<Type>::other(const Type&) const")
+                    FatalErrorInFunction
                         << "Pair " << *this
                         << " does not contain " << a << abort(FatalError);
                 }

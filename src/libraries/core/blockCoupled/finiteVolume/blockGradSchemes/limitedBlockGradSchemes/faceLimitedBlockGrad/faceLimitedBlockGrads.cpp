@@ -2,7 +2,7 @@
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014-2016 H. Jasak
 Copyright (C) 2014 V. Vukcevic
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -278,13 +278,8 @@ faceLimitedBlockGrad<vector>::fvmGrad
     const volVectorField& vsf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> faceLimitedBlockGrad<vector>::fvmGrad\n"
-        "(\n"
-        "    GeometricField<vector, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block gradient operators with face limiters defined"
+    FatalErrorInFunction
+        << "Implicit block gradient operators with face limiters defined"
         << "only for scalar."
         << abort(FatalError);
 

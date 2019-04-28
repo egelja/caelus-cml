@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,33 +24,23 @@ Class
 Description
     Drag model for non-spherical particles.
 
-    Takes the form of
+    The drag coefficient is given by:
+    \f[
+        Cd = \frac{24}{Re} (1 + a Re^{b}) + Re \frac{c}{Re + d}
+    \f]
 
-        24.0/Re*(1.0 + a_*pow(Re, b_)) + Re*c_/(Re + d_);
-
-    Where a(phi), b(phi), c(phi) and d(phi) are model coefficients, with phi
-    defined as:
-
-              area of sphere with same volume as particle
-        phi = -------------------------------------------
-                       actual particle area
-
-    Equation used is Eqn (11) of reference below - good to within 2 to 4 % of
-    RMS values from experiment.
-
-    H and L also give a simplified model with greater error compared to
-    results from experiment - Eqn 12 - but since phi is presumed
-    constant, it offers little benefit.
+    Where \f$a\f$, \f$b\f$, \f$c\f$, and \f$d\f$ are coefficients, calculated
+    as functions of \f$phi\f$. \f$phi\f$ is the ratio of the surface area of a
+    sphere with the same volume as the particle to the actual surface area of
+    the particle, and must be between 0 and 1.
 
     Reference:
     \verbatim
-        "Drag coefficient and terminal velocity of spherical and nonspherical
-        particles"
-        A. Haider and O. Levenspiel,
-        Powder Technology
-        Volume 58, Issue 1, May 1989, Pages 63-70
+        Haider, A., & Levenspiel, O. (1989).
+        Drag coefficient and terminal velocity of spherical and nonspherical
+        particles.
+        Powder technology, 58(1), 63-70.
     \endverbatim
-
 
 \*---------------------------------------------------------------------------*/
 
@@ -63,6 +53,7 @@ Description
 
 namespace CML
 {
+
 /*---------------------------------------------------------------------------*\
                     Class NonSphereDragForce Declaration
 \*---------------------------------------------------------------------------*/
@@ -76,26 +67,22 @@ protected:
 
     // Protected Data
 
-        //- Ratio of surface of sphere having same volume as particle to
-        //  actual surface area of particle (0 < phi <= 1)
-        scalar phi_;
+        //- The ratio of the surface area of a sphere with the same volume as
+        //  the particle to the actual surface area of the particle. Between 0
+        //  and 1.
+        const scalar phi_;
 
+        //- Coefficient
+        const scalar a_;
 
-        // Model coefficients
+        //- Coefficient
+        const scalar b_;
 
-            scalar a_;
+        //- Coefficient
+        const scalar c_;
 
-            scalar b_;
-
-            scalar c_;
-
-            scalar d_;
-
-
-    // Private Member Functions
-
-        //- Drag coefficient multiplied by Reynolds number
-        scalar CdRe(const scalar Re) const;
+        //- Coefficient
+        const scalar d_;
 
 
 public:
@@ -139,6 +126,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -146,18 +134,9 @@ public:
             ) const;
 };
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class CloudType>
-CML::scalar CML::NonSphereDragForce<CloudType>::CdRe(const scalar Re) const
-{
-    return 24.0*(1.0 + a_*pow(Re, b_)) + Re*c_/(1 + d_/(Re + ROOTVSMALL));
-}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -179,14 +158,8 @@ CML::NonSphereDragForce<CloudType>::NonSphereDragForce
 {
     if (phi_ <= 0 || phi_ > 1)
     {
-        FatalErrorIn
-        (
-            "NonSphereDrag<CloudType>::NonSphereDrag"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Ratio of surface of sphere having same volume as particle to "
+        FatalErrorInFunction
+            << "Ratio of surface of sphere having same volume as particle to "
             << "actual surface area of particle (phi) must be greater than 0 "
             << "and less than or equal to 1" << exit(FatalError);
     }
@@ -221,17 +194,17 @@ template<class CloudType>
 CML::forceSuSp CML::NonSphereDragForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    const scalar CdRe =
+        24*(1 + a_*pow(Re, b_)) + Re*c_/(1 + d_/(Re + ROOTVSMALL));
 
-    value.Sp() = mass*0.75*muc*CdRe(Re)/(p.rho()*sqr(p.d()));
-
-    return value;
+    return forceSuSp(Zero, mass*0.75*muc*CdRe/(p.rho()*sqr(p.d())));
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

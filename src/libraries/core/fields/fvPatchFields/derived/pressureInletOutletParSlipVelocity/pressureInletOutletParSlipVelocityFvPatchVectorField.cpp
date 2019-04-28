@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -139,11 +139,8 @@ void CML::pressureInletOutletParSlipVelocityFvPatchVectorField::updateCoeffs()
     }
     else
     {
-        FatalErrorIn
-        (
-            "pressureInletOutletParSlipVelocityFvPatchVectorField::"
-            "updateCoeffs()"
-        )   << "dimensions of phi are not correct" << nl
+        FatalErrorInFunction
+            << "dimensions of phi are not correct" << nl
             << "    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()
             << " in file " << this->dimensionedInternalField().objectPath()

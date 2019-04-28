@@ -65,9 +65,9 @@ meshSurfaceMapper::meshSurfaceMapper
 :
     surfaceEngine_(mse),
     meshOctree_(octree),
-    surfaceEnginePartitionerPtr_(NULL),
+    surfaceEnginePartitionerPtr_(nullptr),
     deletePartitioner_(true),
-    surfPartitionerPtr_(NULL)
+    surfPartitionerPtr_(nullptr)
 {
     if( Pstream::parRun() )
     {
@@ -87,7 +87,7 @@ meshSurfaceMapper::meshSurfaceMapper
     meshOctree_(octree),
     surfaceEnginePartitionerPtr_(&mPart),
     deletePartitioner_(false),
-    surfPartitionerPtr_(NULL)
+    surfPartitionerPtr_(nullptr)
 {
     if( Pstream::parRun() )
     {

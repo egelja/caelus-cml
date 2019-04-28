@@ -58,10 +58,8 @@ autoPtr<numericalBeach> numericalBeach::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "numericalBeach::New(const word&, const fvMesh&)"
-        )   << "Unknown beach type 'numericalBeach" << beachTypeName << "'"
+        FatalErrorInFunction
+            << "Unknown beach type 'numericalBeach" << beachTypeName << "'"
             << endl << endl
             << "Valid beach types are :" << endl
             << dictionaryConstructorTablePtr_->toc()

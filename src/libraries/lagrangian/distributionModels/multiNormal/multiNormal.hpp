@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::multiNormal
+    CML::distributionModels::multiNormal
 
 Description
     A multiNormal distribution model
@@ -81,7 +81,7 @@ public:
     // Constructors
 
         //- Construct from components
-        multiNormal(const dictionary& dict, cachedRandom& rndGen);
+        multiNormal(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         multiNormal(const multiNormal& p);

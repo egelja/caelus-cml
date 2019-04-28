@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,7 @@ void CML::primitiveMesh::calcPointCells() const
         {
             // For checking calls:abort so we can quickly hunt down
             // origin of call
-            FatalErrorIn("primitiveMesh::calcPointCells()")
+            FatalErrorInFunction
                 << abort(FatalError);
         }
     }
@@ -47,7 +47,7 @@ void CML::primitiveMesh::calcPointCells() const
     // if the pointer is already set
     if (pcPtr_)
     {
-        FatalErrorIn("primitiveMesh::calcPointCells() const")
+        FatalErrorInFunction
             << "pointCells already calculated"
             << abort(FatalError);
     }

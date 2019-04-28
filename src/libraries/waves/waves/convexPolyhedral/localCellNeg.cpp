@@ -69,7 +69,7 @@ localCellNeg::localCellNeg
 
     if (checkCell)
     {
-        notImplemented("Check cell in localCell");
+        NotImplemented;
     }
 }
 

@@ -140,10 +140,7 @@ public:
             //- Return patch-normal gradient
             virtual tmp<Field<Type> > snGrad() const
             {
-                notImplemented
-                (
-                    type() + "::coupledFvPatchField<Type>::snGrad()"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -232,7 +229,7 @@ public:
                 const Pstream::commsTypes commsType
             ) const
             {
-                notImplemented("coupledFvPatchField<Type>::updateInterfaceMatrix for block matrices")
+                NotImplemented
             }
 
         //- Write
@@ -400,7 +397,7 @@ template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::coupledFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    notImplemented("coupledFvPatchField<Type>::gradientInternalCoeffs()");
+    NotImplemented;
     return -Type(pTraits<Type>::one)*this->patch().deltaCoeffs();
 }
 
@@ -420,7 +417,7 @@ template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
-    notImplemented("coupledFvPatchField<Type>::gradientBoundaryCoeffs()");
+    NotImplemented;
     return -this->gradientInternalCoeffs();
 }
 

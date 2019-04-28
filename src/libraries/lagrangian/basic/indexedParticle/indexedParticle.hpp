@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,27 +61,14 @@ public:
         indexedParticle
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const label index = 0
         )
         :
-            particle(mesh, position, cellI, tetFaceI, tetPtI),
-            index_(index)
-        {}
-
-        //- Construct from components, with searching for tetFace and tetPt
-        indexedParticle
-        (
-            const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label index = 0
-        )
-        :
-            particle(mesh, position, cellI),
+            particle(mesh, coordinates, celli, tetFacei, tetPti),
             index_(index)
         {}
 

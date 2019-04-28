@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2014-2016 OpenFOAM Foundation
 Copyright (C) 2015 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
@@ -42,6 +42,14 @@ namespace CML
 
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class minData;
+
+Istream& operator>>(Istream&, minData&);
+Ostream& operator<<(Ostream&, const minData&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class minData Declaration

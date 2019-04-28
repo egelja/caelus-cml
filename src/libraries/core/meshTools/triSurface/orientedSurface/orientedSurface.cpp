@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -103,7 +103,7 @@ CML::labelList CML::orientedSurface::edgeToFace
             {
                 if (flip[face1] == UNVISITED)
                 {
-                    FatalErrorIn("orientedSurface::edgeToFace(..)") << "Problem"
+                    FatalErrorInFunction << "Problem"
                         << abort(FatalError);
                 }
                 else
@@ -327,10 +327,8 @@ bool CML::orientedSurface::flipSurface
     {
         if (flipState[faceI] == UNVISITED)
         {
-            FatalErrorIn
-            (
-                "orientSurface(const point&, const label, const point&)"
-            )   << "unvisited face " << faceI
+            FatalErrorInFunction
+                << "unvisited face " << faceI
                 << abort(FatalError);
         }
         else if (flipState[faceI] == FLIP)

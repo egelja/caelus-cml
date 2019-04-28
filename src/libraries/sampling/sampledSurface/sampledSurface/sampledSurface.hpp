@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -62,6 +62,13 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class sampledSurface;
+
+Ostream& operator<<(Ostream&, const sampledSurface&);
+
 
 /*---------------------------------------------------------------------------*\
                       Class sampledSurface Declaration
@@ -209,8 +216,8 @@ public:
         //- Clone
         autoPtr<sampledSurface> clone() const
         {
-            notImplemented("autoPtr<sampledSurface> clone() const");
-            return autoPtr<sampledSurface>(NULL);
+            NotImplemented;
+            return autoPtr<sampledSurface>(nullptr);
         }
 
 
@@ -446,10 +453,7 @@ bool CML::sampledSurface::checkFieldSize(const Field<Type>& field) const
 
     if (field.size() != faces().size())
     {
-        FatalErrorIn
-        (
-            "sampledSurface::checkFieldSize(const Field<Type>&) const"
-        )
+        FatalErrorInFunction
             << "size mismatch: "
             << "field (" << field.size()
             << ") != surface (" << faces().size() << ")"

@@ -106,10 +106,8 @@ CML::autoPtr<CML::motionSolver> CML::motionSolver::New
 
     if (!dictionaryConstructorTablePtr_)
     {
-        FatalErrorIn
-        (
-            "motionSolver::New(const polyMesh& mesh)"
-        )   << "solver table is empty"
+        FatalErrorInFunction
+            << "solver table is empty"
             << exit(FatalError);
     }
 
@@ -118,10 +116,8 @@ CML::autoPtr<CML::motionSolver> CML::motionSolver::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "motionSolver::New(const polyMesh& mesh)"
-        )   << "Unknown solver type "
+        FatalErrorInFunction
+            << "Unknown solver type "
             << solverTypeName << nl << nl
             << "Valid solver types are:" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

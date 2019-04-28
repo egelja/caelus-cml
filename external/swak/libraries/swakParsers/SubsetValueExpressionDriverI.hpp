@@ -238,9 +238,9 @@ namespace CML {
             if(
                 this->warnAutoInterpolate_
             ) {
-                WarningIn("Field<T> *SubsetValueExpressionDriver::getFieldInternalAndInterpolate(const word &name,const Subset &sub)")
+                WarningInFunction
                     << "Going to interpolate " << name
-                        << endl;
+                    << endl;
             }
 
             const labelList &own=this->mesh().faceOwner();
@@ -336,15 +336,15 @@ namespace CML {
         }
 
         if(!done) {
-            FatalErrorIn("SubsetValueExpressionDriver::getFieldInternalAndInterpolate(const word &name,const Subset &sub)")
+            FatalErrorInFunction
                 << "Could not find a field name " << name
-                    << " of type " << pTraits<T>::typeName
-                    << " (neither " << FieldType::typeName
-                    << " nor " << IFieldType::typeName << ")"
-                    << " autoInterpolate: " << this->autoInterpolate_
-                    << (this->autoInterpolate_ ? "" : " (try setting 'autoInterpolate' to 'true')")
-                    << endl
-                    << exit(FatalError);
+                << " of type " << pTraits<T>::typeName
+                << " (neither " << FieldType::typeName
+                << " nor " << IFieldType::typeName << ")"
+                << " autoInterpolate: " << this->autoInterpolate_
+                << (this->autoInterpolate_ ? "" : " (try setting 'autoInterpolate' to 'true')")
+                << endl
+                << exit(FatalError);
         }
 
         return result;
@@ -408,10 +408,10 @@ namespace CML {
         } else {
             label patchI=this->mesh().boundaryMesh().whichPatch(faceI);
             if(patchI<0) {
-                FatalErrorIn("SubsetValueExpressionDriver::useFaceValue")
+                FatalErrorInFunction
                     << "Can't find the correct patch for face " << faceI
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             const polyPatch &patch=this->mesh().boundaryMesh()[patchI];
             if(!patch.coupled()) {
@@ -439,11 +439,11 @@ namespace CML {
         value=pTraits<T>::zero;
 
         if(index<this->mesh().nInternalFaces()) {
-            FatalErrorIn("SubsetValueExpressionDriver::getBoundaryFaceValue")
+            FatalErrorInFunction
                 << "Face with index " << index << " is an internal face (<"
-                    << this->mesh().nInternalFaces() << ")"
-                    << endl
-                    << exit(FatalError);
+                << this->mesh().nInternalFaces() << ")"
+                << endl
+                << exit(FatalError);
         }
         label patchI=this->mesh().boundaryMesh().whichPatch(index);
 

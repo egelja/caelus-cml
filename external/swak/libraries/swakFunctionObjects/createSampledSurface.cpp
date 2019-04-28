@@ -45,9 +45,9 @@ CML::createSampledSurface::createSampledSurface
     if (!isA<fvMesh>(obr))
     {
         active_=false;
-        WarningIn("createSampledSurface::createSampledSurface")
+        WarningInFunction
             << "Not a fvMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
     read(dict);
     execute();

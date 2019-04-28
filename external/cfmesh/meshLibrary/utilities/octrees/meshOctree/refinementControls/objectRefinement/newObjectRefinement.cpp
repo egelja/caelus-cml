@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -57,11 +58,8 @@ autoPtr<CML::objectRefinement> CML::objectRefinement::New
 
     if( cstrIter == dictionaryConstructorTablePtr_->end() )
     {
-        FatalIOErrorIn
-        (
-            "objectRefinement::New(const word&, const dictionary&)",
-            dict
-        )   << "Unknown objectRefinement type " << refType << nl << nl
+        FatalIOErrorInFunction(dict)
+            << "Unknown objectRefinement type " << refType << nl << nl
             << "Valid objectRefinement types are :" << nl
             << "[default: " << typeName_() << "]"
             << dictionaryConstructorTablePtr_->toc()

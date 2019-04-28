@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -152,7 +152,7 @@ CML::ITstream& CML::primitiveEntry::stream() const
 
 const CML::dictionary& CML::primitiveEntry::dict() const
 {
-    FatalErrorIn("const dictionary& primitiveEntry::dict() const")
+    FatalErrorInFunction
         << "Attempt to return primitive entry " << info()
         << " as a sub-dictionary"
         << abort(FatalError);
@@ -163,7 +163,7 @@ const CML::dictionary& CML::primitiveEntry::dict() const
 
 CML::dictionary& CML::primitiveEntry::dict()
 {
-    FatalErrorIn("const dictionary& primitiveEntry::dict()")
+    FatalErrorInFunction
         << "Attempt to return primitive entry " << info()
         << " as a sub-dictionary"
         << abort(FatalError);

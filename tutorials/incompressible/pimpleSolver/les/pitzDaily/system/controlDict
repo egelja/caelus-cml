@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -49,8 +49,8 @@ functions
         type            probes;
         functionObjectLibs ("libsampling.so");
         enabled         true;
-        outputControl   timeStep;
-        outputInterval  1;
+        writeControl   timeStep;
+        writeInterval  1;
 
         fields
         (
@@ -75,7 +75,7 @@ functions
         type            fieldAverage;
         functionObjectLibs ("libfieldFunctionObjects.so");
         enabled         true;
-        outputControl   outputTime;
+        writeControl   outputTime;
 
         fields
         (
@@ -104,7 +104,7 @@ functions
         // Where to load it from (if not already in solver)
         functionObjectLibs ("libsampling.so");
         enabled         true;
-        outputControl   outputTime;
+        writeControl   outputTime;
 
         interpolationScheme cellPoint;
 

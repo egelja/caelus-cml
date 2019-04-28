@@ -46,6 +46,7 @@ Description
 #include "electromagneticConstants.hpp"
 #include "atomicConstants.hpp"
 #include "physicoChemicalConstants.hpp"
+#include "thermodynamicConstants.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

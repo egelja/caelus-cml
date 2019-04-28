@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,6 +42,14 @@ namespace CML
 
 class trackedParticleCloud;
 
+
+// Forward declaration of friend functions and operators
+
+class trackedParticle;
+
+Ostream& operator<<(Ostream&, const trackedParticle&);
+
+
 /*---------------------------------------------------------------------------*\
                      Class trackedParticle Declaration
 \*---------------------------------------------------------------------------*/
@@ -52,17 +60,23 @@ class trackedParticle
 {
     // Private data
 
-        //- end point to track to
+        //- Start point to track from
+        point start_;
+
+        //- End point to track to
         point end_;
 
-        //- level of this particle
+        //- Level of this particle
         label level_;
 
-        //- passive label
+        //- Passive label (used to store feature edge mesh)
         label i_;
 
-        //- passive label
+        //- Passive label (used to store feature edge point)
         label j_;
+
+        //- Passive label (used to store feature edge label)
+        label k_;
 
 
 public:
@@ -72,28 +86,29 @@ public:
     //- Class used to pass tracking data to the trackToFace function
     class trackingData
     :
-        public particle::TrackingData<Cloud<trackedParticle> >
+        public particle::trackingData
     {
+    public:
+
         labelList& maxLevel_;
 
-    public:
+        List<PackedBoolList>& featureEdgeVisited_;
 
 
         // Constructors
 
-            trackingData(Cloud<trackedParticle>& cloud, labelList& maxLevel)
+            trackingData
+            (
+                Cloud<trackedParticle>& cloud,
+                labelList& maxLevel,
+                List<PackedBoolList>& featureEdgeVisited
+            )
             :
-                particle::TrackingData<Cloud<trackedParticle> >(cloud),
-                maxLevel_(maxLevel)
+                particle::trackingData(cloud),
+                maxLevel_(maxLevel),
+                featureEdgeVisited_(featureEdgeVisited)
             {}
 
-
-        // Member functions
-
-            labelList& maxLevel()
-            {
-                return maxLevel_;
-            }
     };
 
 
@@ -104,14 +119,29 @@ public:
         trackedParticle
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
             const label tetPtI,
             const point& end,
             const label level,
             const label i,
-            const label j
+            const label j,
+            const label k
+        );
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology
+        trackedParticle
+        (
+            const polyMesh& mesh,
+            const vector& position,
+            const label celli,
+            const point& end,
+            const label level,
+            const label i,
+            const label j,
+            const label k
         );
 
         //- Construct from Istream
@@ -153,22 +183,52 @@ public:
 
     // Member Functions
 
-        //- point to track to
+        //- Point to track from
+        point& start()
+        {
+            return start_;
+        }
+
+        //- Point to track to
         point& end()
         {
             return end_;
         }
 
-        //- transported label
+        //- Transported label
+        label i() const
+        {
+            return i_;
+        }
+
+        //- Transported label
         label& i()
         {
             return i_;
         }
 
-        //- transported label
+        //- Transported label
+        label j() const
+        {
+            return j_;
+        }
+
+        //- Transported label
         label& j()
         {
             return j_;
+        }
+
+        //- Transported label
+        label k() const
+        {
+            return k_;
+        }
+
+        //- Transported label
+        label& k()
+        {
+            return k_;
         }
 
 
@@ -176,64 +236,62 @@ public:
         // Tracking
 
             //- Track all particles to their end point
-            bool move(trackingData&, const scalar);
-
+            bool move(Cloud<trackedParticle>&, trackingData&, const scalar);
 
             //- Overridable function to handle the particle hitting a patch
             //  Executed before other patch-hitting functions
-            bool hitPatch
-            (
-                const polyPatch&,
-                trackingData& td,
-                const label patchI,
-                const scalar trackFraction,
-                const tetIndices& tetIs
-            );
+            bool hitPatch(Cloud<trackedParticle>&, trackingData&);
 
             //- Overridable function to handle the particle hitting a wedge
-            void hitWedgePatch
+            void hitWedgePatch(Cloud<trackedParticle>&, trackingData&);
+
+            //- Overridable function to handle the particle hitting a
+            //  symmetry plane
+//            void hitSymmetryPlanePatch(Cloud<trackedParticle>&, trackingData&);
+
+            //- Overridable function to handle the particle hitting a
+            //  symmetry patch
+            void hitSymmetryPatch(Cloud<trackedParticle>&, trackingData&);
+
+            //- Overridable function to handle the particle hitting a cyclic
+            void hitCyclicPatch(Cloud<trackedParticle>&, trackingData&);
+
+            //- Overridable function to handle the particle hitting a cyclicAMI
+            void hitCyclicAMIPatch
             (
-                const wedgePolyPatch&,
-                trackingData& td
+                Cloud<trackedParticle>&,
+                trackingData&,
+                const vector&
+            );
+
+            //- Overridable function to handle the particle hitting a cyclicACMI
+            void hitCyclicACMIPatch
+            (
+                Cloud<trackedParticle>&,
+                trackingData&,
+                const vector&
             );
 
             //- Overridable function to handle the particle hitting a
-            //  symmetryPlane
-            void hitSymmetryPatch
-            (
-                const symmetryPolyPatch&,
-                trackingData& td
-            );
-
-            //- Overridable function to handle the particle hitting a cyclic
-            void hitCyclicPatch
-            (
-                const cyclicPolyPatch&,
-                trackingData& td
-            );
+            //  cyclicRepeatAMI
+//            void hitCyclicRepeatAMIPatch
+//            (
+//                const vector&,
+//                const scalar,
+//                Cloud<trackedParticle>&,
+//                trackingData&
+//            );
 
             //- Overridable function to handle the particle hitting a
             //- processorPatch
-            void hitProcessorPatch
-            (
-                const processorPolyPatch&,
-                trackingData& td
-            );
+            void hitProcessorPatch(Cloud<trackedParticle>&, trackingData&);
 
             //- Overridable function to handle the particle hitting a wallPatch
-            void hitWallPatch
-            (
-                const wallPolyPatch&,
-                trackingData& td,
-                const tetIndices&
-            );
+            void hitWallPatch(Cloud<trackedParticle>&, trackingData&);
 
-            //- Overridable function to handle the particle hitting a polyPatch
-            void hitPatch
-            (
-                const polyPatch&,
-                trackingData& td
-            );
+            //- Convert processor patch addressing to the global equivalents
+            //  and set the celli to the face-neighbour
+            void correctAfterParallelTransfer(const label, trackingData&);
 
 
     // Ostream Operator

@@ -26,11 +26,11 @@ License
 
 // Kinematic
 #include "makeParcelForces.hpp"
-#include "makeParcelRASDispersionModels.hpp"
-#include "makeParcelLESDispersionModels.hpp"
+#include "makeParcelDispersionModels.hpp"
 #include "makeParcelInjectionModels.hpp"
 #include "makeParcelCollisionModels.hpp"
 #include "makeParcelPatchInteractionModels.hpp"
+#include "makeParcelStochasticCollisionModels.hpp"
 #include "makeParcelSurfaceFilmModels.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -41,13 +41,12 @@ namespace CML
 
     // Kinematic sub-models
     makeParcelForces(basicKinematicCollidingCloud);
-    makeParcelRASDispersionModels(basicKinematicCollidingCloud);
-    makeParcelLESDispersionModels(basicKinematicCollidingCloud);
+    makeParcelDispersionModels(basicKinematicCollidingCloud);
     makeParcelInjectionModels(basicKinematicCollidingCloud);
     makeParcelCollisionModels(basicKinematicCollidingCloud);
     makeParcelPatchInteractionModels(basicKinematicCollidingCloud);
+    makeParcelStochasticCollisionModels(basicKinematicCollidingCloud);
     makeParcelSurfaceFilmModels(basicKinematicCollidingCloud);
 }
-
 
 // ************************************************************************* //

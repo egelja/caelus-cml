@@ -37,13 +37,13 @@ Contributors/Copyright:
 #include "swakVersion.hpp"
 #include "DebugOStream.hpp"
 
-#include "basicPsiThermo.hpp"
-#include "basicRhoThermo.hpp"
+#include "psiThermo.hpp"
+#include "rhoThermo.hpp"
 
 namespace CML {
-    typedef basicThermo swakFluidThermoType;
-    typedef basicPsiThermo swakPsiThermoType;
-    typedef basicRhoThermo swakRhoThermoType;
+    typedef fluidThermo swakFluidThermoType;
+    typedef psiThermo swakPsiThermoType;
+    typedef rhoThermo swakRhoThermoType;
 }
 
 #include "DebugOStream.hpp"

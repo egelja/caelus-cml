@@ -60,10 +60,8 @@ autoPtr<pointDistributions> pointDistributions::New
 
     if (cstrIter == pointDistributionsConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "pointDistributions::New(const dictionary&)"
-        )   << "Unknown point distribution: " << pd
+        FatalErrorInFunction
+            << "Unknown point distribution: " << pd
             << endl << endl
             << "Valid methods are :" << endl
             << pointDistributionsConstructorTablePtr_->toc()

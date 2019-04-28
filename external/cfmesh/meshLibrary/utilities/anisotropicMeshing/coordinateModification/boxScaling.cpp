@@ -249,10 +249,8 @@ void boxScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxScaling::operator=(const dictionary& d)"
-        ) << "Entry centre is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry centre is not specified!" << exit(FatalError);
         centre_ = vector::zero;
     }
 
@@ -263,10 +261,8 @@ void boxScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxScaling::operator=(const dictionary& d)"
-        ) << "Entry lengthX is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthX is not specified!" << exit(FatalError);
         lengthVec_.x() = 0.0;
     }
 
@@ -277,10 +273,8 @@ void boxScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxScaling::operator=(const dictionary& d)"
-        ) << "Entry lengthY is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthY is not specified!" << exit(FatalError);
         lengthVec_.y() = 0.0;
     }
 
@@ -291,10 +285,8 @@ void boxScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxScaling::operator=(const dictionary& d)"
-        ) << "Entry lengthZ is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthZ is not specified!" << exit(FatalError);
         lengthVec_.z() = 0.0;
     }
 

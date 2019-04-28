@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::exponential
+    CML::distributionModels::exponential
 
 Description
     exponential distribution model
@@ -71,7 +71,7 @@ public:
     // Constructors
 
         //- Construct from components
-        exponential(const dictionary& dict, cachedRandom& rndGen);
+        exponential(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         exponential(const exponential& p);
@@ -89,7 +89,7 @@ public:
 
     // Member Functions
 
-         //- Sample the distributionModel
+        //- Sample the distributionModel
         virtual scalar sample() const;
 
         //- Return the minimum value

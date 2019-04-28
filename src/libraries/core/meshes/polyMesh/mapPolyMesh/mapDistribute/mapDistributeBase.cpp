@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2014-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -192,19 +192,8 @@ void CML::mapDistributeBase::checkReceivedSize
 {
     if (receivedSize != expectedSize)
     {
-        FatalErrorIn
-        (
-            "template<class T>\n"
-            "void mapDistributeBase::distribute\n"
-            "(\n"
-            "    const Pstream::commsTypes commsType,\n"
-            "    const List<labelPair>& schedule,\n"
-            "    const label constructSize,\n"
-            "    const labelListList& subMap,\n"
-            "    const labelListList& constructMap,\n"
-            "    List<T>& field\n"
-            ")\n"
-        )   << "Expected from processor " << proci
+        FatalErrorInFunction
+            << "Expected from processor " << proci
             << " " << expectedSize << " but received "
             << receivedSize << " elements."
             << abort(FatalError);
@@ -267,7 +256,7 @@ void CML::mapDistributeBase::printLayout(Ostream& os) const
             {
                 if (minIndex[proci] != offset)
                 {
-                    FatalErrorIn("mapDistributeBase::printLayout(..)")
+                    FatalErrorInFunction
                         << "offset:" << offset
                         << " proci:" << proci
                         << " minIndex:" << minIndex[proci]
@@ -459,12 +448,10 @@ void CML::mapDistributeBase::exchangeAddressing
     }
 
     subMap_.setSize(Pstream::nProcs());
-    labelListList sendSizes;
     Pstream::exchange<labelList, label>
     (
         wantedRemoteElements,
         subMap_,
-        sendSizes,
         tag
     );
 
@@ -538,12 +525,10 @@ void CML::mapDistributeBase::exchangeAddressing
     }
 
     subMap_.setSize(Pstream::nProcs());
-    labelListList sendSizes;
     Pstream::exchange<labelList, label>
     (
         wantedRemoteElements,
         subMap_,
-        sendSizes,
         tag
     );
 
@@ -604,11 +589,8 @@ CML::mapDistributeBase::mapDistributeBase
 {
     if (sendProcs.size() != recvProcs.size())
     {
-        FatalErrorIn
-        (
-            "mapDistributeBase::mapDistributeBase"
-            "(const labelList&, const labelList&)"
-        )   << "The send and receive data is not the same length. sendProcs:"
+        FatalErrorInFunction
+            << "The send and receive data is not the same length. sendProcs:"
             << sendProcs.size() << " recvProcs:" << recvProcs.size()
             << abort(FatalError);
     }
@@ -1248,10 +1230,8 @@ void CML::mapDistributeBase::operator=(const mapDistributeBase& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::mapDistributeBase::operator=(const CML::mapDistributeBase&)"
-        )   << "Attempted assignment to self"
+        FatalErrorInFunction
+            << "Attempted assignment to self"
             << abort(FatalError);
     }
     constructSize_ = rhs.constructSize_;

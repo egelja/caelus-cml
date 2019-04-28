@@ -1,0 +1,65 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'radiationModels'
+
+sources = Split("""
+radiationModels/radiationModel/radiationModel.cpp
+radiationModels/radiationModel/radiationModelNew.cpp
+radiationModels/noRadiation/noRadiation.cpp
+radiationModels/P1/P1.cpp
+radiationModels/fvDOM/fvDOM/fvDOM.cpp
+radiationModels/fvDOM/radiativeIntensityRay/radiativeIntensityRay.cpp
+radiationModels/fvDOM/blackBodyEmission/blackBodyEmission.cpp
+radiationModels/fvDOM/absorptionCoeffs/absorptionCoeffs.cpp
+radiationModels/viewFactor/viewFactor.cpp
+radiationModels/opaqueSolid/opaqueSolid.cpp
+submodels/scatterModel/scatterModel/scatterModel.cpp
+submodels/scatterModel/scatterModel/scatterModelNew.cpp
+submodels/scatterModel/constantScatter/constantScatter.cpp
+submodels/scatterModel/noScatter/noScatter.cpp
+submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModel.cpp
+submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModelNew.cpp
+submodels/absorptionEmissionModel/noAbsorptionEmission/noAbsorptionEmission.cpp
+submodels/absorptionEmissionModel/constantAbsorptionEmission/constantAbsorptionEmission.cpp
+submodels/absorptionEmissionModel/binaryAbsorptionEmission/binaryAbsorptionEmission.cpp
+submodels/absorptionEmissionModel/greyMeanAbsorptionEmission/greyMeanAbsorptionEmission.cpp
+submodels/absorptionEmissionModel/greyMeanSolidAbsorptionEmission/greyMeanSolidAbsorptionEmission.cpp
+submodels/absorptionEmissionModel/wideBandAbsorptionEmission/wideBandAbsorptionEmission.cpp
+submodels/sootModel/sootModel/sootModel.cpp
+submodels/sootModel/sootModel/sootModelNew.cpp
+submodels/sootModel/mixtureFractionSoot/mixtureFractionSoots.cpp
+submodels/sootModel/noSoot/noSoot.cpp
+derivedFvPatchFields/MarshakRadiation/MarshakRadiationMixedFvPatchScalarField.cpp
+derivedFvPatchFields/MarshakRadiationFixedT/MarshakRadiationFixedTMixedFvPatchScalarField.cpp
+derivedFvPatchFields/greyDiffusiveRadiation/greyDiffusiveRadiationMixedFvPatchScalarField.cpp
+derivedFvPatchFields/wideBandDiffusiveRadiation/wideBandDiffusiveRadiationMixedFvPatchScalarField.cpp
+derivedFvPatchFields/radiationCoupledBase/radiationCoupledBase.cpp
+derivedFvPatchFields/greyDiffusiveViewFactor/greyDiffusiveViewFactorFixedValueFvPatchScalarField.cpp
+""")
+
+caelus_inc = [
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/thermophysicalProperties/lnInclude' 
+]
+
+caelus_libs = [
+'core',
+'specie',
+'fluidThermophysicalModels',
+'solidThermo',
+'SLGThermo',
+'thermophysicalProperties'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

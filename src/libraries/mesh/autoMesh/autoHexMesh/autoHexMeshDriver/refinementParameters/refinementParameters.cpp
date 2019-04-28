@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,6 +72,9 @@ CML::refinementParameters::refinementParameters(const dictionary& dict)
 CML::labelList CML::refinementParameters::findCells(const polyMesh& mesh)
  const
 {
+    // Force calculation of tet-diag decomposition (for use in findCell)
+    (void)mesh.tetBasePtIs();
+
     // Global calculation engine
     globalIndex globalCells(mesh.nCells());
 
@@ -97,10 +100,8 @@ CML::labelList CML::refinementParameters::findCells(const polyMesh& mesh)
 
         if (globalCellI == -1)
         {
-            FatalErrorIn
-            (
-                "refinementParameters::findCells(const polyMesh&) const"
-            )   << "Point " << keepPoint
+            FatalErrorInFunction
+                << "Point " << keepPoint
                 << " is not inside the mesh or on a face or edge." << nl
                 << "Bounding box of the mesh:" << mesh.bounds()
                 << exit(FatalError);

@@ -37,7 +37,7 @@ typedef surfaceWriter scalarSurfaceWriter;
 
 defineTypeNameAndDebug(SurfacesRepository, 0);
 
-SurfacesRepository *SurfacesRepository::repositoryInstance(NULL);
+SurfacesRepository *SurfacesRepository::repositoryInstance(nullptr);
 
 SurfacesRepository::SurfacesRepository(const IOobject &o)
     :
@@ -62,7 +62,7 @@ SurfacesRepository &SurfacesRepository::getRepository(const objectRegistry &obr)
         Pout << "SurfacesRepository: asking for Singleton" << endl;
     }
 
-    if(ptr==NULL) {
+    if(ptr==nullptr) {
         Pout << "swak: Allocating new repository for sampledSurfaces\n";
 
         ptr=new SurfacesRepository(
@@ -94,7 +94,7 @@ sampledSurface &SurfacesRepository::getSurface(
     sampledSurface &found=*(surfaces_[name]);
 
     if((&mesh)!=(&(found.mesh()))) {
-        FatalErrorIn("SampledSurface &SurfacesRepository::getSurface")
+        FatalErrorInFunction
             << "Found a mesh named " << name << " which is not for the mesh "
                 << mesh.name() << "but for the mesh " << found.mesh().name()
                 << endl
@@ -121,11 +121,11 @@ sampledSurface &SurfacesRepository::getSurface(
         }
 
         if(dict.found("surface")) {
-            WarningIn("SampledSurface &SurfacesRepository::getSurface")
+            WarningInFunction
                 << "Already got a surface named " << name
-                    << ". There is a specification for the surface here "
-                    << "which is ignored. It is: " << endl
-                    << dict.subDict("surface") << endl;
+                << ". There is a specification for the surface here "
+                << "which is ignored. It is: " << endl
+                << dict.subDict("surface") << endl;
         }
 
         return getSurface(name,mesh);

@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2015 H. Jasak
 Copyright (C) 2015 V. Vukvevic
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -228,10 +229,8 @@ void BlockGaussSeidelPrecon<Type>::calcInvDiag()
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockGaussSeidelPrecon<Type>::calcInvDiag()"
-        )   << "Problem with coefficient type morphing."
+        FatalErrorInFunction
+            << "Problem with coefficient type morphing."
             << abort(FatalError);
     }
 }
@@ -719,14 +718,8 @@ void BlockGaussSeidelPrecon<Type>::precondition
         }
         else
         {
-            FatalErrorIn
-            (
-                "void BlockGaussSeidelPrecon<Type>::precondition\n"
-                "(\n"
-                "    Field<Type>& x,\n"
-                "    const Field<Type>& b\n"
-                ") const"
-             )  << "Problem with coefficient type morphing."
+            FatalErrorInFunction
+                << "Problem with coefficient type morphing."
                 << abort(FatalError);
         }
     }
@@ -899,27 +892,15 @@ void BlockGaussSeidelPrecon<Type>::precondition
         }
         else
         {
-            FatalErrorIn
-            (
-                "void BlockGaussSeidelPrecon<Type>::precondition\n"
-                "(\n"
-                "    Field<Type>& x,\n"
-                "    const Field<Type>& b\n"
-                ") const"
-             )  << "Problem with coefficient type morphing."
+            FatalErrorInFunction
+                << "Problem with coefficient type morphing."
                 << abort(FatalError);
         }
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockGaussSeidelPrecon<Type>::precondition\n"
-            "(\n"
-            "    Field<Type>& x,\n"
-            "    const Field<Type>& b\n"
-            ") const"
-         )  << "cannot solve incomplete matrix, no diagonal"
+        FatalErrorInFunction
+            << "cannot solve incomplete matrix, no diagonal"
             << abort(FatalError);
     }
 }
@@ -1119,27 +1100,15 @@ void BlockGaussSeidelPrecon<Type>::preconditionT
         }
         else
         {
-            FatalErrorIn
-            (
-                "void BlockGaussSeidelPrecon<Type>::preconditionT\n"
-                "(\n"
-                "    Field<Type>& xT,\n"
-                "    const Field<Type>& bT\n"
-                ") const"
-             )  << "Problem with coefficient type morphing."
+            FatalErrorInFunction
+                << "Problem with coefficient type morphing."
                 << abort(FatalError);
         }
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockGaussSeidelPrecon<Type>::preconditionT\n"
-            "(\n"
-            "    Field<Type>& xT,\n"
-            "    const Field<Type>& bT\n"
-            ") const"
-         )  << "cannot solve incomplete matrix, no diagonal"
+        FatalErrorInFunction
+            << "cannot solve incomplete matrix, no diagonal"
             << abort(FatalError);
     }
 }
@@ -1260,27 +1229,15 @@ void BlockGaussSeidelPrecon<Type>::decoupledPrecondition
         }
         else
         {
-            FatalErrorIn
-            (
-                "void BlockGaussSeidelPrecon<Type>::precondition\n"
-                "(\n"
-                "    Field<Type>& x,\n"
-                "    const Field<Type>& b\n"
-                ") const"
-             )  << "Problem with coefficient type morphing."
+            FatalErrorInFunction
+                << "Problem with coefficient type morphing."
                 << abort(FatalError);
         }
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockGaussSeidelPrecon<Type>::precondition\n"
-            "(\n"
-            "    Field<Type>& x,\n"
-            "    const Field<Type>& b\n"
-            ") const"
-         )  << "cannot solve incomplete matrix, no diagonal"
+        FatalErrorInFunction
+            << "cannot solve incomplete matrix, no diagonal"
             << abort(FatalError);
     }
 }
@@ -1390,27 +1347,15 @@ void BlockGaussSeidelPrecon<Type>::decoupledPreconditionT
         }
         else
         {
-            FatalErrorIn
-            (
-                "void BlockGaussSeidelPrecon<Type>::preconditionT\n"
-                "(\n"
-                "    Field<Type>& xT,\n"
-                "    const Field<Type>& bT\n"
-                ") const"
-             )  << "Problem with coefficient type morphing."
+            FatalErrorInFunction
+                << "Problem with coefficient type morphing."
                 << abort(FatalError);
         }
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockGaussSeidelPrecon<Type>::preconditionT\n"
-            "(\n"
-            "    Field<Type>& xT,\n"
-            "    const Field<Type>& bT\n"
-            ") const"
-         )  << "cannot solve incomplete matrix, no diagonal"
+        FatalErrorInFunction
+            << "cannot solve incomplete matrix, no diagonal"
             << abort(FatalError);
     }
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -283,11 +283,8 @@ void CML::cellClassification::markCells
 
         if (returnReduce(cellI, maxOp<label>()) == -1)
         {
-            FatalErrorIn
-            (
-                "List<cellClassification::cType> markCells"
-                "(const meshSearch&, const boolList&, const pointField&)"
-            )   << "outsidePoint " << outsidePts[outsidePtI]
+            FatalErrorInFunction
+                << "outsidePoint " << outsidePts[outsidePtI]
                 << " is not inside any cell"
                 << nl << "It might be on a face or outside the geometry"
                 << exit(FatalError);
@@ -509,11 +506,8 @@ CML::cellClassification::cellClassification
 {
     if (mesh_.nCells() != size())
     {
-        FatalErrorIn
-        (
-            "cellClassification::cellClassification"
-            "(const polyMesh&, const labelList&)"
-        )   << "Number of elements of cellType argument is not equal to the"
+        FatalErrorInFunction
+            << "Number of elements of cellType argument is not equal to the"
             << " number of cells" << abort(FatalError);
     }
 }

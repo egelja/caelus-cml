@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,18 +22,48 @@ Class
 
 Description
     Thermodynamics package templated on the equation of state, using polynomial
-    functions for cp, h and s
+    functions for \c cp, \c h and \c s.
 
-    Polynomials for h and s derived from cp
+    Polynomials for \c h and \c s derived from \c cp.
 
-SourceFiles
-    hPolynomialThermoI.hpp
-    hPolynomialThermo.cpp
+Usage
+
+    \table
+        Property     | Description
+        Hf           | Heat of formation
+        Sf           | Standard entropy
+        CpCoeffs<8>  | Specific heat at constant pressure polynomial coeffs
+    \endtable
+
+    Example of the specification of the thermodynamic properties:
+    \verbatim
+    thermodynamics
+    {
+        Hf              0;
+        Sf              0;
+        CpCoeffs<8>     ( 1000 -0.05 0.003 0 0 0 0 0 );
+    }
+    \endverbatim
+
+    The polynomial expression is evaluated as so:
+
+        \f[
+            Cp = 1000 - 0.05 T + 0.003 T^2
+        \f]
+
+Note
+    - Heat of formation is inputted in [J/kg], but internally uses [J/kmol]
+    - Standard entropy is inputted in [J/kg/K], but internally uses [J/kmol/K]
+    - Specific heat at constant pressure polynomial coefficients evaluate to an
+      expression in [J/(kg.K)].
+
+See also
+    CML::Polynomial
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef hPolynomialThermo_H
-#define hPolynomialThermo_H
+#ifndef hPolynomialThermo_HPP
+#define hPolynomialThermo_HPP
 
 #include "scalar.hpp"
 #include "Polynomial_.hpp"
@@ -50,13 +80,6 @@ class hPolynomialThermo;
 
 template<class EquationOfState, int PolySize>
 inline hPolynomialThermo<EquationOfState, PolySize> operator+
-(
-    const hPolynomialThermo<EquationOfState, PolySize>&,
-    const hPolynomialThermo<EquationOfState, PolySize>&
-);
-
-template<class EquationOfState, int PolySize>
-inline hPolynomialThermo<EquationOfState, PolySize> operator-
 (
     const hPolynomialThermo<EquationOfState, PolySize>&,
     const hPolynomialThermo<EquationOfState, PolySize>&
@@ -88,261 +111,257 @@ Ostream& operator<<
                       Class hPolynomialThermo Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class EquationOfState, int PolySize>
+template<class EquationOfState, int PolySize=8>
 class hPolynomialThermo
 :
     public EquationOfState
 {
-    // Private data
 
-        //- Heat of formation
-        //  Note: input in [J/kg], but internally uses [J/kmol]
-        scalar Hf_;
+    //- Heat of formation
+    scalar Hf_;
 
-        //- Standard entropy
-        //  Note: input in [J/kg/K], but internally uses [J/kmol/K]
-        scalar Sf_;
+    //- Standard entropy
+    scalar Sf_;
 
-        //- Specific heat at constant pressure polynomial coeffs [J/(kg.K)]
-        Polynomial<PolySize> CpCoeffs_;
+    //- Specific heat at constant pressure polynomial coeffs
+    Polynomial<PolySize> CpCoeffs_;
 
-        //- Enthalpy polynomial coeffs - derived from cp [J/kg]
-        //  NOTE: relative to Tstd
-        typename Polynomial<PolySize>::intPolyType hCoeffs_;
+    //- Enthalpy polynomial coeffs - derived from cp [J/kg]
+    //  NOTE: relative to Tstd
+    typename Polynomial<PolySize>::intPolyType hCoeffs_;
 
-        //- Entropy - derived from Cp [J/(kg.K)] - relative to Tstd
-        Polynomial<PolySize> sCoeffs_;
+    //- Entropy - derived from Cp [J/(kg.K)] - relative to Tstd
+    Polynomial<PolySize> sCoeffs_;
 
 
-    // Private Member Functions
-
-        //- Construct from components
-        inline hPolynomialThermo
-        (
-            const EquationOfState& pt,
-            const scalar Hf,
-            const scalar Sf,
-            const Polynomial<PolySize>& CpCoeffs,
-            const typename Polynomial<PolySize>::intPolyType& hCoeffs,
-            const Polynomial<PolySize>& sCoeffs
-        );
+    //- Construct from components
+    inline hPolynomialThermo
+    (
+        const EquationOfState& pt,
+        const scalar Hf,
+        const scalar Sf,
+        const Polynomial<PolySize>& CpCoeffs,
+        const typename Polynomial<PolySize>::intPolyType& hCoeffs,
+        const Polynomial<PolySize>& sCoeffs
+    )
+    :
+        EquationOfState(pt),
+        Hf_(Hf),
+        Sf_(Sf),
+        CpCoeffs_(CpCoeffs),
+        hCoeffs_(hCoeffs),
+        sCoeffs_(sCoeffs)
+    {}
 
 
 public:
 
-    // Constructors
 
-        //- Construct from Istream
-        hPolynomialThermo(Istream& is);
+    //- Construct from dictionary
+    hPolynomialThermo(const dictionary& dict);
 
-        //- Construct from dictionary
-        hPolynomialThermo(const dictionary& dict);
-
-        //- Construct as copy
-        inline hPolynomialThermo(const hPolynomialThermo&);
-
-        //- Construct as a named copy
-        inline hPolynomialThermo(const word&, const hPolynomialThermo&);
+    //- Construct as a named copy
+    inline hPolynomialThermo(const word& name, const hPolynomialThermo& pt)
+    :
+        EquationOfState(name, pt),
+        Hf_(pt.Hf_),
+        Sf_(pt.Sf_),
+        CpCoeffs_(pt.CpCoeffs_),
+        hCoeffs_(pt.hCoeffs_),
+        sCoeffs_(pt.sCoeffs_)
+    {}
 
 
     // Member Functions
 
-        //- Limit the temperature to be in the range Tlow_ to Thigh_
-        inline scalar limit(const scalar T) const;
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "hPolynomial<" + EquationOfState::typeName() + '>';
+    }
 
-        // Fundamental properties
+    //- Limit the temperature to be in the range Tlow_ to Thigh_
+    inline scalar limit(const scalar T) const
+    {
+        return T;
+    }
 
-            //- Heat capacity at constant pressure [J/(kmol K)]
-            inline scalar cp(const scalar T) const;
+    // Fundamental properties
 
-            //- Enthalpy [J/kmol]
-            inline scalar h(const scalar T) const;
+    //- Heat capacity at constant pressure [J/(kg K)]
+    inline scalar Cp(const scalar p, const scalar T) const
+    {
+        return CpCoeffs_.value(T) + EquationOfState::Cp(p, T);
+    }
 
-            //- Sensible enthalpy [J/kmol]
-            inline scalar hs(const scalar T) const;
+    //- Absolute Enthalpy [J/kg]
+    inline scalar Ha(const scalar p, const scalar T) const
+    {
+        return hCoeffs_.value(T) + EquationOfState::H(p, T);
+    }
 
-            //- Chemical enthalpy [J/kmol]
-            inline scalar hc() const;
+    //- Sensible enthalpy [J/kg]
+    inline scalar Hs(const scalar p, const scalar T) const
+    {
+        return Ha(p, T) - Hc();
+    }
 
-            //- Entropy [J/(kmol K)]
-            inline scalar s(const scalar T) const;
+    //- Chemical enthalpy [J/kg]
+    inline scalar Hc() const
+    {
+        return Hf_;
+    }
+
+    //- Entropy [J/(kg K)]
+    inline scalar S(const scalar p, const scalar T) const
+    {
+        return sCoeffs_.value(T) + EquationOfState::S(p, T);
+    }
+
+    #include "HtoEthermo.hpp"
+
+    // Derivative term used for Jacobian
+
+    //- Derivative of Gibbs free energy w.r.t. temperature
+    inline scalar dGdT(const scalar p, const scalar T) const
+    {
+        return
+        (
+            hCoeffs_.derivative(T)
+          - T*sCoeffs_.derivative(T)
+          - sCoeffs_.value(T)
+        );
+    }
+
+    //- Temperature derivative of heat capacity at constant pressure
+    inline scalar dCpdT(const scalar p, const scalar T) const
+    {
+        return
+        (
+            CpCoeffs_.derivative(T)
+        );
+    }
 
 
-        // I-O
+    // I-O
 
-            //- Write to Ostream
-            void write(Ostream& os) const;
+    //- Write to Ostream
+    void write(Ostream& os) const;
 
 
     // Member operators
+    inline void operator=(const hPolynomialThermo& pt);
 
-        inline hPolynomialThermo& operator=(const hPolynomialThermo&);
-        inline void operator+=(const hPolynomialThermo&);
-        inline void operator-=(const hPolynomialThermo&);
-        inline void operator*=(const scalar);
+    inline void operator+=(const hPolynomialThermo& pt);
+
+    inline void operator*=(const scalar s);
 
 
     // Friend operators
+    friend hPolynomialThermo operator+ <EquationOfState, PolySize>
+    (
+        const hPolynomialThermo& pt1,
+        const hPolynomialThermo& pt2
+    );
 
-        friend hPolynomialThermo operator+ <EquationOfState, PolySize>
-        (
-            const hPolynomialThermo&,
-            const hPolynomialThermo&
-        );
+    friend hPolynomialThermo operator* <EquationOfState, PolySize>
+    (
+        const scalar s,
+        const hPolynomialThermo& pt
+    );
 
-        friend hPolynomialThermo operator- <EquationOfState, PolySize>
-        (
-            const hPolynomialThermo&,
-            const hPolynomialThermo&
-        );
-
-        friend hPolynomialThermo operator* <EquationOfState, PolySize>
-        (
-            const scalar,
-            const hPolynomialThermo&
-        );
-
-        friend hPolynomialThermo operator== <EquationOfState, PolySize>
-        (
-            const hPolynomialThermo&,
-            const hPolynomialThermo&
-        );
-
+    friend hPolynomialThermo operator== <EquationOfState, PolySize>
+    (
+        const hPolynomialThermo& pt1,
+        const hPolynomialThermo& pt2
+    );
 
     // Ostream Operator
-
-        friend Ostream& operator<< <EquationOfState, PolySize>
-        (
-            Ostream&,
-            const hPolynomialThermo&
-        );
+    friend Ostream& operator<< <EquationOfState, PolySize>
+    (
+        Ostream&,
+        const hPolynomialThermo&
+    );
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template<class EquationOfState, int PolySize>
-inline CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
-(
-    const EquationOfState& pt,
-    const scalar Hf,
-    const scalar Sf,
-    const Polynomial<PolySize>& CpCoeffs,
-    const typename Polynomial<PolySize>::intPolyType& hCoeffs,
-    const Polynomial<PolySize>& sCoeffs
-)
-:
-    EquationOfState(pt),
-    Hf_(Hf),
-    Sf_(Sf),
-    CpCoeffs_(CpCoeffs),
-    hCoeffs_(hCoeffs),
-    sCoeffs_(sCoeffs)
-{}
-
+#include "IOstreams.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class EquationOfState, int PolySize>
-inline CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
+CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
 (
-    const hPolynomialThermo& pt
+    const dictionary& dict
 )
 :
-    EquationOfState(pt),
-    Hf_(pt.Hf_),
-    Sf_(pt.Sf_),
-    CpCoeffs_(pt.CpCoeffs_),
-    hCoeffs_(pt.hCoeffs_),
-    sCoeffs_(pt.sCoeffs_)
-{}
+    EquationOfState(dict),
+    Hf_(readScalar(dict.subDict("thermodynamics").lookup("Hf"))),
+    Sf_(readScalar(dict.subDict("thermodynamics").lookup("Sf"))),
+    CpCoeffs_
+    (
+        dict.subDict("thermodynamics").lookup
+        (
+            "CpCoeffs<" + CML::name(PolySize) + '>'
+        )
+    ),
+    hCoeffs_(),
+    sCoeffs_()
+{
+    hCoeffs_ = CpCoeffs_.integral();
+    sCoeffs_ = CpCoeffs_.integralMinus1();
 
+    // Offset h poly so that it is relative to the enthalpy at Tstd
+    hCoeffs_[0] += Hf_ - hCoeffs_.value(Tstd);
 
-template<class EquationOfState, int PolySize>
-inline CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
-(
-    const word& name,
-    const hPolynomialThermo& pt
-)
-:
-    EquationOfState(name, pt),
-    Hf_(pt.Hf_),
-    Sf_(pt.Sf_),
-    CpCoeffs_(pt.CpCoeffs_),
-    hCoeffs_(pt.hCoeffs_),
-    sCoeffs_(pt.sCoeffs_)
-{}
+    // Offset s poly so that it is relative to the entropy at Tstd
+    sCoeffs_[0] += Sf_ - sCoeffs_.value(Tstd);
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::limit
+void CML::hPolynomialThermo<EquationOfState, PolySize>::write
 (
-    const scalar T
+    Ostream& os
 ) const
 {
-    return T;
+    EquationOfState::write(os);
+
+    dictionary dict("thermodynamics");
+    dict.add("Hf", Hf_);
+    dict.add("Sf", Sf_);
+    dict.add
+    (
+        word("CpCoeffs<" + CML::name(PolySize) + '>'),
+        CpCoeffs_
+    );
+    os  << indent << dict.dictName() << dict;
 }
 
 
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
+
 template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::cp
+CML::Ostream& CML::operator<<
 (
-    const scalar T
-) const
+    Ostream& os,
+    const hPolynomialThermo<EquationOfState, PolySize>& pt
+)
 {
-    return CpCoeffs_.value(T);
-}
-
-
-template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::h
-(
-    const scalar T
-) const
-{
-    return hCoeffs_.value(T);
-}
-
-
-template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::hs
-(
-    const scalar T
-) const
-{
-    return h(T) - hc();
-}
-
-
-template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::hc()
-const
-{
-    return Hf_;
-}
-
-
-template<class EquationOfState, int PolySize>
-inline CML::scalar CML::hPolynomialThermo<EquationOfState, PolySize>::s
-(
-    const scalar T
-) const
-{
-    return sCoeffs_.value(T);
+    pt.write(os);
+    return os;
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class EquationOfState, int PolySize>
-inline CML::hPolynomialThermo<EquationOfState, PolySize>&
-CML::hPolynomialThermo<EquationOfState, PolySize>::operator=
+inline void CML::hPolynomialThermo<EquationOfState, PolySize>::operator=
 (
     const hPolynomialThermo<EquationOfState, PolySize>& pt
 )
@@ -354,8 +373,6 @@ CML::hPolynomialThermo<EquationOfState, PolySize>::operator=
     CpCoeffs_ = pt.CpCoeffs_;
     hCoeffs_ = pt.hCoeffs_;
     sCoeffs_ = pt.sCoeffs_;
-
-    return *this;
 }
 
 
@@ -365,39 +382,21 @@ inline void CML::hPolynomialThermo<EquationOfState, PolySize>::operator+=
     const hPolynomialThermo<EquationOfState, PolySize>& pt
 )
 {
-    scalar molr1 = this->nMoles();
+    scalar Y1 = this->Y();
 
     EquationOfState::operator+=(pt);
 
-    molr1 /= this->nMoles();
-    scalar molr2 = pt.nMoles()/this->nMoles();
+    if (mag(this->Y()) > SMALL)
+    {
+        Y1 /= this->Y();
+        const scalar Y2 = pt.Y()/this->Y();
 
-    Hf_ = molr1*Hf_ + molr2*pt.Hf_;
-    Sf_ = molr1*Sf_ + molr2*pt.Sf_;
-    CpCoeffs_ = molr1*CpCoeffs_ + molr2*pt.CpCoeffs_;
-    hCoeffs_ = molr1*hCoeffs_ + molr2*pt.hCoeffs_;
-    sCoeffs_ = molr1*sCoeffs_ + molr2*pt.sCoeffs_;
-}
-
-
-template<class EquationOfState, int PolySize>
-inline void CML::hPolynomialThermo<EquationOfState, PolySize>::operator-=
-(
-    const hPolynomialThermo<EquationOfState, PolySize>& pt
-)
-{
-    scalar molr1 = this->nMoles();
-
-    EquationOfState::operator-=(pt);
-
-    molr1 /= this->nMoles();
-    scalar molr2 = pt.nMoles()/this->nMoles();
-
-    Hf_ = molr1*Hf_ - molr2*pt.Hf_;
-    Sf_ = molr1*Sf_ - molr2*pt.Sf_;
-    CpCoeffs_ = molr1*CpCoeffs_ - molr2*pt.CpCoeffs_;
-    hCoeffs_ = molr1*hCoeffs_ - molr2*pt.hCoeffs_;
-    sCoeffs_ = molr1*sCoeffs_ - molr2*pt.sCoeffs_;
+        Hf_ = Y1*Hf_ + Y2*pt.Hf_;
+        Sf_ = Y1*Sf_ + Y2*pt.Sf_;
+        CpCoeffs_ = Y1*CpCoeffs_ + Y2*pt.CpCoeffs_;
+        hCoeffs_ = Y1*hCoeffs_ + Y2*pt.hCoeffs_;
+        sCoeffs_ = Y1*sCoeffs_ + Y2*pt.sCoeffs_;
+    }
 }
 
 
@@ -423,43 +422,32 @@ inline CML::hPolynomialThermo<EquationOfState, PolySize> CML::operator+
     EquationOfState eofs = pt1;
     eofs += pt2;
 
-    scalar molr1 = pt1.nMoles()/eofs.nMoles();
-    scalar molr2 = pt2.nMoles()/eofs.nMoles();
+    if (mag(eofs.Y()) < SMALL)
+    {
+        return hPolynomialThermo<EquationOfState, PolySize>
+        (
+            eofs,
+            pt1.Hf_,
+            pt1.Sf_,
+            pt1.CpCoeffs_,
+            pt1.hCoeffs_,
+            pt1.sCoeffs_
+        );
+    }
+    {
+        const scalar Y1 = pt1.Y()/eofs.Y();
+        const scalar Y2 = pt2.Y()/eofs.Y();
 
-    return hPolynomialThermo<EquationOfState, PolySize>
-    (
-        eofs,
-        molr1*pt1.Hf_ + molr2*pt2.Hf_,
-        molr1*pt1.Sf_ + molr2*pt2.Sf_,
-        molr1*pt1.CpCoeffs_ + molr2*pt2.CpCoeffs_,
-        molr1*pt1.hCoeffs_ + molr2*pt2.hCoeffs_,
-        molr1*pt1.sCoeffs_ + molr2*pt2.sCoeffs_
-    );
-}
-
-
-template<class EquationOfState, int PolySize>
-inline CML::hPolynomialThermo<EquationOfState, PolySize> CML::operator-
-(
-    const hPolynomialThermo<EquationOfState, PolySize>& pt1,
-    const hPolynomialThermo<EquationOfState, PolySize>& pt2
-)
-{
-    EquationOfState eofs = pt1;
-    eofs -= pt2;
-
-    scalar molr1 = pt1.nMoles()/eofs.nMoles();
-    scalar molr2 = pt2.nMoles()/eofs.nMoles();
-
-    return hPolynomialThermo<EquationOfState, PolySize>
-    (
-        eofs,
-        molr1*pt1.Hf_ - molr2*pt2.Hf_,
-        molr1*pt1.Sf_ - molr2*pt2.Sf_,
-        molr1*pt1.CpCoeffs_ - molr2*pt2.CpCoeffs_,
-        molr1*pt1.hCoeffs_ - molr2*pt2.hCoeffs_,
-        molr1*pt1.sCoeffs_ - molr2*pt2.sCoeffs_
-    );
+        return hPolynomialThermo<EquationOfState, PolySize>
+        (
+            eofs,
+            Y1*pt1.Hf_ + Y2*pt2.Hf_,
+            Y1*pt1.Sf_ + Y2*pt2.Sf_,
+            Y1*pt1.CpCoeffs_ + Y2*pt2.CpCoeffs_,
+            Y1*pt1.hCoeffs_ + Y2*pt2.hCoeffs_,
+            Y1*pt1.sCoeffs_ + Y2*pt2.sCoeffs_
+        );
+    }
 }
 
 
@@ -489,128 +477,25 @@ inline CML::hPolynomialThermo<EquationOfState, PolySize> CML::operator==
     const hPolynomialThermo<EquationOfState, PolySize>& pt2
 )
 {
-    return pt2 - pt1;
-}
-
-
-#include "IOstreams.hpp"
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class EquationOfState, int PolySize>
-CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
-(
-    Istream& is
-)
-:
-    EquationOfState(is),
-    Hf_(readScalar(is)),
-    Sf_(readScalar(is)),
-    CpCoeffs_("CpCoeffs<" + CML::name(PolySize) + '>', is),
-    hCoeffs_(),
-    sCoeffs_()
-{
-    Hf_ *= this->W();
-    Sf_ *= this->W();
-    CpCoeffs_ *= this->W();
-
-    hCoeffs_ = CpCoeffs_.integral();
-    sCoeffs_ = CpCoeffs_.integralMinus1();
-
-    // Offset h poly so that it is relative to the enthalpy at Tstd
-    hCoeffs_[0] += Hf_ - hCoeffs_.value(specie::Tstd);
-
-    // Offset s poly so that it is relative to the entropy at Tstd
-    sCoeffs_[0] += Sf_ - sCoeffs_.value(specie::Tstd);
-}
-
-
-template<class EquationOfState, int PolySize>
-CML::hPolynomialThermo<EquationOfState, PolySize>::hPolynomialThermo
-(
-    const dictionary& dict
-)
-:
-    EquationOfState(dict),
-    Hf_(readScalar(dict.subDict("thermodynamics").lookup("Hf"))),
-    Sf_(readScalar(dict.subDict("thermodynamics").lookup("Sf"))),
-    CpCoeffs_
+    EquationOfState eofs
     (
-        dict.subDict("thermodynamics").lookup
-        (
-            "CpCoeffs<" + CML::name(PolySize) + '>'
-        )
-    ),
-    hCoeffs_(),
-    sCoeffs_()
-{
-    Hf_ *= this->W();
-    Sf_ *= this->W();
-    CpCoeffs_ *= this->W();
-
-    hCoeffs_ = CpCoeffs_.integral();
-    sCoeffs_ = CpCoeffs_.integralMinus1();
-
-    // Offset h poly so that it is relative to the enthalpy at Tstd
-    hCoeffs_[0] += Hf_ - hCoeffs_.value(specie::Tstd);
-
-    // Offset s poly so that it is relative to the entropy at Tstd
-    sCoeffs_[0] += Sf_ - sCoeffs_.value(specie::Tstd);
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class EquationOfState, int PolySize>
-void CML::hPolynomialThermo<EquationOfState, PolySize>::write
-(
-    Ostream& os
-) const
-{
-    EquationOfState::write(os);
-
-    dictionary dict("thermodynamics");
-    dict.add("Hf", Hf_/this->W());
-    dict.add("Sf", Sf_/this->W());
-    dict.add
-    (
-        word("CpCoeffs<" + CML::name(PolySize) + '>'),
-        CpCoeffs_/this->W()
-    );
-    os  << indent << dict.dictName() << dict;
-}
-
-
-// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
-
-template<class EquationOfState, int PolySize>
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const hPolynomialThermo<EquationOfState, PolySize>& pt
-)
-{
-    os  << static_cast<const EquationOfState&>(pt) << tab
-        << pt.Hf_/pt.W() << tab
-        << pt.Sf_/pt.W() << tab
-        << "CpCoeffs<" << CML::name(PolySize) << '>' << tab
-        << pt.CpCoeffs_/pt.W();
-
-    os.check
-    (
-        "operator<<"
-        "("
-            "Ostream&, "
-            "const hPolynomialThermo<EquationOfState, PolySize>&"
-        ")"
+        static_cast<const EquationOfState&>(pt1)
+     == static_cast<const EquationOfState&>(pt2)
     );
 
-    return os;
+    const scalar Y1 = pt1.Y()/eofs.Y();
+    const scalar Y2 = pt2.Y()/eofs.Y();
+
+    return hPolynomialThermo<EquationOfState, PolySize>
+    (
+        eofs,
+        Y2*pt2.Hf_       - Y1*pt1.Hf_,
+        Y2*pt2.Sf_       - Y1*pt1.Sf_,
+        Y2*pt2.CpCoeffs_ - Y1*pt1.CpCoeffs_,
+        Y2*pt2.hCoeffs_  - Y1*pt1.hCoeffs_,
+        Y2*pt2.sCoeffs_  - Y1*pt1.sCoeffs_
+    );
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

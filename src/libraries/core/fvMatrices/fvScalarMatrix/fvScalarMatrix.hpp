@@ -59,13 +59,13 @@ autoPtr<fvMatrix<scalar>::fvSolver> fvMatrix<scalar>::solver
 );
 
 template<>
-lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve
+solverPerformance fvMatrix<scalar>::fvSolver::solve
 (
     const dictionary&
 );
 
 template<>
-lduMatrix::solverPerformance fvMatrix<scalar>::solve
+solverPerformance fvMatrix<scalar>::solve
 (
     const dictionary&
 );

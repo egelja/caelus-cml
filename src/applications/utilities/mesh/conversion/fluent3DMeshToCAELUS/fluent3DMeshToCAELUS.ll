@@ -146,6 +146,7 @@ rbrac                      ")"
 quote                      \"
 dash                       "-"
 dotColonDash               [.:-]
+commaPipe                  [,\|]
 
 schemeSpecialInitial       [!$%&*/\\:<=>?~_^#.@',;]
 schemeSpecialSubsequent    [.+-]
@@ -160,6 +161,7 @@ zeroLabel                  {digit}*
 signedInteger              [-+]?{integer}
 word                       ({alpha}|{digit}|{dotColonDash})*
 wordBraces                 ({word}|{lbrac}|{rbrac})*
+wordBracesExtras           ({word}|{lbrac}|{rbrac}|{commaPipe})*
 
 exponent_part              [eE][-+]?{digit}+
 fractional_constant        [-+]?(({digit}*"."{digit}+)|({digit}+".")|({digit}))
@@ -182,6 +184,8 @@ schemeSymbolList           ({schemeSymbolListElement}+{space})
 starStar                   ("**")
 text                       ({space}({word}*{space})*)
 textBraces                 ({space}({wordBraces}*{space})*)
+textExtras                 ({space}({word}*{commaPipe}{space})*)
+textBracesExtras           ({space}({wordBracesExtras}*{space})*)
 anythingInBlock            ([^)]*)
 gridgenComment             (({space}|{cspace})({word}*{space})*)
 
@@ -275,7 +279,7 @@ endOfSection               {space}")"{space}
         BEGIN(readHeader);
     }
 
-<readHeader>{quote}{textBraces}{quote} {
+<readHeader>{quote}{textBracesExtras}{quote} {
         Info<< "Reading header: " << YYText() << endl;
     }
 
@@ -729,6 +733,8 @@ endOfSection               {space}")"{space}
 <ignoreBlock,ignoreEmbeddedBlock>{space}{text} {
     }
 
+<ignoreBlock,ignoreEmbeddedBlock>{space}{textExtras} {
+    }
 
  /* ------              Count newlines.                              ------  */
 
@@ -747,7 +753,7 @@ endOfSection               {space}")"{space}
 
 <*>. {
         // This is a catch all.
-        FatalErrorIn("fluentMeshToCAELUS::lexer")
+        FatalErrorInFunction
             << "Do not understand characters: " << YYText() << nl
             << "    on line " << lineNo
             << exit(FatalError);
@@ -823,7 +829,7 @@ int main(int argc, char *argv[])
 
     if (!fluentStream)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << ": file " << fluentFile << " not found"
             << exit(FatalError);
     }
@@ -837,7 +843,7 @@ int main(int argc, char *argv[])
 
     if (dimensionOfGrid != 3)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Mesh is not 3D, dimension of grid: " << dimensionOfGrid
             << exit(FatalError);
     }
@@ -1015,7 +1021,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                WarningIn(args.executable())
+                WarningInFunction
                     << "Unknown FaceGroup " << zoneID << " not in a zone"
                     << endl;
             }
@@ -1252,7 +1258,7 @@ int main(int argc, char *argv[])
             {
                 if (!doneWarning)
                 {
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Ignoring internal face " << facei
                         << " on FaceZone " << zoneID
                         << " since owner " << owner[facei] << " or neighbour "
@@ -1303,7 +1309,7 @@ int main(int argc, char *argv[])
             {
                 if (!doneWarning)
                 {
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Ignoring patch face " << facei
                         << " on FaceZone " << zoneID
                         << " since owner " << owner[facei] << " or neighbour "
@@ -1360,7 +1366,7 @@ int main(int argc, char *argv[])
             // Check the face being added as an internal face actually is one
             if (neighbour[facei] == -1)
             {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Attempt of add internal face " << facei
                     << " which is a boundary face"
                     << exit(FatalError);
@@ -1370,7 +1376,7 @@ int main(int argc, char *argv[])
             {
                 if (!doneWarning)
                 {
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Ignoring internal face " << facei
                         << " since owner " << owner[facei] << " or neighbour "
                         << neighbour[facei] << " outside range of cells 0.."

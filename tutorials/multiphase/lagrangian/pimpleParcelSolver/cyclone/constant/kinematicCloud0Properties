@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -107,6 +107,9 @@ subModels
 
     // Wall interaction model
     patchInteractionModel standardWallInteraction;
+
+    // StochasticCollision model
+    stochasticCollisionModel none;
 
     // Surface film
     surfaceFilmModel none;

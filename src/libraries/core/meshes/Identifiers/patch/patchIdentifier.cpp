@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +21,7 @@ License
 
 #include "patchIdentifier.hpp"
 #include "dictionary.hpp"
+#include "ListOps.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -28,12 +29,14 @@ CML::patchIdentifier::patchIdentifier
 (
     const word& name,
     const label index,
-    const word& physicalType
+    const word& physicalType,
+    const wordList& inGroups
 )
 :
     name_(name),
     index_(index),
-    physicalType_(physicalType)
+    physicalType_(physicalType),
+    inGroups_(inGroups)
 {}
 
 
@@ -48,6 +51,7 @@ CML::patchIdentifier::patchIdentifier
     index_(index)
 {
     dict.readIfPresent("physicalType", physicalType_);
+    dict.readIfPresent("inGroups", inGroups_);
 }
 
 
@@ -59,7 +63,8 @@ CML::patchIdentifier::patchIdentifier
 :
     name_(p.name_),
     index_(index),
-    physicalType_(p.physicalType_)
+    physicalType_(p.physicalType_),
+    inGroups_(p.inGroups_)
 {}
 
 
@@ -71,11 +76,22 @@ CML::patchIdentifier::~patchIdentifier()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+bool CML::patchIdentifier::inGroup(const word& name) const
+{
+    return findIndex(inGroups_, name) != -1;
+}
+
+
 void CML::patchIdentifier::write(Ostream& os) const
 {
     if (physicalType_.size())
     {
         os.writeKeyword("physicalType") << physicalType_
+            << token::END_STATEMENT << nl;
+    }
+    if (inGroups_.size())
+    {
+        os.writeKeyword("inGroups") << inGroups_
             << token::END_STATEMENT << nl;
     }
 }

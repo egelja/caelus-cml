@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,9 +44,12 @@ namespace CML
 {
 
 // Forward declaration of friend functions
+
 class forceSuSp;
+
 inline forceSuSp operator+(const forceSuSp& susp1, const forceSuSp& susp2);
-inline forceSuSp operator*(const forceSuSp& susp, const scalar s);
+inline forceSuSp operator*(const scalar s, const forceSuSp& susp);
+
 
 /*---------------------------------------------------------------------------*\
                           Class forceSuSp Declaration

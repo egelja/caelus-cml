@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,6 +41,13 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class ensightParts;
+
+ensightGeoFile& operator<<(ensightGeoFile&, const ensightParts&);
+
 
 /*---------------------------------------------------------------------------*\
                        Class ensightParts Declaration

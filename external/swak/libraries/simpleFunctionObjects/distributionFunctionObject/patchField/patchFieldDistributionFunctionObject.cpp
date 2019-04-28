@@ -79,7 +79,7 @@ patchFieldDistributionFunctionObject::patchFieldDistributionFunctionObject
         const word &name=patchNames_[i];
         patchIDs_[i]=mesh.boundaryMesh().findPatchID(name);
         if(patchIDs_[i]<0) {
-            FatalErrorIn("patchFieldDistributionFunctionObject::patchFieldDistributionFunctionObject")
+            FatalErrorInFunction
                 << "Patch name " << name << " is not a valid patch"
                     << endl
                     << exit(FatalError);

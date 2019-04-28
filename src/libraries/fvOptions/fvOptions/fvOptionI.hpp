@@ -132,7 +132,7 @@ inline const CML::meshToMesh& CML::fv::option::meshInterp() const
 {
     if (!meshInterpPtr_.valid())
     {
-        FatalErrorIn("const meshToMesh& meshInterp() const")
+        FatalErrorInFunction
             << "Interpolation object not set"
             << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -58,11 +58,8 @@ void CML::normalToFace::setNormal()
 
     if (tol_ < -1 || tol_ > 1)
     {
-        FatalErrorIn
-        (
-            "normalToFace::normalToFace(const polyMesh&, const vector&"
-            ", const scalar)"
-        )   << "tolerance not within range -1..1 : " << tol_
+        FatalErrorInFunction
+            << "tolerance not within range -1..1 : " << tol_
             << exit(FatalError);
     }
 }

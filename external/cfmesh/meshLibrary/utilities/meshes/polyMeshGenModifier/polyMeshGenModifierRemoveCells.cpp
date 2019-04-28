@@ -50,10 +50,8 @@ void polyMeshGenModifier::removeCells
     {
         Info << "Size of cells " << cells.size() << endl;
         Info << "Size of list for removal " << removeCell.size() << endl;
-        FatalErrorIn
-        (
-            "void polyMeshGenModifier::removeCells(const boolList& removeCell)"
-        ) << "Incorrect number of entries in removeCell list!"
+        FatalErrorInFunction
+            << "Incorrect number of entries in removeCell list!"
             << abort(FatalError);
     }
 

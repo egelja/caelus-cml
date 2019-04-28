@@ -30,11 +30,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeSprayParcelAtomizationModels(CloudType)                           \
-                                                                              \
-    makeAtomizationModel(CloudType);                                          \
-    makeAtomizationModelType(NoAtomization, CloudType);                       \
-    makeAtomizationModelType(BlobsSheetAtomization, CloudType);               \
+#define makeSprayParcelAtomizationModels(CloudType)                            \
+                                                                               \
+    makeAtomizationModel(CloudType);                                           \
+    makeAtomizationModelType(NoAtomization, CloudType);                        \
+    makeAtomizationModelType(BlobsSheetAtomization, CloudType);                \
     makeAtomizationModelType(LISAAtomization, CloudType);
 
 

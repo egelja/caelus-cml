@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014-2016 V. Vukcevic
 Copyright (C) 2015 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -455,14 +456,8 @@ void fvBlockMatrix<Type>::insertUpperLower
     }
     else
     {
-        FatalErrorIn
-        (
-            "void fvBlockMatrix<Type, matrixType>::insertUpperLower\n"
-            "(\n"
-            "    const direction dir,\n"
-            "    const fvMatrix<matrixType>& matrix\n"
-            ")"
-        )   << "Error in matrix insertion: problem with block structure."
+        FatalErrorInFunction
+            << "Error in matrix insertion: problem with block structure."
             << abort(FatalError);
     }
 
@@ -626,32 +621,16 @@ void fvBlockMatrix<Type>::insertBlock
 
         if (blockMatrixSize > blockMatrixASize)
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type>::insertBlock\n"
-                "(\n"
-                "    const direction dirI,\n"
-                "    const direction dirJ,\n"
-                "    BlockLduSystem<blockType, fieldType>& blockSystem,\n"
-                "    const bool incrementColumnDir\n"
-                ")"
-            )   << "Trying to insert a block matrix from BlockLduSystem into "
+            FatalErrorInFunction
+                << "Trying to insert a block matrix from BlockLduSystem into "
                 << "smaller one from fvBlockMatrix."
                 << abort(FatalError);
         }
 
         if (dirI == dirJ)
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type>::insertBlock\n"
-                "(\n"
-                "    const direction dirI,\n"
-                "    const direction dirJ,\n"
-                "    BlockLduSystem<blockType, fieldType>& blockSystem,\n"
-                "    const bool incrementColumnDir\n"
-                ")"
-            )   << "Trying to insert coupling in the position where equation "
+            FatalErrorInFunction
+                << "Trying to insert coupling in the position where equation "
                 << "should be, since dirI = dirJ. Try using insertEquation "
                 << "member function."
                 << abort(FatalError);
@@ -904,15 +883,8 @@ void fvBlockMatrix<Type>::insertCouplingUpperLower
     }
     else
     {
-        FatalErrorIn
-        (
-            "void fvBlockMatrix<Type>::insertCouplingUpperLower\n"
-            "(\n"
-            "    const direction dirI,\n"
-            "    const direction dirJ,\n"
-            "    const fvScalarMatrix& m\n"
-            ")"
-        )   << "Error in matrix insertion: problem with block structure."
+        FatalErrorInFunction
+            << "Error in matrix insertion: problem with block structure."
             << abort(FatalError);
     }
 
@@ -1120,15 +1092,8 @@ void fvBlockMatrix<Type>::insertAdjointConvection
 
         if (nCmpts > blockMatrixSize)
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type>::insertAdjointConvection\n"
-                "(\n"
-                "    const direction UEqnDir,\n"
-                "    const volVectorField& U,\n"
-                "    const volVectorField& UStar\n"
-                ")"
-            )   << "Trying to insert adjoint convection term into smaller "
+            FatalErrorInFunction
+                << "Trying to insert adjoint convection term into smaller "
                 << "fvBlockMatrix. Do you have momentum equation?"
                 << abort(FatalError);
         }
@@ -1268,16 +1233,8 @@ void fvBlockMatrix<Type>::insertAdjointConvection
         }
         else
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type, matrixType>"
-                "::insertAdjointConvection\n"
-                "(\n"
-                "    const direction UEqnDir,\n"
-                "    const volVectorField& U,\n"
-                "    const volVectorField& UStar\n"
-                ")"
-            )   << "Patch does not fix value, nor doesn't fix value nor is"
+            FatalErrorInFunction
+                << "Patch does not fix value, nor doesn't fix value nor is"
                 << " coupled."
                 << abort(FatalError);
         }
@@ -1385,15 +1342,8 @@ void fvBlockMatrix<Type>::insertPicardTensor
 
         if (nCmpts > blockMatrixSize)
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type>::insertPicardTensor\n"
-                "(\n"
-                "    const direction UEqnDir,\n"
-                "    const volVectorField& U,\n"
-                "    const surfaceScalarField& phi\n"
-                ")"
-            )   << "Trying to insert Picard tensor term into smaller "
+            FatalErrorInFunction
+                << "Trying to insert Picard tensor term into smaller "
                 << "fvBlockMatrix. Do you have momentum equation?"
                 << abort(FatalError);
         }
@@ -1485,15 +1435,8 @@ void fvBlockMatrix<Type>::insertPicardTensor
         }
         else
         {
-            FatalErrorIn
-            (
-                "void fvBlockMatrix<Type, matrixType>::insertPicardTensor\n"
-                "(\n"
-                "    const direction UEqnDir,\n"
-                "    const volVectorField& U,\n"
-                "    const surfaceScalarField& phi\n"
-                ")"
-            )   << "Patch does not fix value, nor doesn't fix value nor is"
+            FatalErrorInFunction
+                << "Patch does not fix value, nor doesn't fix value nor is"
                 << " coupled."
                 << abort(FatalError);
         }
@@ -1648,11 +1591,8 @@ void fvBlockMatrix<Type>::operator=
 {
     if (this == &bxs)
     {
-        FatalErrorIn
-        (
-            "void fvBlockMatrix<Type>::operator="
-            "(const fvBlockMatrix<Type>& bs)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 

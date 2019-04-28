@@ -80,7 +80,7 @@ CML::autoPtr<CML::profileModel> CML::profileModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn("profileModel::New(const dictionary&)")
+        FatalErrorInFunction
             << "Unknown profile model type " << modelType
             << nl << nl
             << "Valid model types are :" << nl

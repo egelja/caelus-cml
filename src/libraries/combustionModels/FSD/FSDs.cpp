@@ -22,17 +22,71 @@ License
 #include "makeCombustionTypes.hpp"
 
 #include "thermoPhysicsTypes.hpp"
-#include "psiCombustionModel.hpp"
+#include "psiReactionThermo.hpp"
+#include "rhoReactionThermo.hpp"
 #include "FSD.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+namespace CML
+{
+
+// Combustion models based on sensibleEnthalpy
 makeCombustionTypesThermo
 (
     FSD,
-    psiCombustionModel,
-    gasThermoPhysics
+    psiReactionThermo,
+    gasHThermoPhysics
 );
 
+makeCombustionTypesThermo
+(
+    FSD,
+    psiReactionThermo,
+    constGasHThermoPhysics
+);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+makeCombustionTypesThermo
+(
+    FSD,
+    rhoReactionThermo,
+    gasHThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    FSD,
+    rhoReactionThermo,
+    constGasHThermoPhysics
+);
+
+// Combustion models based on sensibleInternalEnergy
+makeCombustionTypesThermo
+(
+    FSD,
+    psiReactionThermo,
+    gasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    FSD,
+    psiReactionThermo,
+    constGasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    FSD,
+    rhoReactionThermo,
+    gasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    FSD,
+    rhoReactionThermo,
+    constGasEThermoPhysics
+);
+
+}

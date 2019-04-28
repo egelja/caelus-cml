@@ -72,10 +72,8 @@ bool CML::layerAdditionRemoval::setLayerPairing() const
     // the master patch
     if (pointsPairingPtr_ || facesPairingPtr_)
     {
-        FatalErrorIn
-        (
-            "void CML::layerAdditionRemoval::setLayerPairing() const"
-        )   << "Problem with layer pairing data"
+        FatalErrorInFunction
+            << "Problem with layer pairing data"
             << abort(FatalError);
     }
 
@@ -175,10 +173,8 @@ const CML::labelList& CML::layerAdditionRemoval::pointsPairing() const
 {
     if (!pointsPairingPtr_)
     {
-        FatalErrorIn
-        (
-            "const labelList& layerAdditionRemoval::pointsPairing() const"
-        )   << "Problem with layer pairing data for object " << name()
+        FatalErrorInFunction
+            << "Problem with layer pairing data for object " << name()
             << abort(FatalError);
     }
 
@@ -189,10 +185,8 @@ const CML::labelList& CML::layerAdditionRemoval::facesPairing() const
 {
     if (!facesPairingPtr_)
     {
-        FatalErrorIn
-        (
-            "const labelList& layerAdditionRemoval::facesPairing() const"
-        )   << "Problem with layer pairing data for object " << name()
+        FatalErrorInFunction
+            << "Problem with layer pairing data for object " << name()
             << abort(FatalError);
     }
 

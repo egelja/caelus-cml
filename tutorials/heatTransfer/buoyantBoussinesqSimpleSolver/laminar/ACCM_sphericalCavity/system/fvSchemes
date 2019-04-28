@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -56,8 +56,3 @@ snGradschemes
     default         corrected;
 }
 
-fluxRequired
-{
-    default         no;
-    p_rgh;
-}

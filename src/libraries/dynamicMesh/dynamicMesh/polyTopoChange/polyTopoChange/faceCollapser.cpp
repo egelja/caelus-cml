@@ -75,7 +75,7 @@ CML::label CML::faceCollapser::findEdge
         }
     }
 
-    FatalErrorIn("findEdge") << "Cannot find edge between vertices " << v0
+    FatalErrorInFunction << "Cannot find edge between vertices " << v0
         << " and " << v1 << " in edge labels " << edgeLabels
         << abort(FatalError);
 
@@ -370,7 +370,7 @@ void CML::faceCollapser::setRefinement
             OFstream str("conflictingFace.obj");
             meshTools::writeOBJ(str, faceList(1, f), points);
 
-            FatalErrorIn("faceCollapser::setRefinement")
+            FatalErrorInFunction
                 << "Trying to collapse face:" << faceI << " vertices:" << f
                 << " to edges between vertices " << f[fpA] << " and "
                 << f[fpB] << " but " << f[fpB] << " does not seem to be the"

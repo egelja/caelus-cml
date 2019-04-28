@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,11 +77,8 @@ CML::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 {
     if (undisplacedPoints_.size() != nPoints())
     {
-        FatalIOErrorIn
-        (
-            "solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject&)",
-            dynamicMeshCoeffs_
-        )   << "Read " << undisplacedPoints_.size()
+        FatalIOErrorInFunction(dynamicMeshCoeffs_)
+            << "Read " << undisplacedPoints_.size()
             << " undisplaced points from " << undisplacedPoints_.objectPath()
             << " but the current mesh has " << nPoints()
             << exit(FatalIOError);
@@ -95,11 +92,7 @@ CML::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 
     if ((cellZoneName != "none") && (cellSetName != "none"))
     {
-        FatalIOErrorIn
-        (
-            "solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject&)",
-            dynamicMeshCoeffs_
-        )
+        FatalIOErrorInFunction(dynamicMeshCoeffs_)
             << "Either cellZone OR cellSet can be supplied, but not both. "
             << "If neither is supplied, all cells will be included"
             << exit(FatalIOError);
@@ -116,10 +109,7 @@ CML::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 
         if (zoneID == -1)
         {
-            FatalErrorIn
-            (
-                "solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject&)"
-            )
+            FatalErrorInFunction
                 << "Unable to find cellZone " << cellZoneName
                 << ".  Valid celLZones are:"
                 << cellZones().names()
@@ -231,7 +221,7 @@ bool CML::solidBodyMotionFvMesh::update()
     {
         hasWarned = true;
 
-        WarningIn("solidBodyMotionFvMesh::update()")
+        WarningInFunction
             << "Did not find volVectorField " << UName_
             << " Not updating " << UName_ << "boundary conditions."
             << endl;

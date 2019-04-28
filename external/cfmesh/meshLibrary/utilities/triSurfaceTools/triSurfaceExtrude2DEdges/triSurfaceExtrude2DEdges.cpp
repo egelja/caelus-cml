@@ -58,10 +58,8 @@ void triSurfaceExtrude2DEdges::extrudeSurface(triSurf& newSurf) const
     const boundBox bb(sPoints);
 
     if( CML::mag(bb.max().z() - bb.min().z()) > SMALL )
-        FatalErrorIn
-        (
-            "void triSurfaceExtrude2DEdges::extrudeSurface(triSurf&) const"
-        ) << "Cannot extrude edges which are not in the x-y plane!"
+        FatalErrorInFunction
+          << "Cannot extrude edges which are not in the x-y plane!"
           << exit(FatalError);
 
     //- copy points

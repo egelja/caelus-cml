@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,14 +56,14 @@ CML::PstreamBuffers::PstreamBuffers
 CML::PstreamBuffers::~PstreamBuffers()
 {
     // Check that all data has been consumed.
-    forAll(recvBufPos_, procI)
+    forAll(recvBufPos_, proci)
     {
-        if (recvBufPos_[procI] < recvBuf_[procI].size())
+        if (recvBufPos_[proci] < recvBuf_[proci].size())
         {
-            FatalErrorIn("PstreamBuffers::~PstreamBuffers()")
-                << "Message from processor " << procI
-                << " not fully consumed. messageSize:" << recvBuf_[procI].size()
-                << " bytes of which only " << recvBufPos_[procI]
+            FatalErrorInFunction
+                << "Message from processor " << proci
+                << " not fully consumed. messageSize:" << recvBuf_[proci].size()
+                << " bytes of which only " << recvBufPos_[proci]
                 << " consumed."
                 << CML::abort(FatalError);
         }
@@ -79,12 +79,10 @@ void CML::PstreamBuffers::finishedSends(const bool block)
 
     if (commsType_ == UPstream::nonBlocking)
     {
-        labelListList sizes;
         Pstream::exchange<DynamicList<char>, char>
         (
             sendBuf_,
             recvBuf_,
-            sizes,
             tag_,
             block
         );
@@ -92,47 +90,33 @@ void CML::PstreamBuffers::finishedSends(const bool block)
 }
 
 
-void CML::PstreamBuffers::finishedSends(labelListList& sizes, const bool block)
+void CML::PstreamBuffers::finishedSends(labelList& recvSizes, const bool block)
 {
     finishedSendsCalled_ = true;
 
     if (commsType_ == UPstream::nonBlocking)
     {
+        Pstream::exchangeSizes(sendBuf_, recvSizes);
+
         Pstream::exchange<DynamicList<char>, char>
         (
             sendBuf_,
+            recvSizes,
             recvBuf_,
-            sizes,
             tag_,
             block
         );
     }
     else
     {
-        FatalErrorIn
-        (
-            "PstreamBuffers::finishedSends(labelListList&, const bool)"
-        )   << "Obtaining sizes not supported in "
+        FatalErrorInFunction
+            << "Obtaining sizes not supported in "
             << UPstream::commsTypeNames[commsType_] << endl
             << " since transfers already in progress. Use non-blocking instead."
             << exit(FatalError);
 
-        // Note: possible only if using different tag from write started
+        // Note: maybe possible only if using different tag from write started
         // by ~UOPstream. Needs some work.
-        //sizes.setSize(UPstream::nProcs());
-        //labelList& nsTransPs = sizes[UPstream::myProcNo()];
-        //nsTransPs.setSize(UPstream::nProcs());
-        //
-        //forAll(sendBuf_, procI)
-        //{
-        //    nsTransPs[procI] = sendBuf_[procI].size();
-        //}
-        //
-        //// Send sizes across.
-        //int oldTag = UPstream::msgType();
-        //UPstream::msgType() = tag_;
-        //combineReduce(sizes, UPstream::listEq());
-        //UPstream::msgType() = oldTag;
     }
 }
 

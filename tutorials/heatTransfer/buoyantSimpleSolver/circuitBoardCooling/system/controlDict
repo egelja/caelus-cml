@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -25,15 +25,15 @@ deltaT          1;
 
 writeControl    timeStep;
 
-writeInterval   50;
+writeInterval   500;
 
-purgeWrite      3;
+purgeWrite      0;
 
 writeFormat     ascii;
 
 writePrecision  6;
 
-writeCompression true;
+writeCompression off;
 
 timeFormat      general;
 
@@ -41,6 +41,6 @@ timePrecision   6;
 
 runTimeModifiable true;
 
-libs ("libthermoBaffleModels.so");
+libs            ("libthermalBaffleModels.so");
 
 // ************************************************************************* //

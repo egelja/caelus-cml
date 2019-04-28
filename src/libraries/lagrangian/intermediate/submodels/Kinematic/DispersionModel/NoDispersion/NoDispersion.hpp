@@ -57,10 +57,10 @@ public:
         NoDispersion(const dictionary& dict, CloudType& owner);
 
         //- Construct copy
-        NoDispersion(NoDispersion<CloudType>& dm);
+        NoDispersion(const NoDispersion<CloudType>& dm);
 
         //- Construct and return a clone
-        virtual autoPtr<DispersionModel<CloudType> > clone()
+        virtual autoPtr<DispersionModel<CloudType> > clone() const
         {
             return autoPtr<DispersionModel<CloudType> >
             (
@@ -82,7 +82,7 @@ public:
         virtual vector update
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const vector& U,
             const vector& Uc,
             vector& UTurb,
@@ -105,7 +105,7 @@ CML::NoDispersion<CloudType>::NoDispersion(const dictionary&, CloudType& owner)
 
 
 template<class CloudType>
-CML::NoDispersion<CloudType>::NoDispersion(NoDispersion<CloudType>& dm)
+CML::NoDispersion<CloudType>::NoDispersion(const NoDispersion<CloudType>& dm)
 :
     DispersionModel<CloudType>(dm.owner_)
 {}
@@ -138,7 +138,6 @@ CML::vector CML::NoDispersion<CloudType>::update
     scalar&
 )
 {
-    // Do nothing
     return Uc;
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -657,12 +657,8 @@ PatchEdgeFaceWave
 
     if (allEdgeInfo_.size() != patch_.nEdges())
     {
-        FatalErrorIn
-        (
-            "PatchEdgeFaceWave<Type, TrackingData>::PatchEdgeFaceWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "size of edgeInfo work array is not equal to the number"
+        FatalErrorInFunction
+            << "size of edgeInfo work array is not equal to the number"
             << " of edges in the patch" << endl
             << "    edgeInfo   :" << allEdgeInfo_.size() << endl
             << "    patch.nEdges:" << patch_.nEdges()
@@ -670,12 +666,8 @@ PatchEdgeFaceWave
     }
     if (allFaceInfo_.size() != patch_.size())
     {
-        FatalErrorIn
-        (
-            "PatchEdgeFaceWave<Type, TrackingData>::PatchEdgeFaceWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "size of edgeInfo work array is not equal to the number"
+        FatalErrorInFunction
+            << "size of edgeInfo work array is not equal to the number"
             << " of faces in the patch" << endl
             << "    faceInfo   :" << allFaceInfo_.size() << endl
             << "    patch.size:" << patch_.size()
@@ -696,12 +688,8 @@ PatchEdgeFaceWave
 
     if ((maxIter > 0) && (iter >= maxIter))
     {
-        FatalErrorIn
-        (
-            "PatchEdgeFaceWave<Type, TrackingData>::PatchEdgeFaceWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "Maximum number of iterations reached. Increase maxIter." << endl
+        FatalErrorInFunction
+            << "Maximum number of iterations reached. Increase maxIter." << endl
             << "    maxIter:" << maxIter << endl
             << "    changedEdges:" << changedEdges_.size() << endl
             << "    changedFaces:" << changedFaces_.size() << endl
@@ -840,7 +828,7 @@ faceToEdge()
 
         if (!changedFace_[faceI])
         {
-            FatalErrorIn("PatchEdgeFaceWave<Type, TrackingData>::faceToEdge()")
+            FatalErrorInFunction
                 << "face " << faceI
                 << " not marked as having been changed" << nl
                 << "This might be caused by multiple occurrences of the same"
@@ -905,7 +893,7 @@ edgeToFace()
 
         if (!changedEdge_[edgeI])
         {
-            FatalErrorIn("PatchEdgeFaceWave<Type, TrackingData>::edgeToFace()")
+            FatalErrorInFunction
                 << "edge " << edgeI
                 << " not marked as having been changed" << nl
                 << "This might be caused by multiple occurrences of the same"

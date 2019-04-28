@@ -136,11 +136,11 @@ void CML::displacementSBRStressFvMotionSolver::solve()
         (
             Df
            *(
+               fvc::dotInterpolate
                (
-                   cellDisplacement_.mesh().Sf()
-                 & fvc::interpolate(gradCd.T() - gradCd)
+                   cellDisplacement_.mesh().Sf(),
+                   gradCd.T() - gradCd
                )
-
                // Solid-body rotation "lambda" term
              - cellDisplacement_.mesh().Sf()*fvc::interpolate(tr(gradCd))
             )
@@ -181,7 +181,7 @@ void CML::displacementSBRStressFvMotionSolver::updateMesh
 
     // Update diffusivity. Note two stage to make sure old one is de-registered
     // before creating/registering new one.
-    diffusivityPtr_.reset(NULL);
+    diffusivityPtr_.reset(nullptr);
     diffusivityPtr_ = motionDiffusivity::New
     (
         fvMesh_,

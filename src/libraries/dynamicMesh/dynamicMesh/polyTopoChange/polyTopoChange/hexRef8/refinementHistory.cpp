@@ -106,7 +106,7 @@ void CML::refinementHistory::writeDebug
 CML::refinementHistory::splitCell8::splitCell8()
 :
     parent_(-1),
-    addedCellsPtr_(NULL)
+    addedCellsPtr_(nullptr)
 {}
 
 
@@ -114,7 +114,7 @@ CML::refinementHistory::splitCell8::splitCell8()
 CML::refinementHistory::splitCell8::splitCell8(const label parent)
 :
     parent_(parent),
-    addedCellsPtr_(NULL)
+    addedCellsPtr_(nullptr)
 {}
 
 
@@ -133,7 +133,7 @@ CML::refinementHistory::splitCell8::splitCell8(const splitCell8& sc)
     (
         sc.addedCellsPtr_.valid()
       ? new FixedList<label, 8>(sc.addedCellsPtr_())
-      : NULL
+      : nullptr
     )
 {}
 
@@ -148,7 +148,7 @@ void CML::refinementHistory::splitCell8::operator=(const splitCell8& s)
     // Check for assignment to self
     if (this == &s)
     {
-        FatalErrorIn("refinementHistory::splitCell8::operator=(const splitCell8&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }
@@ -159,7 +159,7 @@ void CML::refinementHistory::splitCell8::operator=(const splitCell8& s)
     (
         s.addedCellsPtr_.valid()
       ? new FixedList<label, 8>(s.addedCellsPtr_())
-      : NULL
+      : nullptr
     );
 }
 
@@ -205,7 +205,7 @@ CML::Istream& CML::operator>>(Istream& is, refinementHistory::splitCell8& sc)
     }
     else
     {
-        sc.addedCellsPtr_.reset(NULL);
+        sc.addedCellsPtr_.reset(nullptr);
     }
 
     return is;
@@ -245,7 +245,7 @@ void CML::refinementHistory::checkIndices() const
     {
         if (visibleCells_[i] < 0 && visibleCells_[i] >= splitCells_.size())
         {
-            FatalErrorIn("refinementHistory::checkIndices() const")
+            FatalErrorInFunction
                 << "Illegal entry " << visibleCells_[i]
                 << " in visibleCells at location" << i << nl
                 << "It points outside the range of splitCells : 0.."
@@ -318,7 +318,7 @@ void CML::refinementHistory::freeSplitCell(const label index)
 
             if (myPos == -1)
             {
-                FatalErrorIn("refinementHistory::freeSplitCell")
+                FatalErrorInFunction
                     << "Problem: cannot find myself in"
                     << " parents' children" << abort(FatalError);
             }
@@ -564,10 +564,8 @@ CML::refinementHistory::refinementHistory(const IOobject& io)
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "refinementHistory::refinementHistory(const IOobject&)"
-        )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+        WarningInFunction
+            << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
             << " does not support automatic rereading."
             << endl;
     }
@@ -618,11 +616,8 @@ CML::refinementHistory::refinementHistory
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "refinementHistory::refinementHistory"
-            "(const IOobject&, const List<splitCell8>&, const labelList&)"
-        )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+        WarningInFunction
+            << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
             << " does not support automatic rereading."
             << endl;
     }
@@ -667,11 +662,8 @@ CML::refinementHistory::refinementHistory
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "refinementHistory::refinementHistory"
-            "(const IOobject&, const label)"
-        )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+        WarningInFunction
+            << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
             << " does not support automatic rereading."
             << endl;
     }
@@ -731,11 +723,8 @@ CML::refinementHistory::refinementHistory
     // Warn for MUST_READ_IF_MODIFIED
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "refinementHistory::refinementHistory"
-            "(const IOobject&, const label, const bool)"
-        )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+        WarningInFunction
+            << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
             << " does not support automatic rereading."
             << endl;
     }
@@ -816,12 +805,8 @@ CML::refinementHistory::refinementHistory
      || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
     )
     {
-        WarningIn
-        (
-            "refinementHistory::refinementHistory"
-            "(const IOobject&, const UPtrList<const labelList>&,"
-            " const UPtrList<const refinementHistory>&)"
-        )   << "read option IOobject::MUST_READ, READ_IF_PRESENT or "
+        WarningInFunction
+            << "read option IOobject::MUST_READ, READ_IF_PRESENT or "
             << "MUST_READ_IF_MODIFIED"
             << " suggests that a read constructor would be more appropriate."
             << endl;
@@ -1164,10 +1149,8 @@ void CML::refinementHistory::updateMesh(const mapPolyMesh& map)
                 // Check not already set
                 if (splitCells_[index].addedCellsPtr_.valid())
                 {
-                    FatalErrorIn
-                    (
-                        "refinementHistory::updateMesh(const mapPolyMesh&)"
-                    )   << "Problem" << abort(FatalError);
+                    FatalErrorInFunction
+                        << "Problem" << abort(FatalError);
                 }
 
                 label newCelli = reverseCellMap[celli];
@@ -1213,11 +1196,8 @@ void CML::refinementHistory::subset
             // Check that cell is live (so its parent has no refinement)
             if (index >= 0 && splitCells_[index].addedCellsPtr_.valid())
             {
-                FatalErrorIn
-                (
-                    "refinementHistory::subset"
-                    "(const labelList&, const labelList&, const labelList&)"
-                )   << "Problem" << abort(FatalError);
+                FatalErrorInFunction
+                    << "Problem" << abort(FatalError);
             }
 
             newVisibleCells[celli] = index;
@@ -1282,10 +1262,8 @@ void CML::refinementHistory::distribute(const mapDistributePolyMesh& map)
 {
     if (!active())
     {
-        FatalErrorIn
-        (
-            "refinementHistory::distribute(const mapDistributePolyMesh&)"
-        )   << "Calling distribute on inactive history" << abort(FatalError);
+        FatalErrorInFunction
+            << "Calling distribute on inactive history" << abort(FatalError);
     }
 
 
@@ -1547,7 +1525,7 @@ void CML::refinementHistory::compact()
 
             if (splitCells_[index].parent_ != -2)
             {
-                FatalErrorIn("refinementHistory::compact()")
+                FatalErrorInFunction
                     << "Problem index:" << index
                     << abort(FatalError);
             }
@@ -1562,7 +1540,7 @@ void CML::refinementHistory::compact()
              && splitCells_[visibleCells_[celli]].parent_ == -2
             )
             {
-                FatalErrorIn("refinementHistory::compact()")
+                FatalErrorInFunction
                     << "Problem : visible cell:" << celli
                     << " is marked as being free." << abort(FatalError);
             }
@@ -1749,7 +1727,7 @@ void CML::refinementHistory::combineCells
     }
 
     splitCell8& parentSplit = splitCells_[parentIndex];
-    parentSplit.addedCellsPtr_.reset(NULL);
+    parentSplit.addedCellsPtr_.reset(nullptr);
     visibleCells_[masterCelli] = parentIndex;
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -51,7 +51,7 @@ Istream& operator>>(Istream& is, cellShape& s)
         }
         else
         {
-            FatalIOErrorIn("operator>>(Istream&, cellShape& s)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected '(', found "
                 << t.info()
                 << exit(FatalIOError);
@@ -69,7 +69,7 @@ Istream& operator>>(Istream& is, cellShape& s)
     }
     else
     {
-        FatalIOErrorIn("operator>>(Istream& is, cellShape& s)", is)
+        FatalIOErrorInFunction(is)
             << "Bad type of token for cellShape symbol " << t.info()
             << exit(FatalIOError);
         return is;
@@ -78,7 +78,7 @@ Istream& operator>>(Istream& is, cellShape& s)
     // Check that a model was found
     if (!s.m)
     {
-        FatalIOErrorIn("operator>>(Istream& is, cellShape& s)", is)
+        FatalIOErrorInFunction(is)
             << "CellShape has unknown model " << t.info()
             << exit(FatalIOError);
         return is;

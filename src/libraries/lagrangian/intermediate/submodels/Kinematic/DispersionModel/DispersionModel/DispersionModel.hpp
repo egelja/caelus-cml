@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -82,16 +82,10 @@ public:
         );
 
         //- Construct copy
-        DispersionModel(DispersionModel<CloudType>& dm);
+        DispersionModel(const DispersionModel<CloudType>& dm);
 
         //- Construct and return a clone
-        virtual autoPtr<DispersionModel<CloudType> > clone()
-        {
-            return autoPtr<DispersionModel<CloudType> >
-            (
-                new DispersionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<DispersionModel<CloudType>> clone() const = 0;
 
 
     //- Destructor
@@ -112,12 +106,12 @@ public:
         virtual vector update
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const vector& U,
             const vector& Uc,
             vector& UTurb,
             scalar& tTurb
-        );
+        ) = 0;
 };
 
 
@@ -127,24 +121,25 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeDispersionModel(CloudType)                                        \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineTemplateTypeNameAndDebug(DispersionModel<kinematicCloudType>, 0);   \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        DispersionModel<kinematicCloudType>,                                  \
-        dictionary                                                            \
+#define makeDispersionModel(CloudType)                                         \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineTemplateTypeNameAndDebug                                             \
+        (DispersionModel<kinematicCloudType>, 0);                              \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        DispersionModel<kinematicCloudType>,                                   \
+        dictionary                                                             \
     );
 
-
-#define makeDispersionModelType(SS, CloudType)                                \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);           \
-                                                                              \
-    DispersionModel<kinematicCloudType>::                                     \
-        adddictionaryConstructorToTable<SS<kinematicCloudType> >              \
+#define makeDispersionModelType(SS, CloudType)                                 \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);            \
+                                                                               \
+    DispersionModel<kinematicCloudType>::                                      \
+        adddictionaryConstructorToTable<SS<kinematicCloudType> >               \
             add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
 
 
@@ -172,7 +167,7 @@ CML::DispersionModel<CloudType>::DispersionModel
 template<class CloudType>
 CML::DispersionModel<CloudType>::DispersionModel
 (
-    DispersionModel<CloudType>& dm
+    const DispersionModel<CloudType>& dm
 )
 :
     CloudSubModelBase<CloudType>(dm)
@@ -199,18 +194,7 @@ CML::vector CML::DispersionModel<CloudType>::update
     scalar&
 )
 {
-    notImplemented
-    (
-        "CML::vector CML::DispersionModel<CloudType>::update"
-        "("
-            "const scalar, "
-            "const label, "
-            "const vector&, "
-            "const vector&, "
-            "vector&, "
-            "scalar&"
-        ")"
-    );
+    NotImplemented;
 
     return Uc;
 }
@@ -235,14 +219,8 @@ CML::DispersionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "DispersionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown dispersion model type "
+        FatalErrorInFunction
+            << "Unknown dispersion model type "
             << modelType << nl << nl
             << "Valid dispersion model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

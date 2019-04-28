@@ -25,6 +25,13 @@ License
 #include "label.hpp"
 #include "products.hpp"
 
+#ifdef windows 
+#if defined(__STRICT_ANSI__)
+#undef __STRICT_ANSI__
+#define REDEFINE_SA__
+#endif
+#endif
+
 #include <cmath>
 
 #ifdef darwin
@@ -50,6 +57,8 @@ License
     inline float ynf(const int n, const float s) { return float(yn(n, double(s))); }	
     #endif
 #endif 
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML

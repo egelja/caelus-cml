@@ -211,4 +211,23 @@ inline bool CML::pointData::updateEdge
 }
 
 
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+inline bool CML::pointData::operator==(const CML::pointData& rhs)
+const
+{
+    return
+        pointEdgePoint::operator==(rhs)
+     && (s() == rhs.s())
+     && (v() == rhs.v());
+}
+
+
+inline bool CML::pointData::operator!=(const CML::pointData& rhs)
+const
+{
+    return !(*this == rhs);
+}
+
+
 // ************************************************************************* //

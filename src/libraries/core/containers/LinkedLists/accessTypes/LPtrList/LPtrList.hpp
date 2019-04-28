@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -411,11 +411,8 @@ void CML::LPtrList<LListBase, T>::read(Istream& is, const INew& iNew)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "LPtrList<LListBase, T>::read(Istream&, const INew&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -442,11 +439,8 @@ void CML::LPtrList<LListBase, T>::read(Istream& is, const INew& iNew)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "LPtrList<LListBase, T>::read(Istream&, const INew&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

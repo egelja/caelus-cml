@@ -101,7 +101,7 @@ public:
 
     // Member Functions
 
-        //- update the parcel properties
+        //- Update the parcel properties
         virtual bool update
         (
             const scalar dt,

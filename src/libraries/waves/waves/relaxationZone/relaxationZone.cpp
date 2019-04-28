@@ -46,8 +46,8 @@ relaxationZone::relaxationZone
     relaxNames_((mesh_.thisDb().lookupObject<IOdictionary>("waveProperties"))
                 .lookup("relaxationNames")),
     relaxSchemePtr_(relaxNames_.size()),
-    targetAlpha_(NULL),
-    targetVelocity_(NULL)
+    targetAlpha_(nullptr),
+    targetVelocity_(nullptr)
 {
     forAll (relaxNames_, relaxi)
     {
@@ -62,12 +62,12 @@ relaxationZone::relaxationZone
 
 void relaxationZone::resetTargetFields()
 {
-    if (targetAlpha_ != NULL)
+    if (targetAlpha_ != nullptr)
     {
         (*targetAlpha_).internalField() = 0.0;
     }
 
-    if (targetVelocity_ != NULL)
+    if (targetVelocity_ != nullptr)
     {
         (*targetVelocity_).internalField() = vector::zero;
     }
@@ -80,12 +80,12 @@ void relaxationZone::correctBoundaries()
 
     U_.correctBoundaryConditions();
 
-    if (targetAlpha_ != NULL)
+    if (targetAlpha_ != nullptr)
     {
         (*targetAlpha_).correctBoundaryConditions();
     }
 
-    if (targetVelocity_ != NULL)
+    if (targetVelocity_ != nullptr)
     {
         (*targetVelocity_).correctBoundaryConditions();
     }

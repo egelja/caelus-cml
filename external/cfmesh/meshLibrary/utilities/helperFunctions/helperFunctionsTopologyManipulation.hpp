@@ -400,11 +400,8 @@ inline void findOpenEdges(const faceList& cellFaces, DynList<edge>& openEdges)
         }
         else if( nAppearances[eI] > 2 )
         {
-            FatalErrorIn
-            (
-                "void findOpenEdges(const faceList& cellFaces,"
-                "DynList<edge>& openEdges)"
-            ) << "More than two faces in " << cellFaces
+            FatalErrorInFunction
+                << "More than two faces in " << cellFaces
                 << " share edge " << cellEdges[eI] << abort(FatalError);
         }
 }
@@ -601,11 +598,8 @@ inline void zipOpenChain(DynList<edge>& bEdges)
     }
     else if( !closed )
     {
-        FatalErrorIn
-        (
-            "void dualMeshExtractor::decomposeCreatedPoly::"
-            "createMissingFaces(List<faceList>& cFaces)"
-        ) << "Chain has " << openVertices << " open vertices"
+        FatalErrorInFunction
+            << "Chain has " << openVertices << " open vertices"
             << abort(FatalError);
     }
 }
@@ -636,11 +630,8 @@ inline labelList sortEdgeChain(const DynList<edge>& bEdges)
                 }
                 else if( sortedEdges[i].end() == bEdges[eI].end() )
                 {
-                    FatalErrorIn
-                    (
-                        "labelList sortEdgeChain("
-                        "const DynList<edge>& bEdges)"
-                    ) << "Chain is not oriented correctly!"
+                    FatalErrorInFunction
+                        << "Chain is not oriented correctly!"
                         << abort(FatalError);
                 }
             }

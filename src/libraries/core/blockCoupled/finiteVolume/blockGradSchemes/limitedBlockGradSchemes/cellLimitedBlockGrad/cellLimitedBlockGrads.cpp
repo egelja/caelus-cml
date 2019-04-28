@@ -2,7 +2,7 @@
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014-2016 H. Jasak
 Copyright (C) 2014 V. Vukcevic
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -164,7 +164,7 @@ cellLimitedBlockGrad<scalar>::fvmGrad
         label nei = neighbour[facei];
 
         // owner side
-        fv::cellLimitedGrad<scalar>::limitFace
+        limitFace
         (
             lfIn[own],
             maxVsf[own],
@@ -173,7 +173,7 @@ cellLimitedBlockGrad<scalar>::fvmGrad
         );
 
         // neighbour side
-        fv::cellLimitedGrad<scalar>::limitFace
+        limitFace
         (
             lfIn[nei],
             maxVsf[nei],
@@ -191,7 +191,7 @@ cellLimitedBlockGrad<scalar>::fvmGrad
         {
             label own = pOwner[pFacei];
 
-            fv::cellLimitedGrad<scalar>::limitFace
+            limitFace
             (
                 lfIn[own],
                 maxVsf[own],
@@ -272,13 +272,8 @@ cellLimitedBlockGrad<vector>::fvmGrad
     const volVectorField& vsf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> cellLimitedBlockGrad<vector>::fvmGrad\n"
-        "(\n"
-        "    GeometricField<vector, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit bock gradient operators with cell limiters defined"
+    FatalErrorInFunction
+        << "Implicit bock gradient operators with cell limiters defined"
         << "only for scalar."
         << abort(FatalError);
 

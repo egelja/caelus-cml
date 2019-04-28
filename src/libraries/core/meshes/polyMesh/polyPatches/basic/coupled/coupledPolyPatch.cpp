@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -266,16 +266,8 @@ CML::label CML::coupledPolyPatch::getRotation
 
             if (distSqr == minDistSqr && fp != anchorFp)
             {
-                WarningIn
-                (
-                    "label coupledPolyPatch::getRotation\n"
-                    "(\n"
-                    "    const pointField&,\n"
-                    "    const face&,\n"
-                    "    const point&,\n"
-                    "    const scalar\n"
-                    ")"
-                )   << "Cannot determine unique anchor point on face "
+                WarningInFunction
+                    << "Cannot determine unique anchor point on face "
                     << UIndirectList<point>(points, f)
                     << endl
                     << "Both at index " << anchorFp << " and " << fp

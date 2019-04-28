@@ -188,10 +188,8 @@ void coneRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void coneRefinement::operator=(const dictionary& d)"
-        ) << "Entry p0 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry p0 is not specified!" << exit(FatalError);
         p0_ = vector::zero;
     }
 
@@ -202,10 +200,8 @@ void coneRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void coneRefinement::operator=(const dictionary& d)"
-        ) << "Entry radius0 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry radius0 is not specified!" << exit(FatalError);
         r0_ = -1.0;
     }
     
@@ -216,10 +212,8 @@ void coneRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void coneRefinement::operator=(const dictionary& d)"
-        ) << "Entry p1 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry p1 is not specified!" << exit(FatalError);
         p1_ = vector::zero;
     }
 
@@ -230,10 +224,8 @@ void coneRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void coneRefinement::operator=(const dictionary& d)"
-        ) << "Entry radius1 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry radius1 is not specified!" << exit(FatalError);
         r1_ = -1.0;
     }
 }

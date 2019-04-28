@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,11 +32,8 @@ void CML::syncTools::swapBoundaryCellPositions
 {
     if (cellData.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T>::swapBoundaryCellPositions"
-            "(const polyMesh&, const UList<T>&, List<T>&)"
-        )   << "Number of cell values " << cellData.size()
+        FatalErrorInFunction
+            << "Number of cell values " << cellData.size()
             << " is not equal to the number of cells in the mesh "
             << mesh.nCells() << abort(FatalError);
     }

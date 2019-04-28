@@ -102,7 +102,7 @@ public:
 
      bool writeData(Ostream&) const
         {
-            notImplemented("searchableBoxWithDirections::writeData(Ostream&) const");
+            NotImplemented;
             return false;
         }
 };

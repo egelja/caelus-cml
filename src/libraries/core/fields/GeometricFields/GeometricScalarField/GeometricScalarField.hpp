@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -87,6 +87,7 @@ UNARY_FUNCTION(scalar, scalar, pow5, pow5)
 UNARY_FUNCTION(scalar, scalar, pow6, pow6)
 UNARY_FUNCTION(scalar, scalar, pow025, pow025)
 UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, cbrt, cbrt)
 UNARY_FUNCTION(scalar, scalar, sign, sign)
 UNARY_FUNCTION(scalar, scalar, pos, pos)
 UNARY_FUNCTION(scalar, scalar, neg, neg)
@@ -578,6 +579,7 @@ UNARY_FUNCTION(scalar, scalar, pow5, pow5)
 UNARY_FUNCTION(scalar, scalar, pow6, pow6)
 UNARY_FUNCTION(scalar, scalar, pow025, pow025)
 UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, cbrt, cbrt)
 UNARY_FUNCTION(scalar, scalar, sign, sign)
 UNARY_FUNCTION(scalar, scalar, pos, pos)
 UNARY_FUNCTION(scalar, scalar, neg, neg)
@@ -631,11 +633,8 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
 {                                                                           \
     if (!gsf.dimensions().dimensionless())                                  \
     {                                                                       \
-        FatalErrorIn                                                        \
-        (                                                                   \
-            #func"(const int n, "                                           \
-            "const GeometricField<scalar, PatchField, GeoMesh>& gsf)"       \
-        )   << "gsf not dimensionless"                                      \
+        FatalErrorInFunction                                                \
+            << "gsf not dimensionless"                                      \
             << abort(FatalError);                                           \
     }                                                                       \
                                                                             \
@@ -672,11 +671,8 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
                                                                             \
     if (!gsf.dimensions().dimensionless())                                  \
     {                                                                       \
-        FatalErrorIn                                                        \
-        (                                                                   \
-            #func"(const int n, "                                           \
-            "const tmp<GeometricField<scalar, PatchField, GeoMesh> >& gsf)" \
-        )   << " : gsf not dimensionless"                                   \
+        FatalErrorInFunction                                                \
+            << " : gsf not dimensionless"                                   \
             << abort(FatalError);                                           \
     }                                                                       \
                                                                             \

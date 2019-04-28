@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,7 +42,7 @@ inline bool CML::cellInfo::update
      || (w2.type() == cellClassification::CUT)
     )
     {
-        FatalErrorIn("cellInfo::update(const cellInfo&)")
+        FatalErrorInFunction
             << "Problem: trying to propagate NOTSET or CUT type:" << w2.type()
             << " into cell/face with type:" << type() << endl
             << "thisFaceI:" << thisFaceI
@@ -73,7 +73,7 @@ inline bool CML::cellInfo::update
     }
 
     // Two conflicting types
-    FatalErrorIn("cellInfo::update(const cellInfo&)")
+    FatalErrorInFunction
         << "Problem: trying to propagate conflicting types:" << w2.type()
         << " into cell/face with type:" << type() << endl
         << "thisFaceI:" << thisFaceI

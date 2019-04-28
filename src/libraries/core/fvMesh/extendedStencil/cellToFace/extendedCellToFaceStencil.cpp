@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -110,11 +110,8 @@ CML::extendedCellToFaceStencil::extendedCellToFaceStencil(const polyMesh& mesh)
 
             if (!cpp.parallel() || cpp.separated())
             {
-                FatalErrorIn
-                (
-                    "extendedCellToFaceStencil::extendedCellToFaceStencil"
-                    "(const polyMesh&)"
-                )   << "Coupled patches with transformations not supported."
+                FatalErrorInFunction
+                    << "Coupled patches with transformations not supported."
                     << endl
                     << "Problematic patch " << cpp.name() << exit(FatalError);
             }

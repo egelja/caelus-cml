@@ -101,7 +101,7 @@ void CML::fv::rotorDiskSource::checkData()
                 }
                 default:
                 {
-                    FatalErrorIn("void rotorDiskSource::checkData()")
+                    FatalErrorInFunction
                         << "Unknown inlet velocity type" << abort(FatalError);
                 }
             }
@@ -111,7 +111,7 @@ void CML::fv::rotorDiskSource::checkData()
         }
         default:
         {
-            FatalErrorIn("void rotorDiskSource::checkData()")
+            FatalErrorInFunction
                 << "Source cannot be used with '"
                 << selectionModeTypeNames_[selectionMode()]
                 << "' mode.  Please use one of: " << nl
@@ -135,24 +135,24 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
     const vectorField& Sf = mesh_.Sf();
     const scalarField& magSf = mesh_.magSf();
 
-    vector n = vector::zero;
+    vector n = Zero;
 
     // Calculate cell addressing for selected cells
     labelList cellAddr(mesh_.nCells(), -1);
     UIndirectList<label>(cellAddr, cells_) = identity(cells_.size());
     labelList nbrFaceCellAddr(mesh_.nFaces() - nInternalFaces, -1);
-    forAll(pbm, patchI)
+    forAll(pbm, patchi)
     {
-        const polyPatch& pp = pbm[patchI];
+        const polyPatch& pp = pbm[patchi];
 
         if (pp.coupled())
         {
             forAll(pp, i)
             {
-                label faceI = pp.start() + i;
-                label nbrFaceI = faceI - nInternalFaces;
-                label own = mesh_.faceOwner()[faceI];
-                nbrFaceCellAddr[nbrFaceI] = cellAddr[own];
+                label facei = pp.start() + i;
+                label nbrFacei = facei - nInternalFaces;
+                label own = mesh_.faceOwner()[facei];
+                nbrFaceCellAddr[nbrFacei] = cellAddr[own];
             }
         }
     }
@@ -161,47 +161,48 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
     syncTools::swapBoundaryFaceList(mesh_, nbrFaceCellAddr);
 
     // Add internal field contributions
-    for (label faceI = 0; faceI < nInternalFaces; faceI++)
+    for (label facei = 0; facei < nInternalFaces; facei++)
     {
-        const label own = cellAddr[mesh_.faceOwner()[faceI]];
-        const label nbr = cellAddr[mesh_.faceNeighbour()[faceI]];
+        const label own = cellAddr[mesh_.faceOwner()[facei]];
+        const label nbr = cellAddr[mesh_.faceNeighbour()[facei]];
 
         if ((own != -1) && (nbr == -1))
         {
-            vector nf = Sf[faceI]/magSf[faceI];
+            vector nf = Sf[facei]/magSf[facei];
 
             if ((nf & axis) > tol)
             {
-                area_[own] += magSf[faceI];
-                n += Sf[faceI];
+                area_[own] += magSf[facei];
+                n += Sf[facei];
             }
         }
         else if ((own == -1) && (nbr != -1))
         {
-            vector nf = Sf[faceI]/magSf[faceI];
+            vector nf = Sf[facei]/magSf[facei];
 
             if ((-nf & axis) > tol)
             {
-                area_[nbr] += magSf[faceI];
-                n -= Sf[faceI];
+                area_[nbr] += magSf[facei];
+                n -= Sf[facei];
             }
         }
     }
 
+
     // Add boundary contributions
-    forAll(pbm, patchI)
+    forAll(pbm, patchi)
     {
-        const polyPatch& pp = pbm[patchI];
-        const vectorField& Sfp = mesh_.Sf().boundaryField()[patchI];
-        const scalarField& magSfp = mesh_.magSf().boundaryField()[patchI];
+        const polyPatch& pp = pbm[patchi];
+        const vectorField& Sfp = mesh_.Sf().boundaryField()[patchi];
+        const scalarField& magSfp = mesh_.magSf().boundaryField()[patchi];
 
         if (pp.coupled())
         {
             forAll(pp, j)
             {
-                const label faceI = pp.start() + j;
-                const label own = cellAddr[mesh_.faceOwner()[faceI]];
-                const label nbr = nbrFaceCellAddr[faceI - nInternalFaces];
+                const label facei = pp.start() + j;
+                const label own = cellAddr[mesh_.faceOwner()[facei]];
+                const label nbr = nbrFaceCellAddr[facei - nInternalFaces];
                 const vector nf = Sfp[j]/magSfp[j];
 
                 if ((own != -1) && (nbr == -1) && ((nf & axis) > tol))
@@ -215,8 +216,8 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
         {
             forAll(pp, j)
             {
-                const label faceI = pp.start() + j;
-                const label own = cellAddr[mesh_.faceOwner()[faceI]];
+                const label facei = pp.start() + j;
+                const label own = cellAddr[mesh_.faceOwner()[facei]];
                 const vector nf = Sfp[j]/magSfp[j];
 
                 if ((own != -1) && ((nf & axis) > tol))
@@ -262,9 +263,9 @@ void CML::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
 void CML::fv::rotorDiskSource::createCoordinateSystem()
 {
     // Construct the local rotor co-ordinate system
-    vector origin(vector::zero);
-    vector axis(vector::zero);
-    vector refDir(vector::zero);
+    vector origin(Zero);
+    vector axis(Zero);
+    vector refDir(Zero);
 
     geometryModeType gm =
         geometryModeTypeNames_.read(coeffs_.lookup("geometryMode"));
@@ -279,21 +280,21 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             const vectorField& C = mesh_.C();
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                sumV += V[cellI];
-                origin += V[cellI]*C[cellI];
+                const label celli = cells_[i];
+                sumV += V[celli];
+                origin += V[celli]*C[celli];
             }
             reduce(origin, sumOp<vector>());
             reduce(sumV, sumOp<scalar>());
             origin /= sumV;
 
             // Determine first radial vector
-            vector dx1(vector::zero);
+            vector dx1(Zero);
             scalar magR = -GREAT;
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                vector test = C[cellI] - origin;
+                const label celli = cells_[i];
+                vector test = C[celli] - origin;
                 if (mag(test) > magR)
                 {
                     dx1 = test;
@@ -306,8 +307,8 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
             // Determine second radial vector and cross to determine axis
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                vector dx2 = C[cellI] - origin;
+                const label celli = cells_[i];
+                vector dx2 = C[celli] - origin;
                 if (mag(dx2) > 0.5*magR)
                 {
                     axis = dx1 ^ dx2;
@@ -351,7 +352,7 @@ void CML::fv::rotorDiskSource::createCoordinateSystem()
         }
         default:
         {
-            FatalErrorIn("rotorDiskSource::createCoordinateSystem()")
+            FatalErrorInFunction
                 << "Unknown geometryMode " << geometryModeTypeNames_[gm]
                 << ". Available geometry modes include "
                 << geometryModeTypeNames_ << exit(FatalError);
@@ -426,10 +427,10 @@ void CML::fv::rotorDiskSource::constructGeometry()
     {
         if (area_[i] > ROOTVSMALL)
         {
-            const label cellI = cells_[i];
+            const label celli = cells_[i];
 
             // Position in (planar) rotor co-ordinate system
-            x_[i] = coordSys_.localPosition(C[cellI]);
+            x_[i] = coordSys_.localPosition(C[celli]);
 
             // Cache max radius
             rMax_ = max(rMax_, x_[i].x());
@@ -491,16 +492,12 @@ CML::tmp<CML::vectorField> CML::fv::rotorDiskSource::inflowVelocity
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::tmp<CML::vectorField> "
-                "CML::fv::rotorDiskSource::inflowVelocity"
-                "(const volVectorField&) const"
-            )   << "Unknown inlet flow specification" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown inlet flow specification" << abort(FatalError);
         }
     }
 
-    return tmp<vectorField>(new vectorField(mesh_.nCells(), vector::zero));
+    return tmp<vectorField>(new vectorField(mesh_.nCells(), Zero));
 }
 
 
@@ -516,17 +513,16 @@ CML::fv::rotorDiskSource::rotorDiskSource
 )
 :
     option(name, modelType, dict, mesh),
-    rhoName_("none"),
     rhoRef_(1.0),
     rotorDebug_(false),
     rotorURF_(1.0),
     rpm_(DataEntry<scalar>::New("rpm", coeffs_)),
     nBlades_(0),
     inletFlow_(ifLocal),
-    inletVelocity_(vector::zero),
+    inletVelocity_(Zero),
     tipEffect_(1.0),
     flap_(),
-    x_(cells_.size(), vector::zero),
+    x_(cells_.size(), Zero),
     R_(cells_.size(), I),
     invR_(cells_.size(), I),
     rBetaDOT_(cells_.size(), 0.0),
@@ -556,12 +552,9 @@ CML::fv::rotorDiskSource::~rotorDiskSource()
 void CML::fv::rotorDiskSource::addSup
 (
     fvMatrix<vector>& eqn,
-    const label fieldI
+    const label fieldi
 )
 {
-    // Read the reference density for incompressible flow
-    coeffs_.lookup("rhoRef") >> rhoRef_;
-
     volVectorField force
     (
         IOobject
@@ -571,7 +564,7 @@ void CML::fv::rotorDiskSource::addSup
             mesh_
         ),
         mesh_,
-        dimensionedVector("zero", eqn.dimensions()/dimVolume, vector::zero)
+        dimensionedVector("zero", eqn.dimensions()/dimVolume, Zero)
     );
 
     static volVectorField oldF
@@ -587,14 +580,16 @@ void CML::fv::rotorDiskSource::addSup
         (
             "zero",
             eqn.dimensions()/dimVolume,
-            vector::zero
+            Zero
         )
     );
+
+    // Read the reference density for incompressible flow
+    coeffs_.lookup("rhoRef") >> rhoRef_;
 
     const volVectorField& U = eqn.psi();
     const vectorField Uin(inflowVelocity(U));
     trim_->correct(Uin, force);
-
     calculate(geometricOneField(), Uin, trim_->thetag(), force);
 
     // Under relax momentum source 
@@ -615,10 +610,9 @@ void CML::fv::rotorDiskSource::addSup
 (
     const volScalarField& rho,
     fvMatrix<vector>& eqn,
-    const label fieldI
+    const label fieldi
 )
 {
-
     volVectorField force
     (
         IOobject
@@ -632,7 +626,7 @@ void CML::fv::rotorDiskSource::addSup
 	(
 	    "zero",
 	    eqn.dimensions()/dimVolume,
-            vector::zero
+            Zero
 	)
     );
 
@@ -649,7 +643,7 @@ void CML::fv::rotorDiskSource::addSup
         (
             "zero",
             eqn.dimensions()/dimVolume,
-            vector::zero
+            Zero
         )
     );
 
@@ -714,10 +708,6 @@ bool CML::fv::rotorDiskSource::read(const dictionary& dict)
         checkData();
 
         constructGeometry();
-
-        // Reading rhoName_ and rhoRef_
-        coeffs_.lookup("rhoName") >> rhoName_;
-        coeffs_.lookup("rhoRef") >> rhoRef_;
 
         trim_->read(coeffs_);
 

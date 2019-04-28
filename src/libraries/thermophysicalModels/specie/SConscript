@@ -8,11 +8,9 @@ target = 'specie'
 sources = Split("""
 atomicWeights/atomicWeights.cpp
 specie/specie.cpp
-equationOfState/perfectGas/perfectGas.cpp
-equationOfState/incompressible/incompressible.cpp
-equationOfState/isobaricPerfectGas/isobaricPerfectGas.cpp
-reaction/reactions/makeReactionThermoReactions.cpp
+reaction/reactions/makeReactions.cpp
 reaction/reactions/makeLangmuirHinshelwoodReactions.cpp
+reaction/reactions/makeMichaelisMentenReactions.cpp
 """)
 
 caelus_inc = []

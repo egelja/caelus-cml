@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,6 +20,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "thermoSingleLayer.hpp"
+#include "filmRadiationModel.hpp"
+#include "heatTransferModel.hpp"
+#include "phaseChangeModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -38,20 +41,14 @@ inline const SLGThermo& thermoSingleLayer::thermo() const
 }
 
 
-inline label thermoSingleLayer::liquidId() const
-{
-    return liquidId_;
-}
-
-
 inline tmp<scalarField> thermoSingleLayer::hs
 (
     const scalarField& T,
-    const label patchI
+    const label patchi
 ) const
 {
-    const scalarField& Cp = Cp_.boundaryField()[patchI];
-    return Cp*(T - 298.15);
+    const scalarField& Cp = Cp_.boundaryField()[patchi];
+    return Cp*(T - Tref.value());
 }
 
 
@@ -72,8 +69,7 @@ inline tmp<volScalarField> thermoSingleLayer::hs
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            Cp_*(T - (dimensionedScalar("Tstd", dimTemperature, 298.15))),
-            zeroGradientFvPatchScalarField::typeName
+            Cp_*(T - Tref)
         )
     );
 }
@@ -84,7 +80,7 @@ inline tmp<volScalarField> thermoSingleLayer::T
     const volScalarField& hs
 ) const
 {
-    return tmp<volScalarField>
+    tmp<volScalarField> tT
     (
         new volScalarField
         (
@@ -96,10 +92,14 @@ inline tmp<volScalarField> thermoSingleLayer::T
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            hs/Cp_ + dimensionedScalar("Tstd", dimTemperature, 298.15),
-            zeroGradientFvPatchScalarField::typeName
+            hs/Cp_ + Tref
         )
     );
+
+    tT().min(Tmax_);
+    tT().max(Tmin_);
+
+    return tT;
 }
 
 
@@ -148,6 +148,26 @@ inline const phaseChangeModel& thermoSingleLayer::phaseChange() const
 inline const filmRadiationModel& thermoSingleLayer::radiation() const
 {
     return radiation_();
+}
+
+
+inline tmp<scalarField> thermoSingleLayer::Qconvw(const label patchi) const
+{
+    const scalarField htc(htcw_->h()().boundaryField()[patchi]);
+    const scalarField& Tp = T_.boundaryField()[patchi];
+    const scalarField& Twp = Tw_.boundaryField()[patchi];
+
+    return htc*(Tp - Twp);
+}
+
+
+inline tmp<scalarField> thermoSingleLayer::Qconvp(const label patchi) const
+{
+    const scalarField htc(htcs_->h()().boundaryField()[patchi]);
+    const scalarField& Tp = T_.boundaryField()[patchi];
+    const scalarField& Tpp = TPrimary_.boundaryField()[patchi];
+
+    return htc*(Tp - Tpp);
 }
 
 

@@ -240,11 +240,10 @@ template<class CloudType>
 bool EvolveCloudFunctionObject<CloudType>::read(const dictionary& dict)
 {
     if(dict_!=dict) {
-        WarningIn("EvolveCloudFunctionObject<CloudType>::read(const dictionary& dict)")
+        WarningInFunction
             << "Can't change the cloud of " << this->name()
-                << " during the run"
-                << endl;
-
+            << " during the run"
+            << endl;
     }
 
     return true;

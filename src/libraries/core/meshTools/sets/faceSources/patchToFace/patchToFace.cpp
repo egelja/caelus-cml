@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -78,7 +78,7 @@ void CML::patchToFace::combine(topoSet& set, const bool add) const
 
     if (!hasMatched)
     {
-        WarningIn("patchToFace::combine(topoSet&, const bool)")
+        WarningInFunction
             << "Cannot find any patch named " << patchName_ << endl
             << "Valid names are " << mesh_.boundaryMesh().names() << endl;
     }

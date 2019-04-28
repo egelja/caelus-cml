@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2013 K. Jareteg
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -141,10 +142,8 @@ scalar BlockCoeffMaxNorm<Type>::normalize
     }
     else
     {
-        FatalErrorIn
-        (
-            "scalar BlockCoeffMaxNorm<Type>(const BlockCoeff<Type>& b)"
-        )   << "Unknown type" << abort(FatalError);
+        FatalErrorInFunction
+            << "Unknown type" << abort(FatalError);
 
         return 0;
     }
@@ -172,10 +171,8 @@ void BlockCoeffMaxNorm<Type>::coeffMag
     }
     else
     {
-        FatalErrorIn
-        (
-            "scalar BlockCoeffMaxNorm<Type>(const BlockCoeff<Type>& b)"
-        )   << "Unknown type" << abort(FatalError);
+        FatalErrorInFunction
+            << "Unknown type" << abort(FatalError);
     }
 }
 

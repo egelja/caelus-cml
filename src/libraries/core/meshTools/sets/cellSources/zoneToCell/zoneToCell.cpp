@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,7 +79,7 @@ void CML::zoneToCell::combine(topoSet& set, const bool add) const
 
     if (!hasMatched)
     {
-        WarningIn("zoneToCell::combine(topoSet&, const bool)")
+        WarningInFunction
             << "Cannot find any cellZone named " << zoneName_ << endl
             << "Valid names are " << mesh_.cellZones().names() << endl;
     }

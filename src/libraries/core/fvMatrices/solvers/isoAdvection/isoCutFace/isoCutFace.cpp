@@ -167,14 +167,7 @@ CML::label CML::isoCutFace::calcSubFace
                 {
                     const face fl(pLabels);
 
-                    WarningIn
-                    (
-                        "CML::label CML::isoCutFace::calcSubFace"
-                        "("
-                            "const scalar,const pointField&,"
-                            "const scalarField&, const labelList&"
-                        ")"
-                    )
+                    WarningInFunction
                         << "More than two face cuts for face " << fl
                         << endl;
 
@@ -521,16 +514,7 @@ void CML::isoCutFace::cutPoints
 
     if (cutPoints.size() > 2)
     {
-        WarningIn
-        (
-            "void CML::isoCutFace::cutPoints"
-            "("
-                 "const pointField&,"
-                 "const scalarField&,"
-                 "const scalar,"
-                 "DynamicList<point>&"
-             ")"
-        )
+        WarningInFunction
           << "cutPoints = " << cutPoints << " for pts = " << pts
           << ", f - f0 = " << f - f0 << " and f0 = " << f0 << endl;
     }
@@ -569,15 +553,7 @@ void CML::isoCutFace::quadAreaCoeffs
         }
         else if (np0 > 2)
         {
-            WarningIn
-            (
-                "void CML::isoCutFace::quadAreaCoeffs"
-                "("
-                    "const DynamicList<point>&,"
-                    "const DynamicList<point>&,"
-                    "scalar&, scalar&"
-                ") const"
-            )
+            WarningInFunction
               << "Vertex face was cut at pf0 = " << pf0 << endl;
         }
 
@@ -587,15 +563,7 @@ void CML::isoCutFace::quadAreaCoeffs
         }
         else if (np1 > 2)
         {
-            WarningIn
-            (
-                "void CML::isoCutFace::quadAreaCoeffs"
-                "("
-                    "const DynamicList<point>&,"
-                    "const DynamicList<point>&,"
-                    "scalar&, scalar&"
-                ") const"
-            )
+            WarningInFunction
               << "Vertex face was cut at pf1 = " << pf1 << endl;
         }
 
@@ -650,15 +618,7 @@ void CML::isoCutFace::quadAreaCoeffs
     }
     else
     {
-        WarningIn
-        (
-            "void CML::isoCutFace::quadAreaCoeffs"
-            "("
-                "const DynamicList<point>&,"
-                "const DynamicList<point>&,"
-                "scalar&, scalar&"
-            ") const"
-        )
+        WarningInFunction
           << "Vertex face was cut at " << pf0 << " and at " << pf1 << endl;
     }
 }

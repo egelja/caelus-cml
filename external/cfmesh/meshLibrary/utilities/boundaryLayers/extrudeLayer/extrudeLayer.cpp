@@ -574,7 +574,7 @@ void extrudeLayer::createNewVertices()
                     }
 
                 if( problem )
-                    FatalErrorIn("void extrudeLayer::createNewVertices()")
+                    FatalErrorInFunction
                         << "Front is not defined at point " << pointI
                         << ". Cannot continue.." << exit(FatalError);
             }
@@ -678,7 +678,7 @@ void extrudeLayer::createNewVertices()
                 }
 
             if( problem )
-                FatalErrorIn("void extrudeLayer::createNewVertices()")
+                FatalErrorInFunction
                     << "Front is not defined at point " << pointI
                     << ". Cannot continue.." << exit(FatalError);
         }
@@ -1046,7 +1046,7 @@ void extrudeLayer::createLayerCells()
                 adc.facesSharingEdge(origFacePointI, origFaceNextI, fc);
 
                 if( fc.size() != 1 )
-                    FatalErrorIn("void extrudeLayer::createLayerCells()")
+                    FatalErrorInFunction
                         << "Cannot find searched face" << abort(FatalError);
 
                 origPointI = adc.origPoint(fc[0], origFacePointI);
@@ -1054,7 +1054,7 @@ void extrudeLayer::createLayerCells()
             }
             else
             {
-                FatalErrorIn("void extrudeLayer::createLayerCells()")
+                FatalErrorInFunction
                     << "Cannot find points" << abort(FatalError);
             }
 
@@ -1195,7 +1195,7 @@ void extrudeLayer::createLayerCells()
             }
 
             if( (prev < 0) || (next < 0) )
-                FatalErrorIn("void extrudeLayer::createLayerCells()")
+                FatalErrorInFunction
                     << "Corner cell is invalid" << abort(FatalError);
 
             cf[0] = prev;
@@ -1311,7 +1311,7 @@ void extrudeLayer::updateBoundary()
             if( nAppearances[i] == newPts.size() )
             {
                 if( patch != label(-1) )
-                    FatalErrorIn("void extrudeLayer::updateBoundary()")
+                    FatalErrorInFunction
                         << "Found more than one patch!" << abort(FatalError);
 
                 patch = patches[i];

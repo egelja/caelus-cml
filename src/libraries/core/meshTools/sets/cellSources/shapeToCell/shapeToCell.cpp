@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -101,10 +101,8 @@ CML::shapeToCell::shapeToCell
 {
     if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
-        FatalErrorIn
-        (
-            "shapeToCell::shapeToCell(const polyMesh&, const word&)"
-        )   << "Illegal cell type " << type_ << exit(FatalError);
+        FatalErrorInFunction
+            << "Illegal cell type " << type_ << exit(FatalError);
     }
 }
 
@@ -121,10 +119,8 @@ CML::shapeToCell::shapeToCell
 {
     if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
-        FatalErrorIn
-        (
-            "shapeToCell::shapeToCell(const polyMesh&, const dictionary&)"
-        )   << "Illegal cell type " << type_ << exit(FatalError);
+        FatalErrorInFunction
+            << "Illegal cell type " << type_ << exit(FatalError);
     }
 }
 
@@ -141,10 +137,8 @@ CML::shapeToCell::shapeToCell
 {
     if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
-        FatalErrorIn
-        (
-            "shapeToCell::shapeToCell(const polyMesh&, Istream&)"
-        )   << "Illegal cell type " << type_ << exit(FatalError);
+        FatalErrorInFunction
+            << "Illegal cell type " << type_ << exit(FatalError);
     }
 }
 

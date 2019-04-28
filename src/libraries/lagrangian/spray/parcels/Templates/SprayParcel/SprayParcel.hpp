@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -57,6 +58,77 @@ class SprayParcel
 :
     public ParcelType
 {
+    // Private data
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
+
+
+public:
+
+    //- Class to hold reacting particle constant properties
+    class constantProperties
+    :
+        public ParcelType::constantProperties
+    {
+        // Private data
+
+            //- Particle initial surface tension [N/m]
+            demandDrivenEntry<scalar> sigma0_;
+
+            //- Particle initial dynamic viscosity [Pa.s]
+            demandDrivenEntry<scalar> mu0_;
+
+
+    public:
+
+        // Constructors
+
+            //- Null constructor
+            constantProperties();
+
+            //- Copy constructor
+            constantProperties(const constantProperties& cp);
+
+            //- Construct from dictionary
+            constantProperties(const dictionary& parentDict);
+
+            //- Construct from components
+            constantProperties
+            (
+                const label parcelTypeId,
+                const scalar rhoMin,
+                const scalar rho0,
+                const scalar minParcelMass,
+                const scalar youngsModulus,
+                const scalar poissonsRatio,
+                const scalar T0,
+                const scalar TMin,
+                const scalar TMax,
+                const scalar Cp0,
+                const scalar epsilon0,
+                const scalar f0,
+                const scalar Pr,
+                const scalar pMin,
+                const Switch& constantVolume,
+                const scalar sigma0,
+                const scalar mu0
+            );
+
+
+        // Access
+
+            //- Return const access to the initial surface tension
+            inline scalar sigma0() const;
+
+            //- Return const access to the initial dynamic viscosity
+            inline scalar mu0() const;
+    };
+
+
+    //- Use base tracking data
+    typedef typename ParcelType::trackingData trackingData;
+
 
 protected:
 
@@ -69,6 +141,12 @@ protected:
 
             //- Injection position
             vector position0_;
+
+            //- Liquid surface tension [N/m]
+            scalar sigma_;
+
+            //- Liquid dynamic viscosity [Pa.s]
+            scalar mu_;
 
             //- Part of liquid core ( >0.5=liquid, <0.5=droplet )
             scalar liquidCore_;
@@ -103,34 +181,40 @@ public:
 
     // Static data members
 
-        //- String representation of properties
-        static string propHeader;
-
         //- Runtime type information
         TypeName("SprayParcel");
 
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, coordinates and topology
         //  Other properties initialised as null
         inline SprayParcel
         (
             const polyMesh& mesh,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
+        );
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline SprayParcel
+        (
+            const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const label celli
         );
 
         //- Construct from components
         inline SprayParcel
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const label typeId,
             const scalar nParticle0,
             const scalar d0,
@@ -218,6 +302,12 @@ public:
             //- Return const access to initial droplet position
             inline const vector& position0() const;
 
+            //- Return const access to the liquid surface tension
+            inline scalar sigma() const;
+
+            //- Return const access to the liquid dynamic viscosity
+            inline scalar mu() const;
+
             //- Return const access to liquid core
             inline scalar liquidCore() const;
 
@@ -254,6 +344,12 @@ public:
             //- Return access to initial droplet position
             inline vector& position0();
 
+            //- Return access to the liquid surface tension
+            inline scalar& sigma();
+
+            //- Return access to the liquid dynamic viscosity
+            inline scalar& mu();
+
             //- Return access to liquid core
             inline scalar& liquidCore();
 
@@ -285,47 +381,42 @@ public:
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
-            (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
-            );
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
 
             //- Correct parcel properties according to atomization model
-            template<class TrackData>
+            template<class TrackCloudType>
             void calcAtomization
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct parcel properties according to breakup model
-            template<class TrackData>
+            template<class TrackCloudType>
             void calcBreakup
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct surface values due to emitted species
-            template<class TrackData>
+            template<class TrackCloudType>
             void correctSurfaceValues
             (
-                TrackData& td,
-                const label cellI,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalar T,
                 const scalarField& Cs,
                 scalar& rhos,
@@ -335,28 +426,30 @@ public:
             );
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Calculate the chi-factor for flash-boiling for the
             //  atomization model
-            template<class TrackData>
+            template<class TrackCloudType>
             scalar chi
             (
-                TrackData& td,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalarField& X
             ) const;
 
             //- Solve the TAB equation
-            template<class TrackData>
+            template<class TrackCloudType>
             void solveTABEq
             (
-                TrackData& td,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalar dt
             );
 
@@ -398,25 +491,103 @@ public:
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+template<class ParcelType>
+inline CML::SprayParcel<ParcelType>::constantProperties::constantProperties()
+:
+    ParcelType::constantProperties(),
+    sigma0_(this->dict_, 0.0),
+    mu0_(this->dict_, 0.0)
+{}
+
+
+template<class ParcelType>
+inline CML::SprayParcel<ParcelType>::constantProperties::constantProperties
+(
+    const constantProperties& cp
+)
+:
+    ParcelType::constantProperties(cp),
+    sigma0_(cp.sigma0_),
+    mu0_(cp.mu0_)
+{}
+
+
+template<class ParcelType>
+inline CML::SprayParcel<ParcelType>::constantProperties::constantProperties
+(
+    const dictionary& parentDict
+)
+:
+    ParcelType::constantProperties(parentDict),
+    sigma0_(this->dict_, "sigma0"),
+    mu0_(this->dict_, "mu0")
+{}
+
+
+template<class ParcelType>
+inline CML::SprayParcel<ParcelType>::constantProperties::constantProperties
+(
+    const label parcelTypeId,
+    const scalar rhoMin,
+    const scalar rho0,
+    const scalar minParcelMass,
+    const scalar youngsModulus,
+    const scalar poissonsRatio,
+    const scalar T0,
+    const scalar TMin,
+    const scalar TMax,
+    const scalar Cp0,
+    const scalar epsilon0,
+    const scalar f0,
+    const scalar Pr,
+    const scalar pMin,
+    const Switch& constantVolume,
+    const scalar sigma0,
+    const scalar mu0
+)
+:
+    ParcelType::constantProperties
+    (
+        parcelTypeId,
+        rhoMin,
+        rho0,
+        minParcelMass,
+        youngsModulus,
+        poissonsRatio,
+        T0,
+        TMin,
+        TMax,
+        Cp0,
+        epsilon0,
+        f0,
+        Pr,
+        pMin,
+        constantVolume
+    ),
+    sigma0_(this->dict_, sigma0),
+    mu0_(this->dict_, mu0)
+{}
+
 
 template<class ParcelType>
 inline CML::SprayParcel<ParcelType>::SprayParcel
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti
 )
 :
-    ParcelType(mesh, position, cellI, tetFaceI, tetPtI),
+    ParcelType(mesh, coordinates, celli, tetFacei, tetPti),
     d0_(this->d()),
-    position0_(position),
+    position0_(this->position()),
+    sigma_(0.0),
+    mu_(0.0),
     liquidCore_(0.0),
     KHindex_(0.0),
     y_(0.0),
@@ -434,9 +605,34 @@ inline CML::SprayParcel<ParcelType>::SprayParcel
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const label celli
+)
+:
+    ParcelType(mesh, position, celli),
+    d0_(this->d()),
+    position0_(this->position()),
+    sigma_(0.0),
+    mu_(0.0),
+    liquidCore_(0.0),
+    KHindex_(0.0),
+    y_(0.0),
+    yDot_(0.0),
+    tc_(0.0),
+    ms_(0.0),
+    injector_(1.0),
+    tMom_(GREAT),
+    user_(0.0)
+{}
+
+
+template<class ParcelType>
+inline CML::SprayParcel<ParcelType>::SprayParcel
+(
+    const polyMesh& mesh,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const label typeId,
     const scalar nParticle0,
     const scalar d0,
@@ -461,10 +657,10 @@ inline CML::SprayParcel<ParcelType>::SprayParcel
     ParcelType
     (
         mesh,
-        position,
-        cellI,
-        tetFaceI,
-        tetPtI,
+        coordinates,
+        celli,
+        tetFacei,
+        tetPti,
         typeId,
         nParticle0,
         d0,
@@ -477,7 +673,9 @@ inline CML::SprayParcel<ParcelType>::SprayParcel
         constProps
     ),
     d0_(d0),
-    position0_(position),
+    position0_(this->position()),
+    sigma_(constProps.sigma0()),
+    mu_(constProps.mu0()),
     liquidCore_(liquidCore),
     KHindex_(KHindex),
     y_(y),
@@ -488,6 +686,24 @@ inline CML::SprayParcel<ParcelType>::SprayParcel
     tMom_(tMom),
     user_(user)
 {}
+
+
+// * * * * * * * * * constantProperties Member Functions * * * * * * * * * * //
+
+template<class ParcelType>
+inline CML::scalar
+CML::SprayParcel<ParcelType>::constantProperties::sigma0() const
+{
+    return sigma0_.value();
+}
+
+
+template<class ParcelType>
+inline CML::scalar
+CML::SprayParcel<ParcelType>::constantProperties::mu0() const
+{
+    return mu0_.value();
+}
 
 
 // * * * * * * * * * * SprayParcel Member Functions * * * * * * * * * * * * //
@@ -503,6 +719,20 @@ template<class ParcelType>
 inline const CML::vector& CML::SprayParcel<ParcelType>::position0() const
 {
     return position0_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::SprayParcel<ParcelType>::sigma() const
+{
+    return sigma_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::SprayParcel<ParcelType>::mu() const
+{
+    return mu_;
 }
 
 
@@ -584,6 +814,20 @@ inline CML::vector& CML::SprayParcel<ParcelType>::position0()
 
 
 template<class ParcelType>
+inline CML::scalar& CML::SprayParcel<ParcelType>::sigma()
+{
+    return sigma_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar& CML::SprayParcel<ParcelType>::mu()
+{
+    return mu_;
+}
+
+
+template<class ParcelType>
 inline CML::scalar& CML::SprayParcel<ParcelType>::liquidCore()
 {
     return liquidCore_;
@@ -649,59 +893,57 @@ inline CML::scalar& CML::SprayParcel<ParcelType>::user()
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::setCellValues
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
-    ParcelType::setCellValues(td, dt, cellI);
+    ParcelType::setCellValues(cloud, td);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::cellValueSourceCorrection
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    ParcelType::cellValueSourceCorrection(td, dt, cellI);
+    ParcelType::cellValueSourceCorrection(cloud, td, dt);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::calc
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    typedef typename TrackCloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+        cloud.composition();
 
     // Check if parcel belongs to liquid core
     if (liquidCore() > 0.5)
     {
         // Liquid core parcels should not experience coupled forces
-        td.cloud().forces().setCalcCoupled(false);
+        cloud.forces().setCalcCoupled(false);
     }
 
     // Get old mixture composition
-    const scalarField& Y0(this->Y());
-    scalarField X0(composition.liquids().X(Y0));
+    scalarField X0(composition.liquids().X(this->Y()));
 
     // Check if we have critical or boiling conditions
     scalar TMax = composition.liquids().Tc(X0);
     const scalar T0 = this->T();
-    const scalar pc0 = this->pc_;
+    const scalar pc0 = td.pc();
     if (composition.liquids().pv(pc0, T0, X0) >= pc0*0.999)
     {
         // Set TMax to boiling temperature
@@ -709,33 +951,44 @@ void CML::SprayParcel<ParcelType>::calc
     }
 
     // Set the maximum temperature limit
-    td.cloud().constProps().TMax() = TMax;
+    cloud.constProps().setTMax(TMax);
 
     // Store the parcel properties
     this->Cp() = composition.liquids().Cp(pc0, T0, X0);
+    sigma_ = composition.liquids().sigma(pc0, T0, X0);
     const scalar rho0 = composition.liquids().rho(pc0, T0, X0);
     this->rho() = rho0;
+    const scalar mass0 = this->mass();
+    mu_ = composition.liquids().mu(pc0, T0, X0);
 
-    ParcelType::calc(td, dt, cellI);
+    ParcelType::calc(cloud, td, dt);
 
     if (td.keepParticle)
     {
-        // update Cp, diameter and density due to change in temperature
+        // Reduce the stripped parcel mass due to evaporation
+        // assuming the number of particles remains unchanged
+        this->ms() -= this->ms()*(mass0 - this->mass())/mass0;
+
+        // Update Cp, sigma, density and diameter due to change in temperature
         // and/or composition
         scalar T1 = this->T();
-        const scalarField& Y1(this->Y());
-        scalarField X1(composition.liquids().X(Y1));
+        scalarField X1(composition.liquids().X(this->Y()));
 
-        this->Cp() = composition.liquids().Cp(this->pc_, T1, X1);
+        this->Cp() = composition.liquids().Cp(td.pc(), T1, X1);
 
-        scalar rho1 = composition.liquids().rho(this->pc_, T1, X1);
+        sigma_ = composition.liquids().sigma(td.pc(), T1, X1);
+
+        scalar rho1 = composition.liquids().rho(td.pc(), T1, X1);
         this->rho() = rho1;
+
+        mu_ = composition.liquids().mu(td.pc(), T1, X1);
+
         scalar d1 = this->d()*cbrt(rho0/rho1);
         this->d() = d1;
 
         if (liquidCore() > 0.5)
         {
-            calcAtomization(td, dt, cellI);
+            calcAtomization(cloud, td, dt);
 
             // Preserve the total mass/volume by increasing the number of
             // particles in parcels due to breakup
@@ -744,68 +997,59 @@ void CML::SprayParcel<ParcelType>::calc
         }
         else
         {
-            calcBreakup(td, dt, cellI);
+            calcBreakup(cloud, td, dt);
         }
     }
 
     // Restore coupled forces
-    td.cloud().forces().setCalcCoupled(true);
+    cloud.forces().setCalcCoupled(true);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::calcAtomization
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    typedef typename TrackCloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+        cloud.composition();
 
-    typedef typename TrackData::cloudType::sprayCloudType sprayCloudType;
+    typedef typename TrackCloudType::sprayCloudType sprayCloudType;
     const AtomizationModel<sprayCloudType>& atomization =
-        td.cloud().atomization();
-
-
-    // cell state info is updated in ReactingParcel calc
-    const scalarField& Y(this->Y());
-    scalarField X(composition.liquids().X(Y));
-
-    scalar rho = composition.liquids().rho(this->pc(), this->T(), X);
-    scalar mu = composition.liquids().mu(this->pc(), this->T(), X);
-    scalar sigma = composition.liquids().sigma(this->pc(), this->T(), X);
+        cloud.atomization();
 
     // Average molecular weight of carrier mix - assumes perfect gas
-    scalar Wc = this->rhoc_*specie::RR*this->Tc()/this->pc();
-    scalar R = specie::RR/Wc;
-    scalar Tav = atomization.Taverage(this->T(), this->Tc());
+    scalar Wc = td.rhoc()*RR*td.Tc()/td.pc();
+    scalar R = RR/Wc;
+    scalar Tav = atomization.Taverage(this->T(), td.Tc());
 
     // Calculate average gas density based on average temperature
-    scalar rhoAv = this->pc()/(R*Tav);
+    scalar rhoAv = td.pc()/(R*Tav);
 
-    scalar soi = td.cloud().injectors().timeStart();
-    scalar currentTime = td.cloud().db().time().value();
+    scalar soi = cloud.injectors().timeStart();
+    scalar currentTime = cloud.db().time().value();
     const vector& pos = this->position();
     const vector& injectionPos = this->position0();
 
-    // Disregard the continuous phase when calculating the relative velocity
+    // Disregard the continous phase when calculating the relative velocity
     // (in line with the deactivated coupled assumption)
     scalar Urel = mag(this->U());
 
     scalar t0 = max(0.0, currentTime - this->age() - soi);
-    scalar t1 = min(t0 + dt, td.cloud().injectors().timeEnd() - soi);
+    scalar t1 = min(t0 + dt, cloud.injectors().timeEnd() - soi);
 
     // This should be the vol flow rate from when the parcel was injected
-    scalar volFlowRate = td.cloud().injectors().volumeToInject(t0, t1)/dt;
+    scalar volFlowRate = cloud.injectors().volumeToInject(t0, t1)/dt;
 
     scalar chi = 0.0;
     if (atomization.calcChi())
     {
-        chi = this->chi(td, X);
+        chi = this->chi(cloud, td, composition.liquids().X(this->Y()));
     }
 
     atomization.update
@@ -814,78 +1058,66 @@ void CML::SprayParcel<ParcelType>::calcAtomization
         this->d(),
         this->liquidCore(),
         this->tc(),
-        rho,
-        mu,
-        sigma,
+        this->rho(),
+        mu_,
+        sigma_,
         volFlowRate,
         rhoAv,
         Urel,
         pos,
         injectionPos,
-        td.cloud().pAmbient(),
+        cloud.pAmbient(),
         chi,
-        td.cloud().rndGen()
+        cloud.rndGen()
     );
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::calcBreakup
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
-    const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+    const typename TrackCloudType::parcelType& p =
+        static_cast<const typename TrackCloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType::trackingData& ttd =
+        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);
 
-    typedef typename TrackData::cloudType cloudType;
-    typedef typename cloudType::parcelType parcelType;
-    typedef typename cloudType::forceType forceType;
+    const typename TrackCloudType::forceType& forces = cloud.forces();
 
-    const parcelType& p = static_cast<const parcelType&>(*this);
-    const forceType& forces = td.cloud().forces();
-
-    if (td.cloud().breakup().solveOscillationEq())
+    if (cloud.breakup().solveOscillationEq())
     {
-        solveTABEq(td, dt);
+        solveTABEq(cloud, td, dt);
     }
 
-    // cell state info is updated in ReactingParcel calc
-    const scalarField& Y(this->Y());
-    scalarField X(composition.liquids().X(Y));
-
-    scalar rho = composition.liquids().rho(this->pc(), this->T(), X);
-    scalar mu = composition.liquids().mu(this->pc(), this->T(), X);
-    scalar sigma = composition.liquids().sigma(this->pc(), this->T(), X);
-
     // Average molecular weight of carrier mix - assumes perfect gas
-    scalar Wc = this->rhoc()*specie::RR*this->Tc()/this->pc();
-    scalar R = specie::RR/Wc;
-    scalar Tav = td.cloud().atomization().Taverage(this->T(), this->Tc());
+    scalar Wc = td.rhoc()*RR*td.Tc()/td.pc();
+    scalar R = RR/Wc;
+    scalar Tav = cloud.atomization().Taverage(this->T(), td.Tc());
 
     // Calculate average gas density based on average temperature
-    scalar rhoAv = this->pc()/(R*Tav);
-    scalar muAv = this->muc();
-    vector Urel = this->U() - this->Uc();
+    scalar rhoAv = td.pc()/(R*Tav);
+    scalar muAv = td.muc();
+    vector Urel = this->U() - td.Uc();
     scalar Urmag = mag(Urel);
-    scalar Re = this->Re(this->U(), this->d(), rhoAv, muAv);
+    scalar Re = this->Re(rhoAv, this->U(), td.Uc(), this->d(), muAv);
 
     const scalar mass = p.mass();
-    const forceSuSp Fcp = forces.calcCoupled(p, dt, mass, Re, muAv);
-    const forceSuSp Fncp = forces.calcNonCoupled(p, dt, mass, Re, muAv);
-    this->tMom() = mass/(Fcp.Sp() + Fncp.Sp());
+    const forceSuSp Fcp = forces.calcCoupled(p, ttd, dt, mass, Re, muAv);
+    const forceSuSp Fncp = forces.calcNonCoupled(p, ttd, dt, mass, Re, muAv);
+    this->tMom() = mass/(Fcp.Sp() + Fncp.Sp() + ROOTVSMALL);
 
-    const vector g = td.cloud().g().value();
+    const vector g = cloud.g().value();
 
     scalar parcelMassChild = 0.0;
     scalar dChild = 0.0;
     if
     (
-        td.cloud().breakup().update
+        cloud.breakup().update
         (
             dt,
             g,
@@ -897,9 +1129,9 @@ void CML::SprayParcel<ParcelType>::calcBreakup
             this->y(),
             this->yDot(),
             this->d0(),
-            rho,
-            mu,
-            sigma,
+            this->rho(),
+            mu_,
+            sigma_,
             this->U(),
             rhoAv,
             muAv,
@@ -915,6 +1147,7 @@ void CML::SprayParcel<ParcelType>::calcBreakup
 
         // Add child parcel as copy of parent
         SprayParcel<ParcelType>* child = new SprayParcel<ParcelType>(*this);
+        child->origId() = this->getNewParticleID();
         child->d() = dChild;
         child->d0() = dChild;
         const scalar massChild = child->mass();
@@ -922,45 +1155,46 @@ void CML::SprayParcel<ParcelType>::calcBreakup
         child->nParticle() = parcelMassChild/massChild;
 
         const forceSuSp Fcp =
-            forces.calcCoupled(*child, dt, massChild, Re, muAv);
+            forces.calcCoupled(*child, ttd, dt, massChild, Re, muAv);
         const forceSuSp Fncp =
-            forces.calcNonCoupled(*child, dt, massChild, Re, muAv);
+            forces.calcNonCoupled(*child, ttd, dt, massChild, Re, muAv);
 
         child->age() = 0.0;
         child->liquidCore() = 0.0;
         child->KHindex() = 1.0;
-        child->y() = td.cloud().breakup().y0();
-        child->yDot() = td.cloud().breakup().yDot0();
+        child->y() = cloud.breakup().y0();
+        child->yDot() = cloud.breakup().yDot0();
         child->tc() = 0.0;
         child->ms() = -GREAT;
         child->injector() = this->injector();
         child->tMom() = massChild/(Fcp.Sp() + Fncp.Sp());
         child->user() = 0.0;
-        child->setCellValues(td, dt, cellI);
+        child->calcDispersion(cloud, td, dt);
 
-        td.cloud().addParticle(child);
+        cloud.addParticle(child);
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 CML::scalar CML::SprayParcel<ParcelType>::chi
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalarField& X
 ) const
 {
     // Modifications to take account of the flash boiling on primary break-up
 
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    typedef typename TrackCloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+        cloud.composition();
 
     scalar chi = 0.0;
     scalar T0 = this->T();
-    scalar p0 = this->pc();
-    scalar pAmb = td.cloud().pAmbient();
+    scalar p0 = td.pc();
+    scalar pAmb = cloud.pAmbient();
 
     scalar pv = composition.liquids().pv(p0, T0, X);
 
@@ -988,63 +1222,45 @@ CML::scalar CML::SprayParcel<ParcelType>::chi
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::SprayParcel<ParcelType>::solveTABEq
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar dt
 )
 {
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
-    const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
-
-    const scalar& TABCmu = td.cloud().breakup().TABCmu();
-    const scalar& TABWeCrit = td.cloud().breakup().TABWeCrit();
-    const scalar& TABComega = td.cloud().breakup().TABComega();
+    const scalar& TABCmu = cloud.breakup().TABCmu();
+    const scalar& TABtwoWeCrit = cloud.breakup().TABtwoWeCrit();
+    const scalar& TABComega = cloud.breakup().TABComega();
 
     scalar r = 0.5*this->d();
     scalar r2 = r*r;
     scalar r3 = r*r2;
 
-    const scalarField& Y(this->Y());
-    scalarField X(composition.liquids().X(Y));
-
-    scalar rho = composition.liquids().rho(this->pc(), this->T(), X);
-    scalar mu = composition.liquids().mu(this->pc(), this->T(), X);
-    scalar sigma = composition.liquids().sigma(this->pc(), this->T(), X);
-
     // Inverse of characteristic viscous damping time
-    scalar rtd = 0.5*TABCmu*mu/(rho*r2);
+    scalar rtd = 0.5*TABCmu*mu_/(this->rho()*r2);
 
     // Oscillation frequency (squared)
-    scalar omega2 = TABComega*sigma/(rho*r3) - rtd*rtd;
+    scalar omega2 = TABComega*sigma_/(this->rho()*r3) - rtd*rtd;
 
-    if(omega2 > 0)
+    if (omega2 > 0)
     {
         scalar omega = sqrt(omega2);
-        scalar rhoc = this->rhoc();
-        scalar Wetmp = this->We(this->U(), r, rhoc, sigma)/TABWeCrit;
+        scalar We =
+            this->We(td.rhoc(), this->U(), td.Uc(), r, sigma_)/TABtwoWeCrit;
 
-        scalar y1 = this->y() - Wetmp;
-        scalar y2 = this->yDot()/omega;
+        // Initial values for y and yDot
+        scalar y0 = this->y() - We;
+        scalar yDot0 = this->yDot() + y0*rtd;
 
         // Update distortion parameters
         scalar c = cos(omega*dt);
         scalar s = sin(omega*dt);
         scalar e = exp(-rtd*dt);
-        y2 = (this->yDot() + y1*rtd)/omega;
 
-        this->y() = Wetmp + e*(y1*c + y2*s);
-        if (this->y() < 0)
-        {
-            this->y() = 0.0;
-            this->yDot() = 0.0;
-        }
-        else
-        {
-            this->yDot() = (Wetmp - this->y())*rtd + e*omega*(y2*c - y1*s);
-        }
+        this->y() = We + e*(y0*c + (yDot0/omega)*s);
+        this->yDot() = (We - this->y())*rtd + e*(yDot0*c - omega*y0*s);
     }
     else
     {
@@ -1057,12 +1273,14 @@ void CML::SprayParcel<ParcelType>::solveTABEq
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template <class ParcelType>
+template<class ParcelType>
 CML::SprayParcel<ParcelType>::SprayParcel(const SprayParcel<ParcelType>& p)
 :
     ParcelType(p),
     d0_(p.d0_),
     position0_(p.position0_),
+    sigma_(p.sigma_),
+    mu_(p.mu_),
     liquidCore_(p.liquidCore_),
     KHindex_(p.KHindex_),
     y_(p.y_),
@@ -1075,7 +1293,7 @@ CML::SprayParcel<ParcelType>::SprayParcel(const SprayParcel<ParcelType>& p)
 {}
 
 
-template <class ParcelType>
+template<class ParcelType>
 CML::SprayParcel<ParcelType>::SprayParcel
 (
     const SprayParcel<ParcelType>& p,
@@ -1085,6 +1303,8 @@ CML::SprayParcel<ParcelType>::SprayParcel
     ParcelType(p, mesh),
     d0_(p.d0_),
     position0_(p.position0_),
+    sigma_(p.sigma_),
+    mu_(p.mu_),
     liquidCore_(p.liquidCore_),
     KHindex_(p.KHindex_),
     y_(p.y_),
@@ -1098,22 +1318,13 @@ CML::SprayParcel<ParcelType>::SprayParcel
 
 
 // * * * * * * * * * * * * * * IOStream operators  * * * * * * * * * * * * * //
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-template <class ParcelType>
-CML::string CML::SprayParcel<ParcelType>::propHeader =
-    ParcelType::propHeader
-  + " d0"
-  + " position0"
-  + " liquidCore"
-  + " KHindex"
-  + " y"
-  + " yDot"
-  + " tc"
-  + " ms"
-  + " injector"
-  + " tMom"
-  + " user";
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+template<class ParcelType>
+const std::size_t CML::SprayParcel<ParcelType>::sizeofFields_
+(
+    sizeof(SprayParcel<ParcelType>) - sizeof(ParcelType)
+);
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -1128,7 +1339,9 @@ CML::SprayParcel<ParcelType>::SprayParcel
 :
     ParcelType(mesh, is, readFields),
     d0_(0.0),
-    position0_(vector::zero),
+    position0_(Zero),
+    sigma_(0.0),
+    mu_(0.0),
     liquidCore_(0.0),
     KHindex_(0.0),
     y_(0.0),
@@ -1141,11 +1354,12 @@ CML::SprayParcel<ParcelType>::SprayParcel
 {
     if (readFields)
     {
-
         if (is.format() == IOstream::ASCII)
         {
             d0_ = readScalar(is);
             is >> position0_;
+            sigma_ = readScalar(is);
+            mu_ = readScalar(is);
             liquidCore_ = readScalar(is);
             KHindex_ = readScalar(is);
             y_ = readScalar(is);
@@ -1158,21 +1372,7 @@ CML::SprayParcel<ParcelType>::SprayParcel
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&d0_),
-                sizeof(d0_)
-              + sizeof(position0_)
-              + sizeof(liquidCore_)
-              + sizeof(KHindex_)
-              + sizeof(y_)
-              + sizeof(yDot_)
-              + sizeof(tc_)
-              + sizeof(ms_)
-              + sizeof(injector_)
-              + sizeof(tMom_)
-              + sizeof(user_)
-            );
+            is.read(reinterpret_cast<char*>(&d0_), sizeofFields_);
         }
     }
 
@@ -1226,34 +1426,64 @@ void CML::SprayParcel<ParcelType>::readFields
     );
     c.checkFieldIOobject(c, position0);
 
-    IOField<scalar> liquidCore(c.fieldIOobject
+    IOField<scalar> sigma(c.fieldIOobject("sigma", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, sigma);
+
+    IOField<scalar> mu(c.fieldIOobject("mu", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, mu);
+
+    IOField<scalar> liquidCore
     (
-        "liquidCore", IOobject::MUST_READ)
+        c.fieldIOobject("liquidCore", IOobject::MUST_READ)
     );
     c.checkFieldIOobject(c, liquidCore);
 
-    IOField<scalar> KHindex(c.fieldIOobject("KHindex", IOobject::MUST_READ));
+    IOField<scalar> KHindex
+    (
+        c.fieldIOobject("KHindex", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, KHindex);
 
-    IOField<scalar> y(c.fieldIOobject("y", IOobject::MUST_READ));
+    IOField<scalar> y
+    (
+        c.fieldIOobject("y", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, y);
 
-    IOField<scalar> yDot(c.fieldIOobject("yDot", IOobject::MUST_READ));
+    IOField<scalar> yDot
+    (
+        c.fieldIOobject("yDot", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, yDot);
 
-    IOField<scalar> tc(c.fieldIOobject("tc", IOobject::MUST_READ));
+    IOField<scalar> tc
+    (
+        c.fieldIOobject("tc", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tc);
 
-    IOField<scalar> ms(c.fieldIOobject("ms", IOobject::MUST_READ));
+    IOField<scalar> ms
+    (
+        c.fieldIOobject("ms", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, ms);
 
-    IOField<scalar> injector(c.fieldIOobject("injector", IOobject::MUST_READ));
+    IOField<scalar> injector
+    (
+        c.fieldIOobject("injector", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, injector);
 
-    IOField<scalar> tMom(c.fieldIOobject("tMom", IOobject::MUST_READ));
+    IOField<scalar> tMom
+    (
+        c.fieldIOobject("tMom", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tMom);
 
-    IOField<scalar> user(c.fieldIOobject("user", IOobject::MUST_READ));
+    IOField<scalar> user
+    (
+        c.fieldIOobject("user", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, user);
 
     label i = 0;
@@ -1262,6 +1492,8 @@ void CML::SprayParcel<ParcelType>::readFields
         SprayParcel<ParcelType>& p = iter();
         p.d0_ = d0[i];
         p.position0_ = position0[i];
+        p.sigma_ = sigma[i];
+        p.mu_ = mu[i];
         p.liquidCore_ = liquidCore[i];
         p.KHindex_ = KHindex[i];
         p.y_ = y[i];
@@ -1302,6 +1534,8 @@ void CML::SprayParcel<ParcelType>::writeFields
         c.fieldIOobject("position0", IOobject::NO_READ),
         np
     );
+    IOField<scalar> sigma(c.fieldIOobject("sigma", IOobject::NO_READ), np);
+    IOField<scalar> mu(c.fieldIOobject("mu", IOobject::NO_READ), np);
     IOField<scalar> liquidCore
     (
         c.fieldIOobject("liquidCore", IOobject::NO_READ),
@@ -1326,6 +1560,8 @@ void CML::SprayParcel<ParcelType>::writeFields
         const SprayParcel<ParcelType>& p = iter();
         d0[i] = p.d0_;
         position0[i] = p.position0_;
+        sigma[i] = p.sigma_;
+        mu[i] = p.mu_;
         liquidCore[i] = p.liquidCore_;
         KHindex[i] = p.KHindex_;
         y[i] = p.y_;
@@ -1340,6 +1576,8 @@ void CML::SprayParcel<ParcelType>::writeFields
 
     d0.write();
     position0.write();
+    sigma.write();
+    mu.write();
     liquidCore.write();
     KHindex.write();
     y.write();
@@ -1366,6 +1604,8 @@ CML::Ostream& CML::operator<<
         os  << static_cast<const ParcelType&>(p)
         << token::SPACE << p.d0()
         << token::SPACE << p.position0()
+        << token::SPACE << p.sigma()
+        << token::SPACE << p.mu()
         << token::SPACE << p.liquidCore()
         << token::SPACE << p.KHindex()
         << token::SPACE << p.y()
@@ -1382,17 +1622,7 @@ CML::Ostream& CML::operator<<
         os.write
         (
             reinterpret_cast<const char*>(&p.d0_),
-            sizeof(p.d0())
-          + sizeof(p.position0())
-          + sizeof(p.liquidCore())
-          + sizeof(p.KHindex())
-          + sizeof(p.y())
-          + sizeof(p.yDot())
-          + sizeof(p.tc())
-          + sizeof(p.ms())
-          + sizeof(p.injector())
-          + sizeof(p.tMom())
-          + sizeof(p.user())
+            SprayParcel<ParcelType>::sizeofFields_
         );
     }
 

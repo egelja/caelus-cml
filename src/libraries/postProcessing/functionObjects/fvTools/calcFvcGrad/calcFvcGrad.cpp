@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -52,16 +52,8 @@ CML::calcFvcGrad::calcFvcGrad
     if (!isA<fvMesh>(obr_))
     {
         active_ = false;
-        WarningIn
-        (
-            "calcFvcGrad::calcFvcGrad"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating." << nl
+        WarningInFunction
+            << "No fvMesh available, deactivating." << nl
             << endl;
     }
 
@@ -103,7 +95,7 @@ void CML::calcFvcGrad::execute()
 
         if (!processed)
         {
-            WarningIn("void CML::calcFvcGrad::write()")
+            WarningInFunction
                 << "Unprocessed field " << fieldName_ << endl;
         }
     }

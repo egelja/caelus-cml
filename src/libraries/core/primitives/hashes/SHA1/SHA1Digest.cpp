@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,7 +53,7 @@ unsigned char CML::SHA1Digest::readHexDigit(Istream& is)
 
     if (!isxdigit(c))
     {
-        FatalIOErrorIn("SHA1Digest::readHexDigit(Istream&)", is)
+        FatalIOErrorInFunction(is)
             << "Illegal hex digit: '" << c << "'"
             << exit(FatalIOError);
     }

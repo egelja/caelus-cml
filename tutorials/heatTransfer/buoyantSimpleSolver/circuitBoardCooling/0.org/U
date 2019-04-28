@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -12,41 +12,36 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 1 -1 0 0 0 0 ];
+dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform ( 0.1 0 0 );
+internalField   uniform (0.1 0 0);
 
 boundaryField
 {
     floor
     {
-        type            fixedValue;
-        value           uniform ( 0 0 0 );
+        type            noSlipWall;
     }
     ceiling
     {
-        type            fixedValue;
-        value           uniform ( 0 0 0 );
+        type            noSlipWall;
     }
     inlet
     {
         type            fixedValue;
-        value           uniform ( 0.1 0 0 );
+        value           uniform (0.1 0 0);
     }
     outlet
     {
         type            inletOutlet;
-        inletValue      uniform ( 0 0 0 );
-        value           uniform ( 0.1 0 0 );
+        inletValue      uniform (0 0 0);
+        value           uniform (0.1 0 0);
     }
     fixedWalls
     {
         type            empty;
     }
-    "baffle1Wall.*"
-    {
-        type            calculated;
-    }
+
 }
 
 

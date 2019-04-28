@@ -1,0 +1,65 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'lagrangianTurbulence'
+
+sources = Split("""
+parcels/derived/basicKinematicParcel/makeBasicKinematicParcelTurbSubmodels.cpp
+parcels/derived/basicKinematicCollidingParcel/makeBasicKinematicCollidingParcelTurbSubmodels.cpp
+parcels/derived/basicThermoParcel/makeBasicThermoParcelTurbSubmodels.cpp
+parcels/derived/basicReactingParcel/makeBasicReactingParcelTurbSubmodels.cpp
+parcels/derived/basicReactingMultiphaseParcel/makeBasicReactingMultiphaseParcelTurbSubmodels.cpp
+""")
+
+caelus_inc = [
+'lagrangian/basic/lnInclude',
+'lagrangian/intermediate/lnInclude',
+'lagrangian/distributionModels/lnInclude',
+'turbulenceModels',
+'turbulenceModels/incompressible/LES/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'transportModels',
+'regionModels/regionModel/lnInclude',
+'regionModels/surfaceFilmModels/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
+'thermophysicalModels/thermophysicalProperties/lnInclude',
+'sampling/lnInclude',
+'dynamicFvMesh/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'lagrangian',
+'lagrangianIntermediate',
+'distributionModels',
+'specie',
+'fluidThermophysicalModels',
+'thermophysicalProperties',
+'reactionThermophysicalModels',
+'SLGThermo',
+'radiationModels',
+'incompressibleTurbulenceModel',
+'incompressibleRASModels',
+'incompressibleLESModels',
+'compressibleTurbulenceModel',
+'compressibleRASModels',
+'compressibleLESModels',
+'LESdeltas',
+'incompressibleTransportModels',
+'regionModels',
+'surfaceFilmModels',
+'dynamicFvMesh',
+'sampling'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

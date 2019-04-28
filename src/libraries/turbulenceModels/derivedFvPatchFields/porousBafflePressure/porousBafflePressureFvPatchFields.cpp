@@ -24,7 +24,7 @@ License
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
 
 

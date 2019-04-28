@@ -139,6 +139,10 @@ surfaceScalarField alphaPhi
     phi*fvc::interpolate(alpha1)
 );
 
+mesh.setFluxRequired(p_rgh.name());
+
+mesh.setFluxRequired(alpha1.name());
+
 // MULES Correction
 tmp<surfaceScalarField> talphaPhiCorr0;
 

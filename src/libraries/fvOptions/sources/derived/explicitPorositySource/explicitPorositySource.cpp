@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -53,13 +53,13 @@ CML::fv::explicitPorositySource::explicitPorositySource
 )
 :
     option(name, modelType, dict, mesh),
-    porosityPtr_(NULL)
+    porosityPtr_(nullptr)
 {
     read(dict);
 
     if (selectionMode_ != smCellZone)
     {
-        FatalErrorIn("void CML::fv::explicitPorositySource::initialise()")
+        FatalErrorInFunction
             << "The porosity region must be specified as a cellZone.  Current "
             << "selection mode is " << selectionModeTypeNames_[selectionMode_]
             << exit(FatalError);

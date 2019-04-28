@@ -45,7 +45,13 @@ namespace CML
 typedef Tensor2D<scalar> tensor2D;
 
 vector2D eigenValues(const tensor2D& t);
-vector2D eigenVector(const tensor2D& t, const scalar lambda);
+vector2D eigenVector
+(
+    const tensor2D& t,
+    const scalar lambda,
+    const vector2D& direction1
+);
+tensor2D eigenVectors(const tensor2D& t, const vector2D& lambdas);
 tensor2D eigenVectors(const tensor2D& t);
 
 //- Data associated with tensor2D type are contiguous

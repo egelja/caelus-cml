@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2017 OpenFOAM Foundation
+Copyright (C) 2015 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -50,6 +51,7 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
         meshSubDir = io.name()/polyMesh::meshSubDir;
     }
 
+
     // Patch types
     // ~~~~~~~~~~~
     // Read and scatter master patches (without reading master mesh!)
@@ -93,9 +95,15 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
     else
     {
         // Receive patches
-        IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+        IPstream fromMaster
+        (
+            Pstream::scheduled,
+            Pstream::masterNo()
+        );
         fromMaster >> patchEntries;
     }
+
+
 
     // Dummy meshes
     // ~~~~~~~~~~~~
@@ -130,9 +138,9 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
         List<polyPatch*> patches(patchEntries.size());
         label nPatches = 0;
 
-        forAll(patchEntries, patchI)
+        forAll(patchEntries, patchi)
         {
-            const entry& e = patchEntries[patchI];
+            const entry& e = patchEntries[patchi];
             const word type(e.dict().lookup("type"));
             const word& name = e.keyword();
 
@@ -146,7 +154,7 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
                 patchDict.set("nFaces", 0);
                 patchDict.set("startFace", 0);
 
-                patches[patchI] = polyPatch::New
+                patches[patchi] = polyPatch::New
                 (
                     name,
                     patchDict,
@@ -157,6 +165,7 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
         }
         patches.setSize(nPatches);
         dummyMesh.addFvPatches(patches, false);  // no parallel comms
+
 
         // Add some dummy zones so upon reading it does not read them
         // from the undecomposed case. Should be done as extra argument to
@@ -206,6 +215,8 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
         Pstream::parRun() = oldParRun;
     }
 
+
+
     // Read mesh
     // ~~~~~~~~~
     // Now all processors have a (possibly zero size) mesh so read in
@@ -214,6 +225,8 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
     //Pout<< "Reading mesh from " << io.objectPath() << endl;
     autoPtr<fvMesh> meshPtr(new fvMesh(io));
     fvMesh& mesh = meshPtr();
+
+
 
     // Sync patches
     // ~~~~~~~~~~~~
@@ -224,9 +237,9 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
 
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-        forAll(patchEntries, patchI)
+        forAll(patchEntries, patchi)
         {
-            const entry& e = patchEntries[patchI];
+            const entry& e = patchEntries[patchi];
             const word type(e.dict().lookup("type"));
             const word& name = e.keyword();
 
@@ -235,42 +248,39 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
                 break;
             }
 
-            if (patchI >= patches.size())
+            if (patchi >= patches.size())
             {
-                FatalErrorIn
-                (
-                    "createMesh(const Time&, const fileName&, const bool)"
-                )   << "Non-processor patches not synchronised."
+                FatalErrorInFunction
+                    << "Non-processor patches not synchronised."
                     << endl
                     << "Processor " << Pstream::myProcNo()
                     << " has only " << patches.size()
                     << " patches, master has "
-                    << patchI
+                    << patchi
                     << exit(FatalError);
             }
 
             if
             (
-                type != patches[patchI].type()
-             || name != patches[patchI].name()
+                type != patches[patchi].type()
+             || name != patches[patchi].name()
             )
             {
-                FatalErrorIn
-                (
-                    "createMesh(const Time&, const fileName&, const bool)"
-                )   << "Non-processor patches not synchronised."
+                FatalErrorInFunction
+                    << "Non-processor patches not synchronised."
                     << endl
-                    << "Master patch " << patchI
+                    << "Master patch " << patchi
                     << " name:" << type
                     << " type:" << type << endl
                     << "Processor " << Pstream::myProcNo()
-                    << " patch " << patchI
-                    << " has name:" << patches[patchI].name()
-                    << " type:" << patches[patchI].type()
+                    << " patch " << patchi
+                    << " has name:" << patches[patchi].name()
+                    << " type:" << patches[patchi].type()
                     << exit(FatalError);
             }
         }
     }
+
 
     // Determine zones
     // ~~~~~~~~~~~~~~~
@@ -329,14 +339,13 @@ CML::autoPtr<CML::fvMesh> CML::loadOrCreateMesh
     // Force recreation of globalMeshData.
     mesh.globalData();
 
+
     // Do some checks.
 
     // Check if the boundary definition is unique
     mesh.boundaryMesh().checkDefinition(true);
-
     // Check if the boundary processor patches are correct
     mesh.boundaryMesh().checkParallelSync(true);
-
     // Check names of zones are equal
     mesh.cellZones().checkDefinition(true);
     mesh.cellZones().checkParallelSync(true);

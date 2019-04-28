@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef pureMixture_H
-#define pureMixture_H
+#ifndef pureMixture_HPP
+#define pureMixture_HPP
 
 #include "basicMixture.hpp"
 #include "fvMesh.hpp"
@@ -48,12 +48,11 @@ class pureMixture
 :
     public basicMixture
 {
-    // Private data
 
-        ThermoType mixture_;
+    ThermoType mixture_;
 
-        //- Construct as copy (not implemented)
-        pureMixture(const pureMixture<ThermoType>&);
+    //- Construct as copy (not implemented)
+    pureMixture(const pureMixture<ThermoType>&);
 
 
 public:
@@ -62,77 +61,88 @@ public:
     typedef ThermoType thermoType;
 
 
-    //- Runtime type information
-    TypeName("pureMixture");
-
-
-    // Constructors
-
-        //- Construct from dictionary and mesh
-        pureMixture(const dictionary&, const fvMesh&);
-
-
-    //- Destructor
-    virtual ~pureMixture();
+    //- Construct from dictionary, mesh and phase name
+    pureMixture(const dictionary&, const fvMesh&, const word&);
 
 
     // Member functions
 
-        const ThermoType& cellMixture(const label) const
-        {
-            return mixture_;
-        }
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "pureMixture<" + ThermoType::typeName() + '>';
+    }
 
-        const ThermoType& patchFaceMixture
-        (
-            const label,
-            const label
-        ) const
-        {
-            return mixture_;
-        }
+    const ThermoType& mixture() const
+    {
+        return mixture_;
+    }
 
-        //- Read dictionary
-        void read(const dictionary&);
+    const ThermoType& cellMixture(const label) const
+    {
+        return mixture_;
+    }
+
+    const ThermoType& patchFaceMixture
+    (
+        const label,
+        const label
+    ) const
+    {
+        return mixture_;
+    }
+
+    const ThermoType& cellVolMixture
+    (
+        const scalar,
+        const scalar,
+        const label
+    ) const
+    {
+        return mixture_;
+    }
+
+    const ThermoType& patchFaceVolMixture
+    (
+        const scalar,
+        const scalar,
+        const label,
+        const label
+    ) const
+    {
+        return mixture_;
+    }
+
+    //- Read dictionary
+    void read(const dictionary&);
+
 };
+
+
+} // End namespace CML
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class ThermoType>
-pureMixture<ThermoType>::pureMixture
+CML::pureMixture<ThermoType>::pureMixture
 (
     const dictionary& thermoDict,
-    const fvMesh& mesh
+    const fvMesh& mesh,
+    const word& phaseName
 )
 :
-    basicMixture(thermoDict, mesh),
+    basicMixture(thermoDict, mesh, phaseName),
     mixture_(thermoDict.subDict("mixture"))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-template<class ThermoType>
-pureMixture<ThermoType>::~pureMixture()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class ThermoType>
-void pureMixture<ThermoType>::read(const dictionary& thermoDict)
+void CML::pureMixture<ThermoType>::read(const dictionary& thermoDict)
 {
     mixture_ = ThermoType(thermoDict.subDict("mixture"));
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

@@ -226,11 +226,11 @@ const cloud& CloudValueExpressionDriver::getCloud(
             IOobject::AUTO_WRITE
         );
         if(! exists(reg.objectPath() )) {
-            WarningIn("CloudValueExpressionDriver::getCloud")
+            WarningInFunction
                 << "No cloud " << name << " in " << mesh.name()
-                    << " and directory " << reg.objectPath()
-                    << " does not exist. Going on anyway"
-                    << endl;
+                << " and directory " << reg.objectPath()
+                << " does not exist. Going on anyway"
+                << endl;
         }
 
         autoPtr<ReaderParticleCloud> theCloud(
@@ -334,11 +334,11 @@ tmp<Field<bool> > CloudValueExpressionDriver::makeCellZoneField(const word &name
     label zoneID=mesh().cellZones().findZoneID(name);
 
     if(zoneID<0) {
-        FatalErrorIn("FieldValueExpressionDriver::makeCellZoneField")
+        FatalErrorInFunction
             << "No zone named " << name << "found. Present: "
-                << mesh().cellZones().names()
-                << endl
-                << exit(FatalError);
+            << mesh().cellZones().names()
+            << endl
+            << exit(FatalError);
     }
 
     labelHashSet zone(mesh().cellZones()[zoneID]);
@@ -449,11 +449,11 @@ tmp<scalarField> CloudValueExpressionDriver::weightsNonPoint(
         Pout << "Expected cloud size: " << size
             << " Real cloud size: " << cloudSize << endl;
 
-        FatalErrorIn("CloudValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Expected weight size not expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -467,7 +467,7 @@ label CloudValueExpressionDriver::size() const
 
 label CloudValueExpressionDriver::pointSize() const
 {
-    notImplemented("CloudValueExpressionDriver::pointSize()");
+    NotImplemented;
     return 0;
 }
 

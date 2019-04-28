@@ -111,16 +111,8 @@ autoPtr<VLESModel> VLESModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "VLESModel::New"
-            "("
-                "volVectorField const&, "
-                "surfaceScalarField const&, "
-                "transportModel&, "
-                "word const&"
-            ")"
-        )   << "Unknown VLESModel type "
+        FatalErrorInFunction
+            << "Unknown VLESModel type "
             << modelType << nl << nl
             << "Valid VLESModel types:" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -69,11 +69,8 @@ CML::autoPtr<CML::faceSelection> CML::faceSelection::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "faceSelection::New"
-            "(const word&, const fvMesh&, const dictionary&)"
-        )   << "Unknown faceSelection type "
+        FatalErrorInFunction
+            << "Unknown faceSelection type "
             << sampleType << nl << nl
             << "Valid faceSelection types : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -93,11 +90,11 @@ void CML::faceSelection::select
 {
     if (flip_)
     {
-        forAll(faceToZoneID, faceI)
+        forAll(faceToZoneID, facei)
         {
-            if (faceToZoneID[faceI] == zoneID)
+            if (faceToZoneID[facei] == zoneID)
             {
-                faceToFlip[faceI] = !faceToFlip[faceI];
+                faceToFlip[facei] = !faceToFlip[facei];
             }
         }
     }

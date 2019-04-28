@@ -35,10 +35,8 @@ void coordinateModifier::checkForValidInverse() const
         forAll(modifiers_, modI)
             if( !modifiers_[modI].combiningPossible() )
             {
-                FatalErrorIn
-                (
-                    "void coordinateModifier::checkForValidInverse() const"
-                ) << modifiers_[modI].name() << " cannot be combined with"
+                FatalErrorInFunction
+                  << modifiers_[modI].name() << " cannot be combined with"
                   << " other anisotropic sources. The operation"
                   << " cannot be reverted!" << exit(FatalError);
             }
@@ -77,11 +75,8 @@ void coordinateModifier::checkForValidInverse() const
                         {
                             if( dn < (1.0 - SMALL) )
                             {
-                                FatalErrorIn
-                                (
-                                    "void coordinateModifier::"
-                                    "checkForValidInverse() const"
-                                ) << "Bounding planes of the objects "
+                                FatalErrorInFunction
+                                  << "Bounding planes of the objects "
                                   << modifiers_[modI].name()
                                   << " and " << modifiers_[modJ].name()
                                   << " are not parallel. This combination of"
@@ -118,11 +113,8 @@ void coordinateModifier::checkForValidInverse() const
                                 //- check if the intervals overlap
                                 if( (t1 >= 0) && (t0 < tMax) )
                                 {
-                                    FatalErrorIn
-                                    (
-                                        "void coordinateModifier::"
-                                        "checkForValidInverse() const"
-                                    ) << "Scaling regions of objects "
+                                    FatalErrorInFunction
+                                      << "Scaling regions of objects "
                                       << modifiers_[modI].name()
                                       << " and " << modifiers_[modJ].name()
                                       << " are overlapping each other."

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,10 +40,12 @@ Description
 #include "IOstream.hpp"
 #include "autoPtr.hpp"
 #include "interpolation.hpp"
+#include "demandDrivenEntry.hpp"
 #include "mathematicalConstants.hpp"
 #include "forceSuSp.hpp"
-#include "IntegrationScheme.hpp"
+#include "integrationScheme.hpp"
 #include "meshTools.hpp"
+#include "cloudSolution.hpp"
 #include "IOstreams.hpp"
 #include "IOField.hpp"
 #include "Cloud.hpp"
@@ -76,34 +78,44 @@ class KinematicParcel
 :
     public ParcelType
 {
+    // Private data
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
+
+        //- Number of particle tracking attempts before we assume that it stalls
+        static label maxTrackAttempts;
+
+
 public:
 
     //- Class to hold kinematic particle constant properties
     class constantProperties
     {
-        // Private data
+    protected:
+
+        // Protected data
 
             //- Constant properties dictionary
             const dictionary dict_;
 
+
+    private:
+
+        // Private data
+
             //- Parcel type id - used for post-processing to flag the type
             //  of parcels issued by this cloud
-            label parcelTypeId_;
+            demandDrivenEntry<label> parcelTypeId_;
 
             //- Minimum density [kg/m3]
-            scalar rhoMin_;
+            demandDrivenEntry<scalar> rhoMin_;
 
             //- Particle density [kg/m3] (constant)
-            scalar rho0_;
+            demandDrivenEntry<scalar> rho0_;
 
             //- Minimum parcel mass [kg]
-            scalar minParcelMass_;
-
-            //- Young's modulus [N/m2]
-            scalar youngsModulus_;
-
-            //- Poisson's ratio
-            scalar poissonsRatio_;
+            demandDrivenEntry<scalar> minParcelMass_;
 
 
     public:
@@ -116,23 +128,8 @@ public:
             //- Copy constructor
             constantProperties(const constantProperties& cp);
 
-            //- Constructor from dictionary
-            constantProperties
-            (
-                const dictionary& parentDict,
-                const bool readFields = true
-            );
-
-            //- Construct from components
-            constantProperties
-            (
-                const label parcelTypeId,
-                const scalar rhoMin,
-                const scalar rho0,
-                const scalar minParcelMass,
-                const scalar youngsModulus,
-                const scalar poissonsRatio
-            );
+            //- Construct from dictionary
+            constantProperties(const dictionary& parentDict);
 
 
         // Member functions
@@ -149,21 +146,14 @@ public:
             //- Return const access to the particle density
             inline scalar rho0() const;
 
-            //- Return const access to the minimum particle mass
+            //- Return const access to the minimum parcel mass
             inline scalar minParcelMass() const;
-
-            //- Return const access to Young's Modulus
-            inline scalar youngsModulus() const;
-
-            //- Return const access to Poisson's ratio
-            inline scalar poissonsRatio() const;
     };
 
 
-    template<class CloudType>
-    class TrackingData
+    class trackingData
     :
-        public ParcelType::template TrackingData<CloudType>
+        public ParcelType::trackingData
     {
     public:
 
@@ -191,6 +181,18 @@ public:
                 autoPtr<interpolation<scalar> > muInterp_;
 
 
+            // Cached continuous phase properties
+
+                //- Density [kg/m3]
+                scalar rhoc_;
+
+                //- Velocity [m/s]
+                vector Uc_;
+
+                //- Viscosity [Pa.s]
+                scalar muc_;
+
+
             //- Local gravitational or other body-force acceleration
             const vector& g_;
 
@@ -204,9 +206,10 @@ public:
         // Constructors
 
             //- Construct from components
-            inline TrackingData
+            template <class TrackCloudType>
+            inline trackingData
             (
-                CloudType& cloud,
+                const TrackCloudType& cloud,
                 trackPart part = tpLinearTrack
             );
 
@@ -225,6 +228,24 @@ public:
             //  phase dynamic viscosity field
             inline const interpolation<scalar>& muInterp() const;
 
+            //- Return the continuous phase density
+            inline scalar rhoc() const;
+
+            //- Access the continuous phase density
+            inline scalar& rhoc();
+
+            //- Return the continuous phase velocity
+            inline const vector& Uc() const;
+
+            //- Access the continuous phase velocity
+            inline vector& Uc();
+
+            //- Return the continuous phase viscosity
+            inline scalar muc() const;
+
+            //- Access the continuous phase viscosity
+            inline scalar& muc();
+
             // Return const access to the gravitational acceleration vector
             inline const vector& g() const;
 
@@ -234,10 +255,6 @@ public:
             //- Return access to the part of the tracking operation taking place
             inline trackPart& part();
     };
-
-
-    //- Number of particle tracking attempts before we assume that it stalls
-    static label maxTrackAttempts;
 
 
 protected:
@@ -264,17 +281,6 @@ protected:
             //- Velocity of Parcel [m/s]
             vector U_;
 
-            //- Force on particle due to collisions [N]
-            vector f_;
-
-            //- Angular momentum of Parcel in global reference frame
-            // [kg m2/s]
-            vector angularMomentum_;
-
-            //- Torque on particle due to collisions in global
-            //  reference frame [Nm]
-            vector torque_;
-
             //- Density [kg/m3]
             scalar rho_;
 
@@ -288,27 +294,15 @@ protected:
             vector UTurb_;
 
 
-        // Cell-based quantities
-
-            //- Density [kg/m3]
-            scalar rhoc_;
-
-            //- Velocity [m/s]
-            vector Uc_;
-
-            //- Viscosity [Pa.s]
-            scalar muc_;
-
-
     // Protected Member Functions
 
         //- Calculate new particle velocity
-        template<class TrackData>
+        template<class TrackCloudType>
         const vector calcVelocity
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
-            const label cellI,         // owner cell
             const scalar Re,           // Reynolds number
             const scalar mu,           // local carrier viscosity
             const scalar mass,         // mass
@@ -335,9 +329,6 @@ public:
           + " d"
           + " dTarget "
           + " (Ux Uy Uz)"
-          + " (fx fy fz)"
-          + " (angularMomentumx angularMomentumy angularMomentumz)"
-          + " (torquex torquey torquez)"
           + " rho"
           + " age"
           + " tTurb"
@@ -347,33 +338,39 @@ public:
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, coordinates and topology
         //  Other properties initialised as null
         inline KinematicParcel
         (
             const polyMesh& mesh,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
+        );
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline KinematicParcel
+        (
+            const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const label celli
         );
 
         //- Construct from components
         inline KinematicParcel
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const label typeId,
             const scalar nParticle0,
             const scalar d0,
             const scalar dTarget0,
             const vector& U0,
-            const vector& f0,
-            const vector& angularMomentum0,
-            const vector& torque0,
             const constantProperties& constProps
         );
 
@@ -448,15 +445,6 @@ public:
             //- Return const access to velocity
             inline const vector& U() const;
 
-            //- Return const access to force
-            inline const vector& f() const;
-
-            //- Return const access to angular momentum
-            inline const vector& angularMomentum() const;
-
-            //- Return const access to torque
-            inline const vector& torque() const;
-
             //- Return const access to density
             inline scalar rho() const;
 
@@ -468,15 +456,6 @@ public:
 
             //- Return const access to turbulent velocity fluctuation
             inline const vector& UTurb() const;
-
-            //- Return const access to carrier density [kg/m3]
-            inline scalar rhoc() const;
-
-            //- Return const access to carrier velocity [m/s]
-            inline const vector& Uc() const;
-
-            //- Return const access to carrier viscosity [Pa.s]
-            inline scalar muc() const;
 
 
         // Edit
@@ -499,15 +478,6 @@ public:
             //- Return access to velocity
             inline vector& U();
 
-            //- Return access to force
-            inline vector& f();
-
-            //- Return access to angular momentum
-            inline vector& angularMomentum();
-
-            //- Return access to torque
-            inline vector& torque();
-
             //- Return access to density
             inline scalar& rho();
 
@@ -523,21 +493,14 @@ public:
 
         // Helper functions
 
-            //- Return the index of the face to be used in the interpolation
-            //  routine
-            inline label faceInterpolation() const;
-
             //- Cell owner mass
-            inline scalar massCell(const label cellI) const;
+            inline scalar massCell(const trackingData& td) const;
 
             //- Particle mass
             inline scalar mass() const;
 
             //- Particle moment of inertia around diameter axis
             inline scalar momentOfInertia() const;
-
-            //- Particle angular velocity
-            inline vector omega() const;
 
             //- Particle volume
             inline scalar volume() const;
@@ -558,116 +521,116 @@ public:
             inline static scalar areaS(const scalar d);
 
             //- Reynolds number
-            inline scalar Re
+            inline scalar Re(const trackingData& td) const;
+
+            //- Reynolds number for given conditions
+            inline static scalar Re
             (
-                const vector& U,        // particle velocity
-                const scalar d,         // particle diameter
-                const scalar rhoc,      // carrier density
-                const scalar muc        // carrier dynamic viscosity
-            ) const;
+                const scalar rhoc,
+                const vector& U,
+                const vector& Uc,
+                const scalar d,
+                const scalar muc
+            );
 
             //- Weber number
             inline scalar We
             (
-                const vector& U,        // particle velocity
-                const scalar d,         // particle diameter
-                const scalar rhoc,      // carrier density
-                const scalar sigma      // particle surface tension
+                const trackingData& td,
+                const scalar sigma
             ) const;
+
+            //- Weber number for given conditions
+            inline static scalar We
+            (
+                const scalar rhoc,
+                const vector& U,
+                const vector& Uc,
+                const scalar d,
+                const scalar sigma
+            );
 
             //- Eotvos number
             inline scalar Eo
             (
-                const vector& a,        // acceleration
-                const scalar d,         // particle diameter
-                const scalar sigma      // particle surface tension
+                const trackingData& td,
+                const scalar sigma
             ) const;
+
+            //- Eotvos number for given conditions
+            inline static scalar Eo
+            (
+                const vector& g,
+                const scalar rho,
+                const scalar rhoc,
+                const vector& U,
+                const scalar d,
+                const scalar sigma
+            );
 
 
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
+
+            //- Apply dispersion to the carrier phase velocity and update
+            //  parcel turbulence parameters
+            template<class TrackCloudType>
+            void calcDispersion
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
 
         // Tracking
 
             //- Move the parcel
-            template<class TrackData>
-            bool move(TrackData& td, const scalar trackTime);
+            template<class TrackCloudType>
+            bool move
+            (
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar trackTime
+            );
 
 
         // Patch interactions
 
-            //- Overridable function to handle the particle hitting a face
-            //  without trackData
-            void hitFace(int& td);
-
-            //- Overridable function to handle the particle hitting a face
-            template<class TrackData>
-            void hitFace(TrackData& td);
-
             //- Overridable function to handle the particle hitting a patch
             //  Executed before other patch-hitting functions
-            template<class TrackData>
-            bool hitPatch
-            (
-                const polyPatch& p,
-                TrackData& td,
-                const label patchI,
-                const scalar trackFraction,
-                const tetIndices& tetIs
-            );
+            template<class TrackCloudType>
+            bool hitPatch(TrackCloudType& cloud, trackingData& td);
 
             //- Overridable function to handle the particle hitting a
             //  processorPatch
-            template<class TrackData>
-            void hitProcessorPatch
-            (
-                const processorPolyPatch&,
-                TrackData& td
-            );
+            template<class TrackCloudType>
+            void hitProcessorPatch(TrackCloudType& cloud, trackingData& td);
 
             //- Overridable function to handle the particle hitting a wallPatch
-            template<class TrackData>
-            void hitWallPatch
-            (
-                const wallPolyPatch&,
-                TrackData& td,
-                const tetIndices&
-            );
-
-            //- Overridable function to handle the particle hitting a polyPatch
-            template<class TrackData>
-            void hitPatch
-            (
-                const polyPatch&,
-                TrackData& td
-            );
+            template<class TrackCloudType>
+            void hitWallPatch(TrackCloudType& cloud, trackingData& td);
 
             //- Transform the physical properties of the particle
             //  according to the given transformation tensor
@@ -677,20 +640,16 @@ public:
             //  according to the given separation vector
             virtual void transformProperties(const vector& separation);
 
-            //- The nearest distance to a wall that the particle can be
-            //  in the n direction
-            virtual scalar wallImpactDistance(const vector& n) const;
-
 
         // I-O
 
             //- Read
-            template<class CloudType>
-            static void readFields(CloudType& c);
+            template<class TrackCloudType>
+            static void readFields(TrackCloudType& c);
 
             //- Write
-            template<class CloudType>
-            static void writeFields(const CloudType& c);
+            template<class TrackCloudType>
+            static void writeFields(const TrackCloudType& c);
 
 
     // Ostream Operator
@@ -718,12 +677,10 @@ inline
 CML::KinematicParcel<ParcelType>::constantProperties::constantProperties()
 :
     dict_(dictionary::null),
-    parcelTypeId_(-1),
-    rhoMin_(0.0),
-    rho0_(0.0),
-    minParcelMass_( 0.0),
-    youngsModulus_(0.0),
-    poissonsRatio_(0.0)
+    parcelTypeId_(dict_, -1),
+    rhoMin_(dict_, 0.0),
+    rho0_(dict_, 0.0),
+    minParcelMass_(dict_, 0.0)
 {}
 
 
@@ -737,56 +694,21 @@ inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
     parcelTypeId_(cp.parcelTypeId_),
     rhoMin_(cp.rhoMin_),
     rho0_(cp.rho0_),
-    minParcelMass_(cp.minParcelMass_),
-    youngsModulus_(cp.youngsModulus_),
-    poissonsRatio_(cp.poissonsRatio_)
+    minParcelMass_(cp.minParcelMass_)
 {}
 
 
 template<class ParcelType>
 inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
 (
-    const dictionary& parentDict,
-    const bool readFields
+    const dictionary& parentDict
 )
 :
     dict_(parentDict.subOrEmptyDict("constantProperties")),
-    parcelTypeId_(-1),
-    rhoMin_(0.0),
-    rho0_(0.0),
-    minParcelMass_(0.0),
-    youngsModulus_(0.0),
-    poissonsRatio_(0.0)
-{
-    if (readFields)
-    {
-        dict_.lookup("parcelTypeId") >> parcelTypeId_;
-        dict_.lookup("rhoMin") >> rhoMin_;
-        dict_.lookup("rho0") >> rho0_;
-        dict_.lookup("minParcelMass") >> minParcelMass_;
-        dict_.lookup("youngsModulus") >> youngsModulus_;
-        dict_.lookup("poissonsRatio") >> poissonsRatio_;
-    }
-}
-
-template<class ParcelType>
-inline CML::KinematicParcel<ParcelType>::constantProperties::constantProperties
-(
-    const label parcelTypeId,
-    const scalar rhoMin,
-    const scalar rho0,
-    const scalar minParcelMass,
-    const scalar youngsModulus,
-    const scalar poissonsRatio
-)
-:
-    dict_(dictionary::null),
-    parcelTypeId_(parcelTypeId),
-    rhoMin_(rhoMin),
-    rho0_(rho0),
-    minParcelMass_(minParcelMass),
-    youngsModulus_(youngsModulus),
-    poissonsRatio_(poissonsRatio)
+    parcelTypeId_(dict_, "parcelTypeId", -1),
+    rhoMin_(dict_, "rhoMin", 1e-15),
+    rho0_(dict_, "rho0"),
+    minParcelMass_(dict_, "minParcelMass", 1e-15)
 {}
 
 
@@ -794,29 +716,23 @@ template<class ParcelType>
 inline CML::KinematicParcel<ParcelType>::KinematicParcel
 (
     const polyMesh& owner,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti
 )
 :
-    ParcelType(owner, position, cellI, tetFaceI, tetPtI),
+    ParcelType(owner, coordinates, celli, tetFacei, tetPti),
     active_(true),
     typeId_(-1),
     nParticle_(0),
     d_(0.0),
     dTarget_(0.0),
-    U_(vector::zero),
-    f_(vector::zero),
-    angularMomentum_(vector::zero),
-    torque_(vector::zero),
+    U_(Zero),
     rho_(0.0),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(vector::zero),
-    rhoc_(0.0),
-    Uc_(vector::zero),
-    muc_(0.0)
+    UTurb_(Zero)
 {}
 
 
@@ -825,37 +741,50 @@ inline CML::KinematicParcel<ParcelType>::KinematicParcel
 (
     const polyMesh& owner,
     const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const label celli
+)
+:
+    ParcelType(owner, position, celli),
+    active_(true),
+    typeId_(-1),
+    nParticle_(0),
+    d_(0.0),
+    dTarget_(0.0),
+    U_(Zero),
+    rho_(0.0),
+    age_(0.0),
+    tTurb_(0.0),
+    UTurb_(Zero)
+{}
+
+
+template<class ParcelType>
+inline CML::KinematicParcel<ParcelType>::KinematicParcel
+(
+    const polyMesh& owner,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const label typeId,
     const scalar nParticle0,
     const scalar d0,
     const scalar dTarget0,
     const vector& U0,
-    const vector& f0,
-    const vector& angularMomentum0,
-    const vector& torque0,
     const constantProperties& constProps
 )
 :
-    ParcelType(owner, position, cellI, tetFaceI, tetPtI),
+    ParcelType(owner, coordinates, celli, tetFacei, tetPti),
     active_(true),
     typeId_(typeId),
     nParticle_(nParticle0),
     d_(d0),
     dTarget_(dTarget0),
     U_(U0),
-    f_(f0),
-    angularMomentum_(angularMomentum0),
-    torque_(torque0),
     rho_(constProps.rho0()),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(vector::zero),
-    rhoc_(0.0),
-    Uc_(vector::zero),
-    muc_(0.0)
+    UTurb_(Zero)
 {}
 
 
@@ -873,7 +802,7 @@ template<class ParcelType>
 inline CML::label
 CML::KinematicParcel<ParcelType>::constantProperties::parcelTypeId() const
 {
-    return parcelTypeId_;
+    return parcelTypeId_.value();
 }
 
 
@@ -881,7 +810,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::KinematicParcel<ParcelType>::constantProperties::rhoMin() const
 {
-    return rhoMin_;
+    return rhoMin_.value();
 }
 
 
@@ -889,7 +818,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::KinematicParcel<ParcelType>::constantProperties::rho0() const
 {
-    return rho0_;
+    return rho0_.value();
 }
 
 
@@ -897,23 +826,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::KinematicParcel<ParcelType>::constantProperties::minParcelMass() const
 {
-    return minParcelMass_;
-}
-
-
-template<class ParcelType>
-inline CML::scalar
-CML::KinematicParcel<ParcelType>::constantProperties::youngsModulus() const
-{
-    return youngsModulus_;
-}
-
-
-template<class ParcelType>
-inline CML::scalar
-CML::KinematicParcel<ParcelType>::constantProperties::poissonsRatio() const
-{
-    return poissonsRatio_;
+    return minParcelMass_.value();
 }
 
 
@@ -962,30 +875,6 @@ inline const CML::vector& CML::KinematicParcel<ParcelType>::U() const
 
 
 template<class ParcelType>
-inline const CML::vector&
-CML::KinematicParcel<ParcelType>::f() const
-{
-    return f_;
-}
-
-
-template<class ParcelType>
-inline const CML::vector&
-CML::KinematicParcel<ParcelType>::angularMomentum() const
-{
-    return angularMomentum_;
-}
-
-
-template<class ParcelType>
-inline const CML::vector&
-CML::KinematicParcel<ParcelType>::torque() const
-{
-    return torque_;
-}
-
-
-template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::rho() const
 {
     return rho_;
@@ -1010,27 +899,6 @@ template<class ParcelType>
 inline const CML::vector& CML::KinematicParcel<ParcelType>::UTurb() const
 {
     return UTurb_;
-}
-
-
-template <class ParcelType>
-inline CML::scalar CML::KinematicParcel<ParcelType>::rhoc() const
-{
-    return rhoc_;
-}
-
-
-template <class ParcelType>
-inline const CML::vector& CML::KinematicParcel<ParcelType>::Uc() const
-{
-    return Uc_;
-}
-
-
-template <class ParcelType>
-inline CML::scalar CML::KinematicParcel<ParcelType>::muc() const
-{
-    return muc_;
 }
 
 
@@ -1077,27 +945,6 @@ inline CML::vector& CML::KinematicParcel<ParcelType>::U()
 
 
 template<class ParcelType>
-inline CML::vector& CML::KinematicParcel<ParcelType>::f()
-{
-    return f_;
-}
-
-
-template<class ParcelType>
-inline CML::vector& CML::KinematicParcel<ParcelType>::angularMomentum()
-{
-    return angularMomentum_;
-}
-
-
-template<class ParcelType>
-inline CML::vector& CML::KinematicParcel<ParcelType>::torque()
-{
-    return torque_;
-}
-
-
-template<class ParcelType>
 inline CML::scalar& CML::KinematicParcel<ParcelType>::rho()
 {
     return rho_;
@@ -1126,27 +973,12 @@ inline CML::vector& CML::KinematicParcel<ParcelType>::UTurb()
 
 
 template<class ParcelType>
-inline CML::label CML::KinematicParcel<ParcelType>::faceInterpolation() const
-{
-    // Use volume-based interpolation if dealing with external faces
-    if (this->cloud().internalFace(this->face()))
-    {
-        return this->face();
-    }
-    else
-    {
-        return -1;
-    }
-}
-
-
-template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::massCell
 (
-    const label cellI
+    const trackingData& td
 ) const
 {
-    return rhoc_*this->mesh().cellVolumes()[cellI];
+    return td.rhoc()*this->mesh().cellVolumes()[this->cell()];
 }
 
 
@@ -1161,13 +993,6 @@ template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::momentOfInertia() const
 {
     return 0.1*mass()*sqr(d_);
-}
-
-
-template<class ParcelType>
-inline CML::vector CML::KinematicParcel<ParcelType>::omega() const
-{
-    return angularMomentum_/momentOfInertia();
 }
 
 
@@ -1216,52 +1041,89 @@ inline CML::scalar CML::KinematicParcel<ParcelType>::areaS(const scalar d)
 template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::Re
 (
-    const vector& U,
-    const scalar d,
-    const scalar rhoc,
-    const scalar muc
+    const trackingData& td
 ) const
 {
-    return rhoc*mag(U - Uc_)*d/(muc + ROOTVSMALL);
+    return Re(td.rhoc(), U_, td.Uc(), d_, td.muc());
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::KinematicParcel<ParcelType>::Re
+(
+    const scalar rhoc,
+    const vector& U,
+    const vector& Uc,
+    const scalar d,
+    const scalar muc
+)
+{
+    return rhoc*mag(U - Uc)*d/max(muc, ROOTVSMALL);
 }
 
 
 template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::We
 (
-    const vector& U,
-    const scalar d,
-    const scalar rhoc,
+    const trackingData& td,
     const scalar sigma
 ) const
 {
-    return rhoc*magSqr(U - Uc_)*d/(sigma + ROOTVSMALL);
+    return We(td.rhoc(), U_, td.Uc(), d_, sigma);
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::KinematicParcel<ParcelType>::We
+(
+    const scalar rhoc,
+    const vector& U,
+    const vector& Uc,
+    const scalar d,
+    const scalar sigma
+)
+{
+    return rhoc*magSqr(U - Uc)*d/max(sigma, ROOTVSMALL);
 }
 
 
 template<class ParcelType>
 inline CML::scalar CML::KinematicParcel<ParcelType>::Eo
 (
-    const vector& a,
-    const scalar d,
+    const trackingData& td,
     const scalar sigma
 ) const
 {
-    vector dir = U_/(mag(U_) + ROOTVSMALL);
-    return mag(a & dir)*mag(rho_ - rhoc_)*sqr(d)/(sigma + ROOTVSMALL);
+    return Eo(td.g(), rho_, td.rhoc(), U_, d_, sigma);
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::KinematicParcel<ParcelType>::Eo
+(
+    const vector& g,
+    const scalar rho,
+    const scalar rhoc,
+    const vector& U,
+    const scalar d,
+    const scalar sigma
+)
+{
+    const vector dir = U/max(mag(U), ROOTVSMALL);
+    return mag(g & dir)*(rho - rhoc)*sqr(d)/max(sigma, ROOTVSMALL);
 }
 
 
 // ************************************************************************* //
 template<class ParcelType>
-template<class CloudType>
-inline CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::TrackingData
+template<class TrackCloudType>
+inline CML::KinematicParcel<ParcelType>::trackingData::trackingData
 (
-    CloudType& cloud,
+    const TrackCloudType& cloud,
     trackPart part
 )
 :
-    ParcelType::template TrackingData<CloudType>(cloud),
+    ParcelType::trackingData(cloud),
     rhoInterp_
     (
         interpolation<scalar>::New
@@ -1286,62 +1148,101 @@ inline CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::TrackingData
             cloud.mu()
         )
     ),
+    rhoc_(Zero),
+    Uc_(Zero),
+    muc_(Zero),
     g_(cloud.g().value()),
     part_(part)
 {}
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::rhoInterp() const
+CML::KinematicParcel<ParcelType>::trackingData::rhoInterp() const
 {
     return rhoInterp_();
 }
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::vector>&
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::UInterp() const
+CML::KinematicParcel<ParcelType>::trackingData::UInterp() const
 {
     return UInterp_();
 }
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::muInterp() const
+CML::KinematicParcel<ParcelType>::trackingData::muInterp() const
 {
     return muInterp_();
 }
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::vector&
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::g() const
+CML::KinematicParcel<ParcelType>::trackingData::g() const
 {
     return g_;
 }
 
 
 template<class ParcelType>
-template<class CloudType>
-inline typename CML::KinematicParcel<ParcelType>::template
-TrackingData<CloudType>::trackPart
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::part() const
+inline CML::scalar
+CML::KinematicParcel<ParcelType>::trackingData::rhoc() const
+{
+    return rhoc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar& CML::KinematicParcel<ParcelType>::trackingData::rhoc()
+{
+    return rhoc_;
+}
+
+
+template<class ParcelType>
+inline const CML::vector&
+CML::KinematicParcel<ParcelType>::trackingData::Uc() const
+{
+    return Uc_;
+}
+
+
+template<class ParcelType>
+inline CML::vector& CML::KinematicParcel<ParcelType>::trackingData::Uc()
+{
+    return Uc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::KinematicParcel<ParcelType>::trackingData::muc() const
+{
+    return muc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar& CML::KinematicParcel<ParcelType>::trackingData::muc()
+{
+    return muc_;
+}
+
+
+template<class ParcelType>
+inline typename CML::KinematicParcel<ParcelType>::trackingData::trackPart
+CML::KinematicParcel<ParcelType>::trackingData::part() const
 {
     return part_;
 }
 
 
 template<class ParcelType>
-template<class CloudType>
-inline typename CML::KinematicParcel<ParcelType>::template
-TrackingData<CloudType>::trackPart&
-CML::KinematicParcel<ParcelType>::TrackingData<CloudType>::part()
+inline typename CML::KinematicParcel<ParcelType>::trackingData::trackPart&
+CML::KinematicParcel<ParcelType>::trackingData::part()
 {
     return part_;
 }
@@ -1356,48 +1257,50 @@ CML::label CML::KinematicParcel<ParcelType>::maxTrackAttempts = 1;
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::KinematicParcel<ParcelType>::setCellValues
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
     tetIndices tetIs = this->currentTetIndices();
 
-    rhoc_ = td.rhoInterp().interpolate(this->position(), tetIs);
+    td.rhoc() = td.rhoInterp().interpolate(this->coordinates(), tetIs);
 
-    if (rhoc_ < td.cloud().constProps().rhoMin())
+    if (td.rhoc() < cloud.constProps().rhoMin())
     {
         if (debug)
         {
-            WarningIn
-            (
-                "void CML::KinematicParcel<ParcelType>::setCellValues"
-                "("
-                    "TrackData&, "
-                    "const scalar, "
-                    "const label"
-                ")"
-            )   << "Limiting observed density in cell " << cellI << " to "
-                << td.cloud().constProps().rhoMin() <<  nl << endl;
+            WarningInFunction
+                << "Limiting observed density in cell " << this->cell()
+                << " to " << cloud.constProps().rhoMin() <<  nl << endl;
         }
 
-        rhoc_ = td.cloud().constProps().rhoMin();
+        td.rhoc() = cloud.constProps().rhoMin();
     }
 
-    Uc_ = td.UInterp().interpolate(this->position(), tetIs);
+    td.Uc() = td.UInterp().interpolate(this->coordinates(), tetIs);
 
-    muc_ = td.muInterp().interpolate(this->position(), tetIs);
+    td.muc() = td.muInterp().interpolate(this->coordinates(), tetIs);
+}
 
-    // Apply dispersion components to carrier phase velocity
-    Uc_ = td.cloud().dispersion().update
+
+template<class ParcelType>
+template<class TrackCloudType>
+void CML::KinematicParcel<ParcelType>::calcDispersion
+(
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
+)
+{
+    td.Uc() = cloud.dispersion().update
     (
         dt,
-        cellI,
+        this->cell(),
         U_,
-        Uc_,
+        td.Uc(),
         UTurb_,
         tTurb_
     );
@@ -1405,25 +1308,25 @@ void CML::KinematicParcel<ParcelType>::setCellValues
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::KinematicParcel<ParcelType>::cellValueSourceCorrection
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    Uc_ += td.cloud().UTrans()[cellI]/massCell(cellI);
+    td.Uc() += cloud.UTrans()[this->cell()]/massCell(td);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::KinematicParcel<ParcelType>::calc
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
     // Define local properties at beginning of time step
@@ -1432,49 +1335,50 @@ void CML::KinematicParcel<ParcelType>::calc
     const scalar mass0 = mass();
 
     // Reynolds number
-    const scalar Re = this->Re(U_, d_, rhoc_, muc_);
+    const scalar Re = this->Re(td);
 
 
     // Sources
     //~~~~~~~~
 
     // Explicit momentum source for particle
-    vector Su = vector::zero;
+    vector Su = Zero;
 
     // Linearised momentum source coefficient
     scalar Spu = 0.0;
 
     // Momentum transfer from the particle to the carrier phase
-    vector dUTrans = vector::zero;
+    vector dUTrans = Zero;
 
 
     // Motion
     // ~~~~~~
 
     // Calculate new particle velocity
-    this->U_ = calcVelocity(td, dt, cellI, Re, muc_, mass0, Su, dUTrans, Spu);
+    this->U_ =
+        calcVelocity(cloud, td, dt, Re, td.muc(), mass0, Su, dUTrans, Spu);
 
 
     // Accumulate carrier phase source terms
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (td.cloud().solution().coupled())
+    if (cloud.solution().coupled())
     {
         // Update momentum transfer
-        td.cloud().UTrans()[cellI] += np0*dUTrans;
+        cloud.UTrans()[this->cell()] += np0*dUTrans;
 
         // Update momentum transfer coefficient
-        td.cloud().UCoeff()[cellI] += np0*Spu;
+        cloud.UCoeff()[this->cell()] += np0*Spu;
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 const CML::vector CML::KinematicParcel<ParcelType>::calcVelocity
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar dt,
-    const label cellI,
     const scalar Re,
     const scalar mu,
     const scalar mass,
@@ -1483,39 +1387,60 @@ const CML::vector CML::KinematicParcel<ParcelType>::calcVelocity
     scalar& Spu
 ) const
 {
-    typedef typename TrackData::cloudType cloudType;
-    typedef typename cloudType::parcelType parcelType;
-    typedef typename cloudType::forceType forceType;
+    const typename TrackCloudType::parcelType& p =
+        static_cast<const typename TrackCloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType::trackingData& ttd =
+        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);
 
-    const forceType& forces = td.cloud().forces();
+    const typename TrackCloudType::forceType& forces = cloud.forces();
 
     // Momentum source due to particle forces
-    const parcelType& p = static_cast<const parcelType&>(*this);
-    const forceSuSp Fcp = forces.calcCoupled(p, dt, mass, Re, mu);
-    const forceSuSp Fncp = forces.calcNonCoupled(p, dt, mass, Re, mu);
-    const forceSuSp Feff = Fcp + Fncp;
-    const scalar massEff = forces.massEff(p, mass);
+    const forceSuSp Fcp = forces.calcCoupled(p, ttd, dt, mass, Re, mu);
+    const forceSuSp Fncp = forces.calcNonCoupled(p, ttd, dt, mass, Re, mu);
+    const scalar massEff = forces.massEff(p, ttd, mass);
 
+    /*
+    // Proper splitting ...
+    // Calculate the integration coefficients
+    const vector acp = (Fcp.Sp()*td.Uc() + Fcp.Su())/massEff;
+    const vector ancp = (Fncp.Sp()*td.Uc() + Fncp.Su() + Su)/massEff;
+    const scalar bcp = Fcp.Sp()/massEff;
+    const scalar bncp = Fncp.Sp()/massEff;
 
-    // New particle velocity
-    //~~~~~~~~~~~~~~~~~~~~~~
+    // Integrate to find the new parcel velocity
+    const vector deltaUcp =
+        cloud.UIntegrator().partialDelta
+        (
+            U_, dt, acp + ancp, bcp + bncp, acp, bcp
+        );
+    const vector deltaUncp =
+        cloud.UIntegrator().partialDelta
+        (
+            U_, dt, acp + ancp, bcp + bncp, ancp, bncp
+        );
+    const vector deltaT = deltaUcp + deltaUncp;
+    */
 
-    // Update velocity - treat as 3-D
-    const vector abp = (Feff.Sp()*Uc_ + (Feff.Su() + Su))/massEff;
-    const scalar bp = Feff.Sp()/massEff;
+    // Shortcut splitting assuming no implicit non-coupled force ...
+    // Calculate the integration coefficients
+    const vector acp = (Fcp.Sp()*td.Uc() + Fcp.Su())/massEff;
+    const vector ancp = (Fncp.Su() + Su)/massEff;
+    const scalar bcp = Fcp.Sp()/massEff;
 
-    Spu = dt*Feff.Sp();
+    // Integrate to find the new parcel velocity
+    const vector deltaU = cloud.UIntegrator().delta(U_, dt, acp + ancp, bcp);
+    const vector deltaUncp = ancp*dt;
+    const vector deltaUcp = deltaU - deltaUncp;
 
-    IntegrationScheme<vector>::integrationResult Ures =
-        td.cloud().UIntegrator().integrate(U_, dt, abp, bp);
+    // Calculate the new velocity and the momentum transfer terms
+    vector Unew = U_ + deltaU;
 
-    vector Unew = Ures.value();
+    dUTrans -= massEff*deltaUcp;
 
-    // note: Feff.Sp() and Fc.Sp() must be the same
-    dUTrans += dt*(Feff.Sp()*(Ures.average() - Uc_) - Fcp.Su());
+    Spu = dt*Fcp.Sp();
 
     // Apply correction to velocity and dUTrans for reduced-D cases
-    const polyMesh& mesh = td.cloud().pMesh();
+    const polyMesh& mesh = cloud.pMesh();
     meshTools::constrainDirection(mesh, mesh.solutionD(), Unew);
     meshTools::constrainDirection(mesh, mesh.solutionD(), dUTrans);
 
@@ -1538,16 +1463,10 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
     d_(p.d_),
     dTarget_(p.dTarget_),
     U_(p.U_),
-    f_(p.f_),
-    angularMomentum_(p.angularMomentum_),
-    torque_(p.torque_),
     rho_(p.rho_),
     age_(p.age_),
     tTurb_(p.tTurb_),
-    UTurb_(p.UTurb_),
-    rhoc_(p.rhoc_),
-    Uc_(p.Uc_),
-    muc_(p.muc_)
+    UTurb_(p.UTurb_)
 {}
 
 
@@ -1565,204 +1484,149 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
     d_(p.d_),
     dTarget_(p.dTarget_),
     U_(p.U_),
-    f_(p.f_),
-    angularMomentum_(p.angularMomentum_),
-    torque_(p.torque_),
     rho_(p.rho_),
     age_(p.age_),
     tTurb_(p.tTurb_),
-    UTurb_(p.UTurb_),
-    rhoc_(p.rhoc_),
-    Uc_(p.Uc_),
-    muc_(p.muc_)
+    UTurb_(p.UTurb_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 bool CML::KinematicParcel<ParcelType>::move
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar trackTime
 )
 {
-    typename TrackData::cloudType::parcelType& p =
-        static_cast<typename TrackData::cloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType& p =
+        static_cast<typename TrackCloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType::trackingData& ttd =
+        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);
 
-    td.switchProcessor = false;
-    td.keepParticle = true;
+    ttd.switchProcessor = false;
+    ttd.keepParticle = true;
 
-    const polyMesh& mesh = td.cloud().pMesh();
-    const polyBoundaryMesh& pbMesh = mesh.boundaryMesh();
-    const scalarField& V = mesh.cellVolumes();
-    const scalar maxCo = td.cloud().solution().maxCo();
+    const scalarField& cellLengthScale = cloud.cellLengthScale();
+    const scalar maxCo = cloud.solution().maxCo();
 
-    scalar tEnd = (1.0 - p.stepFraction())*trackTime;
-    scalar dtMax = trackTime;
-    if (td.cloud().solution().transient())
+    while (ttd.keepParticle && !ttd.switchProcessor && p.stepFraction() < 1)
     {
-        dtMax *= maxCo;
-    }
+        // Cache the current position, cell and step-fraction
+        const point start = p.position();
+        const scalar sfrac = p.stepFraction();
 
-    bool tracking = true;
-    label nTrackingStalled = 0;
+        // Total displacement over the time-step
+        const vector s = trackTime*U_;
 
-    while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-    {
-        // Apply correction to position for reduced-D cases
-        meshTools::constrainToMeshCentre(mesh, p.position());
+        // Cell length scale
+        const scalar l = cellLengthScale[p.cell()];
 
-        const point start(p.position());
+        // Deviation from the mesh centre for reduced-D cases
+        const vector d = p.deviationFromMeshCentre();
 
-        // Set the Lagrangian time-step
-        scalar dt = min(dtMax, tEnd);
-
-        // Cache the parcel current cell as this will change if a face is hit
-        const label cellI = p.cell();
-
-        const scalar magU = mag(U_);
-        if (p.active() && tracking && (magU > ROOTVSMALL))
+        // Fraction of the displacement to track in this loop. This is limited
+        // to ensure that the both the time and distance tracked is less than
+        // maxCo times the total value.
+        scalar f = 1 - p.stepFraction();
+        f = min(f, maxCo);
+        f = min(f, maxCo*l/max(SMALL*l, mag(s)));
+        if (p.active())
         {
-            const scalar d = dt*magU;
-            const scalar dCorr = min(d, maxCo*cbrt(V[cellI]));
-            dt *=
-                dCorr/d
-               *p.trackToFace(p.position() + dCorr*U_/magU, td);
+            // Track to the next face
+            p.trackToFace(f*s - d, f);
+        }
+        else
+        {
+            // At present the only thing that sets active_ to false is a stick
+            // wall interaction. We want the position of the particle to remain
+            // the same relative to the face that it is on. The local
+            // coordinates therefore do not change. We still advance in time and
+            // perform the relevant interactions with the fixed particle.
+            p.stepFraction() += f;
         }
 
-        tEnd -= dt;
-
-        scalar newStepFraction = 1.0 - tEnd/trackTime;
-
-        if (tracking)
-        {
-            if
-            (
-                mag(p.stepFraction() - newStepFraction)
-              < particle::minStepFractionTol
-            )
-            {
-                nTrackingStalled++;
-
-                if (nTrackingStalled > maxTrackAttempts)
-                {
-                    tracking = false;
-                }
-            }
-            else
-            {
-                nTrackingStalled = 0;
-            }
-        }
-
-        p.stepFraction() = newStepFraction;
-
-        bool calcParcel = true;
-        if (!tracking && td.cloud().solution().steadyState())
-        {
-            calcParcel = false;
-        }
+        const scalar dt = (p.stepFraction() - sfrac)*trackTime;
 
         // Avoid problems with extremely small timesteps
-        if ((dt > ROOTVSMALL) && calcParcel)
+        if (dt > ROOTVSMALL)
         {
             // Update cell based properties
-            p.setCellValues(td, dt, cellI);
+            p.setCellValues(cloud, ttd);
 
-            if (td.cloud().solution().cellValueSourceCorrection())
+            p.calcDispersion(cloud, ttd, dt);
+
+            if (cloud.solution().cellValueSourceCorrection())
             {
-                p.cellValueSourceCorrection(td, dt, cellI);
+                p.cellValueSourceCorrection(cloud, ttd, dt);
             }
 
-            p.calc(td, dt, cellI);
-        }
-
-        if (p.onBoundary() && td.keepParticle)
-        {
-            if (isA<processorPolyPatch>(pbMesh[p.patch(p.face())]))
-            {
-                td.switchProcessor = true;
-            }
+            p.calc(cloud, ttd, dt);
         }
 
         p.age() += dt;
 
-        td.cloud().functions().postMove(p, cellI, dt, start, td.keepParticle);
+        if (p.active() && p.onFace())
+        {
+            cloud.functions().postFace(p, ttd.keepParticle);
+        }
+
+        cloud.functions().postMove(p, dt, start, ttd.keepParticle);
+
+        if (p.active() && p.onFace() && ttd.keepParticle)
+        {
+            p.hitFace(s, cloud, ttd);
+        }
     }
 
-    return td.keepParticle;
+    return ttd.keepParticle;
 }
 
 
 template<class ParcelType>
-template<class TrackData>
-void CML::KinematicParcel<ParcelType>::hitFace(TrackData& td)
-{
-    typename TrackData::cloudType::parcelType& p =
-        static_cast<typename TrackData::cloudType::parcelType&>(*this);
-
-    td.cloud().functions().postFace(p, p.face(), td.keepParticle);
-}
-
-
-template<class ParcelType>
-void CML::KinematicParcel<ParcelType>::hitFace(int& td)
-{}
-
-
-template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 bool CML::KinematicParcel<ParcelType>::hitPatch
 (
-    const polyPatch& pp,
-    TrackData& td,
-    const label patchI,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
-    typename TrackData::cloudType::parcelType& p =
-        static_cast<typename TrackData::cloudType::parcelType&>(*this);
+    typename TrackCloudType::parcelType& p =
+        static_cast<typename TrackCloudType::parcelType&>(*this);
+
+    const polyPatch& pp = p.mesh().boundaryMesh()[p.patch()];
 
     // Invoke post-processing model
-    td.cloud().functions().postPatch
-    (
-        p,
-        pp,
-        trackFraction,
-        tetIs,
-        td.keepParticle
-    );
+    cloud.functions().postPatch(p, pp, td.keepParticle);
 
     // Invoke surface film model
-    if (td.cloud().surfaceFilm().transferParcel(p, pp, td.keepParticle))
+    if (cloud.surfaceFilm().transferParcel(p, pp, td.keepParticle))
     {
         // All interactions done
         return true;
     }
+    else if (pp.coupled())
+    {
+        // Don't apply the patchInteraction models to coupled boundaries
+        return false;
+    }
     else
     {
         // Invoke patch interaction model
-        return td.cloud().patchInteraction().correct
-        (
-            p,
-            pp,
-            td.keepParticle,
-            trackFraction,
-            tetIs
-        );
+        return cloud.patchInteraction().correct(p, pp, td.keepParticle);
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::KinematicParcel<ParcelType>::hitProcessorPatch
 (
-    const processorPolyPatch&,
-    TrackData& td
+    TrackCloudType&,
+    trackingData& td
 )
 {
     td.switchProcessor = true;
@@ -1770,27 +1634,14 @@ void CML::KinematicParcel<ParcelType>::hitProcessorPatch
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::KinematicParcel<ParcelType>::hitWallPatch
 (
-    const wallPolyPatch& wpp,
-    TrackData& td,
-    const tetIndices&
+    TrackCloudType&,
+    trackingData&
 )
 {
-    // Wall interactions handled by generic hitPatch function
-}
-
-
-template<class ParcelType>
-template<class TrackData>
-void CML::KinematicParcel<ParcelType>::hitPatch
-(
-    const polyPatch&,
-    TrackData& td
-)
-{
-    td.keepParticle = false;
+    // wall interactions are handled by the generic hitPatch method
 }
 
 
@@ -1800,12 +1651,6 @@ void CML::KinematicParcel<ParcelType>::transformProperties(const tensor& T)
     ParcelType::transformProperties(T);
 
     U_ = transform(T, U_);
-
-    f_ = transform(T, f_);
-
-    angularMomentum_ = transform(T, angularMomentum_);
-
-    torque_ = transform(T, torque_);
 }
 
 
@@ -1819,16 +1664,6 @@ void CML::KinematicParcel<ParcelType>::transformProperties
 }
 
 
-template<class ParcelType>
-CML::scalar CML::KinematicParcel<ParcelType>::wallImpactDistance
-(
-    const vector&
-) const
-{
-    return 0.5*d_;
-}
-
-
 // * * * * * * * * * * * * * * IOStream operators  * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -1836,6 +1671,14 @@ CML::scalar CML::KinematicParcel<ParcelType>::wallImpactDistance
 template<class ParcelType>
 CML::string CML::KinematicParcel<ParcelType>::propertyList_ =
     CML::KinematicParcel<ParcelType>::propertyList();
+
+template<class ParcelType>
+const std::size_t CML::KinematicParcel<ParcelType>::sizeofFields_
+(
+    sizeof(KinematicParcel<ParcelType>)
+  - offsetof(KinematicParcel<ParcelType>, active_)
+);
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -1853,17 +1696,11 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
     nParticle_(0.0),
     d_(0.0),
     dTarget_(0.0),
-    U_(vector::zero),
-    f_(vector::zero),
-    angularMomentum_(vector::zero),
-    torque_(vector::zero),
+    U_(Zero),
     rho_(0.0),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(vector::zero),
-    rhoc_(0.0),
-    Uc_(vector::zero),
-    muc_(0.0)
+    UTurb_(Zero)
 {
     if (readFields)
     {
@@ -1875,9 +1712,6 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
             d_ = readScalar(is);
             dTarget_ = readScalar(is);
             is >> U_;
-            is >> f_;
-            is >> angularMomentum_;
-            is >> torque_;
             rho_ = readScalar(is);
             age_ = readScalar(is);
             tTurb_ = readScalar(is);
@@ -1885,17 +1719,12 @@ CML::KinematicParcel<ParcelType>::KinematicParcel
         }
         else
         {
-            label size = reinterpret_cast<const char*>(&UTurb_) - reinterpret_cast<const char*>(&active_) + sizeof(UTurb_);
-            is.read(reinterpret_cast<char*>(&active_), size);
+            is.read(reinterpret_cast<char*>(&active_), sizeofFields_);
         }
     }
 
     // Check state of Istream
-    is.check
-    (
-        "KinematicParcel<ParcelType>::KinematicParcel"
-        "(const polyMesh&, Istream&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -1910,47 +1739,64 @@ void CML::KinematicParcel<ParcelType>::readFields(CloudType& c)
 
     ParcelType::readFields(c);
 
-    IOField<label> active(c.fieldIOobject("active", IOobject::MUST_READ));
+    IOField<label> active
+    (
+        c.fieldIOobject("active", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, active);
 
-    IOField<label> typeId(c.fieldIOobject("typeId", IOobject::MUST_READ));
+    IOField<label> typeId
+    (
+        c.fieldIOobject("typeId", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, typeId);
 
-    IOField<scalar>
-        nParticle(c.fieldIOobject("nParticle", IOobject::MUST_READ));
+    IOField<scalar> nParticle
+    (
+        c.fieldIOobject("nParticle", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, nParticle);
 
-    IOField<scalar> d(c.fieldIOobject("d", IOobject::MUST_READ));
+    IOField<scalar> d
+    (
+        c.fieldIOobject("d", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, d);
 
-    IOField<scalar> dTarget(c.fieldIOobject("dTarget", IOobject::MUST_READ));
+    IOField<scalar> dTarget
+    (
+        c.fieldIOobject("dTarget", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, dTarget);
 
-    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ));
+    IOField<vector> U
+    (
+        c.fieldIOobject("U", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, U);
 
-    IOField<vector> f(c.fieldIOobject("f", IOobject::MUST_READ));
-    c.checkFieldIOobject(c, f);
-
-    IOField<vector> angularMomentum
+    IOField<scalar> rho
     (
-        c.fieldIOobject("angularMomentum", IOobject::MUST_READ)
+        c.fieldIOobject("rho", IOobject::MUST_READ)
     );
-    c.checkFieldIOobject(c, angularMomentum);
-
-    IOField<vector> torque(c.fieldIOobject("torque", IOobject::MUST_READ));
-    c.checkFieldIOobject(c, torque);
-
-    IOField<scalar> rho(c.fieldIOobject("rho", IOobject::MUST_READ));
     c.checkFieldIOobject(c, rho);
 
-    IOField<scalar> age(c.fieldIOobject("age", IOobject::MUST_READ));
+    IOField<scalar> age
+    (
+        c.fieldIOobject("age", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, age);
 
-    IOField<scalar> tTurb(c.fieldIOobject("tTurb", IOobject::MUST_READ));
+    IOField<scalar> tTurb
+    (
+        c.fieldIOobject("tTurb", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, tTurb);
 
-    IOField<vector> UTurb(c.fieldIOobject("UTurb", IOobject::MUST_READ));
+    IOField<vector> UTurb
+    (
+        c.fieldIOobject("UTurb", IOobject::MUST_READ)
+    );
     c.checkFieldIOobject(c, UTurb);
 
     label i = 0;
@@ -1965,9 +1811,6 @@ void CML::KinematicParcel<ParcelType>::readFields(CloudType& c)
         p.d_ = d[i];
         p.dTarget_ = dTarget[i];
         p.U_ = U[i];
-        p.f_ = f[i];
-        p.angularMomentum_ = angularMomentum[i];
-        p.torque_ = torque[i];
         p.rho_ = rho[i];
         p.age_ = age[i];
         p.tTurb_ = tTurb[i];
@@ -1984,7 +1827,7 @@ void CML::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> active(c.fieldIOobject("active", IOobject::NO_READ), np);
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
@@ -1996,13 +1839,6 @@ void CML::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
     IOField<scalar> d(c.fieldIOobject("d", IOobject::NO_READ), np);
     IOField<scalar> dTarget(c.fieldIOobject("dTarget", IOobject::NO_READ), np);
     IOField<vector> U(c.fieldIOobject("U", IOobject::NO_READ), np);
-    IOField<vector> f(c.fieldIOobject("f", IOobject::NO_READ), np);
-    IOField<vector> angularMomentum
-    (
-        c.fieldIOobject("angularMomentum", IOobject::NO_READ),
-        np
-    );
-    IOField<vector> torque(c.fieldIOobject("torque", IOobject::NO_READ), np);
     IOField<scalar> rho(c.fieldIOobject("rho", IOobject::NO_READ), np);
     IOField<scalar> age(c.fieldIOobject("age", IOobject::NO_READ), np);
     IOField<scalar> tTurb(c.fieldIOobject("tTurb", IOobject::NO_READ), np);
@@ -2020,9 +1856,6 @@ void CML::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
         d[i] = p.d();
         dTarget[i] = p.dTarget();
         U[i] = p.U();
-        f[i] = p.f();
-        angularMomentum[i] = p.angularMomentum();
-        torque[i] = p.torque();
         rho[i] = p.rho();
         age[i] = p.age();
         tTurb[i] = p.tTurb();
@@ -2037,9 +1870,6 @@ void CML::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
     d.write();
     dTarget.write();
     U.write();
-    f.write();
-    angularMomentum.write();
-    torque.write();
     rho.write();
     age.write();
     tTurb.write();
@@ -2065,9 +1895,6 @@ CML::Ostream& CML::operator<<
             << token::SPACE << p.d()
             << token::SPACE << p.dTarget()
             << token::SPACE << p.U()
-            << token::SPACE << p.f()
-            << token::SPACE << p.angularMomentum()
-            << token::SPACE << p.torque()
             << token::SPACE << p.rho()
             << token::SPACE << p.age()
             << token::SPACE << p.tTurb()
@@ -2076,9 +1903,11 @@ CML::Ostream& CML::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-        
-        label size = reinterpret_cast<const char*>(&p.UTurb_) - reinterpret_cast<const char*>(&p.active_) + sizeof(p.UTurb_);
-        os.write(reinterpret_cast<const char*>(&p.active_), size);
+        os.write
+        (
+            reinterpret_cast<const char*>(&p.active_),
+            KinematicParcel<ParcelType>::sizeofFields_
+        );
     }
 
     // Check state of Ostream

@@ -78,10 +78,8 @@ autoPtr<CloudProxy> CloudProxy::New(
 
     if (cstrIter == cloudConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "autoPtr<CloudProxy> CloudProxy::New"
-        )   << "Unknown  cloud type " << cloudType
+        FatalErrorInFunction
+            << "Unknown  cloud type " << cloudType
             << " (cloud: " << c.type() << " alternate: " << alternateType << ")"
             << endl << endl
             << "Valid cloudType are :" << endl
@@ -119,10 +117,8 @@ autoPtr<CloudProxy> CloudProxy::New(
 
     if (cstrIter == cloudConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "autoPtr<CloudProxy> CloudProxy::New"
-        )   << "Unknown  cloud type " << cloudType
+        FatalErrorInFunction
+            << "Unknown  cloud type " << cloudType
             << " (cloud: " << c.type() <<") " << endl
             << "Consider setting the parameter 'alternateCloudType' in "
             << dict.name() << " to a valid type"

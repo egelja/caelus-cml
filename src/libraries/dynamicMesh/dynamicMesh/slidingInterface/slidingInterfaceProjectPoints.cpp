@@ -364,10 +364,8 @@ bool CML::slidingInterface::projectPoints() const
     }
     else
     {
-        FatalErrorIn
-        (
-            "bool slidingInterface::projectPoints() const"
-        )   << "Problem in point projection.  Unknown sliding match type "
+        FatalErrorInFunction
+            << "Problem in point projection.  Unknown sliding match type "
             << " for object " << name()
             << abort(FatalError);
     }
@@ -400,10 +398,8 @@ bool CML::slidingInterface::projectPoints() const
 
         if (nShortEdges > 0)
         {
-            FatalErrorIn
-            (
-                "bool slidingInterface::projectPoints() const"
-            )   << "Problem in point projection.  " << nShortEdges
+            FatalErrorInFunction
+                << "Problem in point projection.  " << nShortEdges
                 << " short projected edges "
                 << "after adjustment for object " << name()
                 << abort(FatalError);
@@ -518,10 +514,8 @@ bool CML::slidingInterface::projectPoints() const
 
         if (minEdgeLength < SMALL)
         {
-            FatalErrorIn
-            (
-                "bool slidingInterface::projectPoints() const"
-            )   << "Problem in point projection.  Short projected edge "
+            FatalErrorInFunction
+                << "Problem in point projection.  Short projected edge "
                 << " after point merge for object " << name()
                 << abort(FatalError);
         }
@@ -683,10 +677,8 @@ bool CML::slidingInterface::projectPoints() const
 
         if (minEdgeLength < SMALL)
         {
-            FatalErrorIn
-            (
-                "bool slidingInterface::projectPoints() const"
-            )   << "Problem in point projection.  Short projected edge "
+            FatalErrorInFunction
+                << "Problem in point projection.  Short projected edge "
             << " after correction for object " << name()
             << abort(FatalError);
         }

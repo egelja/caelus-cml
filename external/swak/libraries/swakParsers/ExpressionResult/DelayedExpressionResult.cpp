@@ -109,7 +109,7 @@ void DelayedExpressionResult::operator=(const DelayedExpressionResult& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("DelayedExpressionResult::operator=(const DelayedExpressionResult&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << exit(FatalError);
     }
@@ -156,14 +156,14 @@ bool DelayedExpressionResult::updateReadValue(const scalar &time)
         return false;
     }
     if(storedValues_.size()<=1) {
-        FatalErrorIn("DelayedExpressionResult::updateReadValue(const scalar &time)")
+        FatalErrorInFunction
             << "Only one stored value yet at time " << time
-                << " for delayedVariable " << name() << endl
-                << "Check the values for the interval " << storeInterval_
-                << " and delay " << delay_ << endl
-                << "Probably the interval is to big"
-                << endl
-                << exit(FatalError);
+            << " for delayedVariable " << name() << endl
+            << "Check the values for the interval " << storeInterval_
+            << " and delay " << delay_ << endl
+            << "Probably the interval is to big"
+            << endl
+            << exit(FatalError);
 
     }
     DLList<ValueAtTime>::const_iterator current=storedValues_.cbegin();

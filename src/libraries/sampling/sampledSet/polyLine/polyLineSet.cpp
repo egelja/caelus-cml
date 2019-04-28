@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------* \
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,31 +48,16 @@ bool CML::polyLineSet::trackToBoundary
     DynamicList<scalar>& samplingCurveDist
 ) const
 {
-    particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
-
-    // Alias
-    const point& trackPt = singleParticle.position();
-
     while (true)
     {
         // Local geometry info
         const vector offset = sampleCoords_[sampleI+1] - sampleCoords_[sampleI];
         const scalar smallDist = mag(tol*offset);
 
-        point oldPos = trackPt;
-        label facei = -1;
-        do
-        {
-            singleParticle.stepFraction() = 0;
-            singleParticle.track(sampleCoords_[sampleI+1], trackData);
-        }
-        while
-        (
-            !singleParticle.onBoundary()
-         && (mag(trackPt - oldPos) < smallDist)
-        );
+        singleParticle.track(offset, 0);
+        const point trackPt = singleParticle.position();
 
-        if (singleParticle.onBoundary())
+        if (singleParticle.onBoundaryFace())
         {
             //Info<< "trackToBoundary : reached boundary"
             //    << "  trackPt:" << trackPt << endl;
@@ -88,7 +73,7 @@ bool CML::polyLineSet::trackToBoundary
                 //    << endl;
                 samplingPts.append(trackPt);
                 samplingCells.append(singleParticle.cell());
-                samplingFaces.append(facei);
+                samplingFaces.append(singleParticle.face());
 
                 // trackPt is at sampleI+1
                 samplingCurveDist.append(1.0*(sampleI+1));
@@ -133,7 +118,7 @@ void CML::polyLineSet::calcSamples
     // Check sampling points
     if (sampleCoords_.size() < 2)
     {
-        FatalErrorIn("polyLineSet::calcSamples()")
+        FatalErrorInFunction
             << "Incorrect sample specification. Too few points:"
             << sampleCoords_ << exit(FatalError);
     }
@@ -142,7 +127,7 @@ void CML::polyLineSet::calcSamples
     {
         if (mag(sampleCoords_[sampleI] - oldPoint) < SMALL)
         {
-            FatalErrorIn("polyLineSet::calcSamples()")
+            FatalErrorInFunction
                 << "Incorrect sample specification."
                 << " Point " << sampleCoords_[sampleI-1]
                 << " at position " << sampleI-1
@@ -170,8 +155,8 @@ void CML::polyLineSet::calcSamples
     {
         // Get boundary intersection
         point trackPt;
-        label trackCellI = -1;
-        label trackFaceI = -1;
+        label trackCelli = -1;
+        label trackFacei = -1;
 
         do
         {
@@ -188,12 +173,12 @@ void CML::polyLineSet::calcSamples
             );
 
             point bPoint(GREAT, GREAT, GREAT);
-            label bFaceI = -1;
+            label bFacei = -1;
 
             if (bHits.size())
             {
                 bPoint = bHits[0].hitPoint();
-                bFaceI = bHits[0].index();
+                bFacei = bHits[0].index();
             }
 
             // Get tracking point
@@ -204,26 +189,26 @@ void CML::polyLineSet::calcSamples
                     sampleCoords_[sampleI+1] - sampleCoords_[sampleI],
                     sampleCoords_[sampleI],
                     bPoint,
-                    bFaceI,
+                    bFacei,
 
                     trackPt,
-                    trackCellI,
-                    trackFaceI
+                    trackCelli,
+                    trackFacei
                 );
 
             if (isSample && (mag(lastSample - trackPt) > smallDist))
             {
                 //Info<< "calcSamples : getTrackingPoint returned valid sample "
                 //    << "  trackPt:" << trackPt
-                //    << "  trackFaceI:" << trackFaceI
-                //    << "  trackCellI:" << trackCellI
+                //    << "  trackFacei:" << trackFacei
+                //    << "  trackCelli:" << trackCelli
                 //    << "  sampleI:" << sampleI
                 //    << "  dist:" << dist
                 //    << endl;
 
                 samplingPts.append(trackPt);
-                samplingCells.append(trackCellI);
-                samplingFaces.append(trackFaceI);
+                samplingCells.append(trackCelli);
+                samplingFaces.append(trackFacei);
 
                 // Convert sampling position to unique curve parameter. Get
                 // fraction of distance between sampleI and sampleI+1.
@@ -235,12 +220,12 @@ void CML::polyLineSet::calcSamples
                 lastSample = trackPt;
             }
 
-            if (trackCellI == -1)
+            if (trackCelli == -1)
             {
                 // No intersection found. Go to next point
                 sampleI++;
             }
-        } while ((trackCellI == -1) && (sampleI < sampleCoords_.size() - 1));
+        } while ((trackCelli == -1) && (sampleI < sampleCoords_.size() - 1));
 
         if (sampleI == sampleCoords_.size() - 1)
         {
@@ -259,7 +244,7 @@ void CML::polyLineSet::calcSamples
         (
             mesh(),
             trackPt,
-            trackCellI
+            trackCelli
         );
 
         bool bReached = trackToBoundary

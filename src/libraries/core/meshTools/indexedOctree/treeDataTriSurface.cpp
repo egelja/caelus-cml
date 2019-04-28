@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,11 +36,8 @@ CML::volumeType CML::treeDataPrimitivePatch<CML::triSurface>::getVolumeType
 
     if (info.index() == -1)
     {
-        FatalErrorIn
-        (
-            "treeDataPrimitivePatch::getSampleType"
-            "(indexedOctree<treeDataPrimitivePatch>&, const point&)"
-        )   << "Could not find " << sample << " in octree."
+        FatalErrorInFunction
+            << "Could not find " << sample << " in octree."
             << abort(FatalError);
     }
 
@@ -68,7 +65,7 @@ CML::volumeType CML::treeDataPrimitivePatch<CML::triSurface>::getVolumeType
     }
     else
     {
-        FatalErrorIn("treeDataPrimitivePatch<PatchType>::getVolumeType(..)")
+        FatalErrorInFunction
             << "problem" << abort(FatalError);
         return volumeType::UNKNOWN;
     }

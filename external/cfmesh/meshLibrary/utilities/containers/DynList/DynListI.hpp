@@ -71,11 +71,8 @@ inline void CML::DynList<T, staticSize>::checkIndex(const label i) const
 {
     if( (i < 0) || (i >= nextFree_) )
     {
-        FatalErrorIn
-        (
-            "void CML::DynList<T, label, Offset>::"
-            "checkIndex(const label i) const"
-        ) << "Index " << i << " is not in range " << 0
+        FatalErrorInFunction
+            << "Index " << i << " is not in range " << 0
             << " and " << nextFree_ << abort(FatalError);
     }
 }
@@ -155,7 +152,7 @@ template<class T, CML::label staticSize>
 inline CML::DynList<T, staticSize>::~DynList()
 {
     allocateSize(0);
-    //UList<T>::reset(NULL, 0);
+    //UList<T>::reset(nullptr, 0);
 }
 
 
@@ -172,7 +169,7 @@ inline CML::label CML::DynList<T, staticSize>::byteSize() const
 {
     if( !contiguous<T>() )
     {
-        FatalErrorIn("DynList<T>::byteSize()")
+        FatalErrorInFunction
             << "Cannot return the binary size of a list of "
                "non-primitive elements"
             << abort(FatalError);
@@ -260,10 +257,8 @@ inline T CML::DynList<T, staticSize>::removeLastElement()
 {
     if( nextFree_ == 0 )
     {
-        FatalErrorIn
-        (
-            "void CML::DynList<T, staticSize>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     T el = UList<T>::operator[](--nextFree_);
@@ -275,10 +270,8 @@ inline T CML::DynList<T, staticSize>::removeElement(const label i)
 {
     if( nextFree_ == 0 )
     {
-        FatalErrorIn
-        (
-            "void CML::DynList<T, staticSize>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     T el = this->operator[](i);

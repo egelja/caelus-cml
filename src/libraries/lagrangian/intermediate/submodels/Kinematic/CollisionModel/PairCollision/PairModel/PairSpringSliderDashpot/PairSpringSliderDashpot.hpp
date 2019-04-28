@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -101,7 +102,7 @@ class PairSpringSliderDashpot
     // Private Member Functions
 
         //- Find the appropriate properties for determining the minimum
-        //- allowable timestep
+        //- Allowable timestep
         void findMinMaxProperties
         (
             scalar& RMin,
@@ -137,7 +138,7 @@ public:
         // centres separated by a distance rAB.  Assumes rAB < (rA + rB).
         inline scalar overlapArea(scalar rA, scalar rB, scalar rAB) const
         {
-            // From:
+            // Reference:
             // http://mathworld.wolfram.com/Sphere-SphereIntersection.html
             return
                 mathematical::pi/4.0
@@ -341,7 +342,7 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
 
     if (normalOverlapMag > 0)
     {
-        //Particles in collision
+        // Particles in collision
 
         vector rHat_AB = r_AB/(r_AB_mag + VSMALL);
 
@@ -377,8 +378,7 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
 
         vector USlip_AB =
             U_AB - (U_AB & rHat_AB)*rHat_AB
-          + (pA.omega() ^ (dAEff/2*-rHat_AB))
-          - (pB.omega() ^ (dBEff/2*rHat_AB));
+          - ((dAEff/2*pA.omega() + dBEff/2*pB.omega()) ^ rHat_AB);
 
         scalar deltaT = this->owner().mesh().time().deltaTValue();
 
@@ -419,15 +419,12 @@ void CML::PairSpringSliderDashpot<CloudType>::evaluatePair
 
                 fT_AB = -mu_*mag(fN_AB)*USlip_AB/mag(USlip_AB);
 
-                tangentialOverlap_AB = vector::zero;
-                tangentialOverlap_BA = vector::zero;
+                tangentialOverlap_AB = Zero;
+                tangentialOverlap_BA = Zero;
             }
             else
             {
-                fT_AB =
-                    -kT*tangentialOverlapMag
-                   *tangentialOverlap_AB/tangentialOverlapMag
-                  - etaT*USlip_AB;
+                fT_AB = - kT*tangentialOverlap_AB - etaT*USlip_AB;
             }
 
             pA.f() += fT_AB;

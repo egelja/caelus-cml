@@ -59,7 +59,8 @@ public:
 
     static tmp<FieldField<Field, TypeR> > New
     (
-        const tmp<FieldField<Field, TypeR> >& tf1
+        const tmp<FieldField<Field, TypeR> >& tf1,
+        const bool initRet = false
     )
     {
         if (tf1.isTmp())
@@ -68,10 +69,17 @@ public:
         }
         else
         {
-            return tmp<FieldField<Field, TypeR> >
+            tmp<FieldField<Field, TypeR> > rtf
             (
                 FieldField<Field, TypeR>::NewCalculatedType(tf1())
             );
+
+            if (initRet)
+            {
+                rtf() = tf1();
+            }
+
+            return rtf;
         }
     }
 

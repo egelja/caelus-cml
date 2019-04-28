@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,14 +21,11 @@ License
 
 #include "cloudSolution.hpp"
 #include "Time.hpp"
+#include "localEulerDdtScheme.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::cloudSolution::cloudSolution
-(
-    const fvMesh& mesh,
-    const dictionary& dict
-)
+CML::cloudSolution::cloudSolution(const fvMesh& mesh, const dictionary& dict)
 :
     mesh_(mesh),
     dict_(dict),
@@ -37,10 +34,10 @@ CML::cloudSolution::cloudSolution
     calcFrequency_(1),
     maxCo_(0.3),
     iter_(1),
-    trackTime_(0.0),
+    trackTime_(0),
     coupled_(false),
     cellValueSourceCorrection_(false),
-    maxTrackTime_(0.0),
+    maxTrackTime_(0),
     resetSourcesOnStartup_(true),
     schemes_()
 {
@@ -84,10 +81,10 @@ CML::cloudSolution::cloudSolution
     calcFrequency_(0),
     maxCo_(GREAT),
     iter_(0),
-    trackTime_(0.0),
+    trackTime_(0),
     coupled_(false),
     cellValueSourceCorrection_(false),
-    maxTrackTime_(0.0),
+    maxTrackTime_(0),
     resetSourcesOnStartup_(false),
     schemes_()
 {}
@@ -103,7 +100,31 @@ CML::cloudSolution::~cloudSolution()
 
 void CML::cloudSolution::read()
 {
-    dict_.lookup("transient") >> transient_;
+    // For transient runs the Lagrangian tracking may be transient or steady
+    transient_ = dict_.lookupOrDefault("transient", false);
+
+    // For LTS and steady-state runs the Lagrangian tracking cannot be transient
+    if (transient_)
+    {
+        if (fv::localEulerDdt::enabled(mesh_))
+        {
+            IOWarningInFunction(dict_)
+                << "Transient tracking is not supported for LTS"
+                   " simulations, switching to steady state tracking."
+                << endl;
+            transient_ = false;
+        }
+
+        if (mesh_.steady())
+        {
+            IOWarningInFunction(dict_)
+                << "Transient tracking is not supported for steady-state"
+                   " simulations, switching to steady state tracking."
+                << endl;
+            transient_ = false;
+        }
+    }
+
     dict_.lookup("coupled") >> coupled_;
     dict_.lookup("cellValueSourceCorrection") >> cellValueSourceCorrection_;
     dict_.readIfPresent("maxCo", maxCo_);
@@ -145,7 +166,7 @@ void CML::cloudSolution::read()
             }
             else
             {
-                FatalErrorIn("void cloudSolution::read()")
+                FatalErrorInFunction
                     << "Invalid scheme " << scheme << ". Valid schemes are "
                     << "explicit and semiImplicit" << exit(FatalError);
             }
@@ -167,11 +188,11 @@ CML::scalar CML::cloudSolution::relaxCoeff(const word& fieldName) const
         }
     }
 
-    FatalErrorIn("scalar cloudSolution::relaxCoeff(const word&) const")
+    FatalErrorInFunction
         << "Field name " << fieldName << " not found in schemes"
         << abort(FatalError);
 
-    return 1.0;
+    return 1;
 }
 
 
@@ -185,7 +206,7 @@ bool CML::cloudSolution::semiImplicit(const word& fieldName) const
         }
     }
 
-    FatalErrorIn("bool cloudSolution::semiImplicit(const word&) const")
+    FatalErrorInFunction
         << "Field name " << fieldName << " not found in schemes"
         << abort(FatalError);
 
@@ -195,12 +216,7 @@ bool CML::cloudSolution::semiImplicit(const word& fieldName) const
 
 bool CML::cloudSolution::solveThisStep() const
 {
-    return
-        active_
-     && (
-            mesh_.time().outputTime()
-         || (mesh_.time().timeIndex() % calcFrequency_ == 0)
-        );
+    return active_ && (mesh_.time().timeIndex() % calcFrequency_ == 0);
 }
 
 

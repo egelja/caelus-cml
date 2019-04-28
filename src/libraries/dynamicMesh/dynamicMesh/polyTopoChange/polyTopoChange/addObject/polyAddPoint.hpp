@@ -95,16 +95,8 @@ public:
         {
             if (zoneID_ < 0 && !inCell)
             {
-                FatalErrorIn
-                (
-                    "polyAddPoint\n"
-                    "(\n"
-                    "    const point& p,\n"
-                    "    const label masterPointID,\n"
-                    "    const label zoneID,\n"
-                    "    const bool inCell\n"
-                    ")"
-                )   << "Point is not in a cell and not in a zone.  "
+                FatalErrorInFunction
+                    << "Point is not in a cell and not in a zone.  "
                     << "This is not allowed.\n"
                     << "point: " << p
                     << " master: " << masterPointID_

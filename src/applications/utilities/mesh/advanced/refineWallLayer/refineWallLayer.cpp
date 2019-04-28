@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     if (!patchSet.size())
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Cannot find any patches in set " << patches << endl
             << "Valid patches are " << mesh.boundaryMesh().names()
             << exit(FatalError);

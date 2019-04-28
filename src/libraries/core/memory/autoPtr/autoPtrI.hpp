@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -95,7 +95,7 @@ inline void CML::autoPtr<T>::set(T* p)
 {
     if (ptr_)
     {
-        FatalErrorIn("void CML::autoPtr<T>::set(T*)")
+        FatalErrorInFunction
             << "object already allocated"
             << abort(FatalError);
     }
@@ -130,7 +130,7 @@ inline T& CML::autoPtr<T>::operator()()
 {
     if (!ptr_)
     {
-        FatalErrorIn("T& CML::autoPtr<T>::operator()()")
+        FatalErrorInFunction
             << "object is not allocated"
             << abort(FatalError);
     }
@@ -144,7 +144,7 @@ inline const T& CML::autoPtr<T>::operator()() const
 {
     if (!ptr_)
     {
-        FatalErrorIn("const T& CML::autoPtr<T>::operator()() const")
+        FatalErrorInFunction
             << "object is not allocated"
             << abort(FatalError);
     }
@@ -165,7 +165,7 @@ inline T* CML::autoPtr<T>::operator->()
 {
     if (!ptr_)
     {
-        FatalErrorIn("CML::autoPtr<T>::operator->()")
+        FatalErrorInFunction
             << "object is not allocated"
             << abort(FatalError);
     }

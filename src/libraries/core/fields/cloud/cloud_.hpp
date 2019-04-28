@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2016-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +22,7 @@ Class
     CML::cloud
 
 Description
-    A cloud is a collection of lagrangian particles
+    A cloud is a registry collection of lagrangian particles.
 
 SourceFiles
     cloud_.cpp
@@ -32,6 +33,8 @@ SourceFiles
 #define cloud__H
 
 #include "objectRegistry.hpp"
+#include "Enum.hpp"
+#include "IOField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -61,6 +64,16 @@ class cloud
 
 public:
 
+    //- Cloud geometry type (internal or IO representations)
+    enum class geometryType
+    {
+        COORDINATES,    //!< barycentric coordinates
+        POSITIONS       //!< positions
+    };
+
+    static const Enum<geometryType> geometryTypeNames;
+
+
     //- Runtime type information
     TypeName("cloud");
 
@@ -74,11 +87,12 @@ public:
     // Constructors
 
         //- Construct for the given objectRegistry and named cloud instance
-        cloud(const objectRegistry&, const word& cloudName = "");
+        cloud(const objectRegistry&, const word& cloudName = defaultName);
 
 
     //- Destructor
-    virtual ~cloud();
+    virtual ~cloud()
+    {};
 
 
     // Member Functions

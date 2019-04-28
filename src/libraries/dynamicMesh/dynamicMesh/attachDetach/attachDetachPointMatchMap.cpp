@@ -50,10 +50,8 @@ void CML::attachDetach::calcPointMatchMap() const
 
     if (pointMatchMapPtr_)
     {
-        FatalErrorIn
-        (
-            "void attachDetach::calcPointMatchMap() const"
-        )   << "Point match map already calculated for object " << name()
+        FatalErrorInFunction
+            << "Point match map already calculated for object " << name()
             << abort(FatalError);
     }
 

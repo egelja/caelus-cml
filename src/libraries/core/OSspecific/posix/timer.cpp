@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -63,10 +63,8 @@ CML::timer::timer(const unsigned int newTimeOut)
         // Is singleton since handler is static function
         if (oldTimeOut_ != 0)
         {
-            FatalErrorIn
-            (
-                "CML::timer::timer(const unsigned int)"
-            )   << "timer already used."
+            FatalErrorInFunction
+                << "timer already used."
                 << abort(FatalError);
         }
 
@@ -80,10 +78,8 @@ CML::timer::timer(const unsigned int newTimeOut)
 
         if (sigaction(SIGALRM, &newAction, &oldAction_) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::timer::timer(const unsigned int)"
-            )   << "sigaction(SIGALRM) error"
+            FatalErrorInFunction
+                << "sigaction(SIGALRM) error"
                 << abort(FatalError);
         }
 
@@ -119,13 +115,10 @@ CML::timer::~timer()
         oldTimeOut_ = 0;
 
         // Restore signal handler
-        if (sigaction(SIGALRM, &oldAction_, NULL) < 0)
+        if (sigaction(SIGALRM, &oldAction_, nullptr) < 0)
         {
-            FatalErrorIn
-            (
-                "CML::timer::~timer(const struct sigaction&"
-                "const struct sigaction&)"
-            )   << "sigaction(SIGALRM) error"
+            FatalErrorInFunction
+                << "sigaction(SIGALRM) error"
                 << abort(FatalError);
         }
     }

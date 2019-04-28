@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,7 +39,7 @@ CML::NamedEnum<Enum, nEnum>::NamedEnum()
                 goodNames[i] = names[i];
             }
 
-            FatalErrorIn("NamedEnum<Enum, nEnum>::NamedEnum()")
+            FatalErrorInFunction
                 << "Illegal enumeration name at position " << enumI << endl
                 << "after entries " << goodNames << ".\n"
                 << "Possibly your NamedEnum<Enum, nEnum>::names array"
@@ -62,10 +62,8 @@ Enum CML::NamedEnum<Enum, nEnum>::read(Istream& is) const
 
     if (iter == HashTable<int>::end())
     {
-        FatalIOErrorIn
-        (
-            "NamedEnum<Enum, nEnum>::read(Istream&) const", is
-        )   << name << " is not in enumeration: "
+        FatalIOErrorInFunction(is)
+            << name << " is not in enumeration: "
             << sortedToc() << exit(FatalIOError);
     }
 

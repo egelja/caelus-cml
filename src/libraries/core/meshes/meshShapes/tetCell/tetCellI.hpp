@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -69,7 +69,7 @@ inline CML::triFace CML::tetCell::face(const label faceI) const
 #   ifdef FULLDEBUG
     if (faceI >= 4)
     {
-        FatalErrorIn("tetCell::tetEdge(const label faceI) const")
+        FatalErrorInFunction
             << "index out of range 0 -> 3. faceI = " << faceI
             << abort(FatalError);
     }
@@ -94,11 +94,8 @@ inline CML::label CML::tetCell::edgeFace(const label edgeI) const
 #   ifdef FULLDEBUG
     if (edgeI >= 6)
     {
-        FatalErrorIn
-        (
-            "tetCell::edgeFace(const label edgeI)"
-            "const"
-        )   << "edge index out of range 0 -> 5. edgeI = " << edgeI
+        FatalErrorInFunction
+            << "edge index out of range 0 -> 5. edgeI = " << edgeI
             << abort(FatalError);
     }
 #   endif
@@ -128,21 +125,15 @@ inline CML::label CML::tetCell::edgeAdjacentFace
 #   ifdef FULLDEBUG
     if (faceI >= 4)
     {
-        FatalErrorIn
-        (
-            "tetCell::edgeAdjacentFace(const label edgeI, const label faceI)"
-            "const"
-        )   << "face index out of range 0 -> 3. faceI = " << faceI
+        FatalErrorInFunction
+            << "face index out of range 0 -> 3. faceI = " << faceI
             << abort(FatalError);
     }
 
     if (edgeI >= 6)
     {
-        FatalErrorIn
-        (
-            "tetCell::edgeAdjacentFace(const label edgeI, const label faceI)"
-            "const"
-        )   << "edge index out of range 0 -> 5. edgeI = " << edgeI
+        FatalErrorInFunction
+            << "edge index out of range 0 -> 5. edgeI = " << edgeI
             << abort(FatalError);
     }
 #   endif
@@ -162,7 +153,7 @@ inline CML::edge CML::tetCell::tetEdge(const label edgeI) const
 #   ifdef FULLDEBUG
     if (edgeI >= 6)
     {
-        FatalErrorIn("tetCell::tetEdge(const label edgeI) const")
+        FatalErrorInFunction
             << "index out of range 0 -> 5. edgeI = " << edgeI
             << abort(FatalError);
     }

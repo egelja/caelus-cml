@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,11 +26,11 @@ License
 
 namespace CML
 {
-    namespace distributionModels
-    {
-        defineTypeNameAndDebug(multiNormal, 0);
-        addToRunTimeSelectionTable(distributionModel, multiNormal, dictionary);
-    }
+namespace distributionModels
+{
+    defineTypeNameAndDebug(multiNormal, 0);
+    addToRunTimeSelectionTable(distributionModel, multiNormal, dictionary);
+}
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -38,7 +38,7 @@ namespace CML
 CML::distributionModels::multiNormal::multiNormal
 (
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 :
     distributionModel(typeName, dict, rndGen),

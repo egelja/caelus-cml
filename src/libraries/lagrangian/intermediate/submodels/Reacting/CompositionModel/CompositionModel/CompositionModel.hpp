@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -60,6 +60,7 @@ class CompositionModel
     public CloudSubModelBase<CloudType>
 {
     // Private data
+
         //- Reference to the thermo database
         const SLGThermo& thermo_;
 
@@ -103,13 +104,7 @@ public:
         CompositionModel(const CompositionModel<CloudType>& cm);
 
         //- Construct and return a clone
-        virtual autoPtr<CompositionModel<CloudType> > clone() const
-        {
-            return autoPtr<CompositionModel<CloudType> >
-            (
-                new CompositionModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<CompositionModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -135,7 +130,7 @@ public:
             // Composition lists
 
                 //- Return the carrier components (wrapper function)
-                const basicMultiComponentMixture& carrier() const;
+                const basicSpecieMixture& carrier() const;
 
                 //- Return the global (additional) liquids
                 const liquidMixtureProperties& liquids() const;
@@ -163,22 +158,11 @@ public:
                 const wordList& componentNames(const label phaseI) const;
 
                 //- Return global id of component cmptName in carrier thermo
-                label globalCarrierId
+                label carrierId
                 (
                     const word& cmptName,
                     const bool allowNotFound = false
                 ) const;
-
-                //- Return global id of component cmptName in phase phaseI
-                label globalId
-                (
-                    const label phaseI,
-                    const word& cmptName,
-                    const bool allowNotFound = false
-                ) const;
-
-                //- Return global ids of for phase phaseI
-                const labelList& globalIds(const label phaseI) const;
 
                 //- Return local id of component cmptName in phase phaseI
                 label localId
@@ -188,8 +172,8 @@ public:
                     const bool allowNotFound = false
                 ) const;
 
-                //- Return global carrier id of component given local id
-                label localToGlobalCarrierId
+                //- Return carrier id of component given local id
+                label localToCarrierId
                 (
                     const label phaseI,
                     const label id,
@@ -208,19 +192,19 @@ public:
 
                 //- Return the list of mixture mass fractions
                 //  If only 1 phase, return component fractions of that phase
-                virtual const scalarField& YMixture0() const;
+                virtual const scalarField& YMixture0() const = 0;
 
                 // Indices of gas, liquid and solid phases in phase properties
                 // list - returns -1 if not applicable
 
                     //- Gas id
-                    virtual label idGas() const;
+                    virtual label idGas() const = 0;
 
                     //- Liquid id
-                    virtual label idLiquid() const;
+                    virtual label idLiquid() const = 0;
 
                     //- Solid id
-                    virtual label idSolid() const;
+                    virtual label idSolid() const = 0;
 
 
         // Evaluation
@@ -278,28 +262,28 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeCompositionModel(CloudType)                                       \
-                                                                              \
-    typedef CloudType::reactingCloudType reactingCloudType;                   \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        CompositionModel<reactingCloudType>,                                  \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        CompositionModel<reactingCloudType>,                                  \
-        dictionary                                                            \
-    );
+#define makeCompositionModel(CloudType)                                        \
+                                                                               \
+    typedef CloudType::reactingCloudType reactingCloudType;                    \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        CompositionModel<reactingCloudType>,                                   \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        CompositionModel<reactingCloudType>,                                   \
+        dictionary                                                             \
+    );                                                                         \
 
 
-#define makeCompositionModelType(SS, CloudType)                               \
-                                                                              \
-    typedef CloudType::reactingCloudType reactingCloudType;                   \
-    defineNamedTemplateTypeNameAndDebug(SS<reactingCloudType>, 0);            \
-                                                                              \
-    CompositionModel<reactingCloudType>::                                     \
-        adddictionaryConstructorToTable<SS<reactingCloudType> >               \
+#define makeCompositionModelType(SS, CloudType)                                \
+                                                                               \
+    typedef CloudType::reactingCloudType reactingCloudType;                    \
+    defineNamedTemplateTypeNameAndDebug(SS<reactingCloudType>, 0);             \
+                                                                               \
+    CompositionModel<reactingCloudType>::                                      \
+        adddictionaryConstructorToTable<SS<reactingCloudType> >                \
             add##SS##CloudType##reactingCloudType##ConstructorToTable_;
 
 
@@ -365,7 +349,7 @@ const CML::SLGThermo& CML::CompositionModel<CloudType>::thermo() const
 
 
 template<class CloudType>
-const CML::basicMultiComponentMixture&
+const CML::basicSpecieMixture&
 CML::CompositionModel<CloudType>::carrier() const
 {
     return thermo_.carrier();
@@ -427,14 +411,14 @@ const CML::wordList& CML::CompositionModel<CloudType>::stateLabels() const
 
 template<class CloudType>
 const CML::wordList&
-CML::CompositionModel<CloudType>::componentNames(const label phaseI) const
+CML::CompositionModel<CloudType>::componentNames(const label phasei) const
 {
-    return phaseProps_[phaseI].names();
+    return phaseProps_[phasei].names();
 }
 
 
 template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::globalCarrierId
+CML::label CML::CompositionModel<CloudType>::carrierId
 (
     const word& cmptName,
     const bool allowNotFound
@@ -444,81 +428,31 @@ CML::label CML::CompositionModel<CloudType>::globalCarrierId
 
     if (id < 0 && !allowNotFound)
     {
-        FatalErrorIn
-        (
-            "CML::label CML::CompositionModel<CloudType>::globalCarrierId"
-            "("
-                "const word&, "
-                "const bool"
-            ") const"
-        )   << "Unable to determine global id for requested component "
+        FatalErrorInFunction
+            << "Unable to determine global id for requested component "
             << cmptName << ". Available components are " << nl
-            << thermo_.carrier().species() << abort(FatalError);
+            << thermo_.carrier().species()
+            << abort(FatalError);
     }
 
     return id;
-}
-
-
-template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::globalId
-(
-    const label phaseI,
-    const word& cmptName,
-    const bool allowNotFound
-) const
-{
-    label id = phaseProps_[phaseI].globalId(cmptName);
-
-    if (id < 0 && !allowNotFound)
-    {
-        FatalErrorIn
-        (
-            "CML::label CML::CompositionModel<CloudType>::globalId"
-            "("
-                "const label, "
-                "const word&, "
-                "const bool"
-            ") const"
-        )   << "Unable to determine global id for requested component "
-            << cmptName << abort(FatalError);
-    }
-
-    return id;
-}
-
-
-template<class CloudType>
-const CML::labelList& CML::CompositionModel<CloudType>::globalIds
-(
-    const label phaseI
-) const
-{
-    return phaseProps_[phaseI].globalIds();
 }
 
 
 template<class CloudType>
 CML::label CML::CompositionModel<CloudType>::localId
 (
-    const label phaseI,
+    const label phasei,
     const word& cmptName,
     const bool allowNotFound
 ) const
 {
-    label id = phaseProps_[phaseI].id(cmptName);
+    label id = phaseProps_[phasei].id(cmptName);
 
     if (id < 0 && !allowNotFound)
     {
-        FatalErrorIn
-        (
-            "CML::label CML::CompositionModel<CloudType>::localId"
-            "("
-                "const label, "
-                "const word&, "
-                "const bool"
-            ") const"
-        )   << "Unable to determine local id for component " << cmptName
+        FatalErrorInFunction
+            << "Unable to determine local id for component " << cmptName
             << abort(FatalError);
     }
 
@@ -527,54 +461,46 @@ CML::label CML::CompositionModel<CloudType>::localId
 
 
 template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::localToGlobalCarrierId
+CML::label CML::CompositionModel<CloudType>::localToCarrierId
 (
-    const label phaseI,
+    const label phasei,
     const label id,
     const bool allowNotFound
 ) const
 {
-    label gid = phaseProps_[phaseI].globalCarrierIds()[id];
+    label cid = phaseProps_[phasei].carrierIds()[id];
 
-    if (gid < 0 && !allowNotFound)
+    if (cid < 0 && !allowNotFound)
     {
-        FatalErrorIn
-        (
-            "CML::label "
-            "CML::CompositionModel<CloudType>::localToGlobalCarrierId"
-            "("
-                "const label, "
-                "const label, "
-                "const bool"
-            ") const"
-        )   << "Unable to determine global carrier id for phase "
-            << phaseI << " with local id " << id
+        FatalErrorInFunction
+            << "Unable to determine global carrier id for phase "
+            << phasei << " with local id " << id
             << abort(FatalError);
     }
 
-    return gid;
+    return cid;
 }
 
 
 template<class CloudType>
 const CML::scalarField& CML::CompositionModel<CloudType>::Y0
 (
-    const label phaseI
+    const label phasei
 ) const
 {
-    return phaseProps_[phaseI].Y();
+    return phaseProps_[phasei].Y();
 }
 
 
 template<class CloudType>
 CML::scalarField CML::CompositionModel<CloudType>::X
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
-    scalarField X(Y.size(), 0.0);
+    const phaseProperties& props = phaseProps_[phasei];
+    scalarField X(Y.size());
     scalar WInv = 0.0;
     switch (props.phase())
     {
@@ -582,9 +508,9 @@ CML::scalarField CML::CompositionModel<CloudType>::X
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                WInv += Y[i]/thermo_.carrier().W(gid);
-                X[i] = Y[i]/thermo_.carrier().W(gid);
+                label cid = props.carrierIds()[i];
+                X[i] = Y[i]/thermo_.carrier().Wi(cid);
+                WInv += X[i];
             }
             break;
         }
@@ -592,90 +518,35 @@ CML::scalarField CML::CompositionModel<CloudType>::X
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                WInv += Y[i]/thermo_.liquids().properties()[gid].W();
-                X[i] += Y[i]/thermo_.liquids().properties()[gid].W();
+                X[i] = Y[i]/thermo_.liquids().properties()[i].W();
+                WInv += X[i];
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalarField CML::CompositionModel<CloudType>::X"
-                "("
-                    "const label, "
-                    "const scalarField&"
-                ") const"
-            )   << "Only possible to convert gas and liquid mass fractions"
+            FatalErrorInFunction
+                << "Only possible to convert gas and liquid mass fractions"
                 << abort(FatalError);
         }
     }
 
-    tmp<scalarField> tfld = X/WInv;
-    return tfld();
-}
+    X /= WInv;
 
-
-template<class CloudType>
-const CML::scalarField& CML::CompositionModel<CloudType>::YMixture0() const
-{
-    notImplemented
-    (
-        "const scalarField& CML::CompositionModel<CloudType>::YMixture0() "
-        "const"
-    );
-
-    return scalarField::null();
-}
-
-
-template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::idGas() const
-{
-    notImplemented
-    (
-        "CML::label CML::CompositionModel<CloudType>::idGas() const"
-    );
-
-    return -1;
-}
-
-
-template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::idLiquid() const
-{
-    notImplemented
-    (
-        "CML::label CML::CompositionModel<CloudType>::idLiquid() const"
-    );
-
-    return -1;
-}
-
-
-template<class CloudType>
-CML::label CML::CompositionModel<CloudType>::idSolid() const
-{
-    notImplemented
-    (
-        "CML::label CML::CompositionModel<CloudType>::idSolid() const"
-    );
-
-    return -1;
+    return X;
 }
 
 
 template<class CloudType>
 CML::scalar CML::CompositionModel<CloudType>::H
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y,
     const scalar p,
     const scalar T
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
+    const phaseProperties& props = phaseProps_[phasei];
     scalar HMixture = 0.0;
     switch (props.phase())
     {
@@ -683,8 +554,8 @@ CML::scalar CML::CompositionModel<CloudType>::H
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HMixture += Y[i]*thermo_.carrier().H(gid, T);
+                label cid = props.carrierIds()[i];
+                HMixture += Y[i]*thermo_.carrier().Ha(cid, p, T);
             }
             break;
         }
@@ -692,8 +563,7 @@ CML::scalar CML::CompositionModel<CloudType>::H
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HMixture += Y[i]*thermo_.liquids().properties()[gid].h(p, T);
+                HMixture += Y[i]*thermo_.liquids().properties()[i].h(p, T);
             }
             break;
         }
@@ -701,28 +571,19 @@ CML::scalar CML::CompositionModel<CloudType>::H
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
                 HMixture +=
                      Y[i]
                     *(
-                        thermo_.solids().properties()[gid].Hf()
-                      + thermo_.solids().properties()[gid].Cp()*T
+                        thermo_.solids().properties()[i].Hf()
+                      + thermo_.solids().properties()[i].Cp()*T
                      );
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::CompositionModel<CloudType>::H"
-                "("
-                "    const label, "
-                "    const scalarField&, "
-                "    const scalar, "
-                "    const scalar"
-                ") const"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration" << abort(FatalError);
         }
     }
 
@@ -733,13 +594,13 @@ CML::scalar CML::CompositionModel<CloudType>::H
 template<class CloudType>
 CML::scalar CML::CompositionModel<CloudType>::Hs
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y,
     const scalar p,
     const scalar T
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
+    const phaseProperties& props = phaseProps_[phasei];
     scalar HsMixture = 0.0;
     switch (props.phase())
     {
@@ -747,8 +608,8 @@ CML::scalar CML::CompositionModel<CloudType>::Hs
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HsMixture += Y[i]*thermo_.carrier().Hs(gid, T);
+                label cid = props.carrierIds()[i];
+                HsMixture += Y[i]*thermo_.carrier().Hs(cid, p, T);
             }
             break;
         }
@@ -756,12 +617,11 @@ CML::scalar CML::CompositionModel<CloudType>::Hs
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
                 HsMixture +=
                     Y[i]
                    *(
-                       thermo_.liquids().properties()[gid].h(p, T)
-                     - thermo_.liquids().properties()[gid].h(p, 298.15)
+                       thermo_.liquids().properties()[i].h(p, T)
+                     - thermo_.liquids().properties()[i].h(p, 298.15)
                     );
             }
             break;
@@ -770,23 +630,15 @@ CML::scalar CML::CompositionModel<CloudType>::Hs
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HsMixture += Y[i]*thermo_.solids().properties()[gid].Cp()*T;
+                HsMixture += Y[i]*thermo_.solids().properties()[i].Cp()*T;
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::CompositionModel<CloudType>::Hs"
-                "("
-                "    const label, "
-                "    const scalarField&, "
-                "    const scalar, "
-                "    const scalar"
-                ") const"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration"
+                << abort(FatalError);
         }
     }
 
@@ -797,13 +649,13 @@ CML::scalar CML::CompositionModel<CloudType>::Hs
 template<class CloudType>
 CML::scalar CML::CompositionModel<CloudType>::Hc
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y,
     const scalar p,
     const scalar T
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
+    const phaseProperties& props = phaseProps_[phasei];
     scalar HcMixture = 0.0;
     switch (props.phase())
     {
@@ -811,8 +663,8 @@ CML::scalar CML::CompositionModel<CloudType>::Hc
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HcMixture += Y[i]*thermo_.carrier().Hc(gid);
+                label cid = props.carrierIds()[i];
+                HcMixture += Y[i]*thermo_.carrier().Hc(cid);
             }
             break;
         }
@@ -820,9 +672,8 @@ CML::scalar CML::CompositionModel<CloudType>::Hc
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
                 HcMixture +=
-                    Y[i]*thermo_.liquids().properties()[gid].h(p, 298.15);
+                    Y[i]*thermo_.liquids().properties()[i].h(p, 298.15);
             }
             break;
         }
@@ -830,23 +681,15 @@ CML::scalar CML::CompositionModel<CloudType>::Hc
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                HcMixture += Y[i]*thermo_.solids().properties()[gid].Hf();
+                HcMixture += Y[i]*thermo_.solids().properties()[i].Hf();
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::CompositionModel<CloudType>::Hc"
-                "("
-                "    const label, "
-                "    const scalarField&, "
-                "    const scalar, "
-                "    const scalar"
-                ") const"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration"
+                << abort(FatalError);
         }
     }
 
@@ -857,13 +700,13 @@ CML::scalar CML::CompositionModel<CloudType>::Hc
 template<class CloudType>
 CML::scalar CML::CompositionModel<CloudType>::Cp
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y,
     const scalar p,
     const scalar T
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
+    const phaseProperties& props = phaseProps_[phasei];
     scalar CpMixture = 0.0;
     switch (props.phase())
     {
@@ -871,8 +714,8 @@ CML::scalar CML::CompositionModel<CloudType>::Cp
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                CpMixture += Y[i]*thermo_.carrier().Cp(gid, T);
+                label cid = props.carrierIds()[i];
+                CpMixture += Y[i]*thermo_.carrier().Cp(cid, p, T);
             }
             break;
         }
@@ -880,8 +723,7 @@ CML::scalar CML::CompositionModel<CloudType>::Cp
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                CpMixture += Y[i]*thermo_.liquids().properties()[gid].Cp(p, T);
+                CpMixture += Y[i]*thermo_.liquids().properties()[i].Cp(p, T);
             }
             break;
         }
@@ -889,23 +731,15 @@ CML::scalar CML::CompositionModel<CloudType>::Cp
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                CpMixture += Y[i]*thermo_.solids().properties()[gid].Cp();
+                CpMixture += Y[i]*thermo_.solids().properties()[i].Cp();
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::CompositionModel<CloudType>::Cp"
-                "("
-                    "const label, "
-                    "const scalarField&, "
-                    "const scalar, "
-                    "const scalar"
-                ") const"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration"
+                << abort(FatalError);
         }
     }
 
@@ -916,13 +750,13 @@ CML::scalar CML::CompositionModel<CloudType>::Cp
 template<class CloudType>
 CML::scalar CML::CompositionModel<CloudType>::L
 (
-    const label phaseI,
+    const label phasei,
     const scalarField& Y,
     const scalar p,
     const scalar T
 ) const
 {
-    const phaseProperties& props = phaseProps_[phaseI];
+    const phaseProperties& props = phaseProps_[phasei];
     scalar LMixture = 0.0;
     switch (props.phase())
     {
@@ -930,16 +764,8 @@ CML::scalar CML::CompositionModel<CloudType>::L
         {
             if (debug)
             {
-                WarningIn
-                (
-                    "CML::scalar CML::CompositionModel<CloudType>::L"
-                    "("
-                        "const label, "
-                        "const scalarField&, "
-                        "const scalar, "
-                        "const scalar"
-                    ") const\n"
-                )   << "No support for gaseous components" << endl;
+                WarningInFunction
+                    << "No support for gaseous components" << endl;
             }
             break;
         }
@@ -947,8 +773,7 @@ CML::scalar CML::CompositionModel<CloudType>::L
         {
             forAll(Y, i)
             {
-                label gid = props.globalIds()[i];
-                LMixture += Y[i]*thermo_.liquids().properties()[gid].hl(p, T);
+                LMixture += Y[i]*thermo_.liquids().properties()[i].hl(p, T);
             }
             break;
         }
@@ -956,31 +781,16 @@ CML::scalar CML::CompositionModel<CloudType>::L
         {
             if (debug)
             {
-                WarningIn
-                (
-                    "CML::scalar CML::CompositionModel<CloudType>::L"
-                    "("
-                        "const label, "
-                        "const scalarField&, "
-                        "const scalar, "
-                        "const scalar"
-                    ") const\n"
-                )   << "No support for solid components" << endl;
+                WarningInFunction
+                    << "No support for solid components" << endl;
             }
             break;
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::CompositionModel<CloudType>::L"
-                "("
-                    "const label, "
-                    "const scalarField&, "
-                    "const scalar, "
-                    "const scalar"
-                ") const"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration"
+                << abort(FatalError);
         }
     }
 
@@ -1009,14 +819,8 @@ CML::CompositionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "CompositionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown composition model type "
+        FatalErrorInFunction
+            << "Unknown composition model type "
             << modelType << nl << nl
             << "Valid composition model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc() << nl
@@ -1025,7 +829,6 @@ CML::CompositionModel<CloudType>::New
 
     return autoPtr<CompositionModel<CloudType> >(cstrIter()(dict, owner));
 }
-
 
 
 #endif

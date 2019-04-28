@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright: ICE Stroemungsfoschungs GmbH
 Copyright (C) 1991-2008 OpenCFD Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is based on CAELUS.
@@ -49,7 +50,7 @@ ExpressionResult::ExpressionResult()
 :
     refCount(),
     valType_("None"),
-    valPtr_(NULL),
+    valPtr_(nullptr),
     isPoint_(false),
     isSingleValue_(true),
     objectSize_(-1),
@@ -65,7 +66,7 @@ ExpressionResult::ExpressionResult(const ExpressionResult &rhs)
 :
     refCount(),
     valType_("None"),
-    valPtr_(NULL),
+    valPtr_(nullptr),
     isPoint_(false),
     isSingleValue_(true),
     objectSize_(-1),
@@ -86,7 +87,7 @@ ExpressionResult::ExpressionResult(
 :
     refCount(),
     valType_(dict.lookupOrDefault<word>("valueType","None")),
-    valPtr_(NULL),
+    valPtr_(nullptr),
     isPoint_(dict.lookupOrDefault<bool>("isPoint",false)),
     isSingleValue_(
         dict.lookupOrDefault<bool>("isSingleValue",isSingleValue)
@@ -115,7 +116,7 @@ ExpressionResult::ExpressionResult(
             } else if(valType_==pTraits<sphericalTensor>::typeName) {
                 valPtr_=new Field<sphericalTensor>(1,pTraits<sphericalTensor>(dict.lookup("value")));
             } else {
-                FatalErrorIn("ExpressionResult::ExpressionResult(const dictionary &dict)")
+                FatalErrorInFunction
                     << "Don't know how to read data type " << valType_
                         << " as a single value" << endl
                         << exit(FatalError);
@@ -136,13 +137,13 @@ ExpressionResult::ExpressionResult(
             } else if(valType_==pTraits<bool>::typeName) {
                 valPtr_=new Field<bool>("value",dict,fs);
             } else {
-                FatalErrorIn("ExpressionResult::ExpressionResult(const dictionary &dict)")
+                FatalErrorInFunction
                     << "Don't know how to read data type " << valType_ << endl
                         << exit(FatalError);
             }
         }
     } else if(needsValue) {
-        FatalErrorIn("ExpressionResult::ExpressionResult(const dictionary &dict,bool isSingleValue)")
+        FatalErrorInFunction
             << "No entry 'value' defined in " << dict.name() << endl
                 << dict
                 << endl
@@ -168,14 +169,12 @@ autoPtr<ExpressionResult> ExpressionResult::New
 
         if (cstrIter == nothingConstructorTablePtr_->end())
         {
-            FatalErrorIn
-                (
-                    "autoPtr<ExpressionResult> ExpressionResult::New"
-                )   << "Unknown  ExpressionResult type " << resultType
-                    << endl << endl
-                    << "Valid resultTypes are :" << endl
-                    << nothingConstructorTablePtr_->sortedToc() // does not work in 1.6
-                    << exit(FatalError);
+            FatalErrorInFunction
+                << "Unknown  ExpressionResult type " << resultType
+                << endl << endl
+                << "Valid resultTypes are :" << endl
+                << nothingConstructorTablePtr_->sortedToc() // does not work in 1.6
+                << exit(FatalError);
         }
 
         if(debug) {
@@ -192,14 +191,12 @@ autoPtr<ExpressionResult> ExpressionResult::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalErrorIn
-                (
-                    "autoPtr<ExpressionResult> ExpressionResult::New"
-                )   << "Unknown  ExpressionResult type " << resultType
-                    << endl << endl
-                    << "Valid resultTypes are :" << endl
-                    << dictionaryConstructorTablePtr_->sortedToc() // does not work in 1.6
-                    << exit(FatalError);
+            FatalErrorInFunction
+                << "Unknown  ExpressionResult type " << resultType
+                << endl << endl
+                << "Valid resultTypes are :" << endl
+                << dictionaryConstructorTablePtr_->sortedToc() // does not work in 1.6
+                << exit(FatalError);
         }
 
         if(debug) {
@@ -227,7 +224,7 @@ ExpressionResult::~ExpressionResult()
 
 bool ExpressionResult::hasValue() const
 {
-    return valType_!="None" && valPtr_!=NULL;
+    return valType_!="None" && valPtr_!=nullptr;
 }
 
 void ExpressionResult::resetInternal() {
@@ -286,14 +283,14 @@ void ExpressionResult::uglyDelete()
         } else if(valType_==pTraits<bool>::typeName) {
             delete static_cast<Field<bool>*>(valPtr_);
         } else {
-            WarningIn("ExpressionResult::uglyDelete()")
+            WarningInFunction
                 << "Unknown type " << valType_
-                    << " propable memory loss" << endl;
+                << " propable memory loss" << endl;
             delete valPtr_;
         }
     }
     valType_="Void";
-    valPtr_=NULL;
+    valPtr_=nullptr;
 
     Pbug << "uglyDelete - done" << endl;
 }
@@ -316,22 +313,22 @@ ExpressionResult ExpressionResult::getUniform(
         } else if(valType_==sphericalTensor::typeName) {
             return getUniformInternal<sphericalTensor>(size,noWarn,parallel);
         } else if(valType_==pTraits<bool>::typeName) {
-            FatalErrorIn("ExpressionResult::getUniformInternal<bool>(const label size,bool noWarn)")
+            FatalErrorInFunction
                 << "This specialisation is not implemented"
-                    << endl << exit(FatalError);
+                << endl << exit(FatalError);
 
             return ExpressionResult(); // makes warnings go away
         } else {
-            FatalErrorIn("ExpressionResult::getUniform()")
+            FatalErrorInFunction
                 << "Unknown type " << valType_ << endl
-                    << exit(FatalError);
+                << exit(FatalError);
 
             return ExpressionResult(); // makes warnings go away
         }
     } else {
-        FatalErrorIn("ExpressionResult::getUniform()")
+        FatalErrorInFunction
             << "Not set. Can't construct an uniform value" << endl
-                << exit(FatalError);
+            << exit(FatalError);
 
         return ExpressionResult(); // makes warnings go away
     }
@@ -352,7 +349,7 @@ label ExpressionResult::size() const {
         } else if(valType_==pTraits<bool>::typeName) {
             return static_cast<Field<bool>*>(valPtr_)->size();
         } else {
-            WarningIn("ExpressionResult::size()")
+            WarningInFunction
                 << "Unknown type " << valType_ << endl;
             return -1;
         }
@@ -371,7 +368,7 @@ void ExpressionResult::operator=(const ExpressionResult& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("ExpressionResult::operator=(const ExpressionResult&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << exit(FatalError);
     }
@@ -417,23 +414,23 @@ void ExpressionResult::operator=(const ExpressionResult& rhs)
                 )
             );
         } else {
-            FatalErrorIn("ExpressionResult::operator=(const ExpressionResult& rhs)")
+            FatalErrorInFunction
                 << " Type " << valType_ << " can not be copied"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
     } else {
         valPtr_=rhs.valPtr_;
         if(generalContent_.valid()) {
-            FatalErrorIn("ExpressionResult::operator=(const ExpressionResult& rhs)")
+            FatalErrorInFunction
                 << "Assignment with general content not possible"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
 
         }
     }
 
-//     const_cast<ExpressionResult &>(rhs).valPtr_=NULL;
+//     const_cast<ExpressionResult &>(rhs).valPtr_=nullptr;
 //     const_cast<ExpressionResult &>(rhs).clearResult();
 }
 
@@ -544,11 +541,11 @@ Istream & operator>>(Istream &in,ExpressionResult &data)
 ExpressionResult operator*(const scalar &f,const ExpressionResult &orig)
 {
     if(orig.isObject()) {
-        FatalErrorIn("operator*(const scalar &f,const ExpressionResult &orig)")
+        FatalErrorInFunction
             << "Can only multiply Field-type ExpressionResult. Not if they're"
-                << orig.valType_
-                << endl
-                << exit(FatalError);
+            << orig.valType_
+            << endl
+            << exit(FatalError);
     }
     ExpressionResult result(orig);
 
@@ -564,11 +561,11 @@ ExpressionResult operator*(const scalar &f,const ExpressionResult &orig)
         (*static_cast<Field<sphericalTensor>*>(result.valPtr_))*=f;
         //    } else if(result.valType_==pTraits<bool>::typeName) {
     } else {
-        FatalErrorIn("operator*(const scalar &f,const ExpressionResult &orig)")
+        FatalErrorInFunction
             << "Can not multiply Field-type ExpressionResult of type"
-                << result.valType_
-                << endl
-                << exit(FatalError);
+            << result.valType_
+            << endl
+            << exit(FatalError);
     }
     return result;
 }
@@ -577,25 +574,25 @@ ExpressionResult operator+(
     const ExpressionResult &a,const ExpressionResult &b
 ) {
     if(a.valType_!=b.valType_) {
-        FatalErrorIn("operator+(const ExpressionResult &a,const ExpressionResult &b)")
+        FatalErrorInFunction
             << "Different types "
-                << a.valType_ << " and " << b.valType_
-                << endl
-                << exit(FatalError);
+            << a.valType_ << " and " << b.valType_
+            << endl
+            << exit(FatalError);
     }
     if(a.isObject()) {
-        FatalErrorIn("operator+(const ExpressionResult &a,const ExpressionResult &b)")
+        FatalErrorInFunction
             << "Can only multiply Field-type ExpressionResult. Not if they're"
-                << a.valType_
-                << endl
-                << exit(FatalError);
+            << a.valType_
+            << endl
+            << exit(FatalError);
     }
     if(a.size()!=b.size()) {
-        FatalErrorIn("operator+(const ExpressionResult &a,const ExpressionResult &b)")
+        FatalErrorInFunction
             << "Different sizes "
-                << a.size() << " and " << b.size()
-                << endl
-                << exit(FatalError);
+            << a.size() << " and " << b.size()
+            << endl
+            << exit(FatalError);
     }
 
     ExpressionResult result(a);
@@ -617,11 +614,11 @@ ExpressionResult operator+(
             (*static_cast<Field<sphericalTensor>*>(b.valPtr_));
         //    } else if(result.valType_==pTraits<bool>::typeName) {
     } else {
-        FatalErrorIn("operator+(const ExpressionResult &a,const ExpressionResult &b)")
+        FatalErrorInFunction
             << "Can not add Field-type ExpressionResult of type"
-                << result.valType_
-                << endl
-                << exit(FatalError);
+            << result.valType_
+            << endl
+            << exit(FatalError);
     }
     return result;
 }
@@ -640,11 +637,11 @@ word ExpressionResult::getAddressAsDecimal() const
      } else if(valType_==pTraits<sphericalTensor>::typeName) {
          makeDec << (*static_cast<Field<sphericalTensor>*>(valPtr_)).cdata();
      } else {
-         FatalErrorIn("ExpressionResult::getAddressAsDecimal")
+         FatalErrorInFunction
              << "Unsupported type"
-                 << valType_
-                 << endl
-                 << exit(FatalError);
+             << valType_
+             << endl
+             << exit(FatalError);
      }
 
     return word(makeDec.str());

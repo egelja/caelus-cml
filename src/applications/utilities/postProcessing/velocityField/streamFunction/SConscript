@@ -8,7 +8,7 @@ Import('env')
 target = 'streamFunction'
 
 sources = Split("""
-streamFunction.cpp
+streamFunction_app.cpp
 """)
 
 caelus_inc = [

@@ -334,11 +334,11 @@ void swakExpressionAverageDistributionFunctionObject::getDistributionInternal(
             )()
         );
     } else {
-        FatalErrorIn("swakExpressionAverageDistributionFunctionObject::getDistributionInternal")
+        FatalErrorInFunction
             << "Unhandled type " << rType << " for abscissaExpression "
-                << abscissaExpression_
-                << endl
-                << exit(FatalError);
+            << abscissaExpression_
+            << endl
+            << exit(FatalError);
     }
 }
 
@@ -351,12 +351,12 @@ void swakExpressionAverageDistributionFunctionObject::writeADistribution(
         return;
     }
     if(dist.size()!=componentNames_.size()) {
-        FatalErrorIn("swakExpressionAverageDistributionFunctionObject::writeADistribution")
+        FatalErrorInFunction
             << "The size of the abszissa-components " << componentNames_
-                << " is not equal to the number of stored distributions "
-                << dist.size()
-                << endl
-                << exit(FatalError);
+            << " is not equal to the number of stored distributions "
+            << dist.size()
+            << endl
+            << exit(FatalError);
 
     }
     fileName theDir(this->baseDir()/obr().time().timeName());

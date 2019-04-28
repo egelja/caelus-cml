@@ -34,10 +34,10 @@ Description
 #undef minor
 #undef makedev
 
-# define major(dev) ((int)(((dev) >> 8) & 0xff))
-# define minor(dev) ((int)((dev) & 0xff))
-# define makedev(major, minor) ((((unsigned int) (major)) << 8) \
-				| ((unsigned int) (minor)))
+# define major(dev) (int(((dev) >> 8) & 0xff))
+# define minor(dev) (int((dev) & 0xff))
+# define makedev(major, minor) ((((unsigned int)(major)) << 8) \
+                                | ((unsigned int)(minor)))
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -47,7 +47,6 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 fileStat::fileStat()
 :
     isValid_(false)
@@ -55,7 +54,11 @@ fileStat::fileStat()
 
 
 // Construct from components
-fileStat::fileStat(const fileName& fName, const unsigned int maxTime)
+fileStat::fileStat
+(
+    const fileName& fName,
+    const unsigned int maxTime
+)
 {
     // Work on volatile
     volatile bool locIsValid = false;
@@ -88,10 +91,10 @@ fileStat::fileStat(Istream& is)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// compare two fileStates for same device
+// Compare two fileStates for same device
 bool fileStat::sameDevice(const fileStat& stat2) const
 {
-    return 
+    return
         isValid_
      && (
             major(status_.st_dev) == major(stat2.status().st_dev)
@@ -99,13 +102,13 @@ bool fileStat::sameDevice(const fileStat& stat2) const
         );
 }
 
-// compare two fileStates for same Inode
+// Compare two fileStates for same Inode
 bool fileStat::sameINode(const fileStat& stat2) const
 {
     return isValid_ && (status_.st_ino == stat2.status().st_ino);
 }
 
-// compare state against inode
+// Compare state against inode
 bool fileStat::sameINode(const label iNode) const
 {
     return isValid_ && (status_.st_ino == ino_t(iNode));

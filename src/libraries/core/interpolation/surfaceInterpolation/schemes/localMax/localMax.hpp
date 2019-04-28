@@ -104,13 +104,9 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const
         {
-            notImplemented
-            (
-                "localMax::weights"
-                "(const GeometricField<Type, fvPatchField, volMesh>&)"
-            );
+            NotImplemented;
 
-            return tmp<surfaceScalarField>(NULL);
+            return tmp<surfaceScalarField>(nullptr);
         }
 
         //- Return the face-interpolate of the given cell field

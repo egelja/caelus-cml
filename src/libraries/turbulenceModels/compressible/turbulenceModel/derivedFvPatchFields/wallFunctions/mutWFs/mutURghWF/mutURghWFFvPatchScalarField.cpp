@@ -22,7 +22,7 @@ License
 #include "mutURghWFFvPatchScalarField.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

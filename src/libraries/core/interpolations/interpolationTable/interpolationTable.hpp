@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -191,10 +191,8 @@ void CML::interpolationTable<Type>::readTable()
 
     if (this->empty())
     {
-        FatalErrorIn
-        (
-            "CML::interpolationTable<Type>::readTable()"
-        )   << "table read from " << fName << " is empty" << nl
+        FatalErrorInFunction
+            << "table read from " << fName << " is empty" << nl
             << exit(FatalError);
     }
 
@@ -211,7 +209,7 @@ CML::interpolationTable<Type>::interpolationTable()
     List<Tuple2<scalar, Type> >(),
     boundsHandling_(interpolationTable::WARN),
     fileName_("fileNameIsUndefined"),
-    reader_(NULL)
+    reader_(nullptr)
 {}
 
 
@@ -226,7 +224,7 @@ CML::interpolationTable<Type>::interpolationTable
     List<Tuple2<scalar, Type> >(values),
     boundsHandling_(bounds),
     fileName_(fName),
-    reader_(NULL)
+    reader_(nullptr)
 {}
 
 
@@ -331,10 +329,8 @@ CML::interpolationTable<Type>::wordToBoundsHandling
     }
     else
     {
-        WarningIn
-        (
-            "CML::interpolationTable<Type>::wordToBoundsHandling(const word&)"
-        )   << "bad outOfBounds specifier " << bound << " using 'warn'" << endl;
+        WarningInFunction
+            << "bad outOfBounds specifier " << bound << " using 'warn'" << endl;
 
         return interpolationTable::WARN;
     }
@@ -368,10 +364,8 @@ void CML::interpolationTable<Type>::check() const
         // avoid duplicate values (divide-by-zero error)
         if (currValue <= prevValue)
         {
-            FatalErrorIn
-            (
-                "CML::interpolationTable<Type>::checkOrder() const"
-            )   << "out-of-order value: "
+            FatalErrorInFunction
+                << "out-of-order value: "
                 << currValue << " at index " << i << nl
                 << exit(FatalError);
         }
@@ -415,24 +409,19 @@ Type CML::interpolationTable<Type>::rateOfChange(const scalar value) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const scalar) const"
-                )   << "value (" << lookupValue << ") underflow" << nl
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") underflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const scalar) const"
-                )   << "value (" << lookupValue << ") underflow" << nl
+                WarningInFunction
+                    << "value (" << lookupValue << ") underflow" << nl
                     << "    Zero rate of change."
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {
@@ -454,24 +443,19 @@ Type CML::interpolationTable<Type>::rateOfChange(const scalar value) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "value (" << lookupValue << ") overflow" << nl
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") overflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "value (" << lookupValue << ") overflow" << nl
+                WarningInFunction
+                    << "value (" << lookupValue << ") overflow" << nl
                     << "    Zero rate of change."
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {
@@ -569,24 +553,19 @@ CML::interpolationTable<Type>::operator[](const label i) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "index (" << ii << ") underflow" << nl
+                FatalErrorInFunction
+                    << "index (" << ii << ") underflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "index (" << ii << ") underflow" << nl
+                WarningInFunction
+                    << "index (" << ii << ") underflow" << nl
                     << "    Continuing with the first entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {
@@ -609,24 +588,19 @@ CML::interpolationTable<Type>::operator[](const label i) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "index (" << ii << ") overflow" << nl
+                FatalErrorInFunction
+                    << "index (" << ii << ") overflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "index (" << ii << ") overflow" << nl
+                WarningInFunction
+                    << "index (" << ii << ") overflow" << nl
                     << "    Continuing with the last entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {
@@ -668,24 +642,19 @@ Type CML::interpolationTable<Type>::operator()(const scalar value) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const scalar) const"
-                )   << "value (" << lookupValue << ") underflow" << nl
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") underflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const scalar) const"
-                )   << "value (" << lookupValue << ") underflow" << nl
+                WarningInFunction
+                    << "value (" << lookupValue << ") underflow" << nl
                     << "    Continuing with the first entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {
@@ -707,24 +676,19 @@ Type CML::interpolationTable<Type>::operator()(const scalar value) const
         {
             case interpolationTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "value (" << lookupValue << ") overflow" << nl
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") overflow" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolationTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolationTable<Type>::operator[]"
-                    "(const label) const"
-                )   << "value (" << lookupValue << ") overflow" << nl
+                WarningInFunction
+                    << "value (" << lookupValue << ") overflow" << nl
                     << "    Continuing with the last entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolationTable::CLAMP:
             {

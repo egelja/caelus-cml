@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2012 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +34,7 @@ int CML::sigWriteNow::signal_
     debug::optimisationSwitch("writeNowSignal", -1)
 );
 
-static CML::Time* runTimePtr_ = NULL;
+CML::Time* CML::sigWriteNow::runTimePtr_ = nullptr;
 
 
 __p_sig_fn_t CML::sigWriteNow::oldAction_ = SIG_DFL;
@@ -49,10 +50,8 @@ void CML::sigWriteNow::sigHandler(int)
     
     if (SIG_ERR == success)
     {
-        FatalErrorIn
-        (
-            "CML::sigWriteNow::sigHandler(int)"
-        )   << "Cannot reset " << signal_ << " trapping"
+        FatalErrorInFunction
+            << "Cannot reset " << signal_ << " trapping"
             << abort(FatalError);
     }
 
@@ -73,19 +72,45 @@ CML::sigWriteNow::sigWriteNow()
 
 CML::sigWriteNow::sigWriteNow(const bool verbose, Time& runTime)
 {
+    // Store runTime
+    runTimePtr_ = &runTime;
+
+    set(verbose);
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+CML::sigWriteNow::~sigWriteNow()
+{
+    // Reset old handling
+    if (signal_ > 0)
+    {
+        const __p_sig_fn_t success = ::signal(signal_, oldAction_);
+        oldAction_ = SIG_DFL;
+
+        if (SIG_ERR == success)
+        {
+            FatalErrorInFunction
+                << "Cannot reset " << signal_ << " trapping"
+                << abort(FatalError);
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void CML::sigWriteNow::set(const bool verbose)
+{
     if (signal_ >= 0)
     {
-        // Store runTime
-        runTimePtr_ = &runTime;
+        oldAction_ = ::signal(signal_, &CML::sigWriteNow::sigHandler);        
 
-	oldAction_ = ::signal(signal_, &CML::sigWriteNow::sigHandler);        
-
-	if (SIG_ERR == oldAction_)
-	{
-            FatalErrorIn
-            (
-                "CML::sigWriteNow::sigWriteNow(const bool, const Time&)"
-            )   << "Cannot set " << signal_ << " trapping"
+        if (SIG_ERR == oldAction_)
+        {
+            FatalErrorInFunction
+                << "Cannot set " << signal_ << " trapping"
                 << abort(FatalError);
         }
 
@@ -98,30 +123,6 @@ CML::sigWriteNow::sigWriteNow(const bool verbose, Time& runTime)
     }
 }
 
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::sigWriteNow::~sigWriteNow()
-{
-    // Reset old handling
-    if (signal_ > 0)
-    {
-        const __p_sig_fn_t success = ::signal(signal_, oldAction_);
-	oldAction_ = SIG_DFL;
-
-	if (SIG_ERR == success)
-        {
-            FatalErrorIn
-            (
-                "CML::sigWriteNow::~sigWriteNow()"
-            )   << "Cannot reset " << signal_ << " trapping"
-                << abort(FatalError);
-        }
-    }
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 bool CML::sigWriteNow::active() const
 {

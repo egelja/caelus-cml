@@ -96,10 +96,8 @@ void meshOptimizer::untangleMeshFV
     forAll(boundaryVertex, pI)
     {
         if( boundaryVertex[pI] && tm.smoothVertex()[pI] )
-            FatalErrorIn
-            (
-                "void meshOptimizer::untangleMeshFV()"
-            ) << "Boundary vertex should not be moved!" << abort(FatalError);
+            FatalErrorInFunction
+              << "Boundary vertex should not be moved!" << abort(FatalError);
     }
     # endif
 

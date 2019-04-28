@@ -25,29 +25,25 @@ License
 
 CML::autoPtr<CML::ODESolver> CML::ODESolver::New
 (
-    const CML::word& ODESolverTypeName,
-    const CML::ODE& ode
+    const CML::ODESystem& odes,
+    const dictionary& dict
 )
 {
+    word ODESolverTypeName(dict.lookup("solver"));
     Info<< "Selecting ODE solver " << ODESolverTypeName << endl;
 
-    ODEConstructorTable::iterator cstrIter =
-        ODEConstructorTablePtr_->find(ODESolverTypeName);
+    dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(ODESolverTypeName);
 
-    if (cstrIter == ODEConstructorTablePtr_->end())
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "ODESolver::New(const word& ODESolverTypeName, const ODE& ode)"
-        )   << "Unknown ODESolver type "
+        FatalErrorInFunction
+            << "Unknown ODESolver type "
             << ODESolverTypeName << nl << nl
             << "Valid ODESolvers are : " << endl
-            << ODEConstructorTablePtr_->sortedToc()
+            << dictionaryConstructorTablePtr_->sortedToc()
             << exit(FatalError);
     }
 
-    return autoPtr<ODESolver>(cstrIter()(ode));
+    return autoPtr<ODESolver>(cstrIter()(odes, dict));
 }
-
-
-// ************************************************************************* //

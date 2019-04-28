@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,24 +30,26 @@ License
 #include "ParticleErosion.hpp"
 #include "ParticleTracks.hpp"
 #include "ParticleTrap.hpp"
+#include "PatchCollisionDensity.hpp"
 #include "PatchPostProcessing.hpp"
 #include "VoidFraction.hpp"
 #include "ParcelRemoval.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParcelCloudFunctionObjects(CloudType)                             \
-                                                                              \
-    makeCloudFunctionObject(CloudType);                                       \
-                                                                              \
-    makeCloudFunctionObjectType(FacePostProcessing, CloudType);               \
-    makeCloudFunctionObjectType(ParticleErosion, CloudType);                  \
-    makeCloudFunctionObjectType(ParticleTracks, CloudType);                   \
-    makeCloudFunctionObjectType(ParticleTrap, CloudType);                     \
-    makeCloudFunctionObjectType(ParticleCollector, CloudType);                \
-    makeCloudFunctionObjectType(PatchPostProcessing, CloudType);              \
-    makeCloudFunctionObjectType(VoidFraction, CloudType);                     \
-    makeCloudFunctionObjectType(ParcelRemoval, CloudType);  
+#define makeParcelCloudFunctionObjects(CloudType)                              \
+                                                                               \
+    makeCloudFunctionObject(CloudType);                                        \
+                                                                               \
+    makeCloudFunctionObjectType(FacePostProcessing, CloudType);                \
+    makeCloudFunctionObjectType(ParticleCollector, CloudType);                 \
+    makeCloudFunctionObjectType(ParticleErosion, CloudType);                   \
+    makeCloudFunctionObjectType(ParticleTracks, CloudType);                    \
+    makeCloudFunctionObjectType(ParticleTrap, CloudType);                      \
+    makeCloudFunctionObjectType(PatchCollisionDensity, CloudType);             \
+    makeCloudFunctionObjectType(PatchPostProcessing, CloudType);               \
+    makeCloudFunctionObjectType(VoidFraction, CloudType);                      \
+    makeCloudFunctionObjectType(ParcelRemoval, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

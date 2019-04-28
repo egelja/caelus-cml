@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -357,7 +357,7 @@ bool limitRefinementLevel
                 {
                     if (refLevel[cellI] - refLevel[nbr] >= limitDiff)
                     {
-                        FatalErrorIn("limitRefinementLevel")
+                        FatalErrorInFunction
                             << "Level difference between neighbouring cells "
                             << cellI << " and " << nbr
                             << " greater than or equal to " << limitDiff << endl
@@ -641,7 +641,7 @@ int main(int argc, char *argv[])
     );
 
     // corrector for mesh motion
-    twoDPointCorrector* correct2DPtr = NULL;
+    twoDPointCorrector* correct2DPtr = nullptr;
 
     if (motionObj.headerOk())
     {
@@ -698,7 +698,7 @@ int main(int argc, char *argv[])
 
     if (nCutLayers > 0 && selectInside)
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Illogical settings : Both nCutLayers>0 and selectInside true."
             << endl
             << "This would mean that inside cells get removed but should be"
@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
 
         if (queryMesh.findCell(outsidePoint, -1, false) == -1)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "outsidePoint " << outsidePoint
                 << " is not inside any cell"
                 << exit(FatalError);

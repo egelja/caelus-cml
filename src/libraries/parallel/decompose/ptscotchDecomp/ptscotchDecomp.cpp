@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -155,7 +155,7 @@ void CML::ptscotchDecomp::check(const int retVal, const char* str)
 {
     if (retVal)
     {
-        FatalErrorIn("ptscotchDecomp::decompose(..)")
+        FatalErrorInFunction
             << "Call to scotch routine " << str << " failed."
             << exit(FatalError);
     }
@@ -241,7 +241,7 @@ void CML::ptscotchDecomp::check(const int retVal, const char* str)
 //
 //        if (prevXadj.size() != nSendCells[Pstream::myProcNo()-1])
 //        {
-//            FatalErrorIn("ptscotchDecomp::decompose(..)")
+//            FatalErrorInFunction
 //                << "Expected from processor " << Pstream::myProcNo()-1
 //                << " connectivity for " << nSendCells[Pstream::myProcNo()-1]
 //                << " nCells but only received " << prevXadj.size()
@@ -318,7 +318,7 @@ void CML::ptscotchDecomp::check(const int retVal, const char* str)
 //
 //        if (nextFinalDecomp.size() != nSendCells[Pstream::myProcNo()])
 //        {
-//            FatalErrorIn("parMetisDecomp::decompose(..)")
+//            FatalErrorInFunction
 //                << "Expected from processor " << Pstream::myProcNo()+1
 //                << " decomposition for " << nSendCells[Pstream::myProcNo()]
 //                << " nCells but only received " << nextFinalDecomp.size()
@@ -492,19 +492,15 @@ CML::label CML::ptscotchDecomp::decompose
     {
         if (minWeights <= 0)
         {
-            WarningIn
-            (
-                "ptscotchDecomp::decompose(..)"
-            )   << "Illegal minimum weight " << minWeights
+            WarningInFunction
+                << "Illegal minimum weight " << minWeights
                 << endl;
         }
 
         if (cWeights.size() != xadjSize-1)
         {
-            FatalErrorIn
-            (
-                "ptscotchDecomp::decompose(..)"
-            )   << "Number of cell weights " << cWeights.size()
+            FatalErrorInFunction
+                << "Number of cell weights " << cWeights.size()
                 << " does not equal number of cells " << xadjSize-1
                 << exit(FatalError);
         }
@@ -522,10 +518,8 @@ CML::label CML::ptscotchDecomp::decompose
             // rangeScale tipping the subsequent sum over the integer limit.
             rangeScale = 0.9*scalar(INT_MAX - 1)/velotabSum;
 
-            WarningIn
-            (
-                "ptscotchDecomp::decompose(...)"
-            )   << "Sum of weights has overflowed integer: " << velotabSum
+            WarningInFunction
+                << "Sum of weights has overflowed integer: " << velotabSum
                 << ", compressing weight scale by a factor of " << rangeScale
                 << endl;
         }
@@ -590,13 +584,13 @@ CML::label CML::ptscotchDecomp::decompose
             const_cast<SCOTCH_Num*>(xadj+1),// vendloctab, end index  ,,
 
             const_cast<SCOTCH_Num*>(velotab.begin()),// veloloctab, vtx weights
-            NULL,                   // vlblloctab
+            nullptr,                   // vlblloctab
 
             adjncySize,             // edgelocnbr, number of arcs
             adjncySize,             // edgelocsiz
             const_cast<SCOTCH_Num*>(adjncy),         // edgeloctab
-            NULL,                   // edgegsttab
-            NULL                    // edlotab, edge weights
+            nullptr,                   // edgegsttab
+            nullptr                    // edlotab, edge weights
         ),
         "SCOTCH_dgraphBuild"
     );
@@ -740,10 +734,7 @@ CML::labelList CML::ptscotchDecomp::decompose
 {
     if (points.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "ptscotchDecomp::decompose(const pointField&, const scalarField&)"
-        )
+        FatalErrorInFunction
             << "Can use this decomposition method only for the whole mesh"
             << endl
             << "and supply one coordinate (cellCentre) for every cell." << endl
@@ -792,10 +783,8 @@ CML::labelList CML::ptscotchDecomp::decompose
 {
     if (agglom.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "ptscotchDecomp::decompose(const labelList&, const pointField&)"
-        )   << "Size of cell-to-coarse map " << agglom.size()
+        FatalErrorInFunction
+            << "Size of cell-to-coarse map " << agglom.size()
             << " differs from number of cells in mesh " << mesh.nCells()
             << exit(FatalError);
     }
@@ -839,10 +828,8 @@ CML::labelList CML::ptscotchDecomp::decompose
 {
     if (cellCentres.size() != globalCellCells.size())
     {
-        FatalErrorIn
-        (
-            "ptscotchDecomp::decompose(const pointField&, const labelListList&)"
-        )   << "Inconsistent number of cells (" << globalCellCells.size()
+        FatalErrorInFunction
+            << "Inconsistent number of cells (" << globalCellCells.size()
             << ") and number of cell centres (" << cellCentres.size()
             << ")." << exit(FatalError);
     }

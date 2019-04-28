@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -151,23 +151,24 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeWallModel(CloudType)                                              \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(WallModel<CloudType>, 0);             \
-                                                                              \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        WallModel<CloudType>,                                                 \
-        dictionary                                                            \
+#define makeWallModel(CloudType)                                               \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(WallModel<CloudType>, 0);              \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        WallModel<CloudType>,                                                  \
+        dictionary                                                             \
     );
 
 
-#define makeWallModelType(SS, CloudType)                                      \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                    \
-                                                                              \
-    WallModel<CloudType>::adddictionaryConstructorToTable<SS<CloudType> >     \
-        add##SS##CloudType##ConstructorToTable_;
+#define makeWallModelType(SS, CloudType)                                       \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                     \
+                                                                               \
+    WallModel<CloudType>::                                                     \
+        adddictionaryConstructorToTable<SS<CloudType> >                        \
+            add##SS##CloudType##ConstructorToTable_;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -247,14 +248,8 @@ CML::WallModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "WallModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown wall model type type " << WallModelType
+        FatalErrorInFunction
+            << "Unknown wall model type type " << WallModelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid wall model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc() << exit(FatalError);

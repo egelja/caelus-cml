@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -57,7 +57,7 @@ solvers
     }
 
 
-    "(U|hs|k)"
+    "(U|h|k)"
     {
         solver          PBiCGStab;
         preconditioner  USGS;
@@ -65,7 +65,7 @@ solvers
         relTol          0.1;
     }
 
-    "(U|hs|k)Final"
+    "(U|h|k)Final"
     {
         solver          PBiCGStab;
         preconditioner  USGS;
@@ -75,7 +75,7 @@ solvers
 
     Yi
     {
-        $hsFinal;
+        $hFinal;
     }
 
 }

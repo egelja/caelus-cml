@@ -28,22 +28,18 @@ subdirs = Split("""
     dynamicMesh/meshMotion/solidBodyMotion/solidBodyMotionFunctions
     ODE
     randomProcesses
-    thermophysicalModels/specie
-    thermophysicalModels/solid
-    thermophysicalModels/thermophysicalFunctions
-    thermophysicalModels/properties/liquidProperties
-    thermophysicalModels/properties/liquidMixtureProperties
-    thermophysicalModels/properties/solidProperties
-    thermophysicalModels/properties/solidMixtureProperties
-    thermophysicalModels/basic
-    thermophysicalModels/reactionThermo
-    thermophysicalModels/laminarFlameSpeed
-    thermophysicalModels/chemistryModel
     thermophysicalModels/barotropicCompressibilityModel
+    thermophysicalModels/basic
+    thermophysicalModels/chemistryModel
+    thermophysicalModels/laminarFlameSpeed
+    thermophysicalModels/radiation
+    thermophysicalModels/reactionThermo
     thermophysicalModels/SLGThermo
-    thermophysicalModels/basicSolidThermo
     thermophysicalModels/solidChemistryModel
-    thermophysicalModels/radiationModels
+    thermophysicalModels/solidSpecie
+    thermophysicalModels/solidThermo
+    thermophysicalModels/specie
+    thermophysicalModels/thermophysicalProperties
     thermophysicalModels/numericFluxes/DBNS/numericFlux
     transportModels/incompressible
     transportModels/interfaceProperties
@@ -58,6 +54,10 @@ subdirs = Split("""
     turbulenceModels/compressible/RAS
     turbulenceModels/compressible/LES
     turbulenceModels/compressible/VLES
+    turbulenceModels/mixture/turbulenceModel
+    turbulenceModels/mixture/RAS
+    turbulenceModels/mixture/LES
+    turbulenceModels/mixture/VLES
     turbulenceModels/derivedFvPatchFields
     combustionModels
     regionModels/regionModel
@@ -67,6 +67,7 @@ subdirs = Split("""
     regionModels/regionCoupling
     lagrangian/solidParticle
     lagrangian/intermediate
+    lagrangian/turbulence
     lagrangian/spray
     lagrangian/coalCombustion
     postProcessing/postCalc
@@ -81,6 +82,7 @@ subdirs = Split("""
     postProcessing/functionObjects/systemCall
     mesh/autoMesh
     mesh/blockMesh
+    mesh/extrudeModel
     fvAgglomerationMethods/pairPatchAgglomeration
     dynamicMesh/meshMotion/rigidBodyDynamics
     dynamicMesh/meshMotion/rigidBodyMeshMotion

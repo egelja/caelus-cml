@@ -73,7 +73,7 @@ void boundaryLayerOptimisation::calculateNormalVectors
         const label bpI = bp[hairEdges_[hairEdgeI][0]];
 
         //- create an entry in a map
-        patchNormalType* patchNormalPtr(NULL);
+        patchNormalType* patchNormalPtr(nullptr);
         # ifdef USE_OMP
         # pragma omp critical
             patchNormalPtr = &pointPatchNormal[bpI];
@@ -223,7 +223,7 @@ void boundaryLayerOptimisation::calculateNormalVectorsSmother
         const label triPointI = triPointLabel[bpI];
 
         //- create an entry in a map
-        patchNormalType* patchNormalPtr(NULL);
+        patchNormalType* patchNormalPtr(nullptr);
         # ifdef USE_OMP
         # pragma omp critical
             patchNormalPtr = &pointPatchNormal[bpI];
@@ -370,11 +370,8 @@ void boundaryLayerOptimisation::calculateHairVectorsAtTheBoundary
                 }
 
                 if( beI < 0 )
-                    FatalErrorIn
-                    (
-                        "boundaryLayerOptimisation::"
-                        "calculateHairVectorsAtTheBoundary(vectorField&)"
-                    ) << "Cannot find hair edge "
+                    FatalErrorInFunction
+                      << "Cannot find hair edge "
                       << hairEdgeI << abort(FatalError);
 
                 //- find the vector at the same angle from both feature edges
@@ -386,11 +383,8 @@ void boundaryLayerOptimisation::calculateHairVectorsAtTheBoundary
                     const label pos = bf.which(he.start());
 
                     if( pos < 0 )
-                        FatalErrorIn
-                        (
-                            "boundaryLayerOptimisation::"
-                            "calculateHairVectorsAtTheBoundary(vectorField&)"
-                        ) << "Cannot find hair edge "
+                        FatalErrorInFunction
+                          << "Cannot find hair edge "
                           << hairEdgeI << " in face " << bf
                           << abort(FatalError);
 
@@ -418,11 +412,8 @@ void boundaryLayerOptimisation::calculateHairVectorsAtTheBoundary
             }
             else
             {
-                FatalErrorIn
-                (
-                    "boundaryLayerOptimisation::"
-                    "calculateHairVectorsAtTheBoundary(vectorField&)"
-                ) << "Invalid hair type " << label(hairType)
+                FatalErrorInFunction
+                  << "Invalid hair type " << label(hairType)
                   << abort(FatalError);
             }
         }
@@ -654,11 +645,8 @@ void boundaryLayerOptimisation::optimiseHairNormalsAtTheBoundary()
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void boundaryLayerOptimisation::"
-                        "optimiseHairNormalsAtTheBoundary(const label)"
-                    ) << "Cannot smooth hair with type " << label(eType)
+                    FatalErrorInFunction
+                      << "Cannot smooth hair with type " << label(eType)
                       << abort(FatalError);
                 }
             }
@@ -862,11 +850,8 @@ void boundaryLayerOptimisation::optimiseHairNormalsInside()
 
                 if( counter == 0 )
                 {
-                    FatalErrorIn
-                    (
-                        "void boundaryLayerOptimisation::"
-                        "optimiseHairNormalsInside()"
-                    ) << "No valid patches for boundary point "
+                    FatalErrorInFunction
+                      << "No valid patches for boundary point "
                       << bp[hairEdges_[hairEdgeI].start()] << abort(FatalError);
                 }
 

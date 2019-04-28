@@ -360,7 +360,7 @@ inline edge partTet::getEdge(const label eI) const
         } break;
     }
 
-    FatalErrorIn("inline edge partTet::getEdge(const label) const")
+    FatalErrorInFunction
         << "Invalid edge index given " << eI << abort(FatalError);
 
     return edge();

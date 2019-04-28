@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -41,10 +41,6 @@ boundaryField
     fixedWalls
     {
         type            empty;
-    }
-    "baffle1Wall.*"
-    {
-        type           calculated;
     }
 }
 

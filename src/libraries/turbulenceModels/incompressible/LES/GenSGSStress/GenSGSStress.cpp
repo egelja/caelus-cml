@@ -97,12 +97,8 @@ GenSGSStress::GenSGSStress
 {
     if (couplingFactor_.value() < 0.0 || couplingFactor_.value() > 1.0)
     {
-        FatalErrorIn
-        (
-            "GenSGSStress::GenSGSStress"
-            "(const volVectorField& U, const surfaceScalarField& phi,"
-            "transportModel& transport)"
-        )   << "couplingFactor = " << couplingFactor_
+        FatalErrorInFunction
+            << "couplingFactor = " << couplingFactor_
             << " is not in range 0 - 1" << nl
             << exit(FatalError);
     }
@@ -202,7 +198,7 @@ bool GenSGSStress::read()
 
         if (couplingFactor_.value() < 0.0 || couplingFactor_.value() > 1.0)
         {
-            FatalErrorIn("GenSGSStress::read()")
+            FatalErrorInFunction
                 << "couplingFactor = " << couplingFactor_
                 << " is not in range 0 - 1"
                 << exit(FatalError);

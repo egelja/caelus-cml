@@ -8,7 +8,7 @@ Import('env')
 target = 'Pe'
 
 sources = Split("""
-Pe.cpp
+Pe_app.cpp
 """)
 
 caelus_inc = [
@@ -36,7 +36,7 @@ caelus_libs = [
 'compressibleRASModels',
 'compressibleLESModels',
 'specie',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'incompressibleTransportModels'
 ]
 

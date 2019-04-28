@@ -79,11 +79,8 @@ CML::commSchedule::commSchedule
 
         if (proc0 < 0 || proc0 >= nProcs || proc1 < 0 || proc1 >= nProcs)
         {
-            FatalErrorIn
-            (
-                "commSchedule::commSchedule"
-                "(const label, const List<labelPair>&)"
-            )   << "Illegal processor " << comms[commI] << abort(FatalError);
+            FatalErrorInFunction
+                << "Illegal processor " << comms[commI] << abort(FatalError);
         }
 
         procToComms[proc0].append(commI);

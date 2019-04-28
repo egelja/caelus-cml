@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::heatTransferModel
+    CML::regionModels::surfaceFilmModels::heatTransferModel
 
 Description
     Base class for film heat transfer models
@@ -77,22 +77,22 @@ public:
              heatTransferModel,
              dictionary,
              (
-                 const surfaceFilmModel& owner,
+                 surfaceFilmRegionModel& film,
                  const dictionary& dict
              ),
-             (owner, dict)
+             (film, dict)
          );
 
     // Constructors
 
         //- Construct null
-        heatTransferModel(const surfaceFilmModel& owner);
+        heatTransferModel(surfaceFilmRegionModel& film);
 
         //- Construct from type name, dictionary and surface film model
         heatTransferModel
         (
-            const word& type,
-            const surfaceFilmModel& owner,
+            const word& modelType,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 
@@ -102,7 +102,7 @@ public:
         //- Return a reference to the selected phase change model
         static autoPtr<heatTransferModel> New
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

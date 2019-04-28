@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,7 +48,7 @@ CML::cylindricalCS CML::arcEdge::calcAngle()
 
     if (mag(denom) < VSMALL)
     {
-        FatalErrorIn("cylindricalCS arcEdge::calcAngle()")
+        FatalErrorInFunction
             << "Invalid arc definition - are the points co-linear?  Denom ="
             << denom
             << abort(FatalError);
@@ -131,7 +131,7 @@ CML::point CML::arcEdge::position(const scalar lambda) const
 {
     if (lambda < 0 || lambda > 1)
     {
-        FatalErrorIn("arcEdge::position(const scalar lambda) const")
+        FatalErrorInFunction
             << "Parameter out of range, lambda = " << lambda
             << abort(FatalError);
     }

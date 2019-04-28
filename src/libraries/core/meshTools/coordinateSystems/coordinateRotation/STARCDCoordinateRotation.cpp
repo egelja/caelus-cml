@@ -67,12 +67,8 @@ CML::tmp<CML::vectorField> CML::STARCDCoordinateRotation::transform
     const vectorField& st
 ) const
 {
-    notImplemented
-    (
-        "tmp<vectorField> CML::STARCDCoordinateRotation:: "
-        "transform(const vectorField& st) const"
-    );
-    return tmp<vectorField>(NULL);
+    NotImplemented;
+    return tmp<vectorField>(nullptr);
 }
 
 
@@ -81,21 +77,14 @@ CML::tmp<CML::vectorField> CML::STARCDCoordinateRotation::invTransform
     const vectorField& st
 ) const
 {
-    notImplemented
-    (
-        "tmp<vectorField>  CML::STARCDCoordinateRotation::"
-        "invTransform(const vectorField& st) const"
-    );
-    return tmp<vectorField>(NULL);
+    NotImplemented;
+    return tmp<vectorField>(nullptr);
 }
 
 
 const CML::tensorField& CML::STARCDCoordinateRotation::Tr() const
 {
-    notImplemented
-    (
-        "const tensorField& STARCDCoordinateRotatio::Tr() const"
-    );
+    NotImplemented;
      return NullSingletonRef<const tensorField>();
 }
 
@@ -105,11 +94,8 @@ CML::tmp<CML::tensorField> CML::STARCDCoordinateRotation::transformTensor
     const tensorField& st
 ) const
 {
-     notImplemented
-    (
-        "tmp<CML::tensorField> STARCDCoordinateRotation::transformTensor()"
-    );
-    return tmp<tensorField>(NULL);
+     NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 
@@ -128,14 +114,8 @@ CML::tmp<CML::tensorField> CML::STARCDCoordinateRotation::transformTensor
     const labelList& cellMap
 ) const
 {
-    notImplemented
-    (
-        "tmp<CML::tensorField> STARCDCoordinateRotation::transformTensor "
-        " const tensorField& st,"
-        " const labelList& cellMap "
-        ") const"
-    );
-    return tmp<tensorField>(NULL);
+    NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 

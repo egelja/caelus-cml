@@ -80,33 +80,5 @@ CML::Istream& CML::operator>>
     return is;
 }
 
-CML::Ostream& CML::operator<<
-(
-    Ostream& os,
-    const patchInteractionData& pid
-)
-{
-    os << "e = "
-       << pid.e_ 
-       << token::SPACE
-       << "mu = "
-       << pid.mu_
-       << endl;
-
-    return os;
-}
-
-bool CML::operator!=
-(
-    const patchInteractionData& x, 
-    const patchInteractionData& y
-)
-{
-    if (x.e_ != y.e_ && x.mu_ != y.mu_)
-        return true;
-    else
-        return false; 
-}
-
 
 // ************************************************************************* //

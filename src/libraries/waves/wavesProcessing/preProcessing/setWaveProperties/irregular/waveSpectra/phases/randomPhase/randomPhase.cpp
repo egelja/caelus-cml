@@ -44,7 +44,7 @@ randomPhase::randomPhase
     phases(rT, dict)
 {
     Info << "\nConstructing: " << this->type() << endl;
-    srand(time(NULL));
+    srand(time(nullptr));
 
     if (dict.found("seedForRandomPhase"))
     {

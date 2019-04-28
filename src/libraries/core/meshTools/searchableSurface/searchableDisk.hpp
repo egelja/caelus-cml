@@ -160,10 +160,7 @@ public:
         //- Does any part of the surface overlap the supplied bound box?
         virtual bool overlaps(const boundBox& bb) const
         {
-            notImplemented
-            (
-                "searchableDisk::overlaps(const boundBox&) const"
-            );
+            NotImplemented;
 
             return false;
         }
@@ -227,7 +224,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("searchableDisk::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

@@ -30,11 +30,4 @@ CML::regionModels::pyrolysisModels::reactingOneDim::nNonOrthCorr() const
 }
 
 
-inline const CML::volScalarField&
-CML::regionModels::pyrolysisModels::reactingOneDim::Qr() const
-{
-    return Qr_;
-}
-
-
 // ************************************************************************* //

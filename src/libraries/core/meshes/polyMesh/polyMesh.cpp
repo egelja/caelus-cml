@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2016 OpenFOAM Foundation
-Copyright (C) 2015-16 Applied CCM
+Copyright (C) 2011-2018 OpenFOAM Foundation
+Copyright (C) 2015-2016 Applied CCM
 Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
@@ -39,7 +39,6 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-
 namespace CML
 {
     defineTypeNameAndDebug(polyMesh, 0);
@@ -64,8 +63,8 @@ void CML::polyMesh::calcDirections() const
     label nEmptyPatches = 0;
     label nWedgePatches = 0;
 
-    vector emptyDirVec = vector::zero;
-    vector wedgeDirVec = vector::zero;
+    vector emptyDirVec = Zero;
+    vector wedgeDirVec = Zero;
 
     forAll(boundaryMesh(), patchi)
     {
@@ -133,6 +132,29 @@ void CML::polyMesh::calcDirections() const
                 geometricD_[cmpt] = 1;
             }
         }
+    }
+}
+
+
+CML::autoPtr<CML::labelIOList> CML::polyMesh::readTetBasePtIs() const
+{
+    IOobject io
+    (
+        "tetBasePtIs",
+        instance(),
+        meshSubDir,
+        *this,
+        IOobject::READ_IF_PRESENT,
+        IOobject::NO_WRITE
+    );
+
+    if (io.headerOk())
+    {
+        return autoPtr<labelIOList>(new labelIOList(io));
+    }
+    else
+    {
+        return autoPtr<labelIOList>(nullptr);
     }
 }
 
@@ -206,10 +228,10 @@ CML::polyMesh::polyMesh(const IOobject& io, const bool defectCorr, const scalar 
         *this
     ),
     bounds_(points_),
-    geometricD_(Vector<label>::zero),
-    solutionD_(Vector<label>::zero),
-    tetBasePtIsPtr_(NULL),
-    cellTreePtr_(NULL),
+    geometricD_(Zero),
+    solutionD_(Zero),
+    tetBasePtIsPtr_(readTetBasePtIs()),
+    cellTreePtr_(nullptr),
     pointZones_
     (
         IOobject
@@ -264,11 +286,13 @@ CML::polyMesh::polyMesh(const IOobject& io, const bool defectCorr, const scalar 
         ),
         *this
     ),
-    globalMeshDataPtr_(NULL),
+    globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(NULL)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     if (exists(owner_.objectPath()))
     {
@@ -305,12 +329,12 @@ CML::polyMesh::polyMesh(const IOobject& io, const bool defectCorr, const scalar 
     // Warn if global empty mesh
     if (returnReduce(nPoints(), sumOp<label>()) == 0)
     {
-        WarningIn("polyMesh(const IOobject&)")
+        WarningInFunction
             << "no points in mesh" << endl;
     }
     if (returnReduce(nCells(), sumOp<label>()) == 0)
     {
-        WarningIn("polyMesh(const IOobject&)")
+        WarningInFunction
             << "no cells in mesh" << endl;
     }
 
@@ -401,10 +425,10 @@ CML::polyMesh::polyMesh
         polyPatchList()
     ),
     bounds_(points_, syncPar),
-    geometricD_(Vector<label>::zero),
-    solutionD_(Vector<label>::zero),
-    tetBasePtIsPtr_(NULL),
-    cellTreePtr_(NULL),
+    geometricD_(Zero),
+    solutionD_(Zero),
+    tetBasePtIsPtr_(readTetBasePtIs()),
+    cellTreePtr_(nullptr),
     pointZones_
     (
         IOobject
@@ -447,29 +471,23 @@ CML::polyMesh::polyMesh
         *this,
         PtrList<cellZone>()
     ),
-    globalMeshDataPtr_(NULL),
+    globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(NULL)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if the faces and cells are valid
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        const face& curFace = faces_[faceI];
+        const face& curFace = faces_[facei];
 
         if (min(curFace) < 0 || max(curFace) > points_.size())
         {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh\n"
-                "(\n"
-                "    const IOobject& io,\n"
-                "    const pointField& points,\n"
-                "    const faceList& faces,\n"
-                "    const cellList& cells\n"
-                ")\n"
-            )   << "Face " << faceI << "contains vertex labels out of range: "
+            FatalErrorInFunction
+                << "Face " << facei << "contains vertex labels out of range: "
                 << curFace << " Max point index = " << points_.size()
                 << abort(FatalError);
         }
@@ -561,10 +579,10 @@ CML::polyMesh::polyMesh
         0
     ),
     bounds_(points_, syncPar),
-    geometricD_(Vector<label>::zero),
-    solutionD_(Vector<label>::zero),
-    tetBasePtIsPtr_(NULL),
-    cellTreePtr_(NULL),
+    geometricD_(Zero),
+    solutionD_(Zero),
+    tetBasePtIsPtr_(readTetBasePtIs()),
+    cellTreePtr_(nullptr),
     pointZones_
     (
         IOobject
@@ -607,29 +625,23 @@ CML::polyMesh::polyMesh
         *this,
         0
     ),
-    globalMeshDataPtr_(NULL),
+    globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(NULL)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if faces are valid
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        const face& curFace = faces_[faceI];
+        const face& curFace = faces_[facei];
 
         if (min(curFace) < 0 || max(curFace) > points_.size())
         {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh\n"
-                "(\n"
-                "    const IOobject&,\n"
-                "    const Xfer<pointField>&,\n"
-                "    const Xfer<faceList>&,\n"
-                "    const Xfer<cellList>&\n"
-                ")\n"
-            )   << "Face " << faceI << "contains vertex labels out of range: "
+            FatalErrorInFunction
+                << "Face " << facei << "contains vertex labels out of range: "
                 << curFace << " Max point index = " << points_.size()
                 << abort(FatalError);
         }
@@ -639,22 +651,14 @@ CML::polyMesh::polyMesh
     cellList cLst(cells);
 
     // Check if cells are valid
-    forAll(cLst, cellI)
+    forAll(cLst, celli)
     {
-        const cell& curCell = cLst[cellI];
+        const cell& curCell = cLst[celli];
 
         if (min(curCell) < 0 || max(curCell) > faces_.size())
         {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh\n"
-                "(\n"
-                "    const IOobject&,\n"
-                "    const Xfer<pointField>&,\n"
-                "    const Xfer<faceList>&,\n"
-                "    const Xfer<cellList>&\n"
-                ")\n"
-            )   << "Cell " << cellI << "contains face labels out of range: "
+            FatalErrorInFunction
+                << "Cell " << celli << "contains face labels out of range: "
                 << curCell << " Max face index = " << faces_.size()
                 << abort(FatalError);
         }
@@ -704,15 +708,15 @@ void CML::polyMesh::resetPrimitives
 
 
     // Reset patch sizes and starts
-    forAll(boundary_, patchI)
+    forAll(boundary_, patchi)
     {
-        boundary_[patchI] = polyPatch
+        boundary_[patchi] = polyPatch
         (
-            boundary_[patchI],
+            boundary_[patchi],
             boundary_,
-            patchI,
-            patchSizes[patchI],
-            patchStarts[patchI]
+            patchi,
+            patchSizes[patchi],
+            patchStarts[patchi]
         );
     }
 
@@ -721,25 +725,14 @@ void CML::polyMesh::resetPrimitives
     setInstance(time().timeName());
 
     // Check if the faces and cells are valid
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        const face& curFace = faces_[faceI];
+        const face& curFace = faces_[facei];
 
         if (min(curFace) < 0 || max(curFace) > points_.size())
         {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh::resetPrimitives\n"
-                "(\n"
-                "    const Xfer<pointField>&,\n"
-                "    const Xfer<faceList>&,\n"
-                "    const Xfer<labelList>& owner,\n"
-                "    const Xfer<labelList>& neighbour,\n"
-                "    const labelList& patchSizes,\n"
-                "    const labelList& patchStarts\n"
-                "    const bool validBoundary\n"
-                ")\n"
-            )   << "Face " << faceI << " contains vertex labels out of range: "
+            FatalErrorInFunction
+                << "Face " << facei << " contains vertex labels out of range: "
                 << curFace << " Max point index = " << points_.size()
                 << abort(FatalError);
         }
@@ -770,19 +763,8 @@ void CML::polyMesh::resetPrimitives
          || (returnReduce(nCells(), sumOp<label>()) == 0)
         )
         {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh::resetPrimitives\n"
-                "(\n"
-                "    const Xfer<pointField>&,\n"
-                "    const Xfer<faceList>&,\n"
-                "    const Xfer<labelList>& owner,\n"
-                "    const Xfer<labelList>& neighbour,\n"
-                "    const labelList& patchSizes,\n"
-                "    const labelList& patchStarts\n"
-                "    const bool validBoundary\n"
-                ")\n"
-            )   << "no points or no cells in mesh" << endl;
+            FatalErrorInFunction
+                << "no points or no cells in mesh" << endl;
         }
     }
 }
@@ -864,22 +846,30 @@ CML::label CML::polyMesh::nSolutionD() const
 }
 
 
-const CML::labelList& CML::polyMesh::tetBasePtIs() const
+const CML::labelIOList& CML::polyMesh::tetBasePtIs() const
 {
     if (tetBasePtIsPtr_.empty())
     {
         if (debug)
         {
-            WarningIn("const labelList& polyMesh::tetBasePtIs() const")
-                << "Tet base point indices not available.  "
+            WarningInFunction
                 << "Forcing storage of base points."
                 << endl;
         }
 
         tetBasePtIsPtr_.reset
         (
-            new labelList
+            new labelIOList
             (
+                IOobject
+                (
+                    "tetBasePtIs",
+                    instance(),
+                    meshSubDir,
+                    *this,
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::NO_WRITE
+                ),
                 polyMeshTetDecomposition::findFaceBasePts(*this)
             )
         );
@@ -894,25 +884,17 @@ CML::polyMesh::cellTree() const
 {
     if (cellTreePtr_.empty())
     {
-        treeBoundBox overallBb(points());
-
-        Random rndGen(261782);
-
-        overallBb = overallBb.extend(rndGen, 1e-4);
-        overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-
         cellTreePtr_.reset
         (
             new indexedOctree<treeDataCell>
             (
                 treeDataCell
                 (
-                    false,          // not cache bb
+                    false,      // not cache bb
                     *this,
-                    FACEDIAGTETS    // use tetDecomposition for any inside test
+                    FACEDIAGTETS   // use tet-decomposition for any inside test
                 ),
-                overallBb,
+                treeBoundBox(points()).extend(1e-4),
                 8,              // maxLevel
                 10,             // leafsize
                 5.0             // duplicity
@@ -933,16 +915,14 @@ void CML::polyMesh::addPatches
 {
     if (boundaryMesh().size())
     {
-        FatalErrorIn
-        (
-            "void polyMesh::addPatches(const List<polyPatch*>&, const bool)"
-        )   << "boundary already exists"
+        FatalErrorInFunction
+            << "boundary already exists"
             << abort(FatalError);
     }
 
     // Reset valid directions
-    geometricD_ = Vector<label>::zero;
-    solutionD_ = Vector<label>::zero;
+    geometricD_ = Zero;
+    solutionD_ = Zero;
 
     boundary_.setSize(p.size());
 
@@ -954,7 +934,7 @@ void CML::polyMesh::addPatches
 
     // parallelData depends on the processorPatch ordering so force
     // recalculation. Problem: should really be done in removeBoundary but
-    // there is some info in parallelData which might be interesting inbetween
+    // there is some info in parallelData which might be interesting in between
     // removeBoundary and addPatches.
     globalMeshDataPtr_.clear();
 
@@ -981,15 +961,8 @@ void CML::polyMesh::addZones
 {
     if (pointZones().size() || faceZones().size() || cellZones().size())
     {
-        FatalErrorIn
-        (
-            "void addZones\n"
-            "(\n"
-            "    const List<pointZone*>&,\n"
-            "    const List<faceZone*>&,\n"
-            "    const List<cellZone*>&\n"
-            ")"
-        )   << "point, face or cell zone already exists"
+        FatalErrorInFunction
+            << "point, face or cell zone already exists"
             << abort(FatalError);
     }
 
@@ -1041,7 +1014,7 @@ const CML::pointField& CML::polyMesh::points() const
 {
     if (clearedPrimitives_)
     {
-        FatalErrorIn("const pointField& polyMesh::points() const")
+        FatalErrorInFunction
             << "points deallocated"
             << abort(FatalError);
     }
@@ -1058,7 +1031,7 @@ bool CML::polyMesh::upToDatePoints(const regIOobject& io) const
 
 void CML::polyMesh::setUpToDatePoints(regIOobject& io) const
 {
-    io.eventNo() = points_.eventNo();
+    io.eventNo() = points_.eventNo()+1;
 }
 
 
@@ -1066,7 +1039,7 @@ const CML::faceList& CML::polyMesh::faces() const
 {
     if (clearedPrimitives_)
     {
-        FatalErrorIn("const faceList& polyMesh::faces() const")
+        FatalErrorInFunction
             << "faces deallocated"
             << abort(FatalError);
     }
@@ -1090,21 +1063,41 @@ const CML::labelList& CML::polyMesh::faceNeighbour() const
 // Return old mesh motion points
 const CML::pointField& CML::polyMesh::oldPoints() const
 {
+    if (!moving_)
+    {
+        return points_;
+    }
+
     if (oldPointsPtr_.empty())
     {
-        if (debug)
-        {
-            WarningIn("const pointField& polyMesh::oldPoints() const")
-                << "Old points not available.  Forcing storage of old points"
-                << endl;
-        }
-
-        oldPointsPtr_.reset(new pointField(points_));
-        curMotionTimeIndex_ = time().timeIndex();
+        FatalErrorInFunction
+            << "Old points have not been stored"
+            << exit(FatalError);
     }
 
     return oldPointsPtr_();
 }
+
+
+const CML::pointField& CML::polyMesh::oldCellCentres() const
+{
+    storeOldCellCentres_ = true;
+
+    if (!moving_)
+    {
+        return cellCentres();
+    }
+
+    if (oldCellCentresPtr_.empty())
+    {
+        FatalErrorInFunction
+            << "Old cell centres have not been stored"
+            << exit(FatalError);
+    }
+
+    return oldCellCentresPtr_();
+}
+
 
 
 CML::tmp<CML::scalarField> CML::polyMesh::movePoints
@@ -1114,31 +1107,37 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
 {
     if (debug)
     {
-        Info<< "tmp<scalarField> polyMesh::movePoints(const pointField&) : "
-            << " Moving points for time " << time().value()
+        InfoInFunction
+            << "Moving points for time " << time().value()
             << " index " << time().timeIndex() << endl;
     }
 
     moving(true);
 
-    // Pick up old points
+    // Pick up old points and cell centres
     if (curMotionTimeIndex_ != time().timeIndex())
     {
-        // Mesh motion in the new time step
         oldPointsPtr_.clear();
         oldPointsPtr_.reset(new pointField(points_));
+        if (storeOldCellCentres_)
+        {
+            oldCellCentresPtr_.clear();
+            oldCellCentresPtr_.reset(new pointField(cellCentres()));
+        }
         curMotionTimeIndex_ = time().timeIndex();
     }
 
     points_ = newPoints;
 
+    bool moveError = false;
     if (debug)
     {
         // Check mesh motion
         if (checkMeshMotion(points_, true))
         {
-            Info<< "tmp<scalarField> polyMesh::movePoints"
-                << "(const pointField&) : "
+            moveError = true;
+
+            InfoInFunction
                 << "Moving the mesh with given points will "
                 << "invalidate the mesh." << nl
                 << "Mesh motion should not be executed." << endl;
@@ -1147,7 +1146,14 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
 
     points_.writeOpt() = IOobject::AUTO_WRITE;
     points_.instance() = time().timeName();
+    points_.eventNo() = getEvent();
 
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_().writeOpt() = IOobject::AUTO_WRITE;
+        tetBasePtIsPtr_().instance() = time().timeName();
+        tetBasePtIsPtr_().eventNo() = getEvent();
+    }
 
     tmp<scalarField> sweptVols = primitiveMesh::movePoints
     (
@@ -1170,9 +1176,12 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
     faceZones_.movePoints(points_);
     cellZones_.movePoints(points_);
 
+    // Cell tree might become invalid
+    cellTreePtr_.clear();
+
     // Reset valid directions (could change with rotation)
-    geometricD_ = Vector<label>::zero;
-    solutionD_ = Vector<label>::zero;
+    geometricD_ = Zero;
+    solutionD_ = Zero;
 
 
     // Hack until proper callbacks. Below are all the polyMeh MeshObjects with a
@@ -1197,8 +1206,9 @@ CML::tmp<CML::scalarField> CML::polyMesh::movePoints
 // Reset motion by deleting old points
 void CML::polyMesh::resetMotion() const
 {
-    curMotionTimeIndex_ = 0;
+    curMotionTimeIndex_ = -1;
     oldPointsPtr_.clear();
+    oldCellCentresPtr_.clear();
 }
 
 
@@ -1255,105 +1265,49 @@ void CML::polyMesh::removeFiles() const
 
 void CML::polyMesh::findCellFacePt
 (
-    const point& pt,
-    label& cellI,
-    label& tetFaceI,
-    label& tetPtI
+    const point& p,
+    label& celli,
+    label& tetFacei,
+    label& tetPti
 ) const
 {
-    cellI = -1;
-    tetFaceI = -1;
-    tetPtI = -1;
+    celli = -1;
+    tetFacei = -1;
+    tetPti = -1;
 
     const indexedOctree<treeDataCell>& tree = cellTree();
 
-    // Find nearest cell to the point
+    // Find point inside cell
+    celli = tree.findInside(p);
 
-    pointIndexHit info = tree.findNearest(pt, sqr(GREAT));
-
-    if (info.hit())
+    if (celli != -1)
     {
-        label nearestCellI = tree.shapes().cellLabels()[info.index()];
-
         // Check the nearest cell to see if the point is inside.
-        findTetFacePt(nearestCellI, pt, tetFaceI, tetPtI);
-
-        if (tetFaceI != -1)
-        {
-            // Point was in the nearest cell
-
-            cellI = nearestCellI;
-
-            return;
-        }
-        else
-        {
-            // Check the other possible cells that the point may be in
-
-            labelList testCells = tree.findIndices(pt);
-
-            forAll(testCells, pCI)
-            {
-                label testCellI = tree.shapes().cellLabels()[testCells[pCI]];
-
-                if (testCellI == nearestCellI)
-                {
-                    // Don't retest the nearest cell
-
-                    continue;
-                }
-
-                // Check the test cell to see if the point is inside.
-                findTetFacePt(testCellI, pt, tetFaceI, tetPtI);
-
-                if (tetFaceI != -1)
-                {
-                    // Point was in the test cell
-
-                    cellI = testCellI;
-
-                    return;
-                }
-            }
-        }
-    }
-    else
-    {
-        FatalErrorIn
-        (
-            "void CML::polyMesh::findCellFacePt"
-            "("
-                "const point&, "
-                "label&, "
-                "label&, "
-                "label&"
-            ") const"
-        )   << "Did not find nearest cell in search tree."
-            << abort(FatalError);
+        findTetFacePt(celli, p, tetFacei, tetPti);
     }
 }
 
 
 void CML::polyMesh::findTetFacePt
 (
-    const label cellI,
-    const point& pt,
-    label& tetFaceI,
-    label& tetPtI
+    const label celli,
+    const point& p,
+    label& tetFacei,
+    label& tetPti
 ) const
 {
     const polyMesh& mesh = *this;
 
-    tetIndices tet(polyMeshTetDecomposition::findTet(mesh, cellI, pt));
-    tetFaceI = tet.face();
-    tetPtI = tet.tetPt();
+    tetIndices tet(polyMeshTetDecomposition::findTet(mesh, celli, p));
+    tetFacei = tet.face();
+    tetPti = tet.tetPt();
 }
 
 
 bool CML::polyMesh::pointInCell
 (
     const point& p,
-    label cellI,
+    label celli,
     const cellRepresentation decompMode
 ) const
 {
@@ -1361,7 +1315,7 @@ bool CML::polyMesh::pointInCell
     {
         case FACEPLANES:
         {
-            return primitiveMesh::pointInCell(p, cellI);
+            return primitiveMesh::pointInCell(p, celli);
         }
         break;
 
@@ -1369,41 +1323,41 @@ bool CML::polyMesh::pointInCell
         {
             // only test that point is on inside of plane defined by cell face
             // triangles
-            const cell& cFaces = cells()[cellI];
+            const cell& cFaces = cells()[celli];
 
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                label faceI = cFaces[cFaceI];
-                const face& f = faces_[faceI];
-                const point& fc = faceCentres()[faceI];
-                bool isOwn = (owner_[faceI] == cellI);
+                label facei = cFaces[cFacei];
+                const face& f = faces_[facei];
+                const point& fc = faceCentres()[facei];
+                bool isOwn = (owner_[facei] == celli);
 
                 forAll(f, fp)
                 {
-                    label pointI;
-                    label nextPointI;
+                    label pointi;
+                    label nextPointi;
 
                     if (isOwn)
                     {
-                        pointI = f[fp];
-                        nextPointI = f.nextLabel(fp);
+                        pointi = f[fp];
+                        nextPointi = f.nextLabel(fp);
                     }
                     else
                     {
-                        pointI = f.nextLabel(fp);
-                        nextPointI = f[fp];
+                        pointi = f.nextLabel(fp);
+                        nextPointi = f[fp];
                     }
 
                     triPointRef faceTri
                     (
-                        points()[pointI],
-                        points()[nextPointI],
+                        points()[pointi],
+                        points()[nextPointi],
                         fc
                     );
 
                     vector proj = p - faceTri.centre();
 
-                    if ((faceTri.normal() & proj) > 0)
+                    if ((faceTri.area() & proj) > 0)
                     {
                         return false;
                     }
@@ -1417,32 +1371,23 @@ bool CML::polyMesh::pointInCell
         {
             // only test that point is on inside of plane defined by cell face
             // triangles
-            const cell& cFaces = cells()[cellI];
+            const cell& cFaces = cells()[celli];
 
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                label faceI = cFaces[cFaceI];
-                const face& f = faces_[faceI];
+                label facei = cFaces[cFacei];
+                const face& f = faces_[facei];
 
-                for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI++)
+                for (label tetPti = 1; tetPti < f.size() - 1; tetPti++)
                 {
                     // Get tetIndices of face triangle
-                    tetIndices faceTetIs
-                    (
-                        polyMeshTetDecomposition::triangleTetIndices
-                        (
-                            *this,
-                            faceI,
-                            cellI,
-                            tetPtI
-                        )
-                    );
+                    tetIndices faceTetIs(celli, facei, tetPti);
 
                     triPointRef faceTri = faceTetIs.faceTri(*this);
 
                     vector proj = p - faceTri.centre();
 
-                    if ((faceTri.normal() & proj) > 0)
+                    if ((faceTri.area() & proj) > 0)
                     {
                         return false;
                     }
@@ -1458,28 +1403,35 @@ bool CML::polyMesh::pointInCell
             label tetFacei;
             label tetPti;
 
-            findTetFacePt(cellI, p, tetFacei, tetPti);
+            findTetFacePt(celli, p, tetFacei, tetPti);
 
             return tetFacei != -1;
         }
         break;
     }
+
     return false;
 }
 
 
 CML::label CML::polyMesh::findCell
 (
-    const point& location,
+    const point& p,
     const cellRepresentation decompMode
 ) const
 {
-    if (Pstream::parRun() && decompMode == FACEDIAGTETS)
+    if
+    (
+        Pstream::parRun()
+     && decompMode == FACEDIAGTETS
+    )
     {
         // Force construction of face-diagonal decomposition before testing
-        // for zero cells. If parallel running a local domain might have zero
-        // cells so never construct the face-diagonal decomposition (which
-        // uses parallel transfers)
+        // for zero cells.
+        //
+        // If parallel running a local domain might have zero cells so never
+        // construct the face-diagonal decomposition which uses parallel
+        // transfers.
         (void)tetBasePtIs();
     }
 
@@ -1489,22 +1441,25 @@ CML::label CML::polyMesh::findCell
     }
 
     // Find the nearest cell centre to this location
-    label cellI = findNearestCell(location);
+    label celli = findNearestCell(p);
 
     // If point is in the nearest cell return
-    if (pointInCell(location, cellI, decompMode))
+    if (pointInCell(p, celli, decompMode))
     {
-        return cellI;
+        return celli;
     }
-    else // point is not in the nearest cell so search all cells
+    else
     {
-        for (label cellI = 0; cellI < nCells(); cellI++)
+        // Point is not in the nearest cell so search all cells
+
+        for (label celli = 0; celli < nCells(); celli++)
         {
-            if (pointInCell(location, cellI, decompMode))
+            if (pointInCell(p, celli, decompMode))
             {
-                return cellI;
+                return celli;
             }
         }
+
         return -1;
     }
 }

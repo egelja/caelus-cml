@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -105,33 +105,6 @@ public:
 
         // Access
 
-            // Gas properties
-
-                //- Return the list of gas mass fractions
-                const scalarField& YGas0() const;
-
-                //- Return the total gas mass fraction
-                scalar YGasTot0() const;
-
-
-            // Liquid properties
-
-                //- Return the list of liquid mass fractions
-                const scalarField& YLiquid0() const;
-
-                //- Return the total liquid mass fraction
-                scalar YLiquidTot0() const;
-
-
-            // Solid properties
-
-                //- Return the list of solid mass fractions
-                const scalarField& YSolid0() const;
-
-                //- Return the total solid mass fraction
-                scalar YSolidTot0() const;
-
-
             // Mixture properties
 
                 //- Return the list of mixture mass fractions
@@ -177,30 +150,27 @@ void CML::SingleMixtureFraction<CloudType>::constructIds()
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "void CML::SingleMixtureFraction<CloudType>::"
-                    "constructIds()"
-                )   << "Unknown phase enumeration" << nl << abort(FatalError);
+                FatalErrorInFunction
+                    << "Unknown phase enumeration" << nl << abort(FatalError);
             }
         }
     }
 
     if (idGas_ < 0)
     {
-        FatalErrorIn("CML::SingleMixtureFraction<CloudType>::constructIds()")
+        FatalErrorInFunction
             << "No gas phase found in phase list:" << nl
             << this->phaseTypes() << exit(FatalError);
     }
     if (idLiquid_ < 0)
     {
-        FatalErrorIn("CML::SingleMixtureFraction<CloudType>::constructIds()")
+        FatalErrorInFunction
             << "No liquid phase found in phase list:" << nl
             << this->phaseTypes() << exit(FatalError);
     }
     if (idSolid_ < 0)
     {
-        FatalErrorIn("CML::SingleMixtureFraction<CloudType>::constructIds()")
+        FatalErrorInFunction
             << "No solid phase found in phase list:" << nl
             << this->phaseTypes() << exit(FatalError);
     }
@@ -228,15 +198,8 @@ CML::SingleMixtureFraction<CloudType>::SingleMixtureFraction
 
     if (this->phaseProps().size() != 3)
     {
-        FatalErrorIn
-        (
-            "CML::SingleMixtureFraction<CloudType>::"
-            "SingleMixtureFraction"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Incorrect numebr of phases: " << nl
+        FatalErrorInFunction
+            << "Incorrect number of phases: " << nl
             << "    Please specify 1 gas, 1 liquid and 1 solid"
             << exit(FatalError);
     }
@@ -247,15 +210,8 @@ CML::SingleMixtureFraction<CloudType>::SingleMixtureFraction
 
     if (mag(sum(YMixture0_) - 1.0) > SMALL)
     {
-        FatalErrorIn
-        (
-            "CML::SingleMixtureFraction<CloudType>::"
-            "SingleMixtureFraction"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Sum of phases should be 1. Phase fractions:" << nl
+        FatalErrorInFunction
+            << "Sum of phases should be 1. Phase fractions:" << nl
             << YMixture0_ << exit(FatalError);
     }
 }
@@ -283,30 +239,6 @@ CML::SingleMixtureFraction<CloudType>::~SingleMixtureFraction()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-const CML::scalarField&
-CML::SingleMixtureFraction<CloudType>::YGas0() const
-{
-    return this->phaseProps()[idGas_].Y();
-}
-
-
-template<class CloudType>
-const CML::scalarField&
-CML::SingleMixtureFraction<CloudType>::YLiquid0() const
-{
-    return this->phaseProps()[idLiquid_].Y();
-}
-
-
-template<class CloudType>
-const CML::scalarField&
-CML::SingleMixtureFraction<CloudType>::YSolid0() const
-{
-    return this->phaseProps()[idSolid_].Y();
-}
-
 
 template<class CloudType>
 const CML::scalarField&

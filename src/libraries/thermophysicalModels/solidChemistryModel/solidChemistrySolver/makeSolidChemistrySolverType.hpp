@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,10 +23,14 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef makeSolidChemistrySolverType_H
-#define makeSolidChemistrySolverType_H
+#ifndef makeSolidChemistrySolverType_HPP
+#define makeSolidChemistrySolverType_HPP
 
 #include "addToRunTimeSelectionTable.hpp"
+
+#include "noChemistrySolver.hpp"
+#include "EulerImplicit.hpp"
+#include "ode_.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -35,32 +39,50 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeSolidChemistrySolverType(SS, ODEChem, Comp, SThermo, GThermo)     \
-                                                                              \
-    typedef SS<ODEChem<Comp, SThermo, GThermo> >                              \
-        SS##ODEChem##Comp##SThermo##GThermo;                                  \
-                                                                              \
-    defineTemplateTypeNameAndDebugWithName                                    \
-    (                                                                         \
-        SS##ODEChem##Comp##SThermo##GThermo,                                  \
-        #SS"<"#ODEChem"<"#Comp","#SThermo","#GThermo">>",                     \
-        0                                                                     \
-    );                                                                        \
-                                                                              \
-    addToRunTimeSelectionTable                                                \
-    (                                                                         \
-        Comp,                                                                 \
-        SS##ODEChem##Comp##SThermo##GThermo,                                  \
-        fvMesh                                                                \
+#define makeSolidChemistrySolverType(SS, Schem, Comp, SThermo, GThermo)        \
+                                                                               \
+    typedef SS<Schem<Comp, SThermo, GThermo>>                                  \
+        SS##Schem##Comp##SThermo##GThermo;                                     \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        SS##Schem##Comp##SThermo##GThermo,                                     \
+        (#SS"<" + word(Schem<Comp, SThermo, GThermo>::typeName_())             \
+      + "<"#Comp"," + SThermo::typeName()                                      \
+      + ","  + GThermo::typeName() + ">>").c_str(),                            \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    addToRunTimeSelectionTable                                                 \
+    (                                                                          \
+        Comp,                                                                  \
+        SS##Schem##Comp##SThermo##GThermo,                                     \
+        thermo                                                                 \
     );
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#define makeSolidChemistrySolverTypes(SolidChem, Comp, SThermo, GThermo)       \
+                                                                               \
+    makeSolidChemistrySolverType                                               \
+    (                                                                          \
+        noChemistrySolver,                                                     \
+        SolidChem,                                                             \
+        Comp,                                                                  \
+        SThermo,                                                               \
+        GThermo                                                                \
+    );                                                                         \
+                                                                               \
+    makeSolidChemistrySolverType                                               \
+    (                                                                          \
+        ode,                                                                   \
+        SolidChem,                                                             \
+        Comp,                                                                  \
+        SThermo,                                                               \
+        GThermo                                                                \
+    );
+
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

@@ -54,13 +54,8 @@ CML::surfacePatchIOList::surfacePatchIOList
     {
         if (readOpt() == IOobject::MUST_READ_IF_MODIFIED)
         {
-            WarningIn
-            (
-                "surfacePatchIOList::surfacePatchIOList\n"
-                "(\n"
-                "    const IOobject&\n"
-                ")"
-            )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+            WarningInFunction
+                << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
                 << " does not support automatic rereading."
                 << endl;
         }
@@ -96,7 +91,7 @@ CML::surfacePatchIOList::surfacePatchIOList
 
             if (startFaceI != faceI)
             {
-                FatalErrorIn(functionName)
+                FatalErrorInFunction
                     << "Patches are not ordered. Start of patch " << patchI
                     << " does not correspond to sum of preceding patches."
                     << endl

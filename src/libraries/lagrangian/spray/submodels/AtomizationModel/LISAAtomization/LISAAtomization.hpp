@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -113,10 +113,10 @@ public:
 
     // Member Functions
 
-        //- initial value of liquidCore
+        //- Initial value of liquidCore
         virtual scalar initLiquidCore() const;
 
-        //- flag to indicate if chi needs to be calculated
+        //- Flag to indicate if chi needs to be calculated
         virtual bool calcChi() const;
 
         virtual void update
@@ -135,7 +135,7 @@ public:
             const vector& injectionPos,
             const scalar pAmbient,
             const scalar chi,
-            cachedRandom& rndGen
+            Random& rndGen
         ) const;
 };
 
@@ -237,7 +237,7 @@ void CML::LISAAtomization<CloudType>::update
     const vector& injectionPos,
     const scalar pAmbient,
     const scalar chi,
-    cachedRandom& rndGen
+    Random& rndGen
 ) const
 {
     if (volFlowRate < SMALL)
@@ -344,7 +344,7 @@ void CML::LISAAtomization<CloudType>::update
     }
     else
     {
-        k = rhoAv*sqr(Urel)/2.0*sigma;
+        k = rhoAv*sqr(Urel)/(2.0*sigma);
 
         scalar J = 0.5*traveledTime*hSheet;
 
@@ -365,7 +365,7 @@ void CML::LISAAtomization<CloudType>::update
 
     scalar pExp = 0.135;
 
-    //  modifing dD to take account of flash boiling
+    //  modifying dD to take account of flash boiling
     dD = dD*(1.0 - chi*pow(pRatio, -pExp));
     scalar lBU = Cl_ * mag(Urel)*tau;
 

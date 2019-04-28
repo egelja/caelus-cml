@@ -25,11 +25,12 @@ License
 #include "makeParcelCloudFunctionObjects.hpp"
 
 // Kinematic
-#include "makeThermoParcelForces.hpp" // thermo variant
-#include "makeParcelRASDispersionModels.hpp"
-#include "makeParcelLESDispersionModels.hpp"
+#include "makeParcelForces.hpp"
+#include "makeParcelDispersionModels.hpp"
 #include "makeReactingMultiphaseParcelInjectionModels.hpp" // MP variant
 #include "makeParcelPatchInteractionModels.hpp"
+#include "makeReactingMultiphaseParcelStochasticCollisionModels.hpp" // MP variant
+#include "makeReactingParcelSurfaceFilmModels.hpp" // Reacting variant
 
 // Thermodynamic
 #include "makeParcelHeatTransferModels.hpp"
@@ -37,7 +38,6 @@ License
 // Reacting
 #include "makeReactingMultiphaseParcelCompositionModels.hpp" // MP Variant
 #include "makeReactingParcelPhaseChangeModels.hpp"
-#include "makeReactingParcelSurfaceFilmModels.hpp"
 
 // Reacting multiphase
 #include "makeReactingMultiphaseParcelDevolatilisationModels.hpp"
@@ -47,15 +47,18 @@ License
 
 namespace CML
 {
-
     makeParcelCloudFunctionObjects(basicReactingMultiphaseCloud);
 
     // Kinematic sub-models
-    makeThermoParcelForces(basicReactingMultiphaseCloud);
-    makeParcelRASDispersionModels(basicReactingMultiphaseCloud);
-    makeParcelLESDispersionModels(basicReactingMultiphaseCloud);
+    makeParcelForces(basicReactingMultiphaseCloud);
+    makeParcelDispersionModels(basicReactingMultiphaseCloud);
     makeReactingMultiphaseParcelInjectionModels(basicReactingMultiphaseCloud);
     makeParcelPatchInteractionModels(basicReactingMultiphaseCloud);
+    makeReactingMultiphaseParcelStochasticCollisionModels
+    (
+        basicReactingMultiphaseCloud
+    );
+    makeReactingParcelSurfaceFilmModels(basicReactingMultiphaseCloud);
 
     // Thermo sub-models
     makeParcelHeatTransferModels(basicReactingMultiphaseCloud);
@@ -72,16 +75,10 @@ namespace CML
     (
         basicReactingMultiphaseCloud
     );
-    makeReactingParcelSurfaceFilmModels
-    (
-        basicReactingMultiphaseCloud
-    );
     makeReactingMultiphaseParcelSurfaceReactionModels
     (
         basicReactingMultiphaseCloud
     );
 }
-
- 
 
 // ************************************************************************* //

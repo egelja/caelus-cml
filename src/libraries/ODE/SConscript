@@ -8,11 +8,22 @@ target = 'ODE'
 sources = Split("""
 ODESolvers/ODESolver/ODESolver.cpp
 ODESolvers/ODESolver/ODESolverNew.cpp
-ODESolvers/RK/RK.cpp
-ODESolvers/KRR4/KRR4.cpp
+ODESolvers/adaptiveSolver/adaptiveSolver.cpp
+ODESolvers/Euler/Euler.cpp
+ODESolvers/EulerSI/EulerSI.cpp
+ODESolvers/Trapezoid/Trapezoid.cpp
+ODESolvers/RKF45/RKF45.cpp
+ODESolvers/RKCK45/RKCK45.cpp
+ODESolvers/RKDP45/RKDP45.cpp
+ODESolvers/Rosenbrock12/Rosenbrock12.cpp
+ODESolvers/Rosenbrock23/Rosenbrock23.cpp
+ODESolvers/Rosenbrock34/Rosenbrock34.cpp
+ODESolvers/rodas23/rodas23.cpp
+ODESolvers/rodas34/rodas34.cpp
 ODESolvers/SIBS/SIBS.cpp
 ODESolvers/SIBS/SIMPR.cpp
 ODESolvers/SIBS/polyExtrapolate.cpp
+ODESolvers/seulex/seulex.cpp
 """)
 
 caelus_inc = []

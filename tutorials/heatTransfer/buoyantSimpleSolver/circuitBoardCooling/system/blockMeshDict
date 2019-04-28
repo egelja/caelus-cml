@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -19,10 +19,10 @@ vertices
     (10 0 0)
     (10 5 0)
     (0 5 0)
-    (0 0 10)
-    (10 0 10)
-    (10 5 10)
-    (0 5 10)
+    (0 0 1)
+    (10 0 1)
+    (10 5 1)
+    (0 5 1)
 );
 
 blocks
@@ -80,28 +80,6 @@ boundary
             (0 3 2 1)
             (4 5 6 7)
         );
-    }
-
-    baffle1Wall_0
-    {
-        type            mappedWall;
-        sampleMode      nearestPatchFace;
-        sampleRegion    region0;
-        samplePatch     baffle1Wall_1;
-        offsetMode      uniform;
-        offset          (0 0 0);
-        faces ();
-    }
-
-    baffle1Wall_1
-    {
-        type            mappedWall;
-        sampleMode      nearestPatchFace;
-        sampleRegion    region0;
-        samplePatch     baffle1Wall_0;
-        offsetMode      uniform;
-        offset          (0 0 0);
-        faces ();
     }
 );
 

@@ -31,11 +31,11 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeReactingParcelPhaseChangeModels(CloudType)                        \
-                                                                              \
-    makePhaseChangeModel(CloudType);                                          \
-    makePhaseChangeModelType(NoPhaseChange, CloudType);                       \
-    makePhaseChangeModelType(LiquidEvaporation, CloudType);                   \
+#define makeReactingParcelPhaseChangeModels(CloudType)                         \
+                                                                               \
+    makePhaseChangeModel(CloudType);                                           \
+    makePhaseChangeModelType(NoPhaseChange, CloudType);                        \
+    makePhaseChangeModelType(LiquidEvaporation, CloudType);                    \
     makePhaseChangeModelType(LiquidEvaporationBoil, CloudType);
 
 
@@ -44,4 +44,3 @@ License
 #endif
 
 // ************************************************************************* //
-

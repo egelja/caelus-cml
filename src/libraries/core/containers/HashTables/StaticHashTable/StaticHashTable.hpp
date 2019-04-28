@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -509,7 +509,7 @@ inline T& CML::StaticHashTable<T, Key, Hash>::operator[](const Key& key)
 
     if (iter == end())
     {
-        FatalErrorIn("StaticHashTable<T, Key, Hash>::operator[](const Key&)")
+        FatalErrorInFunction
             << key << " not found in table.  Valid entries: "
             << toc()
             << exit(FatalError);
@@ -529,10 +529,8 @@ inline const T& CML::StaticHashTable<T, Key, Hash>::operator[]
 
     if (iter == cend())
     {
-        FatalErrorIn
-        (
-            "StaticHashTable<T, Key, Hash>::operator[](const Key&) const"
-        )   << key << " not found in table.  Valid entries: "
+        FatalErrorInFunction
+            << key << " not found in table.  Valid entries: "
             << toc()
             << exit(FatalError);
     }
@@ -883,10 +881,8 @@ CML::StaticHashTable<T, Key, Hash>::StaticHashTable(const label size)
 {
     if (size < 1)
     {
-        FatalErrorIn
-        (
-            "StaticHashTable<T, Key, Hash>::StaticHashTable(const label size)"
-        )   << "Illegal size " << size << " for StaticHashTable."
+        FatalErrorInFunction
+            << "Illegal size " << size << " for StaticHashTable."
             << " Minimum size is 1" << abort(FatalError);
     }
 }
@@ -1218,10 +1214,8 @@ void CML::StaticHashTable<T, Key, Hash>::resize(const label sz)
 
     if (newSize < 1)
     {
-        FatalErrorIn
-        (
-            "StaticHashTable<T, Key, Hash>::resize(const label)"
-        )   << "Illegal size " << newSize << " for StaticHashTable."
+        FatalErrorInFunction
+            << "Illegal size " << newSize << " for StaticHashTable."
             << " Minimum size is 1" << abort(FatalError);
     }
 
@@ -1298,11 +1292,8 @@ void CML::StaticHashTable<T, Key, Hash>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "StaticHashTable<T, Key, Hash>::operator="
-            "(const StaticHashTable<T, Key, Hash>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1385,10 +1376,8 @@ CML::StaticHashTable<T, Key, Hash>::StaticHashTable
 {
     if (size < 1)
     {
-        FatalErrorIn
-        (
-            "StaticHashTable<T, Key, Hash>::StaticHashTable(const label size)"
-        )   << "Illegal size " << size << " for StaticHashTable."
+        FatalErrorInFunction
+            << "Illegal size " << size << " for StaticHashTable."
             << " Minimum size is 1" << abort(FatalError);
     }
 
@@ -1482,11 +1471,8 @@ CML::Istream& CML::operator>>(Istream& is, StaticHashTable<T, Key, Hash>& L)
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "operator>>(Istream&, StaticHashTable<T, Key, Hash>&)",
-                    is
-                )   << "incorrect first token, '(', found " << firstToken.info()
+                FatalIOErrorInFunction(is)
+                    << "incorrect first token, '(', found " << firstToken.info()
                     << exit(FatalIOError);
             }
         }
@@ -1498,11 +1484,8 @@ CML::Istream& CML::operator>>(Istream& is, StaticHashTable<T, Key, Hash>& L)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "operator>>(Istream&, StaticHashTable<T, Key, Hash>&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -1536,11 +1519,8 @@ CML::Istream& CML::operator>>(Istream& is, StaticHashTable<T, Key, Hash>& L)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "operator>>(Istream&, StaticHashTable<T, Key, Hash>&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

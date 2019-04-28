@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -112,6 +112,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -122,6 +123,7 @@ public:
             virtual scalar massAdd
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
             ) const;
 };
@@ -139,11 +141,8 @@ CML::PressureGradientForce<CloudType>::DUcDtInterp() const
 {
     if (!DUcDtInterpPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "inline const CML::interpolation<CML::vector>&"
-            "CML::PressureGradientForce<CloudType>::DUcDtInterp() const"
-        )   << "Carrier phase DUcDt interpolation object not set"
+        FatalErrorInFunction
+            << "Carrier phase DUcDt interpolation object not set"
             << abort(FatalError);
     }
 
@@ -164,7 +163,7 @@ CML::PressureGradientForce<CloudType>::PressureGradientForce
 :
     ParticleForce<CloudType>(owner, mesh, dict, forceType, true),
     UName_(this->coeffs().template lookupOrDefault<word>("U", "U")),
-    DUcDtInterpPtr_(NULL)
+    DUcDtInterpPtr_(nullptr)
 {}
 
 
@@ -176,7 +175,7 @@ CML::PressureGradientForce<CloudType>::PressureGradientForce
 :
     ParticleForce<CloudType>(pgf),
     UName_(pgf.UName_),
-    DUcDtInterpPtr_(NULL)
+    DUcDtInterpPtr_(nullptr)
 {}
 
 
@@ -243,18 +242,19 @@ template<class CloudType>
 CML::forceSuSp CML::PressureGradientForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     vector DUcDt =
-        DUcDtInterp().interpolate(p.position(), p.currentTetIndices());
+        DUcDtInterp().interpolate(p.coordinates(), p.currentTetIndices());
 
-    value.Su() = mass*p.rhoc()/p.rho()*DUcDt;
+    value.Su() = mass*td.rhoc()/p.rho()*DUcDt;
 
     return value;
 }
@@ -264,6 +264,7 @@ template<class CloudType>
 CML::scalar CML::PressureGradientForce<CloudType>::massAdd
 (
     const typename CloudType::parcelType&,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar
 ) const
 {

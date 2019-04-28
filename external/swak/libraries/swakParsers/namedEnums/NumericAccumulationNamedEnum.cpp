@@ -119,21 +119,21 @@ NumericAccumulationNamedEnum::readAccumulations(
 
         if(hasValue) {
             if(!needsArgument.found(accus[i].first())) {
-                FatalErrorIn("NumericAccumulationNamedEnum::readAccumulations")
+                FatalErrorInFunction
                     << "Problem in " << name << " with " << aNames[i]
-                        << endl
-                        << "Accumulator " << aName
-                        << " does not need an argument" << endl
-                        << exit(FatalError);
+                    << endl
+                    << "Accumulator " << aName
+                    << " does not need an argument" << endl
+                    << exit(FatalError);
             }
         } else {
             if(needsArgument.found(accus[i].first())) {
-                FatalErrorIn("NumericAccumulationNamedEnum::readAccumulations")
+                FatalErrorInFunction
                     << "Problem in " << name << " with " << aNames[i]
-                        << endl
-                        << "Accumulator " << aName
-                        << " needs an argument" << endl
-                        << exit(FatalError);
+                    << endl
+                    << "Accumulator " << aName
+                    << " needs an argument" << endl
+                    << exit(FatalError);
             }
         }
 

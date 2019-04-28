@@ -33,8 +33,9 @@ Author
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.hpp"
-#include "psiChemistryCombustionModel.hpp"
-#include "turbulenceModel.hpp"
+#include "psiReactionThermo.hpp"
+#include "CombustionModel_.hpp"
+#include "compressibleTurbulenceModel.hpp"
 #include "multivariateScheme.hpp"
 #include "pimpleControl.hpp"
 #include "fvIOoptionList.hpp"

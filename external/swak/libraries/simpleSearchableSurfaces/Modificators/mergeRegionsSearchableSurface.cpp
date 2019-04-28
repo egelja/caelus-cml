@@ -58,10 +58,10 @@ CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface
     label size=oldNames.size()-children.size()+1;
 
     if(size<1) {
-        FatalErrorIn("CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface")
+        FatalErrorInFunction
             << "To few regions " << oldNames << " to merge to "
-                << children << endl
-                << abort(FatalError);
+            << children << endl
+            << abort(FatalError);
     }
 
     regions_.setSize(size);
@@ -89,10 +89,10 @@ CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface
             }
         } else {
             if(cnt>=size) {
-                FatalErrorIn("CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface")
+                FatalErrorInFunction
                     << "Too few matched regions in " << children
-                        << " (old: " << oldNames << ")\n" << endl
-                        << abort(FatalError);
+                    << " (old: " << oldNames << ")\n" << endl
+                    << abort(FatalError);
             }
             regions_[cnt]=n;
             coordinates_[cnt]=oldCoords[i];
@@ -102,10 +102,10 @@ CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface
     }
 
     if(cnt!=size) {
-        FatalErrorIn("CML::mergeRegionsSearchableSurface::mergeRegionsSearchableSurface")
+        FatalErrorInFunction
             << "Mismatch with " << children
-                << " (old: " << oldNames << ")\n" << endl
-                << abort(FatalError);
+            << " (old: " << oldNames << ")\n" << endl
+            << abort(FatalError);
     }
 }
 

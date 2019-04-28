@@ -79,10 +79,10 @@ StackExpressionResult::~StackExpressionResult()
 ExpressionResult StackExpressionResult::pop()
 {
     if(!(size()>0)) {
-        FatalErrorIn("StackExpressionResult::pop()")
+        FatalErrorInFunction
             << "Trying to pop result from a empty queue"
-                << endl
-                << abort(FatalError);
+            << endl
+            << abort(FatalError);
 
         return ExpressionResult();
     }
@@ -98,10 +98,10 @@ ExpressionResult StackExpressionResult::pop()
     } else if(valueType()==pTraits<sphericalTensor>::typeName) {
         return popInternal<sphericalTensor>();
     } else {
-            FatalErrorIn("StackExpressionResult::pop()")
+            FatalErrorInFunction
                 << " Unsopported value type " << valueType()
-                    << endl
-                    << abort(FatalError);
+                << endl
+                << abort(FatalError);
 
             return ExpressionResult();
     }
@@ -118,11 +118,11 @@ void StackExpressionResult::push(ExpressionResult &atEnd)
         ExpressionResult::operator=(atEnd);
     } else {
         if(valueType()!=atEnd.valueType()) {
-            FatalErrorIn("StackExpressionResult::push(const ExpressionResult &atEnd)")
+            FatalErrorInFunction
                 << "Type of pushed value " << atEnd.valueType()
-                    << " is not the expected type " << valueType()
-                    << endl
-                    << abort(FatalError);
+                << " is not the expected type " << valueType()
+                << endl
+                << abort(FatalError);
         }
         if(valueType()==pTraits<scalar>::typeName) {
             pushInternal<scalar>(atEnd);
@@ -135,10 +135,10 @@ void StackExpressionResult::push(ExpressionResult &atEnd)
         } else if(valueType()==pTraits<sphericalTensor>::typeName) {
             pushInternal<sphericalTensor>(atEnd);
         } else {
-            FatalErrorIn("StackExpressionResult::push(const ExpressionResult &atEnd)")
+            FatalErrorInFunction
                 << " Unsopported value type " << valueType()
-                    << endl
-                    << abort(FatalError);
+                << endl
+                << abort(FatalError);
         }
     }
 
@@ -155,7 +155,7 @@ void StackExpressionResult::operator=(const StackExpressionResult& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("StackExpressionResult::operator=(const StackExpressionResult&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << exit(FatalError);
     }

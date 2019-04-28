@@ -24,16 +24,16 @@ Class
 Description
     Injection at specified positions, with the conditions:
 
-    - for injection to be allowed
+    For injection to be allowed
+      \verbatim
+      factor*referenceField[celli] >= thresholdField[celli]
+      \endverbatim
+      where:
+        - \c referenceField is the field used to supply the look-up values
+        - \c thresholdField supplies the values beyond which the injection is
+            permitted.
 
-        factor*referenceField[cellI] >= thresholdField[cellI]
-
-        where:
-          - referenceField is the field used to supply the look-up values
-          - thresholdField supplies the values beyond which the injection is
-            permitted
-
-    - limited to a user-supllied number of injections per injector location
+    Limited to a user-supplied number of injections per injector location
 
 
 \*---------------------------------------------------------------------------*/
@@ -108,7 +108,7 @@ class FieldActivatedInjection
             scalarList diameters_;
 
             //- Parcel size distribution model
-            const autoPtr<distributionModels::distributionModel>
+            const autoPtr<distributionModel>
                 sizeDistribution_;
 
 
@@ -170,8 +170,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -250,7 +250,7 @@ CML::FieldActivatedInjection<CloudType>::FieldActivatedInjection
     diameters_(positions_.size()),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -371,14 +371,14 @@ void CML::FieldActivatedInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     position = positions_[parcelI];
     cellOwner = injectorCells_[parcelI];
-    tetFaceI = injectorTetFaces_[parcelI];
-    tetPtI = injectorTetPts_[parcelI];
+    tetFacei = injectorTetFaces_[parcelI];
+    tetPti = injectorTetPts_[parcelI];
 }
 
 
@@ -412,12 +412,12 @@ bool CML::FieldActivatedInjection<CloudType>::validInjection
     const label parcelI
 )
 {
-    const label cellI = injectorCells_[parcelI];
+    const label celli = injectorCells_[parcelI];
 
     if
     (
         nParcelsInjected_[parcelI] < nParcelsPerInjector_
-     && factor_*referenceField_[cellI] > thresholdField_[cellI]
+     && factor_*referenceField_[celli] > thresholdField_[celli]
     )
     {
         nParcelsInjected_[parcelI]++;

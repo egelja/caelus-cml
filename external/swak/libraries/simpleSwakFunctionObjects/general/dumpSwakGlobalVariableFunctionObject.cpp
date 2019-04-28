@@ -58,11 +58,11 @@ dumpSwakGlobalVariableFunctionObject::dumpSwakGlobalVariableFunctionObject
 {
     const string warnSwitch="IKnowThatThisFunctionObjectMayWriteExcessiveAmountsOfData";
     if(!dict.lookupOrDefault<bool>(warnSwitch,false)) {
-        WarningIn("dumpSwakGlobalVariableFunctionObject::dumpSwakGlobalVariableFunctionObject")
+        WarningInFunction
             << "This functionObject may write huge amounts of data. "
-                << "If you understand the risks set the switch " << warnSwitch
-                << " to 'true' to get rid of this warning"
-                << endl;
+            << "If you understand the risks set the switch " << warnSwitch
+            << " to 'true' to get rid of this warning"
+            << endl;
     }
 }
 
@@ -112,9 +112,9 @@ void dumpSwakGlobalVariableFunctionObject::write()
     } else if(rType==pTraits<sphericalTensor>::typeName) {
         writeTheData<sphericalTensor>(value);
     } else {
-        WarningIn("dumpSwakGlobalVariableFunctionObject::write()")
+        WarningInFunction
             << "Don't know how to handle type " << rType
-                << endl;
+            << endl;
     }
 
     if(verbose()) {

@@ -18,40 +18,53 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::compressible::turbulentTemperatureCoupledBaffleMixedFvPatchScalarField
+    CML::compressible::
+        turbulentTemperatureCoupledBaffleMixedFvPatchScalarField
 
 Description
     Mixed boundary condition for temperature, to be used for heat-transfer
-    on back-to-back baffles.
+    on back-to-back baffles. Optional thin thermal layer resistances can be
+    specified through thicknessLayers and kappaLayers entries.
 
     Specifies gradient and temperature such that the equations are the same
     on both sides:
-    - refGradient = zero gradient
-    - refValue = neighbour value
-    - mixFraction = nbrKDelta / (nbrKDelta + myKDelta())
+      - refGradient = zero gradient
+      - refValue = neighbour value
+      - mixFraction = nbrKDelta / (nbrKDelta + myKDelta())
 
     where KDelta is heat-transfer coefficient K * deltaCoeffs
 
-    Example usage:
-        myInterfacePatchName
-        {
-            type        compressible::turbulentTemperatureCoupledBaffleMixed;
-            neighbourFieldName  T;
-            K                   lookup;
-            KName               K;
-            value               uniform 300;
-        }
+    The thermal conductivity \c kappa can either be retrieved from various
+    possible sources, as detailed in the class temperatureCoupledBase.
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        Tnbr         | name of the field    | no | T
+        thicknessLayers | list of thicknesses per layer [m] | no |
+        kappaLayers  | list of thermal conductivities per layer [W/m/K] | no |
+        kappaMethod  | inherited from temperatureCoupledBase | inherited |
+        kappa        | inherited from temperatureCoupledBase | inherited |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            compressible::turbulentTemperatureCoupledBaffleMixed;
+        Tnbr            T;
+        thicknessLayers (0.1 0.2 0.3 0.4);
+        kappaLayers     (1 2 3 4);
+        kappaMethod     lookup;
+        kappa           kappa;
+        value           uniform 300;
+    }
+    \endverbatim
 
     Needs to be on underlying mapped(Wall)FvPatch.
 
-    Note: K : heat conduction at patch. Gets supplied how to lookup/calculate K:
-    - 'lookup' : lookup volScalarField (or volSymmTensorField) with name
-    - 'basicThermo' : use basicThermo and compressible::RASmodel to calculate K
-    - 'solidThermo' : use basicSolidThermo K()
-    - 'directionalSolidThermo' directionalK()
-
-    Note: runs in parallel with arbitrary decomposition. Uses mapped
-    functionality to calculate exchange.
+See also
+    CML::temperatureCoupledBase
 
 SourceFiles
     turbulentTemperatureCoupledBaffleMixedFvPatchScalarField.cpp
@@ -63,6 +76,7 @@ SourceFiles
 
 #include "mixedFvPatchFields.hpp"
 #include "temperatureCoupledBase.hpp"
+#include "scalarField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -83,7 +97,16 @@ class turbulentTemperatureCoupledBaffleMixedFvPatchScalarField
     // Private data
 
         //- Name of field on the neighbour region
-        const word neighbourFieldName_;
+        const word TnbrName_;
+
+        //- Thickness of layers
+        scalarList thicknessLayers_;
+
+        //- Conductivity of layers
+        scalarList kappaLayers_;
+
+        //- Total contact resistance
+        scalar contactRes_;
 
 
 public:

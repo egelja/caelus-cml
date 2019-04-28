@@ -10,14 +10,13 @@ tmp<fv::convectionScheme<scalar> > divOperator
 );
 
 {
-    combustionModel->correct();
-    dQ = combustionModel->dQ();
-    label inertIndex = -1;
+    reaction->correct();
+    Qdot = reaction->Qdot();
     volScalarField Yt(0.0*Y[0]);
 
     forAll(Y, i)
     {
-        if (Y[i].name() != inertSpecie)
+        if (i != inertIndex && composition.active(i))
         {
             volScalarField& Yi = Y[i];
 
@@ -27,18 +26,20 @@ tmp<fv::convectionScheme<scalar> > divOperator
               + divOperator().fvmDiv(phi, Yi)
               - fvm::laplacian(turbulence->muEff(), Yi)
              ==
-                combustionModel->R(Yi)
+                reaction->R(Yi)
+              + fvOptions(rho, Yi)
             );
 
             YiEqn.relax();
+
+            fvOptions.constrain(YiEqn);
+
             YiEqn.solve(mesh.solver("Yi"));
+
+            fvOptions.correct(Yi);
 
             Yi.max(0.0);
             Yt += Yi;
-        }
-        else
-        {
-            inertIndex = i;
         }
     }
 

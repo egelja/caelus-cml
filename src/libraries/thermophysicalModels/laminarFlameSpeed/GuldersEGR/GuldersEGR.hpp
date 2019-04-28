@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef GuldersEGR_H
-#define GuldersEGR_H
+#ifndef GuldersEGR_HPP
+#define GuldersEGR_HPP
 
 #include "laminarFlameSpeed.hpp"
 
@@ -48,52 +48,65 @@ class GuldersEGR
 :
     public laminarFlameSpeed
 {
-    // Private Data
 
-        dictionary coeffsDict_;
+    dictionary coeffsDict_;
 
-        scalar W_;
-        scalar eta_;
-        scalar xi_;
-        scalar f_;
-        scalar alpha_;
-        scalar beta_;
+    scalar W_;
+    scalar eta_;
+    scalar xi_;
+    scalar f_;
+    scalar alpha_;
+    scalar beta_;
 
 
-    // Private Member Functions
+    inline scalar SuRef
+    (
+        scalar phi
+    ) const
+    {
+        if (phi > SMALL)
+        {
+            return W_*pow(phi, eta_)*exp(-xi_*sqr(phi - 1.075));
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
 
-        inline scalar SuRef
-        (
-            scalar phi
-        ) const;
+    inline scalar Su0pTphi
+    (
+        scalar p,
+        scalar Tu,
+        scalar phi,
+        scalar Yres
+    ) const
+    {
+        static const scalar Tref = 300.0;
+        static const scalar pRef = 1.013e5;
 
-        inline scalar Su0pTphi
-        (
-            scalar p,
-            scalar Tu,
-            scalar phi,
-            scalar Yres
-        ) const;
+        return SuRef(phi)*pow((Tu/Tref), alpha_)*pow((p/pRef), beta_)*(1 - f_*Yres);
+    }
 
-        tmp<volScalarField> Su0pTphi
-        (
-            const volScalarField& p,
-            const volScalarField& Tu,
-            scalar phi
-        ) const;
+    tmp<volScalarField> Su0pTphi
+    (
+        const volScalarField& p,
+        const volScalarField& Tu,
+        scalar phi
+    ) const;
 
-        tmp<volScalarField> Su0pTphi
-        (
-            const volScalarField& p,
-            const volScalarField& Tu,
-            const volScalarField& phi,
-            const volScalarField& egr
-        ) const;
+    tmp<volScalarField> Su0pTphi
+    (
+        const volScalarField& p,
+        const volScalarField& Tu,
+        const volScalarField& phi,
+        const volScalarField& egr
+    ) const;
 
-        //- Construct as copy (not implemented)
-        GuldersEGR(const GuldersEGR&);
+    //- Construct as copy (not implemented)
+    GuldersEGR(const GuldersEGR&);
 
-        void operator=(const GuldersEGR&);
+    void operator=(const GuldersEGR&);
 
 
 public:
@@ -101,34 +114,30 @@ public:
     //- Runtime type information
     TypeName("GuldersEGR");
 
-    // Constructors
 
-        //- Construct from dictionary and hhuCombustionThermo
-        GuldersEGR
-        (
-            const dictionary&,
-            const hhuCombustionThermo&
-        );
+    //- Construct from dictionary and psiuReactionThermo
+    GuldersEGR
+    (
+        const dictionary&,
+        const psiuReactionThermo&
+    );
 
 
     //- Destructor
-    virtual ~GuldersEGR();
+    virtual ~GuldersEGR()
+    {}
 
 
     // Member functions
 
-        //- Return the laminar flame speed [m/s]
-        tmp<volScalarField> operator()() const;
+    //- Return the laminar flame speed [m/s]
+    tmp<volScalarField> operator()() const;
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End laminarFlameSpeedModels
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

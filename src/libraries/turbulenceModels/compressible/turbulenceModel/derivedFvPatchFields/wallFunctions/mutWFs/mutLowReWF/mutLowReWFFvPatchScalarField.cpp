@@ -20,7 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "mutLowReWFFvPatchScalarField.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"

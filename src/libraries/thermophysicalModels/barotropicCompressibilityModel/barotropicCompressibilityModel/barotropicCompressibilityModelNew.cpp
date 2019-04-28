@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,10 +43,8 @@ CML::barotropicCompressibilityModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "barotropicCompressibilityModel::New(const volScalarField&)"
-        )   << "Unknown barotropicCompressibilityModel type "
+        FatalErrorInFunction
+            << "Unknown barotropicCompressibilityModel type "
             << modelType << nl << nl
             << "Valid barotropicCompressibilityModels are : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -58,6 +56,3 @@ CML::barotropicCompressibilityModel::New
         cstrIter()(compressibilityProperties, gamma, psiName)
     );
 }
-
-
-// ************************************************************************* //

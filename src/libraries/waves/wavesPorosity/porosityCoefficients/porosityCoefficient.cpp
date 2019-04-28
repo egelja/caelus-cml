@@ -96,10 +96,8 @@ autoPtr<porosityCoefficient> porosityCoefficient::New
 
     if (cstrIter == porosityCoefficientConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "porosityCoefficient::New(const dictionary &)"
-        )   << "Unknown resistance formulation: " << poroForm
+        FatalErrorInFunction
+            << "Unknown resistance formulation: " << poroForm
             << endl << endl
             << "Valid methods are :" << endl
             << porosityCoefficientConstructorTablePtr_->toc()

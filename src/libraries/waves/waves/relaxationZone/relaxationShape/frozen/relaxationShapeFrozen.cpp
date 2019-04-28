@@ -60,7 +60,7 @@ relaxationShapeFrozen::relaxationShapeFrozen
 
         if ("relaxationShape"+actualType == typeName)
         {
-            FatalErrorIn("relaxationShapeFrozen::relaxationShapeFrozen")
+            FatalErrorInFunction
                 << "The chosen type of the relaxation shape type "
                 << "'actualRelaxationShape' is the calling type.\n"
                 << "This is not allowed.\n\n"
@@ -169,7 +169,7 @@ void relaxationShapeFrozen::computeSigmaCoordinate()
 
 const pointField& relaxationShapeFrozen::pointSet()
 {
-    notImplemented("pointSet is not implemented for this shape");
+    NotImplemented;
 }
 
 
@@ -179,7 +179,7 @@ scalar relaxationShapeFrozen::interpolation
     const point& p0
 ) const
 {
-    notImplemented("interpolation is not implemented for this shape");
+    NotImplemented;
     return 0.0;
 }
 

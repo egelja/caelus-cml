@@ -35,7 +35,7 @@ CML::kinematicCloud::kinematicCloud()
 {}
 
 
-// * * * * * * * * * * * * * * * *  Destructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * *  Destructor   * * * * * * * * * * * * * * //
 
 CML::kinematicCloud::~kinematicCloud()
 {}

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,8 +26,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noChemistySolver_H
-#define noChemistySolver_H
+#ifndef noChemistrySolver_HPP
+#define noChemistrySolver_HPP
 
 #include "chemistrySolver.hpp"
 
@@ -40,10 +40,10 @@ namespace CML
                      Class noChemistrySolver Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class ODEChemistryType>
+template<class ChemistryModel>
 class noChemistrySolver
 :
-    public chemistrySolver<ODEChemistryType>
+    public chemistrySolver<ChemistryModel>
 {
 
 public:
@@ -52,84 +52,58 @@ public:
     TypeName("none");
 
 
-    // Constructors
-
-
-        //- Construct from components
-        noChemistrySolver
-        (
-            const fvMesh& mesh,
-            const word& ODEModelName,
-            const word& thermoType
-        );
+    //- Construct from thermo
+    noChemistrySolver(typename ChemistryModel::reactionThermo& thermo);
 
 
     //- Destructor
-    virtual ~noChemistrySolver();
+    virtual ~noChemistrySolver()
+    {}
 
 
     // Member Functions
 
-        //- Update the concentrations and return the chemical time
-        virtual scalar solve
-        (
-            scalarField &c,
-            const scalar T,
-            const scalar p,
-            const scalar t0,
-            const scalar dt
-        ) const;
+    //- Update the concentrations and return the chemical time
+    virtual void solve
+    (
+        scalarField& c,
+        scalar& T,
+        scalar& p,
+        scalar& deltaT,
+        scalar& subDeltaT
+    ) const;
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class ODEChemistryType>
-CML::noChemistrySolver<ODEChemistryType>::noChemistrySolver
+template<class ChemistryModel>
+CML::noChemistrySolver<ChemistryModel>::noChemistrySolver
 (
-    const fvMesh& mesh,
-    const word& ODEModelName,
-    const word& thermoType
+    typename ChemistryModel::reactionThermo& thermo
 )
 :
-    chemistrySolver<ODEChemistryType>(mesh, ODEModelName, thermoType)
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-template<class ODEChemistryType>
-CML::noChemistrySolver<ODEChemistryType>::~noChemistrySolver()
+    chemistrySolver<ChemistryModel>(thermo)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class ODEChemistryType>
-CML::scalar CML::noChemistrySolver<ODEChemistryType>::solve
+template<class ChemistryModel>
+void CML::noChemistrySolver<ChemistryModel>::solve
 (
     scalarField&,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar
+    scalar&,
+    scalar&,
+    scalar&,
+    scalar&
 ) const
-{
-    return GREAT;
-}
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+{}
 
 #endif
-
-// ************************************************************************* //

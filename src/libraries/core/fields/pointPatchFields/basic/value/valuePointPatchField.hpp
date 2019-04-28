@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -199,8 +199,8 @@ public:
 };
 
 
-// This function is added to override the hack in pointPatchField.H
-// which enables simple backward compatibility with verions using
+// This function is added to overide the hack in pointPatchField.H
+// which enables simple backward compatability with verions using
 // referenceLevel in GeometicField
 template<class Type>
 tmp<Field<Type> > operator+
@@ -228,10 +228,8 @@ void CML::valuePointPatchField<Type>::checkFieldSize() const
 {
     if (this->size() != this->patch().size())
     {
-        FatalErrorIn
-        (
-            "void valuePointPatchField<Type>::checkField() const"
-        )   << "field does not correspond to patch. " << endl
+        FatalErrorInFunction
+            << "field does not correspond to patch. " << endl
             << "Field size: " << size() << " patch size: "
             << this->patch().size()
             << abort(FatalError);
@@ -278,17 +276,8 @@ CML::valuePointPatchField<Type>::valuePointPatchField
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "pointPatchField<Type>::pointPatchField"
-            "("
-            "const fvPatch& p,"
-            "const DimensionedField<Type, pointMesh>& iF,"
-            "const dictionary& dict,"
-            "const bool valueRequired"
-            ")",
-            dict
-        )   << "Essential entry 'value' missing"
+        FatalIOErrorInFunction(dict)
+            << "Essential entry 'value' missing"
             << exit(FatalIOError);
     }
 }

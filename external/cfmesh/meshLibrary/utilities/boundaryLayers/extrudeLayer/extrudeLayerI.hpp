@@ -66,11 +66,8 @@ inline label extrudeLayer::addressingCalculator::origPointLabel
         return of[(of.size()-pos)%of.size()];
     }
     
-    FatalErrorIn
-    (
-        "label extrudeLayer::addressingCalculator::origPointLabel"
-        "(const label, const label) const"
-    ) << "Cannot find point for the given position" << abort(FatalError);
+    FatalErrorInFunction
+        << "Cannot find point for the given position" << abort(FatalError);
     
     return -1;
 }
@@ -94,11 +91,8 @@ inline label extrudeLayer::addressingCalculator::origPoint
         return of[(of.size()-pos)%of.size()];
     }
     
-    FatalErrorIn
-    (
-        "label extrudeLayer::addressingCalculator::origPoint"
-        "(const label, const label) const"
-    ) << "Cannot find point for the given position" << abort(FatalError);
+    FatalErrorInFunction
+        << "Cannot find point for the given position" << abort(FatalError);
     
     return -1;
 }
@@ -125,11 +119,8 @@ inline label extrudeLayer::addressingCalculator::faceSharingEdge
         if( pointExtruded_.contains(nextI, currFaceI) )
         {
             if( otherFace != -1 )
-                FatalErrorIn
-                (
-                    "label extrudeLayer::addressingCalculator::faceSharingEdge"
-                    "(const label, const label) const"
-                ) << "Expected only one such face"
+                FatalErrorInFunction
+                    << "Expected only one such face"
                     << abort(FatalError);
             
             otherFace = currFaceI;

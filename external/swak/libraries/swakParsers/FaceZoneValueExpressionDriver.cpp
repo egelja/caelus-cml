@@ -49,7 +49,7 @@ label getFaceZoneID(const fvMesh &mesh,const word &name)
 {
     label result=mesh.faceZones().findZoneID(name);
     if(result<0) {
-        FatalErrorIn("getFaceZoneID(const fvMesh &mesh,const word &name)")
+        FatalErrorInFunction
             << "The faceZone " << name << " was not found in "
                 << mesh.faceZones().names()
                 << endl
@@ -207,7 +207,7 @@ tmp<vectorField> FaceZoneValueExpressionDriver::makePositionField() const
 
 tmp<scalarField> FaceZoneValueExpressionDriver::makeCellVolumeField() const
 {
-    FatalErrorIn("FaceZoneValueExpressionDriver::makeCellVolumeField()")
+    FatalErrorInFunction
         << "faceZone knows nothing about cells"
             << endl
             << exit(FatalError);
@@ -219,7 +219,7 @@ tmp<scalarField> FaceZoneValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> FaceZoneValueExpressionDriver::makePointField()
 // {
-//     notImplemented("FaceZoneValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField> FaceZoneValueExpressionDriver::makeFaceAreaMagField() const
@@ -289,7 +289,7 @@ tmp<scalarField> FaceZoneValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Face size: " << faceSize << endl;
 
-        FatalErrorIn("FaceZoneValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
                 << " For sizes on the processors see above"
                 << endl

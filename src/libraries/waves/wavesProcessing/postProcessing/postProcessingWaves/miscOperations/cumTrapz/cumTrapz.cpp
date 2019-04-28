@@ -198,7 +198,7 @@ void cumTrapz::evaluate()
     }
     else
     {
-        notImplemented("Only scalars and vectors are not supported.");
+        NotImplemented;
     }
 }
 

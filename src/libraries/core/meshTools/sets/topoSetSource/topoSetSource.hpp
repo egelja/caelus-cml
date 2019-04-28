@@ -112,7 +112,7 @@ protected:
                 if (usageTablePtr_)
                 {
                     delete usageTablePtr_;
-                    usageTablePtr_ = NULL;
+                    usageTablePtr_ = nullptr;
                 }
             }
         };
@@ -238,8 +238,8 @@ public:
         //- Clone
         autoPtr<topoSetSource> clone() const
         {
-            notImplemented("autoPtr<topoSetSource> clone() const");
-            return autoPtr<topoSetSource>(NULL);
+            NotImplemented;
+            return autoPtr<topoSetSource>(nullptr);
         }
 
 

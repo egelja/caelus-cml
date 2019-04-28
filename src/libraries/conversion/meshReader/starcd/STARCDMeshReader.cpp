@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,7 +65,7 @@ bool CML::meshReaders::STARCD::readHeader(IFstream& is, word fileSignature)
 {
     if (!is.good())
     {
-        FatalErrorIn("meshReaders::STARCD::readHeader()")
+        FatalErrorInFunction
             << "cannot read " << fileSignature  << "  " << is.name()
             << abort(FatalError);
     }
@@ -190,7 +190,7 @@ void CML::meshReaders::STARCD::readPoints
     }
     else
     {
-        FatalErrorIn("meshReaders::STARCD::readPoints()")
+        FatalErrorInFunction
             << "no points in file " << inputName
             << abort(FatalError);
     }
@@ -362,7 +362,7 @@ void CML::meshReaders::STARCD::readCells(const fileName& inputName)
     // construct cellFaces_ and possibly cellShapes_
     if (nCells <= 0)
     {
-        FatalErrorIn("meshReaders::STARCD::readCells()")
+        FatalErrorInFunction
             << "no cells in file " << inputName
             << abort(FatalError);
     }
@@ -408,7 +408,7 @@ void CML::meshReaders::STARCD::readCells(const fileName& inputName)
             }
 
             // determine the caelus cell shape
-            const cellModel* curModelPtr = NULL;
+            const cellModel* curModelPtr = nullptr;
 
             // fluid/solid cells
             switch (shapeId)
@@ -529,7 +529,7 @@ void CML::meshReaders::STARCD::readCells(const fileName& inputName)
 
                 if (nFaces < 4)
                 {
-                    FatalErrorIn("meshReaders::STARCD::readCells()")
+                    FatalErrorInFunction
                         << "star cell " << starCellId << " has " << nFaces
                         << abort(FatalError);
                 }
@@ -593,7 +593,7 @@ void CML::meshReaders::STARCD::readCells(const fileName& inputName)
 
     if (unknownVertices)
     {
-        FatalErrorIn("meshReaders::STARCD::readCells()")
+        FatalErrorInFunction
             << "cells with unknown vertices"
             << abort(FatalError);
     }

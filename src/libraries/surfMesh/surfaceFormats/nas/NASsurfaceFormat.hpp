@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -134,10 +134,7 @@ bool CML::fileFormats::NASsurfaceFormat<Face>::read
     IFstream is(filename);
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::NASsurfaceFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << filename
             << exit(FatalError);
     }
@@ -377,10 +374,7 @@ bool CML::fileFormats::NASsurfaceFormat<Face>::read
             is.getLine(line);
             if (line[0] != '*')
             {
-                FatalErrorIn
-                (
-                    "fileFormats::NASsurfaceFormat::read(const fileName&)"
-                )
+                FatalErrorInFunction
                     << "Expected continuation symbol '*' when reading GRID*"
                     << " (double precision coordinate) format" << nl
                     << "Read:" << line << nl

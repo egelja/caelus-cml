@@ -36,7 +36,7 @@ namespace CML {
 
 defineTypeNameAndDebug(CloudRepository, 0);
 
-CloudRepository *CloudRepository::repositoryInstance(NULL);
+CloudRepository *CloudRepository::repositoryInstance(nullptr);
 
 CloudRepository::CloudRepository(const IOobject &o)
     :
@@ -61,7 +61,7 @@ CloudRepository &CloudRepository::getRepository(const objectRegistry &obr)
         Pout << "CloudRepository: asking for Singleton" << endl;
     }
 
-    if(ptr==NULL) {
+    if(ptr==nullptr) {
         Pout << "swak: Allocating new repository for sampledSets\n";
 
         ptr=new CloudRepository(
@@ -100,19 +100,19 @@ void CloudRepository::addUpdateableCloud(
     const word &name=c->name();
 
     if(clouds_.found(name)) {
-        FatalErrorIn("CloudRepository::addCloud")
+        FatalErrorInFunction
             << "There is already a cloud " << name
-                << " in the non-updateable clouds. I guess there is a mistake"
-                << endl
-                << exit(FatalError);
+            << " in the non-updateable clouds. I guess there is a mistake"
+            << endl
+            << exit(FatalError);
     }
 
     if(updateableClouds_.found(name)) {
-        FatalErrorIn("CloudRepository::addCloud")
+        FatalErrorInFunction
             << "Repository of updateable clouds already has an entry "
-                << name << ". This can't be right"
-                << endl
-                << exit(FatalError);
+            << name << ". This can't be right"
+            << endl
+            << exit(FatalError);
     } else {
         updateableClouds_.insert(
             name,
@@ -127,18 +127,18 @@ void CloudRepository::addCloud(
     const word &name=c->name();
 
     if(updateableClouds_.found(name)) {
-        FatalErrorIn("CloudRepository::addCloud")
+        FatalErrorInFunction
             << "There is already a cloud " << name
-                << " in the updateable clouds. I guess there is a mistake"
-                << endl
-                << exit(FatalError);
+            << " in the updateable clouds. I guess there is a mistake"
+            << endl
+            << exit(FatalError);
     }
 
     if(clouds_.found(name)) {
-        WarningIn("CloudRepository::addCloud")
+        WarningInFunction
             << "Repository of clouds already has an entry "
-                << name <<". Overwriting. Expect strange behaviour"
-                << endl;
+            << name <<". Overwriting. Expect strange behaviour"
+            << endl;
         clouds_.set(
             name,
             c.ptr()

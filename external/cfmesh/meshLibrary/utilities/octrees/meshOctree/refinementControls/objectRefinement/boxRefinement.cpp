@@ -176,10 +176,8 @@ void boxRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxRefinement::operator=(const dictionary& d)"
-        ) << "Entry centre is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry centre is not specified!" << exit(FatalError);
         centre_ = vector::zero;
     }
 
@@ -190,10 +188,8 @@ void boxRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxRefinement::operator=(const dictionary& d)"
-        ) << "Entry lengthX is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthX is not specified!" << exit(FatalError);
         lengthX_ = -1.0;
     }
 
@@ -204,10 +200,8 @@ void boxRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxRefinement::operator=(const dictionary& d)"
-        ) << "Entry lengthY is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthY is not specified!" << exit(FatalError);
         lengthY_ = -1.0;
     }
 
@@ -218,10 +212,8 @@ void boxRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void boxRefinement::operator=(const dictionary& d)"
-        ) << "Entry lengthZ is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthZ is not specified!" << exit(FatalError);
         lengthZ_ = -1.0;
     }
 }

@@ -81,7 +81,7 @@ inline const CML::labelList& CML::cellMatcher::faceLabels() const
 
 inline const CML::cellModel& CML::cellMatcher::model() const
 {
-    if (cellModelPtr_ == NULL)
+    if (cellModelPtr_ == nullptr)
     {
         cellModelPtr_ = cellModeller::lookup(cellModelName_);
     }

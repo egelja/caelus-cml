@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -87,21 +87,15 @@ CML::label CML::metisDecomp::decompose
     {
         if (minWeights <= 0)
         {
-            WarningIn
-            (
-                "metisDecomp::decompose"
-                "(const pointField&, const scalarField&)"
-            )   << "Illegal minimum weight " << minWeights
+            WarningInFunction
+                << "Illegal minimum weight " << minWeights
                 << endl;
         }
 
         if (cWeights.size() != numCells)
         {
-            FatalErrorIn
-            (
-                "metisDecomp::decompose"
-                "(const pointField&, const scalarField&)"
-            )   << "Number of cell weights " << cWeights.size()
+            FatalErrorInFunction
+                << "Number of cell weights " << cWeights.size()
                 << " does not equal number of cells " << numCells
                 << exit(FatalError);
         }
@@ -125,7 +119,7 @@ CML::label CML::metisDecomp::decompose
         {
             if (method != "recursive" && method != "k-way")
             {
-                FatalErrorIn("metisDecomp::decompose()")
+                FatalErrorInFunction
                     << "Method " << method << " in metisCoeffs in dictionary : "
                     << decompositionDict_.name()
                     << " should be 'recursive' or 'k-way'"
@@ -141,7 +135,7 @@ CML::label CML::metisDecomp::decompose
         {
             if (mOptions.size() != METIS_NOPTIONS)
             {
-                FatalErrorIn("metisDecomp::decompose()")
+                FatalErrorInFunction
                     << "Number of options in metisCoeffs in dictionary : "
                     << decompositionDict_.name()
                     << " should be " << METIS_NOPTIONS
@@ -163,7 +157,7 @@ CML::label CML::metisDecomp::decompose
 
             if (processorWeights.size() != nProcessors_)
             {
-                FatalErrorIn("metisDecomp::decompose(const pointField&)")
+                FatalErrorInFunction
                     << "Number of processor weights "
                     << processorWeights.size()
                     << " does not equal number of domains " << nProcessors_
@@ -190,7 +184,7 @@ CML::label CML::metisDecomp::decompose
         //
         //    if (cellWeights.size() != xadj.size()-1)
         //    {
-        //        FatalErrorIn("metisDecomp::decompose(const pointField&)")
+        //        FatalErrorInFunction
         //            << "Number of cell weights " << cellWeights.size()
         //            << " does not equal number of cells " << xadj.size()-1
         //            << exit(FatalError);
@@ -209,8 +203,8 @@ CML::label CML::metisDecomp::decompose
     label edgeCut = 0;
 
     // Vertex weight info
-    label* vwgtPtr = NULL;
-    label* adjwgtPtr = NULL;
+    label* vwgtPtr = nullptr;
+    label* adjwgtPtr = nullptr;
 
     if (cellWeights.size())
     {
@@ -231,11 +225,11 @@ CML::label CML::metisDecomp::decompose
             const_cast<List<label>&>(xadj).begin(),   // indexing into adjncy
             const_cast<List<label>&>(adjncy).begin(), // neighbour info
             vwgtPtr,// vertexweights
-            NULL,               // vsize: total communication vol
+            nullptr,               // vsize: total communication vol
             adjwgtPtr,// edgeweights
             &nProcs,            // nParts
             processorWeights.begin(),   // tpwgts
-            NULL,               // ubvec: processor imbalance (default)
+            nullptr,               // ubvec: processor imbalance (default)
             options,
             &edgeCut,
             finalDecomp.begin()
@@ -250,11 +244,11 @@ CML::label CML::metisDecomp::decompose
             const_cast<List<label>&>(xadj).begin(),   // indexing into adjncy
             const_cast<List<label>&>(adjncy).begin(), // neighbour info
             vwgtPtr,// vertexweights
-            NULL,               // vsize: total communication vol
+            nullptr,               // vsize: total communication vol
             adjwgtPtr,// edgeweights
             &nProcs,            // nParts
             processorWeights.begin(),   // tpwgts
-            NULL,               // ubvec: processor imbalance (default)
+            nullptr,               // ubvec: processor imbalance (default)
             options,
             &edgeCut,
             finalDecomp.begin()
@@ -284,10 +278,8 @@ CML::labelList CML::metisDecomp::decompose
 {
     if (points.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "metisDecomp::decompose(const pointField&,const scalarField&)"
-        )   << "Can use this decomposition method only for the whole mesh"
+        FatalErrorInFunction
+            << "Can use this decomposition method only for the whole mesh"
             << endl
             << "and supply one coordinate (cellCentre) for every cell." << endl
             << "The number of coordinates " << points.size() << endl
@@ -323,11 +315,8 @@ CML::labelList CML::metisDecomp::decompose
 {
     if (agglom.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "metisDecomp::decompose"
-            "(const labelList&, const pointField&, const scalarField&)"
-        )   << "Size of cell-to-coarse map " << agglom.size()
+        FatalErrorInFunction
+            << "Size of cell-to-coarse map " << agglom.size()
             << " differs from number of cells in mesh " << mesh.nCells()
             << exit(FatalError);
     }
@@ -365,11 +354,8 @@ CML::labelList CML::metisDecomp::decompose
 {
     if (cellCentres.size() != globalCellCells.size())
     {
-        FatalErrorIn
-        (
-            "metisDecomp::decompose"
-            "(const pointField&, const labelListList&, const scalarField&)"
-        )   << "Inconsistent number of cells (" << globalCellCells.size()
+        FatalErrorInFunction
+            << "Inconsistent number of cells (" << globalCellCells.size()
             << ") and number of cell centres (" << cellCentres.size()
             << ")." << exit(FatalError);
     }

@@ -42,10 +42,8 @@ meshSurfaceEngine& meshSurfaceEdgeExtractorFUN::surfaceEngine()
 {
     # ifdef USE_OMP
     if( omp_in_parallel() )
-        FatalErrorIn
-        (
-            "meshSurfaceEngine& meshSurfaceEdgeExtractorFUN::surfaceEngine()"
-        ) << "Cannot create surface engine with a parallel region"
+        FatalErrorInFunction
+            << "Cannot create surface engine with a parallel region"
             << exit(FatalError);
     # endif
 
@@ -72,15 +70,12 @@ meshSurfaceEdgeExtractorFUN::meshSurfaceEdgeExtractorFUN
 :
     mesh_(mesh),
     meshOctree_(octree),
-    surfaceEnginePtr_(NULL),
+    surfaceEnginePtr_(nullptr),
     createWrapperSheet_(createWrapperSheet)
 {
     if( Pstream::parRun() )
-        FatalErrorIn
-        (
-            "meshSurfaceEdgeExtractorFUN::meshSurfaceEdgeExtractorFUN"
-            "(polyMeshGen&, const meshOctree&)"
-        ) << "Cannot run in parallel!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Cannot run in parallel!" << exit(FatalError);
 
     createBasicFundamentalSheets();
 

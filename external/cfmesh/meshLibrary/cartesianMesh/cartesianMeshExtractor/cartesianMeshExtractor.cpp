@@ -98,10 +98,8 @@ void cartesianMeshExtractor::createMesh()
     }
     if( mesh_.cells().size() == 0 )
     {
-        FatalErrorIn
-        (
-            "void cartesianMeshExtractor::createMesh()"
-        ) << "There are no cells in the mesh!"
+        FatalErrorInFunction
+        << "There are no cells in the mesh!"
         << nl << "The reasons for this can be fwofold:"
         << nl << "1. Inadequate mesh resolution."
         << nl << "2. You maxCellSize is a multiplier of the domain length."

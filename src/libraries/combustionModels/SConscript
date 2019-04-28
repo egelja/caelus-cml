@@ -7,16 +7,12 @@ target = 'combustionModels'
 
 sources = Split("""
 combustionModel/combustionModel.cpp
-psiCombustionModel/psiCombustionModel.cpp
-psiCombustionModel/psiCombustionModelNew.cpp
-rhoCombustionModel/rhoCombustionModel.cpp
-rhoCombustionModel/rhoCombustionModelNew.cpp
+CombustionModel_/CombustionModel/CombustionModels.cpp
+diffusion/diffusions.cpp
 infinitelyFastChemistry/infinitelyFastChemistrys.cpp
-psiChemistryCombustionModel/psiChemistryCombustionModel.cpp
-psiChemistryCombustionModel/psiChemistryCombustionModelNew.cpp
-rhoChemistryCombustionModel/rhoChemistryCombustionModel.cpp
-rhoChemistryCombustionModel/rhoChemistryCombustionModelNew.cpp
 PaSR/PaSRs.cpp
+EDC/EDCs.cpp
+laminar/laminars.cpp
 FSD/reactionRateFlameAreaModels/consumptionSpeed/consumptionSpeed.cpp
 FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameArea.cpp
 FSD/reactionRateFlameAreaModels/reactionRateFlameArea/reactionRateFlameAreaNew.cpp
@@ -41,7 +37,8 @@ caelus_libs = [
 'core',
 'chemistryModel',
 'compressibleLESModels',
-'reactionThermophysicalModels'
+'reactionThermophysicalModels',
+'fluidThermophysicalModels'
 ]
 
 build_lib(env,

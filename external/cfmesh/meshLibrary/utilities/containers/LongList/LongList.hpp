@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -229,11 +230,8 @@ void CML::LongList<T, Offset>::checkIndex(const label i) const
 {
     if( (i < 0) || (i >= nextFree_) )
     {
-        FatalErrorIn
-        (
-            "void CML::LongList<T, label>::"
-            "checkIndex(const label i) const"
-        ) << "Index " << i << " is not in range " << 0
+        FatalErrorInFunction
+            << "Index " << i << " is not in range " << 0
             << " and " << nextFree_ << abort(FatalError);
     }
 }
@@ -265,11 +263,8 @@ inline void CML::LongList<T, Offset>::allocateSize(const label s)
     }
     else if( s < 0 )
     {
-        FatalErrorIn
-        (
-            "template<class T, CML::label Offset>\n"
-            "inline void CML::LongList<T, Offset>::allocateSize(const label)"
-        ) << "Negative size requested." << abort(FatalError);
+        FatalErrorInFunction
+           << "Negative size requested." << abort(FatalError);
     }
 
     const label numblock1 = ((s-1)>>shift_) + 1;
@@ -316,7 +311,7 @@ void CML::LongList<T, Offset>::clearOut()
     if( dataPtr_ )
     {
         delete [] dataPtr_;
-        dataPtr_ = NULL;
+        dataPtr_ = nullptr;
     }
 
     N_ = 0;
@@ -337,7 +332,7 @@ inline CML::LongList<T, Offset>::LongList()
     numAllocatedBlocks_(0),
     shift_(),
     mask_(),
-    dataPtr_(NULL)
+    dataPtr_(nullptr)
 {
     initializeParameters();
 }
@@ -352,7 +347,7 @@ inline CML::LongList<T, Offset>::LongList(const label s)
     numAllocatedBlocks_(0),
     shift_(),
     mask_(),
-    dataPtr_(NULL)
+    dataPtr_(nullptr)
 {
     initializeParameters();
     setSize(s);
@@ -369,7 +364,7 @@ inline CML::LongList<T, Offset>::LongList(const label s, const T& t)
     numAllocatedBlocks_(0),
     shift_(),
     mask_(),
-    dataPtr_(NULL)
+    dataPtr_(nullptr)
 {
     initializeParameters();
     setSize(s);
@@ -385,7 +380,7 @@ inline CML::LongList<T, Offset>::LongList(const LongList<T, Offset>& ol)
     numAllocatedBlocks_(0),
     shift_(ol.shift_),
     mask_(ol.mask_),
-    dataPtr_(NULL)
+    dataPtr_(nullptr)
 {
     *this = ol;
 }
@@ -409,7 +404,7 @@ inline CML::label CML::LongList<T, Offset>::byteSize() const
 {
     if( !contiguous<T>() )
     {
-        FatalErrorIn("LongList<T, Offset>::byteSize()")
+        FatalErrorInFunction
             << "Cannot return the binary size of a list of "
                "non-primitive elements"
             << abort(FatalError);
@@ -452,7 +447,7 @@ inline void CML::LongList<T, Offset>::transfer(LongList<T, Offset>& ol)
     shift_ = ol.shift_;
     mask_ = ol.mask_;
 
-    ol.dataPtr_ = NULL;
+    ol.dataPtr_ = nullptr;
     ol.N_ = 0;
     ol.nextFree_ = 0;
     ol.numBlocks_ = 0;
@@ -506,10 +501,8 @@ inline T CML::LongList<T, Offset>::remove(const label i)
 {
     if( nextFree_ == 0 )
     {
-        FatalErrorIn
-        (
-            "void CML::LongList<T, Offset>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     T el = operator[](i);
@@ -523,10 +516,8 @@ inline T CML::LongList<T, Offset>::removeLastElement()
 {
     if( nextFree_ == 0 )
     {
-        FatalErrorIn
-        (
-            "void CML::LongList<T, Offset>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     T lastEl = operator[](nextFree_-1);
@@ -825,7 +816,7 @@ CML::Istream& CML::operator>>
     }
     else
     {
-        FatalIOErrorIn("operator>>(Istream&, LongList<T, Offset>&)", is)
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int>, found "
             << firstToken.info()
             << exit(FatalIOError);
@@ -918,7 +909,7 @@ void CML::LongList<T, Offset>::appendFromStream(Istream& is)
     }
     else
     {
-        FatalIOErrorIn("appendFromStream(Istream& is)", is)
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int>, found "
             << firstToken.info()
             << exit(FatalIOError);

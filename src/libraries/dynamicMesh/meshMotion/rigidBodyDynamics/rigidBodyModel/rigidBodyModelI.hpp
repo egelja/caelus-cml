@@ -155,10 +155,7 @@ CML::RBD::rigidBodyModel::mergedBody(label mergedBodyID) const
 {
     if (!merged(mergedBodyID))
     {
-        FatalErrorIn
-        (
-            "RBD::rigidBodyModel::mergedBody(label) const"
-        )
+        FatalErrorInFunction
             << "Body " << mergedBodyID << " has not been merged"
             << abort(FatalError);
     }

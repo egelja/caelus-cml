@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -191,11 +191,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 :
     calculatedFvPatchField<Type>(p, iF)
 {
-    FatalErrorIn
-    (
-        "genericFvPatchField<Type>::genericFvPatchField"
-        "(const fvPatch& p, const DimensionedField<Type, volMesh>& iF)"
-    )   << "Not Implemented\n    "
+    FatalErrorInFunction
+        << "Not Implemented\n    "
         << "Trying to construct an genericFvPatchField on patch "
         << this->patch().name()
         << " of field " << this->dimensionedInternalField().name()
@@ -217,12 +214,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 {
     if (!dict.found("value"))
     {
-        FatalIOErrorIn
-        (
-            "genericFvPatchField<Type>::genericFvPatchField"
-            "(const fvPatch&, const Field<Type>&, const dictionary&)",
-            dict
-        )   << "\n    Cannot find 'value' entry"
+        FatalIOErrorInFunction(dict)
+            << "\n    Cannot find 'value' entry"
             << " on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()
             << " in file " << this->dimensionedInternalField().objectPath()
@@ -274,13 +267,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
                         }
                         else
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    token following 'nonuniform' "
+                            FatalIOErrorInFunction(dict)
+                                << "\n    token following 'nonuniform' "
                                   "is not a compound"
                                 << "\n    on patch " << this->patch().name()
                                 << " of field "
@@ -307,13 +295,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 
                         if (fPtr->size() != this->size())
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    size of field " << iter().keyword()
+                            FatalIOErrorInFunction(dict)
+                                << "\n    size of field " << iter().keyword()
                                 << " (" << fPtr->size() << ')'
                                 << " is not the same size as the patch ("
                                 << this->size() << ')'
@@ -344,13 +327,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 
                         if (fPtr->size() != this->size())
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    size of field " << iter().keyword()
+                            FatalIOErrorInFunction(dict)
+                                << "\n    size of field " << iter().keyword()
                                 << " (" << fPtr->size() << ')'
                                 << " is not the same size as the patch ("
                                 << this->size() << ')'
@@ -384,13 +362,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 
                         if (fPtr->size() != this->size())
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    size of field " << iter().keyword()
+                            FatalIOErrorInFunction(dict)
+                                << "\n    size of field " << iter().keyword()
                                 << " (" << fPtr->size() << ')'
                                 << " is not the same size as the patch ("
                                 << this->size() << ')'
@@ -424,13 +397,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 
                         if (fPtr->size() != this->size())
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    size of field " << iter().keyword()
+                            FatalIOErrorInFunction(dict)
+                                << "\n    size of field " << iter().keyword()
                                 << " (" << fPtr->size() << ')'
                                 << " is not the same size as the patch ("
                                 << this->size() << ')'
@@ -461,13 +429,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
 
                         if (fPtr->size() != this->size())
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    size of field " << iter().keyword()
+                            FatalIOErrorInFunction(dict)
+                                << "\n    size of field " << iter().keyword()
                                 << " (" << fPtr->size() << ')'
                                 << " is not the same size as the patch ("
                                 << this->size() << ')'
@@ -483,13 +446,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
                     }
                     else
                     {
-                        FatalIOErrorIn
-                        (
-                            "genericFvPatchField<Type>::genericFvPatchField"
-                            "(const fvPatch&, const Field<Type>&, "
-                            "const dictionary&)",
-                            dict
-                        )   << "\n    compound " << fieldToken.compoundToken()
+                        FatalIOErrorInFunction(dict)
+                            << "\n    compound " << fieldToken.compoundToken()
                             << " not supported"
                             << "\n    on patch " << this->patch().name()
                             << " of field "
@@ -573,13 +531,8 @@ CML::genericFvPatchField<Type>::genericFvPatchField
                         }
                         else
                         {
-                            FatalIOErrorIn
-                            (
-                                "genericFvPatchField<Type>::genericFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\n    unrecognised native type " << l
+                            FatalIOErrorInFunction(dict)
+                                << "\n    unrecognised native type " << l
                                 << "\n    on patch " << this->patch().name()
                                 << " of field "
                                 << this->dimensionedInternalField().name()
@@ -878,11 +831,8 @@ CML::genericFvPatchField<Type>::valueInternalCoeffs
     const tmp<scalarField>&
 ) const
 {
-    FatalErrorIn
-    (
-        "genericFvPatchField<Type>::"
-        "valueInternalCoeffs(const tmp<scalarField>&) const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "valueInternalCoeffs cannot be called for a genericFvPatchField"
            " (actual type " << actualTypeName_ << ")"
         << "\n    on patch " << this->patch().name()
@@ -903,11 +853,8 @@ CML::genericFvPatchField<Type>::valueBoundaryCoeffs
     const tmp<scalarField>&
 ) const
 {
-    FatalErrorIn
-    (
-        "genericFvPatchField<Type>::"
-        "valueBoundaryCoeffs(const tmp<scalarField>&) const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "valueBoundaryCoeffs cannot be called for a genericFvPatchField"
            " (actual type " << actualTypeName_ << ")"
         << "\n    on patch " << this->patch().name()
@@ -925,11 +872,8 @@ template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::genericFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    FatalErrorIn
-    (
-        "genericFvPatchField<Type>::"
-        "gradientInternalCoeffs() const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "gradientInternalCoeffs cannot be called for a genericFvPatchField"
            " (actual type " << actualTypeName_ << ")"
         << "\n    on patch " << this->patch().name()
@@ -946,11 +890,8 @@ template<class Type>
 CML::tmp<CML::Field<Type> >
 CML::genericFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
-    FatalErrorIn
-    (
-        "genericFvPatchField<Type>::"
-        "gradientBoundaryCoeffs() const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "gradientBoundaryCoeffs cannot be called for a genericFvPatchField"
            " (actual type " << actualTypeName_ << ")"
         << "\n    on patch " << this->patch().name()

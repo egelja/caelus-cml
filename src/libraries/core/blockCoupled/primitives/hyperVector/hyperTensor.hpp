@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-2016 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -257,14 +257,8 @@ inline direction hyperTensor<Cmpt, length>::cmpt
      || j > hyperTensor<Cmpt, length>::rowLength - 1
     )
     {
-        FatalErrorIn
-        (
-            "direction hyperTensor<Cmpt, length>::cmpt()\n"
-            "(\n"
-            "    const direction i,\n"
-            "    const direction j\n"
-            ") const"
-        )   << "Direction out of range (0 "
+        FatalErrorInFunction
+            << "Direction out of range (0 "
             << hyperTensor<Cmpt, length>::rowLength - 1 << ")"
             << " and (i j) = ("  << i << " " << j << ")"
             << abort(FatalError);
@@ -637,11 +631,8 @@ inline hyperTensor<Cmpt, length> inv(const hyperTensor<Cmpt, length>& t)
         srcIter = &result(iCol, iCol);  // Dummy pointer to reduce indexing
         if ((*srcIter) == Cmpt(0))
         {
-            FatalErrorIn
-            (
-                "inline hyperTensor<Cmpt, length> inv("
-                "const hyperTensor<Cmpt, length>& t)"
-            )   << "Singular tensor" << length << CML::abort(FatalError);
+            FatalErrorInFunction
+                << "Singular tensor" << length << CML::abort(FatalError);
         }
 
         // Divide the pivot row by pivot element

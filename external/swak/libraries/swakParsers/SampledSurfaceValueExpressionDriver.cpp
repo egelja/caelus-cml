@@ -237,7 +237,7 @@ tmp<vectorField> SampledSurfaceValueExpressionDriver::makePositionField() const
 tmp<scalarField>
 SampledSurfaceValueExpressionDriver::makeCellVolumeField() const
 {
-    FatalErrorIn("SampledSurfaceValueExpressionDriver::makeCellVolumeField()")
+    FatalErrorInFunction
         << "faceZone knows nothing about cells"
             << endl
             << exit(FatalError);
@@ -250,7 +250,7 @@ SampledSurfaceValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> SampledSurfaceValueExpressionDriver::makePointField()
 // {
-//     notImplemented("SampledSurfaceValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField>
@@ -320,7 +320,7 @@ tmp<scalarField> SampledSurfaceValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Face size: " << faceSize << endl;
 
-        FatalErrorIn("SampledSurfaceValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
                 << " For sizes on the processors see above"
                 << endl

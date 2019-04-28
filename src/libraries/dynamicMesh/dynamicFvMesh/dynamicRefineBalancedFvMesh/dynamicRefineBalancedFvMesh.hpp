@@ -189,10 +189,8 @@ void CML::dynamicRefineBalancedFvMesh::correctBoundaries()
         else
         {
             // Scheduled patch updates not supported
-            FatalErrorIn
-            (
-                "dynamicRefineBalancedFvMeshTemplates::correctBoundaries"
-            )   << "Unsupported communications type "
+            FatalErrorInFunction
+                << "Unsupported communications type "
                 << Pstream::commsTypeNames[Pstream::defaultCommsType]
                 << exit(FatalError);
         }

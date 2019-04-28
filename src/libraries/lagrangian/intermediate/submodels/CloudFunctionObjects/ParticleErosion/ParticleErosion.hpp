@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,8 +22,52 @@ Class
     CML::ParticleErosion
 
 Description
-    Creates particle erosion field, Q
+    Function object to create a field of eroded volume, Q, on a specified list
+    of patches. The volume is calculated by the model of Finnie et al. The
+    implementation follows the description given by the review of Yadav et al.
 
+    References:
+    \verbatim
+        I Finnie, A Levy, D H McFadden
+        "Fundamental Mechanisms of the Erosive Wear of Ductile Metals by Solid
+        Particles"
+        ASTM STP664, 1979, pages 36-58
+    \endverbatim
+
+    \verbatim
+        I Finnie and D H McFadden
+        "On the Velocity Dependence of the Erosion of Ductile Metal by Solid
+        Particle at Low Angles of Incidence"
+        Wear, 1978, volume 48, pages 181-190
+    \endverbatim
+
+    \verbatim
+        G Yadav, S Tiwari, A Rajput, R Jatola, M L Jain
+        "A Review: Erosion Wear Models"
+        Emerging Trends in Mechanical Engineering, 2016, volume 1, pages 150-154
+    \endverbatim
+
+Usage
+    \table
+        Property    | Description                          | Req'd? | Default
+        patches     | The patches on which to calculate Q  | yes    |
+        p           | Plastic flow stress                  | yes    |
+        psi         | Ratio between depth of contact and length of cut | no | 2
+        K           | Ratio of normal and tangential force | no | 2
+    \endtable
+
+    Example:
+    \verbatim
+    <functionName>
+    {
+        type    particleErosion;
+        patches (wall1 wall2);
+        p       2.7e9;
+    }
+    \endverbatim
+
+SourceFiles
+    ParticleErosion.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -55,19 +99,19 @@ class ParticleErosion
             typedef typename CloudType::parcelType parcelType;
 
 
-        //- Particle erosion field
+        //- Particle eroded volume field
         autoPtr<volScalarField> QPtr_;
 
         //- List of patch indices to post-process
         labelList patchIDs_;
 
-        //- Plastic flow stress - typical metal value = 2.7 GPa
+        //- Plastic flow stress
         scalar p_;
 
-        //- Ratio between depth of contact and length of cut - default=2
+        //- Ratio between depth of contact and length of cut. Default 2.
         scalar psi_;
 
-        //- Ratio of normal and tangential forces - default=2
+        //- Ratio of normal and tangential forces. Default 2.
         scalar K_;
 
 
@@ -75,8 +119,8 @@ protected:
 
     // Protected Member Functions
 
-        //- Returns local patchI if patch is in patchIds_ list
-        label applyToPatch(const label globalPatchI) const;
+        //- Returns local patchi if patch is in patchIds_ list
+        label applyToPatch(const label globalPatchi) const;
 
         //- Write post-processing info
         virtual void write();
@@ -122,56 +166,30 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
-            //- Post-evolve hook
-            virtual void postEvolve();
-
-            //- Post-move hook
-            virtual void postMove
-            (
-                typename CloudType::parcelType& p,
-                const label cellI,
-                const scalar dt,
-                const point& position0,
-                bool& keepParticle
-            );
-
             //- Post-patch hook
             virtual void postPatch
             (
-                const typename CloudType::parcelType& p,
+                const parcelType& p,
                 const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& tetIs,
-                bool& keepParticle
-            );
-
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * Protected Member Functions * * * * * * * * * * * //
 
 template<class CloudType>
 CML::label CML::ParticleErosion<CloudType>::applyToPatch
 (
-    const label globalPatchI
+    const label globalPatchi
 ) const
 {
     forAll(patchIDs_, i)
     {
-        if (patchIDs_[i] == globalPatchI)
+        if (patchIDs_[i] == globalPatchi)
         {
             return i;
         }
@@ -190,7 +208,7 @@ void CML::ParticleErosion<CloudType>::write()
     }
     else
     {
-        FatalErrorIn("void CML::ParticleErosion<CloudType>::write()")
+        FatalErrorInFunction
             << "QPtr not valid" << abort(FatalError);
     }
 }
@@ -207,7 +225,7 @@ CML::ParticleErosion<CloudType>::ParticleErosion
 )
 :
     CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
-    QPtr_(NULL),
+    QPtr_(nullptr),
     patchIDs_(),
     p_(readScalar(this->coeffDict().lookup("p"))),
     psi_(this->coeffDict().template lookupOrDefault<scalar>("psi", 2.0)),
@@ -223,14 +241,8 @@ CML::ParticleErosion<CloudType>::ParticleErosion
 
         if (patchIDs.empty())
         {
-            WarningIn
-            (
-                "CML::ParticleErosion<CloudType>::ParticleErosion"
-                "("
-                    "const dictionary&, "
-                    "CloudType& "
-                ")"
-            )   << "Cannot find any patch names matching " << patchName[i]
+            WarningInFunction
+                << "Cannot find any patch names matching " << patchName[i]
                 << endl;
         }
 
@@ -239,7 +251,7 @@ CML::ParticleErosion<CloudType>::ParticleErosion
 
     patchIDs_ = uniquePatchIDs.toc();
 
-    // trigger the creation of the Q field
+    // Trigger creation of the Q field
     preEvolve();
 }
 
@@ -251,7 +263,7 @@ CML::ParticleErosion<CloudType>::ParticleErosion
 )
 :
     CloudFunctionObject<CloudType>(pe),
-    QPtr_(NULL),
+    QPtr_(nullptr),
     patchIDs_(pe.patchIDs_),
     p_(pe.p_),
     psi_(pe.psi_),
@@ -285,7 +297,7 @@ void CML::ParticleErosion<CloudType>::preEvolve()
             (
                 IOobject
                 (
-                    this->owner().name() + "Q",
+                    this->owner().name() + ":Q",
                     mesh.time().timeName(),
                     mesh,
                     IOobject::READ_IF_PRESENT,
@@ -300,88 +312,52 @@ void CML::ParticleErosion<CloudType>::preEvolve()
 
 
 template<class CloudType>
-void CML::ParticleErosion<CloudType>::postEvolve()
-{
-    CloudFunctionObject<CloudType>::postEvolve();
-}
-
-
-template<class CloudType>
-void CML::ParticleErosion<CloudType>::postMove
-(
-    typename CloudType::parcelType& p,
-    const label cellI,
-    const scalar dt,
-    const point& position0,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-template<class CloudType>
 void CML::ParticleErosion<CloudType>::postPatch
 (
-    const typename CloudType::parcelType& p,
+    const parcelType& p,
     const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& tetIs,
     bool&
 )
 {
-    const label patchI = pp.index();
+    const label patchi = pp.index();
+    const label localPatchi = applyToPatch(patchi);
 
-    const label localPatchI = applyToPatch(patchI);
-
-    if (localPatchI != -1)
+    if (localPatchi != -1)
     {
-        vector nw;
-        vector Up;
+        // Get patch data
+        vector nw, Up;
+        this->owner().patchData(p, pp, nw, Up);
 
-        // patch-normal direction
-        this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
-
-        // particle velocity relative to patch
+        // Particle velocity relative to patch
         const vector& U = p.U() - Up;
 
-        // quick reject if particle travelling away from the patch
+        // Quick rejection if the particle is travelling away from the patch
         if ((nw & U) < 0)
         {
             return;
         }
 
         const scalar magU = mag(U);
-        const vector Udir = U/magU;
+        const vector UHat = U/magU;
 
-        // determine impact angle, alpha
-        const scalar alpha = mathematical::pi/2.0 - acos(nw & Udir);
+        // Impact angle
+        const scalar alpha = mathematical::pi/2 - acos(nw & UHat);
 
+        // Get the face value to accumulate into
+        const label patchFacei = pp.whichFace(p.face());
+        scalar& Q = QPtr_->boundaryField()[patchi][patchFacei];
+
+        // Finnie's model
         const scalar coeff = p.nParticle()*p.mass()*sqr(magU)/(p_*psi_*K_);
-
-        const label patchFaceI = pp.whichFace(p.face());
-        scalar& Q = QPtr_->boundaryField()[patchI][patchFaceI];
-
-        if (tan(alpha) < K_/6.0)
+        if (tan(alpha) < K_/6)
         {
-            Q += coeff*(sin(2.0*alpha) - 6.0/K_*sqr(sin(alpha)));
+            Q += coeff*(sin(2*alpha) - 6/K_*sqr(sin(alpha)));
         }
         else
         {
-            Q += coeff*(K_*sqr(cos(alpha))/6.0);
+            Q += coeff*(K_*sqr(cos(alpha))/6);
         }
     }
-}
-
-
-template<class CloudType>
-void CML::ParticleErosion<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
 }
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,7 +36,7 @@ void CML::primitiveMesh::calcCellShapes() const
     // if the pointer is already set
     if (cellShapesPtr_)
     {
-        FatalErrorIn("primitiveMesh::calcCellShapes() const")
+        FatalErrorInFunction
             << "cellShapes already calculated"
             << abort(FatalError);
     }

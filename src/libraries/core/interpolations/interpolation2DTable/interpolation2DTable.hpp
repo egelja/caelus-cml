@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -166,10 +166,8 @@ void CML::interpolation2DTable<Type>::readTable()
 
     if (this->empty())
     {
-        FatalErrorIn
-        (
-            "CML::interpolation2DTable<Type>::readTable()"
-        )   << "table read from " << fName << " is empty" << nl
+        FatalErrorInFunction
+            << "table read from " << fName << " is empty" << nl
             << exit(FatalError);
     }
 
@@ -184,7 +182,7 @@ CML::interpolation2DTable<Type>::interpolation2DTable()
     List<Tuple2<scalar, List<Tuple2<scalar, Type> > > >(),
     boundsHandling_(interpolation2DTable::WARN),
     fileName_("fileNameIsUndefined"),
-    reader_(NULL)
+    reader_(nullptr)
 {}
 
 
@@ -199,7 +197,7 @@ CML::interpolation2DTable<Type>::interpolation2DTable
     List<Tuple2<scalar, List<Tuple2<scalar, Type> > > >(values),
     boundsHandling_(bounds),
     fileName_(fName),
-    reader_(NULL)
+    reader_(nullptr)
 {}
 
 
@@ -259,32 +257,21 @@ Type CML::interpolation2DTable<Type>::interpolateValue
         {
             case interpolation2DTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolation2DTable<Type>::interpolateValue"
-                    "("
-                        "List<Tuple2<scalar, Type> >&, "
-                        "const scalar"
-                    ")"
-                )   << "value (" << lookupValue << ") less than lower "
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") less than lower "
                     << "bound (" << minLimit << ")" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolation2DTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolation2DTable<Type>::interpolateValue"
-                    "("
-                        "List<Tuple2<scalar, Type> >&, "
-                        "const scalar"
-                    ")"
-                )   << "value (" << lookupValue << ") less than lower "
+                WarningInFunction
+                    << "value (" << lookupValue << ") less than lower "
                     << "bound (" << minLimit << ")" << nl
                     << "    Continuing with the first entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolation2DTable::CLAMP:
             {
@@ -299,32 +286,21 @@ Type CML::interpolation2DTable<Type>::interpolateValue
         {
             case interpolation2DTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::interpolation2DTable<Type>::interpolateValue"
-                    "("
-                        "List<Tuple2<scalar, Type> >&, "
-                        "const scalar"
-                    ")"
-                )   << "value (" << lookupValue << ") greater than upper "
+                FatalErrorInFunction
+                    << "value (" << lookupValue << ") greater than upper "
                     << "bound (" << maxLimit << ")" << nl
                     << exit(FatalError);
                 break;
             }
             case interpolation2DTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::interpolation2DTable<Type>::interpolateValue"
-                    "("
-                        "List<Tuple2<scalar, Type> >&, "
-                        "const scalar"
-                    ")"
-                )   << "value (" << lookupValue << ") greater than upper "
+                WarningInFunction
+                    << "value (" << lookupValue << ") greater than upper "
                     << "bound (" << maxLimit << ")" << nl
                     << "    Continuing with the last entry"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolation2DTable::CLAMP:
             {
@@ -390,30 +366,18 @@ CML::label CML::interpolation2DTable<Type>::Xi
         {
             case interpolation2DTable::ERROR:
             {
-                FatalErrorIn
-                (
-                    "CML::label CML::interpolation2DTable<Type>::Xi"
-                    "("
-                        "const BinaryOp&, "
-                        "const scalar, "
-                        "const bool"
-                    ") const"
-                )   << "value (" << valueX << ") out of bounds"
+                FatalErrorInFunction
+                    << "value (" << valueX << ") out of bounds"
                     << exit(FatalError);
                 break;
             }
             case interpolation2DTable::WARN:
             {
-                WarningIn
-                (
-                    "CML::label CML::interpolation2DTable<Type>::Xi"
-                    "("
-                        "const BinaryOp&, "
-                        "const scalar, "
-                        "const bool"
-                )   << "value (" << valueX << ") out of bounds"
+                WarningInFunction
+                    << "value (" << valueX << ") out of bounds"
                     << endl;
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case interpolation2DTable::CLAMP:
             {
@@ -421,15 +385,7 @@ CML::label CML::interpolation2DTable<Type>::Xi
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "CML::label CML::interpolation2DTable<Type>::Xi"
-                    "("
-                        "const BinaryOp&, "
-                        "const scalar, "
-                        "const bool"
-                    ") const"
-                )
+                FatalErrorInFunction
                     << "Un-handled enumeration " << boundsHandling_
                     << abort(FatalError);
             }
@@ -473,14 +429,7 @@ Type CML::interpolation2DTable<Type>::operator()
 
     if (nX == 0)
     {
-        WarningIn
-        (
-            "Type CML::interpolation2DTable<Type>::operator()"
-            "("
-                "const scalar, "
-                "const scalar"
-            ") const"
-        )
+        WarningInFunction
             << "cannot interpolate a zero-sized table - returning zero" << endl;
 
         return pTraits<Type>::zero;
@@ -571,13 +520,8 @@ CML::interpolation2DTable<Type>::wordToBoundsHandling
     }
     else
     {
-        WarningIn
-        (
-            "CML::interpolation2DTable<Type>::wordToBoundsHandling"
-            "("
-            "    const word&"
-            ")"
-        )   << "bad outOfBounds specifier " << bound << " using 'warn'" << endl;
+        WarningInFunction
+            << "bad outOfBounds specifier " << bound << " using 'warn'" << endl;
 
         return interpolation2DTable::WARN;
     }
@@ -612,10 +556,8 @@ void CML::interpolation2DTable<Type>::checkOrder() const
         // avoid duplicate values (divide-by-zero error)
         if (currValue <= prevValue)
         {
-            FatalErrorIn
-            (
-                "CML::interpolation2DTable<Type>::checkOrder() const"
-            )   << "out-of-order value: "
+            FatalErrorInFunction
+                << "out-of-order value: "
                 << currValue << " at index " << i << nl
                 << exit(FatalError);
         }

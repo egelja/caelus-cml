@@ -39,14 +39,14 @@ CML::autoPtr<CML::calcType> CML::calcType::New
         // exit without stack trace
         if (calcTypeName == "-help")
         {
-            FatalErrorIn("calcType::New()")
+            FatalErrorInFunction
                 << "Valid calcType selections are:" << nl
                 << dictionaryConstructorTablePtr_->sortedToc() << nl
                 << exit(FatalError);
         }
         else
         {
-            FatalErrorIn("calcType::New()")
+            FatalErrorInFunction
                 << "Unknown calcType type " << calcTypeName << nl
                 << "Valid calcType selections are:" << nl
                 << dictionaryConstructorTablePtr_->sortedToc() << nl

@@ -162,10 +162,8 @@ void polyMeshGenModifier::removeFaces(const boolList& removeFace)
         }
 
         if( nProcFaces != procFaces.size() )
-            FatalErrorIn
-            (
-                "void polyMeshGenModifier::removeFaces()"
-            ) << "Invalid number of processor faces!" << abort(FatalError);
+            FatalErrorInFunction
+              << "Invalid number of processor faces!" << abort(FatalError);
 
         //- remove faces from processor patches
         npI = 0;

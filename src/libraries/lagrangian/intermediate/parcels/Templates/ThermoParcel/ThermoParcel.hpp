@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,6 +33,7 @@ Description
 
 #include "particle.hpp"
 #include "SLGThermo.hpp"
+#include "demandDrivenEntry.hpp"
 #include "physicoChemicalConstants.hpp"
 #include "IOstreams.hpp"
 
@@ -60,6 +61,12 @@ class ThermoParcel
 :
     public ParcelType
 {
+    // Private data
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
+
+
 public:
 
     //- Class to hold thermo particle constant properties
@@ -71,25 +78,22 @@ public:
         // Private data
 
             //- Particle initial temperature [K]
-            scalar T0_;
+            demandDrivenEntry<scalar> T0_;
 
             //- Minimum temperature [K]
-            scalar TMin_;
+            demandDrivenEntry<scalar> TMin_;
 
             //- Maximum temperature [K]
-            scalar TMax_;
+            demandDrivenEntry<scalar> TMax_;
 
             //- Particle specific heat capacity [J/(kg.K)]
-            scalar Cp0_;
+            demandDrivenEntry<scalar> Cp0_;
 
             //- Particle emissivity [] (radiation)
-            scalar epsilon0_;
+            demandDrivenEntry<scalar> epsilon0_;
 
             //- Particle scattering factor [] (radiation)
-            scalar f0_;
-
-            //- Default carrier Prandtl number []
-            scalar Pr_;
+            demandDrivenEntry<scalar> f0_;
 
 
     public:
@@ -102,30 +106,8 @@ public:
             //- Copy constructor
             constantProperties(const constantProperties& cp);
 
-            //- Constructor from dictionary
-            constantProperties
-            (
-                const dictionary& parentDict,
-                const bool readFields = true
-            );
-
-            //- Construct from components
-            constantProperties
-            (
-                const label parcelTypeId,
-                const scalar rhoMin,
-                const scalar rho0,
-                const scalar minParticleMass,
-                const scalar youngsModulus,
-                const scalar poissonsRatio,
-                const scalar T0,
-                const scalar TMin,
-                const scalar TMax,
-                const scalar Cp0,
-                const scalar epsilon0,
-                const scalar f0,
-                const scalar Pr
-            );
+            //- Construct from dictionary
+            constantProperties(const dictionary& parentDict);
 
 
         // Member functions
@@ -141,8 +123,8 @@ public:
                 //- Return const access to maximum temperature [K]
                 inline scalar TMax() const;
 
-                //- Return non-const access to maximum temperature [K]
-                inline scalar& TMax();
+                //- Set the maximum temperature [K]
+                inline void setTMax(const scalar TMax);
 
                 //- Return const access to the particle specific heat capacity
                 //  [J/(kg.K)]
@@ -155,16 +137,12 @@ public:
                 //- Return const access to the particle scattering factor []
                 //  Active for radiation only
                 inline scalar f0() const;
-
-                //- Return const access to the default carrier Prandtl number []
-                inline scalar Pr() const;
     };
 
 
-    template<class CloudType>
-    class TrackingData
+    class trackingData
     :
-        public ParcelType::template TrackingData<CloudType>
+        public ParcelType::trackingData
     {
     private:
 
@@ -176,7 +154,7 @@ public:
 
             //- Local copy of carrier thermal conductivity field
             //  kappa not stored on carrier thermo, but returned as tmp<...>
-//            const volScalarField kappa_;
+            const volScalarField kappa_;
 
 
             // Interpolators for continuous phase fields
@@ -188,25 +166,33 @@ public:
                 autoPtr<interpolation<scalar> > CpInterp_;
 
                 //- Thermal conductivity field interpolator
-//                autoPtr<interpolation<scalar> > kappaInterp_;
+                autoPtr<interpolation<scalar> > kappaInterp_;
 
                 //- Radiation field interpolator
                 autoPtr<interpolation<scalar> > GInterp_;
 
 
+            // Cached continuous phase properties
+
+                //- Temperature [K]
+                scalar Tc_;
+
+                //- Specific heat capacity [J/(kg.K)]
+                scalar Cpc_;
+
+
     public:
 
-        typedef typename ParcelType::template TrackingData<CloudType>::trackPart
-            trackPart;
+        typedef typename ParcelType::trackingData::trackPart trackPart;
 
         // Constructors
 
             //- Construct from components
-            inline TrackingData
+            template <class TrackCloudType>
+            inline trackingData
             (
-                CloudType& cloud,
-                trackPart part = ParcelType::template
-                    TrackingData<CloudType>::tpLinearTrack
+                const TrackCloudType& cloud,
+                trackPart part = ParcelType::trackingData::tpLinearTrack
             );
 
 
@@ -216,7 +202,7 @@ public:
             inline const volScalarField& Cp() const;
 
             //- Return access to the locally stored carrier kappa field
-//            inline const volScalarField& kappa() const;
+            inline const volScalarField& kappa() const;
 
             //- Return const access to the interpolator for continuous
             //  phase temperature field
@@ -228,11 +214,23 @@ public:
 
             //- Return const access to the interpolator for continuous
             //  phase thermal conductivity field
-//            inline const interpolation<scalar>& kappaInterp() const;
+            inline const interpolation<scalar>& kappaInterp() const;
 
             //- Return const access to the interpolator for continuous
             //  radiation field
             inline const interpolation<scalar>& GInterp() const;
+
+            //- Return the continuous phase temperature
+            inline scalar Tc() const;
+
+            //- Access the continuous phase temperature
+            inline scalar& Tc();
+
+            //- Return the continuous phase specific heat capacity
+            inline scalar Cpc() const;
+
+            //- Access the continuous phase specific heat capacity
+            inline scalar& Cpc();
     };
 
 
@@ -249,24 +247,15 @@ protected:
             scalar Cp_;
 
 
-        // Cell-based quantities
-
-            //- Temperature [K]
-            scalar Tc_;
-
-            //- Specific heat capacity [J/(kg.K)]
-            scalar Cpc_;
-
-
     // Protected Member Functions
 
         //- Calculate new particle temperature
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar calcHeatTransfer
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
-            const label cellI,         // owner cell
             const scalar Re,           // Reynolds number
             const scalar Pr,           // Prandtl number - surface
             const scalar kappa,        // Thermal conductivity - surface
@@ -295,25 +284,34 @@ public:
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, coordinates and topology
         //  Other properties initialised as null
         inline ThermoParcel
         (
             const polyMesh& mesh,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
+        );
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline ThermoParcel
+        (
+            const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const label celli
         );
 
         //- Construct from components
         inline ThermoParcel
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const label typeId,
             const scalar nParticle0,
             const scalar d0,
@@ -387,12 +385,6 @@ public:
             //- Return the parcel sensible enthalpy
             inline scalar hs() const;
 
-            //- Return const access to carrier temperature
-            inline scalar Tc() const;
-
-            //- Return const access to carrier specific heat capacity
-            inline scalar Cpc() const;
-
 
         // Edit
 
@@ -406,29 +398,24 @@ public:
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
-            (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
-            );
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Calculate surface thermo properties
-            template<class TrackData>
+            template<class TrackCloudType>
             void calcSurfaceValues
             (
-                TrackData& td,
-                const label cellI,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalar T,
                 scalar& Ts,
                 scalar& rhos,
@@ -438,12 +425,12 @@ public:
             ) const;
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
 
@@ -479,13 +466,12 @@ template<class ParcelType>
 inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties()
 :
     ParcelType::constantProperties(),
-    T0_(0.0),
-    TMin_(0.0),
-    TMax_(VGREAT),
-    Cp0_(0.0),
-    epsilon0_(0.0),
-    f0_(0.0),
-    Pr_(0.0)
+    T0_(this->dict_, 0.0),
+    TMin_(this->dict_, 0.0),
+    TMax_(this->dict_, VGREAT),
+    Cp0_(this->dict_, 0.0),
+    epsilon0_(this->dict_, 0.0),
+    f0_(this->dict_, 0.0)
 {}
 
 
@@ -501,81 +487,23 @@ inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
     TMax_(cp.TMax_),
     Cp0_(cp.Cp0_),
     epsilon0_(cp.epsilon0_),
-    f0_(cp.f0_),
-    Pr_(cp.Pr_)
+    f0_(cp.f0_)
 {}
 
 
 template<class ParcelType>
 inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
 (
-    const dictionary& parentDict,
-    const bool readFields
+    const dictionary& parentDict
 )
 :
-    ParcelType::constantProperties(parentDict, readFields),
-    T0_(0.0),
-    TMin_(200),
-    TMax_(5000),
-    Cp0_(0.0),
-    epsilon0_(0.0),
-    f0_(0.0),
-    Pr_(0.0)
-{
-    if (readFields)
-    {
-        if (this->dict().readIfPresent("TMin", TMin_))
-        {
-            Info<< "    employing parcel TMin of " << TMin_ << endl;
-        }
-        if (this->dict().readIfPresent("TMax", TMax_))
-        {
-            Info<< "    employing parcel TMax of " << TMax_ << endl;
-        }
-
-        this->dict().lookup("T0") >> T0_;
-        this->dict().lookup("Cp0") >> Cp0_;
-        this->dict().lookup("epsilon0") >> epsilon0_;
-        this->dict().lookup("f0") >> f0_;
-        this->dict().lookup("Pr") >> Pr_;
-    }
-}
-
-
-template<class ParcelType>
-inline CML::ThermoParcel<ParcelType>::constantProperties::constantProperties
-(
-    const label parcelTypeId,
-    const scalar rhoMin,
-    const scalar rho0,
-    const scalar minParticleMass,
-    const scalar youngsModulus,
-    const scalar poissonsRatio,
-    const scalar T0,
-    const scalar TMin,
-    const scalar TMax,
-    const scalar Cp0,
-    const scalar epsilon0,
-    const scalar f0,
-    const scalar Pr
-)
-:
-    ParcelType::constantProperties
-    (
-        parcelTypeId,
-        rhoMin,
-        rho0,
-        minParticleMass,
-        youngsModulus,
-        poissonsRatio
-    ),
-    T0_(T0),
-    TMin_(TMin),
-    TMax_(TMax),
-    Cp0_(Cp0),
-    epsilon0_(epsilon0),
-    f0_(f0),
-    Pr_(Pr)
+    ParcelType::constantProperties(parentDict),
+    T0_(this->dict_, "T0"),
+    TMin_(this->dict_, "TMin", 200.0),
+    TMax_(this->dict_, "TMax", 5000.0),
+    Cp0_(this->dict_, "Cp0"),
+    epsilon0_(this->dict_, "epsilon0"),
+    f0_(this->dict_, "f0")
 {}
 
 
@@ -583,17 +511,15 @@ template<class ParcelType>
 inline CML::ThermoParcel<ParcelType>::ThermoParcel
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti
 )
 :
-    ParcelType(mesh, position, cellI, tetFaceI, tetPtI),
+    ParcelType(mesh, coordinates, celli, tetFacei, tetPti),
     T_(0.0),
-    Cp_(0.0),
-    Tc_(0.0),
-    Cpc_(0.0)
+    Cp_(0.0)
 {}
 
 
@@ -602,9 +528,23 @@ inline CML::ThermoParcel<ParcelType>::ThermoParcel
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const label celli
+)
+:
+    ParcelType(mesh, position, celli),
+    T_(0.0),
+    Cp_(0.0)
+{}
+
+
+template<class ParcelType>
+inline CML::ThermoParcel<ParcelType>::ThermoParcel
+(
+    const polyMesh& mesh,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const label typeId,
     const scalar nParticle0,
     const scalar d0,
@@ -619,10 +559,10 @@ inline CML::ThermoParcel<ParcelType>::ThermoParcel
     ParcelType
     (
         mesh,
-        position,
-        cellI,
-        tetFaceI,
-        tetPtI,
+        coordinates,
+        celli,
+        tetFacei,
+        tetPti,
         typeId,
         nParticle0,
         d0,
@@ -634,9 +574,7 @@ inline CML::ThermoParcel<ParcelType>::ThermoParcel
         constProps
     ),
     T_(constProps.T0()),
-    Cp_(constProps.Cp0()),
-    Tc_(0.0),
-    Cpc_(0.0)
+    Cp_(constProps.Cp0())
 {}
 
 
@@ -646,7 +584,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::T0() const
 {
-    return T0_;
+    return T0_.value();
 }
 
 
@@ -654,7 +592,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::TMin() const
 {
-    return TMin_;
+    return TMin_.value();
 }
 
 
@@ -662,15 +600,15 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::TMax() const
 {
-    return TMax_;
+    return TMax_.value();
 }
 
 
 template<class ParcelType>
-inline CML::scalar&
-CML::ThermoParcel<ParcelType>::constantProperties::TMax()
+inline void
+CML::ThermoParcel<ParcelType>::constantProperties::setTMax(const scalar TMax)
 {
-    return TMax_;
+    TMax_.setValue(TMax);
 }
 
 
@@ -678,7 +616,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::Cp0() const
 {
-    return Cp0_;
+    return Cp0_.value();
 }
 
 
@@ -686,7 +624,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::epsilon0() const
 {
-    return epsilon0_;
+    return epsilon0_.value();
 }
 
 
@@ -694,16 +632,9 @@ template<class ParcelType>
 inline CML::scalar
 CML::ThermoParcel<ParcelType>::constantProperties::f0() const
 {
-    return f0_;
+    return f0_.value();
 }
 
-
-template<class ParcelType>
-inline CML::scalar
-CML::ThermoParcel<ParcelType>::constantProperties::Pr() const
-{
-    return Pr_;
-}
 
 // * * * * * * * * * * ThermoParcel Member Functions * * * * * * * * * * * * //
 
@@ -729,20 +660,6 @@ inline CML::scalar CML::ThermoParcel<ParcelType>::hs() const
 
 
 template<class ParcelType>
-inline CML::scalar CML::ThermoParcel<ParcelType>::Tc() const
-{
-    return Tc_;
-}
-
-
-template<class ParcelType>
-inline CML::scalar CML::ThermoParcel<ParcelType>::Cpc() const
-{
-    return Cpc_;
-}
-
-
-template<class ParcelType>
 inline CML::scalar& CML::ThermoParcel<ParcelType>::T()
 {
     return T_;
@@ -759,16 +676,16 @@ inline CML::scalar& CML::ThermoParcel<ParcelType>::Cp()
 // ************************************************************************* //
 
 template<class ParcelType>
-template<class CloudType>
-inline CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TrackingData
+template<class TrackCloudType>
+inline CML::ThermoParcel<ParcelType>::trackingData::trackingData
 (
-    CloudType& cloud,
+    const TrackCloudType& cloud,
     trackPart part
 )
 :
-    ParcelType::template TrackingData<CloudType>(cloud, part),
+    ParcelType::trackingData(cloud, part),
     Cp_(cloud.thermo().thermo().Cp()),
-//    kappa_(cloud.thermo().thermo().kappa()),
+    kappa_(cloud.thermo().thermo().kappa()),
     TInterp_
     (
         interpolation<scalar>::New
@@ -785,15 +702,17 @@ inline CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TrackingData
             Cp_
         )
     ),
-//    kappaInterp_
-//    (
-//        interpolation<scalar>::New
-//        (
-//            cloud.solution().interpolationSchemes(),
-//            kappa_
-//        )
-//    ),
-    GInterp_(NULL)
+    kappaInterp_
+    (
+        interpolation<scalar>::New
+        (
+            cloud.solution().interpolationSchemes(),
+            kappa_
+        )
+    ),
+    GInterp_(nullptr),
+    Tc_(Zero),
+    Cpc_(Zero)
 {
     if (cloud.radiation())
     {
@@ -811,67 +730,85 @@ inline CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TrackingData
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::volScalarField&
-CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::Cp() const
+CML::ThermoParcel<ParcelType>::trackingData::Cp() const
 {
     return Cp_;
 }
 
 
-//template<class ParcelType>
-//template<class CloudType>
-//inline const CML::volScalarField&
-//CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::kappa() const
-//{
-//    return kappa_;
-//}
+template<class ParcelType>
+inline const CML::volScalarField&
+CML::ThermoParcel<ParcelType>::trackingData::kappa() const
+{
+    return kappa_;
+}
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
-CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::TInterp() const
+CML::ThermoParcel<ParcelType>::trackingData::TInterp() const
 {
     return TInterp_();
 }
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
-CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::CpInterp() const
+CML::ThermoParcel<ParcelType>::trackingData::CpInterp() const
 {
     return CpInterp_();
 }
 
 
-//template<class ParcelType>
-//template<class CloudType>
-//inline const CML::interpolation<CML::scalar>&
-//CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::kappaInterp() const
-//{
-//    return kappaInterp_();
-//}
+template<class ParcelType>
+inline const CML::interpolation<CML::scalar>&
+CML::ThermoParcel<ParcelType>::trackingData::kappaInterp() const
+{
+    return kappaInterp_();
+}
 
 
 template<class ParcelType>
-template<class CloudType>
 inline const CML::interpolation<CML::scalar>&
-CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::GInterp() const
+CML::ThermoParcel<ParcelType>::trackingData::GInterp() const
 {
     if (!GInterp_.valid())
     {
-        FatalErrorIn
-        (
-            "inline const CML::interpolation<CML::scalar>&"
-            "CML::ThermoParcel<ParcelType>::TrackingData<CloudType>::"
-            "GInterp() const"
-        )   << "Radiation G interpolation object not set"
+        FatalErrorInFunction
+            << "Radiation G interpolation object not set"
             << abort(FatalError);
     }
 
     return GInterp_();
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::ThermoParcel<ParcelType>::trackingData::Tc() const
+{
+    return Tc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar& CML::ThermoParcel<ParcelType>::trackingData::Tc()
+{
+    return Tc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar CML::ThermoParcel<ParcelType>::trackingData::Cpc() const
+{
+    return Cpc_;
+}
+
+
+template<class ParcelType>
+inline CML::scalar& CML::ThermoParcel<ParcelType>::trackingData::Cpc()
+{
+    return Cpc_;
 }
 
 
@@ -882,84 +819,69 @@ using namespace CML::constant;
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ThermoParcel<ParcelType>::setCellValues
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
-    ParcelType::setCellValues(td, dt, cellI);
+    ParcelType::setCellValues(cloud, td);
 
     tetIndices tetIs = this->currentTetIndices();
 
-    Cpc_ = td.CpInterp().interpolate(this->position(), tetIs);
+    td.Cpc() = td.CpInterp().interpolate(this->coordinates(), tetIs);
 
-    Tc_ = td.TInterp().interpolate(this->position(), tetIs);
+    td.Tc() = td.TInterp().interpolate(this->coordinates(), tetIs);
 
-    if (Tc_ < td.cloud().constProps().TMin())
+    if (td.Tc() < cloud.constProps().TMin())
     {
         if (debug)
         {
-            WarningIn
-            (
-                "void CML::ThermoParcel<ParcelType>::setCellValues"
-                "("
-                    "TrackData&, "
-                    "const scalar, "
-                    "const label"
-                ")"
-            )   << "Limiting observed temperature in cell " << cellI << " to "
-                << td.cloud().constProps().TMin() <<  nl << endl;
+            WarningInFunction
+                << "Limiting observed temperature in cell " << this->cell()
+                << " to " << cloud.constProps().TMin() <<  nl << endl;
         }
 
-        Tc_ = td.cloud().constProps().TMin();
+        td.Tc() = cloud.constProps().TMin();
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ThermoParcel<ParcelType>::cellValueSourceCorrection
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    this->Uc_ += td.cloud().UTrans()[cellI]/this->massCell(cellI);
+    td.Uc() += cloud.UTrans()[this->cell()]/this->massCell(td);
 
-    const scalar CpMean = td.CpInterp().psi()[cellI];
-    Tc_ += td.cloud().hsTrans()[cellI]/(CpMean*this->massCell(cellI));
+    const scalar CpMean = td.CpInterp().psi()[this->cell()];
+    td.Tc() += cloud.hsTrans()[this->cell()]/(CpMean*this->massCell(td));
 
-    if (Tc_ < td.cloud().constProps().TMin())
+    if (td.Tc() < cloud.constProps().TMin())
     {
         if (debug)
         {
-            WarningIn
-            (
-                "void CML::ThermoParcel<ParcelType>::cellValueSourceCorrection"
-                "("
-                    "TrackData&, "
-                    "const scalar, "
-                    "const label"
-                ")"
-            )   << "Limiting observed temperature in cell " << cellI << " to "
-                << td.cloud().constProps().TMin() <<  nl << endl;
+            WarningInFunction
+                << "Limiting observed temperature in cell " << this->cell()
+                << " to " << cloud.constProps().TMin() <<  nl << endl;
         }
 
-        Tc_ = td.cloud().constProps().TMin();
+        td.Tc() = cloud.constProps().TMin();
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ThermoParcel<ParcelType>::calcSurfaceValues
 (
-    TrackData& td,
-    const label cellI,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar T,
     scalar& Ts,
     scalar& rhos,
@@ -969,56 +891,41 @@ void CML::ThermoParcel<ParcelType>::calcSurfaceValues
 ) const
 {
     // Surface temperature using two thirds rule
-    Ts = (2.0*T + Tc_)/3.0;
+    Ts = (2.0*T + td.Tc())/3.0;
 
-    if (Ts < td.cloud().constProps().TMin())
+    if (Ts < cloud.constProps().TMin())
     {
         if (debug)
         {
-            WarningIn
-            (
-                "void CML::ThermoParcel<ParcelType>::calcSurfaceValues"
-                "("
-                    "TrackData&, "
-                    "const label, "
-                    "const scalar, "
-                    "scalar&, "
-                    "scalar&, "
-                    "scalar&, "
-                    "scalar&, "
-                    "scalar&"
-                ") const"
-            )   << "Limiting parcel surface temperature to "
-                << td.cloud().constProps().TMin() <<  nl << endl;
+            WarningInFunction
+                << "Limiting parcel surface temperature to "
+                << cloud.constProps().TMin() <<  nl << endl;
         }
 
-        Ts = td.cloud().constProps().TMin();
+        Ts = cloud.constProps().TMin();
     }
 
     // Assuming thermo props vary linearly with T for small d(T)
-    const scalar TRatio = Tc_/Ts;
+    const scalar TRatio = td.Tc()/Ts;
 
-    rhos = this->rhoc_*TRatio;
+    rhos = td.rhoc()*TRatio;
 
     tetIndices tetIs = this->currentTetIndices();
-    mus = td.muInterp().interpolate(this->position(), tetIs)/TRatio;
-//    kappas = td.kappaInterp().interpolate(this->position(), tetIs)/TRatio;
+    mus = td.muInterp().interpolate(this->coordinates(), tetIs)/TRatio;
+    kappas = td.kappaInterp().interpolate(this->coordinates(), tetIs)/TRatio;
 
-    Pr = td.cloud().constProps().Pr();
+    Pr = td.Cpc()*mus/kappas;
     Pr = max(ROOTVSMALL, Pr);
-
-    kappas = Cpc_*mus/Pr;
-    kappas = max(ROOTVSMALL, kappas);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ThermoParcel<ParcelType>::calc
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
     // Define local properties at beginning of time step
@@ -1026,27 +933,30 @@ void CML::ThermoParcel<ParcelType>::calc
     const scalar np0 = this->nParticle_;
     const scalar mass0 = this->mass();
 
+    // Store T for consistent radiation source
+    const scalar T0 = this->T_;
+
 
     // Calc surface values
     // ~~~~~~~~~~~~~~~~~~~
     scalar Ts, rhos, mus, Pr, kappas;
-    calcSurfaceValues(td, cellI, this->T_, Ts, rhos, mus, Pr, kappas);
+    calcSurfaceValues(cloud, td, this->T_, Ts, rhos, mus, Pr, kappas);
 
     // Reynolds number
-    scalar Re = this->Re(this->U_, this->d_, rhos, mus);
+    scalar Re = this->Re(rhos, this->U_, td.Uc(), this->d_, mus);
 
 
     // Sources
     // ~~~~~~~
 
     // Explicit momentum source for particle
-    vector Su = vector::zero;
+    vector Su = Zero;
 
     // Linearised momentum source coefficient
     scalar Spu = 0.0;
 
     // Momentum transfer from the particle to the carrier phase
-    vector dUTrans = vector::zero;
+    vector dUTrans = Zero;
 
     // Explicit enthalpy source for particle
     scalar Sh = 0.0;
@@ -1068,9 +978,9 @@ void CML::ThermoParcel<ParcelType>::calc
     this->T_ =
         this->calcHeatTransfer
         (
+            cloud,
             td,
             dt,
-            cellI,
             Re,
             Pr,
             kappas,
@@ -1086,45 +996,45 @@ void CML::ThermoParcel<ParcelType>::calc
 
     // Calculate new particle velocity
     this->U_ =
-        this->calcVelocity(td, dt, cellI, Re, mus, mass0, Su, dUTrans, Spu);
+        this->calcVelocity(cloud, td, dt, Re, mus, mass0, Su, dUTrans, Spu);
 
 
     //  Accumulate carrier phase source terms
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (td.cloud().solution().coupled())
+    if (cloud.solution().coupled())
     {
         // Update momentum transfer
-        td.cloud().UTrans()[cellI] += np0*dUTrans;
+        cloud.UTrans()[this->cell()] += np0*dUTrans;
 
         // Update momentum transfer coefficient
-        td.cloud().UCoeff()[cellI] += np0*Spu;
+        cloud.UCoeff()[this->cell()] += np0*Spu;
 
         // Update sensible enthalpy transfer
-        td.cloud().hsTrans()[cellI] += np0*dhsTrans;
+        cloud.hsTrans()[this->cell()] += np0*dhsTrans;
 
         // Update sensible enthalpy coefficient
-        td.cloud().hsCoeff()[cellI] += np0*Sph;
+        cloud.hsCoeff()[this->cell()] += np0*Sph;
 
         // Update radiation fields
-        if (td.cloud().radiation())
+        if (cloud.radiation())
         {
             const scalar ap = this->areaP();
-            const scalar T4 = pow4(this->T_);
-            td.cloud().radAreaP()[cellI] += dt*np0*ap;
-            td.cloud().radT4()[cellI] += dt*np0*T4;
-            td.cloud().radAreaPT4()[cellI] += dt*np0*ap*T4;
+            const scalar T4 = pow4(T0);
+            cloud.radAreaP()[this->cell()] += dt*np0*ap;
+            cloud.radT4()[this->cell()] += dt*np0*T4;
+            cloud.radAreaPT4()[this->cell()] += dt*np0*ap*T4;
         }
     }
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 CML::scalar CML::ThermoParcel<ParcelType>::calcHeatTransfer
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar dt,
-    const label cellI,
     const scalar Re,
     const scalar Pr,
     const scalar kappa,
@@ -1134,62 +1044,47 @@ CML::scalar CML::ThermoParcel<ParcelType>::calcHeatTransfer
     scalar& Sph
 )
 {
-    if (!td.cloud().heatTransfer().active())
+    if (!cloud.heatTransfer().active())
     {
         return T_;
     }
 
     const scalar d = this->d();
     const scalar rho = this->rho();
+    const scalar As = this->areaS(d);
+    const scalar V = this->volume(d);
+    const scalar m = rho*V;
 
     // Calc heat transfer coefficient
-    scalar htc = td.cloud().heatTransfer().htc(d, Re, Pr, kappa, NCpW);
+    scalar htc = cloud.heatTransfer().htc(d, Re, Pr, kappa, NCpW);
 
-    if (mag(htc) < ROOTVSMALL && !td.cloud().radiation())
+    // Calculate the integration coefficients
+    const scalar bcp = htc*As/(m*Cp_);
+    const scalar acp = bcp*td.Tc();
+    scalar ancp = Sh;
+    if (cloud.radiation())
     {
-        return
-            max
-            (
-                T_ + dt*Sh/(this->volume(d)*rho*Cp_),
-                td.cloud().constProps().TMin()
-            );
-    }
-
-    htc = max(htc, ROOTVSMALL);
-    const scalar As = this->areaS(d);
-
-    scalar ap = Tc_ + Sh/As/htc;
-    scalar bp = 6.0*(Sh/As + htc*(Tc_ - T_));
-    if (td.cloud().radiation())
-    {
-        tetIndices tetIs = this->currentTetIndices();
-        const scalar Gc = td.GInterp().interpolate(this->position(), tetIs);
+        const tetIndices tetIs = this->currentTetIndices();
+        const scalar Gc = td.GInterp().interpolate(this->coordinates(), tetIs);
         const scalar sigma = physicoChemical::sigma.value();
-        const scalar epsilon = td.cloud().constProps().epsilon0();
+        const scalar epsilon = cloud.constProps().epsilon0();
 
-        ap = (ap + epsilon*Gc/(4.0*htc))/(1.0 + epsilon*sigma*pow3(T_)/htc);
-        bp += 6.0*(epsilon*(Gc/4.0 - sigma*pow4(T_)));
+        ancp += As*epsilon*(Gc/4.0 - sigma*pow4(T_));
     }
-    bp /= rho*d*Cp_*(ap - T_) + ROOTVSMALL;
+    ancp /= m*Cp_;
 
     // Integrate to find the new parcel temperature
-    IntegrationScheme<scalar>::integrationResult Tres =
-        td.cloud().TIntegrator().integrate(T_, dt, ap*bp, bp);
+    const scalar deltaT = cloud.TIntegrator().delta(T_, dt, acp + ancp, bcp);
+    const scalar deltaTncp = ancp*dt;
+    const scalar deltaTcp = deltaT - deltaTncp;
 
-    scalar Tnew =
-        min
-        (
-            max
-            (
-                Tres.value(),
-                td.cloud().constProps().TMin()
-            ),
-            td.cloud().constProps().TMax()
-        );
+    // Calculate the new temperature and the enthalpy transfer terms
+    scalar Tnew = T_ + deltaT;
+    Tnew = min(max(Tnew, cloud.constProps().TMin()), cloud.constProps().TMax());
 
-    Sph = dt*htc*As;
+    dhsTrans -= m*Cp_*deltaTcp;
 
-    dhsTrans += Sph*(Tres.average() - Tc_);
+    Sph = dt*m*Cp_*bcp;
 
     return Tnew;
 }
@@ -1205,9 +1100,7 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 :
     ParcelType(p),
     T_(p.T_),
-    Cp_(p.Cp_),
-    Tc_(p.Tc_),
-    Cpc_(p.Cpc_)
+    Cp_(p.Cp_)
 {}
 
 
@@ -1220,9 +1113,7 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 :
     ParcelType(p, mesh),
     T_(p.T_),
-    Cp_(p.Cp_),
-    Tc_(p.Tc_),
-    Cpc_(p.Cpc_)
+    Cp_(p.Cp_)
 {}
 
 
@@ -1232,6 +1123,13 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 template<class ParcelType>
 CML::string CML::ThermoParcel<ParcelType>::propertyList_ =
     CML::ThermoParcel<ParcelType>::propertyList();
+
+template<class ParcelType>
+const std::size_t CML::ThermoParcel<ParcelType>::sizeofFields_
+(
+    sizeof(ThermoParcel<ParcelType>)
+  - offsetof(ThermoParcel<ParcelType>, T_)
+);
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -1246,9 +1144,7 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
 :
     ParcelType(mesh, is, readFields),
     T_(0.0),
-    Cp_(0.0),
-    Tc_(0.0),
-    Cpc_(0.0)
+    Cp_(0.0)
 {
     if (readFields)
     {
@@ -1259,16 +1155,11 @@ CML::ThermoParcel<ParcelType>::ThermoParcel
         }
         else
         {
-            label size = reinterpret_cast<const char*>(&Cp_) - reinterpret_cast<const char*>(&T_) + sizeof(Cp_);
-            is.read(reinterpret_cast<char*>(&T_), size);
+            is.read(reinterpret_cast<char*>(&T_), sizeofFields_);
         }
     }
 
-    // Check state of Istream
-    is.check
-    (
-        "ThermoParcel::ThermoParcel(const polyMesh&, Istream&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -1346,17 +1237,14 @@ CML::Ostream& CML::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-
-        label size = reinterpret_cast<const char*>(&p.Cp_) - reinterpret_cast<const char*>(&p.T_) + sizeof(p.Cp_);
-        os.write(reinterpret_cast<const char*>(&p.T_), size);
+        os.write
+        (
+            reinterpret_cast<const char*>(&p.T_),
+            ThermoParcel<ParcelType>::sizeofFields_
+        );
     }
 
-    // Check state of Ostream
-    os.check
-    (
-        "Ostream& operator<<(Ostream&, const ThermoParcel<ParcelType>&)"
-    );
-
+    os.check(FUNCTION_NAME);
     return os;
 }
 

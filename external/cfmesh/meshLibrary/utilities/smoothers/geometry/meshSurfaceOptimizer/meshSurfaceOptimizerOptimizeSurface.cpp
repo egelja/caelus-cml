@@ -360,7 +360,7 @@ bool meshSurfaceOptimizer::untangleSurface
 
     meshSurfaceEngineModifier surfaceModifier(surfaceEngine_);
 
-    meshSurfaceMapper* mapperPtr = NULL;
+    meshSurfaceMapper* mapperPtr = nullptr;
     if( octreePtr_ )
         mapperPtr = new meshSurfaceMapper(*partitionerPtr_, *octreePtr_);
 
@@ -587,7 +587,7 @@ void meshSurfaceOptimizer::optimizeSurface(const label nIterations)
     surfaceEngine_.pointNormals();
     surfaceEngine_.boundaryPointEdges();
 
-    meshSurfaceMapper* mapperPtr = NULL;
+    meshSurfaceMapper* mapperPtr = nullptr;
     if( octreePtr_ )
         mapperPtr = new meshSurfaceMapper(*partitionerPtr_, *octreePtr_);
 
@@ -697,7 +697,7 @@ void meshSurfaceOptimizer::optimizeSurface2D(const label nIterations)
         }
     }
 
-    meshSurfaceMapper2D* mapperPtr = NULL;
+    meshSurfaceMapper2D* mapperPtr = nullptr;
     if( octreePtr_ )
         mapperPtr = new meshSurfaceMapper2D(surfaceEngine_, *octreePtr_);
 

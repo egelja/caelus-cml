@@ -52,11 +52,8 @@ CML::procLduInterface::procLduInterface
     }
     else
     {
-        FatalErrorIn
-        (
-            "procLduInterface::procLduInterface"
-            "(const lduInterfaceField&, const scalarField&"
-        )   << "Unknown lduInterface type "
+        FatalErrorInFunction
+            << "Unknown lduInterface type "
             << interface.interface().type()
             << exit(FatalError);
     }

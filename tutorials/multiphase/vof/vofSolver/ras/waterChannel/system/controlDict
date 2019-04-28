@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -54,7 +54,7 @@ functions
     {
         type            faceSource;
         functionObjectLibs ("libfieldFunctionObjects.so");
-        outputControl   timeStep;
+        writeControl   timeStep;
         log             true;
         // Output field values as well
         valueOutput     false;

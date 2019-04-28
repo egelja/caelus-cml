@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -308,13 +308,8 @@ CML::advectiveFvPatchField<Type>::advectiveFvPatchField
 
         if (lInf_ < 0.0)
         {
-            FatalIOErrorIn
-            (
-                "advectiveFvPatchField<Type>::"
-                "advectiveFvPatchField"
-                "(const fvPatch&, const Field<Type>&, const dictionary&)",
-                dict
-            )   << "unphysical lInf specified (lInf < 0)\n"
+            FatalIOErrorInFunction(dict)
+                << "unphysical lInf specified (lInf < 0)\n"
                 << "    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()
                 << " in file " << this->dimensionedInternalField().objectPath()
@@ -475,10 +470,8 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
         }
         else
         {
-            FatalErrorIn
-            (
-                "advectiveFvPatchField<Type>::updateCoeffs()"
-            )   << "    Unsupported temporal differencing scheme : "
+            FatalErrorInFunction
+                << "    Unsupported temporal differencing scheme : "
                 << ddtScheme
                 << "\n    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()
@@ -528,10 +521,8 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
         }
         else
         {
-            FatalErrorIn
-            (
-                "advectiveFvPatchField<Type>::updateCoeffs()"
-            )   << "    Unsupported temporal differencing scheme : "
+            FatalErrorInFunction
+                << "    Unsupported temporal differencing scheme : "
                 << ddtScheme
                 << "\n    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()

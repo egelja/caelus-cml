@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -69,7 +69,7 @@ void CML::fvMesh::clearGeomNotOldVol()
     slicedVolScalarField::DimensionedInternalField* VPtr =
         static_cast<slicedVolScalarField::DimensionedInternalField*>(VPtr_);
     deleteDemandDrivenData(VPtr);
-    VPtr_ = NULL;
+    VPtr_ = nullptr;
 
     deleteDemandDrivenData(SfPtr_);
     deleteDemandDrivenData(magSfPtr_);
@@ -82,13 +82,13 @@ void CML::fvMesh::clearGeomNotOldVol()
 
 void CML::fvMesh::updateGeomNotOldVol()
 {
-    bool haveV = (VPtr_ != NULL);
-    bool haveSf = (SfPtr_ != NULL);
-    bool haveMagSf = (magSfPtr_ != NULL);
-    bool haveCP = (CPtr_ != NULL);
-    bool haveCPg = (CgPtr_ != NULL);
-    bool haveDefectCorrVec = (defectCorrVecsPtr_ != NULL);
-    bool haveCf = (CfPtr_ != NULL);
+    bool haveV = (VPtr_ != nullptr);
+    bool haveSf = (SfPtr_ != nullptr);
+    bool haveMagSf = (magSfPtr_ != nullptr);
+    bool haveCP = (CPtr_ != nullptr);
+    bool haveCPg = (CgPtr_ != nullptr);
+    bool haveDefectCorrVec = (defectCorrVecsPtr_ != nullptr);
+    bool haveCf = (CfPtr_ != nullptr);
 
     clearGeomNotOldVol();
 
@@ -185,7 +185,7 @@ void CML::fvMesh::clearOut()
 const CML::scalarField CML::fvMesh::patchWeights(const fvPatch& patch) const
 {
    if (!isA<wallFvPatch>(patch))
-      FatalErrorIn("fvMesh::patchWeight(const fvPatch&) const")
+      FatalErrorInFunction
          << "patch: " << patch.name() << " is not a wall patch"
          << abort(FatalError);
 
@@ -205,18 +205,18 @@ CML::fvMesh::fvMesh(const IOobject& io, const bool defectCorr, const scalar area
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CgPtr_(NULL),
-    defectCorrVecsPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CgPtr_(nullptr),
+    defectCorrVecsPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -322,18 +322,18 @@ CML::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CgPtr_(NULL),
-    defectCorrVecsPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CgPtr_(nullptr),
+    defectCorrVecsPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -360,18 +360,18 @@ CML::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CgPtr_(NULL),
-    defectCorrVecsPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CgPtr_(nullptr),
+    defectCorrVecsPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -397,18 +397,18 @@ CML::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CgPtr_(NULL),
-    defectCorrVecsPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CgPtr_(nullptr),
+    defectCorrVecsPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -435,10 +435,8 @@ void CML::fvMesh::addFvPatches
 {
     if (boundary().size())
     {
-        FatalErrorIn
-        (
-            "fvMesh::addFvPatches(const List<polyPatch*>&, const bool)"
-        )   << " boundary already exists"
+        FatalErrorInFunction
+            << " boundary already exists"
             << abort(FatalError);
     }
 

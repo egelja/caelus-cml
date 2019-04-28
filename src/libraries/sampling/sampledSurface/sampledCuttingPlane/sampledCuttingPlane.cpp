@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -264,10 +264,10 @@ CML::sampledCuttingPlane::sampledCuttingPlane
     zoneID_(dict.lookupOrDefault("zone", word::null), mesh.cellZones()),
     exposedPatchName_(word::null),
     needsUpdate_(true),
-    subMeshPtr_(NULL),
-    cellDistancePtr_(NULL),
-    isoSurfPtr_(NULL),
-    facesPtr_(NULL)
+    subMeshPtr_(nullptr),
+    cellDistancePtr_(nullptr),
+    isoSurfPtr_(nullptr),
+    facesPtr_(nullptr)
 {
     if (zoneID_.index() != -1)
     {
@@ -275,11 +275,8 @@ CML::sampledCuttingPlane::sampledCuttingPlane
 
         if (mesh.boundaryMesh().findPatchID(exposedPatchName_) == -1)
         {
-            FatalErrorIn
-            (
-                "sampledCuttingPlane::sampledCuttingPlane"
-                "(const word&, const polyMesh&, const dictionary&)"
-            )   << "Cannot find patch " << exposedPatchName_
+            FatalErrorInFunction
+                << "Cannot find patch " << exposedPatchName_
                 << " in which to put exposed faces." << endl
                 << "Valid patches are " << mesh.boundaryMesh().names()
                 << exit(FatalError);

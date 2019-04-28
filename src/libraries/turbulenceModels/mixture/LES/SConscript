@@ -1,0 +1,39 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'mixtureLESModels'
+
+sources = Split("""
+mxLESdelta/mxLESdelta.cpp
+vanDriestDelta/mxvanDriestDelta.cpp
+LESModel/mxLESModel.cpp
+GenEddyVisc/mxGenEddyVisc.cpp
+GenSGSStress/mxGenSGSStress.cpp
+laminar/mxLESLaminar.cpp
+Smagorinsky/mxSmagorinsky.cpp
+oneEqEddy/mxOneEqEddy.cpp
+derivedFvPatchFields/wallFunctions/muSgsWFs/muSgsUSpaldingWF/mxmuSgsUSpaldingWFFvPatchScalarField.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels',
+'transportModels/incompressible/lnInclude',
+'turbulenceModels/LES/LESdeltas/lnInclude',
+'turbulenceModels/LES/LESfilters/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'incompressibleTransportModels',
+'mixtureTurbulenceModel',
+'LESfilters',
+'LESdeltas'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

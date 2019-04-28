@@ -188,7 +188,7 @@ void cartesianMeshGenerator::optimiseFinalMesh()
 
     optimizer.optimizeMeshFV();
     optimizer.optimizeLowQualityFaces();
-    optimizer.optimizeBoundaryLayer(modSurfacePtr_==NULL);
+    optimizer.optimizeBoundaryLayer(modSurfacePtr_==nullptr);
     optimizer.untangleMeshFV();
 
     mesh_.clearAddressingData();
@@ -313,8 +313,8 @@ void cartesianMeshGenerator::generateMesh()
 cartesianMeshGenerator::cartesianMeshGenerator(const Time& time)
 :
     db_(time),
-    surfacePtr_(NULL),
-    modSurfacePtr_(NULL),
+    surfacePtr_(nullptr),
+    modSurfacePtr_(nullptr),
     meshDict_
     (
         IOobject
@@ -326,7 +326,7 @@ cartesianMeshGenerator::cartesianMeshGenerator(const Time& time)
             IOobject::NO_WRITE
         )
     ),
-    octreePtr_(NULL),
+    octreePtr_(nullptr),
     mesh_(time),
     controller_(mesh_)
 {

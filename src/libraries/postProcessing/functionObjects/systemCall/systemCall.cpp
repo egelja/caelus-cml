@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
  License
  
@@ -67,7 +67,7 @@ void CML::systemCall::read(const dictionary& dict)
 
     if (executeCalls_.empty() && endCalls_.empty() && writeCalls_.empty())
     {
-        WarningIn("CML::system::read(const dictionary&)")
+        WarningInFunction
             << "no executeCalls, endCalls or writeCalls defined."
             << endl;
     }

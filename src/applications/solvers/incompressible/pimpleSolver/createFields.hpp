@@ -42,3 +42,5 @@ autoPtr<incompressible::turbulenceModel> turbulence
 (
     incompressible::turbulenceModel::New(U, phi, laminarTransport)
 );
+
+mesh.setFluxRequired(p.name());

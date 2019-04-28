@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -85,11 +85,8 @@ addToRunTimeSelectionTable(searchableSurface, triSurfaceMesh, dict);
 //        return runTime.constant();
 //    }
 //
-//    FatalErrorIn
-//    (
-//        "searchableSurfaces::findRawInstance"
-//        "(const Time&, const fileName&, const word&)"
-//    )   << "Cannot find file \"" << name << "\" in directory "
+//    FatalErrorInFunction
+//        << "Cannot find file \"" << name << "\" in directory "
 //        << runTime.constant()/dir
 //        << exit(FatalError);
 //
@@ -106,10 +103,8 @@ const CML::fileName& CML::triSurfaceMesh::checkFile
 {
     if (fName.empty())
     {
-        FatalErrorIn
-        (
-            "triSurfaceMesh::checkFile(const fileName&, const fileName&)"
-        )   << "Cannot find triSurfaceMesh starting from "
+        FatalErrorInFunction
+            << "Cannot find triSurfaceMesh starting from "
             << objectName << exit(FatalError);
     }
     return fName;
@@ -153,15 +148,15 @@ bool CML::triSurfaceMesh::isSurfaceClosed() const
     // To prevent doing work twice per edge only look at edges to higher
     // point
     EdgeMap<label> facesPerEdge(100);
-    forAll(pointFaces, pointI)
+    forAll(pointFaces, pointi)
     {
-        const labelList& pFaces = pointFaces[pointI];
+        const labelList& pFaces = pointFaces[pointi];
 
         facesPerEdge.clear();
         forAll(pFaces, i)
         {
             const triSurface::FaceType& f = triSurface::operator[](pFaces[i]);
-            label fp = findIndex(f, pointI);
+            label fp = findIndex(f, pointi);
 
             // Something weird: if I expand the code of addFaceToEdge in both
             // below instances it gives a segmentation violation on some
@@ -169,13 +164,13 @@ bool CML::triSurfaceMesh::isSurfaceClosed() const
 
 
             // Forward edge
-            label nextPointI = f[f.fcIndex(fp)];
+            label nextPointi = f[f.fcIndex(fp)];
 
-            if (nextPointI > pointI)
+            if (nextPointi > pointi)
             {
                 bool okFace = addFaceToEdge
                 (
-                    edge(pointI, nextPointI),
+                    edge(pointi, nextPointi),
                     facesPerEdge
                 );
 
@@ -185,13 +180,13 @@ bool CML::triSurfaceMesh::isSurfaceClosed() const
                 }
             }
             // Reverse edge
-            label prevPointI = f[f.rcIndex(fp)];
+            label prevPointi = f[f.rcIndex(fp)];
 
-            if (prevPointI > pointI)
+            if (prevPointi > pointi)
             {
                 bool okFace = addFaceToEdge
                 (
-                    edge(pointI, prevPointI),
+                    edge(pointi, prevPointi),
                     facesPerEdge
                 );
 
@@ -340,7 +335,7 @@ CML::triSurfaceMesh::triSurfaceMesh
 {
     scalar scaleFactor = 0;
 
-    // allow rescaling of the surface points
+    // Allow rescaling of the surface points
     // eg, CAD geometries are often done in millimeters
     if (dict.readIfPresent("scale", scaleFactor) && scaleFactor > 0)
     {
@@ -361,7 +356,6 @@ CML::triSurfaceMesh::triSurfaceMesh
             << minQuality_ << " for normals calculation." << endl;
     }
 }
-
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -409,14 +403,14 @@ void CML::triSurfaceMesh::boundingSpheres
 
     const pointField& pts = triSurface::points();
 
-    forAll(*this, faceI)
+    forAll(*this, facei)
     {
-        const labelledTri& f = triSurface::operator[](faceI);
-        const point& fc = centres[faceI];
+        const labelledTri& f = triSurface::operator[](facei);
+        const point& fc = centres[facei];
         forAll(f, fp)
         {
             const point& pt = pts[f[fp]];
-            radiusSqr[faceI] = max(radiusSqr[faceI], CML::magSqr(fc-pt));
+            radiusSqr[facei] = max(radiusSqr[facei], CML::magSqr(fc-pt));
         }
     }
 
@@ -477,15 +471,9 @@ CML::triSurfaceMesh::edgeTree() const
                 nPoints
             );
 
-            // Random number generator. Bit dodgy since not exactly random ;-)
-            Random rndGen(65431);
-
             // Slightly extended bb. Slightly off-centred just so on symmetric
             // geometry there are less face/edge aligned items.
-
-            bb = bb.extend(rndGen, 1e-4);
-            bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-            bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            bb = bb.extend(1e-4);
         }
 
         scalar oldTol = indexedOctree<treeDataEdge>::perturbTol();
@@ -503,7 +491,7 @@ CML::triSurfaceMesh::edgeTree() const
                     bEdges          // selected edges
                 ),
                 bb,                 // bb
-                maxTreeDepth(),      // maxLevel
+                maxTreeDepth(),     // maxLevel
                 10,                 // leafsize
                 3.0                 // duplicity
             )
@@ -653,15 +641,15 @@ void CML::triSurfaceMesh::getNormal
         {
             if (info[i].hit())
             {
-                label faceI = info[i].index();
-                normal[i] = s[faceI].normal(pts);
+                label facei = info[i].index();
+                normal[i] = s[facei].area(pts);
 
-                scalar qual = s[faceI].tri(pts).quality();
+                scalar qual = s[facei].tri(pts).quality();
 
                 if (qual < minQuality_)
                 {
                     // Search neighbouring triangles
-                    const labelList& fFaces = faceFaces[faceI];
+                    const labelList& fFaces = faceFaces[facei];
 
                     forAll(fFaces, j)
                     {
@@ -670,7 +658,7 @@ void CML::triSurfaceMesh::getNormal
                         if (nbrQual > qual)
                         {
                             qual = nbrQual;
-                            normal[i] = s[nbrI].normal(pts);
+                            normal[i] = s[nbrI].area(pts);
                         }
                     }
                 }
@@ -690,13 +678,12 @@ void CML::triSurfaceMesh::getNormal
         {
             if (info[i].hit())
             {
-                label faceI = info[i].index();
-                //- Cached:
-                //normal[i] = faceNormals()[faceI];
+                label facei = info[i].index();
+                // Cached:
+                //normal[i] = faceNormals()[facei];
 
-                //- Uncached
-                normal[i] = s[faceI].normal(pts);
-                normal[i] /= mag(normal[i]) + VSMALL;
+                // Uncached
+                normal[i] = s[facei].normal(pts);
             }
             else
             {
@@ -771,23 +758,20 @@ void CML::triSurfaceMesh::getVolumeType
     scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
     indexedOctree<treeDataTriSurface>::perturbTol() = tolerance();
 
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        const point& pt = points[pointI];
+        const point& pt = points[pointi];
 
         if (!tree().bb().contains(pt))
         {
             // Have to calculate directly as outside the octree
-            volType[pointI] = tree().shapes().getVolumeType(tree(), pt);
+            volType[pointi] = tree().shapes().getVolumeType(tree(), pt);
         }
         else
         {
             // - use cached volume type per each tree node
-            volType[pointI] = tree().getVolumeType(pt);
+            volType[pointi] = tree().getVolumeType(pt);
         }
-
-//        Info<< "octree : " << pt << " = "
-//            << volumeType::names[volType[pointI]] << endl;
     }
 
     indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
@@ -816,7 +800,6 @@ bool CML::triSurfaceMesh::writeObject
         return false;
     }
 
-    //return objectRegistry::writeObject(fmt, ver, cmp);
     return true;
 }
 

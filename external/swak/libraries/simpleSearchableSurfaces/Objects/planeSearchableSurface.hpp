@@ -202,7 +202,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("planeSearchableSurface::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

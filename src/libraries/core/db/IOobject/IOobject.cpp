@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -63,16 +63,7 @@ bool CML::IOobject::fileNameComponents
     // called with directory
     if (isDir(path))
     {
-        WarningIn
-        (
-            "IOobject::fileNameComponents"
-            "("
-                "const fileName&, "
-                "fileName&, "
-                "fileName&, "
-                "word&"
-            ")"
-        )
+        WarningInFunction
             << " called with directory: " << path << endl;
 
         return false;
@@ -117,16 +108,7 @@ bool CML::IOobject::fileNameComponents
     // check for valid (and stripped) name, regardless of the debug level
     if (name.empty() || string::stripInvalid<word>(name))
     {
-        WarningIn
-        (
-            "IOobject::fileNameComponents"
-            "("
-                "const fileName&, "
-                "fileName&, "
-                "fileName&, "
-                "word&"
-            ")"
-        )
+        WarningInFunction
             << "has invalid word for name: \"" << name
             << "\"\nwhile processing path: " << path << endl;
 
@@ -134,6 +116,36 @@ bool CML::IOobject::fileNameComponents
     }
 
     return true;
+}
+
+
+CML::word CML::IOobject::group(const word& name)
+{
+    word::size_type i = name.find_last_of('.');
+
+    if (i == word::npos || i == 0)
+    {
+        return word::null;
+    }
+    else
+    {
+        return name.substr(i+1, word::npos);
+    }
+}
+
+
+CML::word CML::IOobject::member(const word& name)
+{
+    word::size_type i = name.find_last_of('.');
+
+    if (i == word::npos || i == 0)
+    {
+        return name;
+    }
+    else
+    {
+        return name.substr(0, i);
+    }
 }
 
 
@@ -222,17 +234,7 @@ CML::IOobject::IOobject
 {
     if (!fileNameComponents(path, instance_, local_, name_))
     {
-        FatalErrorIn
-        (
-            "IOobject::IOobject"
-            "("
-                "const fileName&, "
-                "const objectRegistry&, "
-                "readOption, "
-                "writeOption, "
-                "bool"
-            ")"
-        )
+        FatalErrorInFunction
             << " invalid path specification"
             << exit(FatalError);
     }
@@ -269,6 +271,17 @@ const CML::Time& CML::IOobject::time() const
 const CML::fileName& CML::IOobject::caseName() const
 {
     return time().caseName();
+}
+
+CML::word CML::IOobject::group() const
+{
+    return group(name_);
+}
+
+
+CML::word CML::IOobject::member() const
+{
+    return member(name_);
 }
 
 
@@ -436,12 +449,12 @@ CML::Istream* CML::IOobject::objectStream(const fileName& fName)
         else
         {
             delete isPtr;
-            return NULL;
+            return nullptr;
         }
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -472,7 +485,7 @@ bool CML::IOobject::headerOk()
         {
             if (objectRegistry::debug)
             {
-                IOWarningIn("IOobject::headerOk()", (*isPtr))
+                IOWarningInFunction((*isPtr))
                     << "failed to read header of file " << objectPath()
                     << endl;
             }
@@ -491,7 +504,7 @@ void CML::IOobject::setBad(const string& s)
 {
     if (objState_ != GOOD)
     {
-        FatalErrorIn("IOobject::setBad(const string&)")
+        FatalErrorInFunction
             << "recurrent failure for object " << s
             << exit(FatalError);
     }

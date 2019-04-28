@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,10 +25,6 @@ Description
     Templated into a given thermodynamics package (needed for thermal
     conductivity).
 
-SourceFiles
-    constTransportI.hpp
-    constTransport.cpp
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef constTransport_H
@@ -51,23 +47,9 @@ inline constTransport<Thermo> operator+
 );
 
 template<class Thermo>
-inline constTransport<Thermo> operator-
-(
-    const constTransport<Thermo>&,
-    const constTransport<Thermo>&
-);
-
-template<class Thermo>
 inline constTransport<Thermo> operator*
 (
     const scalar,
-    const constTransport<Thermo>&
-);
-
-template<class Thermo>
-inline constTransport<Thermo> operator==
-(
-    const constTransport<Thermo>&,
     const constTransport<Thermo>&
 );
 
@@ -90,110 +72,181 @@ class constTransport
 {
     // Private data
 
-        //- Constant dynamic viscosity [Pa.s]
-        scalar mu_;
+    //- Constant dynamic viscosity [Pa.s]
+    scalar mu_;
 
-        //- Reciprocal Prandtl Number []
-        scalar rPr_;
+    //- Reciprocal Prandtl Number []
+    scalar rPr_;
 
 
     // Private Member Functions
 
-        //- Construct from components
-        inline constTransport
-        (
-            const Thermo& t,
-            const scalar mu,
-            const scalar Pr
-        );
+    //- Construct from components
+    inline constTransport
+    (
+        const Thermo& t,
+        const scalar mu,
+        const scalar Pr
+    )
+    :
+        Thermo(t),
+        mu_(mu),
+        rPr_(1.0/Pr)
+    {}
 
 
 public:
 
-    // Constructors
 
-        //- Construct as named copy
-        inline constTransport(const word&, const constTransport&);
+    //- Construct as named copy
+    inline constTransport(const word& name, const constTransport& ct)
+    :
+        Thermo(name, ct),
+        mu_(ct.mu_),
+        rPr_(ct.rPr_)
+    {}
 
-        //- Construct from Istream
-        constTransport(Istream&);
+    //- Construct from dictionary
+    constTransport(const dictionary& dict);
 
-        //- Construct from dictionary
-        constTransport(const dictionary& dict);
+    //- Construct and return a clone
+    inline autoPtr<constTransport> clone() const
+    {
+        return autoPtr<constTransport<Thermo> >
+        (
+            new constTransport<Thermo>(*this)
+        );
+    }
 
-        //- Construct and return a clone
-        inline autoPtr<constTransport> clone() const;
 
-        // Selector from Istream
-        inline static autoPtr<constTransport> New(Istream& is);
-
-        // Selector from dictionary
-        inline static autoPtr<constTransport> New(const dictionary& dict);
+    // Selector from dictionary
+    inline static autoPtr<constTransport> New(const dictionary& dict)
+    {
+        return autoPtr<constTransport<Thermo> >
+        (
+            new constTransport<Thermo>(dict)
+        );
+    }
 
 
     // Member functions
 
-        //- Dynamic viscosity [kg/ms]
-        inline scalar mu(const scalar T) const;
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "const<" + Thermo::typeName() + '>';
+    }
 
-        //- Thermal conductivity [W/mK]
-        inline scalar kappa(const scalar T) const;
+    //- Dynamic viscosity [kg/ms]
+    inline scalar mu(const scalar p, const scalar T) const
+    {
+        return mu_;
+    }
 
-        //- Thermal diffusivity for enthalpy [kg/ms]
-        inline scalar alpha(const scalar T) const;
+    //- Thermal conductivity [W/mK]
+    inline scalar kappa(const scalar p, const scalar T) const
+    {
+        return this->Cp(p, T)*mu(p, T)*rPr_;
+    }
 
-        // Species diffusivity
-        //inline scalar D(const scalar T) const;
+    //- Thermal diffusivity of enthalpy [kg/ms]
+    inline scalar alphah(const scalar p, const scalar T) const
+    {
+        return mu(p, T)*rPr_;
+    }
 
-        //- Write to Ostream
-        void write(Ostream& os) const;
+    // Species diffusivity
+    // inline scalar D(const scalar p, const scalar T) const;
+
+    //- Write to Ostream
+    void write(Ostream& os) const;
 
 
     // Member operators
+    inline void operator=(const constTransport& ct)
+    {
+        Thermo::operator=(ct);
 
-        inline constTransport& operator=(const constTransport&);
+        mu_ = ct.mu_;
+        rPr_ = ct.rPr_;
+    }
 
-        inline void operator+=(const constTransport&);
+    inline void operator+=(const constTransport& st)
+    {
+        scalar Y1 = this->Y();
 
-        inline void operator-=(const constTransport&);
+        Thermo::operator+=(st);
 
-        inline void operator*=(const scalar);
+        if (mag(this->Y()) > SMALL)
+        {
+            Y1 /= this->Y();
+            scalar Y2 = st.Y()/this->Y();
 
+            mu_ = Y1*mu_ + Y2*st.mu_;
+            rPr_ = 1.0/(Y1/rPr_ + Y2/st.rPr_);
+        }
+    }
+
+    inline void operator*=(const scalar s)
+    {
+        Thermo::operator*=(s);
+    }
 
     // Friend operators
-
-        friend constTransport operator+ <Thermo>
+    friend constTransport operator+
+    (
+        const constTransport& ct1,
+        const constTransport& ct2
+    )
+    {
+        Thermo t
         (
-            const constTransport&,
-            const constTransport&
+            static_cast<const Thermo&>(ct1) + static_cast<const Thermo&>(ct2)
         );
 
-        friend constTransport operator- <Thermo>
-        (
-            const constTransport&,
-            const constTransport&
-        );
+        if (mag(t.Y()) < SMALL)
+        {
+            return constTransport<Thermo>
+            (
+                t,
+                0,
+                ct1.rPr_
+            );
+        }
+        else
+        {
+            scalar Y1 = ct1.Y()/t.Y();
+            scalar Y2 = ct2.Y()/t.Y();
 
-        friend constTransport operator* <Thermo>
-        (
-            const scalar,
-            const constTransport&
-        );
+            return constTransport<Thermo>
+            (
+                t,
+                Y1*ct1.mu_ + Y2*ct2.mu_,
+                1.0/(Y1/ct1.rPr_ + Y2/ct2.rPr_)
+            );
+        }
+    }
 
-        friend constTransport operator== <Thermo>
+    friend constTransport operator*
+    (
+        const scalar s,
+        const constTransport& ct
+    )
+    {
+        return constTransport<Thermo>
         (
-            const constTransport&,
-            const constTransport&
+            s*static_cast<const Thermo&>(ct),
+            ct.mu_,
+            1.0/ct.rPr_
         );
-
+    }
 
     // Ostream Operator
-
-        friend Ostream& operator<< <Thermo>
-        (
-            Ostream&,
-            const constTransport&
-        );
+    friend Ostream& operator<< <Thermo>
+    (
+        Ostream&,
+        const constTransport&
+    );
 };
 
 
@@ -201,287 +254,10 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class Thermo>
-inline CML::constTransport<Thermo>::constTransport
-(
-    const Thermo& t,
-    const scalar mu,
-    const scalar Pr
-)
-:
-    Thermo(t),
-    mu_(mu),
-    rPr_(1.0/Pr)
-{}
-
-
-template<class Thermo>
-inline CML::constTransport<Thermo>::constTransport
-(
-    const word& name,
-    const constTransport& ct
-)
-:
-    Thermo(name, ct),
-    mu_(ct.mu_),
-    rPr_(ct.rPr_)
-{}
-
-
-template<class Thermo>
-inline CML::autoPtr<CML::constTransport<Thermo> >
-CML::constTransport<Thermo>::clone() const
-{
-    return autoPtr<constTransport<Thermo> >
-    (
-        new constTransport<Thermo>(*this)
-    );
-}
-
-
-template<class Thermo>
-inline CML::autoPtr<CML::constTransport<Thermo> >
-CML::constTransport<Thermo>::New
-(
-    Istream& is
-)
-{
-    return autoPtr<constTransport<Thermo> >
-    (
-        new constTransport<Thermo>(is)
-    );
-}
-
-
-template<class Thermo>
-inline CML::autoPtr<CML::constTransport<Thermo> >
-CML::constTransport<Thermo>::New
-(
-    const dictionary& dict
-)
-{
-    return autoPtr<constTransport<Thermo> >
-    (
-        new constTransport<Thermo>(dict)
-    );
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class Thermo>
-inline CML::scalar CML::constTransport<Thermo>::mu(const scalar) const
-{
-    return mu_;
-}
-
-
-template<class Thermo>
-inline CML::scalar CML::constTransport<Thermo>::kappa(const scalar T) const
-{
-    return this->Cp(T)*mu(T)*rPr_;
-}
-
-
-template<class Thermo>
-inline CML::scalar CML::constTransport<Thermo>::alpha(const scalar T) const
-{
-    scalar Cp_ = this->Cp(T);
-
-    scalar deltaT = T - specie::Tstd;
-    scalar CpBar =
-        (deltaT*(this->H(T) - this->H(specie::Tstd)) + Cp_)/(sqr(deltaT) + 1);
-
-    return Cp_*mu(T)*rPr_/CpBar;
-}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-template<class Thermo>
-inline CML::constTransport<Thermo>& CML::constTransport<Thermo>::operator=
-(
-    const constTransport<Thermo>& ct
-)
-{
-    Thermo::operator=(ct);
-
-    mu_ = ct.mu_;
-    rPr_ = ct.rPr_;
-
-    return *this;
-}
-
-
-template<class Thermo>
-inline void CML::constTransport<Thermo>::operator+=
-(
-    const constTransport<Thermo>& st
-)
-{
-    scalar molr1 = this->nMoles();
-
-    Thermo::operator+=(st);
-
-    if (mag(molr1) + mag(st.nMoles()) > SMALL)
-    {
-        molr1 /= this->nMoles();
-        scalar molr2 = st.nMoles()/this->nMoles();
-
-        mu_ = molr1*mu_ + molr2*st.mu_;
-        rPr_ = 1.0/(molr1/rPr_ + molr2/st.rPr_);
-    }
-}
-
-
-template<class Thermo>
-inline void CML::constTransport<Thermo>::operator-=
-(
-    const constTransport<Thermo>& st
-)
-{
-    scalar molr1 = this->nMoles();
-
-    Thermo::operator-=(st);
-
-    if (mag(molr1) + mag(st.nMoles()) > SMALL)
-    {
-        molr1 /= this->nMoles();
-        scalar molr2 = st.nMoles()/this->nMoles();
-
-        mu_ = molr1*mu_ - molr2*st.mu_;
-        rPr_ = 1.0/(molr1/rPr_ - molr2/st.rPr_);
-    }
-}
-
-
-template<class Thermo>
-inline void CML::constTransport<Thermo>::operator*=
-(
-    const scalar s
-)
-{
-    Thermo::operator*=(s);
-}
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
-
-template<class Thermo>
-inline CML::constTransport<Thermo> CML::operator+
-(
-    const constTransport<Thermo>& ct1,
-    const constTransport<Thermo>& ct2
-)
-{
-    Thermo t
-    (
-        static_cast<const Thermo&>(ct1) + static_cast<const Thermo&>(ct2)
-    );
-
-    if (mag(ct1.nMoles()) + mag(ct2.nMoles()) < SMALL)
-    {
-        return constTransport<Thermo>
-        (
-            t,
-            0,
-            ct1.rPr_
-        );
-    }
-    else
-    {
-        scalar molr1 = ct1.nMoles()/t.nMoles();
-        scalar molr2 = ct2.nMoles()/t.nMoles();
-
-        return constTransport<Thermo>
-        (
-            t,
-            molr1*ct1.mu_ + molr2*ct2.mu_,
-            1.0/(molr1/ct1.rPr_ + molr2/ct2.rPr_)
-        );
-    }
-}
-
-
-template<class Thermo>
-inline CML::constTransport<Thermo> CML::operator-
-(
-    const constTransport<Thermo>& ct1,
-    const constTransport<Thermo>& ct2
-)
-{
-    Thermo t
-    (
-        static_cast<const Thermo&>(ct1) - static_cast<const Thermo&>(ct2)
-    );
-
-    if (mag(ct1.nMoles()) + mag(ct2.nMoles()) < SMALL)
-    {
-        return constTransport<Thermo>
-        (
-            t,
-            0,
-            ct1.rPr_
-        );
-    }
-    else
-    {
-        scalar molr1 = ct1.nMoles()/t.nMoles();
-        scalar molr2 = ct2.nMoles()/t.nMoles();
-
-        return constTransport<Thermo>
-        (
-            t,
-            molr1*ct1.mu_ - molr2*ct2.mu_,
-            1.0/(molr1/ct1.rPr_ - molr2/ct2.rPr_)
-        );
-    }
-}
-
-
-template<class Thermo>
-inline CML::constTransport<Thermo> CML::operator*
-(
-    const scalar s,
-    const constTransport<Thermo>& ct
-)
-{
-    return constTransport<Thermo>
-    (
-        s*static_cast<const Thermo&>(ct),
-        ct.mu_,
-        1.0/ct.rPr_
-    );
-}
-
-
-template<class Thermo>
-inline CML::constTransport<Thermo> CML::operator==
-(
-    const constTransport<Thermo>& ct1,
-    const constTransport<Thermo>& ct2
-)
-{
-    return ct2 - ct1;
-}
-
 
 #include "IOstreams.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class Thermo>
-CML::constTransport<Thermo>::constTransport(Istream& is)
-:
-    Thermo(is),
-    mu_(readScalar(is)),
-    rPr_(1.0/readScalar(is))
-{
-    is.check("constTransport::constTransport(Istream& is)");
-}
-
 
 template<class Thermo>
 CML::constTransport<Thermo>::constTransport(const dictionary& dict)
@@ -516,17 +292,10 @@ void CML::constTransport<Thermo>::write(Ostream& os) const
 template<class Thermo>
 CML::Ostream& CML::operator<<(Ostream& os, const constTransport<Thermo>& ct)
 {
-    operator<<(os, static_cast<const Thermo&>(ct));
-    os << tab << ct.mu_ << tab << 1.0/ct.rPr_;
-
-    os.check("Ostream& operator<<(Ostream&, const constTransport&)");
-
+    ct.write(os);
     return os;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
 
-// ************************************************************************* //

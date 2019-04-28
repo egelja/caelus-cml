@@ -60,11 +60,8 @@ objectRefinement::objectRefinement
 
         if( cellSize_ < 0.0 )
         {
-            FatalErrorIn
-            (
-                "objectRefinement::objectRefinement"
-                "(const word&, const dictionary&)"
-            ) << "Specified cell size for object " << name_
+            FatalErrorInFunction
+              << "Specified cell size for object " << name_
               << " is negative" << exit(FatalError);
         }
     }
@@ -75,11 +72,8 @@ objectRefinement::objectRefinement
 
         if( additionalRefLevel_ < 0 )
         {
-            FatalErrorIn
-            (
-                "objectRefinement::objectRefinement"
-                "(const word&, const dictionary&)"
-            ) << "Specified additionalRefinementLevel for object " << name_
+            FatalErrorInFunction
+              << "Specified additionalRefinementLevel for object " << name_
               << " is negative" << exit(FatalError);
         }
     }

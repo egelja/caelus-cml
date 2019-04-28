@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,7 +65,7 @@ void CML::regExp::set(const char* pattern, const bool ignoreCase) const
 {
     clear();
 
-    // avoid NULL pointer and zero-length patterns
+    // avoid nullptr pointer and zero-length patterns
     if (pattern && *pattern)
     {
         preg_ = new regex_t;
@@ -83,10 +83,8 @@ void CML::regExp::set(const char* pattern, const bool ignoreCase) const
             char errbuf[200];
             regerror(err, preg_, errbuf, sizeof(errbuf));
 
-            FatalErrorIn
-            (
-                "regExp::set(const char*)"
-            )   << "Failed to compile regular expression '" << pattern << "'"
+            FatalErrorInFunction
+                << "Failed to compile regular expression '" << pattern << "'"
                 << nl << errbuf
                 << exit(FatalError);
         }

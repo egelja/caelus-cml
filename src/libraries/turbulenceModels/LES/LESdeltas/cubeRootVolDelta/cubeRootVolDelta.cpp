@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,7 +45,7 @@ void cubeRootVolDelta::calcDelta()
     }
     else if (nD == 2)
     {
-        WarningIn("cubeRootVolDelta::calcDelta()")
+        WarningInFunction
             << "Case is 2D, LES is not strictly applicable\n"
             << endl;
 
@@ -65,7 +65,7 @@ void cubeRootVolDelta::calcDelta()
     }
     else
     {
-        FatalErrorIn("cubeRootVolDelta::calcDelta()")
+        FatalErrorInFunction
             << "Case is not 3D or 2D, LES is not applicable"
             << exit(FatalError);
     }

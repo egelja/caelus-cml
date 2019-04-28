@@ -54,6 +54,9 @@ public:
 
     // Constructors
 
+        //- Null constructor.
+        DiagonalMatrix<Type>();
+
         //- Construct from diagonal component of a Matrix
         template<class Form>
         DiagonalMatrix<Type>(const Matrix<Form, Type>&);
@@ -67,7 +70,7 @@ public:
 
     // Member functions
 
-        //- Invert the diaganol matrix and return itself
+        //- Invert the diagonal matrix and return itself
         DiagonalMatrix<Type>& invert();
 };
 
@@ -79,23 +82,25 @@ template<class Type>
 DiagonalMatrix<Type> inv(const DiagonalMatrix<Type>&);
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Type>
+inline CML::DiagonalMatrix<Type>::DiagonalMatrix()
+:
+    List<Type>()
+{}
+
 
 template<class Type>
 template<class Form>
 CML::DiagonalMatrix<Type>::DiagonalMatrix(const Matrix<Form, Type>& a)
 :
-    List<Type>(min(a.n(), a.m()))
+    List<Type>(min(a.m(), a.n()))
 {
     forAll(*this, i)
     {
-        this->operator[](i) = a[i][i];
+        this->operator[](i) = a(i, i);
     }
 }
 
@@ -156,9 +161,4 @@ CML::DiagonalMatrix<Type> CML::inv(const DiagonalMatrix<Type>& A)
 }
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

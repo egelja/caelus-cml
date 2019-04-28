@@ -18,10 +18,13 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    cpuTime
+    CML::cpuTime
 
 Description
     Starts timing CPU usage and return elapsed time from start.
+
+See also
+    clockTime
 
 SourceFiles
     cpuTime.cpp

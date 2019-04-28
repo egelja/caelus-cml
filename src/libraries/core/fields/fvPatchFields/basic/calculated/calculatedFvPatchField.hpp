@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -287,11 +287,8 @@ tmp<Field<Type> > calculatedFvPatchField<Type>::valueInternalCoeffs
     const tmp<scalarField>&
 ) const
 {
-    FatalErrorIn
-    (
-        "calculatedFvPatchField<Type>::"
-        "valueInternalCoeffs(const tmp<scalarField>&) const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "valueInternalCoeffs cannot be called for a calculatedFvPatchField"
         << "\n    on patch " << this->patch().name()
         << " of field " << this->dimensionedInternalField().name()
@@ -310,11 +307,8 @@ tmp<Field<Type> > calculatedFvPatchField<Type>::valueBoundaryCoeffs
     const tmp<scalarField>&
 ) const
 {
-    FatalErrorIn
-    (
-        "calculatedFvPatchField<Type>::"
-        "valueBoundaryCoeffs(const tmp<scalarField>&) const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "valueBoundaryCoeffs cannot be called for a calculatedFvPatchField"
         << "\n    on patch " << this->patch().name()
         << " of field " << this->dimensionedInternalField().name()
@@ -329,11 +323,8 @@ tmp<Field<Type> > calculatedFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > calculatedFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    FatalErrorIn
-    (
-        "calculatedFvPatchField<Type>::"
-        "gradientInternalCoeffs() const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "gradientInternalCoeffs cannot be called for a "
            "calculatedFvPatchField"
         << "\n    on patch " << this->patch().name()
@@ -349,11 +340,8 @@ tmp<Field<Type> > calculatedFvPatchField<Type>::gradientInternalCoeffs() const
 template<class Type>
 tmp<Field<Type> > calculatedFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
-    FatalErrorIn
-    (
-        "calculatedFvPatchField<Type>::"
-        "gradientBoundaryCoeffs() const"
-    )   << "\n    "
+    FatalErrorInFunction
+        << "\n    "
            "gradientBoundaryCoeffs cannot be called for a "
            "calculatedFvPatchField"
         << "\n    on patch " << this->patch().name()

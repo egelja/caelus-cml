@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,6 +30,8 @@ Description
 #define particle_H
 
 #include "vector.hpp"
+#include "barycentric.hpp"
+#include "barycentricTensor.hpp"
 #include "Cloud.hpp"
 #include "IDLList.hpp"
 #include "pointField.hpp"
@@ -45,6 +47,7 @@ Description
 #include "IOPosition.hpp"
 #include "cyclicPolyPatch.hpp"
 #include "cyclicAMIPolyPatch.hpp"
+#include "cyclicACMIPolyPatch.hpp"
 #include "processorPolyPatch.hpp"
 #include "symmetryPolyPatch.hpp"
 #include "wallPolyPatch.hpp"
@@ -62,6 +65,8 @@ class particle;
 class polyPatch;
 
 class cyclicPolyPatch;
+class cyclicAMIPolyPatch;
+class cyclicACMIPolyPatch;
 class processorPolyPatch;
 class symmetryPolyPatch;
 class wallPolyPatch;
@@ -87,31 +92,26 @@ class particle
 :
     public IDLList<particle>::link
 {
-        // Private member data
+    // Private member data
 
         //- Size in bytes of the position data
         static const std::size_t sizeofPosition_;
 
         //- Size in bytes of the fields
         static const std::size_t sizeofFields_;
-        
-        
+
+        //- The value of nBehind_ at which tracking is abandoned. See the
+        //  description of nBehind_.
+        static const label maxNBehind_;
+
+
 public:
 
-    template<class CloudType>
-    class TrackingData
+    class trackingData
     {
-        // Private data
-
-            //- Reference to the cloud containing (this) particle
-            CloudType& cloud_;
-
-
     public:
 
         // Public data
-
-            typedef CloudType cloudType;
 
             //- Flag to switch processor
             bool switchProcessor;
@@ -121,49 +121,51 @@ public:
 
 
         // Constructor
-        TrackingData(CloudType& cloud)
-        :
-            cloud_(cloud)
+        template <class TrackCloudType>
+        trackingData(const TrackCloudType& cloud)
         {}
-
-
-        // Member functions
-
-            //- Return a reference to the cloud
-            CloudType& cloud()
-            {
-                return cloud_;
-            }
     };
 
 
-protected:
+private:
 
-    // Protected data
+    // Private data
 
         //- Reference to the polyMesh database
         const polyMesh& mesh_;
 
-        //- Position of particle
-        vector position_;
+        //- Coordinates of particle
+        barycentric coordinates_;
 
         //- Index of the cell it is in
-        label cellI_;
-
-        //- Face index if the particle is on a face otherwise -1
-        label faceI_;
-
-        //- Fraction of time-step completed
-        scalar stepFraction_;
+        label celli_;
 
         //- Index of the face that owns the decomposed tet that the
         //  particle is in
-        label tetFaceI_;
+        label tetFacei_;
 
         //- Index of the point on the face that defines the decomposed
         //  tet that the particle is in.  Relative to the face base
         //  point.
-        label tetPtI_;
+        label tetPti_;
+
+        //- Face index if the particle is on a face otherwise -1
+        label facei_;
+
+        //- Fraction of time-step completed
+        scalar stepFraction_;
+
+        //- The distance behind the maximum distance reached so far
+        scalar behind_;
+
+        //- The number of tracks carried out that ended in a distance behind the
+        //  maximum distance reached so far. Once this reaches maxNBehind_,
+        //  tracking is abandoned for the current step. This is needed because
+        //  when tetrahedra are inverted a straight trajectory can form a closed
+        //  loop through regions of overlapping positive and negative space.
+        //  Without this break clause, such loops can result in a valid track
+        //  which never ends.
+        label nBehind_;
 
         //- Originating processor id
         label origProc_;
@@ -172,135 +174,177 @@ protected:
         label origId_;
 
 
+private:
+
     // Private Member Functions
 
-        //- Find the tet tri faces between position and tet centre
-        void findTris
-        (
-            const vector& position,
-            DynamicList<label>& faceList,
-            const tetPointRef& tet,
-            const FixedList<vector, 4>& tetAreas,
-            const FixedList<label, 4>& tetPlaneBasePtIs,
-            const scalar tol
-        ) const;
+        // Tetrahedra functions
 
-        //- Find the lambda value for the line to-from across the
-        //  given tri face, where p = from + lambda*(to - from)
-        inline scalar tetLambda
-        (
-            const vector& from,
-            const vector& to,
-            const label triI,
-            const vector& tetArea,
-            const label tetPlaneBasePtI,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
-            const scalar tol
-        ) const;
+            //- Get the vertices of the current tet
+            inline void stationaryTetGeometry
+            (
+                vector& centre,
+                vector& base,
+                vector& vertex1,
+                vector& vertex2
+            ) const;
 
-        //- Find the lambda value for a moving tri face
-        inline scalar movingTetLambda
-        (
-            const vector& from,
-            const vector& to,
-            const label triI,
-            const vector& tetArea,
-            const label tetPlaneBasePtI,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
-            const scalar tol
-        ) const;
+            //- Get the transformation associated with the current tet. This
+            //  will convert a barycentric position within the tet to a
+            //  cartesian position in the global coordinate system. The
+            //  conversion is x = A & y, where x is the cartesian position, y is
+            //  the barycentric position and A is the transformation tensor.
+            inline barycentricTensor stationaryTetTransform() const;
 
-        //- Modify the tet owner data by crossing triI
-        inline void tetNeighbour(label triI);
+            //- Get the reverse transform associated with the current tet. The
+            //  conversion is detA*y = (x - centre) & T. The variables x, y and
+            //  centre have the same meaning as for the forward transform. T is
+            //  the transposed inverse of the forward transform tensor, A,
+            //  multiplied by its determinant, detA. This separation allows
+            //  the barycentric tracking algorithm to function on inverted or
+            //  degenerate tetrahedra.
+            void stationaryTetReverseTransform
+            (
+                vector& centre,
+                scalar& detA,
+                barycentricTensor& T
+            ) const;
 
-        //- Cross the from the given face across the given edge of the
-        //  given cell to find the resulting face and tetPtI
-        inline void crossEdgeConnectedFace
-        (
-            const label& cellI,
-            label& tetFaceI,
-            label& tetPtI,
-            const edge& e
-        );
+            //- Get the vertices of the current moving tet. Two values are
+            //  returned for each vertex. The first is a constant, and the
+            //  second is a linear coefficient of the track fraction.
+            inline void movingTetGeometry
+            (
+                const scalar endStepFraction,
+                Pair<vector>& centre,
+                Pair<vector>& base,
+                Pair<vector>& vertex1,
+                Pair<vector>& vertex2
+            ) const;
 
-        //- Hit wall faces in the current cell if the
-        //- wallImpactDistance is non-zero.  They may not be in
-        //- different tets to the current.
-        template<class CloudType>
-        inline void hitWallFaces
-        (
-            const CloudType& td,
-            const vector& from,
-            const vector& to,
-            scalar& lambdaMin,
-            tetIndices& closestTetIs
-        );
+            //- Get the transformation associated with the current, moving, tet.
+            //  This is of the same form as for the static case. As with the
+            //  moving geometry, a linear function of the tracking fraction is
+            //  returned for each component.
+            inline Pair<barycentricTensor> movingTetTransform
+            (
+                const scalar endStepFraction
+            ) const;
 
+            //- Get the reverse transformation associated with the current,
+            //  moving, tet. This is of the same form as for the static case. As
+            //  with the moving geometry, a function of the tracking fraction is
+            //  returned for each component. The functions are higher order than
+            //  for the forward transform; the determinant is cubic, and the
+            //  tensor is quadratic.
+            void movingTetReverseTransform
+            (
+                const scalar endStepFraction,
+                Pair<vector>& centre,
+                FixedList<scalar, 4>& detA,
+                FixedList<barycentricTensor, 3>& T
+            ) const;
+
+
+        // Transformations
+
+            //- Reflection transform. Corrects the coordinates when the particle
+            //  moves between two tets which share a base vertex, but for which
+            //  the other two non cell-centre vertices are reversed. All hits
+            //  which retain the same face behave this way, as do face hits.
+            void reflect();
+
+            //- Rotation transform. Corrects the coordinates when the particle
+            //  moves between two tets with different base vertices, but are
+            //  otherwise similarly oriented. Hits which change the face within
+            //  the cell make use of both this and the reflect transform.
+            void rotate(const bool direction);
+
+
+        // Topology changes
+
+            //- Change tet within a cell. Called after a triangle is hit.
+            void changeTet(const label tetTriI);
+
+            //- Change tet face within a cell. Called by changeTet.
+            void changeFace(const label tetTriI);
+
+            //- Change cell. Called when the particle hits an internal face.
+            void changeCell();
+
+            //- Put the particle on the lowest indexed patch for the current set
+            //  of coincident faces. In the case of an ACMI-wall pair, this will
+            //  move the particle from the wall face to the ACMI face, because
+            //  ACMI patches are always listed before their associated non-
+            //  overlapping patch.
+            void changeToMasterPatch();
+
+
+        // Geometry changes
+
+            //- Locate the particle at the given position
+            void locate
+            (
+                const vector& position,
+                const vector* direction,
+                label celli,
+                const bool boundaryFail,
+                const string boundaryMsg
+            );
+
+
+protected:
 
     // Patch interactions
 
-        //- Overridable function to handle the particle hitting a face
-        template<class TrackData>
-        void hitFace(TrackData& td);
-
-        //- Overridable function to handle the particle hitting a
-        //  patch.  Executed before other patch-hitting functions.
-        //  trackFraction is passed in to allow mesh motion to
-        //  interpolate in time to the correct face state.
-        template<class TrackData>
-        bool hitPatch
-        (
-            const polyPatch&,
-            TrackData& td,
-            const label patchI,
-            const scalar trackFraction,
-            const tetIndices& tetIs
-        );
+        //- Overridable function to handle the particle hitting a patch.
+        //  Executed before other patch-hitting functions.
+        template<class TrackCloudType>
+        bool hitPatch(TrackCloudType&, trackingData&);
 
         //- Overridable function to handle the particle hitting a wedgePatch
-        template<class TrackData>
-        void hitWedgePatch(const wedgePolyPatch&, TrackData& td);
+        template<class TrackCloudType>
+        void hitWedgePatch(TrackCloudType&, trackingData&);
 
         //- Overridable function to handle the particle hitting a
-        //  symmetryPatch
-        template<class TrackData>
-        void hitSymmetryPatch(const symmetryPolyPatch&, TrackData& td);
+        //  symmetryPlanePatch
+//        template<class TrackCloudType>
+//        void hitSymmetryPlanePatch(TrackCloudType&, trackingData&);
+
+        //- Overridable function to handle the particle hitting a symmetryPatch
+        template<class TrackCloudType>
+        void hitSymmetryPatch(TrackCloudType&, trackingData&);
 
         //- Overridable function to handle the particle hitting a cyclicPatch
-        template<class TrackData>
-        void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
+        template<class TrackCloudType>
+        void hitCyclicPatch(TrackCloudType&, trackingData&);
 
         //- Overridable function to handle the particle hitting a cyclicAMIPatch
-        template<class TrackData>
-        void hitCyclicAMIPatch
-        (
-            const cyclicAMIPolyPatch&,
-            TrackData& td,
-            const vector& direction
-        );
+        template<class TrackCloudType>
+        void hitCyclicAMIPatch(TrackCloudType&, trackingData&, const vector&);
 
         //- Overridable function to handle the particle hitting a
-        //  processorPatch
-        template<class TrackData>
-        void hitProcessorPatch(const processorPolyPatch&, TrackData& td);
+        //  cyclicACMIPatch
+        template<class TrackCloudType>
+        void hitCyclicACMIPatch(TrackCloudType&, trackingData&, const vector&);
+
+        //- Overridable function to handle the particle hitting an
+        //  cyclicRepeatAMIPolyPatch
+//        template<class TrackCloudType>
+//        void hitCyclicRepeatAMIPatch
+//        (
+//            TrackCloudType&,
+//            trackingData&,
+//            const vector&
+//        );
+
+        //- Overridable function to handle the particle hitting a processorPatch
+        template<class TrackCloudType>
+        void hitProcessorPatch(TrackCloudType&, trackingData&);
 
         //- Overridable function to handle the particle hitting a wallPatch
-        template<class TrackData>
-        void hitWallPatch
-        (
-            const wallPolyPatch&,
-            TrackData& td,
-            const tetIndices& tetIs
-        );
-
-        //- Overridable function to handle the particle hitting a
-        //  general patch
-        template<class TrackData>
-        void hitPatch(const polyPatch&, TrackData& td);
+        template<class TrackCloudType>
+        void hitWallPatch(TrackCloudType&, trackingData&);
 
 
 public:
@@ -311,21 +355,15 @@ public:
         TypeName("particle");
 
         //- String representation of properties
-        DefinePropertyList("(Px Py Pz) cellI tetFaceI tetPtI origProc origId");
+        DefinePropertyList
+        (
+            "(coordinatesa coordinatesb coordinatesc coordinatesd) "
+            "celli tetFacei tetPti facei stepFraction "
+            "behind nBehind origProc origId"
+        );
 
-        //- Cumulative particle counter - used to provode unique ID
+        //- Cumulative particle counter - used to provide unique ID
         static label particleCount_;
-
-        //- Fraction of distance to tet centre to move a particle to
-        // 'rescue' it from a tracking problem
-        static const scalar trackingCorrectionTol;
-
-        //- Fraction of the cell volume to use in determining tolerance values
-        //  for the denominator and numerator of lambda
-        static const scalar lambdaDistanceToleranceCoeff;
-
-        //- Minimum stepFraction tolerance
-        static const scalar minStepFractionTol;
 
 
     // Constructors
@@ -334,20 +372,19 @@ public:
         particle
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
         );
 
-        //- Construct from components, tetFaceI_ and tetPtI_ are not
-        //  supplied so they will be deduced by a search
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology
         particle
         (
             const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            bool doCellFacePt = true
+            const label celli
         );
 
         //- Construct from Istream
@@ -356,7 +393,7 @@ public:
         //- Construct as a copy
         particle(const particle& p);
 
-        //- Construct as a copy with reference to a new mesh
+        //- Construct as a copy with references to a new mesh
         particle(const particle& p, const polyMesh& mesh);
 
         //- Construct a clone
@@ -364,7 +401,6 @@ public:
         {
             return autoPtr<particle>(new particle(*this));
         }
-
 
         //- Factory class to read-construct particles used for
         //  parallel transfer
@@ -401,128 +437,173 @@ public:
             //- Return the mesh database
             inline const polyMesh& mesh() const;
 
-            //- Return current particle position
-            inline const vector& position() const;
-
-            //- Return current particle position
-            inline vector& position();
-
-            //- Return current cell particle is in
-            inline label& cell();
+            //- Return current particle coordinates
+            inline const barycentric& coordinates() const;
 
             //- Return current cell particle is in
             inline label cell() const;
 
-            //- Return current tet face particle is in
-            inline label& tetFace();
+            //- Return current cell particle is in for manipulation
+            inline label& cell();
 
             //- Return current tet face particle is in
             inline label tetFace() const;
 
             //- Return current tet face particle is in
-            inline label& tetPt();
-
-            //- Return current tet face particle is in
             inline label tetPt() const;
+
+            //- Return current face particle is on otherwise -1
+            inline label face() const;
+
+            //- Return the fraction of time-step completed
+            inline scalar stepFraction() const;
+
+            //- Return the fraction of time-step completed
+            inline scalar& stepFraction();
+
+            //- Return the originating processor ID
+            inline label origProc() const;
+
+            //- Return the originating processor ID
+            inline label& origProc();
+
+            //- Return the particle ID on the originating processor
+            inline label origId() const;
+
+            //- Return the particle ID on the originating processor
+            inline label& origId();
+
+
+        // Check
+
+            //- Return the step fraction change within the overall time-step.
+            //  Returns the start value and the change as a scalar pair. Always
+            //  return Pair<scalar>(0, 1), unless sub-cycling is in effect, in
+            //  which case the values will reflect the span of the sub-cycle
+            //  within the time-step.
+            inline Pair<scalar> stepFractionSpan() const;
+
+            //- Return the current fraction within the timestep. This differs
+            //  from the stored step fraction due to sub-cycling.
+            inline scalar currentTimeFraction() const;
 
             //- Return the indices of the current tet that the
             //  particle occupies.
             inline tetIndices currentTetIndices() const;
 
-            //- Return the geometry of the current tet that the
-            //  particle occupies.
-            inline tetPointRef currentTet() const;
+            //- Return the current tet transformation tensor
+            inline barycentricTensor currentTetTransform() const;
 
-            //- Return the normal of the tri on tetFaceI_ for the
+            //- Return the normal of the tri on tetFacei_ for the
             //  current tet.
             inline vector normal() const;
 
-            //- Return the normal of the tri on tetFaceI_ for the
-            //  current tet at the start of the timestep, i.e. based
-            //  on oldPoints
-            inline vector oldNormal() const;
+            //- Is the particle on a face?
+            inline bool onFace() const;
 
-            //- Return current face particle is on otherwise -1
-            inline label& face();
+            //- Is the particle on an internal face?
+            inline bool onInternalFace() const;
 
-            //- Return current face particle is on otherwise -1
-            inline label face() const;
+            //- Is the particle on a boundary face?
+            inline bool onBoundaryFace() const;
 
-            //- Return the impact model to be used, soft or hard (default).
-            inline bool softImpact() const;
+            //- Return the index of patch that the particle is on
+            inline label patch() const;
 
-            //- Return the particle current time
-            inline scalar currentTime() const;
+            //- Return current particle position
+            inline vector position() const;
 
 
-        // Check
+    // Track
 
-            //- Check the stored cell value (setting if necessary) and
-            //  initialise the tetFace and tetPt values
-            inline void initCellFacePt();
+        //- Set step fraction and behind data to zero in preparation for a new
+        //  track
+        inline void reset();
 
-            //- Is the particle on the boundary/(or outside the domain)?
-            inline bool onBoundary() const;
+        //- Track along the displacement for a given fraction of the overall
+        //  step. End when the track is complete, or when a boundary is hit.
+        //  On exit, stepFraction_ will have been incremented to the current
+        //  position, and facei_ will be set to the index of the boundary
+        //  face that was hit, or -1 if the track completed within a cell.
+        //  The proportion of the displacement still to be completed is
+        //  returned.
+        scalar track
+        (
+            const vector& displacement,
+            const scalar fraction
+        );
 
-            //- Is this global face an internal face?
-            inline bool internalFace(const label faceI) const;
+        //- As particle::track, but stops when a new cell is reached.
+        scalar trackToCell
+        (
+            const vector& displacement,
+            const scalar fraction
+        );
 
-            //- Is this global face a boundary face?
-            inline bool boundaryFace(const label faceI) const;
+        //- As particle::track, but stops when a face is hit.
+        scalar trackToFace
+        (
+            const vector& displacement,
+            const scalar fraction
+        );
 
-            //- Which patch is particle on
-            inline label patch(const label faceI) const;
+        //- As particle::trackToFace, but stops when a tet triangle is hit. On
+        //  exit, tetTriI is set to the index of the tet triangle that was hit,
+        //  or -1 if the end position was reached.
+        scalar trackToTri
+        (
+            const vector& displacement,
+            const scalar fraction,
+            label& tetTriI
+        );
 
-            //- Which face of this patch is this particle on
-            inline label patchFace
-            (
-                const label patchI,
-                const label faceI
-            ) const;
+        //- As particle::trackToTri, but for stationary meshes
+        scalar trackToStationaryTri
+        (
+            const vector& displacement,
+            const scalar fraction,
+            label& tetTriI
+        );
 
-            //- Return the fraction of time-step completed
-            inline scalar& stepFraction();
+        //- As particle::trackToTri, but for moving meshes
+        scalar trackToMovingTri
+        (
+            const vector& displacement,
+            const scalar fraction,
+            label& tetTriI
+        );
 
-            //-  Return the fraction of time-step completed
-            inline scalar stepFraction() const;
+        //- Hit the current face. If the current face is internal than this
+        //  crosses into the next cell. If it is a boundary face then this will
+        //  interact the particle with the relevant patch.
+        template<class TrackCloudType>
+        void hitFace
+        (
+            const vector& direction,
+            TrackCloudType& cloud,
+            trackingData& td
+        );
 
-            //- Return const access to the originating processor id
-            inline label origProc() const;
+        //- Convenience function. Cobines trackToFace and hitFace
+        template<class TrackCloudType>
+        scalar trackToAndHitFace
+        (
+            const vector& direction,
+            const scalar fraction,
+            TrackCloudType& cloud,
+            trackingData& td
+        );
 
-            //- Return the originating processor id for manipulation
-            inline label& origProc();
-
-            //- Return const access to  the particle id on originating processor
-            inline label origId() const;
-
-            //- Return the particle id on originating processor for manipulation
-            inline label& origId();
+        //- Get the displacement from the mesh centre. Used to correct the
+        //  particle position in cases with reduced dimensionality. Returns a
+        //  zero vector for three-dimensional cases.
+        vector deviationFromMeshCentre() const;
 
 
-        // Track
+    // Patch data
 
-            //- Track particle to end of trajectory
-            //  or until it hits the boundary.
-            //  On entry 'stepFraction()' should be set to the fraction of the
-            //  time-step at which the tracking starts and on exit it contains
-            //  the fraction of the time-step completed.
-            //  Returns the boundary face index if the track stops at the
-            //  boundary, -1 otherwise.
-            template<class TrackData>
-            label track(const vector& endPosition, TrackData& td);
-
-            //- Track particle to a given position and returns 1.0 if the
-            //  trajectory is completed without hitting a face otherwise
-            //  stops at the face and returns the fraction of the trajectory
-            //  completed.
-            //  on entry 'stepFraction()' should be set to the fraction of the
-            //  time-step at which the tracking starts.
-            template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td);
-
-            //- Return the index of the face to be used in the interpolation
-            //  routine
-            inline label faceInterpolation() const;
+        //- Get the normal and velocity of the current patch location
+        inline void patchData(vector& n, vector& U) const;
 
 
     // Transformations
@@ -535,36 +616,61 @@ public:
         //  according to the given separation vector
         virtual void transformProperties(const vector& separation);
 
-        //- The nearest distance to a wall that
-        //  the particle can be in the n direction
-        virtual scalar wallImpactDistance(const vector& n) const;
-
 
     // Parallel transfer
 
-        //- Convert global addressing to the processor patch
-        //  local equivalents
-        template<class TrackData>
-        void prepareForParallelTransfer(const label patchI, TrackData& td);
+        //- Convert global addressing to the processor patch local equivalents
+        void prepareForParallelTransfer();
 
         //- Convert processor patch addressing to the global equivalents
-        //  and set the cellI to the face-neighbour
-        template<class TrackData>
-        void correctAfterParallelTransfer(const label patchI, TrackData& td);
+        //  and set the celli to the face-neighbour
+        void correctAfterParallelTransfer(const label patchi, trackingData& td);
+
+
+    // Interaction list referral
+
+        //- Break the topology and store the particle position so that the
+        //  particle can be referred.
+        void prepareForInteractionListReferral
+        (
+            const vectorTensorTransform& transform
+        );
+
+        //- Correct the topology after referral. The particle may still be
+        //  outside the stored tet and therefore not track-able.
+        void correctAfterInteractionListReferral(const label celli);
+
+
+    // Decompose and reconstruct
+
+        //- Return the tet point appropriate for decomposition or reconstruction
+        //  to or from the given mesh.
+        label procTetPt
+        (
+            const polyMesh& procMesh,
+            const label procCell,
+            const label procTetFace
+        ) const;
+
+
+    // Mapping
+
+        //- Map after a topology change
+        void autoMap(const vector& position, const mapPolyMesh& mapper);
 
 
     // I-O
 
         //- Read the fields associated with the owner cloud
-        template<class CloudType>
-        static void readFields(CloudType& c);
+        template<class TrackCloudType>
+        static void readFields(TrackCloudType& c);
 
         //- Write the fields associated with the owner cloud
-        template<class CloudType>
-        static void writeFields(const CloudType& c);
+        template<class TrackCloudType>
+        static void writeFields(const TrackCloudType& c);
 
-        //- Write the particle data
-        void write(Ostream& os, bool writeFields) const;
+        //- Write the particle position and cell
+        void writePosition(Ostream&) const;
 
 
     // Friend Operators
@@ -581,581 +687,84 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-inline void CML::particle::findTris
+void CML::particle::stationaryTetGeometry
 (
-    const vector& position,
-    DynamicList<label>& faceList,
-    const tetPointRef& tet,
-    const FixedList<vector, 4>& tetAreas,
-    const FixedList<label, 4>& tetPlaneBasePtIs,
-    const scalar tol
+    vector& centre,
+    vector& base,
+    vector& vertex1,
+    vector& vertex2
 ) const
 {
-    faceList.clear();
+    const triFace triIs(currentTetIndices().faceTriIs(mesh_));
+    const vectorField& ccs = mesh_.cellCentres();
+    const pointField& pts = mesh_.points();
 
-    const point Ct = tet.centre();
+    centre = ccs[celli_];
+    base = pts[triIs[0]];
+    vertex1 = pts[triIs[1]];
+    vertex2 = pts[triIs[2]];
+}
 
-    for (label i = 0; i < 4; i++)
-    {
-        scalar lambda = tetLambda
+
+inline CML::barycentricTensor CML::particle::stationaryTetTransform() const
+{
+    vector centre, base, vertex1, vertex2;
+    stationaryTetGeometry(centre, base, vertex1, vertex2);
+
+    return barycentricTensor(centre, base, vertex1, vertex2);
+}
+
+
+inline void CML::particle::movingTetGeometry
+(
+    const scalar fraction,
+    Pair<vector>& centre,
+    Pair<vector>& base,
+    Pair<vector>& vertex1,
+    Pair<vector>& vertex2
+) const
+{
+    const triFace triIs(currentTetIndices().faceTriIs(mesh_));
+    const pointField& ptsOld = mesh_.oldPoints();
+    const pointField& ptsNew = mesh_.points();
+    const vector ccOld = mesh_.oldCellCentres()[celli_];
+    const vector ccNew = mesh_.cellCentres()[celli_];
+
+    // Old and new points and cell centres are not sub-cycled. If we are sub-
+    // cycling, then we have to account for the timestep change here by
+    // modifying the fractions that we take of the old and new geometry.
+    const Pair<scalar> s = stepFractionSpan();
+    const scalar f0 = s[0] + stepFraction_*s[1], f1 = fraction*s[1];
+
+    centre[0] = ccOld + f0*(ccNew - ccOld);
+    base[0] = ptsOld[triIs[0]] + f0*(ptsNew[triIs[0]] - ptsOld[triIs[0]]);
+    vertex1[0] = ptsOld[triIs[1]] + f0*(ptsNew[triIs[1]] - ptsOld[triIs[1]]);
+    vertex2[0] = ptsOld[triIs[2]] + f0*(ptsNew[triIs[2]] - ptsOld[triIs[2]]);
+
+    centre[1] = f1*(ccNew - ccOld);
+    base[1] = f1*(ptsNew[triIs[0]] - ptsOld[triIs[0]]);
+    vertex1[1] = f1*(ptsNew[triIs[1]] - ptsOld[triIs[1]]);
+    vertex2[1] = f1*(ptsNew[triIs[2]] - ptsOld[triIs[2]]);
+}
+
+
+inline CML::Pair<CML::barycentricTensor> CML::particle::movingTetTransform
+(
+    const scalar fraction
+) const
+{
+    Pair<vector> centre, base, vertex1, vertex2;
+    movingTetGeometry(fraction, centre, base, vertex1, vertex2);
+
+    return
+        Pair<barycentricTensor>
         (
-            Ct,
-            position,
-            i,
-            tetAreas[i],
-            tetPlaneBasePtIs[i],
-            cellI_,
-            tetFaceI_,
-            tetPtI_,
-            tol
+            barycentricTensor(centre[0], base[0], vertex1[0], vertex2[0]),
+            barycentricTensor(centre[1], base[1], vertex1[1], vertex2[1])
         );
-
-        if ((lambda > 0.0) && (lambda < 1.0))
-        {
-            faceList.append(i);
-        }
-    }
-}
-
-
-inline CML::scalar CML::particle::tetLambda
-(
-    const vector& from,
-    const vector& to,
-    const label triI,
-    const vector& n,
-    const label tetPlaneBasePtI,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
-    const scalar tol
-) const
-{
-    const pointField& pPts = mesh_.points();
-
-    if (mesh_.moving())
-    {
-        return movingTetLambda
-        (
-            from,
-            to,
-            triI,
-            n,
-            tetPlaneBasePtI,
-            cellI,
-            tetFaceI,
-            tetPtI,
-            tol
-        );
-    }
-
-    const point& base = pPts[tetPlaneBasePtI];
-
-    scalar lambdaNumerator = (base - from) & n;
-    scalar lambdaDenominator = (to - from) & n;
-
-    // n carries the area of the tet faces, so the dot product with a
-    // delta-length has the units of volume.  Comparing the component of each
-    // delta-length in the direction of n times the face area to a fraction of
-    // the cell volume.
-
-    if (mag(lambdaDenominator) < tol)
-    {
-        if (mag(lambdaNumerator) < tol)
-        {
-            // Track starts on the face, and is potentially
-            // parallel to it.  +-tol/+-tol is not a good
-            // comparison, return 0.0, in anticipation of tet
-            // centre correction.
-
-            return 0.0;
-        }
-        else
-        {
-            if (mag((to - from)) < tol/mag(n))
-            {
-                // 'Zero' length track (compared to the tolerance, which is
-                // based on the cell volume, divided by the tet face area), not
-                // along the face, face cannot be crossed.
-
-                return GREAT;
-            }
-            else
-            {
-                // Trajectory is non-zero and parallel to face
-
-                lambdaDenominator = sign(lambdaDenominator)*SMALL;
-            }
-        }
-    }
-
-    return lambdaNumerator/lambdaDenominator;
-}
-
-
-inline CML::scalar CML::particle::movingTetLambda
-(
-    const vector& from,
-    const vector& to,
-    const label triI,
-    const vector& n,
-    const label tetPlaneBasePtI,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
-    const scalar tol
-) const
-{
-    const pointField& pPts = mesh_.points();
-    const pointField& oldPPts = mesh_.oldPoints();
-
-    // Base point of plane at end of motion
-    const point& b = pPts[tetPlaneBasePtI];
-
-    // n: Normal of plane at end of motion
-
-    // Base point of plane at start of timestep
-    const point& b00 = oldPPts[tetPlaneBasePtI];
-
-    // Base point of plane at start of tracking portion (cast forward by
-    // stepFraction)
-    point b0 = b00 + stepFraction_*(b - b00);
-
-    // Normal of plane at start of tracking portion
-    vector n0 = vector::zero;
-
-    {
-        tetIndices tetIs(cellI, tetFaceI, tetPtI, mesh_);
-
-        // tet at timestep start
-        tetPointRef tet00 = tetIs.oldTet(mesh_);
-
-        // tet at timestep end
-        tetPointRef tet = tetIs.tet(mesh_);
-
-        point tet0PtA = tet00.a() + stepFraction_*(tet.a() - tet00.a());
-        point tet0PtB = tet00.b() + stepFraction_*(tet.b() - tet00.b());
-        point tet0PtC = tet00.c() + stepFraction_*(tet.c() - tet00.c());
-        point tet0PtD = tet00.d() + stepFraction_*(tet.d() - tet00.d());
-
-        // Tracking portion start tet (cast forward by stepFraction)
-        tetPointRef tet0(tet0PtA, tet0PtB, tet0PtC, tet0PtD);
-
-        switch (triI)
-        {
-            case 0:
-            {
-                n0 = tet0.Sa();
-                break;
-            }
-            case 1:
-            {
-                n0 = tet0.Sb();
-                break;
-            }
-            case 2:
-            {
-                n0 = tet0.Sc();
-                break;
-            }
-            case 3:
-            {
-                n0 = tet0.Sd();
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
-    }
-
-    if (mag(n0) < SMALL)
-    {
-        // If the old normal is zero (for example in layer addition)
-        // then use the current normal;
-
-        n0 = n;
-    }
-
-    scalar lambdaNumerator = 0;
-    scalar lambdaDenominator = 0;
-
-    vector dP = to - from;
-    vector dN = n - n0;
-    vector dB = b - b0;
-    vector dS = from - b0;
-
-    if (mag(dN) > SMALL)
-    {
-        scalar a = (dP - dB) & dN;
-        scalar b = ((dP - dB) & n0) + (dS & dN);
-        scalar c = dS & n0;
-
-        if (mag(a) > SMALL)
-        {
-
-            // Solve quadratic for lambda
-            scalar discriminant = sqr(b) - 4.0*a*c;
-
-            if (discriminant < 0)
-            {
-                // Imaginary roots only - face not crossed
-                return GREAT;
-            }
-            else
-            {
-                // Numerical Recipes in C,
-                // Second Edition (1992),
-                // Section 5.6.
-                // q = -0.5*(b + sgn(b)*sqrt(b^2 - 4ac))
-                // x1 = q/a
-                // x2 = c/q
-
-                scalar q = -0.5*(b + sign(b)*CML::sqrt(discriminant));
-
-                if (mag(q) < VSMALL)
-                {
-                    // If q is zero, then l1 = q/a is the required
-                    // value of lambda, and is zero.
-
-                    return 0.0;
-                }
-
-                scalar l1 = q/a;
-                scalar l2 = c/q;
-
-                // There will be two roots, a big one and a little
-                // one, choose the little one.
-
-                if (mag(l1) < mag(l2))
-                {
-                    return l1;
-                }
-                else
-                {
-                    return l2;
-                }
-            }
-        }
-        {
-            // When a is zero, solve the first order polynomial
-
-            lambdaNumerator = -c;
-            lambdaDenominator = b;
-        }
-    }
-    else
-    {
-        // when n = n0 is zero, there is no plane rotation, solve the
-        // first order polynomial
-
-        lambdaNumerator = -(dS & n0);
-        lambdaDenominator = ((dP - dB) & n0);
-
-    }
-
-    if (mag(lambdaDenominator) < tol)
-    {
-        if (mag(lambdaNumerator) < tol)
-        {
-            // Track starts on the face, and is potentially
-            // parallel to it.  +-tol)/+-tol is not a good
-            // comparison, return 0.0, in anticipation of tet
-            // centre correction.
-
-            return 0.0;
-        }
-        else
-        {
-            if (mag((to - from)) < tol/mag(n))
-            {
-                // Zero length track, not along the face, face
-                // cannot be crossed.
-
-                return GREAT;
-            }
-            else
-            {
-                // Trajectory is non-zero and parallel to face
-
-                lambdaDenominator = sign(lambdaDenominator)*SMALL;
-            }
-        }
-    }
-
-    return lambdaNumerator/lambdaDenominator;
-}
-
-
-
-inline void CML::particle::tetNeighbour(label triI)
-{
-    const labelList& pOwner = mesh_.faceOwner();
-    const faceList& pFaces = mesh_.faces();
-
-    bool own = (pOwner[tetFaceI_] == cellI_);
-
-    const CML::face& f = pFaces[tetFaceI_];
-
-    label tetBasePtI = mesh_.tetBasePtIs()[tetFaceI_];
-
-    if (tetBasePtI == -1)
-    {
-        FatalErrorIn
-        (
-            "inline void CML::particle::tetNeighbour(label triI)"
-        )
-            << "No base point for face " << tetFaceI_ << ", " << f
-            << ", produces a valid tet decomposition."
-            << abort(FatalError);
-    }
-
-    label facePtI = (tetPtI_ + tetBasePtI) % f.size();
-    label otherFacePtI = f.fcIndex(facePtI);
-
-    switch (triI)
-    {
-        case 0:
-        {
-            // Crossing this triangle changes tet to that in the
-            // neighbour cell over tetFaceI
-
-            // Modification of cellI_ will happen by other indexing,
-            // tetFaceI_ and tetPtI don't change.
-
-            break;
-        }
-        case 1:
-        {
-            crossEdgeConnectedFace
-            (
-                cellI_,
-                tetFaceI_,
-                tetPtI_,
-                CML::edge(f[facePtI], f[otherFacePtI])
-            );
-
-            break;
-        }
-        case 2:
-        {
-            if (own)
-            {
-                if (tetPtI_ < f.size() - 2)
-                {
-                    tetPtI_ = f.fcIndex(tetPtI_);
-                }
-                else
-                {
-                    crossEdgeConnectedFace
-                    (
-                        cellI_,
-                        tetFaceI_,
-                        tetPtI_,
-                        CML::edge(f[tetBasePtI], f[otherFacePtI])
-                    );
-                }
-            }
-            else
-            {
-                if (tetPtI_ > 1)
-                {
-                    tetPtI_ = f.rcIndex(tetPtI_);
-                }
-                else
-                {
-                    crossEdgeConnectedFace
-                    (
-                        cellI_,
-                        tetFaceI_,
-                        tetPtI_,
-                        CML::edge(f[tetBasePtI], f[facePtI])
-                    );
-                }
-            }
-
-            break;
-        }
-        case 3:
-        {
-            if (own)
-            {
-                if (tetPtI_ > 1)
-                {
-                    tetPtI_ = f.rcIndex(tetPtI_);
-                }
-                else
-                {
-                    crossEdgeConnectedFace
-                    (
-                        cellI_,
-                        tetFaceI_,
-                        tetPtI_,
-                        CML::edge(f[tetBasePtI], f[facePtI])
-                    );
-                }
-            }
-            else
-            {
-                if (tetPtI_ < f.size() - 2)
-                {
-                    tetPtI_ = f.fcIndex(tetPtI_);
-                }
-                else
-                {
-                    crossEdgeConnectedFace
-                    (
-                        cellI_,
-                        tetFaceI_,
-                        tetPtI_,
-                        CML::edge(f[tetBasePtI], f[otherFacePtI])
-                    );
-                }
-            }
-
-            break;
-        }
-        default:
-        {
-            FatalErrorIn
-            (
-                "inline void "
-                "CML::particle::tetNeighbour(label triI)"
-            )
-                << "Tet tri face index error, can only be 0..3, supplied "
-                << triI << abort(FatalError);
-
-            break;
-        }
-    }
-}
-
-
-inline void CML::particle::crossEdgeConnectedFace
-(
-    const label& cellI,
-    label& tetFaceI,
-    label& tetPtI,
-    const edge& e
-)
-{
-    const faceList& pFaces = mesh_.faces();
-    const cellList& pCells = mesh_.cells();
-
-    const CML::face& f = pFaces[tetFaceI];
-
-    const CML::cell& thisCell = pCells[cellI];
-
-    forAll(thisCell, cFI)
-    {
-        // Loop over all other faces of this cell and
-        // find the one that shares this edge
-
-        label fI = thisCell[cFI];
-
-        if (tetFaceI == fI)
-        {
-            continue;
-        }
-
-        const CML::face& otherFace = pFaces[fI];
-
-        label edDir = otherFace.edgeDirection(e);
-
-        if (edDir == 0)
-        {
-            continue;
-        }
-        else if (f == pFaces[fI])
-        {
-            // This is a necessary condition if using duplicate baffles
-            // (so coincident faces). We need to make sure we don't cross into
-            // the face with the same vertices since we might enter a tracking
-            // loop where it never exits. This test should be cheap
-            // for most meshes so can be left in for 'normal' meshes.
-
-            continue;
-        }
-        else
-        {
-            //Found edge on other face
-            tetFaceI = fI;
-
-            label eIndex = -1;
-
-            if (edDir == 1)
-            {
-                // Edge is in the forward circulation of this face, so
-                // work with the start point of the edge
-
-                eIndex = findIndex(otherFace, e.start());
-            }
-            else
-            {
-                // edDir == -1, so the edge is in the reverse
-                // circulation of this face, so work with the end
-                // point of the edge
-
-                eIndex = findIndex(otherFace, e.end());
-            }
-
-            label tetBasePtI = mesh_.tetBasePtIs()[fI];
-
-            if (tetBasePtI == -1)
-            {
-                FatalErrorIn
-                (
-                    "inline void "
-                    "CML::particle::crossEdgeConnectedFace"
-                    "("
-                        "const label& cellI,"
-                        "label& tetFaceI,"
-                        "label& tetPtI,"
-                        "const edge& e"
-                    ")"
-                )
-                    << "No base point for face " << fI << ", " << f
-                    << ", produces a decomposition that has a minimum "
-                    << "volume greater than tolerance."
-                    << abort(FatalError);
-            }
-
-            // Find eIndex relative to the base point on new face
-            eIndex -= tetBasePtI;
-
-            if (neg(eIndex))
-            {
-                eIndex = (eIndex + otherFace.size()) % otherFace.size();
-            }
-
-            if (eIndex == 0)
-            {
-                // The point is the base point, so this is first tet
-                // in the face circulation
-
-                tetPtI = 1;
-            }
-            else if (eIndex == otherFace.size() - 1)
-            {
-                // The point is the last before the base point, so
-                // this is the last tet in the face circulation
-
-                tetPtI = otherFace.size() - 2;
-            }
-            else
-            {
-                tetPtI = eIndex;
-            }
-
-            break;
-        }
-    }
 }
 
 
@@ -1167,7 +776,7 @@ inline CML::label CML::particle::getNewParticleID() const
 
     if (id == labelMax)
     {
-        WarningIn("particle::getNewParticleID() const")
+        WarningInFunction
             << "Particle counter has overflowed. This might cause problems"
             << " when reconstructing particle tracks." << endl;
     }
@@ -1181,244 +790,47 @@ inline const CML::polyMesh& CML::particle::mesh() const
 }
 
 
-inline const CML::vector& CML::particle::position() const
+inline const CML::barycentric& CML::particle::coordinates() const
 {
-    return position_;
-}
-
-
-inline CML::vector& CML::particle::position()
-{
-    return position_;
+    return coordinates_;
 }
 
 
 inline CML::label CML::particle::cell() const
 {
-    return cellI_;
+    return celli_;
 }
-
 
 inline CML::label& CML::particle::cell()
 {
-    return cellI_;
+    return celli_;
 }
-
 
 inline CML::label CML::particle::tetFace() const
 {
-    return tetFaceI_;
-}
-
-
-inline CML::label& CML::particle::tetFace()
-{
-    return tetFaceI_;
+    return tetFacei_;
 }
 
 
 inline CML::label CML::particle::tetPt() const
 {
-    return tetPtI_;
-}
-
-
-inline CML::label& CML::particle::tetPt()
-{
-    return tetPtI_;
-}
-
-
-inline CML::tetIndices CML::particle::currentTetIndices() const
-{
-    return tetIndices(cellI_, tetFaceI_, tetPtI_, mesh_);
-}
-
-
-inline CML::tetPointRef CML::particle::currentTet() const
-{
-    return currentTetIndices().tet(mesh_);
-}
-
-
-inline CML::vector CML::particle::normal() const
-{
-    return currentTetIndices().faceTri(mesh_).normal();
-}
-
-
-inline CML::vector CML::particle::oldNormal() const
-{
-    return currentTetIndices().oldFaceTri(mesh_).normal();
+    return tetPti_;
 }
 
 
 inline CML::label CML::particle::face() const
 {
-    return faceI_;
+    return facei_;
 }
 
 
-inline CML::label& CML::particle::face()
-{
-    return faceI_;
-}
-
-
-inline void CML::particle::initCellFacePt()
-{
-    if (cellI_ == -1)
-    {
-        mesh_.findCellFacePt
-        (
-            position_,
-            cellI_,
-            tetFaceI_,
-            tetPtI_
-        );
-
-        if (cellI_ == -1)
-        {
-            FatalErrorIn("void CML::particle::initCellFacePt()")
-                << "cell, tetFace and tetPt search failure at position "
-                << position_ << abort(FatalError);
-        }
-    }
-    else
-    {
-        mesh_.findTetFacePt(cellI_, position_, tetFaceI_, tetPtI_);
-
-        if (tetFaceI_ == -1 || tetPtI_ == -1)
-        {
-            label oldCellI = cellI_;
-
-            mesh_.findCellFacePt
-            (
-                position_,
-                cellI_,
-                tetFaceI_,
-                tetPtI_
-            );
-
-            if (cellI_ == -1 || tetFaceI_ == -1 || tetPtI_ == -1)
-            {
-                // The particle has entered this function with a cell
-                // number, but hasn't been able to find a cell to
-                // occupy.
-
-                if (!mesh_.pointInCellBB(position_, oldCellI, 0.1))
-                {
-                    // If the position is not inside the (slightly
-                    // extended) bound-box of the cell that it thought
-                    // it should be in, then this is considered an
-                    // error.
-
-                    FatalErrorIn("void CML::particle::initCellFacePt()")
-                        << "    cell, tetFace and tetPt search failure at "
-                        << "position " << position_ << nl
-                        << "    for requested cell " << oldCellI << nl
-                        << "    If this is a restart or "
-                           "reconstruction/decomposition etc. it is likely that"
-                           " the write precision is not sufficient.\n"
-                           "    Either increase 'writePrecision' or "
-                           "set 'writeFormat' to 'binary'"
-                        << abort(FatalError);
-                }
-
-                // The position is in the (slightly extended)
-                // bound-box of the cell.  This situation may arise
-                // because the face decomposition of the cell is not
-                // the same as when the particle acquired the cell
-                // index.  For example, it has been read into a mesh
-                // that has made a different face base-point decision
-                // for a boundary face and now this particle is in a
-                // position that is not in the mesh.  Gradually move
-                // the particle towards the centre of the cell that it
-                // thought that it was in.
-
-                cellI_ = oldCellI;
-
-                point newPosition = position_;
-
-                const point& cC = mesh_.cellCentres()[cellI_];
-
-                label trap(1.0/trackingCorrectionTol + 1);
-
-                label iterNo = 0;
-
-                do
-                {
-                    newPosition += trackingCorrectionTol*(cC - position_);
-
-                    mesh_.findTetFacePt
-                    (
-                        cellI_,
-                        newPosition,
-                        tetFaceI_,
-                        tetPtI_
-                    );
-
-                    iterNo++;
-
-                } while (tetFaceI_ < 0  && iterNo <= trap);
-
-                if (tetFaceI_ == -1)
-                {
-                    FatalErrorIn("void CML::particle::initCellFacePt()")
-                        << "cell, tetFace and tetPt search failure at position "
-                        << position_ << abort(FatalError);
-                }
-
-                if (debug)
-                {
-                    WarningIn("void CML::particle::initCellFacePt()")
-                        << "Particle moved from " << position_
-                        << " to " << newPosition
-                        << " in cell " << cellI_
-                        << " tetFace " << tetFaceI_
-                        << " tetPt " << tetPtI_ << nl
-                        << "    (A fraction of "
-                        << 1.0 - mag(cC - newPosition)/mag(cC - position_)
-                        << " of the distance to the cell centre)"
-                        << " because a decomposition tetFace and tetPt "
-                        << "could not be found."
-                        << endl;
-                }
-
-                position_ = newPosition;
-            }
-
-            if (debug && cellI_ != oldCellI)
-            {
-                WarningIn("void CML::particle::initCellFacePt()")
-                    << "Particle at position " << position_
-                    << " searched for a cell, tetFace and tetPt." << nl
-                    << "    Found"
-                    << " cell " << cellI_
-                    << " tetFace " << tetFaceI_
-                    << " tetPt " << tetPtI_ << nl
-                    << "    This is a different cell to that which was supplied"
-                    << " (" << oldCellI << ")." << nl
-                    << endl;
-            }
-        }
-    }
-}
-
-
-inline bool CML::particle::onBoundary() const
-{
-    return faceI_ != -1 && faceI_ >= mesh_.nInternalFaces();
-}
-
-
-inline CML::scalar& CML::particle::stepFraction()
+inline CML::scalar CML::particle::stepFraction() const
 {
     return stepFraction_;
 }
 
 
-inline CML::scalar CML::particle::stepFraction() const
+inline CML::scalar& CML::particle::stepFraction()
 {
     return stepFraction_;
 }
@@ -1448,147 +860,144 @@ inline CML::label& CML::particle::origId()
 }
 
 
-inline bool CML::particle::softImpact() const
+inline CML::Pair<CML::scalar> CML::particle::stepFractionSpan() const
 {
-    return false;
-}
-
-
-inline CML::scalar CML::particle::currentTime() const
-{
-    return
-        mesh_.time().value()
-      + stepFraction_*mesh_.time().deltaTValue();
-}
-
-
-inline bool CML::particle::internalFace(const label faceI) const
-{
-    return mesh_.isInternalFace(faceI);
-}
-
-
-bool CML::particle::boundaryFace(const label faceI) const
-{
-    return !internalFace(faceI);
-}
-
-
-inline CML::label CML::particle::patch(const label faceI) const
-{
-    return mesh_.boundaryMesh().whichPatch(faceI);
-}
-
-
-inline CML::label CML::particle::patchFace
-(
-    const label patchI,
-    const label faceI
-) const
-{
-    return mesh_.boundaryMesh()[patchI].whichFace(faceI);
-}
-
-
-inline CML::label CML::particle::faceInterpolation() const
-{
-    return faceI_;
-}
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class TrackData>
-void CML::particle::prepareForParallelTransfer
-(
-    const label patchI,
-    TrackData& td
-)
-{
-    // Convert the face index to be local to the processor patch
-    faceI_ = patchFace(patchI, faceI_);
-}
-
-
-template<class TrackData>
-void CML::particle::correctAfterParallelTransfer
-(
-    const label patchI,
-    TrackData& td
-)
-{
-    const coupledPolyPatch& ppp =
-        refCast<const coupledPolyPatch>(mesh_.boundaryMesh()[patchI]);
-
-    cellI_ = ppp.faceCells()[faceI_];
-
-    // Have patch transform the position
-    ppp.transformPosition(position_, faceI_);
-
-    // Transform the properties
-    if (!ppp.parallel())
+    if (mesh_.time().subCycling())
     {
-        const tensor& T =
+        const TimeState& tsNew = mesh_.time();
+        const TimeState& tsOld = mesh_.time().prevTimeState();
+
+        const scalar tFrac =
         (
-            ppp.forwardT().size() == 1
-          ? ppp.forwardT()[0]
-          : ppp.forwardT()[faceI_]
-        );
-        transformProperties(T);
-    }
-    else if (ppp.separated())
-    {
-        const vector& s =
-        (
-            (ppp.separation().size() == 1)
-          ? ppp.separation()[0]
-          : ppp.separation()[faceI_]
-        );
-        transformProperties(-s);
-    }
+            (tsNew.value() - tsNew.deltaTValue())
+          - (tsOld.value() - tsOld.deltaTValue())
+        )/tsOld.deltaTValue();
 
-    tetFaceI_ = faceI_ + ppp.start();
+        const scalar dtFrac = tsNew.deltaTValue()/tsOld.deltaTValue();
 
-    // Faces either side of a coupled patch have matched base indices,
-    // tetPtI is specified relative to the base point, already and
-    // opposite circulation directions by design, so if the vertices
-    // are:
-    // source:
-    // face    (a b c d e f)
-    // fPtI     0 1 2 3 4 5
-    //            +
-    // destination:
-    // face    (a f e d c b)
-    // fPtI     0 1 2 3 4 5
-    //                  +
-    // where a is the base point of the face are matching , and we
-    // have fPtI = 1 on the source processor face, i.e. vertex b, then
-    // this because of the face circulation direction change, vertex c
-    // is the characterising point on the destination processor face,
-    // giving the destination fPtI as:
-    //     fPtI_d = f.size() - 1 - fPtI_s = 6 - 1 - 1 = 4
-    // This relationship can be verified for other points and sizes of
-    // face.
-
-    tetPtI_ = mesh_.faces()[tetFaceI_].size() - 1 - tetPtI_;
-
-    // Reset the face index for the next tracking operation
-    if (stepFraction_ > (1.0 - SMALL))
-    {
-        stepFraction_ = 1.0;
-        faceI_ = -1;
+        return Pair<scalar>(tFrac, dtFrac);
     }
     else
     {
-        faceI_ += ppp.start();
+        return Pair<scalar>(0, 1);
+    }
+}
+
+
+inline CML::scalar CML::particle::currentTimeFraction() const
+{
+    const Pair<scalar> s = stepFractionSpan();
+
+    return s[0] + stepFraction_*s[1];
+}
+
+
+inline CML::tetIndices CML::particle::currentTetIndices() const
+{
+    return tetIndices(celli_, tetFacei_, tetPti_);
+}
+
+
+inline CML::barycentricTensor CML::particle::currentTetTransform() const
+{
+    if (mesh_.moving())
+    {
+        return movingTetTransform(0)[0];
+    }
+    else
+    {
+        return stationaryTetTransform();
+    }
+}
+
+
+inline CML::vector CML::particle::normal() const
+{
+    return currentTetIndices().faceTri(mesh_).normal();
+}
+
+
+inline bool CML::particle::onFace() const
+{
+    return facei_ >= 0;
+}
+
+
+inline bool CML::particle::onInternalFace() const
+{
+    return onFace() && mesh_.isInternalFace(facei_);
+}
+
+
+inline bool CML::particle::onBoundaryFace() const
+{
+    return onFace() && !mesh_.isInternalFace(facei_);
+}
+
+
+inline CML::label CML::particle::patch() const
+{
+    return onFace() ? mesh_.boundaryMesh().whichPatch(facei_) : -1;
+}
+
+
+inline CML::vector CML::particle::position() const
+{
+    return currentTetTransform() & coordinates_;
+}
+
+
+inline void CML::particle::reset()
+{
+    stepFraction_ = 0;
+    nBehind_ = 0;
+    behind_ = 0;
+}
+
+
+void CML::particle::patchData(vector& n, vector& U) const
+{
+    if (!onBoundaryFace())
+    {
+        FatalErrorInFunction
+            << "Patch data was requested for a particle that isn't on a patch"
+            << exit(FatalError);
+    }
+
+    if (mesh_.moving())
+    {
+        Pair<vector> centre, base, vertex1, vertex2;
+        movingTetGeometry(1, centre, base, vertex1, vertex2);
+
+        n = triPointRef(base[0], vertex1[0], vertex2[0]).normal();
+
+        // Interpolate the motion of the three face vertices to the current
+        // coordinates
+        U =
+            coordinates_.b()*base[1]
+          + coordinates_.c()*vertex1[1]
+          + coordinates_.d()*vertex2[1];
+
+        // The movingTetGeometry method gives the motion as a displacement
+        // across the time-step, so we divide by the time-step to get velocity
+        U /= mesh_.time().deltaTValue();
+    }
+    else
+    {
+        vector centre, base, vertex1, vertex2;
+        stationaryTetGeometry(centre, base, vertex1, vertex2);
+
+        n = triPointRef(base, vertex1, vertex2).normal();
+
+        U = Zero;
     }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class CloudType>
-void CML::particle::readFields(CloudType& c)
+template<class TrackCloudType>
+void CML::particle::readFields(TrackCloudType& c)
 {
     if (!c.size())
     {
@@ -1605,7 +1014,7 @@ void CML::particle::readFields(CloudType& c)
         c.checkFieldIOobject(c, origId);
 
         label i = 0;
-        forAllIter(typename CloudType, c, iter)
+        forAllIter(typename TrackCloudType, c, iter)
         {
             particle& p = iter();
 
@@ -1617,24 +1026,27 @@ void CML::particle::readFields(CloudType& c)
 }
 
 
-template<class CloudType>
-void CML::particle::writeFields(const CloudType& c)
+template<class TrackCloudType>
+void CML::particle::writeFields(const TrackCloudType& c)
 {
-    // Write the cloud position file
-    IOPosition<CloudType> ioP(c);
-    ioP.write();
+    label np = c.size();
 
-    label np =  c.size();
+    IOPosition<TrackCloudType> ioP(c);
+    ioP.write();
 
     IOField<label> origProc
     (
         c.fieldIOobject("origProcId", IOobject::NO_READ),
         np
     );
-    IOField<label> origId(c.fieldIOobject("origId", IOobject::NO_READ), np);
+    IOField<label> origId
+    (
+        c.fieldIOobject("origId", IOobject::NO_READ),
+        np
+    );
 
     label i = 0;
-    forAllConstIter(typename CloudType, c, iter)
+    forAllConstIter(typename TrackCloudType, c, iter)
     {
         origProc[i] = iter().origProc_;
         origId[i] = iter().origId_;
@@ -1646,818 +1058,160 @@ void CML::particle::writeFields(const CloudType& c)
 }
 
 
-template<class TrackData>
-CML::label CML::particle::track(const vector& endPosition, TrackData& td)
-{
-    faceI_ = -1;
-
-    // Tracks to endPosition or stop on boundary
-    while (!onBoundary() && stepFraction_ < 1.0 - SMALL)
-    {
-        stepFraction_ += trackToFace(endPosition, td)*(1.0 - stepFraction_);
-    }
-
-    return faceI_;
-}
-
-
-template<class TrackData>
-CML::scalar CML::particle::trackToFace
+template<class TrackCloudType>
+void CML::particle::hitFace
 (
-    const vector& endPosition,
-    TrackData& td
+    const vector& direction,
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
-    typedef typename TrackData::cloudType cloudType;
-    typedef typename cloudType::particleType particleType;
-
-    cloudType& cloud = td.cloud();
-
-
-    const faceList& pFaces = mesh_.faces();
-    const pointField& pPts = mesh_.points();
-    const vectorField& pC = mesh_.cellCentres();
-
-    faceI_ = -1;
-
-    // Pout<< "Particle " << origId_ << " " << origProc_
-    //     << " Tracking from " << position_
-    //     << " to " << endPosition
-    //     << endl;
-
-    // Pout<< "stepFraction " << stepFraction_ << nl
-    //     << "cellI " << cellI_ << nl
-    //     << "tetFaceI " << tetFaceI_ << nl
-    //     << "tetPtI " << tetPtI_
-    //     << endl;
-
-    scalar trackFraction = 0.0;
-
-    // Minimum tetrahedron decomposition of each cell of the mesh into
-    // using the cell centre, base point on face, and further two
-    // points on the face.  For each face of n points, there are n - 2
-    // tets generated.
-
-    // The points for each tet are organised to match those used in the
-    // tetrahedron class, supplying them in the order:
-    //     Cc, basePt, pA, pB
-    // where:
-    //   + Cc is the cell centre;
-    //   + basePt is the base point on the face;
-    //   + pA and pB are the remaining points on the face, such that
-    //     the circulation, {basePt, pA, pB} produces a positive
-    //     normal by the right-hand rule.  pA and pB are chosen from
-    //     tetPtI_ do accomplish this depending if the cell owns the
-    //     face, tetPtI_ is the vertex that characterises the tet, and
-    //     is the first vertex on the tet when circulating around the
-    //     face. Therefore, the same tetPtI represents the same face
-    //     triangle for both the owner and neighbour cell.
-    //
-    // Each tet has its four triangles represented in the same order:
-    // 0) tri joining a tet to the tet across the face in next cell.
-    //    This is the triangle opposite Cc.
-    // 1) tri joining a tet to the tet that is in the same cell, but
-    //    belongs to the face that shares the edge of the current face
-    //    that doesn't contain basePt.  This is the triangle opposite
-    //    basePt.
-
-    // 2) tri joining a tet to the tet that is in the same cell, but
-    //    belongs to the face that shares the tet-edge (basePt - pB).
-    //    This may be on the same face, or a different one.  This is
-    //    the triangle opposite basePt.  This is the triangle opposite
-    //    pA.
-
-    // 4) tri joining a tet to the tet that is in the same cell, but
-    //    belongs to the face that shares the tet-edge (basePt - pA).
-    //    This may be on the same face, or a different one.  This is
-    //    the triangle opposite basePt.  This is the triangle opposite
-    //    pA.
-
-    // Which tri (0..3) of the tet has been crossed
-    label triI = -1;
-
-    // Determine which face was actually crossed.  lambdaMin < SMALL
-    // is considered a trigger for a tracking correction towards the
-    // current tet centre.
-    scalar lambdaMin = VGREAT;
-
-    DynamicList<label>& tris = cloud.labels();
-
-    // Tet indices that will be set by hitWallFaces if a wall face is
-    // to be hit, or are set when any wall tri of a tet is hit.
-    // Carries the description of the tet on which the cell face has
-    // been hit.  For the case of being set in hitWallFaces, this may
-    // be a different tet to the one that the particle occupies.
-    tetIndices faceHitTetIs;
-
-    // What tolerance is appropriate the minimum lambda numerator and
-    // denominator for tracking in this cell.
-    scalar lambdaDistanceTolerance =
-        lambdaDistanceToleranceCoeff*mesh_.cellVolumes()[cellI_];
-
-    do
+    if (debug)
     {
-        if (triI != -1)
-        {
-            // Change tet ownership because a tri face has been crossed
-            tetNeighbour(triI);
-        }
-
-        const CML::face& f = pFaces[tetFaceI_];
-
-        bool own = (mesh_.faceOwner()[tetFaceI_] == cellI_);
-
-        label tetBasePtI = mesh_.tetBasePtIs()[tetFaceI_];
-
-        label basePtI = f[tetBasePtI];
-
-        label facePtI = (tetPtI_ + tetBasePtI) % f.size();
-        label otherFacePtI = f.fcIndex(facePtI);
-
-        label fPtAI = -1;
-        label fPtBI = -1;
-
-        if (own)
-        {
-            fPtAI = facePtI;
-            fPtBI = otherFacePtI;
-        }
-        else
-        {
-            fPtAI = otherFacePtI;
-            fPtBI = facePtI;
-        }
-
-        tetPointRef tet
-        (
-            pC[cellI_],
-            pPts[basePtI],
-            pPts[f[fPtAI]],
-            pPts[f[fPtBI]]
-        );
-
-        if (lambdaMin < SMALL)
-        {
-            // Apply tracking correction towards tet centre
-
-            if (debug)
-            {
-                Pout<< "tracking rescue using tetCentre from " << position();
-            }
-
-            position_ += trackingCorrectionTol*(tet.centre() - position_);
-
-            if (debug)
-            {
-                Pout<< " to " << position() << " due to "
-                    << (tet.centre() - position_) << endl;
-            }
-
-            cloud.trackingRescue();
-
-            return trackFraction;
-        }
-
-        if (triI != -1 && mesh_.moving())
-        {
-            // Mesh motion requires stepFraction to be correct for
-            // each tracking portion, so trackToFace must return after
-            // every lambda calculation.
-            return trackFraction;
-        }
-
-        FixedList<vector, 4> tetAreas;
-
-        tetAreas[0] = tet.Sa();
-        tetAreas[1] = tet.Sb();
-        tetAreas[2] = tet.Sc();
-        tetAreas[3] = tet.Sd();
-
-        FixedList<label, 4> tetPlaneBasePtIs;
-
-        tetPlaneBasePtIs[0] = basePtI;
-        tetPlaneBasePtIs[1] = f[fPtAI];
-        tetPlaneBasePtIs[2] = basePtI;
-        tetPlaneBasePtIs[3] = basePtI;
-
-        findTris
-        (
-            endPosition,
-            tris,
-            tet,
-            tetAreas,
-            tetPlaneBasePtIs,
-            lambdaDistanceTolerance
-        );
-
-        // Reset variables for new track
-        triI = -1;
-        lambdaMin = VGREAT;
-
-        // Pout<< "tris " << tris << endl;
-
-        // Sets a value for lambdaMin and faceI_ if a wall face is hit
-        // by the track.
-        hitWallFaces
-        (
-            cloud,
-            position_,
-            endPosition,
-            lambdaMin,
-            faceHitTetIs
-        );
-
-        // Did not hit any tet tri faces, and no wall face has been
-        // found to hit.
-        if (tris.empty() && faceI_ < 0)
-        {
-            position_ = endPosition;
-
-            return 1.0;
-        }
-        else
-        {
-            // Loop over all found tris and see if any of them find a
-            // lambda value smaller than that found for a wall face.
-            forAll(tris, i)
-            {
-                label tI = tris[i];
-
-                scalar lam = tetLambda
-                (
-                    position_,
-                    endPosition,
-                    tI,
-                    tetAreas[tI],
-                    tetPlaneBasePtIs[tI],
-                    cellI_,
-                    tetFaceI_,
-                    tetPtI_,
-                    lambdaDistanceTolerance
-                );
-
-                if (lam < lambdaMin)
-                {
-                    lambdaMin = lam;
-
-                    triI = tI;
-                }
-            }
-        }
-
-        if (triI == 0)
-        {
-            // This must be a cell face crossing
-            faceI_ = tetFaceI_;
-
-            // Set the faceHitTetIs to those for the current tet in case a
-            // wall interaction is required with the cell face
-            faceHitTetIs = tetIndices
-            (
-                cellI_,
-                tetFaceI_,
-                tetBasePtI,
-                fPtAI,
-                fPtBI,
-                tetPtI_
-            );
-        }
-        else if (triI > 0)
-        {
-            // A tri was found to be crossed before a wall face was hit (if any)
-            faceI_ = -1;
-        }
-
-        // Pout<< "track loop " << position_ << " " << endPosition << nl
-        //     << "    " << cellI_
-        //     << "    " << faceI_
-        //     << " " << tetFaceI_
-        //     << " " << tetPtI_
-        //     << " " << triI
-        //     << " " << lambdaMin
-        //     << " " << trackFraction
-        //     << endl;
-
-        // Pout<< "# Tracking loop tet "
-        //     << origId_ << " " << origProc_<< nl
-        //     << "# face: " << tetFaceI_ << nl
-        //     << "# tetPtI: " << tetPtI_ << nl
-        //     << "# tetBasePtI: " << mesh_.tetBasePtIs()[tetFaceI_] << nl
-        //     << "# tet.mag(): " << tet.mag() << nl
-        //     << "# tet.quality(): " << tet.quality()
-        //     << endl;
-
-        // meshTools::writeOBJ(Pout, tet.a());
-        // meshTools::writeOBJ(Pout, tet.b());
-        // meshTools::writeOBJ(Pout, tet.c());
-        // meshTools::writeOBJ(Pout, tet.d());
-
-        // Pout<< "f 1 3 2" << nl
-        //     << "f 2 3 4" << nl
-        //     << "f 1 4 3" << nl
-        //     << "f 1 2 4" << endl;
-
-        // The particle can be 'outside' the tet.  This will yield a
-        // lambda larger than 1, or smaller than 0.  For values < 0,
-        // the particle travels away from the tet and we don't move
-        // the particle, only change tet/cell.  For values larger than
-        // 1, we move the particle to endPosition before the tet/cell
-        // change.
-        if (lambdaMin > SMALL)
-        {
-            if (lambdaMin <= 1.0)
-            {
-                trackFraction += lambdaMin*(1 - trackFraction);
-
-                position_ += lambdaMin*(endPosition - position_);
-            }
-            else
-            {
-                position_ = endPosition;
-
-                return 1.0;
-            }
-        }
-        else
-        {
-            // Set lambdaMin to zero to force a towards-tet-centre
-            // correction.
-            lambdaMin = 0.0;
-        }
-
-    } while (faceI_ < 0);
-
-    particleType& p = static_cast<particleType&>(*this);
-    p.hitFace(td);
-
-    if (internalFace(faceI_))
-    {
-        // Change tet ownership because a tri face has been crossed,
-        // in general this is:
-        //     tetNeighbour(triI);
-        // but triI must be 0;
-        // No modifications are required for triI = 0, no call required to
-        //     tetNeighbour(0);
-
-        if (cellI_ == mesh_.faceOwner()[faceI_])
-        {
-            cellI_ = mesh_.faceNeighbour()[faceI_];
-        }
-        else if (cellI_ == mesh_.faceNeighbour()[faceI_])
-        {
-            cellI_ = mesh_.faceOwner()[faceI_];
-        }
-        else
-        {
-            FatalErrorIn("Particle::trackToFace(const vector&, TrackData&)")
-                << "addressing failure" << abort(FatalError);
-        }
-    }
-    else
-    {
-        label origFaceI = faceI_;
-        label patchI = patch(faceI_);
-
-        // No action taken for tetPtI_ for tetFaceI_ here, handled by
-        // patch interaction call or later during processor transfer.
-
-        if
-        (
-            !p.hitPatch
-            (
-                mesh_.boundaryMesh()[patchI],
-                td,
-                patchI,
-                trackFraction,
-                faceHitTetIs
-            )
-        )
-        {
-            // Did patch interaction model switch patches?
-            if (faceI_ != origFaceI)
-            {
-                patchI = patch(faceI_);
-            }
-
-            const polyPatch& patch = mesh_.boundaryMesh()[patchI];
-
-            if (isA<wedgePolyPatch>(patch))
-            {
-                p.hitWedgePatch
-                (
-                    static_cast<const wedgePolyPatch&>(patch), td
-                );
-            }
-            else if (isA<symmetryPolyPatch>(patch))
-            {
-                p.hitSymmetryPatch
-                (
-                    static_cast<const symmetryPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<cyclicPolyPatch>(patch))
-            {
-                p.hitCyclicPatch
-                (
-                    static_cast<const cyclicPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<cyclicAMIPolyPatch>(patch))
-            {
-                p.hitCyclicAMIPatch
-                (
-                    static_cast<const cyclicAMIPolyPatch&>(patch),
-                    td,
-                    endPosition - position_
-                );
-            }
-            else if (isA<processorPolyPatch>(patch))
-            {
-                p.hitProcessorPatch
-                (
-                    static_cast<const processorPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<wallPolyPatch>(patch))
-            {
-                p.hitWallPatch
-                (
-                    static_cast<const wallPolyPatch&>(patch), td, faceHitTetIs
-                );
-            }
-            else
-            {
-                p.hitPatch(patch, td);
-            }
-        }
+        Info << "Particle " << origId() << nl << FUNCTION_NAME << nl << endl;
     }
 
-    if (lambdaMin < SMALL)
-    {
-        // Apply tracking correction towards tet centre.
-        // Generate current tet to find centre to apply correction.
+    typename TrackCloudType::particleType& p =
+        static_cast<typename TrackCloudType::particleType&>(*this);
+    typename TrackCloudType::particleType::trackingData& ttd =
+        static_cast<typename TrackCloudType::particleType::trackingData&>(td);
 
-        tetPointRef tet = currentTet();
-
-        if (debug)
-        {
-            Pout<< "tracking rescue for lambdaMin:" << lambdaMin
-                << "from " << position();
-        }
-
-        position_ += trackingCorrectionTol*(tet.centre() - position_);
-
-        if
-        (
-            cloud.hasWallImpactDistance()
-         && !internalFace(faceHitTetIs.face())
-         && cloud.cellHasWallFaces()[faceHitTetIs.cell()]
-        )
-        {
-            const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-
-            label fI = faceHitTetIs.face();
-
-            label patchI = patches.patchID()[fI - mesh_.nInternalFaces()];
-
-            if (isA<wallPolyPatch>(patches[patchI]))
-            {
-                // In the case of collision with a wall where there is
-                // a non-zero wallImpactDistance, it is possible for
-                // there to be a tracking correction required to bring
-                // the particle into the domain, but the position of
-                // the particle is further from the wall than the tet
-                // centre, in which case the normal correction can be
-                // counter-productive, i.e. pushes the particle
-                // further out of the domain.  In this case it is the
-                // position that hit the wall that is in need of a
-                // rescue correction.
-
-                triPointRef wallTri = faceHitTetIs.faceTri(mesh_);
-
-                tetPointRef wallTet = faceHitTetIs.tet(mesh_);
-
-                vector nHat = wallTri.normal();
-                nHat /= mag(nHat);
-
-                const scalar r = p.wallImpactDistance(nHat);
-
-                // Removing (approximately) the wallTri normal
-                // component of the existing correction, to avoid the
-                // situation where the existing correction in the wall
-                // normal direction is larger towards the wall than
-                // the new correction is away from it.
-                position_ +=
-                    trackingCorrectionTol
-                   *(
-                        (wallTet.centre() - (position_ + r*nHat))
-                      - (nHat & (tet.centre() - position_))*nHat
-                    );
-            }
-        }
-
-        if (debug)
-        {
-            Pout<< " to " << position() << endl;
-        }
-
-        cloud.trackingRescue();
-    }
-
-    return trackFraction;
-}
-
-
-template<class CloudType>
-void CML::particle::hitWallFaces
-(
-    const CloudType& cloud,
-    const vector& from,
-    const vector& to,
-    scalar& lambdaMin,
-    tetIndices& closestTetIs
-)
-{
-    typedef typename CloudType::particleType particleType;
-
-    if (!(cloud.hasWallImpactDistance() && cloud.cellHasWallFaces()[cellI_]))
+    if (!onFace())
     {
         return;
     }
-
-    particleType& p = static_cast<particleType&>(*this);
-
-    const faceList& pFaces = mesh_.faces();
-
-    const CML::cell& thisCell = mesh_.cells()[cellI_];
-
-    scalar lambdaDistanceTolerance =
-        lambdaDistanceToleranceCoeff*mesh_.cellVolumes()[cellI_];
-
-    const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-
-    forAll(thisCell, cFI)
+    else if (onInternalFace())
     {
-        label fI = thisCell[cFI];
+        changeCell();
+    }
+    else if (onBoundaryFace())
+    {
+        changeToMasterPatch();
 
-        if (internalFace(fI))
+        if (!p.hitPatch(cloud, ttd))
         {
-            continue;
-        }
+            const polyPatch& patch = mesh_.boundaryMesh()[p.patch()];
 
-        label patchI = patches.patchID()[fI - mesh_.nInternalFaces()];
-
-        if (isA<wallPolyPatch>(patches[patchI]))
-        {
-            // Get the decomposition of this wall face
-
-            const List<tetIndices> faceTetIs =
-                polyMeshTetDecomposition::faceTetIndices(mesh_, fI, cellI_);
-
-            const CML::face& f = pFaces[fI];
-
-            forAll(faceTetIs, tI)
+            if (isA<wedgePolyPatch>(patch))
             {
-                const tetIndices& tetIs = faceTetIs[tI];
-
-                triPointRef tri = tetIs.faceTri(mesh_);
-
-                vector n = tri.normal();
-
-                vector nHat = n/mag(n);
-
-                // Radius of particle with respect to this wall face
-                // triangle.  Assuming that the wallImpactDistance
-                // does not change as the particle or the mesh moves
-                // forward in time.
-                scalar r = p.wallImpactDistance(nHat);
-
-                vector toPlusRNHat = to + r*nHat;
-
-                // triI = 0 because it is the cell face tri of the tet
-                // we are concerned with.
-                scalar tetClambda = tetLambda
-                (
-                    tetIs.tet(mesh_).centre(),
-                    toPlusRNHat,
-                    0,
-                    n,
-                    f[tetIs.faceBasePt()],
-                    cellI_,
-                    fI,
-                    tetIs.tetPt(),
-                    lambdaDistanceTolerance
-                );
-
-                if ((tetClambda <= 0.0) || (tetClambda >= 1.0))
-                {
-                    // toPlusRNHat is not on the outside of the plane of
-                    // the wall face tri, the tri cannot be hit.
-                    continue;
-                }
-
-                // Check if the actual trajectory of the near-tri
-                // points intersects the triangle.
-
-                vector fromPlusRNHat = from + r*nHat;
-
-                // triI = 0 because it is the cell face tri of the tet
-                // we are concerned with.
-                scalar lambda = tetLambda
-                (
-                    fromPlusRNHat,
-                    toPlusRNHat,
-                    0,
-                    n,
-                    f[tetIs.faceBasePt()],
-                    cellI_,
-                    fI,
-                    tetIs.tetPt(),
-                    lambdaDistanceTolerance
-                );
-
-                pointHit hitInfo(vector::zero);
-
-                if (mesh_.moving())
-                {
-                    // For a moving mesh, the position of wall
-                    // triangle needs to be moved in time to be
-                    // consistent with the moment defined by the
-                    // current value of stepFraction and the value of
-                    // lambda just calculated.
-
-                    // Total fraction thought the timestep of the
-                    // motion, including stepFraction before the
-                    // current tracking step and the current
-                    // lambda
-                    // i.e.
-                    // let s = stepFraction, l = lambda
-                    // Motion of x in time:
-                    // |-----------------|---------|---------|
-                    // x00               x0        xi        x
-                    //
-                    // where xi is the correct value of x at the required
-                    // tracking instant.
-                    //
-                    // x0 = x00 + s*(x - x00) = s*x + (1 - s)*x00
-                    //
-                    // i.e. the motion covered by previous tracking portions
-                    // within this timestep, and
-                    //
-                    // xi = x0 + l*(x - x0)
-                    //    = l*x + (1 - l)*x0
-                    //    = l*x + (1 - l)*(s*x + (1 - s)*x00)
-                    //    = (s + l - s*l)*x + (1 - (s + l - s*l))*x00
-                    //
-                    // let m = (s + l - s*l)
-                    //
-                    // xi = m*x + (1 - m)*x00 = x00 + m*(x - x00);
-                    //
-                    // In the same form as before.
-
-                    // Clip lambda to 0.0-1.0 to ensure that sensible
-                    // positions are used for triangle intersections.
-                    scalar lam = max(0.0, min(1.0, lambda));
-
-                    scalar m = stepFraction_ + lam - (stepFraction_*lam);
-
-                    triPointRef tri00 = tetIs.oldFaceTri(mesh_);
-
-                    // Use SMALL positive tolerance to make the triangle
-                    // slightly "fat" to improve robustness.  Intersection
-                    // is calculated as the ray (from + r*nHat) -> (to +
-                    // r*nHat).
-
-                    point tPtA = tri00.a() + m*(tri.a() - tri00.a());
-                    point tPtB = tri00.b() + m*(tri.b() - tri00.b());
-                    point tPtC = tri00.c() + m*(tri.c() - tri00.c());
-
-                    triPointRef t(tPtA, tPtB, tPtC);
-
-                    // The point fromPlusRNHat + m*(to - from) is on the
-                    // plane of the triangle.  Determine the
-                    // intersection with this triangle by testing if
-                    // this point is inside or outside of the triangle.
-                    hitInfo = t.intersection
-                    (
-                        fromPlusRNHat + m*(to - from),
-                        t.normal(),
-                        intersection::FULL_RAY,
-                        SMALL
-                    );
-                }
-                else
-                {
-                    // Use SMALL positive tolerance to make the triangle
-                    // slightly "fat" to improve robustness.  Intersection
-                    // is calculated as the ray (from + r*nHat) -> (to +
-                    // r*nHat).
-                    hitInfo = tri.intersection
-                    (
-                        fromPlusRNHat,
-                        (to - from),
-                        intersection::FULL_RAY,
-                        SMALL
-                    );
-                }
-
-                if (hitInfo.hit())
-                {
-                    if (lambda < lambdaMin)
-                    {
-                        lambdaMin = lambda;
-
-                        faceI_ = fI;
-
-                        closestTetIs = tetIs;
-                    }
-                }
+                p.hitWedgePatch(cloud, ttd);
+            }
+//            else if (isA<symmetryPlanePolyPatch>(patch))
+//            {
+//                p.hitSymmetryPlanePatch(cloud, ttd);
+//            }
+            else if (isA<symmetryPolyPatch>(patch))
+            {
+                p.hitSymmetryPatch(cloud, ttd);
+            }
+            else if (isA<cyclicPolyPatch>(patch))
+            {
+                p.hitCyclicPatch(cloud, ttd);
+            }
+            else if (isA<cyclicACMIPolyPatch>(patch))
+            {
+                p.hitCyclicACMIPatch(cloud, ttd, direction);
+            }
+            else if (isA<cyclicAMIPolyPatch>(patch))
+            {
+                p.hitCyclicAMIPatch(cloud, ttd, direction);
+            }
+//            else if (isA<cyclicRepeatAMIPolyPatch>(patch))
+//            {
+//                p.hitCyclicRepeatAMIPatch(cloud, ttd, direction);
+//            }
+            else if (isA<processorPolyPatch>(patch))
+            {
+                p.hitProcessorPatch(cloud, ttd);
+            }
+            else if (isA<wallPolyPatch>(patch))
+            {
+                p.hitWallPatch(cloud, ttd);
+            }
+            else
+            {
+                td.keepParticle = false;
             }
         }
     }
 }
 
 
-template<class TrackData>
-void CML::particle::hitFace(TrackData&)
-{}
-
-
-template<class TrackData>
-bool CML::particle::hitPatch
+template<class TrackCloudType>
+CML::scalar CML::particle::trackToAndHitFace
 (
-    const polyPatch&,
-    TrackData&,
-    const label,
-    const scalar,
-    const tetIndices&
+    const vector& direction,
+    const scalar fraction,
+    TrackCloudType& cloud,
+    trackingData& td
 )
+{
+    if (debug)
+    {
+        Info << "Particle " << origId() << nl << FUNCTION_NAME << nl << endl;
+    }
+
+    const scalar f = trackToFace(direction, fraction);
+
+    hitFace(direction, cloud, td);
+
+    return f;
+}
+
+
+template<class TrackCloudType>
+bool CML::particle::hitPatch(TrackCloudType&, trackingData&)
 {
     return false;
 }
 
 
-template<class TrackData>
-void CML::particle::hitWedgePatch
-(
-    const wedgePolyPatch& wpp,
-    TrackData&
-)
+template<class TrackCloudType>
+void CML::particle::hitWedgePatch(TrackCloudType& cloud, trackingData& td)
 {
-    FatalErrorIn
-    (
-        "void CML::particle::hitWedgePatch"
-        "("
-            "const wedgePolyPatch& wpp, "
-            "TrackData&"
-        ")"
-    )   << "Hitting a wedge patch should not be possible."
+    FatalErrorInFunction
+        << "Hitting a wedge patch should not be possible."
         << abort(FatalError);
 
-    vector nf = normal();
-    nf /= mag(nf);
+    hitSymmetryPatch(cloud, td);
+}
 
+
+//template<class TrackCloudType>
+//void CML::particle::hitSymmetryPlanePatch
+//(
+//    TrackCloudType& cloud,
+//    trackingData& td
+//)
+//{
+//    hitSymmetryPatch(cloud, td);
+//}
+
+
+template<class TrackCloudType>
+void CML::particle::hitSymmetryPatch(TrackCloudType&, trackingData&)
+{
+    const vector nf = normal();
     transformProperties(I - 2.0*nf*nf);
 }
 
 
-template<class TrackData>
-void CML::particle::hitSymmetryPatch
-(
-    const symmetryPolyPatch& spp,
-    TrackData&
-)
+template<class TrackCloudType>
+void CML::particle::hitCyclicPatch(TrackCloudType&, trackingData&)
 {
-    vector nf = normal();
-    nf /= mag(nf);
-
-    transformProperties(I - 2.0*nf*nf);
-}
-
-
-template<class TrackData>
-void CML::particle::hitCyclicPatch
-(
-    const cyclicPolyPatch& cpp,
-    TrackData& td
-)
-{
-    faceI_ = cpp.transformGlobalFace(faceI_);
-
-    cellI_ = mesh_.faceOwner()[faceI_];
-
-    tetFaceI_ = faceI_;
-
-    // See note in correctAfterParallelTransfer for tetPtI_ addressing.
-    tetPtI_ = mesh_.faces()[tetFaceI_].size() - 1 - tetPtI_;
-
+    const cyclicPolyPatch& cpp =
+        static_cast<const cyclicPolyPatch&>(mesh_.boundaryMesh()[patch()]);
     const cyclicPolyPatch& receiveCpp = cpp.neighbPatch();
-    label patchFacei = receiveCpp.whichFace(faceI_);
+    const label receiveFacei = receiveCpp.whichFace(facei_);
 
-    // Now the particle is on the receiving side
+    // Set the topology
+    facei_ = tetFacei_ = cpp.transformGlobalFace(facei_);
+    celli_ = mesh_.faceOwner()[facei_];
+    // See note in correctAfterParallelTransfer for tetPti addressing ...
+    tetPti_ = mesh_.faces()[tetFacei_].size() - 1 - tetPti_;
 
-    // Have patch transform the position
-    receiveCpp.transformPosition(position_, patchFacei);
+    // Reflect to account for the change of triangle orientation in the new cell
+    reflect();
 
     // Transform the properties
     if (!receiveCpp.parallel())
@@ -2466,7 +1220,7 @@ void CML::particle::hitCyclicPatch
         (
             receiveCpp.forwardT().size() == 1
           ? receiveCpp.forwardT()[0]
-          : receiveCpp.forwardT()[patchFacei]
+          : receiveCpp.forwardT()[receiveFacei]
         );
         transformProperties(T);
     }
@@ -2476,60 +1230,60 @@ void CML::particle::hitCyclicPatch
         (
             (receiveCpp.separation().size() == 1)
           ? receiveCpp.separation()[0]
-          : receiveCpp.separation()[patchFacei]
+          : receiveCpp.separation()[receiveFacei]
         );
         transformProperties(-s);
     }
 }
 
 
-template<class TrackData>
+template<class TrackCloudType>
 void CML::particle::hitCyclicAMIPatch
 (
-    const cyclicAMIPolyPatch& cpp,
-    TrackData& td,
+    TrackCloudType&,
+    trackingData& td,
     const vector& direction
 )
 {
+    vector pos = position();
+
+    const cyclicAMIPolyPatch& cpp =
+        static_cast<const cyclicAMIPolyPatch&>(mesh_.boundaryMesh()[patch()]);
     const cyclicAMIPolyPatch& receiveCpp = cpp.neighbPatch();
+    const label sendFacei = cpp.whichFace(facei_);
+    const label receiveFacei = cpp.pointFace(sendFacei, direction, pos);
 
-    // patch face index on sending side
-    label patchFaceI = faceI_ - cpp.start();
-
-    // patch face index on receiving side - also updates position
-    patchFaceI = cpp.pointFace(patchFaceI, direction, position_);
-
-    if (patchFaceI < 0)
+    if (receiveFacei < 0)
     {
-        FatalErrorIn
-        (
-            "template<class TrackData>"
-            "void CML::particle::hitCyclicAMIPatch"
-            "("
-                "const cyclicAMIPolyPatch&, "
-                "TrackData&, "
-                "const vector&"
-            ")"
-        )
+        // If the patch face of the particle is not known assume that the
+        // particle is lost and mark it to be deleted.
+        td.keepParticle = false;
+        WarningInFunction
             << "Particle lost across " << cyclicAMIPolyPatch::typeName
             << " patches " << cpp.name() << " and " << receiveCpp.name()
-            << " at position " << position_ << abort(FatalError);
+            << " at position " << pos << endl;
     }
 
-    // convert face index into global numbering
-    faceI_ = patchFaceI + receiveCpp.start();
+    // Set the topology
+    facei_ = tetFacei_ = receiveFacei + receiveCpp.start();
 
-    cellI_ = mesh_.faceOwner()[faceI_];
+    // Locate the particle on the receiving side
+    vector directionT = direction;
+    cpp.reverseTransformDirection(directionT, sendFacei);
+    locate
+    (
+        pos,
+        &directionT,
+        mesh_.faceOwner()[facei_],
+        false,
+        "Particle crossed between " + cyclicAMIPolyPatch::typeName +
+        " patches " + cpp.name() + " and " + receiveCpp.name() +
+        " to a location outside of the mesh."
+    );
 
-    tetFaceI_ = faceI_;
-
-    // See note in correctAfterParallelTransfer for tetPtI_ addressing.
-    tetPtI_ = mesh_.faces()[tetFaceI_].size() - 1 - tetPtI_;
-
-    // Now the particle is on the receiving side
-
-    // Have patch transform the position
-    receiveCpp.transformPosition(position_, patchFaceI);
+    // The particle must remain associated with a face for the tracking to
+    // register as incomplete
+    facei_ = tetFacei_;
 
     // Transform the properties
     if (!receiveCpp.parallel())
@@ -2538,7 +1292,7 @@ void CML::particle::hitCyclicAMIPatch
         (
             receiveCpp.forwardT().size() == 1
           ? receiveCpp.forwardT()[0]
-          : receiveCpp.forwardT()[patchFaceI]
+          : receiveCpp.forwardT()[receiveFacei]
         );
         transformProperties(T);
     }
@@ -2548,35 +1302,78 @@ void CML::particle::hitCyclicAMIPatch
         (
             (receiveCpp.separation().size() == 1)
           ? receiveCpp.separation()[0]
-          : receiveCpp.separation()[patchFaceI]
+          : receiveCpp.separation()[receiveFacei]
         );
         transformProperties(-s);
     }
 }
 
 
-template<class TrackData>
-void CML::particle::hitProcessorPatch(const processorPolyPatch&, TrackData&)
-{}
-
-
-template<class TrackData>
-void CML::particle::hitWallPatch
+template<class TrackCloudType>
+void CML::particle::hitCyclicACMIPatch
 (
-    const wallPolyPatch&,
-    TrackData&,
-    const tetIndices&
+    TrackCloudType& cloud,
+    trackingData& td,
+    const vector& direction
 )
+{
+    const cyclicACMIPolyPatch& cpp =
+        static_cast<const cyclicACMIPolyPatch&>(mesh_.boundaryMesh()[patch()]);
+
+    const label localFacei = cpp.whichFace(facei_);
+
+    // If the mask is within the patch tolerance at either end, then we can
+    // assume an interaction with the appropriate part of the ACMI pair.
+    const scalar mask = cpp.mask()[localFacei];
+    bool couple = mask >= 1 - cpp.tolerance();
+    bool nonOverlap = mask <= cpp.tolerance();
+
+    // If the mask is an intermediate value, then we search for a location on
+    // the other side of the AMI. If we can't find a location, then we assume
+    // that we have hit the non-overlap patch.
+    if (!couple && !nonOverlap)
+    {
+        vector pos = position();
+        couple = cpp.pointFace(localFacei, direction, pos) >= 0;
+        nonOverlap = !couple;
+    }
+
+    if (couple)
+    {
+        hitCyclicAMIPatch(cloud, td, direction);
+    }
+    else
+    {
+        // Move to the face associated with the non-overlap patch and redo the
+        // face interaction.
+        tetFacei_ = facei_ = cpp.nonOverlapPatch().start() + localFacei;
+        hitFace(direction, cloud, td);
+    }
+}
+
+
+//template<class TrackCloudType>
+//void CML::particle::hitCyclicRepeatAMIPatch
+//(
+//    TrackCloudType& cloud,
+//    trackingData& td,
+//    const vector& direction
+//)
+//{
+//
+//    hitCyclicAMIPatch(cloud, td, direction);
+//}
+
+
+template<class TrackCloudType>
+void CML::particle::hitProcessorPatch(TrackCloudType&, trackingData&)
 {}
 
 
-template<class TrackData>
-void CML::particle::hitPatch(const polyPatch&, TrackData&)
+template<class TrackCloudType>
+void CML::particle::hitWallPatch(TrackCloudType&, trackingData&)
 {}
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

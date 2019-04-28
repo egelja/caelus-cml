@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -167,7 +167,7 @@ void turbulentInletFvPatchField<Type>::updateCoeffs()
 
         forAll(patchField, facei)
         {
-            ranGen_.randomise(randomField[facei]);
+            randomField[facei] = ranGen_.sample01<Type>();
         }
 
         // Correction-factor to compensate for the loss of RMS fluctuation

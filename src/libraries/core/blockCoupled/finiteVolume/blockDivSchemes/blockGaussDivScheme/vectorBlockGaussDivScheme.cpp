@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2014 H. Jasak
 -------------------------------------------------------------------------------
 License
@@ -43,13 +43,8 @@ tmp<BlockLduSystem<vector, scalar> > blockGaussDivScheme<vector>::fvmUDiv
 {
     if (this->tinterpScheme_().type() != word("linear"))
     {
-        FatalErrorIn
-        (
-            "tmp<BlockLduSystem> blockGaussDivScheme<vector>::fvmUDiv\n"
-            "(\n"
-            "    GeometricField<vector, fvPatchField, volMesh>&"
-            ")\n"
-        )   << "Implicit block div operator currently defined only for"
+        FatalErrorInFunction
+            << "Implicit block div operator currently defined only for"
             << " Gauss linear. "
             << abort(FatalError);
     }
@@ -137,13 +132,8 @@ tmp<BlockLduSystem<vector, scalar> > blockGaussDivScheme<vector>::fvmUDiv
 {
     if (this->tinterpScheme_().type() != word("linear"))
     {
-        FatalErrorIn
-        (
-            "tmp<BlockLduSystem> blockGaussDivScheme<vector>::fvmUDiv\n"
-            "(\n"
-            "    GeometricField<vector, fvPatchField, volMesh>&"
-            ")\n"
-        )   << "Implicit block div operator currently defined only for"
+        FatalErrorInFunction
+            << "Implicit block div operator currently defined only for"
             << " Gauss linear. "
             << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -133,7 +133,7 @@ CML::csvTableReader<Type>::csvTableReader(const dictionary& dict)
 {
     if (componentColumns_.size() != pTraits<Type>::nComponents)
     {
-        FatalErrorIn("csvTableReader<Type>::csvTableReader(const dictionary&)")
+        FatalErrorInFunction
             << componentColumns_ << " does not have the expected length "
             << pTraits<Type>::nComponents << endl
             << exit(FatalError);
@@ -158,10 +158,8 @@ namespace CML
     {
         if (componentColumns_[0] >= splitted.size())
         {
-            FatalErrorIn
-            (
-                "csvTableReader<scalar>::readValue(const List<string>&)"
-            )   << "No column " << componentColumns_[0] << " in "
+            FatalErrorInFunction
+                << "No column " << componentColumns_[0] << " in "
                 << splitted << endl
                 << exit(FatalError);
         }
@@ -179,10 +177,8 @@ namespace CML
         {
             if (componentColumns_[i] >= splitted.size())
             {
-                FatalErrorIn
-                (
-                    "csvTableReader<Type>::readValue(const List<string>&)"
-                )   << "No column " << componentColumns_[i] << " in "
+                FatalErrorInFunction
+                    << "No column " << componentColumns_[i] << " in "
                     << splitted << endl
                     << exit(FatalError);
             }
@@ -262,7 +258,7 @@ void CML::csvTableReader<Type>::operator()
     List<Tuple2<scalar, List<Tuple2<scalar, Type> > > >& data
 )
 {
-    notImplemented("csvTableReader<Type>::operator()");
+    NotImplemented;
 }
 
 

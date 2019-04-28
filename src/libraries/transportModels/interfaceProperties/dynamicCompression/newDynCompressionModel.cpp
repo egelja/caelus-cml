@@ -41,10 +41,8 @@ CML::autoPtr<CML::dynCompressionModel> CML::dynCompressionModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "dynCompressionModel::New(const fvMesh&)"
-        )   << "Unknown Dynamic Interface Compression model type " << typeName
+        FatalErrorInFunction
+            << "Unknown Dynamic Interface Compression model type " << typeName
             << endl << endl
             << "Valid Dynamic Interface Compression model types are :" << endl
             << dictionaryConstructorTablePtr_->toc()

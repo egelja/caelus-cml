@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2014-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -38,10 +38,8 @@ CML::IOmapDistributePolyMesh::IOmapDistributePolyMesh(const IOobject& io)
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "IOmapDistributePolyMesh::IOmapDistributePolyMesh(const IOobject&)"
-        )   << "IOmapDistributePolyMesh does not support automatic rereading."
+        WarningInFunction
+            << "IOmapDistributePolyMesh does not support automatic rereading."
             << endl;
     }
 
@@ -70,11 +68,8 @@ CML::IOmapDistributePolyMesh::IOmapDistributePolyMesh
 {
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn
-        (
-            "IOmapDistributePolyMesh::IOmapDistributePolyMesh"
-            "(const IOobject&, const mapDistributePolyMesh&)"
-        )   << "IOmapDistributePolyMesh does not support automatic rereading."
+        WarningInFunction
+            << "IOmapDistributePolyMesh does not support automatic rereading."
             << endl;
     }
 

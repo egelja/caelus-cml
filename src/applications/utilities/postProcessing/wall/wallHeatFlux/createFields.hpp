@@ -1,9 +1,9 @@
-autoPtr<basicThermo> thermo
+autoPtr<fluidThermo> thermo
 (
-    basicThermo::New(mesh)
+    fluidThermo::New(mesh)
 );
 
-const volScalarField& h = thermo->h();
+const volScalarField& h = thermo->he();
 
 volScalarField rho
 (

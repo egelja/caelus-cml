@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -42,7 +42,12 @@ SourceFiles
 namespace CML
 {
 
+// Forward declaration of friend functions and operators
+
+class streamLineParticle;
 class streamLineParticleCloud;
+
+Ostream& operator<<(Ostream&, const streamLineParticle&);
 
 /*---------------------------------------------------------------------------*\
                      Class streamLineParticle Declaration
@@ -52,35 +57,41 @@ class streamLineParticle
 :
     public particle
 {
-
 public:
 
-    //- Class used to pass tracking data to the trackToFace function
     class trackingData
     :
-        public particle::TrackingData<Cloud<streamLineParticle> >
+        public particle::trackingData
     {
-
     public:
 
+        // Public data
 
-        const PtrList<interpolation<scalar> >& vsInterp_;
-        const PtrList<interpolation<vector> >& vvInterp_;
-        const label UIndex_;
-        const bool trackForward_;
-        const label nSubCycle_;
-        const scalar trackLength_;
+            const PtrList<interpolation<scalar> >& vsInterp_;
 
-        DynamicList<vectorList>& allPositions_;
-        List<DynamicList<scalarList> >& allScalars_;
-        List<DynamicList<vectorList> >& allVectors_;
+            const PtrList<interpolation<vector> >& vvInterp_;
+
+            const label UIndex_;
+
+            bool trackForward_;
+
+            const label nSubCycle_;
+
+            const scalar trackLength_;
+
+            DynamicList<vectorList>& allPositions_;
+
+            List<DynamicList<scalarList> >& allScalars_;
+
+            List<DynamicList<vectorList> >& allVectors_;
 
 
         // Constructors
 
+            //- Construct from components
             trackingData
             (
-                Cloud<streamLineParticle>& cloud,
+                streamLineParticleCloud& cloud,
                 const PtrList<interpolation<scalar> >& vsInterp,
                 const PtrList<interpolation<vector> >& vvInterp,
                 const label UIndex,
@@ -93,14 +104,13 @@ public:
                 List<DynamicList<vectorList> >& allVectors
             )
             :
-                particle::TrackingData<Cloud<streamLineParticle> >(cloud),
+                particle::trackingData(cloud),
                 vsInterp_(vsInterp),
                 vvInterp_(vvInterp),
                 UIndex_(UIndex),
                 trackForward_(trackForward),
                 nSubCycle_(nSubCycle),
                 trackLength_(trackLength),
-
                 allPositions_(allPositions),
                 allScalars_(allScalars),
                 allVectors_(allVectors)
@@ -115,41 +125,25 @@ private:
         //- Lifetime of particle. Particle dies when reaches 0.
         label lifeTime_;
 
-        //- sampled positions
+        //- Sampled positions
         DynamicList<point> sampledPositions_;
 
-        //- sampled scalars
+        //- Sampled scalars
         List<DynamicList<scalar> > sampledScalars_;
 
-        //- sampled vectors
+        //- Sampled vectors
         List<DynamicList<vector> > sampledVectors_;
 
 
     // Private Member Functions
-
-        //- Estimate dt to cross from current face to next one in nSubCycle
-        //  steps.
-        scalar calcSubCycleDeltaT
-        (
-            trackingData& td,
-            const scalar dt,
-            const vector& U
-        ) const;
-
-        void constrainVelocity
-        (
-            trackingData& td,
-            const scalar dt,
-            vector& U
-        );
 
         //- Interpolate all quantities; return interpolated velocity.
         vector interpolateFields
         (
             const trackingData&,
             const point&,
-            const label cellI,
-            const label faceI
+            const label celli,
+            const label facei
         );
 
 
@@ -162,7 +156,7 @@ public:
         (
             const polyMesh& c,
             const vector& position,
-            const label cellI,
+            const label celli,
             const label lifeTime
         );
 
@@ -183,8 +177,7 @@ public:
             return autoPtr<particle>(new streamLineParticle(*this));
         }
 
-        //- Factory class to read-construct particles used for
-        //  parallel transfer
+        //- Factory class to read-construct particles used for parallel transfer
         class iNew
         {
             const polyMesh& mesh_;
@@ -211,72 +204,50 @@ public:
         // Tracking
 
             //- Track all particles to their end point
-            bool move(trackingData&, const scalar trackTime);
-
+            bool move(streamLineParticleCloud&, trackingData&, const scalar);
 
             //- Overridable function to handle the particle hitting a patch
             //  Executed before other patch-hitting functions
-            bool hitPatch
-            (
-                const polyPatch&,
-                trackingData& td,
-                const label patchI,
-                const scalar trackFraction,
-                const tetIndices& tetIs
-            );
+            bool hitPatch(streamLineParticleCloud&, trackingData&);
 
             //- Overridable function to handle the particle hitting a wedge
-            void hitWedgePatch
-            (
-                const wedgePolyPatch&,
-                trackingData& td
-            );
+            void hitWedgePatch(streamLineParticleCloud&, trackingData&);
 
             //- Overridable function to handle the particle hitting a
             //  symmetry plane
-            //void hitSymmetryPlanePatch
-            //(
-            //    const symmetryPlanePolyPatch&,
-            //    trackingData& td
-            //);
+            //void hitSymmetryPlanePatch(streamLineParticleCloud&, trackingData&);
 
             //- Overridable function to handle the particle hitting a
             //  symmetry patch
-            void hitSymmetryPatch
-            (
-                const symmetryPolyPatch&,
-                trackingData& td
-            );
+            void hitSymmetryPatch(streamLineParticleCloud&, trackingData&);
 
             //- Overridable function to handle the particle hitting a cyclic
-            void hitCyclicPatch
+            void hitCyclicPatch(streamLineParticleCloud&, trackingData&);
+
+            //- Overridable function to handle the particle hitting a
+            //  cyclicAMIPatch
+            void hitCyclicAMIPatch
             (
-                const cyclicPolyPatch&,
-                trackingData& td
+                streamLineParticleCloud&,
+                trackingData&,
+                const vector& direction
+            );
+
+            //- Overridable function to handle the particle hitting a
+            //  cyclicACMIPatch
+            void hitCyclicACMIPatch
+            (
+                streamLineParticleCloud&,
+                trackingData&,
+                const vector& direction
             );
 
             //- Overridable function to handle the particle hitting a
             //- processorPatch
-            void hitProcessorPatch
-            (
-                const processorPolyPatch&,
-                trackingData& td
-            );
+            void hitProcessorPatch(streamLineParticleCloud&, trackingData&);
 
             //- Overridable function to handle the particle hitting a wallPatch
-            void hitWallPatch
-            (
-                const wallPolyPatch&,
-                trackingData& td,
-                const tetIndices&
-            );
-
-            //- Overridable function to handle the particle hitting a polyPatch
-            void hitPatch
-            (
-                const polyPatch&,
-                trackingData& td
-            );
+            void hitWallPatch(streamLineParticleCloud&, trackingData&);
 
 
         // I-O

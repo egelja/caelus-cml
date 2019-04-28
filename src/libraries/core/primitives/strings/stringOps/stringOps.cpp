@@ -282,33 +282,15 @@ CML::string CML::stringOps::getVariable
 
         if (value.empty())
         {
-            FatalIOErrorIn
-            (
-                "stringOps::getVariable\n"
-                "(\n"
-                "    const word&, \n"
-                "    const dictionary&,\n"
-                "    const bool,\n"
-                "    const bool\n"
-                ")\n",
-                dict
-            )   << "Cannot find dictionary or environment variable "
+            FatalIOErrorInFunction(dict)
+                << "Cannot find dictionary or environment variable "
                 << name << exit(FatalIOError);
         }
     }
     else
     {
-        FatalIOErrorIn
-        (
-            " stringOps::getVariable\n"
-            "(\n"
-            "    const word&,\n"
-            "    const dictionary&,\n"
-            "    const bool,\n"
-            "    const bool\n"
-            ")\n",
-            dict
-        )   << "Cannot find dictionary variable "
+        FatalIOErrorInFunction(dict)
+            << "Cannot find dictionary variable "
             << name << exit(FatalIOError);
     }
 
@@ -788,10 +770,7 @@ CML::string& CML::stringOps::inplaceExpand
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "stringOps::inplaceExpand(string&, const bool)"
-                    )
+                    FatalErrorInFunction
                         << "Unknown variable name '" << varName << "'"
                         << exit(FatalError);
                 }

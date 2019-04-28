@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,12 +47,8 @@ CML::autoPtr<CML::polyMeshModifier> CML::polyMeshModifier::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "polyMeshModifier::New(const word&, const dictionary&, "
-            "const label, const polyMesh&)",
-            dict
-        )   << "Unknown polyMeshModifier type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown polyMeshModifier type "
             << modifierType << nl << nl
             << "Valid polyMeshModifier types are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

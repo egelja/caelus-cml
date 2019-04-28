@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,12 +77,8 @@ CML::multiSolidBodyMotionFvMesh::multiSolidBodyMotionFvMesh(const IOobject& io)
 {
     if (undisplacedPoints_.size() != nPoints())
     {
-        FatalIOErrorIn
-        (
-            "multiSolidBodyMotionFvMesh::multiSolidBodyMotionFvMesh"
-            "(const IOobject&)",
-            dynamicMeshCoeffs_
-        )   << "Read " << undisplacedPoints_.size()
+        FatalIOErrorInFunction(dynamicMeshCoeffs_)
+            << "Read " << undisplacedPoints_.size()
             << " undisplaced points from " << undisplacedPoints_.objectPath()
             << " but the current mesh has " << nPoints()
             << exit(FatalIOError);
@@ -102,12 +98,8 @@ CML::multiSolidBodyMotionFvMesh::multiSolidBodyMotionFvMesh(const IOobject& io)
 
             if (zoneIDs_[zoneI] == -1)
             {
-                FatalIOErrorIn
-                (
-                    "multiSolidBodyMotionFvMesh::"
-                    "multiSolidBodyMotionFvMesh(const IOobject&)",
-                    dynamicMeshCoeffs_
-                )   << "Cannot find cellZone named " << iter().keyword()
+                FatalIOErrorInFunction(dynamicMeshCoeffs_)
+                    << "Cannot find cellZone named " << iter().keyword()
                     << ". Valid zones are " << cellZones().names()
                     << exit(FatalIOError);
             }
@@ -203,7 +195,7 @@ bool CML::multiSolidBodyMotionFvMesh::update()
     {
         hasWarned = true;
 
-        WarningIn("multiSolidBodyMotionFvMesh::update()")
+        WarningInFunction
             << "Did not find volVectorField U."
             << " Not updating U boundary conditions." << endl;
     }

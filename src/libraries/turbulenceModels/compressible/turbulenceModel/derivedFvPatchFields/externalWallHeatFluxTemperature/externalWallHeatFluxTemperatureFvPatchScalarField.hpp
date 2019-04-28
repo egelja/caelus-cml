@@ -21,37 +21,82 @@ Class
     externalWallHeatFluxTemperatureFvPatchScalarField
 
 Description
-    Heat flux boundary condition for temperature on external wall.
+    This boundary condition applies a heat flux condition to temperature
+    on an external wall in one of three modes:
 
-    If h and Ta are specified then fixed_heat_transfer_coefficient mode is used
-    If q is specified then fixed_heat_flux is used.
+      - fixed power: supply Q
+      - fixed heat flux: supply q
+      - fixed heat transfer coefficient: supply h and Ta
 
-    Example usage:
-        myWallPatch
-        {
-            type            externalWallHeatFluxTemperature;
-            K               solidThermo;       // solidThermo or lookup
-            q               uniform 1000;      // Heat flux / [W/m2]
-            Ta              uniform 300.0;     // Tambient temperature /[K]
-            h               uniform 10.0;      // Heat transfer coeff /[W/Km2]
-            value           uniform 300.0;     // Initial temperature / [K]
-            KName           none;
-        }
+    where:
+    \vartable
+        Q  | Power [W]
+        q  | Heat flux [W/m^2]
+        h  | Heat transfer coefficient [W/m^2/K]
+        Ta | Ambient temperature [K]
+    \endvartable
 
-Note:
-    Only the pair h, Ta or q can be specified in the dictionary.
+    For heat transfer coefficient mode optional thin thermal layer resistances
+    can be specified through thicknessLayers and kappaLayers entries.
 
+    The thermal conductivity \c kappa can either be retrieved from various
+    possible sources, as detailed in the class temperatureCoupledBase.
+
+    The ambient temperature Ta is specified as a Foam::Function1 of time but
+    uniform is space.
+
+Usage
+    \table
+    Property     | Description                 | Required | Default value
+    mode         | 'power', 'flux' or 'coefficient' | yes |
+    Q            | Power [W]                   | for mode 'power'     |
+    q            | Heat flux [W/m^2]           | for mode 'flux'     |
+    h            | Heat transfer coefficient [W/m^2/K] | for mode 'coefficent' |
+    Ta           | Ambient temperature [K]     | for mode 'coefficient' |
+    thicknessLayers | Layer thicknesses [m] | no |
+    kappaLayers  | Layer thermal conductivities [W/m/K] | no |
+    relaxation   | Relaxation for the wall temperature | no | 1
+    emissivity   | Surface emissivity for radiative flux to ambient | no | 0
+    qr           | Name of the radiative field | no | none
+    qrRelaxation | Relaxation factor for radiative field | no | 1
+    kappaMethod  | Inherited from temperatureCoupledBase | inherited |
+    kappa        | Inherited from temperatureCoupledBase | inherited |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            externalWallHeatFluxTemperature;
+
+        mode            coefficient;
+
+        Ta              constant 300.0;
+        h               uniform 10.0;
+        thicknessLayers (0.1 0.2 0.3 0.4);
+        kappaLayers     (1 2 3 4);
+
+        kappaMethod     fluidThermo;
+
+        value           $internalField;
+    }
+    \endverbatim
+
+See also
+    Foam::temperatureCoupledBase
+    Foam::mixedFvPatchScalarField
 
 SourceFiles
     externalWallHeatFluxTemperatureFvPatchScalarField.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef solidWallHeatFluxTemperatureFvPatchScalarField_H
-#define solidWallHeatFluxTemperatureFvPatchScalarField_H
+#ifndef externalWallHeatFluxTemperatureFvPatchScalarField_HPP
+#define externalWallHeatFluxTemperatureFvPatchScalarField_HPP
 
 #include "mixedFvPatchFields.hpp"
 #include "temperatureCoupledBase.hpp"
+#include "DataEntry.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -74,10 +119,11 @@ public:
         //- Operation mode enumeration
         enum operationMode
         {
+            fixedPower,
             fixedHeatFlux,
-            fixedHeatTransferCoeff,
-            unknown
+            fixedHeatTransferCoeff
         };
+
         static const NamedEnum<operationMode, 3> operationModeNames;
 
 
@@ -86,16 +132,40 @@ private:
     // Private data
 
         //- Operation mode
-        operationMode oldMode_;
+        operationMode mode_;
 
-        //- Heat flux / [W/m2]
+        //- Heat power [W]
+        scalar Q_;
+
+        //- Heat flux [W/m2]
         scalarField q_;
 
-        //- Heat transfer coefficient / [W/m2K]
+        //- Heat transfer coefficient [W/m2K]
         scalarField h_;
 
-        //- Ambient temperature / [K]
-        scalarField Ta_;
+        //- Ambient temperature [K]
+        autoPtr<DataEntry<scalar> > Ta_;
+
+        //- Relaxation for the wall temperature (thermal inertia)
+        scalar relaxation_;
+
+        //- Optional surface emissivity for radiative transfer to ambient
+        scalar emissivity_;
+
+        //- Cache qr for relaxation
+        scalarField qrPrevious_;
+
+        //- Relaxation for qr
+        scalar qrRelaxation_;
+
+        //- Name of the radiative heat flux
+        const word qrName_;
+
+        //- Thickness of layers
+        scalarList thicknessLayers_;
+
+        //- Conductivity of layers
+        scalarList kappaLayers_;
 
 
 public:
@@ -122,8 +192,8 @@ public:
         );
 
         //- Construct by mapping given
-        // externalWallHeatFluxTemperatureFvPatchScalarField
-        // onto a new patch
+        //  externalWallHeatFluxTemperatureFvPatchScalarField
+        //  onto a new patch
         externalWallHeatFluxTemperatureFvPatchScalarField
         (
             const externalWallHeatFluxTemperatureFvPatchScalarField&,
@@ -169,6 +239,15 @@ public:
 
     // Member functions
 
+        // Access
+
+            //- Allow manipulation of the boundary values
+            virtual bool fixesValue() const
+            {
+                return false;
+            }
+
+
         // Mapping functions
 
             //- Map (and resize as needed) from self given a mapping object
@@ -189,6 +268,7 @@ public:
 
             //- Update the coefficients associated with the patch field
             virtual void updateCoeffs();
+
 
         // I-O
 

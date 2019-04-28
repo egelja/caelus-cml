@@ -8,7 +8,7 @@ Import('env')
 target = 'uprime'
 
 sources = Split("""
-uprime.cpp
+uprime_app.cpp
 """)
 
 caelus_inc = [

@@ -77,7 +77,7 @@ CML::fv::executeFunctionObjectsFvOption::executeFunctionObjectsFvOption
     applied_.setSize(fieldNames_.size(), false);
 
     if(!coeffs_.found("functions")) {
-        FatalErrorIn("CML::fv::executeFunctionObjectsFvOption::executeFunctionObjectsFvOption")
+        FatalErrorInFunction
             << "No entry 'functions' in " << coeffs_.name()
                 << endl
                 << exit(FatalError);

@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
     {
         runTime.setTime(timeDirs[timeI], timeI);
 
-        #include "getTimeIndex.hpp"
+        #include "getTimeIndex_ensightParts.hpp"
 
         // remember the time index
         fieldTimesUsed.append(timeIndex);
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
 
             // check that the positions field is present for this time
             IOobject* positionPtr = cloudObjs.lookup(word("positions"));
-            if (positionPtr != NULL)
+            if (positionPtr != nullptr)
             {
                 ensightParticlePositions
                 (

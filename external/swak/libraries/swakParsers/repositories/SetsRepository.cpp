@@ -37,7 +37,7 @@ namespace CML {
 
 defineTypeNameAndDebug(SetsRepository, 0);
 
-SetsRepository *SetsRepository::repositoryInstance(NULL);
+SetsRepository *SetsRepository::repositoryInstance(nullptr);
 
 SetsRepository::SetsRepository(const IOobject &o)
     :
@@ -62,7 +62,7 @@ SetsRepository &SetsRepository::getRepository(const objectRegistry &obr)
         Pout << "SetsRepository: asking for Singleton" << endl;
     }
 
-    if(ptr==NULL) {
+    if(ptr==nullptr) {
         Pout << "swak: Allocating new repository for sampledSets\n";
 
         ptr=new SetsRepository(
@@ -94,7 +94,7 @@ sampledSet &SetsRepository::getSet(
     sampledSet &found=*(sets_[name]);
 
     if((&mesh)!=(&(found.mesh()))) {
-        FatalErrorIn("SampledSet &SetsRepository::getSet")
+        FatalErrorInFunction
             << "Found a mesh named " << name << " which is not for the mesh "
                 << mesh.name() << "but for the mesh " << found.mesh().name()
                 << endl
@@ -121,11 +121,11 @@ sampledSet &SetsRepository::getSet(
         }
 
         if(dict.found("set")) {
-            WarningIn("SampledSet &SetsRepository::getSet")
+            WarningInFunction
                 << "Already got a set named " << name
-                    << ". There is a specification for the set here "
-                    << "which is ignored. It is: " << endl
-                    << dict.subDict("set") << endl;
+                << ". There is a specification for the set here "
+                << "which is ignored. It is: " << endl
+                << dict.subDict("set") << endl;
         }
 
         return getSet(name,mesh);
@@ -206,7 +206,7 @@ meshSearch &SetsRepository::getSearch(
         meshSearch &found=*(meshSearches_[name]);
 
         if((&mesh)!=(&(found.mesh()))) {
-        FatalErrorIn("SampledSet &SetsRepository::getSearch")
+        FatalErrorInFunction
             << "Found a mesh named " << name << " which is not for the mesh "
                 << mesh.name() << "but for the mesh " << found.mesh().name()
                 << endl

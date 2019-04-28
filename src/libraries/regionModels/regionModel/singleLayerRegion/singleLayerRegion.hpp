@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::singleLayerRegion
+    CML::regionModels::singleLayerRegion
 
 Description
     Base class for single layer region models
@@ -50,9 +50,6 @@ class singleLayerRegion
 :
     public regionModel
 {
-
-private:
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -102,7 +99,7 @@ public:
     // Constructors
 
         //- Construct null
-        singleLayerRegion(const fvMesh& mesh);
+        singleLayerRegion(const fvMesh& mesh, const word& regionType);
 
         //- Construct from mesh, region type and name
         singleLayerRegion
@@ -171,8 +168,8 @@ CML::regionModels::singleLayerRegion::mappedFieldAndInternalPatchTypes() const
 
     forAll(intCoupledPatchIDs_, i)
     {
-        const label patchI = intCoupledPatchIDs_[i];
-        bTypes[patchI] = mappedFixedInternalValueFvPatchField<Type>::typeName;
+        const label patchi = intCoupledPatchIDs_[i];
+        bTypes[patchi] = mappedFixedInternalValueFvPatchField<Type>::typeName;
     }
 
     return bTypes;
@@ -189,8 +186,8 @@ CML::regionModels::singleLayerRegion::mappedPushedFieldPatchTypes() const
 
     forAll(intCoupledPatchIDs_, i)
     {
-        const label patchI = intCoupledPatchIDs_[i];
-        bTypes[patchI] =
+        const label patchi = intCoupledPatchIDs_[i];
+        bTypes[patchi] =
             mappedFixedPushedInternalValueFvPatchField<Type>::typeName;
     }
 

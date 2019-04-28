@@ -6,28 +6,29 @@ Import('env')
 target = 'solidChemistryModel'
 
 sources = Split("""
-solidChemistryModel/solidChemistryModel.cpp
-solidChemistryModel/solidChemistryModelNew.cpp
-solidChemistryModel/solidChemistryModels.cpp
+basicSolidChemistryModel/basicSolidChemistryModel.cpp
+basicSolidChemistryModel/basicSolidChemistryModelNew.cpp
+basicSolidChemistryModel/basicSolidChemistryModels.cpp
 solidChemistrySolver/makeSolidChemistrySolvers.cpp
 """)
 
 caelus_inc = [
-'thermophysicalModels/solid/lnInclude',
 'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/solidSpecie/lnInclude',
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/chemistryModel/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude',
 'thermophysicalModels/reactionThermo/lnInclude',
 'ODE/lnInclude'
 ]
 
 caelus_libs = [
 'core',
-'specie',
-'basicSolidThermo',
+'fluidThermophysicalModels',
 'chemistryModel',
-'ODE'
+'specie',
+'ODE',
+'reactionThermophysicalModels'
 ]
 
 build_lib(env,

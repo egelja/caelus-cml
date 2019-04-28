@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -24,7 +24,7 @@ License
 
 #include "incompressible/RAS/RASModel/RASModel.hpp"
 #include "nutWF/nutWFFvPatchScalarField.hpp"
-#include "compressible/RAS/RASModel/RASModel.hpp"
+#include "compressible/RAS/RASModel/compressibleRASModel.hpp"
 #include "mutkWF/mutkWFFvPatchScalarField.hpp"
 #include "wallDist.hpp"
 
@@ -186,16 +186,8 @@ CML::yPlusRAS::yPlusRAS
     if (!isA<fvMesh>(obr_))
     {
         active_ = false;
-        WarningIn
-        (
-            "yPlusRAS::yPlusRAS"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_ << nl
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_ << nl
             << endl;
     }
 

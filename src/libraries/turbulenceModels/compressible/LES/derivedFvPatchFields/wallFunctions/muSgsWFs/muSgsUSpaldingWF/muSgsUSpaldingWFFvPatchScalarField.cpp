@@ -20,7 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "muSgsUSpaldingWFFvPatchScalarField.hpp"
-#include "LESModel.hpp"
+#include "compressibleLESModel.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"

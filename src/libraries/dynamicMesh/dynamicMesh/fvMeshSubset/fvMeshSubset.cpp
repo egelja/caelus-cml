@@ -45,7 +45,7 @@ bool CML::fvMeshSubset::checkCellSubset() const
 {
     if (fvMeshSubsetPtr_.empty())
     {
-        FatalErrorIn("bool fvMeshSubset::checkCellSubset() const")
+        FatalErrorInFunction
             << "Mesh subset not set.  Please set the cell map using "
             << "void setCellSubset(const labelHashSet& cellsToSubset)" << endl
             << "before attempting to access subset data"
@@ -465,7 +465,7 @@ CML::labelList CML::fvMeshSubset::getCellsToRemove
 CML::fvMeshSubset::fvMeshSubset(const fvMesh& baseMesh)
 :
     baseMesh_(baseMesh),
-    fvMeshSubsetPtr_(NULL),
+    fvMeshSubsetPtr_(nullptr),
     pointMap_(0),
     faceMap_(0),
     cellMap_(0),
@@ -501,11 +501,8 @@ void CML::fvMeshSubset::setCellSubset
     }
     else if (wantedPatchID < 0 || wantedPatchID >= oldPatches.size())
     {
-        FatalErrorIn
-        (
-            "fvMeshSubset::setCellSubset(const labelHashSet&"
-            ", const label patchID)"
-        )   << "Non-existing patch index " << wantedPatchID << endl
+        FatalErrorInFunction
+            << "Non-existing patch index " << wantedPatchID << endl
             << "Should be between 0 and " << oldPatches.size()-1
             << abort(FatalError);
     }
@@ -901,11 +898,8 @@ void CML::fvMeshSubset::setLargeCellSubset
 
     if (region.size() != oldCells.size())
     {
-        FatalErrorIn
-        (
-            "fvMeshSubset::setCellSubset(const labelList&"
-            ", const label, const label, const bool)"
-        )   << "Size of region " << region.size()
+        FatalErrorInFunction
+            << "Size of region " << region.size()
             << " is not equal to number of cells in mesh " << oldCells.size()
             << abort(FatalError);
     }
@@ -921,11 +915,8 @@ void CML::fvMeshSubset::setLargeCellSubset
     }
     else if (wantedPatchID < 0 || wantedPatchID >= oldPatches.size())
     {
-        FatalErrorIn
-        (
-            "fvMeshSubset::setCellSubset(const labelList&"
-            ", const label, const label, const bool)"
-        )   << "Non-existing patch index " << wantedPatchID << endl
+        FatalErrorInFunction
+            << "Non-existing patch index " << wantedPatchID << endl
             << "Should be between 0 and " << oldPatches.size()-1
             << abort(FatalError);
     }
@@ -1175,11 +1166,8 @@ void CML::fvMeshSubset::setLargeCellSubset
 
     if (facei != nFacesInSet)
     {
-        FatalErrorIn
-        (
-            "fvMeshSubset::setCellSubset(const labelList&"
-            ", const label, const label, const bool)"
-        )   << "Problem" << abort(FatalError);
+        FatalErrorInFunction
+            << "Problem" << abort(FatalError);
     }
 
 

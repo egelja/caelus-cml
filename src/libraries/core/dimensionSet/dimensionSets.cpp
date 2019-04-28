@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,31 +23,37 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-const CML::dimensionSet CML::dimless(0, 0, 0, 0, 0, 0, 0);
+namespace CML
+{
 
-const CML::dimensionSet CML::dimMass(1, 0, 0, 0, 0, 0, 0);
-const CML::dimensionSet CML::dimLength(0, 1, 0, 0, 0, 0, 0);
-const CML::dimensionSet CML::dimTime(0, 0, 1, 0, 0, 0, 0);
-const CML::dimensionSet CML::dimTemperature(0, 0, 0, 1, 0, 0, 0);
-const CML::dimensionSet CML::dimMoles(0, 0, 0, 0, 1, 0, 0);
-const CML::dimensionSet CML::dimCurrent(0, 0, 0, 0, 0, 1, 0);
-const CML::dimensionSet CML::dimLuminousIntensity(0, 0, 0, 0, 0, 0, 1);
+const dimensionSet dimless(0, 0, 0, 0, 0, 0, 0);
 
-const CML::dimensionSet CML::dimArea(sqr(dimLength));
-const CML::dimensionSet CML::dimVolume(pow3(dimLength));
-const CML::dimensionSet CML::dimVol(dimVolume);
+const dimensionSet dimMass(1, 0, 0, 0, 0, 0, 0);
+const dimensionSet dimLength(0, 1, 0, 0, 0, 0, 0);
+const dimensionSet dimTime(0, 0, 1, 0, 0, 0, 0);
+const dimensionSet dimTemperature(0, 0, 0, 1, 0, 0, 0);
+const dimensionSet dimMoles(0, 0, 0, 0, 1, 0, 0);
+const dimensionSet dimCurrent(0, 0, 0, 0, 0, 1, 0);
+const dimensionSet dimLuminousIntensity(0, 0, 0, 0, 0, 0, 1);
 
-const CML::dimensionSet CML::dimVelocity(dimLength/dimTime);
-const CML::dimensionSet CML::dimAcceleration(dimVelocity/dimTime);
+const dimensionSet dimArea(sqr(dimLength));
+const dimensionSet dimVolume(pow3(dimLength));
+const dimensionSet dimVol(dimVolume);
 
-const CML::dimensionSet CML::dimDensity(dimMass/dimVolume);
-const CML::dimensionSet CML::dimForce(dimMass*dimAcceleration);
-const CML::dimensionSet CML::dimEnergy(dimForce*dimLength);
-const CML::dimensionSet CML::dimPower(dimEnergy/dimTime);
+const dimensionSet dimVelocity(dimLength/dimTime);
+const dimensionSet dimAcceleration(dimVelocity/dimTime);
 
-const CML::dimensionSet CML::dimPressure(dimForce/dimArea);
-const CML::dimensionSet CML::dimGasConstant(dimEnergy/dimMass/dimTemperature);
-const CML::dimensionSet CML::dimSpecificHeatCapacity(dimGasConstant);
+const dimensionSet dimDensity(dimMass/dimVolume);
+const dimensionSet dimForce(dimMass*dimAcceleration);
+const dimensionSet dimEnergy(dimForce*dimLength);
+const dimensionSet dimPower(dimEnergy/dimTime);
 
+const dimensionSet dimPressure(dimForce/dimArea);
+const dimensionSet dimCompressibility(dimDensity/dimPressure);
+const dimensionSet dimGasConstant(dimEnergy/dimMass/dimTemperature);
+const dimensionSet dimSpecificHeatCapacity(dimGasConstant);
+const dimensionSet dimViscosity(dimArea/dimTime);
+const dimensionSet dimDynamicViscosity(dimDensity*dimViscosity);
 
+} // End namespace CML
 // ************************************************************************* //

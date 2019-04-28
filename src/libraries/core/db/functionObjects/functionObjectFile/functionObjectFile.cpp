@@ -243,21 +243,21 @@ CML::OFstream& CML::functionObjectFile::file()
 {
     if (!Pstream::master())
     {
-        FatalErrorIn("CML::OFstream& CML::functionObjectFile::file()")
+        FatalErrorInFunction
             << "Request for file() can only be done by the master process"
             << abort(FatalError);
     }
 
     if (filePtrs_.size() != 1)
     {
-        WarningIn("CML::Ostream& CML::functionObjectFile::file()")
+        WarningInFunction
             << "Requested single file, but multiple files are present"
             << endl;
     }
 
     if (!filePtrs_.set(0))
     {
-        FatalErrorIn("CML::OFstream& CML::functionObjectFile::file()")
+        FatalErrorInFunction
             << "File pointer at index " << 0 << " not allocated"
             << abort(FatalError);
     }
@@ -270,7 +270,7 @@ CML::PtrList<CML::OFstream>& CML::functionObjectFile::files()
 {
     if (!Pstream::master())
     {
-        FatalErrorIn("CML::OFstream& CML::functionObjectFile::files()")
+        FatalErrorInFunction
             << "Request for files() can only be done by the master process"
             << abort(FatalError);
     }
@@ -283,17 +283,14 @@ CML::OFstream& CML::functionObjectFile::file(const label i)
 {
     if (!Pstream::master())
     {
-        FatalErrorIn
-        (
-            "CML::OFstream& CML::functionObjectFile::file(const label)"
-        )
+        FatalErrorInFunction
             << "Request for file(i) can only be done by the master process"
             << abort(FatalError);
     }
 
     if (!filePtrs_.set(i))
     {
-        FatalErrorIn("CML::OFstream& CML::functionObjectFile::file()")
+        FatalErrorInFunction
             << "File pointer at index " << i << " not allocated"
             << abort(FatalError);
     }

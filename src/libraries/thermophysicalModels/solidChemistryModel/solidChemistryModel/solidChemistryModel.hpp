@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2013-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,23 +21,23 @@ Class
     CML::solidChemistryModel
 
 Description
-    Chemistry model for solid thermodynamics
+    Extends base solid chemistry model by adding a thermo package, and ODE
+    functions.
+    Introduces chemistry equation system and evaluation of chemical source
+    terms.
 
 SourceFiles
-    solidChemistryModelI.hpp
     solidChemistryModel.cpp
-    newChemistrySolidModel.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef solidChemistryModel_H
-#define solidChemistryModel_H
+#ifndef solidChemistryModel_HPP
+#define solidChemistryModel_HPP
 
-#include "basicChemistryModel.hpp"
-#include "autoPtr.hpp"
-#include "runTimeSelectionTables.hpp"
-#include "basicSolidThermo.hpp"
-
+#include "Reaction.hpp"
+#include "ODESystem.hpp"
+#include "volFields.hpp"
+#include "simpleMatrix.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,28 +48,58 @@ namespace CML
 class fvMesh;
 
 /*---------------------------------------------------------------------------*\
-                     class solidChemistryModel Declaration
+                   Class solidChemistryModel Declaration
 \*---------------------------------------------------------------------------*/
 
+template<class CompType, class SolidThermo>
 class solidChemistryModel
 :
-    public basicChemistryModel
+    public CompType,
+    public ODESystem
 {
     // Private Member Functions
 
-        //- Construct as copy (not implemented)
-        solidChemistryModel(const solidChemistryModel&);
+    //- Disallow copy constructor
+    solidChemistryModel(const solidChemistryModel&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const solidChemistryModel&);
+    //- Disallow default bitwise assignment
+    void operator=(const solidChemistryModel&);
 
 
 protected:
 
-    // Protected data
+    //- Reference to solid mass fractions
+    PtrList<volScalarField>& Ys_;
 
-        //- Solid thermo package
-        autoPtr<basicSolidThermo> solidThermo_;
+    //- Reactions
+    const PtrList<Reaction<SolidThermo> >& reactions_;
+
+    //- Thermodynamic data of solids
+    const PtrList<SolidThermo>& solidThermo_;
+
+    //- Number of solid components
+    label nSolids_;
+
+    //- Number of solid reactions
+    label nReaction_;
+
+    //- List of reaction rate per solid [kg/m3/s]
+    PtrList<DimensionedField<scalar, volMesh> > RRs_;
+
+    //- List of active reacting cells
+    List<bool> reactingCells_;
+
+
+    // Protected Member Functions
+
+    //- Write access to source terms for solids
+    inline PtrList<DimensionedField<scalar, volMesh> >& RRs()
+    {
+        return RRs_;
+    }
+
+    //- Set reacting status of cell, celli
+    void setCellReacting(const label celli, const bool active);
 
 
 public:
@@ -78,87 +108,293 @@ public:
     TypeName("solidChemistryModel");
 
 
-    //- Declare run-time constructor selection tables
-    declareRunTimeSelectionTable
-    (
-        autoPtr,
-        solidChemistryModel,
-        fvMesh,
-        (
-            const fvMesh& mesh,
-            const word& compTypeName,
-            const word& solidThermoTypeName
-        ),
-        (mesh, compTypeName, solidThermoTypeName)
-    );
-
-
-    // Constructors
-
-        //- Construct from mesh and thermo type name
-        solidChemistryModel
-        (
-            const fvMesh& mesh,
-            const word& solidThermoTypeName
-        );
-
-
-    //- Selector
-    static autoPtr<solidChemistryModel> New(const fvMesh& mesh);
+    //- Construct from thermo
+    solidChemistryModel(typename CompType::reactionThermo& thermo);
 
 
     //- Destructor
-    virtual ~solidChemistryModel();
+    virtual ~solidChemistryModel()
+    {}
 
 
     // Member Functions
 
-        //- Return access to the solid thermo package
-        inline basicSolidThermo& solidThermo();
+    //- The reactions
+    inline const PtrList<Reaction<SolidThermo> >& reactions() const
+    {
+        return reactions_;
+    }
 
-        //- Return const access to the solid thermo package
-        inline const basicSolidThermo& solidThermo() const;
+    //- The number of reactions
+    inline label nReaction() const
+    {
+        return nReaction_;
+    }
 
-        //- Return total gases mass source term [kg/m3/s]
-        virtual tmp<volScalarField> RRg() const = 0;
+    //- dc/dt = omega, rate of change in concentration, for each species
+    virtual scalarField omega
+    (
+        const scalarField& c,
+        const scalar T,
+        const scalar p,
+        const bool updateC0 = false
+    ) const = 0;
 
-        //- Return total solids mass source term [kg/m3/s]
-        virtual tmp<volScalarField> RRs() const = 0;
+    //- Return the reaction rate for reaction r and the reference
+    //  species and charateristic times
+    virtual scalar omega
+    (
+        const Reaction<SolidThermo>& r,
+        const scalarField& c,
+        const scalar T,
+        const scalar p,
+        scalar& pf,
+        scalar& cf,
+        label& lRef,
+        scalar& pr,
+        scalar& cr,
+        label& rRef
+    ) const = 0;
 
-        //- Return chemical source terms for solids [kg/m3/s]
-        virtual tmp<volScalarField> RRs(const label i) const = 0;
 
-        //- Return chemical source terms for gases [kg/m3/s]
-        virtual tmp<volScalarField> RRg(const label i) const = 0;
+    //- Return the reaction rate for iReaction and the reference
+    //  species and charateristic times
+    virtual scalar omegaI
+    (
+        label iReaction,
+        const scalarField& c,
+        const scalar T,
+        const scalar p,
+        scalar& pf,
+        scalar& cf,
+        label& lRef,
+        scalar& pr,
+        scalar& cr,
+        label& rRef
+    ) const = 0;
 
-        //- Return sensible enthalpy for gas i [J/Kg]
-        virtual tmp<volScalarField> gasHs
+    //- Calculates the reaction rates
+    virtual void calculate() = 0;
+
+
+    // Solid Chemistry model functions
+
+    //- Return const access to the chemical source terms for solids
+    inline const DimensionedField<scalar, volMesh>& RRs
+    (
+        const label i
+    ) const
+    {
+        return RRs_[i];
+    }
+
+    //- Return total solid source term
+    inline tmp<DimensionedField<scalar, volMesh> > RRs() const
+    {
+        tmp<DimensionedField<scalar, volMesh> > tRRs
         (
-            const volScalarField& T,
-            const label i
-        ) const = 0;
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    "RRs",
+                    this->time().timeName(),
+                    this->mesh(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                this->mesh(),
+                dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
+            )
+        );
 
-        //- Return specie Table for gases
-        virtual const speciesTable& gasTable() const = 0;
+        if (this->chemistry_)
+        {
+            DimensionedField<scalar, volMesh>& RRs = tRRs();
+            for (label i=0; i < nSolids_; i++)
+            {
+                RRs += RRs_[i];
+            }
+        }
+        return tRRs;
+    }
 
-        //- Set reacting status of cell, cellI
-        virtual void setCellReacting(const label cellI, const bool active) = 0;
+    //- Solve the reaction system for the given time step
+    //  and return the characteristic time
+    virtual scalar solve(const scalar deltaT) = 0;
 
-        //- Calculates the reaction rates
-        virtual void calculate() = 0;
+    //- Solve the reaction system for the given time step
+    //  and return the characteristic time
+    virtual scalar solve(const scalarField& deltaT);
+
+    //- Return the chemical time scale
+    virtual tmp<volScalarField> tc() const;
+
+    //- Return the heat release rate [kg/m/s3]
+    virtual tmp<volScalarField> Qdot() const;
+
+
+    // ODE functions (overriding abstract functions in ode_.hpp)
+
+    //- Number of ODE's to solve
+    virtual label nEqns() const = 0;
+
+    virtual void derivatives
+    (
+        const scalar t,
+        const scalarField& c,
+        scalarField& dcdt
+    ) const = 0;
+
+    virtual void jacobian
+    (
+        const scalar t,
+        const scalarField& c,
+        scalarField& dcdt,
+        scalarSquareMatrix& dfdc
+    ) const = 0;
+
+    virtual void solve
+    (
+        scalarField &c,
+        scalar& T,
+        scalar& p,
+        scalar& deltaT,
+        scalar& subDeltaT
+    ) const = 0;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
+    
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "solidChemistryModelI.hpp"
+#include "reactingMixture.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class CompType, class SolidThermo>
+CML::solidChemistryModel<CompType, SolidThermo>::solidChemistryModel
+(
+    typename CompType::reactionThermo& thermo
+)
+:
+    CompType(thermo),
+    ODESystem(),
+    Ys_(this->solidThermo().composition().Y()),
+    reactions_
+    (
+        dynamic_cast<const reactingMixture<SolidThermo>& >
+        (
+            this->solidThermo()
+        )
+    ),
+    solidThermo_
+    (
+        dynamic_cast<const reactingMixture<SolidThermo>& >
+        (
+            this->solidThermo()
+        ).speciesData()
+    ),
+    nSolids_(Ys_.size()),
+    nReaction_(reactions_.size()),
+    RRs_(nSolids_),
+    reactingCells_(this->mesh().nCells(), true)
+{
+    // create the fields for the chemistry sources
+    forAll(RRs_, fieldi)
+    {
+        RRs_.set
+        (
+            fieldi,
+            new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    "RRs." + Ys_[fieldi].name(),
+                    this->mesh().time().timeName(),
+                    this->mesh(),
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                this->mesh(),
+                dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
+            )
+        );
+   }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CompType, class SolidThermo>
+CML::scalar CML::solidChemistryModel<CompType, SolidThermo>::solve
+(
+    const scalarField& deltaT
+)
+{
+    NotImplemented;
+    return 0;
+}
+
+
+template<class CompType, class SolidThermo>
+CML::tmp<CML::volScalarField>
+CML::solidChemistryModel<CompType, SolidThermo>::tc() const
+{
+    NotImplemented;
+    return volScalarField::null();
+}
+
+
+template<class CompType, class SolidThermo>
+CML::tmp<CML::volScalarField>
+CML::solidChemistryModel<CompType, SolidThermo>::Qdot() const
+{
+    tmp<volScalarField> tQdot
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "Qdot",
+                this->mesh_.time().timeName(),
+                this->mesh_,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            this->mesh_,
+            dimensionedScalar("zero", dimEnergy/dimVolume/dimTime, 0.0)
+        )
+    );
+
+    if (this->chemistry_)
+    {
+        scalarField& Qdot = tQdot();
+
+        forAll(Ys_, i)
+        {
+            forAll(Qdot, celli)
+            {
+                scalar hf = solidThermo_[i].Hc();
+                Qdot[celli] -= hf*RRs_[i][celli];
+            }
+        }
+    }
+
+    return tQdot;
+}
+
+
+template<class CompType, class SolidThermo>
+void CML::solidChemistryModel<CompType, SolidThermo>::setCellReacting
+(
+    const label celli,
+    const bool active
+)
+{
+    reactingCells_[celli] = active;
+}
+
 
 #endif
-
-// ************************************************************************* //

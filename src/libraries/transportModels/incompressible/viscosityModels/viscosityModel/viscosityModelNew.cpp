@@ -42,11 +42,8 @@ CML::autoPtr<CML::viscosityModel> CML::viscosityModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "viscosityModel::New(const volVectorField&, "
-            "const surfaceScalarField&)"
-        )   << "Unknown viscosityModel type "
+        FatalErrorInFunction
+            << "Unknown viscosityModel type "
             << modelType << nl << nl
             << "Valid viscosityModels are : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()

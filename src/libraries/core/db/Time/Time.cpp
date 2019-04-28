@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2015-2016 OpenCFD Ltd
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -174,7 +174,7 @@ void CML::Time::setControls()
         }
         else
         {
-            FatalIOErrorIn("Time::setControls()", controlDict_)
+            FatalIOErrorInFunction(controlDict_)
                 << "expected startTime, firstTime or latestTime"
                 << " found '" << startFrom << "'"
                 << exit(FatalIOError);
@@ -197,7 +197,7 @@ void CML::Time::setControls()
           > Pstream::nProcs()*deltaT_/10.0
         )
         {
-            FatalIOErrorIn("Time::setControls()", controlDict_)
+            FatalIOErrorInFunction(controlDict_)
                 << "Start time is not the same for all processors" << nl
                 << "processor " << Pstream::myProcNo() << " has startTime "
                 << startTime_ << exit(FatalIOError);
@@ -264,7 +264,7 @@ void CML::Time::setControls()
 
             if (storedTimeName != timeName())
             {
-                IOWarningIn("Time::setControls()", timeDict)
+                IOWarningInFunction(timeDict)
                     << "Time read from time dictionary " << storedTimeName
                     << " differs from actual time " << timeName() << '.' << nl
                     << "    This may cause unexpected database behaviour."
@@ -1069,7 +1069,7 @@ CML::Time& CML::Time::operator++()
         }
         while (precision_ < 100 && dimensionedScalar::name() == oldTimeName);
 
-        WarningIn("Time::operator++()")
+        WarningInFunction
             << "Increased the timePrecision from " << oldPrecision
             << " to " << precision_
             << " to distinguish between timeNames at time " << value()
@@ -1078,7 +1078,7 @@ CML::Time& CML::Time::operator++()
         if (precision_ == 100 && precision_ != oldPrecision)
         {
             // Reached limit.
-            WarningIn("Time::operator++()")
+            WarningInFunction
                 << "Current time name " << dimensionedScalar::name()
                 << " is the old as the previous one " << oldTimeName
                 << endl

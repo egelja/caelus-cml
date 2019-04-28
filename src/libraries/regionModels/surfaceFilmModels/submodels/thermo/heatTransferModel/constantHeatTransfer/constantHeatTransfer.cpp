@@ -22,7 +22,6 @@ License
 #include "constantHeatTransfer.hpp"
 #include "volFields.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "zeroGradientFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,12 +47,12 @@ addToRunTimeSelectionTable
 
 constantHeatTransfer::constantHeatTransfer
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    heatTransferModel(typeName, owner, dict),
-    c0_(readScalar(coeffs_.lookup("c0")))
+    heatTransferModel(typeName, film, dict),
+    c0_(readScalar(coeffDict_.lookup("c0")))
 {}
 
 
@@ -66,9 +65,7 @@ constantHeatTransfer::~constantHeatTransfer()
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 void constantHeatTransfer::correct()
-{
-    // do nothing
-}
+{}
 
 
 tmp<volScalarField> constantHeatTransfer::h() const
@@ -80,20 +77,19 @@ tmp<volScalarField> constantHeatTransfer::h() const
             IOobject
             (
                 "htc",
-                owner_.time().timeName(),
-                owner_.regionMesh(),
+                filmModel_.time().timeName(),
+                filmModel_.regionMesh(),
                 IOobject::NO_READ,
                 IOobject::NO_WRITE,
                 false
             ),
-            owner_.regionMesh(),
+            filmModel_.regionMesh(),
             dimensionedScalar
             (
                 "c0",
                 dimEnergy/dimTime/sqr(dimLength)/dimTemperature,
                 c0_
-            ),
-            zeroGradientFvPatchScalarField::typeName
+            )
         )
     );
 }

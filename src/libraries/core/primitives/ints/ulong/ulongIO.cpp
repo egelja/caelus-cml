@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -57,7 +57,7 @@ CML::Istream& CML::operator>>(Istream& is, unsigned long& val)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, unsigned long&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected unsigned long, found " << t.info()
             << exit(FatalIOError);
 

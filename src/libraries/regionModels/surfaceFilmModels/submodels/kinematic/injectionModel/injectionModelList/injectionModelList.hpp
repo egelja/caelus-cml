@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::injectionModelList
+    CML::regionModels::surfaceFilmModels::injectionModelList
 
 Description
     List container for film injection models
@@ -33,6 +33,7 @@ SourceFiles
 
 #include "PtrList.hpp"
 #include "injectionModel.hpp"
+#include "filmSubModelBase.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,20 +50,15 @@ namespace surfaceFilmModels
 
 class injectionModelList
 :
-    public PtrList<injectionModel>
+    public PtrList<injectionModel>,
+    public filmSubModelBase
 {
 private:
 
     // Private data
 
-        //- Reference to the owner surface film model
-        const surfaceFilmModel& owner_;
-
-        //- Dictionary
-        dictionary dict_;
-
-        //- Cumulative mass injected total
-        scalar injectedMassTotal_;
+        //- List of mass injected per patch
+        scalarField massInjected_;
 
 
     // Private Member Functions
@@ -79,12 +75,12 @@ public:
     // Constructors
 
         //- Construct null
-        injectionModelList(const surfaceFilmModel& owner);
+        injectionModelList(surfaceFilmRegionModel& film);
 
         //- Construct from type name, dictionary and surface film model
         injectionModelList
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 
@@ -109,7 +105,7 @@ public:
         // I-O
 
             //- Provide some info
-            void info(Ostream& os) const;
+            virtual void info(Ostream& os);
 };
 
 

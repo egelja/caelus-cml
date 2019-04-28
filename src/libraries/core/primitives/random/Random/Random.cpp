@@ -20,187 +20,86 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "Random.hpp"
-#include "OSspecific.hpp"
+#include "PstreamReduceOps.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-namespace CML
+CML::scalar CML::Random::scalarNormal()
 {
+    // Proper inversion of the distribution. Slow. Exactly maintains
+    // the random behaviour of the generator.
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    /*
+    using namespace constant::mathematical;
 
-#if INT_MAX    != 2147483647
-#    error "INT_MAX    != 2147483647"
-#    error "The random number generator may not work!"
-#endif
+    static const scalar sqrtTwo = sqrt(scalar(2));
+    static const scalar sqrtPiByTwo = sqrt(pi)/2;
+    static const scalar a = 8*(pi - 3)/(3*pi*(4 - pi));
 
+    const scalar x = 2*scalar01() - 1;
+    const scalar xPos = mag(x);
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+    // Initial approximation
+    const scalar l = log(1 - sqr(xPos));
+    const scalar ll = 2/(pi*a) + l/2;
+    scalar y = sqrt(sqrt(sqr(ll) - l/a) - ll);
 
-Random::Random(const label seed)
-{
-    if (seed > 1)
+    // Newton improvement
+    label n = 0;
+    while (n < 2)
     {
-        Seed = seed;
+        const scalar dt = (erf(y) - xPos)/exp(- y*y)*sqrtPiByTwo;
+        y -= dt;
+        n += mag(dt) < rootSmall;
+    }
+
+    return sign(x)*sqrtTwo*y;
+    */
+
+    // Box-Muller transform. Fast. Uses rejection and caching so the
+    // random sequence is not guaranteed.
+
+    if (scalarNormalStored_)
+    {
+        scalarNormalStored_ = false;
+
+        return scalarNormalValue_;
     }
     else
     {
-        Seed = 1;
-    }
+        scalar x1, x2, rr;
 
-    osRandomSeed(Seed);
-}
-
-
-int Random::bit()
-{
-    if (osRandomInteger() > INT_MAX/2)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-
-scalar Random::scalar01()
-{
-    return osRandomDouble();
-}
-
-
-vector Random::vector01()
-{
-    vector rndVec;
-    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-    {
-        rndVec.component(cmpt) = scalar01();
-    }
-
-    return rndVec;
-}
-
-
-sphericalTensor Random::sphericalTensor01()
-{
-    sphericalTensor rndTen;
-    rndTen.ii() = scalar01();
-
-    return rndTen;
-}
-
-
-symmTensor Random::symmTensor01()
-{
-    symmTensor rndTen;
-    for (direction cmpt=0; cmpt<symmTensor::nComponents; cmpt++)
-    {
-        rndTen.component(cmpt) = scalar01();
-    }
-
-    return rndTen;
-}
-
-
-tensor Random::tensor01()
-{
-    tensor rndTen;
-    for (direction cmpt=0; cmpt<tensor::nComponents; cmpt++)
-    {
-        rndTen.component(cmpt) = scalar01();
-    }
-
-    return rndTen;
-}
-
-
-label Random::integer(const label lower, const label upper)
-{
-    return lower + (osRandomInteger() % (upper+1-lower));
-}
-
-
-vector Random::position(const vector& start, const vector& end)
-{
-    vector rndVec(start);
-
-    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-    {
-        rndVec.component(cmpt) +=
-            scalar01()*(end.component(cmpt) - start.component(cmpt));
-    }
-
-    return rndVec;
-}
-
-
-void Random::randomise(scalar& s)
-{
-     s = scalar01();
-}
-
-
-void Random::randomise(vector& v)
-{
-    v = vector01();
-}
-
-
-void Random::randomise(sphericalTensor& st)
-{
-    st = sphericalTensor01();
-}
-
-
-void Random::randomise(symmTensor& st)
-{
-    st = symmTensor01();
-}
-
-
-void Random::randomise(tensor& t)
-{
-    t = tensor01();
-}
-
-
-// return a normal Gaussian randon number
-// with zero mean and unity variance N(0, 1)
-
-scalar Random::GaussNormal()
-{
-    static int iset = 0;
-    static scalar gset;
-    scalar fac, rsq, v1, v2;
-
-    if (iset == 0)
-    {
         do
         {
-            v1 = 2.0*scalar01() - 1.0;
-            v2 = 2.0*scalar01() - 1.0;
-            rsq = v1*v1 + v2*v2;
-        } while (rsq >= 1.0 || rsq == 0.0);
+            x1 = 2*scalar01() - 1;
+            x2 = 2*scalar01() - 1;
+            rr = sqr(x1) + sqr(x2);
+        }
+        while (rr >= 1 || rr == 0);
 
-        fac = sqrt(-2.0*log(rsq)/rsq);
-        gset = v1*fac;
-        iset = 1;
+        const scalar f = sqrt(- 2*log(rr)/rr);
 
-        return v2*fac;
-    }
-    else
-    {
-        iset = 0;
+        scalarNormalValue_ = x1*f;
+        scalarNormalStored_ = true;
 
-        return gset;
+        return x2*f;
     }
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+CML::scalar CML::Random::globalScalar01()
+{
+    scalar value = - VGREAT;
 
-} // End namespace CML
+    if (Pstream::master())
+    {
+        value = scalar01();
+    }
+
+    Pstream::scatter(value);
+
+    return value;
+}
+
 
 // ************************************************************************* //

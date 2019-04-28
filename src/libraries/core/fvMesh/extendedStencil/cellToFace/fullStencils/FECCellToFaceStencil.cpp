@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -207,7 +207,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
         {
             if (iter.key() == globalOwn || iter.key() == globalNei)
             {
-                FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+                FatalErrorInFunction
                     << "problem:" << faceStencilSet
                     << abort(FatalError);
             }
@@ -268,10 +268,8 @@ void CML::FECCellToFaceStencil::calcFaceStencil
                 {
                     if (iter.key() == globalOwn || iter.key() == globalNei)
                     {
-                        FatalErrorIn
-                        (
-                            "FECCellToFaceStencil::calcFaceStencil(..)"
-                        )   << "problem:" << faceStencilSet
+                        FatalErrorInFunction
+                            << "problem:" << faceStencilSet
                             << abort(FatalError);
                     }
                     faceStencil[faceI][n++] = iter.key();
@@ -279,7 +277,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
 
                 if (n != faceStencil[faceI].size())
                 {
-                    FatalErrorIn("problem") << "n:" << n
+                    FatalErrorInFunction << "n:" << n
                         << " size:" << faceStencil[faceI].size()
                         << abort(FatalError);
                 }
@@ -334,10 +332,8 @@ void CML::FECCellToFaceStencil::calcFaceStencil
                 {
                     if (iter.key() == globalOwn)
                     {
-                        FatalErrorIn
-                        (
-                            "FECCellToFaceStencil::calcFaceStencil(..)"
-                        )   << "problem:" << faceStencilSet
+                        FatalErrorInFunction
+                            << "problem:" << faceStencilSet
                             << abort(FatalError);
                     }
                     faceStencil[faceI][n++] = iter.key();
@@ -354,7 +350,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
         label globalOwn = globalNumbering().toGlobal(own[faceI]);
         if (faceStencil[faceI][0] != globalOwn)
         {
-            FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+            FatalErrorInFunction
                 << "problem:" << faceStencil[faceI]
                 << " globalOwn:" << globalOwn
                 << abort(FatalError);
@@ -362,7 +358,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
         label globalNei = globalNumbering().toGlobal(nei[faceI]);
         if (faceStencil[faceI][1] != globalNei)
         {
-            FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+            FatalErrorInFunction
                 << "problem:" << faceStencil[faceI]
                 << " globalNei:" << globalNei
                 << abort(FatalError);
@@ -383,7 +379,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
                 label globalOwn = globalNumbering().toGlobal(own[faceI]);
                 if (faceStencil[faceI][0] != globalOwn)
                 {
-                    FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+                    FatalErrorInFunction
                         << "problem:" << faceStencil[faceI]
                         << " globalOwn:" << globalOwn
                         << abort(FatalError);
@@ -391,7 +387,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
                 label globalNei = neiGlobalCell[faceI-mesh().nInternalFaces()];
                 if (faceStencil[faceI][1] != globalNei)
                 {
-                    FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+                    FatalErrorInFunction
                         << "problem:" << faceStencil[faceI]
                         << " globalNei:" << globalNei
                         << abort(FatalError);
@@ -407,7 +403,7 @@ void CML::FECCellToFaceStencil::calcFaceStencil
                 label globalOwn = globalNumbering().toGlobal(own[faceI]);
                 if (faceStencil[faceI][0] != globalOwn)
                 {
-                    FatalErrorIn("FECCellToFaceStencil::calcFaceStencil(..)")
+                    FatalErrorInFunction
                         << "problem:" << faceStencil[faceI]
                         << " globalOwn:" << globalOwn
                         << abort(FatalError);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -70,17 +70,17 @@ public:
         inline Type interpolate
         (
             const vector& position,
-            const label cellI,
-            const label faceI = -1
+            const label celli,
+            const label facei = -1
         ) const;
 
-        //- Interpolate field to the given point in the tetrahedron
+        //- Interpolate field to the given coordinates in the tetrahedron
         //  defined by the given indices.
         inline Type interpolate
         (
-            const vector& position,
+            const barycentric& coordinates,
             const tetIndices& tetIs,
-            const label faceI = -1
+            const label facei = -1
         ) const;
 };
 
@@ -97,8 +97,8 @@ inline Type CML::interpolationCellPointWallModified<Type>::interpolate
     const cellPointWeightWallModified& cpw
 ) const
 {
-    const List<scalar>& weights = cpw.weights();
-    const List<label>& faceVertices = cpw.faceVertices();
+    const barycentric& weights = cpw.weights();
+    const triFace& faceVertices = cpw.faceVertices();
 
     Type t = this->psi_[cpw.cell()]*weights[0];
     t += this->psip_[faceVertices[0]]*weights[1];
@@ -113,8 +113,8 @@ template<class Type>
 inline Type CML::interpolationCellPointWallModified<Type>::interpolate
 (
     const vector& position,
-    const label cellI,
-    const label faceI
+    const label celli,
+    const label facei
 ) const
 {
     return interpolate
@@ -123,8 +123,8 @@ inline Type CML::interpolationCellPointWallModified<Type>::interpolate
         (
             this->pMesh_,
             position,
-            cellI,
-            faceI
+            celli,
+            facei
         )
     );
 }
@@ -133,36 +133,27 @@ inline Type CML::interpolationCellPointWallModified<Type>::interpolate
 template<class Type>
 inline Type CML::interpolationCellPointWallModified<Type>::interpolate
 (
-    const vector& position,
+    const barycentric& coordinates,
     const tetIndices& tetIs,
-    const label faceI
+    const label facei
 ) const
 {
-    if (faceI >= 0)
+    if (facei >= 0)
     {
-        if (faceI != tetIs.face())
+        if (facei != tetIs.face())
         {
-            FatalErrorIn
-            (
-                "inline Type "
-                "CML::interpolationCellPointWallModifie<Type>::interpolate"
-                "("
-                    "const vector& position, "
-                    "const tetIndices& tetIs, "
-                    "const label faceI"
-                ") const"
-            )
-                << "specified face " << faceI << " inconsistent with the face "
+            FatalErrorInFunction
+                << "specified face " << facei << " inconsistent with the face "
                 << "stored by tetIndices: " << tetIs.face()
                 << exit(FatalError);
         }
 
         const polyBoundaryMesh& bm = this->pMesh_.boundaryMesh();
-        label patchI = bm.whichPatch(faceI);
+        label patchi = bm.whichPatch(facei);
 
-        if (patchI != -1)
+        if (patchi != -1)
         {
-            if (isA<wallPolyPatch>(bm[patchI]))
+            if (isA<wallPolyPatch>(bm[patchi]))
             {
                 Type t = this->psi_[tetIs.cell()];
 
@@ -176,9 +167,9 @@ inline Type CML::interpolationCellPointWallModified<Type>::interpolate
 
     return interpolationCellPoint<Type>::interpolate
     (
-        position,
+        coordinates,
         tetIs,
-        faceI
+        facei
     );
 }
 

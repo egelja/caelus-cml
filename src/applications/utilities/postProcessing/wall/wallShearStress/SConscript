@@ -7,7 +7,7 @@ Import('env')
 target = 'wallShearStress'
 
 sources = Split("""
-wallShearStress.cpp
+wallShearStress_app.cpp
 """)
 
 caelus_inc = [
@@ -26,7 +26,7 @@ caelus_libs = [
 'compressibleRASModels',
 'reactionThermophysicalModels',
 'specie',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'compressibleTurbulenceModel',
 'incompressibleRASModels',
 'incompressibleTransportModels',

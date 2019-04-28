@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -67,6 +67,7 @@ class searchableSurface;
 class regionSplit;
 class globalIndex;
 class removePoints;
+class localPointRegion;
 
 /*---------------------------------------------------------------------------*\
                            Class meshRefinement Declaration
@@ -104,10 +105,10 @@ private:
         //- Reference to mesh
         fvMesh& mesh_;
 
-        //- tolerance used for sorting coordinates (used in 'less' routine)
+        //- Tolerance used for sorting coordinates (used in 'less' routine)
         const scalar mergeDistance_;
 
-        //- overwrite the mesh?
+        //- Overwrite the mesh?
         const bool overwrite_;
 
         //- Instance of mesh upon construction. Used when in overwrite_ mode.
@@ -122,14 +123,14 @@ private:
         //- All shell-refinement interaction
         const shellSurfaces& shells_;
 
-        //- refinement engine
+        //- Refinement engine
         hexRef8 meshCutter_;
 
-        //- per cc-cc vector the index of the surface hit
+        //- Per cc-cc vector the index of the surface hit
         labelIOList surfaceIndex_;
 
-        //- user supplied face based data.
-        List<Tuple2<mapType, labelList> > userFaceData_;
+        //- User supplied face based data.
+        List<Tuple2<mapType, labelList>> userFaceData_;
 
         //- Meshed patches - are treated differently. Stored as wordList since
         //  order changes.
@@ -137,15 +138,6 @@ private:
 
 
     // Private Member Functions
-
-        //- Reorder list according to map.
-        template<class T>
-        static void updateList
-        (
-            const labelList& newToOld,
-            const T& nullValue,
-            List<T>& elems
-        );
 
         //- Add patchfield of given type to all fields on mesh
         template<class GeoField>
@@ -191,7 +183,7 @@ private:
         autoPtr<mapPolyMesh> removeInsideCells
         (
             const string& msg,
-            const label exposedPatchI
+            const label exposedPatchi
         );
 
 
@@ -207,6 +199,14 @@ private:
                 label& cellValue,
                 label& nRefine
             );
+
+            //- Mark every cell with level of feature passing through it
+            //  (or -1 if not passed through). Uses tracking.
+            void markFeatureCellLevel
+            (
+                const point& keepPoint,
+                labelList& maxFeatureLevel
+            ) const;
 
             //- Calculate list of cells to refine based on intersection of
             //  features.
@@ -306,7 +306,7 @@ private:
             //  Returns label of added face.
             label createBaffle
             (
-                const label faceI,
+                const label facei,
                 const label ownPatch,
                 const label neiPatch,
                 polyTopoChange& meshMod
@@ -318,7 +318,7 @@ private:
             //  markFacesOnProblemCells
             void markBoundaryFace
             (
-                const label faceI,
+                const label facei,
                 boolList& isBoundaryFace,
                 boolList& isBoundaryEdge,
                 boolList& isBoundaryPoint
@@ -345,14 +345,14 @@ private:
                 const pointField& neiCc,
                 const scalar minFaceArea,
                 const scalar maxNonOrtho,
-                const label faceI
+                const label facei
             ) const;
 
             bool isCollapsedCell
             (
                 const pointField&,
                 const scalar volFraction,
-                const label cellI
+                const label celli
             ) const;
 
             //- Returns list with for every internal face -1 or the patch
@@ -455,7 +455,7 @@ public:
 
         // Access
 
-            //- reference to mesh
+            //- Reference to mesh
             const fvMesh& mesh() const
             {
                 return mesh_;
@@ -482,31 +482,31 @@ public:
                 return oldInstance_;
             }
 
-            //- reference to surface search engines
+            //- Reference to surface search engines
             const refinementSurfaces& surfaces() const
             {
                 return surfaces_;
             }
 
-            //- reference to feature edge mesh
+            //- Reference to feature edge mesh
             const refinementFeatures& features() const
             {
                 return features_;
             }
 
-            //- reference to refinement shells (regions)
+            //- Reference to refinement shells (regions)
             const shellSurfaces& shells() const
             {
                 return shells_;
             }
 
-            //- reference to meshcutting engine
+            //- Reference to meshcutting engine
             const hexRef8& meshCutter() const
             {
                 return meshCutter_;
             }
 
-            //- per start-end edge the index of the surface hit
+            //- Per start-end edge the index of the surface hit
             const labelList& surfaceIndex() const
             {
                 return surfaceIndex_;
@@ -645,6 +645,10 @@ public:
 
             //- Find boundary points that connect to more than one cell
             //  region and split them.
+            autoPtr<mapPolyMesh> dupNonManifoldPoints(const localPointRegion&);
+
+            //- Find boundary points that connect to more than one cell
+            //  region and split them.
             autoPtr<mapPolyMesh> dupNonManifoldPoints();
 
             //- Create baffle for every internal face where ownPatch != -1.
@@ -687,7 +691,7 @@ public:
             static label appendPatch
             (
                 fvMesh&,
-                const label insertPatchI,
+                const label insertPatchi,
                 const word&,
                 const dictionary&
             );
@@ -717,6 +721,15 @@ public:
             (
                 const mapPolyMesh&,
                 const labelList& changedFaces
+            );
+
+            //- Helper: reorder list according to map.
+            template<class T>
+            static void updateList
+            (
+                const labelList& newToOld,
+                const T& nullValue,
+                List<T>& elems
             );
 
 
@@ -776,6 +789,8 @@ public:
                     const labelHashSet& set
                 ) const;
 
+                //- Merge edges, maintain mesh quality. Return global number
+                //  of edges merged
                 label mergeEdgesUndo
                 (
                     const scalar minCos,
@@ -877,11 +892,8 @@ void meshRefinement::testSyncBoundaryFaceList
 
     if (faceData.size() != nBFaces || syncedFaceData.size() != nBFaces)
     {
-        FatalErrorIn
-        (
-            "meshRefinement::testSyncBoundaryFaceList"
-            "(const scalar, const string&, const List<T>&, const List<T>&)"
-        )   << "Boundary faces:" << nBFaces
+        FatalErrorInFunction
+            << "Boundary faces:" << nBFaces
             << " faceData:" << faceData.size()
             << " syncedFaceData:" << syncedFaceData.size()
             << abort(FatalError);
@@ -889,26 +901,26 @@ void meshRefinement::testSyncBoundaryFaceList
 
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        label bFaceI = pp.start() - mesh_.nInternalFaces();
+        label bFacei = pp.start() - mesh_.nInternalFaces();
 
         forAll(pp, i)
         {
-            const T& data = faceData[bFaceI];
-            const T& syncData = syncedFaceData[bFaceI];
+            const T& data = faceData[bFacei];
+            const T& syncData = syncedFaceData[bFacei];
 
             if (mag(data - syncData) > tol)
             {
-                label faceI = pp.start()+i;
+                label facei = pp.start()+i;
 
-                FatalErrorIn("testSyncFaces")
+                FatalErrorInFunction
                     << msg
                     << "patchFace:" << i
-                    << " face:" << faceI
-                    << " fc:" << mesh_.faceCentres()[faceI]
+                    << " face:" << facei
+                    << " fc:" << mesh_.faceCentres()[facei]
                     << " patch:" << pp.name()
                     << " faceData:" << data
                     << " syncedFaceData:" << syncData
@@ -916,7 +928,7 @@ void meshRefinement::testSyncBoundaryFaceList
                     << abort(FatalError);
             }
 
-            bFaceI++;
+            bFacei++;
         }
     }
 }

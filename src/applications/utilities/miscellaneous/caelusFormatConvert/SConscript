@@ -11,7 +11,7 @@ caelusFormatConvert.cpp
 """)
 
 caelus_inc = [
-'lagrangian/lnInclude'
+'lagrangian/basic/lnInclude'
 ]
 
 caelus_libs = [

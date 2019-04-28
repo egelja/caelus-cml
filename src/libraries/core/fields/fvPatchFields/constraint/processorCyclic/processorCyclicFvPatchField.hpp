@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -206,16 +206,8 @@ CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 {
     if (!isType<processorCyclicFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "processorCyclicFvPatchField<Type>::processorCyclicFvPatchField\n"
-            "(\n"
-            "    const processorCyclicFvPatchField<Type>& ptf,\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, volMesh>& iF,\n"
-            "    const fvPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "\n    patch type '" << p.type()
+        FatalErrorInFunction
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -239,16 +231,8 @@ CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 {
     if (!isType<processorCyclicFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "processorCyclicFvPatchField<Type>::processorCyclicFvPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "\n    patch type '" << p.type()
+        FatalIOErrorInFunction(dict)
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -258,15 +242,8 @@ CML::processorCyclicFvPatchField<Type>::processorCyclicFvPatchField
 
     if (Pstream::defaultCommsType == Pstream::scheduled)
     {
-        WarningIn
-        (
-            "processorCyclicFvPatchField<Type>::processorCyclicFvPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, volMesh>& iF,\n"
-            "    const dictionary& dict\n"
-            ")\n"
-        )   << "Scheduled communication with split cyclics not supported."
+        WarningInFunction
+            << "Scheduled communication with split cyclics not supported."
             << endl;
     }
 }

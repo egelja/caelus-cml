@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -91,12 +91,8 @@ bool setCellFieldType
     }
     else
     {
-        WarningIn
-        (
-            "void setCellFieldType"
-            "(const fvMesh& mesh, const labelList& selectedCells,"
-            "Istream& fieldValueStream)"
-        ) << "Field " << fieldName << " not found" << endl;
+        WarningInFunction
+          << "Field " << fieldName << " not found" << endl;
     }
 
     return true;
@@ -149,7 +145,7 @@ public:
                 )
             )
             {
-                WarningIn("setCellField::iNew::operator()(Istream& is)")
+                WarningInFunction
                     << "field type " << fieldType << " not currently supported"
                     << endl;
             }
@@ -217,7 +213,7 @@ bool setFaceFieldType
             label facei = selectedFaces[i];
             if (mesh.isInternalFace(facei))
             {
-                WarningIn("setFaceFieldType(..)")
+                WarningInFunction
                     << "Ignoring internal face " << facei << endl;
             }
             else
@@ -253,12 +249,8 @@ bool setFaceFieldType
     }
     else
     {
-        WarningIn
-        (
-            "void setFaceFieldType"
-            "(const fvMesh& mesh, const labelList& selectedFaces,"
-            "Istream& fieldValueStream)"
-        ) << "Field " << fieldName << " not found" << endl;
+        WarningInFunction
+          << "Field " << fieldName << " not found" << endl;
     }
 
     return true;
@@ -311,7 +303,7 @@ public:
                 )
             )
             {
-                WarningIn("setFaceField::iNew::operator()(Istream& is)")
+                WarningInFunction
                     << "field type " << fieldType << " not currently supported"
                     << endl;
             }

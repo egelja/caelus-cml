@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,18 +39,18 @@ namespace CML
 CML::lduMatrix::lduMatrix(const lduMesh& mesh)
 :
     lduMesh_(mesh),
-    lowerPtr_(NULL),
-    diagPtr_(NULL),
-    upperPtr_(NULL)
+    lowerPtr_(nullptr),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr)
 {}
 
 
 CML::lduMatrix::lduMatrix(const lduMatrix& A)
 :
     lduMesh_(A.lduMesh_),
-    lowerPtr_(NULL),
-    diagPtr_(NULL),
-    upperPtr_(NULL)
+    lowerPtr_(nullptr),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr)
 {
     if (A.lowerPtr_)
     {
@@ -72,28 +72,28 @@ CML::lduMatrix::lduMatrix(const lduMatrix& A)
 CML::lduMatrix::lduMatrix(lduMatrix& A, bool reUse)
 :
     lduMesh_(A.lduMesh_),
-    lowerPtr_(NULL),
-    diagPtr_(NULL),
-    upperPtr_(NULL)
+    lowerPtr_(nullptr),
+    diagPtr_(nullptr),
+    upperPtr_(nullptr)
 {
     if (reUse)
     {
         if (A.lowerPtr_)
         {
             lowerPtr_ = A.lowerPtr_;
-            A.lowerPtr_ = NULL;
+            A.lowerPtr_ = nullptr;
         }
 
         if (A.diagPtr_)
         {
             diagPtr_ = A.diagPtr_;
-            A.diagPtr_ = NULL;
+            A.diagPtr_ = nullptr;
         }
 
         if (A.upperPtr_)
         {
             upperPtr_ = A.upperPtr_;
-            A.upperPtr_ = NULL;
+            A.upperPtr_ = nullptr;
         }
     }
     else
@@ -199,7 +199,7 @@ const CML::scalarField& CML::lduMatrix::lower() const
 {
     if (!lowerPtr_ && !upperPtr_)
     {
-        FatalErrorIn("lduMatrix::lower() const")
+        FatalErrorInFunction
             << "lowerPtr_ or upperPtr_ unallocated"
             << abort(FatalError);
     }
@@ -219,7 +219,7 @@ const CML::scalarField& CML::lduMatrix::diag() const
 {
     if (!diagPtr_)
     {
-        FatalErrorIn("const scalarField& lduMatrix::diag() const")
+        FatalErrorInFunction
             << "diagPtr_ unallocated"
             << abort(FatalError);
     }
@@ -232,7 +232,7 @@ const CML::scalarField& CML::lduMatrix::upper() const
 {
     if (!lowerPtr_ && !upperPtr_)
     {
-        FatalErrorIn("lduMatrix::upper() const")
+        FatalErrorInFunction
             << "lowerPtr_ or upperPtr_ unallocated"
             << abort(FatalError);
     }

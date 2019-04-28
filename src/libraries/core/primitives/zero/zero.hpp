@@ -88,6 +88,11 @@ public:
 // Global zero
 static const zero Zero;
 
+inline zero operator+(const zero&, const zero&)
+{
+    return Zero;
+}
+
 template <typename Type>
 inline const Type& operator+(const Type& t, const zero&)
 {
@@ -100,6 +105,11 @@ inline const Type& operator+(const zero&, const Type& t)
     return t;
 }
 
+inline zero operator-(const zero&, const zero&)
+{
+    return Zero;
+}
+
 template <typename Type>
 inline const Type& operator-(const Type& t, const zero&)
 {
@@ -110,6 +120,11 @@ template <typename Type>
 inline Type operator-(const zero&, const Type& t)
 {
     return -t;
+}
+
+inline zero operator*(const zero&, const zero&)
+{
+    return Zero;
 }
 
 template <typename Type>

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::standardPhaseChange
+    CML::regionModels::surfaceFilmModels::standardPhaseChange
 
 Description
     Standard phase change model with modification for boiling
@@ -65,9 +65,6 @@ protected:
 
     // Protected data
 
-        //- Boiling temperature / [K]
-        const scalar Tb_;
-
         //- Minimum film height for model to be active
         const scalar deltaMin_;
 
@@ -78,11 +75,24 @@ protected:
         //  Used to set max limit on temperature to Tb*TbFactor
         const scalar TbFactor_;
 
+        //- Switch to treat YInf as zero
+        Switch YInfZero_;
+
 
     // Protected member functions
 
         //- Return Sherwood number as a function of Reynolds and Schmidt numbers
         scalar Sh(const scalar Re, const scalar Sc) const;
+
+        template<class YInfType>
+        void correctModel
+        (
+            const scalar dt,
+            scalarField& availableMass,
+            scalarField& dMass,
+            scalarField& dEnergy,
+            YInfType YInf
+        );
 
 
 public:
@@ -96,7 +106,7 @@ public:
         //- Construct from surface film model
         standardPhaseChange
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

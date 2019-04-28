@@ -77,10 +77,7 @@ CML::autoPtr<CML::RBD::rigidBody> CML::RBD::rigidBody::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "rigidBody::New(const word&,const dictionary&)"
-        )
+        FatalErrorInFunction
             << "Unknown rigidBody type "
             << bodyType << nl << nl
             << "Valid rigidBody types are : " << endl

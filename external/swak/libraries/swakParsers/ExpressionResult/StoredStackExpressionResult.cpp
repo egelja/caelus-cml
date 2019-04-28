@@ -93,7 +93,7 @@ void StoredStackExpressionResult::operator=(const StoredStackExpressionResult& r
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("StoredStackExpressionResult::operator=(const StoredStackExpressionResult&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << exit(FatalError);
     }

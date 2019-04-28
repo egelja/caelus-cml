@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -73,7 +73,7 @@ bool CML::fileFormats::EMESHedgeFormat::read
 
     if (!io.headerOk())
     {
-        FatalErrorIn("fileFormats::EMESHedgeFormat::read(const fileName&)")
+        FatalErrorInFunction
             << "Cannot read file " << filename
             << exit(FatalError);
     }
@@ -105,11 +105,7 @@ bool CML::fileFormats::EMESHedgeFormat::read
 {
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::EMESHedgeFormat::read"
-            "(Istream&, pointField&, edgeList&)"
-        )
+        FatalErrorInFunction
             << "read error "
             << exit(FatalError);
     }
@@ -133,11 +129,7 @@ CML::Ostream& CML::fileFormats::EMESHedgeFormat::write
 {
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::EMESHedgeFormat::write"
-            "(Ostream&, const fileName&, const edgeMesh&)"
-        )
+        FatalErrorInFunction
             << "bad output stream " << os.name()
             << exit(FatalError);
     }
@@ -190,12 +182,8 @@ void CML::fileFormats::EMESHedgeFormat::write
 
     if (!osPtr().good())
     {
-        FatalIOErrorIn
-        (
-            "fileFormats::EMESHedgeFormat::write"
-            "(const fileName&, const edgeMesh&)",
-            osPtr()
-        )   << "Cannot open file for writing " << filename
+        FatalIOErrorInFunction(osPtr())
+            << "Cannot open file for writing " << filename
             << exit(FatalIOError);
     }
 
@@ -204,12 +192,8 @@ void CML::fileFormats::EMESHedgeFormat::write
 
     if (!ok)
     {
-        FatalIOErrorIn
-        (
-            "fileFormats::EMESHedgeFormat::write"
-            "(const fileName&, const edgeMesh&)",
-            os
-        )   << "Cannot write header"
+        FatalIOErrorInFunction(os)
+            << "Cannot write header"
             << exit(FatalIOError);
     }
 

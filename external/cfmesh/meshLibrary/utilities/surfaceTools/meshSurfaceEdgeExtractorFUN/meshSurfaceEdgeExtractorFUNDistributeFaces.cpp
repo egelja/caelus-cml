@@ -95,11 +95,8 @@ void meshSurfaceEdgeExtractorFUN::distributeBoundaryFaces()
         }
         else
         {
-            FatalErrorIn
-            (
-                "void meshSurfaceEdgeExtractorNonTopo::"
-                "distributeBoundaryFaces()"
-            ) << "Cannot distribute a face " << bFaces[bfI] << " into any "
+            FatalErrorInFunction
+                << "Cannot distribute a face " << bFaces[bfI] << " into any "
                 << "surface patch!. Exiting.." << exit(FatalError);
         }
     }

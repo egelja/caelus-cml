@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -67,7 +67,7 @@ public:
     {
         if (k_ < 0 || k_ > 2)
         {
-            FatalIOErrorIn("limitedLinearLimiter(Istream& is)", is)
+            FatalIOErrorInFunction(is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
@@ -82,7 +82,7 @@ public:
             order_ = readScalar(is);
             if (order_ < 0 || order_ > 2)
             {
-                FatalIOErrorIn("linearKoren(fvMesh const&, Istream&)", is)
+                FatalIOErrorInFunction(is)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

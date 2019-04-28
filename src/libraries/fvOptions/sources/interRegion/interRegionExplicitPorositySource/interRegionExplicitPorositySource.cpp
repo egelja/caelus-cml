@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -80,10 +80,7 @@ void CML::fv::interRegionExplicitPorositySource::initialise()
     }
     else
     {
-        FatalErrorIn
-        (
-            "void CML::fv::interRegionExplicitPorositySource::initialise()"
-        )
+        FatalErrorInFunction
             << "Unable to create porous cellZone " << zoneName
             << ": zone already exists"
             << abort(FatalError);
@@ -115,7 +112,7 @@ CML::fv::interRegionExplicitPorositySource::interRegionExplicitPorositySource
 )
 :
     option(name, modelType, dict, mesh, true),
-    porosityPtr_(NULL),
+    porosityPtr_(nullptr),
     firstIter_(-1),
     UName_(coeffs_.lookupOrDefault<word>("UName", "U")),
     muName_(coeffs_.lookupOrDefault<word>("muName", "thermo:mu"))

@@ -82,11 +82,10 @@ void lcLocalAveragePluginFunction::setArgument(
 void lcLocalAveragePluginFunction::doCellCalculation(volScalarField &field)
 {
     if(Pstream::parRun()) {
-        FatalErrorIn(" lcLocalAveragePluginFunction::doCellCalculation(volScalarField &field)")
+        FatalErrorInFunction
             << "Not yet parallelized"
-                << endl
-                << exit(FatalError);
-
+            << endl
+            << exit(FatalError);
     }
 
     const cellList &cl=field.mesh().cells();
@@ -121,11 +120,10 @@ void lcLocalAveragePluginFunction::doCellCalculation(volScalarField &field)
         if(nr>0) {
             field[cellI]=sum/nr;
         } else {
-            FatalErrorIn(" lcLocalAveragePluginFunction::doCellCalculation(volScalarField &field)")
+            FatalErrorInFunction
                 << "Cell " << cellI << " doesn't have neighbours. Strange"
-                    << endl
-                    << exit(FatalError);
-
+                << endl
+                << exit(FatalError);
         }
     }
 }

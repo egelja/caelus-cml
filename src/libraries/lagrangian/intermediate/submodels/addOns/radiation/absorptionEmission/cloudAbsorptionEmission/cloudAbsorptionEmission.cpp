@@ -20,9 +20,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "cloudAbsorptionEmission.hpp"
-#include "addToRunTimeSelectionTable.hpp"
-
 #include "thermoCloud.hpp"
+#include "addToRunTimeSelectionTable.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -155,7 +154,8 @@ CML::radiation::cloudAbsorptionEmission::EDisp(const label bandI) const
         tE() += tc.Ep();
     }
 
-    return tE;
+    // Total emission is 4 times the projected emission
+    return 4*tE;
 }
 
 

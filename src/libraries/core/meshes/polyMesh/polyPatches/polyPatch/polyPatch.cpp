@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -88,8 +88,8 @@ CML::polyPatch::polyPatch
     ),
     start_(start),
     boundaryMesh_(bm),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -115,8 +115,8 @@ CML::polyPatch::polyPatch
     ),
     start_(readLabel(dict.lookup("startFace"))),
     boundaryMesh_(bm),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -139,8 +139,8 @@ CML::polyPatch::polyPatch
     ),
     start_(pp.start()),
     boundaryMesh_(bm),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -166,8 +166,8 @@ CML::polyPatch::polyPatch
     ),
     start_(newStart),
     boundaryMesh_(bm),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -193,8 +193,8 @@ CML::polyPatch::polyPatch
     ),
     start_(newStart),
     boundaryMesh_(bm),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -204,8 +204,8 @@ CML::polyPatch::polyPatch(const polyPatch& p)
     primitivePatch(p),
     start_(p.start_),
     boundaryMesh_(p.boundaryMesh_),
-    faceCellsPtr_(NULL),
-    mePtr_(NULL)
+    faceCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {}
 
 
@@ -286,6 +286,25 @@ CML::tmp<CML::vectorField> CML::polyPatch::faceCellCentres() const
     }
 
     return tcc;
+}
+
+
+CML::tmp<CML::scalarField> CML::polyPatch::areaFraction() const
+{
+    tmp<scalarField> tfraction(new scalarField(size()));
+    scalarField& fraction = tfraction();
+
+    const vectorField::subField faceAreas = this->faceAreas();
+    const pointField& points = this->points();
+
+    forAll(*this, facei)
+    {
+        const face& curFace = this->operator[](facei);
+        fraction[facei] =
+            mag(faceAreas[facei])/(curFace.mag(points) + ROOTVSMALL);
+    }
+
+    return tfraction;
 }
 
 

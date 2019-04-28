@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
         if (!nProcs)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "No processor* directories found"
                 << exit(FatalError);
         }

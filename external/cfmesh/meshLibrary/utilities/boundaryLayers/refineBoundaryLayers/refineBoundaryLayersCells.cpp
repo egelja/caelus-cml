@@ -737,11 +737,8 @@ void refineBoundaryLayers::refineCornerHexCell::determineFacesInDirections()
         else
         {
             //- this situation is not allowed
-            FatalErrorIn
-            (
-                "void refineBoundaryLayers::refineCornerHexCell::"
-                "determineFacesInDirections()"
-            ) << "Cannot refine layer for cell " << cellI_ << abort(FatalError);
+            FatalErrorInFunction
+               << "Cannot refine layer for cell " << cellI_ << abort(FatalError);
         }
     }
 
@@ -1563,10 +1560,8 @@ void refineBoundaryLayers::generateNewCells()
         }
         else
         {
-            FatalErrorIn
-            (
-                "void refineBoundaryLayers::generateNewCells()"
-            ) << "Cannot refine boundary layer for cell "
+            FatalErrorInFunction
+              << "Cannot refine boundary layer for cell "
               << cellI << abort(FatalError);
         }
     }

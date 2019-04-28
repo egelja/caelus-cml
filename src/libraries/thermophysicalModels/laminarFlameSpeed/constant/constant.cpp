@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,18 +45,12 @@ namespace laminarFlameSpeedModels
 CML::laminarFlameSpeedModels::constant::constant
 (
     const dictionary& dict,
-    const hhuCombustionThermo& ct
+    const psiuReactionThermo& ct
 )
 :
     laminarFlameSpeed(dict, ct),
 
     Su_(dict.lookup("Su"))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::laminarFlameSpeedModels::constant::~constant()
 {}
 
 
@@ -72,16 +66,14 @@ CML::laminarFlameSpeedModels::constant::operator()() const
             IOobject
             (
                 "Su0",
-                hhuCombustionThermo_.T().time().timeName(),
-                hhuCombustionThermo_.T().db(),
+                psiuReactionThermo_.T().time().timeName(),
+                psiuReactionThermo_.T().db(),
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
-            hhuCombustionThermo_.T().mesh(),
+            psiuReactionThermo_.T().mesh(),
             Su_
         )
     );
 }
-
-
-// ************************************************************************* //

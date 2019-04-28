@@ -49,7 +49,7 @@ CML::diagonalSolver::diagonalSolver
     )
 {}
 
-CML::lduMatrix::solverPerformance CML::diagonalSolver::solve
+CML::solverPerformance CML::diagonalSolver::solve
 (
     scalarField& x,
     const scalarField& b,
@@ -58,7 +58,7 @@ CML::lduMatrix::solverPerformance CML::diagonalSolver::solve
 {
     x = b/matrix_.diag();
 
-    return lduMatrix::solverPerformance
+    return solverPerformance
     (
         typeName,
         fieldName_,

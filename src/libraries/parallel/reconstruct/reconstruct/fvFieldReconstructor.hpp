@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -384,15 +384,8 @@ CML::fvFieldReconstructor::reconstructFvVolumeField
                     // Check
                     if (cp[faceI] <= 0)
                     {
-                        FatalErrorIn
-                        (
-                            "fvFieldReconstructor::reconstructFvVolumeField\n"
-                            "(\n"
-                            "    const IOobject&,\n"
-                            "    const PtrList<GeometricField<Type,"
-                            " fvPatchField, volMesh> >&\n"
-                            ") const\n"
-                        )   << "Processor " << procI
+                        FatalErrorInFunction
+                            << "Processor " << procI
                             << " patch "
                             << procField.mesh().boundary()[patchI].name()
                             << " face " << faceI

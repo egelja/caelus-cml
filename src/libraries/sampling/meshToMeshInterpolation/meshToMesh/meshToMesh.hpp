@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2014 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -587,15 +587,8 @@ void CML::meshToMesh::mapSrcToTgt
 {
     if (result.size() != tgtToSrcCellAddr_.size())
     {
-        FatalErrorIn
-        (
-            "void CML::meshToMesh::mapSrcToTgt"
-            "("
-                "const UList<Type>&, "
-                "const CombineOp&, "
-                "List<Type>&"
-            ") const"
-        )   << "Supplied field size is not equal to target mesh size" << nl
+        FatalErrorInFunction
+            << "Supplied field size is not equal to target mesh size" << nl
             << "    source mesh    = " << srcToTgtCellAddr_.size() << nl
             << "    target mesh    = " << tgtToSrcCellAddr_.size() << nl
             << "    supplied field = " << result.size()
@@ -715,15 +708,8 @@ void CML::meshToMesh::mapTgtToSrc
 {
     if (result.size() != srcToTgtCellAddr_.size())
     {
-        FatalErrorIn
-        (
-            "void CML::meshToMesh::mapTgtToSrc"
-            "("
-                "const UList<Type>&, "
-                "const CombineOp&, "
-                "List<Type>&"
-            ") const"
-        )   << "Supplied field size is not equal to source mesh size" << nl
+        FatalErrorInFunction
+            << "Supplied field size is not equal to source mesh size" << nl
             << "    source mesh    = " << srcToTgtCellAddr_.size() << nl
             << "    target mesh    = " << tgtToSrcCellAddr_.size() << nl
             << "    supplied field = " << result.size()

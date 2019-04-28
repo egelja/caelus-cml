@@ -1,25 +1,21 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
-     \\/     M anipulation  |
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
-    This file is part of OpenFOAM.
+    This file is part of Caelus.
 
-    OpenFOAM is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
 
@@ -86,7 +82,7 @@ void hexBlock::setHandedness()
 
     if (blockHandedness_ == noPoints)
     {
-        WarningIn("hexBlock::hexBlock::setHandedness()")
+        WarningInFunction
             << "Cannot determine orientation of block."
             << " Continuing as if right handed." << endl;
         blockHandedness_ = right;
@@ -233,7 +229,7 @@ labelListList hexBlock::blockCells() const
     }
     else
     {
-        FatalErrorIn("hexBlock::cellShapes()")
+        FatalErrorInFunction
             << "Unable to determine block handedness as points "
             << "have not been read in yet"
             << abort(FatalError);
@@ -252,10 +248,8 @@ faceList hexBlock::patchFaces(const label direc, const labelList& range) const
 {
     if (range.size() != 6)
     {
-        FatalErrorIn
-        (
-            "patchFaces(const label direc, const labelList& range) const"
-        )   << "Invalid size of the range array: " << range.size()
+        FatalErrorInFunction
+            << "Invalid size of the range array: " << range.size()
             << ". Should be 6 (xMin, xMax, yMin, yMax, zMin, zMax"
             << abort(FatalError);
     }
@@ -448,10 +442,8 @@ faceList hexBlock::patchFaces(const label direc, const labelList& range) const
 
         default:
         {
-            FatalErrorIn
-            (
-                "patchFaces(const label direc, const labelList& range) const"
-            )   << "direction out of range (1 to 6): " << direc
+            FatalErrorInFunction
+                << "direction out of range (1 to 6): " << direc
                 << abort(FatalError);
         }
     }
@@ -460,10 +452,8 @@ faceList hexBlock::patchFaces(const label direc, const labelList& range) const
     // Do nothing for the right-handed block
     if (blockHandedness_ == noPoints)
     {
-        FatalErrorIn
-        (
-            "patchFaces(const label direc, const labelList& range) const"
-        )   << "Unable to determine block handedness as points "
+        FatalErrorInFunction
+            << "Unable to determine block handedness as points "
             << "have not been read in yet"
             << abort(FatalError);
     }

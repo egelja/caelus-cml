@@ -257,7 +257,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("searchableBox::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 };

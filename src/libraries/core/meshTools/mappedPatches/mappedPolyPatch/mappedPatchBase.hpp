@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,20 +25,31 @@ Description
     centres and processors they're on.
 
     If constructed from dictionary:
+    \verbatim
         // Region to sample (default is region0)
         sampleRegion region0;
 
         // What to sample:
-        // - nearestCell         : sample nearest cell
+        // - nearestCell         : sample cell containing point
+        // - nearestOnlyCell     : nearest sample cell (even if not containing
+        //                         point)
         // - nearestPatchFace    : nearest face on selected patch
         // - nearestPatchFaceAMI : nearest face on selected patch
                                    - patches need not conform
                                    - uses AMI interpolation
         // - nearestFace         : nearest boundary face on any patch
+        // - nearestPatchPoint   : nearest patch point (for coupled points
+        //                         this might be any of the points so you have
+        //                         to guarantee the point data is synchronised
+        //                         beforehand)
         sampleMode nearestCell;
 
-        // If sampleMod is nearestPatchFace : patch to find faces of
+        // If sampleMode is nearestPatchFace : patch to find faces of
         samplePatch movingWall;
+
+        // If sampleMode is nearestPatchFace : specify patchgroup to find
+        // samplePatch and sampleRegion (if not provided)
+        coupleGroup baffleGroup;
 
         // How to supply offset (w.r.t. my patch face centres):
         // - uniform : single offset vector
@@ -49,8 +60,9 @@ Description
         // According to offsetMode (see above) supply one of
         // offset, offsets or distance
         offset  (1 0 0);
+    \endverbatim
 
-    Note: if offsetMode is 'normal' it uses outwards pointing normals. So
+    Note: if offsetMode is \c normal it uses outwards pointing normals. So
     supply a negative distance if sampling inside the domain.
 
 
@@ -70,6 +82,7 @@ SourceFiles
 #include "Tuple2.hpp"
 #include "pointIndexHit.hpp"
 #include "AMIPatchToPatchInterpolation.hpp"
+#include "coupleGroupIdentifier.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -94,10 +107,12 @@ public:
         //- Mesh items to sample
         enum sampleMode
         {
-            NEARESTCELL,         // nearest cell
-            NEARESTPATCHFACE,    // faces on selected patch
+            NEARESTCELL,         // nearest cell containing sample
+            NEARESTPATCHFACE,    // nearest face on selected patch
             NEARESTPATCHFACEAMI, // nearest patch face + AMI interpolation
-            NEARESTFACE          // nearest face
+            NEARESTPATCHPOINT,   // nearest point on selected patch
+            NEARESTFACE,         // nearest face
+            NEARESTONLYCELL      // nearest cell (even if not containing cell)
         };
 
         //- How to project face centres
@@ -108,13 +123,13 @@ public:
             NORMAL              // use face normal + distance
         };
 
-        static const NamedEnum<sampleMode, 4> sampleModeNames_;
+        static const NamedEnum<sampleMode, 6> sampleModeNames_;
 
         static const NamedEnum<offsetMode, 3> offsetModeNames_;
 
 
     //- Helper class for finding nearest
-    // Nearest:
+    //  Nearest:
     //  - point+local index
     //  - sqr(distance)
     //  - processor
@@ -141,6 +156,27 @@ public:
         }
     };
 
+    class maxProcEqOp
+    {
+
+    public:
+
+        void operator()(nearInfo& x, const nearInfo& y) const
+        {
+            if (y.first().hit())
+            {
+                if (!x.first().hit())
+                {
+                    x = y;
+                }
+                else if (y.second().second() > x.second().second())
+                {
+                    x = y;
+                }
+            }
+        }
+    };
+
 
 protected:
 
@@ -150,13 +186,16 @@ protected:
         const polyPatch& patch_;
 
         //- Region to sample
-        const word sampleRegion_;
+        mutable word sampleRegion_;
 
         //- What to sample
         const sampleMode mode_;
 
-        //- Patch (only if NEARESTPATCHFACE)
-        const word samplePatch_;
+        //- Patch (if in sampleMode NEARESTPATCH*)
+        mutable word samplePatch_;
+
+        //- PatchGroup (if in sampleMode NEARESTPATCH*)
+        const coupleGroupIdentifier coupleGroup_;
 
         //- How to obtain samples
         offsetMode offsetMode_;
@@ -171,19 +210,20 @@ protected:
         scalar distance_;
 
         //- Same region
-        const bool sameRegion_;
+        mutable bool sameRegion_;
 
 
         // Derived information
 
             //- Communication schedule:
-            //  - Cells/faces to sample per processor
-            //  - Patch faces to receive per processor
-            //  - schedule
+            //
+            //    - Cells/faces to sample per processor
+            //    - Patch faces to receive per processor
+            //    - schedule
             mutable autoPtr<mapDistribute> mapPtr_;
 
 
-        // AMI interpolator
+        // AMI interpolator (only for NEARESTPATCHFACEAMI)
 
             //- Pointer to AMI interpolator
             mutable autoPtr<AMIPatchToPatchInterpolation> AMIPtr_;
@@ -285,6 +325,11 @@ public:
         //- Construct from dictionary
         mappedPatchBase(const polyPatch&, const dictionary&);
 
+        //- Construct from dictionary and (collocated) sample mode
+        //  (only for nearestPatchFace, nearestPatchFaceAMI, nearestPatchPoint)
+        //  Assumes zero offset.
+        mappedPatchBase(const polyPatch&, const sampleMode, const dictionary&);
+
         //- Construct as copy, resetting patch
         mappedPatchBase(const polyPatch&, const mappedPatchBase&);
 
@@ -315,6 +360,9 @@ public:
 
             //- Patch (only if NEARESTPATCHFACE)
             inline const word& samplePatch() const;
+
+            //- PatchGroup (only if NEARESTPATCHFACE)
+            inline const word& coupleGroup() const;
 
             //- Return size of mapped mesh/patch/boundary
             inline label sampleSize() const;
@@ -361,7 +409,7 @@ public:
             static pointIndexHit facePoint
             (
                 const polyMesh&,
-                const label faceI,
+                const label facei,
                 const polyMesh::cellRepresentation
             );
 
@@ -407,13 +455,59 @@ CML::mappedPatchBase::mode() const
 
 inline const CML::word& CML::mappedPatchBase::sampleRegion() const
 {
+    if (sampleRegion_.empty())
+    {
+        if (!coupleGroup_.valid())
+        {
+            FatalErrorInFunction
+                << "Supply either a regionName or a coupleGroup"
+                << " for patch " << patch_.name()
+                << " in region " << patch_.boundaryMesh().mesh().name()
+                << exit(FatalError);
+        }
+
+        // Try and use patchGroup to find samplePatch and sampleRegion
+        label samplePatchID = coupleGroup_.findOtherPatchID
+        (
+            patch_,
+            sampleRegion_
+        );
+
+        samplePatch_ = sampleMesh().boundaryMesh()[samplePatchID].name();
+    }
     return sampleRegion_;
 }
 
 
 inline const CML::word& CML::mappedPatchBase::samplePatch() const
 {
+    if (samplePatch_.empty())
+    {
+        if (!coupleGroup_.valid())
+        {
+            FatalErrorInFunction
+                << "Supply either a patchName or a coupleGroup"
+                << " for patch " << patch_.name()
+                << " in region " << patch_.boundaryMesh().mesh().name()
+                << exit(FatalError);
+        }
+
+        // Try and use patchGroup to find samplePatch and sampleRegion
+        label samplePatchID = coupleGroup_.findOtherPatchID
+        (
+            patch_,
+            sampleRegion_
+        );
+
+        samplePatch_ = sampleMesh().boundaryMesh()[samplePatchID].name();
+    }
     return samplePatch_;
+}
+
+
+inline const CML::word& CML::mappedPatchBase::coupleGroup() const
+{
+    return coupleGroup_.name();
 }
 
 
@@ -440,7 +534,7 @@ inline CML::label CML::mappedPatchBase::sampleSize() const
         }
         default:
         {
-            FatalErrorIn("mappedPatchBase::sampleSize()")
+            FatalErrorInFunction
                 << "problem." << abort(FatalError);
             return -1;
         }

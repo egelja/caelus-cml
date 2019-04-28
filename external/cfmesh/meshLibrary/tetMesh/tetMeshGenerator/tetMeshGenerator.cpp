@@ -302,8 +302,8 @@ void tetMeshGenerator::generateMesh()
 tetMeshGenerator::tetMeshGenerator(const Time& time)
 :
     runTime_(time),
-    surfacePtr_(NULL),
-    modSurfacePtr_(NULL),
+    surfacePtr_(nullptr),
+    modSurfacePtr_(nullptr),
     meshDict_
     (
         IOobject
@@ -315,7 +315,7 @@ tetMeshGenerator::tetMeshGenerator(const Time& time)
             IOobject::NO_WRITE
         )
     ),
-    octreePtr_(NULL),
+    octreePtr_(nullptr),
     mesh_(time),
     controller_(mesh_)
 {

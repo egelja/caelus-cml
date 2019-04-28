@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -218,16 +218,8 @@ emptyFvPatchField<Type>::emptyFvPatchField
 {
     if (!isType<emptyFvPatch>(p))
     {
-        FatalErrorIn
-        (
-            "emptyFvPatchField<Type>::emptyFvPatchField\n"
-            "(\n"
-            "    const emptyFvPatchField<Type>&,\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, volMesh>& iF,\n"
-            "    const fvPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "\n    patch type '" << p.type()
+        FatalErrorInFunction
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -249,16 +241,8 @@ emptyFvPatchField<Type>::emptyFvPatchField
 {
     if (!isType<emptyFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "emptyFvPatchField<Type>::emptyFvPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "\n    patch type '" << p.type()
+        FatalIOErrorInFunction(dict)
+            << "\n    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -307,7 +291,7 @@ void emptyFvPatchField<Type>::updateCoeffs()
     //  % this->dimensionedInternalField().mesh().nCells()
     //)
     //{
-    //    FatalErrorIn("emptyFvPatchField<Type>::updateCoeffs()")
+    //    FatalErrorInFunction
     //        << "This mesh contains patches of type empty but is not"
     //        << "1D or 2D\n"
     //           "    by virtue of the fact that the number of faces of this\n"

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,8 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "surfaceFilmModel.hpp"
-#include "fvMesh.hpp"
-#include "Time.hpp"
+#include "noFilm.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -29,34 +28,42 @@ namespace CML
 {
 namespace regionModels
 {
-namespace surfaceFilmModels
-{
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
 autoPtr<surfaceFilmModel> surfaceFilmModel::New
 (
     const fvMesh& mesh,
-    const dimensionedVector& g
+    const dimensionedVector& g,
+    const word& regionType
 )
 {
     word modelType;
 
     {
-        IOdictionary surfaceFilmPropertiesDict
+        IOobject surfaceFilmPropertiesDictHeader
         (
-            IOobject
-            (
-                "surfaceFilmProperties",
-                mesh.time().constant(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE,
-                false
-            )
+            regionType + "Properties",
+            mesh.time().constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            false
         );
 
-        surfaceFilmPropertiesDict.lookup("surfaceFilmModel") >> modelType;
+        if (surfaceFilmPropertiesDictHeader.headerOk())
+        {
+            IOdictionary surfaceFilmPropertiesDict
+            (
+                surfaceFilmPropertiesDictHeader
+            );
+
+            surfaceFilmPropertiesDict.lookup("surfaceFilmModel") >> modelType;
+        }
+        else
+        {
+            modelType = surfaceFilmModels::noFilm::typeName;
+        }
     }
 
     Info<< "Selecting surfaceFilmModel " << modelType << endl;
@@ -66,22 +73,28 @@ autoPtr<surfaceFilmModel> surfaceFilmModel::New
 
     if (cstrIter == meshConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "surfaceFilmModel::New(const fvMesh&, const dimensionedVector&)"
-        )   << "Unknown surfaceFilmModel type " << modelType
+        FatalErrorInFunction
+            << "Unknown surfaceFilmModel type " << modelType
             << nl << nl << "Valid surfaceFilmModel types are:" << nl
             << meshConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<surfaceFilmModel>(cstrIter()(modelType, mesh, g));
+    return autoPtr<surfaceFilmModel>
+    (
+        cstrIter()
+        (
+            modelType,
+            mesh,
+            g,
+            regionType
+        )
+    );
 }
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace surfaceFilmModels
 } // End namespace regionModels
 } // End namespace CML
 

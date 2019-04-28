@@ -200,7 +200,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("unitCylinderSearchableSurface::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

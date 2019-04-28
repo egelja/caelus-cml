@@ -117,11 +117,8 @@ partTetMeshSimplex::partTetMeshSimplex
             } break;
             default:
             {
-                FatalErrorIn
-                (
-                    "partTetMeshSimplex::partTetMeshSimplex("
-                    "(const partTetMesh& tm, const label pI)"
-                ) << "Point " << pI << " is not present in tet" << tet
+                FatalErrorInFunction
+                    << "Point " << pI << " is not present in tet" << tet
                     << abort(FatalError);
             }
         }
@@ -207,11 +204,8 @@ partTetMeshSimplex::partTetMeshSimplex
             } break;
             default:
             {
-                FatalErrorIn
-                (
-                    "partTetMeshSimplex::partTetMeshSimplex("
-                    "(const partTetMesh& tm, const label pI)"
-                ) << "Point " << gpI << " is not present in tet" << tet
+                FatalErrorInFunction
+                    << "Point " << gpI << " is not present in tet" << tet
                     << abort(FatalError);
             }
         }
@@ -282,12 +276,8 @@ partTetMeshSimplex::partTetMeshSimplex
             } break;
             default:
             {
-                FatalErrorIn
-                (
-                    "partTetMeshSimplex::partTetMeshSimplex"
-                    "(const DynList<point, 128>& pts,"
-                    "const DynList<partTet, 128>& tets, const label pointI)"
-                ) << "Point " << pointI << " is not present in tet" << tet
+                FatalErrorInFunction
+                    << "Point " << pointI << " is not present in tet" << tet
                     << abort(FatalError);
             }
         }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,16 +22,13 @@ Class
 
 Description
     Constant properties thermodynamics package
-    templated into the equationOfState.
+    templated into the EquationOfState.
 
-SourceFiles
-    hConstThermoI.hpp
-    hConstThermo.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef hConstThermo_H
-#define hConstThermo_H
+#ifndef hConstThermo_HPP
+#define hConstThermo_HPP
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,41 +37,34 @@ namespace CML
 
 // Forward declaration of friend functions and operators
 
-template<class equationOfState> class hConstThermo;
+template<class EquationOfState> class hConstThermo;
 
-template<class equationOfState>
-inline hConstThermo<equationOfState> operator+
+template<class EquationOfState>
+inline hConstThermo<EquationOfState> operator+
 (
-    const hConstThermo<equationOfState>&,
-    const hConstThermo<equationOfState>&
+    const hConstThermo<EquationOfState>&,
+    const hConstThermo<EquationOfState>&
 );
 
-template<class equationOfState>
-inline hConstThermo<equationOfState> operator-
-(
-    const hConstThermo<equationOfState>&,
-    const hConstThermo<equationOfState>&
-);
-
-template<class equationOfState>
-inline hConstThermo<equationOfState> operator*
+template<class EquationOfState>
+inline hConstThermo<EquationOfState> operator*
 (
     const scalar,
-    const hConstThermo<equationOfState>&
+    const hConstThermo<EquationOfState>&
 );
 
-template<class equationOfState>
-inline hConstThermo<equationOfState> operator==
+template<class EquationOfState>
+inline hConstThermo<EquationOfState> operator==
 (
-    const hConstThermo<equationOfState>&,
-    const hConstThermo<equationOfState>&
+    const hConstThermo<EquationOfState>&,
+    const hConstThermo<EquationOfState>&
 );
 
-template<class equationOfState>
+template<class EquationOfState>
 Ostream& operator<<
 (
     Ostream&,
-    const hConstThermo<equationOfState>&
+    const hConstThermo<EquationOfState>&
 );
 
 
@@ -82,125 +72,164 @@ Ostream& operator<<
                            Class hConstThermo Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class equationOfState>
+template<class EquationOfState>
 class hConstThermo
 :
-    public equationOfState
+    public EquationOfState
 {
-    // Private data
 
-        //- Heat capacity at constant pressure
-        //  Note: input in [J/(kg K)], but internally uses [J/(kmol K)]
-        scalar Cp_;
-
-        //- Heat of formation
-        //  Note: input in [J/kg], but internally uses [J/kmol]
-        scalar Hf_;
+    scalar Cp_;
+    scalar Hf_;
 
 
-    // Private Member Functions
-
-        //- Construct from components
-        inline hConstThermo
-        (
-            const equationOfState& st,
-            const scalar cp,
-            const scalar hf
-        );
+    //- Construct from components
+    inline hConstThermo
+    (
+        const EquationOfState& st,
+        const scalar cp,
+        const scalar hf
+    )
+    :
+        EquationOfState(st),
+        Cp_(cp),
+        Hf_(hf)
+    {}
 
 
 public:
 
-    // Constructors
 
-        //- Construct from Istream
-        hConstThermo(Istream&);
+    //- Construct from dictionary
+    hConstThermo(const dictionary& dict);
 
-        //- Construct from dictionary
-        hConstThermo(const dictionary& dict);
+    //- Construct as named copy
+    inline hConstThermo(const word& name, const hConstThermo& ct)
+    :
+        EquationOfState(name, ct),
+        Cp_(ct.Cp_),
+        Hf_(ct.Hf_)
+    {}
 
-        //- Construct as named copy
-        inline hConstThermo(const word&, const hConstThermo&);
 
-        //- Construct and return a clone
-        inline autoPtr<hConstThermo> clone() const;
+    //- Construct and return a clone
+    inline autoPtr<hConstThermo> clone() const
+    {
+        return autoPtr<hConstThermo<EquationOfState> >
+        (
+            new hConstThermo<EquationOfState>(*this)
+        );
+    }
 
-        //- Selector from Istream
-        inline static autoPtr<hConstThermo> New(Istream& is);
-
-        //- Selector from dictionary
-        inline static autoPtr<hConstThermo> New(const dictionary& dict);
+    //- Selector from dictionary
+    inline static autoPtr<hConstThermo> New(const dictionary& dict)
+    {
+        return autoPtr<hConstThermo<EquationOfState> >
+        (
+            new hConstThermo<EquationOfState>(dict)
+        );
+    }
 
 
     // Member Functions
 
-        //- Limit the temperature to be in the range Tlow_ to Thigh_
-        inline scalar limit(const scalar T) const;
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "hConst<" + EquationOfState::typeName() + '>';
+    }
 
-        // Fundamental properties
-
-            //- Heat capacity at constant pressure [J/(kmol K)]
-            inline scalar cp(const scalar T) const;
-
-            //- Enthalpy [J/kmol]
-            inline scalar h(const scalar T) const;
-
-            //- Sensible enthalpy [J/kmol]
-            inline scalar hs(const scalar T) const;
-
-            //- Chemical enthalpy [J/kmol]
-            inline scalar hc() const;
-
-            //- Entropy [J/(kmol K)]
-            inline scalar s(const scalar T) const;
+    //- Limit the temperature to be in the range Tlow_ to Thigh_
+    inline scalar limit(const scalar T) const
+    {
+        return T;
+    }
 
 
-        // I-O
+    // Fundamental properties
 
-            //- Write to Ostream
-            void write(Ostream& os) const;
+    //- Heat capacity at constant pressure [J/(kg K)]
+    inline scalar Cp(const scalar p, const scalar T) const
+    {
+        return Cp_ + EquationOfState::Cp(p, T);
+    }
+
+    //- Sensible enthalpy [J/kg]
+    inline scalar Hs(const scalar p, const scalar T) const
+    {
+        return Cp_*T + EquationOfState::H(p, T);
+    }
+
+    //- Chemical enthalpy [J/kg]
+    inline scalar Hc() const
+    {
+        return Hf_;
+    }
+
+    //- Absolute Enthalpy [J/kg]
+    inline scalar Ha(const scalar p, const scalar T) const
+    {
+        return Hs(p, T) + Hc();
+    }
+
+    //- Entropy [J/(kg K)]
+    inline scalar S(const scalar p, const scalar T) const
+    {
+        return Cp_*log(T/Tstd) + EquationOfState::S(p, T);
+    }
+
+    #include "HtoEthermo.hpp"
+
+    // Derivative term used for Jacobian
+
+    //- Derivative of Gibbs free energy w.r.t. temperature
+    inline scalar dGdT(const scalar p, const scalar T) const
+    {
+        return 0;
+    }
+
+    //- Temperature derivative of heat capacity at constant pressure
+    inline scalar dCpdT(const scalar p, const scalar T) const
+    {
+        return 0;
+    }
+
+
+    // I-O
+
+    //- Write to Ostream
+    void write(Ostream& os) const;
 
 
     // Member operators
 
-        inline void operator+=(const hConstThermo&);
-        inline void operator-=(const hConstThermo&);
+    inline void operator+=(const hConstThermo& ct);
 
 
     // Friend operators
+    friend hConstThermo operator+ <EquationOfState>
+    (
+        const hConstThermo& ct1,
+        const hConstThermo& ct2
+    );
 
-        friend hConstThermo operator+ <equationOfState>
-        (
-            const hConstThermo&,
-            const hConstThermo&
-        );
+    friend hConstThermo operator* <EquationOfState>
+    (
+        const scalar s,
+        const hConstThermo& ct
+    );
 
-        friend hConstThermo operator- <equationOfState>
-        (
-            const hConstThermo&,
-            const hConstThermo&
-        );
-
-        friend hConstThermo operator* <equationOfState>
-        (
-            const scalar,
-            const hConstThermo&
-        );
-
-        friend hConstThermo operator== <equationOfState>
-        (
-            const hConstThermo&,
-            const hConstThermo&
-        );
-
+    friend hConstThermo operator== <EquationOfState>
+    (
+        const hConstThermo& ct1,
+        const hConstThermo& ct2
+    );
 
     // IOstream Operators
-
-        friend Ostream& operator<< <equationOfState>
-        (
-            Ostream&,
-            const hConstThermo&
-        );
+    friend Ostream& operator<< <EquationOfState>
+    (
+        Ostream&,
+        const hConstThermo&
+    );
 };
 
 
@@ -208,312 +237,148 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState>::hConstThermo
-(
-    const equationOfState& st,
-    const scalar cp,
-    const scalar hf
-)
-:
-    equationOfState(st),
-    Cp_(cp),
-    Hf_(hf)
-{}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState>::hConstThermo
-(
-    const word& name,
-    const hConstThermo& ct
-)
-:
-    equationOfState(name, ct),
-    Cp_(ct.Cp_),
-    Hf_(ct.Hf_)
-{}
-
-
-template<class equationOfState>
-inline CML::autoPtr<CML::hConstThermo<equationOfState> >
-CML::hConstThermo<equationOfState>::clone() const
-{
-    return autoPtr<hConstThermo<equationOfState> >
-    (
-        new hConstThermo<equationOfState>(*this)
-    );
-}
-
-
-template<class equationOfState>
-inline CML::autoPtr<CML::hConstThermo<equationOfState> >
-CML::hConstThermo<equationOfState>::New(Istream& is)
-{
-    return autoPtr<hConstThermo<equationOfState> >
-    (
-        new hConstThermo<equationOfState>(is)
-    );
-}
-
-
-template<class equationOfState>
-inline CML::autoPtr<CML::hConstThermo<equationOfState> >
-CML::hConstThermo<equationOfState>::New(const dictionary& dict)
-{
-    return autoPtr<hConstThermo<equationOfState> >
-    (
-        new hConstThermo<equationOfState>(dict)
-    );
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class EquationOfState>
-inline CML::scalar CML::hConstThermo<EquationOfState>::limit
-(
-    const scalar T
-) const
-{
-    return T;
-}
-
-
-template<class equationOfState>
-inline CML::scalar CML::hConstThermo<equationOfState>::cp
-(
-    const scalar
-) const
-{
-    return Cp_;
-}
-
-
-template<class equationOfState>
-inline CML::scalar CML::hConstThermo<equationOfState>::h
-(
-    const scalar T
-) const
-{
-    return Cp_*T + Hf_;
-}
-
-
-template<class equationOfState>
-inline CML::scalar CML::hConstThermo<equationOfState>::hs
-(
-    const scalar T
-) const
-{
-    return Cp_*T;
-}
-
-
-template<class equationOfState>
-inline CML::scalar CML::hConstThermo<equationOfState>::hc() const
-{
-    return Hf_;
-}
-
-
-template<class equationOfState>
-inline CML::scalar CML::hConstThermo<equationOfState>::s
-(
-    const scalar T
-) const
-{
-    notImplemented
-    (
-        "scalar hConstThermo<equationOfState>::s(const scalar T) const"
-    );
-    return T;
-}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-template<class equationOfState>
-inline void CML::hConstThermo<equationOfState>::operator+=
-(
-    const hConstThermo<equationOfState>& ct
-)
-{
-    scalar molr1 = this->nMoles();
-
-    equationOfState::operator+=(ct);
-
-    molr1 /= this->nMoles();
-    scalar molr2 = ct.nMoles()/this->nMoles();
-
-    Cp_ = molr1*Cp_ + molr2*ct.Cp_;
-    Hf_ = molr1*Hf_ + molr2*ct.Hf_;
-}
-
-
-template<class equationOfState>
-inline void CML::hConstThermo<equationOfState>::operator-=
-(
-    const hConstThermo<equationOfState>& ct
-)
-{
-    scalar molr1 = this->nMoles();
-
-    equationOfState::operator-=(ct);
-
-    molr1 /= this->nMoles();
-    scalar molr2 = ct.nMoles()/this->nMoles();
-
-    Cp_ = molr1*Cp_ - molr2*ct.Cp_;
-    Hf_ = molr1*Hf_ - molr2*ct.Hf_;
-}
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState> CML::operator+
-(
-    const hConstThermo<equationOfState>& ct1,
-    const hConstThermo<equationOfState>& ct2
-)
-{
-    equationOfState eofs
-    (
-        static_cast<const equationOfState&>(ct1)
-      + static_cast<const equationOfState&>(ct2)
-    );
-
-    return hConstThermo<equationOfState>
-    (
-        eofs,
-        ct1.nMoles()/eofs.nMoles()*ct1.Cp_
-      + ct2.nMoles()/eofs.nMoles()*ct2.Cp_,
-        ct1.nMoles()/eofs.nMoles()*ct1.Hf_
-      + ct2.nMoles()/eofs.nMoles()*ct2.Hf_
-    );
-}
-
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState> CML::operator-
-(
-    const hConstThermo<equationOfState>& ct1,
-    const hConstThermo<equationOfState>& ct2
-)
-{
-    equationOfState eofs
-    (
-        static_cast<const equationOfState&>(ct1)
-      - static_cast<const equationOfState&>(ct2)
-    );
-
-    return hConstThermo<equationOfState>
-    (
-        eofs,
-        ct1.nMoles()/eofs.nMoles()*ct1.Cp_
-      - ct2.nMoles()/eofs.nMoles()*ct2.Cp_,
-        ct1.nMoles()/eofs.nMoles()*ct1.Hf_
-      - ct2.nMoles()/eofs.nMoles()*ct2.Hf_
-    );
-}
-
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState> CML::operator*
-(
-    const scalar s,
-    const hConstThermo<equationOfState>& ct
-)
-{
-    return hConstThermo<equationOfState>
-    (
-        s*static_cast<const equationOfState&>(ct),
-        ct.Cp_,
-        ct.Hf_
-    );
-}
-
-
-template<class equationOfState>
-inline CML::hConstThermo<equationOfState> CML::operator==
-(
-    const hConstThermo<equationOfState>& ct1,
-    const hConstThermo<equationOfState>& ct2
-)
-{
-    return ct2 - ct1;
-}
-
 
 #include "IOstreams.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class equationOfState>
-CML::hConstThermo<equationOfState>::hConstThermo(Istream& is)
+
+template<class EquationOfState>
+CML::hConstThermo<EquationOfState>::hConstThermo(const dictionary& dict)
 :
-    equationOfState(is),
-    Cp_(readScalar(is)),
-    Hf_(readScalar(is))
-{
-    is.check("hConstThermo::hConstThermo(Istream& is)");
-
-    Cp_ *= this->W();
-    Hf_ *= this->W();
-}
-
-
-template<class equationOfState>
-CML::hConstThermo<equationOfState>::hConstThermo(const dictionary& dict)
-:
-    equationOfState(dict),
+    EquationOfState(dict),
     Cp_(readScalar(dict.subDict("thermodynamics").lookup("Cp"))),
     Hf_(readScalar(dict.subDict("thermodynamics").lookup("Hf")))
-{
-    Cp_ *= this->W();
-    Hf_ *= this->W();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class equationOfState>
-void CML::hConstThermo<equationOfState>::write(Ostream& os) const
+template<class EquationOfState>
+void CML::hConstThermo<EquationOfState>::write(Ostream& os) const
 {
-    equationOfState::write(os);
+    EquationOfState::write(os);
 
     dictionary dict("thermodynamics");
-    dict.add("Cp", Cp_/this->W());
-    dict.add("Hf", Hf_/this->W());
+    dict.add("Cp", Cp_);
+    dict.add("Hf", Hf_);
     os  << indent << dict.dictName() << dict;
 }
 
 
 // * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
-template<class equationOfState>
+template<class EquationOfState>
 CML::Ostream& CML::operator<<
 (
     Ostream& os,
-    const hConstThermo<equationOfState>& ct
+    const hConstThermo<EquationOfState>& ct
 )
 {
-    os  << static_cast<const equationOfState&>(ct) << tab
-        << ct.Cp_/ct.W() << tab << ct.Hf_/ct.W();
-
-    os.check("Ostream& operator<<(Ostream& os, const hConstThermo& ct)");
+    ct.write(os);
     return os;
 }
 
 
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class EquationOfState>
+inline void CML::hConstThermo<EquationOfState>::operator+=
+(
+    const hConstThermo<EquationOfState>& ct
+)
+{
+    scalar Y1 = this->Y();
+
+    EquationOfState::operator+=(ct);
+
+    if (mag(this->Y()) > SMALL)
+    {
+        Y1 /= this->Y();
+        scalar Y2 = ct.Y()/this->Y();
+
+        Cp_ = Y1*Cp_ + Y2*ct.Cp_;
+        Hf_ = Y1*Hf_ + Y2*ct.Hf_;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+
+template<class EquationOfState>
+inline CML::hConstThermo<EquationOfState> CML::operator+
+(
+    const hConstThermo<EquationOfState>& ct1,
+    const hConstThermo<EquationOfState>& ct2
+)
+{
+    EquationOfState eofs
+    (
+        static_cast<const EquationOfState&>(ct1)
+      + static_cast<const EquationOfState&>(ct2)
+    );
+
+    if (mag(eofs.Y()) < SMALL)
+    {
+        return hConstThermo<EquationOfState>
+        (
+            eofs,
+            ct1.Cp_,
+            ct1.Hf_
+        );
+    }
+    else
+    {
+        return hConstThermo<EquationOfState>
+        (
+            eofs,
+            ct1.Y()/eofs.Y()*ct1.Cp_
+          + ct2.Y()/eofs.Y()*ct2.Cp_,
+            ct1.Y()/eofs.Y()*ct1.Hf_
+          + ct2.Y()/eofs.Y()*ct2.Hf_
+        );
+    }
+}
+
+
+template<class EquationOfState>
+inline CML::hConstThermo<EquationOfState> CML::operator*
+(
+    const scalar s,
+    const hConstThermo<EquationOfState>& ct
+)
+{
+    return hConstThermo<EquationOfState>
+    (
+        s*static_cast<const EquationOfState&>(ct),
+        ct.Cp_,
+        ct.Hf_
+    );
+}
+
+
+template<class EquationOfState>
+inline CML::hConstThermo<EquationOfState> CML::operator==
+(
+    const hConstThermo<EquationOfState>& ct1,
+    const hConstThermo<EquationOfState>& ct2
+)
+{
+    EquationOfState eofs
+    (
+        static_cast<const EquationOfState&>(ct1)
+     == static_cast<const EquationOfState&>(ct2)
+    );
+
+    return hConstThermo<EquationOfState>
+    (
+        eofs,
+        ct2.Y()/eofs.Y()*ct2.Cp_
+      - ct1.Y()/eofs.Y()*ct1.Cp_,
+        ct2.Y()/eofs.Y()*ct2.Hf_
+      - ct1.Y()/eofs.Y()*ct1.Hf_
+    );
+}
+
 
 #endif
-
-// ************************************************************************* //

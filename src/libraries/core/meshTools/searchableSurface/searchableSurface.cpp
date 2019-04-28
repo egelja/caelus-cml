@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,11 +47,8 @@ CML::autoPtr<CML::searchableSurface> CML::searchableSurface::New
 
     if (cstrIter == dictConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "searchableSurface::New(const word&,"
-            " const IOobject&, const dictionary&)"
-        )   << "Unknown searchableSurface type " << searchableSurfaceType
+        FatalErrorInFunction
+            << "Unknown searchableSurface type " << searchableSurfaceType
             << endl << endl
             << "Valid searchableSurface types : " << endl
             << dictConstructorTablePtr_->sortedToc()

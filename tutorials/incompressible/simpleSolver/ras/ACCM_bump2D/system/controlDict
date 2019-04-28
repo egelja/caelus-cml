@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*------------------------------------------------------------------------------*/
 
@@ -54,12 +54,12 @@ functions
 	{
 		type			forces;
 
-        functionObjectLibs		("libforces.so");
-        patches     			( wall );
+        functionObjectLibs	("libforces.so");
+        patches     		( wall );
         CofR      			(0 0 0);
-        rhoName         		rhoInf;
-        rhoInf          		0.80822;
-        outputControl   		timeStep;
-        outputInterval  		50;
+        rhoName         	rhoInf;
+        rhoInf          	0.80822;
+        writeControl   	 	timeStep;
+        writeInterval   	50;
      }
 }

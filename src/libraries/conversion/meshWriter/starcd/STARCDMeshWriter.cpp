@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -94,7 +94,7 @@ void CML::meshWriters::STARCD::getCellTable()
         }
         else
         {
-            WarningIn("STARCD::getCellTable()")
+            WarningInFunction
                 << ioList.objectPath() << " has incorrect number of cells "
                 << " - use cellZone information"
                 << endl;

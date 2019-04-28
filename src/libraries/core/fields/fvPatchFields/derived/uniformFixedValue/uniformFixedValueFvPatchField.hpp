@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -26,8 +27,9 @@ Description
     \heading Patch usage
 
     \table
-        Property     | Description             | Required    | Default value
-        uniformValue | uniform value           |         yes |
+        Property       | Description             | Required    | Default value
+        uniformValue   | uniform value           | yes         |
+        inlet-diffusion| diffusion at this BC    | no          | true
     \endtable
 
     Example of the boundary condition specification:
@@ -58,6 +60,7 @@ SourceFiles
 
 #include "fixedValueFvPatchFields.hpp"
 #include "DataEntry.hpp"
+#include "Switch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -76,6 +79,9 @@ class uniformFixedValueFvPatchField
     // Private data
 
         autoPtr<DataEntry<Type> > uniformValue_;
+
+        // Include diffusion (default on)
+        Switch inletDiffusion_;
 
 
 public:
@@ -162,6 +168,14 @@ public:
             //- Update the coefficients associated with the patch field
             virtual void updateCoeffs();
 
+            //- Return the matrix diagonal coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientInternalCoeffs() const;
+
+            //- Return the matrix source coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientBoundaryCoeffs() const;
+
 
         //- Write
         virtual void write(Ostream&) const;
@@ -187,7 +201,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(p, iF),
-    uniformValue_()
+    uniformValue_(),
+    inletDiffusion_(true)
 {}
 
 
@@ -200,7 +215,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(p, iF, fld),
-    uniformValue_()
+    uniformValue_(),
+    inletDiffusion_(true)
 {}
 
 
@@ -214,7 +230,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(p, iF),  // bypass mapper
-    uniformValue_(ptf.uniformValue_().clone().ptr())
+    uniformValue_(ptf.uniformValue_().clone().ptr()),
+    inletDiffusion_(ptf.inletDiffusion_)
 {
     // Evaluate since value not mapped
     const scalar t = this->db().time().timeOutputValue();
@@ -231,7 +248,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(p, iF),
-    uniformValue_(DataEntry<Type>::New("uniformValue", dict))
+    uniformValue_(DataEntry<Type>::New("uniformValue", dict)),
+    inletDiffusion_(dict.lookupOrDefault("inlet-diffusion", true))
 {
     if (dict.found("value"))
     {
@@ -257,7 +275,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
         ptf.uniformValue_.valid()
       ? ptf.uniformValue_().clone().ptr()
       : NULL
-    )
+    ),
+    inletDiffusion_(ptf.inletDiffusion_)
 {}
 
 
@@ -274,7 +293,8 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
         ptf.uniformValue_.valid()
       ? ptf.uniformValue_().clone().ptr()
       : NULL
-    )
+    ),
+    inletDiffusion_(ptf.inletDiffusion_)
 {
     // For safety re-evaluate
     const scalar t = this->db().time().timeOutputValue();
@@ -304,11 +324,46 @@ void uniformFixedValueFvPatchField<Type>::updateCoeffs()
 
 
 template<class Type>
+tmp<Field<Type> > uniformFixedValueFvPatchField<Type>::gradientInternalCoeffs() const
+{
+    if (inletDiffusion_)
+    {
+        return -pTraits<Type>::one*this->patch().deltaCoeffs();
+    }
+    else
+    {
+        return tmp<Field<Type> >
+        (
+            new Field<Type>(this->size(), pTraits<Type>::zero)
+        );
+    }
+}
+
+
+template<class Type>
+tmp<Field<Type> > uniformFixedValueFvPatchField<Type>::gradientBoundaryCoeffs() const
+{
+    if (inletDiffusion_)
+    {
+        return this->patch().deltaCoeffs()*(*this);
+    }
+    else
+    {
+        return tmp<Field<Type> >
+        (
+            new Field<Type>(this->size(), pTraits<Type>::zero)
+        );
+    }
+}
+
+
+template<class Type>
 void uniformFixedValueFvPatchField<Type>::write(Ostream& os) const
 {
     // Note: do not write value
     fvPatchField<Type>::write(os);
     uniformValue_->writeData(os);
+    os.writeKeyword("inlet-diffusion") << inletDiffusion_ << token::END_STATEMENT << nl;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

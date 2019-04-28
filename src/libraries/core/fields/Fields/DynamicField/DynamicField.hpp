@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -556,11 +556,8 @@ CML::DynamicField<Type, SizeInc, SizeMult, SizeDiv>::append
 {
     if (this == &lst)
     {
-        FatalErrorIn
-        (
-            "DynamicField<Type, SizeInc, SizeMult, SizeDiv>::append"
-            "(const UList<Type>&)"
-        )   << "attempted appending to self" << abort(FatalError);
+        FatalErrorInFunction
+            << "attempted appending to self" << abort(FatalError);
     }
 
     label nextFree = List<Type>::size();
@@ -581,10 +578,8 @@ inline Type CML::DynamicField<Type, SizeInc, SizeMult, SizeDiv>::remove()
 
     if (elemI < 0)
     {
-        FatalErrorIn
-        (
-            "CML::DynamicField<Type, SizeInc, SizeMult, SizeDiv>::remove()"
-        )   << "List is empty" << abort(FatalError);
+        FatalErrorInFunction
+            << "List is empty" << abort(FatalError);
     }
 
     const Type& val = List<Type>::operator[](elemI);
@@ -630,11 +625,8 @@ inline void CML::DynamicField<Type, SizeInc, SizeMult, SizeDiv>::operator=
 {
     if (this == &lst)
     {
-        FatalErrorIn
-        (
-            "DynamicField<Type, SizeInc, SizeMult, SizeDiv>::operator="
-            "(const DynamicField<Type, SizeInc, SizeMult, SizeDiv>&)"
-        )   << "attempted assignment to self" << abort(FatalError);
+        FatalErrorInFunction
+            << "attempted assignment to self" << abort(FatalError);
     }
 
     if (capacity_ >= lst.size())

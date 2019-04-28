@@ -169,7 +169,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("wrapperSearchableSurface::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

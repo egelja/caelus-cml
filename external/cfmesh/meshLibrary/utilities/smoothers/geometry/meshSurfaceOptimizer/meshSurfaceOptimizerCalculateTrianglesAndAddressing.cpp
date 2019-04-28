@@ -43,10 +43,8 @@ namespace CML
 void meshSurfaceOptimizer::calculateTrianglesAndAddressing() const
 {
     if( triMeshPtr_ )
-        FatalErrorIn
-        (
-            "void meshSurfaceOptimizer::calculateTrianglesAndAddressing() const"
-        ) << "Addressing is already calculated!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Addressing is already calculated!" << abort(FatalError);
 
     triMeshPtr_ = new partTriMesh(*partitionerPtr_);
 

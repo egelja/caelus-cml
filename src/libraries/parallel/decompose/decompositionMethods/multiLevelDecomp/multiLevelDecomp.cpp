@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -347,7 +347,7 @@ CML::multiLevelDecomp::multiLevelDecomp(const dictionary& decompositionDict)
 
     if (n != nDomains())
     {
-        FatalErrorIn("multiLevelDecomp::multiLevelDecomp(const dictionary&)")
+        FatalErrorInFunction
             << "Top level decomposition specifies " << nDomains()
             << " domains which is not equal to the product of"
             << " all sub domains " << n

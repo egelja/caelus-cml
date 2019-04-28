@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,7 +61,7 @@ tmp<volScalarField> curvatureSeparation::calcInvR1
 /*
     tmp<volScalarField> tinvR1
     (
-        new volScalarField("invR1", fvc::div(owner().nHat()))
+        new volScalarField("invR1", fvc::div(film().nHat()))
     );
 */
 
@@ -78,13 +78,13 @@ tmp<volScalarField> curvatureSeparation::calcInvR1
 
     // apply defined patch radii
     const scalar rMin = 1e-6;
-    const fvMesh& mesh = owner().regionMesh();
+    const fvMesh& mesh = film().regionMesh();
     const polyBoundaryMesh& pbm = mesh.boundaryMesh();
     forAll(definedPatchRadii_, i)
     {
-        label patchI = definedPatchRadii_[i].first();
+        label patchi = definedPatchRadii_[i].first();
         scalar definedInvR1 = 1.0/max(rMin, definedPatchRadii_[i].second());
-        UIndirectList<scalar>(invR1, pbm[patchI].faceCells()) = definedInvR1;
+        UIndirectList<scalar>(invR1, pbm[patchi].faceCells()) = definedInvR1;
     }
 
     // filter out large radii
@@ -111,43 +111,43 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
     const surfaceScalarField& phi
 ) const
 {
-    const fvMesh& mesh = owner().regionMesh();
+    const fvMesh& mesh = film().regionMesh();
     const vectorField nf(mesh.Sf()/mesh.magSf());
     const unallocLabelList& own = mesh.owner();
     const unallocLabelList& nbr = mesh.neighbour();
 
     scalarField phiMax(mesh.nCells(), -GREAT);
     scalarField cosAngle(mesh.nCells(), 0.0);
-    forAll(nbr, faceI)
+    forAll(nbr, facei)
     {
-        label cellO = own[faceI];
-        label cellN = nbr[faceI];
+        label cellO = own[facei];
+        label cellN = nbr[facei];
 
-        if (phi[faceI] > phiMax[cellO])
+        if (phi[facei] > phiMax[cellO])
         {
-            phiMax[cellO] = phi[faceI];
-            cosAngle[cellO] = -gHat_ & nf[faceI];
+            phiMax[cellO] = phi[facei];
+            cosAngle[cellO] = -gHat_ & nf[facei];
         }
-        if (-phi[faceI] > phiMax[cellN])
+        if (-phi[facei] > phiMax[cellN])
         {
-            phiMax[cellN] = -phi[faceI];
-            cosAngle[cellN] = -gHat_ & -nf[faceI];
+            phiMax[cellN] = -phi[facei];
+            cosAngle[cellN] = -gHat_ & -nf[facei];
         }
     }
 
-    forAll(phi.boundaryField(), patchI)
+    forAll(phi.boundaryField(), patchi)
     {
-        const fvsPatchScalarField& phip = phi.boundaryField()[patchI];
+        const fvsPatchScalarField& phip = phi.boundaryField()[patchi];
         const fvPatch& pp = phip.patch();
         const labelList& faceCells = pp.faceCells();
         const vectorField nf(pp.nf());
         forAll(phip, i)
         {
-            label cellI = faceCells[i];
-            if (phip[i] > phiMax[cellI])
+            label celli = faceCells[i];
+            if (phip[i] > phiMax[celli])
             {
-                phiMax[cellI] = phip[i];
-                cosAngle[cellI] = -gHat_ & nf[i];
+                phiMax[celli] = phip[i];
+                cosAngle[celli] = -gHat_ & nf[i];
             }
         }
     }
@@ -155,14 +155,14 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
     // correction for cyclics - use cyclic pairs' face normal instead of
     // local face normal
     const fvBoundaryMesh& pbm = mesh.boundary();
-    forAll(phi.boundaryField(), patchI)
+    forAll(phi.boundaryField(), patchi)
     {
-        if (isA<cyclicPolyPatch>(pbm[patchI]))
+        if (isA<cyclicPolyPatch>(pbm[patchi]))
         {
-            const scalarField& phip = phi.boundaryField()[patchI];
-            const vectorField nf(pbm[patchI].nf());
-            const labelList& faceCells = pbm[patchI].faceCells();
-            const label sizeBy2 = pbm[patchI].size()/2;
+            const scalarField& phip = phi.boundaryField()[patchi];
+            const vectorField nf(pbm[patchi].nf());
+            const labelList& faceCells = pbm[patchi].faceCells();
+            const label sizeBy2 = pbm[patchi].size()/2;
 
             for (label face0=0; face0<sizeBy2; face0++)
             {
@@ -208,7 +208,7 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
         volCosAngle.write();
     }
 
-    return max(min(cosAngle, scalar(1.0)), scalar(-1.0));
+    return max(min(cosAngle, scalar(1)), scalar(-1));
 }
 
 
@@ -216,21 +216,30 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
 
 curvatureSeparation::curvatureSeparation
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    injectionModel(type(), owner, dict),
-    gradNHat_(fvc::grad(owner.nHat())),
-    deltaByR1Min_(coeffs().lookupOrDefault<scalar>("deltaByR1Min", 0.0)),
+    injectionModel(type(), film, dict),
+    gradNHat_(fvc::grad(film.nHat())),
+    deltaByR1Min_(coeffDict_.lookupOrDefault<scalar>("deltaByR1Min", 0.0)),
     definedPatchRadii_(),
-    magG_(mag(owner.g().value())),
-    gHat_(owner.g().value()/magG_)
+    magG_(mag(film.g().value())),
+    gHat_(Zero)
 {
-    List<Tuple2<word, scalar> > prIn(coeffs().lookup("definedPatchRadii"));
-    const wordList& allPatchNames = owner.regionMesh().boundaryMesh().names();
+    if (magG_ < ROOTVSMALL)
+    {
+        FatalErrorInFunction
+            << "Acceleration due to gravity must be non-zero"
+            << exit(FatalError);
+    }
 
-    DynamicList<Tuple2<label, scalar> > prData(allPatchNames.size());
+    gHat_ = film.g().value()/magG_;
+
+    List<Tuple2<word, scalar>> prIn(coeffDict_.lookup("definedPatchRadii"));
+    const wordList& allPatchNames = film.regionMesh().boundaryMesh().names();
+
+    DynamicList<Tuple2<label, scalar>> prData(allPatchNames.size());
 
     labelHashSet uniquePatchIDs;
 
@@ -239,14 +248,14 @@ curvatureSeparation::curvatureSeparation
         labelList patchIDs = findStrings(prIn[i].first(), allPatchNames);
         forAll(patchIDs, j)
         {
-            const label patchI = patchIDs[j];
+            const label patchi = patchIDs[j];
 
-            if (!uniquePatchIDs.found(patchI))
+            if (!uniquePatchIDs.found(patchi))
             {
                 const scalar radius = prIn[i].second();
-                prData.append(Tuple2<label, scalar>(patchI, radius));
+                prData.append(Tuple2<label, scalar>(patchi, radius));
 
-                uniquePatchIDs.insert(patchI);
+                uniquePatchIDs.insert(patchi);
             }
         }
     }
@@ -271,7 +280,7 @@ void curvatureSeparation::correct
 )
 {
     const kinematicSingleLayer& film =
-        refCast<const kinematicSingleLayer>(this->owner());
+        refCast<const kinematicSingleLayer>(this->film());
     const fvMesh& mesh = film.regionMesh();
 
     const volScalarField& delta = film.delta();
@@ -319,6 +328,8 @@ void curvatureSeparation::correct
     diameterToInject = separated*delta;
     availableMass -= separated*availableMass;
 
+    addToInjectedMass(sum(separated*availableMass));
+
     if (debug && mesh.time().outputTime())
     {
         volScalarField volFnet
@@ -338,6 +349,8 @@ void curvatureSeparation::correct
         volFnet.correctBoundaryConditions();
         volFnet.write();
     }
+
+    injectionModel::correct();
 }
 
 

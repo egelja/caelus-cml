@@ -78,11 +78,35 @@ void CML::polyMesh::updateMesh(const mapPolyMesh& mpm)
 
         // Any points created out-of-nothing get set to the current coordinate
         // for lack of anything better.
-        forAll(mpm.pointMap(), newPointI)
+        forAll(mpm.pointMap(), newPointi)
         {
-            if (mpm.pointMap()[newPointI] == -1)
+            if (mpm.pointMap()[newPointi] == -1)
             {
-                newMotionPoints[newPointI] = points_[newPointI];
+                newMotionPoints[newPointi] = points_[newPointi];
+            }
+        }
+    }
+
+    if (oldCellCentresPtr_.valid())
+    {
+        // Make a copy of the original cell-centres
+        pointField oldMotionCellCentres = oldCellCentresPtr_();
+
+        pointField& newMotionCellCentres = oldCellCentresPtr_();
+
+        // Resize the list to new size
+        newMotionCellCentres.setSize(cellCentres().size());
+
+        // Map the list
+        newMotionCellCentres.map(oldMotionCellCentres, mpm.cellMap());
+
+        // Any points created out-of-nothing get set to the current coordinate
+        // for lack of anything better.
+        forAll(mpm.cellMap(), newCelli)
+        {
+            if (mpm.cellMap()[newCelli] == -1)
+            {
+                newMotionCellCentres[newCelli] = cellCentres()[newCelli];
             }
         }
     }

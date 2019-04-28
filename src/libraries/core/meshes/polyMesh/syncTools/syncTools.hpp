@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -1373,12 +1373,8 @@ void CML::syncTools::syncEdgeMap
 //{
 //    if (pointValues.size() != mesh.nPoints())
 //    {
-//        FatalErrorIn
-//        (
-//            "syncTools<class T, class CombineOp>::syncPointList"
-//            "(const polyMesh&, List<T>&, const CombineOp&, const T&"
-//            ", const bool)"
-//        )   << "Number of values " << pointValues.size()
+//        FatalErrorInFunction
+//            << "Number of values " << pointValues.size()
 //            << " is not equal to the number of points in the mesh "
 //            << mesh.nPoints() << abort(FatalError);
 //    }
@@ -1550,12 +1546,8 @@ void CML::syncTools::syncEdgeMap
 //{
 //    if (pointValues.size() != meshPoints.size())
 //    {
-//        FatalErrorIn
-//        (
-//            "syncTools<class T, class CombineOp>::syncPointList"
-//            "(const polyMesh&, const labelList&, List<T>&, const CombineOp&"
-//            ", const T&, const bool)"
-//        )   << "Number of values " << pointValues.size()
+//        FatalErrorInFunction
+//            << "Number of values " << pointValues.size()
 //            << " is not equal to the number of points "
 //            << meshPoints.size() << abort(FatalError);
 //    }
@@ -1599,12 +1591,8 @@ void CML::syncTools::syncPointList
 {
     if (pointValues.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::syncPointList"
-            "(const polyMesh&, List<T>&, const CombineOp&, const T&"
-            ", const bool)"
-        )   << "Number of values " << pointValues.size()
+        FatalErrorInFunction
+            << "Number of values " << pointValues.size()
             << " is not equal to the number of points in the mesh "
             << mesh.nPoints() << abort(FatalError);
     }
@@ -1624,11 +1612,8 @@ void CML::syncTools::syncPointList
 //{
 //    if (pointValues.size() != mesh.nPoints())
 //    {
-//        FatalErrorIn
-//        (
-//            "syncTools<class CombineOp>::syncPointPositions"
-//            "(const polyMesh&, List<point>&, const CombineOp&, const point&)"
-//        )   << "Number of values " << pointValues.size()
+//        FatalErrorInFunction
+//            << "Number of values " << pointValues.size()
 //            << " is not equal to the number of points in the mesh "
 //            << mesh.nPoints() << abort(FatalError);
 //    }
@@ -1650,11 +1635,8 @@ void CML::syncTools::syncPointList
 {
     if (pointValues.size() != meshPoints.size())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::syncPointList"
-            "(const polyMesh&, List<T>&, const CombineOp&, const T&)"
-        )   << "Number of values " << pointValues.size()
+        FatalErrorInFunction
+            << "Number of values " << pointValues.size()
             << " is not equal to the number of meshPoints "
             << meshPoints.size() << abort(FatalError);
     }
@@ -1709,11 +1691,8 @@ void CML::syncTools::syncPointList
 //{
 //    if (pointValues.size() != meshPoints.size())
 //    {
-//        FatalErrorIn
-//        (
-//            "syncTools<class CombineOp>::syncPointList"
-//            "(const polyMesh&, List<point>&, const CombineOp&, const point&)"
-//        )   << "Number of values " << pointValues.size()
+//        FatalErrorInFunction
+//            << "Number of values " << pointValues.size()
 //            << " is not equal to the number of meshPoints "
 //            << meshPoints.size() << abort(FatalError);
 //    }
@@ -1769,11 +1748,8 @@ void CML::syncTools::syncEdgeList
 {
     if (edgeValues.size() != mesh.nEdges())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::syncEdgeList"
-            "(const polyMesh&, List<T>&, const CombineOp&, const T&)"
-        )   << "Number of values " << edgeValues.size()
+        FatalErrorInFunction
+            << "Number of values " << edgeValues.size()
             << " is not equal to the number of edges in the mesh "
             << mesh.nEdges() << abort(FatalError);
     }
@@ -1815,11 +1791,8 @@ void CML::syncTools::syncEdgeList
 //{
 //    if (edgeValues.size() != mesh.nEdges())
 //    {
-//        FatalErrorIn
-//        (
-//            "syncTools<class CombineOp>::syncEdgePositions"
-//            "(const polyMesh&, List<point>&, const CombineOp&, const point&)"
-//        )   << "Number of values " << edgeValues.size()
+//        FatalErrorInFunction
+//            << "Number of values " << edgeValues.size()
 //            << " is not equal to the number of edges in the mesh "
 //            << mesh.nEdges() << abort(FatalError);
 //    }
@@ -1864,11 +1837,8 @@ void CML::syncTools::syncEdgeList
 {
     if (edgeValues.size() != meshEdges.size())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::syncEdgeList"
-            "(const polyMesh&, List<T>&, const CombineOp&, const T&)"
-        )   << "Number of values " << edgeValues.size()
+        FatalErrorInFunction
+            << "Number of values " << edgeValues.size()
             << " is not equal to the number of meshEdges "
             << meshEdges.size() << abort(FatalError);
     }
@@ -1924,12 +1894,8 @@ void CML::syncTools::syncBoundaryFaceList
 
     if (faceValues.size() != nBFaces)
     {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::syncBoundaryFaceList"
-            "(const polyMesh&, UList<T>&, const CombineOp&"
-            ", const bool)"
-        )   << "Number of values " << faceValues.size()
+        FatalErrorInFunction
+            << "Number of values " << faceValues.size()
             << " is not equal to the number of boundary faces in the mesh "
             << nBFaces << abort(FatalError);
     }
@@ -2048,11 +2014,8 @@ void CML::syncTools::syncFaceList
 {
     if (faceValues.size() != mesh.nFaces())
     {
-        FatalErrorIn
-        (
-            "syncTools<unsigned nBits, class CombineOp>::syncFaceList"
-            "(const polyMesh&, PackedList<nBits>&, const CombineOp&)"
-        )   << "Number of values " << faceValues.size()
+        FatalErrorInFunction
+            << "Number of values " << faceValues.size()
             << " is not equal to the number of faces in the mesh "
             << mesh.nFaces() << abort(FatalError);
     }
@@ -2165,11 +2128,8 @@ void CML::syncTools::swapBoundaryCellList
 {
     if (cellData.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "syncTools<class T>::swapBoundaryCellList"
-            "(const polyMesh&, const UList<T>&, List<T>&)"
-        )   << "Number of cell values " << cellData.size()
+        FatalErrorInFunction
+            << "Number of cell values " << cellData.size()
             << " is not equal to the number of cells in the mesh "
             << mesh.nCells() << abort(FatalError);
     }
@@ -2216,12 +2176,8 @@ void CML::syncTools::syncPointList
 {
     if (pointValues.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "syncTools<unsigned nBits, class CombineOp>::syncPointList"
-            "(const polyMesh&, PackedList<nBits>&, const CombineOp&"
-            ", const unsigned int)"
-        )   << "Number of values " << pointValues.size()
+        FatalErrorInFunction
+            << "Number of values " << pointValues.size()
             << " is not equal to the number of points in the mesh "
             << mesh.nPoints() << abort(FatalError);
     }
@@ -2263,12 +2219,8 @@ void CML::syncTools::syncEdgeList
 {
     if (edgeValues.size() != mesh.nEdges())
     {
-        FatalErrorIn
-        (
-            "syncTools<unsigned nBits, class CombineOp>::syncEdgeList"
-            "(const polyMesh&, PackedList<nBits>&, const CombineOp&"
-            ", const unsigned int)"
-        )   << "Number of values " << edgeValues.size()
+        FatalErrorInFunction
+            << "Number of values " << edgeValues.size()
             << " is not equal to the number of edges in the mesh "
             << mesh.nEdges() << abort(FatalError);
     }

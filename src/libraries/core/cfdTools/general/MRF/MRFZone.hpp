@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -167,8 +167,8 @@ public:
         //- Return clone
         autoPtr<MRFZone> clone() const
         {
-            notImplemented("autoPtr<MRFZone> clone() const");
-            return autoPtr<MRFZone>(NULL);
+            NotImplemented;
+            return autoPtr<MRFZone>(nullptr);
         }
 
 
@@ -250,6 +250,10 @@ public:
 
         //- Correct the boundary velocity for the rotation of the MRF region
         void correctBoundaryVelocity(volVectorField& U) const;
+
+        //- Zero the MRF region of the given field
+        template<class Type>
+        void zero(GeometricField<Type, fvsPatchField, surfaceMesh>& phi) const;
 
         //- Update MRFZone faces if the mesh topology changes
         void update();
@@ -443,6 +447,45 @@ void CML::MRFZone::makeAbsoluteRhoFlux
                 rho.boundaryField()[patchi][patchFacei]
               * (Omega ^ (Cf.boundaryField()[patchi][patchFacei] - origin_))
               & Sf.boundaryField()[patchi][patchFacei];
+        }
+    }
+}
+
+
+template<class Type>
+void CML::MRFZone::zero
+(
+    GeometricField<Type, fvsPatchField, surfaceMesh>& phi
+) const
+{
+    if (!active_)
+    {
+        return;
+    }
+
+    Field<Type>& phii = phi.internalField();
+
+    forAll(internalFaces_, i)
+    {
+        phii[internalFaces_[i]] = Zero;
+    }
+
+    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
+        GeometricBoundaryField& phibf = phi.boundaryField();
+
+    forAll(includedFaces_, patchi)
+    {
+        forAll(includedFaces_[patchi], i)
+        {
+            phibf[patchi][includedFaces_[patchi][i]] = Zero;
+        }
+    }
+
+    forAll(excludedFaces_, patchi)
+    {
+        forAll(excludedFaces_[patchi], i)
+        {
+            phibf[patchi][excludedFaces_[patchi][i]] = Zero;
         }
     }
 }

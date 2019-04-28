@@ -100,11 +100,12 @@ public:
 
         // Edit
 
-            //- Return tmp pointer for reuse
+            //- Return tmp pointer for reuse.
+            //  Returns a clone if the object is not a temporary
             inline T* ptr() const;
 
             //- If object pointer points to valid object:
-            //  delete object and set pointer to NULL
+            //  delete object and set pointer to nullptr
             inline void clear() const;
 
 

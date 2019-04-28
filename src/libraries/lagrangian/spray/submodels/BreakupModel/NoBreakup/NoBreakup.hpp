@@ -76,7 +76,7 @@ public:
         //- Flag to indicate whether model activates break-up model
         virtual bool active() const;
 
-        //- update the parcel properties
+        //- Update the parcel properties
         virtual bool update
         (
             const scalar dt,
@@ -171,7 +171,6 @@ bool CML::NoBreakup<CloudType>::update
     scalar& massChild
 )
 {
-    // Do nothing
     return false;
 }
 

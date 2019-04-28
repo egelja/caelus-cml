@@ -40,7 +40,7 @@ namespace CML {
 
     label FaceZoneValueExpressionDriver::pointSize() const
     {
-        notImplemented("FaceZoneValueExpressionDriver::pointSize()");
+        NotImplemented;
         return 0;
     }
 

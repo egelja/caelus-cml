@@ -101,8 +101,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             virtual void setProperties
@@ -217,7 +217,7 @@ void CML::NoInjection<CloudType>::setProperties
 )
 {
     // set particle velocity
-    parcel.U() = vector::zero;
+    parcel.U() = Zero;
 
     // set particle diameter
     parcel.d() = 0.0;

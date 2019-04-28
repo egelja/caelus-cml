@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -203,16 +203,8 @@ processorCyclicFvsPatchField<Type>::processorCyclicFvsPatchField
 {
     if (!isType<processorCyclicFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "processorCyclicFvsPatchField<Type>::processorCyclicFvsPatchField\n"
-            "(\n"
-            "    const processorCyclicFvsPatchField<Type>& ptf,\n"
-            "    const fvPatch& p,\n"
-            "    const DimensionedField<Type, surfaceMesh>& iF,\n"
-            "    const fvPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()
@@ -234,16 +226,8 @@ processorCyclicFvsPatchField<Type>::processorCyclicFvsPatchField
 {
     if (!isType<processorCyclicFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "processorCyclicFvsPatchField<Type>::processorCyclicFvsPatchField\n"
-            "(\n"
-            "    const fvPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not processor type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not processor type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }

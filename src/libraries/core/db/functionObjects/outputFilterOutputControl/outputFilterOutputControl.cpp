@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,10 +52,12 @@ const CML::NamedEnum<CML::outputFilterOutputControl::outputControls, 7>
 CML::outputFilterOutputControl::outputFilterOutputControl
 (
     const Time& t,
-    const dictionary& dict
+    const dictionary& dict,
+    const word prefix
 )
 :
     time_(t),
+    prefix_(prefix),
     outputControl_(ocTimeStep),
     outputInterval_(0),
     outputTimeLastDump_(0),
@@ -75,9 +77,26 @@ CML::outputFilterOutputControl::~outputFilterOutputControl()
 
 void CML::outputFilterOutputControl::read(const dictionary& dict)
 {
-    if (dict.found("outputControl"))
+    word controlName(prefix_ + "Control");
+    word intervalName(prefix_ + "Interval");
+
+    // For backward compatibility support the deprecated 'outputControl' option
+    // now superseded by 'writeControl'
+    if (prefix_ == "write" && dict.found("outputControl"))
     {
-        outputControl_ = outputControlNames_.read(dict.lookup("outputControl"));
+        IOWarningIn("outputFilterOutputControl::read(const dictionary& dict)",dict)
+            << "Using deprecated 'outputControl'" << nl
+            << "    Please use 'writeControl' with 'writeInterval'"
+            << endl;
+        
+        // Change the old names for this option
+        controlName = "outputControl";
+        intervalName = "outputInterval";
+    }
+
+    if (dict.found(controlName))
+    {
+        outputControl_ = outputControlNames_.read(dict.lookup(controlName));
     }
     else
     {
@@ -88,13 +107,13 @@ void CML::outputFilterOutputControl::read(const dictionary& dict)
     {
         case ocTimeStep:
         {
-            outputInterval_ = dict.lookupOrDefault<label>("outputInterval", 0);
+            outputInterval_ = dict.lookupOrDefault<label>(intervalName, 0);
             break;
         }
 
         case ocOutputTime:
         {
-            outputInterval_ = dict.lookupOrDefault<label>("outputInterval", 1);
+            outputInterval_ = dict.lookupOrDefault<label>(intervalName, 1);
             break;
         }
 
@@ -103,7 +122,7 @@ void CML::outputFilterOutputControl::read(const dictionary& dict)
         case ocCpuTime:
         case ocAdjustableTime:
         {
-            writeInterval_ = readScalar(dict.lookup("writeInterval"));
+            writeInterval_ = readScalar(dict.lookup(intervalName));
             break;
         }
 
@@ -198,7 +217,7 @@ bool CML::outputFilterOutputControl::output()
         default:
         {
             // this error should not actually be possible
-            FatalErrorIn("bool CML::outputFilterOutputControl::output()")
+            FatalErrorInFunction
                 << "Undefined output control: "
                 << outputControlNames_[outputControl_] << nl
                 << abort(FatalError);

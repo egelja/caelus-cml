@@ -71,3 +71,5 @@ volScalarField rhoInf
     rhoInfValue
 );
 
+mesh.setFluxRequired(p.name());
+

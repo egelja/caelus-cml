@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,12 +43,6 @@ CML::consumptionSpeed::consumptionSpeed
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::consumptionSpeed::~consumptionSpeed()
-{}
-
-
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 CML::scalar CML::consumptionSpeed::omega0Sigma
@@ -57,17 +51,18 @@ CML::scalar CML::consumptionSpeed::omega0Sigma
     scalar a
 ) const
 {
-        scalar omega0 = 0.0;
-        if (sigma < sigmaExt_)
-        {
-            omega0 =
-            max
-            (
-                a*omega0_*(1.0 - exp(eta_*max(sigma, 0.0))),
-                omegaMin_
-            ) ;
-        }
-        return omega0;
+    scalar omega0 = 0.0;
+
+    if (sigma < sigmaExt_)
+    {
+        omega0 = max
+        (
+            a*omega0_*(1.0 - exp(eta_*max(sigma, 0.0))),
+            omegaMin_
+        ) ;
+    }
+
+    return omega0;
 }
 
 
@@ -133,5 +128,3 @@ void  CML::consumptionSpeed::read(const dictionary& dict)
     dict.lookup("sigmaExt") >> sigmaExt_;
     dict.lookup("omegaMin") >> omegaMin_;
 }
-
-// ************************************************************************* //

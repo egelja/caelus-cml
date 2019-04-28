@@ -70,11 +70,11 @@ CML::wrapperSearchableSurface::wrapperSearchableSurface
             << name() << " wraps " << delegate().name() << endl;
     }
     if(regions().size()!=size()) {
-        WarningIn("wrapperSearchableSurface::wrapperSearchableSurface")
+        WarningInFunction
             << "Number of regions " << regions().size() << " not equal to size "
-                << size() << nl << "Regions: " << regions()
-                << endl
-                << "in " << name() << " wraps " << delegate().name() << endl;
+            << size() << nl << "Regions: " << regions()
+            << endl
+            << "in " << name() << " wraps " << delegate().name() << endl;
         //                << exit(FatalError);
     }
 }
@@ -201,10 +201,7 @@ void CML::wrapperSearchableSurface::getVolumeType
 
 bool CML::wrapperSearchableSurface::overlaps(const boundBox& bb) const
 {
-    notImplemented
-        (
-            "CML::wrapperSearchableSurface::overlaps(const boundBox&) const"
-        );
+    NotImplemented;
 
     return false;
 }

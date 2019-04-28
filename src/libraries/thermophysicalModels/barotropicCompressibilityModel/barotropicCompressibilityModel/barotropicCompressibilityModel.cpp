@@ -68,6 +68,3 @@ bool CML::barotropicCompressibilityModel::read
 
     return true;
 }
-
-
-// ************************************************************************* //

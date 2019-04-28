@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -171,7 +171,7 @@ labelList findBaffles(const polyMesh& mesh, const labelList& boundaryFaces)
 
             if (isA<processorPolyPatch>(patches[patchI]))
             {
-                FatalErrorIn("findBaffles(const polyMesh&, const labelList&)")
+                FatalErrorInFunction
                     << "Duplicate face " << faceI
                     << " is on a processorPolyPatch."
                     << "This is not allowed." << nl

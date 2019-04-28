@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -123,13 +123,7 @@ public:
         PhaseChangeModel(const PhaseChangeModel<CloudType>& pcm);
 
         //- Construct and return a clone
-        virtual autoPtr<PhaseChangeModel<CloudType> > clone() const
-        {
-            return autoPtr<PhaseChangeModel<CloudType> >
-            (
-                new PhaseChangeModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<PhaseChangeModel<CloudType>> clone() const = 0;
 
 
     //- Destructor
@@ -156,7 +150,7 @@ public:
         virtual void calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar Re,
             const scalar Pr,
             const scalar d,
@@ -165,9 +159,9 @@ public:
             const scalar Ts,
             const scalar pc,
             const scalar Tc,
-            const scalarField& Yl,
+            const scalarField& X,
             scalarField& dMassPC
-        ) const;
+        ) const = 0;
 
         //- Return the enthalpy per unit mass
         virtual scalar dh
@@ -179,10 +173,10 @@ public:
         ) const;
 
         //- Return vapourisation temperature
-        virtual scalar Tvap(const scalarField& Y) const;
+        virtual scalar Tvap(const scalarField& X) const;
 
         //- Return maximum/limiting temperature
-        virtual scalar TMax(const scalar p, const scalarField& Y) const;
+        virtual scalar TMax(const scalar p, const scalarField& X) const;
 
         //- Add to phase change mass
         void addToPhaseChangeMass(const scalar dMass);
@@ -201,32 +195,30 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makePhaseChangeModel(CloudType)                                       \
-                                                                              \
-    typedef CloudType::reactingCloudType reactingCloudType;                   \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        PhaseChangeModel<reactingCloudType>,                                  \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        PhaseChangeModel<reactingCloudType>,                                  \
-        dictionary                                                            \
-    );
+#define makePhaseChangeModel(CloudType)                                        \
+                                                                               \
+    typedef CloudType::reactingCloudType reactingCloudType;                    \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        PhaseChangeModel<reactingCloudType>,                                   \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        PhaseChangeModel<reactingCloudType>,                                   \
+        dictionary                                                             \
+    );                                                                         \
 
 
-#define makePhaseChangeModelType(SS, CloudType)                               \
-                                                                              \
-    typedef CloudType::reactingCloudType reactingCloudType;                   \
-    defineNamedTemplateTypeNameAndDebug(SS<reactingCloudType>, 0);            \
-                                                                              \
-    PhaseChangeModel<reactingCloudType>::                                     \
-        adddictionaryConstructorToTable<SS<reactingCloudType> >               \
+#define makePhaseChangeModelType(SS, CloudType)                                \
+                                                                               \
+    typedef CloudType::reactingCloudType reactingCloudType;                    \
+    defineNamedTemplateTypeNameAndDebug(SS<reactingCloudType>, 0);             \
+                                                                               \
+    PhaseChangeModel<reactingCloudType>::                                      \
+        adddictionaryConstructorToTable<SS<reactingCloudType> >                \
             add##SS##CloudType##reactingCloudType##ConstructorToTable_;
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -259,11 +251,8 @@ const
         }
     }
 
-    FatalErrorIn
-    (
-        "PhaseChangeModel<CloudType>::enthalpyTransferType"
-        "PhaseChangeModel<CloudType>::wordToEnthalpyTransfer(const word&) const"
-    )   << "Unknown enthalpyType " << etName << ". Valid selections are:" << nl
+    FatalErrorInFunction
+        << "Unknown enthalpyType " << etName << ". Valid selections are:" << nl
         << enthalpyTransferTypeNames << exit(FatalError);
 
     return enthalpyTransferType(0);
@@ -331,44 +320,6 @@ CML::PhaseChangeModel<CloudType>::enthalpyTransfer() const
 
 
 template<class CloudType>
-void CML::PhaseChangeModel<CloudType>::calculate
-(
-    const scalar,
-    const label,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalarField&,
-    scalarField&
-) const
-{
-    notImplemented
-    (
-        "void CML::PhaseChangeModel<CloudType>::calculate"
-        "("
-            "const scalar, "
-            "const label, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalarField&,"
-            "scalarField&"
-        ") const"
-    );
-}
-
-
-template<class CloudType>
 CML::scalar CML::PhaseChangeModel<CloudType>::dh
 (
     const label idc,
@@ -384,8 +335,8 @@ CML::scalar CML::PhaseChangeModel<CloudType>::dh
 template<class CloudType>
 CML::scalar CML::PhaseChangeModel<CloudType>::TMax
 (
-    const scalar,
-    const scalarField&
+    const scalar p,
+    const scalarField& X
 ) const
 {
     return GREAT;
@@ -393,7 +344,7 @@ CML::scalar CML::PhaseChangeModel<CloudType>::TMax
 
 
 template<class CloudType>
-CML::scalar CML::PhaseChangeModel<CloudType>::Tvap(const scalarField& Y) const
+CML::scalar CML::PhaseChangeModel<CloudType>::Tvap(const scalarField& X) const
 {
     return -GREAT;
 }
@@ -414,7 +365,7 @@ void CML::PhaseChangeModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer phase change      = " << massTotal << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;
@@ -442,14 +393,8 @@ CML::PhaseChangeModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PhaseChangeModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown phase change model type "
+        FatalErrorInFunction
+            << "Unknown phase change model type "
             << modelType << nl << nl
             << "Valid phase change model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

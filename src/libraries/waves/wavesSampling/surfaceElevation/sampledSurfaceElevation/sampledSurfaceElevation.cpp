@@ -200,13 +200,8 @@ CML::sampledSurfaceElevation::sampledSurfaceElevation
     fieldNames_(),
     interpolationScheme_(word::null),
     writeFormat_(word::null),
-    surfaceElevationFilePtr_( NULL )
+    surfaceElevationFilePtr_(nullptr)
 {
-    startTime_ = dict.lookupOrDefault<scalar>("samplingStartTime", 0.0);
-    nextSampleTime_ = startTime_;
-    surfaceSampleDeltaT_ =
-        dict.lookupOrDefault<scalar>("surfaceSampleDeltaT", -1);
-
     if (Pstream::parRun())
     {
         outputPath_ = mesh_.time().path()/".."/name_;
@@ -260,135 +255,17 @@ void CML::sampledSurfaceElevation::write()
     }
 }
 
-bool CML::sampledSurfaceElevation::performAction()
-{
-    if (surfaceSampleDeltaT_ <= 10*SMALL)
-    {
-        // This line is needed to update the locations of the interpolation
-        // lines.
-    	// Note, that performAction() is only called in case the upstream
-    	// time controls passes, i.e. a given timeIndex or at outputTime().
-        if (mesh_.moving())
-        {
-    	    this->correct();
-        }
-
-        return mesh_.time().value() >= startTime_;
-    }
-    else
-    {
-        if (mesh_.time().value() < nextSampleTime_)
-        {
-            return false;
-        }
-        else
-        {
-            while (mesh_.time().value() > nextSampleTime_)
-            {
-                nextSampleTime_ += surfaceSampleDeltaT_;
-            }
-
-            // This line is needed to update the locations of the interpolation
-            // lines.
-            if (mesh_.moving())
-            {
-        	    this->correct();
-            }
-
-            return true;
-        }
-    }
-}
-
 
 void CML::sampledSurfaceElevation::sampleIntegrateAndWrite
 (
     fieldGroup<scalar>& fields
 )
 {
-    if (fields.size() && performAction())
-    {
-        scalarField result(0);
-        sampleAndIntegrate(scalarFields_, result);
-
-        if (Pstream::master())
-        {
-            // create file if not already there, notice: this shall be
-            // done on master node only
-            if (surfaceElevationFilePtr_.empty())
-            {
-                mkDir( outputPath_ + "/" + mesh_.time().timeName() );
-                surfaceElevationFilePtr_.reset
-                (
-                    new OFstream
-                    (
-                        outputPath_ + "/" + mesh_.time().timeName()
-                      + "/surfaceElevation.dat"
-                    )
-                );
-
-                // write header
-                if (surfaceElevationFilePtr_.valid())
-                {
-                    surfaceElevationFilePtr_() << "Time";
-
-                    forAll (masterSampledSets_, seti)
-                    {
-                        surfaceElevationFilePtr_() << tab
-                            << masterSampledSets_[seti].name();
-                    }
-                    surfaceElevationFilePtr_() << endl;
-
-                    for (int coordi = 0; coordi < 3; coordi++)
-                    {
-                        surfaceElevationFilePtr_() << -1 - coordi;
-
-                        forAll (masterSampledSets_, seti)
-                        {
-                            surfaceElevationFilePtr_() << tab
-                                 << masterSampledSets_[seti][0].component(coordi);
-                        }
-                        surfaceElevationFilePtr_() << endl;
-                    }
-                }
-                else
-                {
-                    FatalErrorIn
-                    (
-                       "void CML::sampledSurfaceElevation::sampleIntegrateAndWrite( ... )"
-                    )
-                    << "Output file could not be opened in " << outputPath_
-                    << "/" << mesh_.time().timeName() << endl << endl
-                    << exit(FatalError);
-                }
-            }
-
-            if (surfaceElevationFilePtr_.valid())
-            {
-                surfaceElevationFilePtr_() << mesh_.time().value();
-
-                forAll (result, seti)
-                {
-                    surfaceElevationFilePtr_() << tab << result[seti];
-                }
-
-                surfaceElevationFilePtr_() << endl;
-            }
-        }
-    }
-}
-
-
-void CML::sampledSurfaceElevation::sampleAndIntegrate
-(
-    fieldGroup<scalar>& fields,
-    Field<scalar>& result
-)
-{
-    result.setSize(0);
-
     if (fields.size())
     {
+        scalarField result(0);
+        result.setSize(0);
+
         bool interpolate = interpolationScheme_ != "cell";
 
         // Create or use existing writer
@@ -545,6 +422,17 @@ void CML::sampledSurfaceElevation::sampleAndIntegrate
                 }
             }
         }
+
+        // Write time
+        surfaceElevationFilePtr_() << mesh_.time().value();
+
+        // Write the surface elevation
+        forAll (result, seti)
+        {
+            surfaceElevationFilePtr_() << tab << result[seti];
+        }
+
+        surfaceElevationFilePtr_() << endl;
     }
 }
 
@@ -580,6 +468,61 @@ void CML::sampledSurfaceElevation::read(const dictionary& dict)
             Pout << "  " << operator[](si) << endl;
         }
         Pout << ")" << endl;
+    }
+
+    // Create the output file
+    if (Pstream::master())
+    {
+        // create file if not already there, notice: this shall be
+        // done on master node only
+        if (surfaceElevationFilePtr_.empty())
+        {
+            // Initialise the file
+            mkDir(outputPath_ + "/" + mesh_.time().timeName());
+            surfaceElevationFilePtr_.reset
+            (
+                new OFstream
+                (
+                    outputPath_ + "/" + mesh_.time().timeName()
+                  + "/surfaceElevation.dat"
+                )
+            );
+
+            // Write header
+            if (surfaceElevationFilePtr_.valid())
+            {
+                surfaceElevationFilePtr_() << "Time";
+
+                forAll (masterSampledSets_, seti)
+                {
+                    surfaceElevationFilePtr_() << tab
+                        << masterSampledSets_[seti].name();
+                }
+                surfaceElevationFilePtr_() << endl;
+
+                for (int coordi = 0; coordi < 3; coordi++)
+                {
+                    surfaceElevationFilePtr_() << -1 - coordi;
+
+                    forAll (masterSampledSets_, seti)
+                    {
+                        surfaceElevationFilePtr_() << tab
+                             << masterSampledSets_[seti][0].component(coordi);
+                    }
+                    surfaceElevationFilePtr_() << endl;
+                }
+            }
+            else
+            {
+                FatalErrorIn
+                (
+                   "void CML::sampledSurfaceElevation::sampleIntegrateAndWrite( ... )"
+                )
+                << "Output file could not be opened in " << outputPath_
+                << "/" << mesh_.time().timeName() << endl << endl
+                << exit(FatalError);
+            }
+        }
     }
 }
 

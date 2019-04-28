@@ -76,8 +76,8 @@ meshSurfaceOptimizer::meshSurfaceOptimizer(const meshSurfaceEngine& surface)
     vertexType_(surface.boundaryPoints().size()),
     partitionerPtr_(new meshSurfacePartitioner(surface)),
     deletePartitioner_(true),
-    octreePtr_(NULL),
-    triMeshPtr_(NULL),
+    octreePtr_(nullptr),
+    triMeshPtr_(nullptr),
     enforceConstraints_(false),
     badPointsSubsetName_("invertedBoundaryPoints")
 {
@@ -90,8 +90,8 @@ meshSurfaceOptimizer::meshSurfaceOptimizer(const meshSurfacePartitioner& mPart)
     vertexType_(surfaceEngine_.boundaryPoints().size()),
     partitionerPtr_(&mPart),
     deletePartitioner_(true),
-    octreePtr_(NULL),
-    triMeshPtr_(NULL),
+    octreePtr_(nullptr),
+    triMeshPtr_(nullptr),
     enforceConstraints_(false),
     badPointsSubsetName_("invertedBoundaryPoints")
 {
@@ -109,7 +109,7 @@ meshSurfaceOptimizer::meshSurfaceOptimizer
     partitionerPtr_(new meshSurfacePartitioner(surface)),
     deletePartitioner_(true),
     octreePtr_(&octree),
-    triMeshPtr_(NULL),
+    triMeshPtr_(nullptr),
     enforceConstraints_(false),
     badPointsSubsetName_("invertedBoundaryPoints")
 {
@@ -127,7 +127,7 @@ meshSurfaceOptimizer::meshSurfaceOptimizer
     partitionerPtr_(&partitioner),
     deletePartitioner_(false),
     octreePtr_(&octree),
-    triMeshPtr_(NULL),
+    triMeshPtr_(nullptr),
     enforceConstraints_(false),
     badPointsSubsetName_("invertedBoundaryPoints")
 {

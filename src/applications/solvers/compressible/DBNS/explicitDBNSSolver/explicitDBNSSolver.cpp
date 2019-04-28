@@ -46,8 +46,8 @@ Author
 
 \*---------------------------------------------------------------------------*/
 #include "fvCFD.hpp"
-#include "basicPsiThermo.hpp"
-#include "turbulenceModel.hpp"
+#include "psiThermo.hpp"
+#include "compressibleTurbulenceModel.hpp"
 #include "bound.hpp"
 #include "numericFlux.hpp"
 #include "mdLimiter.hpp"
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
             Info << "rhoU residual: "<< rhoUL2 << "    ";
 
-            volScalarField k = (thermo->Cp()*turbulence->alphaEff())();
+            volScalarField k = (thermo.Cp()*turbulence->alphaEff())();
             k.correctBoundaryConditions();
             rhoEResidual -= fvc::laplacian(k,T);
             rhoEResidual -= 

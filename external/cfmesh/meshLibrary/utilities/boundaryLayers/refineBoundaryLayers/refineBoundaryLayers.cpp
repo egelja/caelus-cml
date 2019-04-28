@@ -45,7 +45,7 @@ const meshSurfaceEngine& refineBoundaryLayers::surfaceEngine() const
 refineBoundaryLayers::refineBoundaryLayers(polyMeshGen& mesh)
 :
     mesh_(mesh),
-    msePtr_(NULL),
+    msePtr_(nullptr),
     globalNumLayers_(1),
     globalThicknessRatio_(1.0),
     globalMaxThicknessFirstLayer_(VGREAT),
@@ -78,10 +78,8 @@ void refineBoundaryLayers::avoidRefinement()
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::avoidRefinement()"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     globalNumLayers_ = 1;
@@ -92,10 +90,8 @@ void refineBoundaryLayers::activate2DMode()
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::activate2DMode()"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     is2DMesh_ = true;
@@ -105,10 +101,8 @@ void refineBoundaryLayers::setGlobalNumberOfLayers(const label nLayers)
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setGlobalNumberOfLayers(const label)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( nLayers < 2 )
@@ -129,10 +123,8 @@ void refineBoundaryLayers::setGlobalThicknessRatio(const scalar thicknessRatio)
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setGlobalThicknessRatio(const scalar)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( thicknessRatio < 1.0 )
@@ -155,11 +147,8 @@ void refineBoundaryLayers::setGlobalMaxThicknessOfFirstLayer
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setGlobalMaxThicknessOfFirstLayer"
-            "(const scalar)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( maxThickness <= 0.0 )
@@ -185,11 +174,8 @@ void refineBoundaryLayers::setNumberOfLayersForPatch
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setNumberOfLayersForPatch"
-            "(const word&, const label)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( nLayers < 2 )
@@ -218,11 +204,8 @@ void refineBoundaryLayers::setThicknessRatioForPatch
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setThicknessRatioForPatch"
-            "(const word&, const scalar)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( thicknessRatio < 1.0 )
@@ -254,11 +237,8 @@ void refineBoundaryLayers::setMaxThicknessOfFirstLayerForPatch
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setMaxThicknessOfFirstLayerForPatch"
-            "(const word&, const scalar)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     if( maxThickness <= 0.0 )
@@ -286,10 +266,8 @@ void refineBoundaryLayers::setInteruptForPatch(const word& patchName)
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setInteruptForPatch(const word&)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     const labelList matchedIDs = mesh_.findPatches(patchName);
@@ -305,10 +283,8 @@ void refineBoundaryLayers::setCellSubset(const word subsetName)
 {
     if( done_ )
     {
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::setCellSubset(const word)"
-        ) << "refineLayers is already executed" << exit(FatalError);
+        FatalErrorInFunction
+            << "refineLayers is already executed" << exit(FatalError);
     }
 
     cellSubsetName_ = subsetName;

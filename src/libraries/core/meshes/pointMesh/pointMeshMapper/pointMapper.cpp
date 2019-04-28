@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,7 +39,7 @@ void CML::pointMapper::calcAddressing() const
      || insertedPointLabelsPtr_
     )
     {
-        FatalErrorIn("void pointMapper::calcAddressing() const")
+        FatalErrorInFunction
             << "Addressing already calculated."
             << abort(FatalError);
     }
@@ -94,7 +94,7 @@ void CML::pointMapper::calcAddressing() const
 
             if (addr[pointI].size())
             {
-                FatalErrorIn("void pointMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master point " << pointI
                     << " mapped from points " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -164,10 +164,10 @@ CML::pointMapper::pointMapper(const pointMesh& pMesh, const mapPolyMesh& mpm)
     mpm_(mpm),
     insertedPoints_(true),
     direct_(false),
-    directAddrPtr_(NULL),
-    interpolationAddrPtr_(NULL),
-    weightsPtr_(NULL),
-    insertedPointLabelsPtr_(NULL)
+    directAddrPtr_(nullptr),
+    interpolationAddrPtr_(nullptr),
+    weightsPtr_(nullptr),
+    insertedPointLabelsPtr_(nullptr)
 {
     // Check for possibility of direct mapping
     if (mpm_.pointsFromPointsMap().empty())
@@ -233,10 +233,8 @@ const CML::labelUList& CML::pointMapper::directAddressing() const
 {
     if (!direct())
     {
-        FatalErrorIn
-        (
-            "const labelUList& pointMapper::directAddressing() const"
-        )   << "Requested direct addressing for an interpolative mapper."
+        FatalErrorInFunction
+            << "Requested direct addressing for an interpolative mapper."
             << abort(FatalError);
     }
 
@@ -261,10 +259,8 @@ const CML::labelListList& CML::pointMapper::addressing() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const labelListList& pointMapper::addressing() const"
-        )   << "Requested interpolative addressing for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative addressing for a direct mapper."
             << abort(FatalError);
     }
 
@@ -281,10 +277,8 @@ const CML::scalarListList& CML::pointMapper::weights() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const scalarListList& pointMapper::weights() const"
-        )   << "Requested interpolative weights for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative weights for a direct mapper."
             << abort(FatalError);
     }
 

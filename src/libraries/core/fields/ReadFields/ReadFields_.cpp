@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,10 +52,8 @@ CML::wordList CML::fieldNames
 
             if (iter == localNamesSet.end())
             {
-                FatalErrorIn
-                (
-                    "fieldNames(const IOobjectList&, const bool syncPar)"
-                )   << "Fields not synchronised across processors." << endl
+                FatalErrorInFunction
+                    << "Fields not synchronised across processors." << endl
                     << "Master has fields " << masterNames
                     << "  processor " << Pstream::myProcNo()
                     << " has fields " << localNames << exit(FatalError);
@@ -68,10 +66,8 @@ CML::wordList CML::fieldNames
 
         forAllConstIter(HashSet<word>, localNamesSet, iter)
         {
-            FatalErrorIn
-            (
-                "fieldNames(const IOobjectList&, const bol syncPar)"
-            )   << "Fields not synchronised across processors." << endl
+            FatalErrorInFunction
+                << "Fields not synchronised across processors." << endl
                 << "Master has fields " << masterNames
                 << "  processor " << Pstream::myProcNo()
                 << " has fields " << localNames << exit(FatalError);

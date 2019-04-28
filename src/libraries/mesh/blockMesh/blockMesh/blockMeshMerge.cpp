@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -95,7 +95,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Cannot find merge face for block " << blockPlabel
                 << exit(FatalError);
         }
@@ -204,7 +204,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Cannot find merge face for block " << blockNlabel
                 << exit(FatalError);
         }
@@ -214,7 +214,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (blockPfaceFaces.size() != blockNfaceFaces.size())
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Inconsistent number of faces between block pair "
                 << blockPlabel << " and " << blockNlabel
                 << exit(FatalError);
@@ -287,7 +287,7 @@ void CML::blockMesh::calcMergeInfo()
             {
                 if (cp[blockPfaceFacePointLabel] == -1)
                 {
-                    FatalErrorIn("blockMesh::calcMergeInfo()")
+                    FatalErrorInFunction
                         << "Inconsistent point locations between block pair "
                         << blockPlabel << " and " << blockNlabel << nl
                         << "    probably due to inconsistent grading."
@@ -410,7 +410,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (nPasses > 100)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Point merging failed after max number of passes."
                 << abort(FatalError);
         }
@@ -455,7 +455,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Cannot find merge face for block " << blockPlabel
                 << exit(FatalError);
         }
@@ -482,7 +482,7 @@ void CML::blockMesh::calcMergeInfo()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "Cannot find merge face for block " << blockNlabel
                 << exit(FatalError);
         }
@@ -506,7 +506,7 @@ void CML::blockMesh::calcMergeInfo()
 
                 if (mergeList_[PpointLabel] == -1)
                 {
-                    FatalErrorIn("blockMesh::calcMergeInfo()")
+                    FatalErrorInFunction
                         << "Unable to merge point "
                         << blockPfaceFacePointLabel
                         << ' ' << blockPpoints[blockPfaceFacePointLabel]
@@ -532,7 +532,7 @@ void CML::blockMesh::calcMergeInfo()
 
                 if (mergeList_[NpointLabel] == -1)
                 {
-                    FatalErrorIn("blockMesh::calcMergeInfo()")
+                    FatalErrorInFunction
                         << "unable to merge point "
                         << blockNfaceFacePointLabel
                         << ' ' << blockNpoints[blockNfaceFacePointLabel]
@@ -555,7 +555,7 @@ void CML::blockMesh::calcMergeInfo()
     {
         if (mergeList_[pointLabel] > pointLabel)
         {
-            FatalErrorIn("blockMesh::calcMergeInfo()")
+            FatalErrorInFunction
                 << "ouch" << exit(FatalError);
         }
 

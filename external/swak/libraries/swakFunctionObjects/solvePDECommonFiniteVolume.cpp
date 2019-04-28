@@ -56,9 +56,9 @@ CML::solvePDECommonFiniteVolume::solvePDECommonFiniteVolume
     if (!isA<polyMesh>(obr))
     {
         active_=false;
-        WarningIn("solvePDECommonFiniteVolume::solvePDECommonFiniteVolume")
+        WarningInFunction
             << "Not a polyMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
 }
 
@@ -92,32 +92,32 @@ void CML::solvePDECommonFiniteVolume::read(const dictionary& dict)
             &&
             fieldName_!=theField_->name()
         ) {
-            WarningIn("CML::solvePDECommonFiniteVolume::read(const dictionary& dict)")
+            WarningInFunction
                 << "Throwing out field " << theField_->name()
-                    << " and loading " << fieldName_ << ". "
-                    << "This might lead to unpredicatable behaviour" << endl;
+                << " and loading " << fieldName_ << ". "
+                << "This might lead to unpredicatable behaviour" << endl;
             theField_.clear();
         }
         if(!theField_.valid()) {
             if(obr_.foundObject<volScalarField>(fieldName_)) {
                 if(!dict.found("useFieldFromMemory")) {
-                    FatalErrorIn("CML::solvePDECommonFiniteVolume::read(const dictionary& dict)")
+                    FatalErrorInFunction
                         << "Field " << fieldName_ << " alread in memory. "
-                            << "Set 'useFieldFromMemory true;' to use it or "
-                            << "use different name"
-                            << endl
-                            << exit(FatalError);
+                        << "Set 'useFieldFromMemory true;' to use it or "
+                        << "use different name"
+                        << endl
+                        << exit(FatalError);
 
                 }
                 bool useFieldFromMemory=readBool(
                     dict.lookup("useFieldFromMemory")
                 );
                 if(!useFieldFromMemory) {
-                    FatalErrorIn("CML::solvePDECommonFiniteVolume::read(const dictionary& dict)")
+                    FatalErrorInFunction
                         << "Field " << fieldName_ << " alread in memory. "
-                            << "Use different name"
-                            << endl
-                            << exit(FatalError);
+                        << "Use different name"
+                        << endl
+                        << exit(FatalError);
                 }
             } else {
                 theField_.set(

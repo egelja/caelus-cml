@@ -132,13 +132,13 @@ bool writeIfSwakExpressionFunctionObject::evaluateCondition(
         !=
         pTraits<bool>::typeName
     ) {
-        FatalErrorIn("writeIfSwakExpressionFunctionObject::endRunNow()")
+        FatalErrorInFunction
             << "Logical Expression " << expression
-                << " evaluates to type "
-                << driver_->CommonValueExpressionDriver::getResultType()
-                << " when it should be " << pTraits<bool>::typeName
-                << endl
-                << exit(FatalError);
+            << " evaluates to type "
+            << driver_->CommonValueExpressionDriver::getResultType()
+            << " when it should be " << pTraits<bool>::typeName
+            << endl
+            << exit(FatalError);
     }
 
     bool result=false;
@@ -151,11 +151,11 @@ bool writeIfSwakExpressionFunctionObject::evaluateCondition(
             result=driver_->getReduced(orOp<bool>(),false);
             break;
         default:
-            FatalErrorIn("writeIfSwakExpressionFunctionObject::condition()")
+            FatalErrorInFunction
                 << "Unimplemented logical accumulation "
-                    << LogicalAccumulationNamedEnum::names[accumulation]
-                    << endl
-                    << exit(FatalError);
+                << LogicalAccumulationNamedEnum::names[accumulation]
+                << endl
+                << exit(FatalError);
     }
     if(writeDebug()) {
         Info << "Expression " << expression

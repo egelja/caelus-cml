@@ -46,7 +46,13 @@ namespace viscosityModels
 CML::tmp<CML::volScalarField>
 CML::viscosityModels::CrossPowerLaw::calcNu() const
 {
-    return (nu0_ - nuInf_)/(scalar(1) + pow(m_*strainRate(), n_)) + nuInf_;
+
+    return 
+    (
+        ((mu0_ - muInf_)/(scalar(1) + pow(lambda_*
+        max(strainRate(), dimensionedScalar("VSMALL", dimless/dimTime, VSMALL)), n_)) 
+        + muInf_)/rhoRef_
+    );
 }
 
 
@@ -62,10 +68,11 @@ CML::viscosityModels::CrossPowerLaw::CrossPowerLaw
 :
     viscosityModel(name, viscosityProperties, U, phi),
     CrossPowerLawCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
-    nu0_(CrossPowerLawCoeffs_.lookup("nu0")),
-    nuInf_(CrossPowerLawCoeffs_.lookup("nuInf")),
-    m_(CrossPowerLawCoeffs_.lookup("m")),
+    mu0_(CrossPowerLawCoeffs_.lookup("mu0")),
+    muInf_(CrossPowerLawCoeffs_.lookup("muInf")),
+    lambda_(CrossPowerLawCoeffs_.lookup("lambda")),
     n_(CrossPowerLawCoeffs_.lookup("n")),
+    rhoRef_(CrossPowerLawCoeffs_.lookup("rhoRef")),
     nu_
     (
         IOobject
@@ -83,6 +90,17 @@ CML::viscosityModels::CrossPowerLaw::CrossPowerLaw
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+
+void CML::viscosityModels::CrossPowerLaw::correct()
+{
+    viscosityModel::correct();
+    nu_.storePrevIter();
+    nu_ = calcNu();
+    // Explicitly relax
+    nu_.relax();
+}
+
+
 bool CML::viscosityModels::CrossPowerLaw::read
 (
     const dictionary& viscosityProperties
@@ -92,10 +110,11 @@ bool CML::viscosityModels::CrossPowerLaw::read
 
     CrossPowerLawCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
 
-    CrossPowerLawCoeffs_.lookup("nu0") >> nu0_;
-    CrossPowerLawCoeffs_.lookup("nuInf") >> nuInf_;
-    CrossPowerLawCoeffs_.lookup("m") >> m_;
+    CrossPowerLawCoeffs_.lookup("mu0") >> mu0_;
+    CrossPowerLawCoeffs_.lookup("muInf") >> muInf_;
+    CrossPowerLawCoeffs_.lookup("lambda") >> lambda_;
     CrossPowerLawCoeffs_.lookup("n") >> n_;
+    CrossPowerLawCoeffs_.lookup("rhoRef") >> rhoRef_;
 
     return true;
 }

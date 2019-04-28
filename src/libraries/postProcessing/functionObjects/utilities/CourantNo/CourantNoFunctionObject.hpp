@@ -32,7 +32,7 @@ SourceFiles
 #ifndef CourantNoFunctionObject_H
 #define CourantNoFunctionObject_H
 
-#include "CourantNo.hpp"
+#include "CourantNo_fo.hpp"
 #include "OutputFilterFunctionObject.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

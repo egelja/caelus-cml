@@ -59,7 +59,7 @@ void CML::printMeshStats(const polyMesh& mesh, const bool allTopology, const boo
 
         if (returnReduce(mesh.nInternalPoints(), minOp<label>()) == -1)
         {
-            WarningIn("CML::printMeshStats(const polyMesh&, const bool)")
+            WarningInFunction
                 << "Some processors have their points sorted into internal"
                 << " and external and some do not." << endl
                 << "This can cause problems later on." << endl;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -24,7 +24,7 @@ License
 #include "dictionary.hpp"
 #include "surfaceFields.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "surfaceInterpolate.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -55,16 +55,8 @@ CML::Peclet::Peclet
     if (!isA<fvMesh>(obr_))
     {
         active_ = false;
-        WarningIn
-        (
-            "Peclet::Peclet"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_ << nl
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_ << nl
             << endl;
     }
 
@@ -166,7 +158,7 @@ void CML::Peclet::execute()
         }
         else
         {
-            FatalErrorIn("void CML::Peclet::write()")
+            FatalErrorInFunction
                 << "Unable to determine the viscosity"
                 << exit(FatalError);
         }

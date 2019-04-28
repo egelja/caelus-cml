@@ -18,7 +18,7 @@ import utils
 
 ### General Variables
 PROJECT_NAME     = "caelus"
-PROJECT_VERSION  = '8.04'
+PROJECT_VERSION  = '9.04'
 METIS_VERSION    = '5.1.0'
 GSL_VERSION      = '2.3'
 SCOTCH_VERSION   = '6.0.4'

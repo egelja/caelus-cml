@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -629,11 +629,8 @@ void CML::FaceCellWave<Type, TrackingData>::checkCyclic
             )
         )
         {
-            FatalErrorIn
-            (
-                "FaceCellWave<Type, TrackingData>"
-                "::checkCyclic(const polyPatch&)"
-            )   << "problem: i:" << i1 << "  otheri:" << i2
+            FatalErrorInFunction
+                << "problem: i:" << i1 << "  otheri:" << i2
                 << "   faceInfo:" << allFaceInfo_[i1]
                 << "   otherfaceInfo:" << allFaceInfo_[i2]
                 << abort(FatalError);
@@ -641,11 +638,8 @@ void CML::FaceCellWave<Type, TrackingData>::checkCyclic
 
         if (changedFace_[i1] != changedFace_[i2])
         {
-            FatalErrorIn
-            (
-                "FaceCellWave<Type, TrackingData>"
-                "::checkCyclic(const polyPatch&)"
-            )   << " problem: i:" << i1 << "  otheri:" << i2
+            FatalErrorInFunction
+                << " problem: i:" << i1 << "  otheri:" << i2
                 << "   faceInfo:" << allFaceInfo_[i1]
                 << "   otherfaceInfo:" << allFaceInfo_[i2]
                 << "   changedFace:" << changedFace_[i1]
@@ -1276,12 +1270,8 @@ CML::FaceCellWave<Type, TrackingData>::FaceCellWave
      || allCellInfo.size() != mesh_.nCells()
     )
     {
-        FatalErrorIn
-        (
-            "FaceCellWave<Type, TrackingData>::FaceCellWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " UList<Type>&, UList<Type>&, const label maxIter)"
-        )   << "face and cell storage not the size of mesh faces, cells:"
+        FatalErrorInFunction
+            << "face and cell storage not the size of mesh faces, cells:"
             << endl
             << "    allFaceInfo   :" << allFaceInfo.size() << endl
             << "    mesh_.nFaces():" << mesh_.nFaces() << endl
@@ -1332,12 +1322,8 @@ CML::FaceCellWave<Type, TrackingData>::FaceCellWave
      || allCellInfo.size() != mesh_.nCells()
     )
     {
-        FatalErrorIn
-        (
-            "FaceCellWave<Type, TrackingData>::FaceCellWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " UList<Type>&, UList<Type>&, const label maxIter)"
-        )   << "face and cell storage not the size of mesh faces, cells:"
+        FatalErrorInFunction
+            << "face and cell storage not the size of mesh faces, cells:"
             << endl
             << "    allFaceInfo   :" << allFaceInfo.size() << endl
             << "    mesh_.nFaces():" << mesh_.nFaces() << endl
@@ -1354,12 +1340,7 @@ CML::FaceCellWave<Type, TrackingData>::FaceCellWave
 
     if ((maxIter > 0) && (iter >= maxIter))
     {
-        FatalErrorIn
-        (
-            "FaceCellWave<Type, TrackingData>::FaceCellWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " UList<Type>&, UList<Type>&, const label maxIter)"
-        )
+        FatalErrorInFunction
             << "Maximum number of iterations reached. Increase maxIter." << endl
             << "    maxIter:" << maxIter << endl
             << "    nChangedCells:" << nChangedCells_ << endl
@@ -1412,13 +1393,7 @@ CML::FaceCellWave<Type, TrackingData>::FaceCellWave
      || allCellInfo.size() != mesh_.nCells()
     )
     {
-        FatalErrorIn
-        (
-            "FaceCellWave<Type, TrackingData>::FaceCellWave"
-            "(const polyMesh&, const List<labelPair>&, const bool,"
-            " const labelList&, const List<Type>&, UList<Type>&,"
-            " UList<Type>&, const label,TrackingData&)"
-        )
+        FatalErrorInFunction
             << "face and cell storage not the size of mesh faces, cells:"
             << endl
             << "    allFaceInfo   :" << allFaceInfo.size() << endl
@@ -1436,13 +1411,7 @@ CML::FaceCellWave<Type, TrackingData>::FaceCellWave
 
     if ((maxIter > 0) && (iter >= maxIter))
     {
-        FatalErrorIn
-        (
-            "FaceCellWave<Type, TrackingData>::FaceCellWave"
-            "(const polyMesh&, const List<labelPair>&, const bool,"
-            " const labelList&, const List<Type>&, UList<Type>&,"
-            " UList<Type>&, const label,TrackingData&)"
-        )
+        FatalErrorInFunction
             << "Maximum number of iterations reached. Increase maxIter." << endl
             << "    maxIter:" << maxIter << endl
             << "    nChangedCells:" << nChangedCells_ << endl
@@ -1488,7 +1457,7 @@ CML::label CML::FaceCellWave<Type, TrackingData>::faceToCell()
         label faceI = changedFaces_[changedFaceI];
         if (!changedFace_[faceI])
         {
-            FatalErrorIn("FaceCellWave<Type, TrackingData>::faceToCell()")
+            FatalErrorInFunction
                 << "Face " << faceI
                 << " not marked as having been changed"
                 << abort(FatalError);
@@ -1571,7 +1540,7 @@ CML::label CML::FaceCellWave<Type, TrackingData>::cellToFace()
         label cellI = changedCells_[changedCellI];
         if (!changedCell_[cellI])
         {
-            FatalErrorIn("FaceCellWave<Type, TrackingData>::cellToFace()")
+            FatalErrorInFunction
                 << "Cell " << cellI << " not marked as having been changed"
                 << abort(FatalError);
         }

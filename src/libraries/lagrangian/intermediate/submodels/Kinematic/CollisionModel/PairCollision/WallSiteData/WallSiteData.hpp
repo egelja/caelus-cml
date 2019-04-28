@@ -59,7 +59,7 @@ class WallSiteData
     // Private data
 
         //- Index of originating patch
-        label patchI_;
+        label patchi_;
 
         //- Wall data
         Type wallData_;
@@ -75,7 +75,7 @@ public:
         //- Construct from components
         WallSiteData
         (
-            label patchI,
+            label patchi,
             const Type& wallData
         );
 
@@ -125,14 +125,14 @@ public:
 template<class Type>
 CML::label CML::WallSiteData<Type>::patchIndex() const
 {
-    return patchI_;
+    return patchi_;
 }
 
 
 template<class Type>
 CML::label& CML::WallSiteData<Type>::patchIndex()
 {
-    return patchI_;
+    return patchi_;
 }
 
 
@@ -155,7 +155,7 @@ Type& CML::WallSiteData<Type>::wallData()
 template<class Type>
 CML::WallSiteData<Type>::WallSiteData()
 :
-    patchI_(),
+    patchi_(),
     wallData_()
 {}
 
@@ -163,11 +163,11 @@ CML::WallSiteData<Type>::WallSiteData()
 template<class Type>
 CML::WallSiteData<Type>::WallSiteData
 (
-    label patchI,
+    label patchi,
     const Type& wallData
 )
 :
-    patchI_(patchI),
+    patchi_(patchi),
     wallData_(wallData)
 {}
 
@@ -187,7 +187,7 @@ bool CML::WallSiteData<Type>::operator==
     const WallSiteData<Type>& rhs
 ) const
 {
-    return patchI_ == rhs.patchI_ && wallData_ == rhs.wallData_;
+    return patchi_ == rhs.patchi_ && wallData_ == rhs.wallData_;
 }
 
 
@@ -210,7 +210,7 @@ CML::Istream& CML::operator>>
     WallSiteData<Type>& wIS
 )
 {
-    is  >> wIS.patchI_ >> wIS.wallData_;
+    is  >> wIS.patchi_ >> wIS.wallData_;
 
     // Check state of Istream
     is.check
@@ -230,7 +230,7 @@ CML::Ostream& CML::operator<<
     const WallSiteData<Type>& wIS
 )
 {
-    os  << wIS.patchI_ << token::SPACE << wIS.wallData_;
+    os  << wIS.patchi_ << token::SPACE << wIS.wallData_;
 
     // Check state of Ostream
     os.check

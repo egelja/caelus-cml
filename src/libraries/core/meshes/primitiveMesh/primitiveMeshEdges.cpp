@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,7 +79,7 @@ void CML::primitiveMesh::calcEdges(const bool doFaceEdges) const
     // if the pointer is already set
     if ((edgesPtr_ || pePtr_) || (doFaceEdges && fePtr_))
     {
-        FatalErrorIn("primitiveMesh::calcEdges(const bool) const")
+        FatalErrorInFunction
             << "edges or pointEdges or faceEdges already calculated"
             << abort(FatalError);
     }
@@ -377,7 +377,7 @@ void CML::primitiveMesh::calcEdges(const bool doFaceEdges) const
                             else if (nbrPointI < nInternalPoints_)
                             {
                                 // Not possible!
-                                FatalErrorIn("primitiveMesh::calcEdges(..)")
+                                FatalErrorInFunction
                                     << abort(FatalError);
                             }
                             else
@@ -400,7 +400,7 @@ void CML::primitiveMesh::calcEdges(const bool doFaceEdges) const
             {
                 const edge& e = es[edgeI];
 
-                FatalErrorIn("primitiveMesh::calcEdges(..)")
+                FatalErrorInFunction
                     << "Did not sort edge " << edgeI << " points:" << e
                     << " coords:" << points()[e[0]] << points()[e[1]]
                     << endl
@@ -479,11 +479,8 @@ CML::label CML::primitiveMesh::findFirstCommonElementFromSortedLists
     }
     if (result == -1)
     {
-        FatalErrorIn
-        (
-            "primitiveMesh::findFirstCommonElementFromSortedLists"
-            "(const labelList&, const labelList&)"
-        )   << "No common elements in lists " << list1 << " and " << list2
+        FatalErrorInFunction
+            << "No common elements in lists " << list1 << " and " << list2
             << abort(FatalError);
     }
     return result;

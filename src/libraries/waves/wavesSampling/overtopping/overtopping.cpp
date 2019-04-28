@@ -174,7 +174,7 @@ CML::overtopping::overtopping
 
     mesh_(refCast<const fvMesh>(obr)),
 
-    outputFilePtr_(NULL)
+    outputFilePtr_(nullptr)
 {
 }
 

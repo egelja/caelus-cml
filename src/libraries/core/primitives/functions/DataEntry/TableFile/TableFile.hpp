@@ -138,11 +138,8 @@ CML::DataEntryTypes::TableFile<Type>::TableFile
 
     if (!is.good())
     {
-        FatalIOErrorIn
-        (
-            "DataEntryTypes::TableFile<Type>::TableFile(const word&, const dictionary&)",
-            is
-        )   << "Cannot open file." << exit(FatalIOError);
+        FatalIOErrorInFunction(is)
+            << "Cannot open file." << exit(FatalIOError);
     }
 
     is  >> this->table_;

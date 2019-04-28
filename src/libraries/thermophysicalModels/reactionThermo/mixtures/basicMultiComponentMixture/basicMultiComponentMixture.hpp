@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,20 +21,24 @@ Class
     CML::basicMultiComponentMixture
 
 Description
-    Multi-component mixture. Provides a list of mass fraction fields and helper
-    functions to query mixture composition.
+    Multi-component mixture.
+
+    Provides a list of mass fraction fields and helper functions to
+    query mixture composition.
 
 SourceFiles
     basicMultiComponentMixture.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef basicMultiComponentMixture_H
-#define basicMultiComponentMixture_H
+#ifndef basicMultiComponentMixture_HPP
+#define basicMultiComponentMixture_HPP
 
 #include "volFields.hpp"
 #include "PtrList.hpp"
+#include "basicMixture.hpp"
 #include "speciesTable.hpp"
+#include "typeInfo.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,30 +50,40 @@ namespace CML
 \*---------------------------------------------------------------------------*/
 
 class basicMultiComponentMixture
+:
+    public basicMixture
 {
 
 protected:
 
-    // Protected data
+    //- Table of specie names
+    speciesTable species_;
 
-        //- Table of specie names
-        speciesTable species_;
+    //- List of specie active flags
+    List<bool> active_;
 
-        //- Species mass fractions
-        PtrList<volScalarField> Y_;
+    //- Species mass fractions
+    PtrList<volScalarField> Y_;
 
 
 public:
 
-    // Constructors
+    //- Run time type information
+    TypeName("basicMultiComponentMixture");
 
-        //- Construct from dictionary and mesh
-        basicMultiComponentMixture
-        (
-            const dictionary&,
-            const wordList& specieNames,
-            const fvMesh&
-        );
+
+    //- The base class of the mixture
+    typedef basicMultiComponentMixture basicMixtureType;
+
+
+    //- Construct from dictionary, species names, mesh and phase name
+    basicMultiComponentMixture
+    (
+        const dictionary&,
+        const wordList& specieNames,
+        const fvMesh&,
+        const word&
+    );
 
 
     //- Destructor
@@ -79,104 +93,82 @@ public:
 
     // Member functions
 
-        //- Return the table of species
-        const speciesTable& species() const
-        {
-            return species_;
-        }
+    //- Return the table of species
+    inline const speciesTable& species() const
+    {
+        return species_;
+    }
 
-        //- Return the mass-fraction fields
-        inline PtrList<volScalarField>& Y();
+    //- Does the mixture include this specie?
+    inline bool contains(const word& specieName) const
+    {
+        return species_.contains(specieName);
+    }
 
-        //- Return the const mass-fraction fields
-        inline const PtrList<volScalarField>& Y() const;
+    //- Return true for active species
+    inline bool active(label speciei) const
+    {
+        return active_[speciei];
+    }
 
-        //- Return the mass-fraction field for a specie given by index
-        inline volScalarField& Y(const label i);
+    //- Return the bool list of active species
+    inline const List<bool>& active() const
+    {
+        return active_;
+    }
 
-        //- Return the const mass-fraction field for a specie given by index
-        inline const volScalarField& Y(const label i) const;
+    //- Set speciei active
+    inline void setActive(label speciei)
+    {
+        active_[speciei] = true;
+    }
 
-        //- Return the mass-fraction field for a specie given by name
-        inline volScalarField& Y(const word& specieName);
+    //- Set speciei inactive
+    inline void setInactive(label speciei)
+    {
+        active_[speciei] = false;
+    }
 
-        //- Return the const mass-fraction field for a specie given by name
-        inline const volScalarField& Y(const word& specieName) const;
+    //- Return the mass-fraction fields
+    inline PtrList<volScalarField>& Y()
+    {
+        return Y_;
+    }
 
-        //- Does the mixture include this specie?
-        inline bool contains(const word& specieName) const;
+    //- Return the const mass-fraction fields
+    inline const PtrList<volScalarField>& Y() const
+    {
+        return Y_;
+    }
 
-        inline scalar fres(const scalar ft, const scalar stoicRatio) const;
+    //- Return the mass-fraction field for a specie given by index
+    inline volScalarField& Y(const label i)
+    {
+        return Y_[i];
+    }
 
-        inline tmp<volScalarField> fres
-        (
-            const volScalarField& ft,
-            const dimensionedScalar& stoicRatio
-        ) const;
+    //- Return the const mass-fraction field for a specie given by index
+    inline const volScalarField& Y(const label i) const
+    {
+        return Y_[i];
+    }
 
+    //- Return the mass-fraction field for a specie given by name
+    inline volScalarField& Y(const word& specieName)
+    {
+        return Y_[species_[specieName]];
+    }
 
-        // Per specie properties
+    //- Return the const mass-fraction field for a specie given by name
+    inline const volScalarField& Y(const word& specieName) const
+    {
+        return Y_[species_[specieName]];
+    }
 
-            //- Number of moles []
-            virtual scalar nMoles(const label specieI) const = 0;
-
-            //- Molecular weight [kg/kmol]
-            virtual scalar W(const label specieI) const = 0;
-
-
-        // Per specie thermo properties
-
-            //- Heat capacity at constant pressure [J/(kg K)]
-            virtual scalar Cp(const label specieI, const scalar T) const = 0;
-
-            //- Heat capacity at constant volume [J/(kg K)]
-            virtual scalar Cv(const label specieI, const scalar T) const = 0;
-
-            //- Enthalpy [J/kg]
-            virtual scalar H(const label specieI, const scalar T) const = 0;
-
-            //- Sensible enthalpy [J/kg]
-            virtual scalar Hs(const label specieI, const scalar T) const = 0;
-
-            //- Chemical enthalpy [J/kg]
-            virtual scalar Hc(const label specieI) const = 0;
-
-            //- Entropy [J/(kg K)]
-            virtual scalar S(const label specieI, const scalar T) const = 0;
-
-            //- Internal energy [J/kg]
-            virtual scalar E(const label specieI, const scalar T) const = 0;
-
-            //- Gibbs free energy [J/kg]
-            virtual scalar G(const label specieI, const scalar T) const = 0;
-
-            //- Helmholtz free energy [J/kg]
-            virtual scalar A(const label specieI, const scalar T) const = 0;
-
-
-        // Per specie transport properties
-
-            //- Dynamic viscosity [kg/m/s]
-            virtual scalar mu(const label specieI, const scalar T) const = 0;
-
-            //- Thermal conductivity [W/m/K]
-            virtual scalar kappa(const label specieI, const scalar T) const = 0;
-
-            //- Thermal diffusivity [kg/m/s]
-            virtual scalar alpha(const label specieI, const scalar T) const = 0;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "basicMultiComponentMixtureI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

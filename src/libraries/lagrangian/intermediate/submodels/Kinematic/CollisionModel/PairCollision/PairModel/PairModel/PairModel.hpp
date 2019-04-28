@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -138,26 +138,25 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makePairModel(CloudType)                                              \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(PairModel<CloudType>, 0);             \
-                                                                              \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        PairModel<CloudType>,                                                 \
-        dictionary                                                            \
+#define makePairModel(CloudType)                                               \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(PairModel<CloudType>, 0);              \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        PairModel<CloudType>,                                                  \
+        dictionary                                                             \
     );
 
 
-#define makePairModelType(SS, CloudType)                                      \
-                                                                              \
-    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                    \
-                                                                              \
-    PairModel<CloudType>::adddictionaryConstructorToTable<SS<CloudType> >     \
+#define makePairModelType(SS, CloudType)                                       \
+                                                                               \
+    defineNamedTemplateTypeNameAndDebug(SS<CloudType>, 0);                     \
+                                                                               \
+    PairModel<CloudType>::                                                     \
+        adddictionaryConstructorToTable<SS<CloudType> >                        \
         add##SS##CloudType##ConstructorToTable_;
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -200,8 +199,7 @@ const CML::dictionary& CML::PairModel<CloudType>::dict() const
 
 
 template<class CloudType>
-const CML::dictionary&
-CML::PairModel<CloudType>::coeffDict() const
+const CML::dictionary& CML::PairModel<CloudType>::coeffDict() const
 {
     return coeffDict_;
 }
@@ -226,14 +224,8 @@ CML::PairModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PairModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown pair model type "
+        FatalErrorInFunction
+            << "Unknown pair model type "
             << PairModelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid pair model types are:" << nl

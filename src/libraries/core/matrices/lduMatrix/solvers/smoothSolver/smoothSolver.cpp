@@ -65,7 +65,7 @@ void CML::smoothSolver::readControls()
 }
 
 
-CML::lduMatrix::solverPerformance CML::smoothSolver::solve
+CML::solverPerformance CML::smoothSolver::solve
 (
     scalarField& x,
     const scalarField& b,
@@ -73,7 +73,7 @@ CML::lduMatrix::solverPerformance CML::smoothSolver::solve
 ) const
 {
     // Setup class containing solver performance data
-    lduMatrix::solverPerformance solverPerf(typeName, fieldName_);
+    solverPerformance solverPerf(typeName, fieldName_);
 
     // If the nSweeps_ is negative do a fixed number of sweeps
     if (nSweeps_ < 0)

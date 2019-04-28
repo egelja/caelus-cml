@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -237,11 +237,8 @@ CML::displacementLayeredMotionMotionSolver::faceZoneEvaluate
     {
         if ((patchI % 2) != 1)
         {
-            FatalIOErrorIn
-            (
-                "displacementLayeredMotionMotionSolver::faceZoneEvaluate(..)",
-                *this
-            )   << "slip can only be used on second faceZonePatch of pair."
+            FatalIOErrorInFunction(*this)
+                << "slip can only be used on second faceZonePatch of pair."
                 << "FaceZone:" << fz.name()
                 << exit(FatalIOError);
         }
@@ -267,11 +264,8 @@ CML::displacementLayeredMotionMotionSolver::faceZoneEvaluate
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "displacementLayeredMotionMotionSolver::faceZoneEvaluate(..)",
-            *this
-        )   << "Unknown faceZonePatch type " << type << " for faceZone "
+        FatalIOErrorInFunction(*this)
+            << "Unknown faceZonePatch type " << type << " for faceZone "
             << fz.name() << exit(FatalIOError);
     }
     return tfld;
@@ -292,12 +286,8 @@ void CML::displacementLayeredMotionMotionSolver::cellZoneSolve
 
     if (patchesDict.size() != 2)
     {
-        FatalIOErrorIn
-        (
-            "displacementLayeredMotionMotionSolver::"
-            "correctBoundaryConditions(..)",
-            *this
-        )   << "Can only handle 2 faceZones (= patches) per cellZone. "
+        FatalIOErrorInFunction(*this)
+            << "Can only handle 2 faceZones (= patches) per cellZone. "
             << " cellZone:" << cellZoneI
             << " patches:" << patchesDict.toc()
             << exit(FatalIOError);
@@ -314,12 +304,8 @@ void CML::displacementLayeredMotionMotionSolver::cellZoneSolve
         label zoneI = mesh().faceZones().findZoneID(faceZoneName);
         if (zoneI == -1)
         {
-            FatalIOErrorIn
-            (
-                "displacementLayeredMotionMotionSolver::cellZoneSolve"
-                "(const label, const dictionary&)",
-                *this
-            )   << "Cannot find faceZone " << faceZoneName
+            FatalIOErrorInFunction(*this)
+                << "Cannot find faceZone " << faceZoneName
                 << endl << "Valid zones are " << mesh().faceZones().names()
                 << exit(FatalIOError);
         }
@@ -487,11 +473,7 @@ void CML::displacementLayeredMotionMotionSolver::cellZoneSolve
     }
     else
     {
-            FatalErrorIn
-            (
-                "displacementLayeredMotionMotionSolver::cellZoneSolve"
-                "(const label, const dictionary&)"
-            )
+            FatalErrorInFunction
             << "Invalid interpolationScheme: " << interpolationScheme
             << ". Valid schemes are 'oneSided' and 'linear'"
             << exit(FatalError);
@@ -554,11 +536,8 @@ void CML::displacementLayeredMotionMotionSolver::solve()
 
         if (zoneI == -1)
         {
-            FatalIOErrorIn
-            (
-                "displacementLayeredMotionFvMotionSolver::solve(..)",
-                *this
-            )   << "Cannot find cellZone " << cellZoneName
+            FatalIOErrorInFunction(*this)
+                << "Cannot find cellZone " << cellZoneName
                 << endl << "Valid zones are " << mesh().cellZones().names()
                 << exit(FatalIOError);
         }

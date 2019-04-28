@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2105 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -51,7 +51,7 @@ class LimitedLimiter
     {
         if (lowerBound_ > upperBound_)
         {
-            FatalIOErrorIn("checkParameters()", is)
+            FatalIOErrorInFunction(is)
                 << "Invalid bounds.  Lower = " << lowerBound_
                 << "  Upper = " << upperBound_
                 << ".  Lower bound is higher than the upper bound."

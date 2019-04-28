@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     // Test mapDistribute
     // ~~~~~~~~~~~~~~~~~~
 
-    if (false)
+    if (true)
     {
         Random rndGen(43544*Pstream::myProcNo());
 
@@ -58,7 +58,8 @@ int main(int argc, char *argv[])
         List<Tuple2<label, List<scalar> > > complexData(100);
         forAll(complexData, i)
         {
-            complexData[i].first() = rndGen.integer(0, Pstream::nProcs()-1);
+            complexData[i].first() =
+                rndGen.sampleAB<label>(0, Pstream::nProcs());
             complexData[i].second().setSize(3);
             complexData[i].second()[0] = 1;
             complexData[i].second()[1] = 2;
@@ -72,8 +73,8 @@ int main(int argc, char *argv[])
         labelList nSend(Pstream::nProcs(), 0);
         forAll(complexData, i)
         {
-            label procI = complexData[i].first();
-            nSend[procI]++;
+            label proci = complexData[i].first();
+            nSend[proci]++;
         }
 
         // Sync how many to send
@@ -83,22 +84,22 @@ int main(int argc, char *argv[])
 
         // Collect items to be sent
         labelListList sendMap(Pstream::nProcs());
-        forAll(sendMap, procI)
+        forAll(sendMap, proci)
         {
-            sendMap[procI].setSize(nSend[procI]);
+            sendMap[proci].setSize(nSend[proci]);
         }
         nSend = 0;
         forAll(complexData, i)
         {
-            label procI = complexData[i].first();
-            sendMap[procI][nSend[procI]++] = i;
+            label proci = complexData[i].first();
+            sendMap[proci][nSend[proci]++] = i;
         }
 
         // Collect items to be received
         labelListList recvMap(Pstream::nProcs());
-        forAll(recvMap, procI)
+        forAll(recvMap, proci)
         {
-            recvMap[procI].setSize(allNTrans[procI][Pstream::myProcNo()]);
+            recvMap[proci].setSize(allNTrans[proci][Pstream::myProcNo()]);
         }
 
         label constructSize = 0;
@@ -108,13 +109,13 @@ int main(int argc, char *argv[])
             recvMap[Pstream::myProcNo()][i] = constructSize++;
         }
         // Construct from other processors
-        forAll(recvMap, procI)
+        forAll(recvMap, proci)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
-                forAll(recvMap[procI], i)
+                forAll(recvMap[proci], i)
                 {
-                    recvMap[procI][i] = constructSize++;
+                    recvMap[proci][i] = constructSize++;
                 }
             }
         }

@@ -38,6 +38,7 @@ SourceFiles
 #define sigFpe_H
 
 #include <signal.h>
+#include "UList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -76,7 +77,12 @@ public:
 
     // Member functions
 
+        //- Activate SIGFPE signal handler when CAELUS_SIGFPE is %set
+        //  Fill memory with NaN when CAELUS_SETNAN is %set
         void set(const bool verbose);
+
+        //- Helper: fill block of data with NaN
+        static void fillNan(UList<scalar>&);
 };
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -33,20 +33,18 @@ void distributionModelsLoad()
 
 namespace CML
 {
-    namespace distributionModels
-    {
-        defineTypeNameAndDebug(distributionModel, 0);
-        defineRunTimeSelectionTable(distributionModel, dictionary);
-    }
+    defineTypeNameAndDebug(distributionModel, 0);
+    defineRunTimeSelectionTable(distributionModel, dictionary);
 }
+
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
-void CML::distributionModels::distributionModel::check() const
+void CML::distributionModel::check() const
 {
     if (minValue() < 0)
     {
-        FatalErrorIn("distributionModels::distributionModel::check() const")
+        FatalErrorInFunction
             << type() << "distribution: Minimum value must be greater than "
             << "zero." << nl << "Supplied minValue = " << minValue()
             << abort(FatalError);
@@ -54,7 +52,7 @@ void CML::distributionModels::distributionModel::check() const
 
     if (maxValue() < minValue())
     {
-        FatalErrorIn("distributionModels::distributionModel::check() const")
+        FatalErrorInFunction
             << type() << "distribution: Maximum value is smaller than the "
             << "minimum value:" << nl << "    maxValue = " << maxValue()
             << ", minValue = " << minValue()
@@ -65,11 +63,11 @@ void CML::distributionModels::distributionModel::check() const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::distributionModels::distributionModel::distributionModel
+CML::distributionModel::distributionModel
 (
     const word& name,
     const dictionary& dict,
-    cachedRandom& rndGen
+    Random& rndGen
 )
 :
     distributionModelDict_(dict.subDict(name + "Distribution")),
@@ -77,7 +75,7 @@ CML::distributionModels::distributionModel::distributionModel
 {}
 
 
-CML::distributionModels::distributionModel::distributionModel
+CML::distributionModel::distributionModel
 (
     const distributionModel& p
 )
@@ -89,53 +87,8 @@ CML::distributionModels::distributionModel::distributionModel
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-CML::distributionModels::distributionModel::~distributionModel()
+CML::distributionModel::~distributionModel()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-CML::scalar CML::distributionModels::distributionModel::sample() const
-{
-    notImplemented
-    (
-        "CML::scalar "
-        "CML::distributionModels::distributionModel::sample() const"
-    );
-    return 0.0;
-}
-
-
-CML::scalar CML::distributionModels::distributionModel::minValue() const
-{
-    notImplemented
-    (
-        "CML::scalar "
-        "CML::distributionModels::distributionModel::minValue() const"
-    );
-    return 0.0;
-}
-
-
-CML::scalar CML::distributionModels::distributionModel::maxValue() const
-{
-    notImplemented
-    (
-        "CML::scalar "
-        "CML::distributionModels::distributionModel::maxValue() const"
-    );
-    return 0.0;
-}
-
-CML::scalar CML::distributionModels::distributionModel::meanValue() const
-{
-    notImplemented
-    (
-        "CML::scalar "
-        "CML::distributionModels::distributionModel::meanValue() const"
-    );
-    return 0.0;
-}
 
 
 // ************************************************************************* //

@@ -59,9 +59,9 @@ CML::topoSetSource::addToUsageTable CML::expressionToFace::usage_
 void CML::expressionToFace::combine(topoSet& set, const bool add) const
 {
     if(Pstream::parRun()) {
-        WarningIn("CML::expressionToFace::combine(topoSet& set, const bool add) const")
+        WarningInFunction
             << " Does not give correct results if faces are on the processor boundary"
-                << endl;
+            << endl;
     }
 
     fvMesh mesh(set.db());
@@ -82,10 +82,10 @@ void CML::expressionToFace::combine(topoSet& set, const bool add) const
     }
     driver.parse(expression_);
     if(!driver.isLogical()) {
-        FatalErrorIn("CML::expressionToFace::combine(topoSet& set, const bool add) const")
+        FatalErrorInFunction
             << "Expression " << expression_ << " does not evaluate to a logical expression"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
     }
 
     if(driver.resultIsTyp<volScalarField>(true)) {
@@ -123,11 +123,11 @@ void CML::expressionToFace::combine(topoSet& set, const bool add) const
             }
         }
     } else {
-        FatalErrorIn("CML::expressionToFace::combine(topoSet& set, const bool add)")
+        FatalErrorInFunction
             << "Don't know how to handle a logical field of type "
-                << driver.typ()
-                << endl
-                << exit(FatalError);
+            << driver.typ()
+            << endl
+            << exit(FatalError);
     }
 }
 

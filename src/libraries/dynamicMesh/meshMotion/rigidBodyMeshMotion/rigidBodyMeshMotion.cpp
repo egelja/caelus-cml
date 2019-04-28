@@ -196,11 +196,7 @@ CML::rigidBodyMeshMotion::rigidBodyMeshMotion
 
             if (bodyID == -1)
             {
-                FatalErrorIn
-                    (
-                        "rigidBodyMeshMotion::rigidBodyMeshMotion"
-                        "(const polyMesh&, Istream& )"
-                    )
+                FatalErrorInFunction
                     << "Body " << iter().keyword()
                     << " has been merged with another body"
                        " and cannot be assigned a set of patches"
@@ -285,7 +281,7 @@ void CML::rigidBodyMeshMotion::solve()
 
     if (mesh().nPoints() != points0().size())
     {
-        FatalErrorIn("rigidBodyMeshMotion::solve()")
+        FatalErrorInFunction
             << "The number of points in the mesh seems to have changed." << endl
             << "In constant/polyMesh there are " << points0().size()
             << " points; in the current mesh there are " << mesh().nPoints()

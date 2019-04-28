@@ -32,6 +32,8 @@ SourceFiles
 #define STLtriangle_H
 
 #include "STLpoint.hpp"
+#include "Istream.hpp"
+#include "Ostream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -39,73 +41,125 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class STLtriangle Declaration
+                         Class STLtriangle Declaration
 \*---------------------------------------------------------------------------*/
 
 class STLtriangle
 {
     // Private data
 
-        STLpoint normal_, a_, b_, c_;
-        unsigned short region_;
+    //- Attribute is 16-bit
+    typedef unsigned short STLattrib;
+
+    //- The face normal, many programs write zore or other junk
+    STLpoint normal_;
+
+    //- The three points defining the triangle
+    STLpoint a_, b_, c_;
+
+    //- The attribute information could for colour or solid id, etc
+    STLattrib attrib_;
 
 
 public:
 
     // Constructors
 
-        //- Construct null
-        inline STLtriangle();
+    //- Construct null
+    inline STLtriangle()
+    {}
 
-        //- Construct from components
-        inline STLtriangle
-        (
-            const STLpoint& normal,
-            const STLpoint& a,
-            const STLpoint& b,
-            const STLpoint& c,
-            unsigned short region
-        );
+    //- Construct from components
+    inline STLtriangle
+    (
+        const STLpoint& normal,
+        const STLpoint& a,
+        const STLpoint& b,
+        const STLpoint& c,
+        unsigned short attrib
+    )
+    :
+        normal_(normal),
+        a_(a),
+        b_(b),
+        c_(c),
+        attrib_(attrib)
+        {}
 
-        //- Construct from istream (read binary)
-        inline STLtriangle(istream&);
+    //- Construct from istream (read binary)
+    inline STLtriangle(istream& is)
+    {
+        read(is);
+    }
 
 
     // Member Functions
 
-        // Access
+    // Access
 
-            inline const STLpoint& a() const;
-            inline const STLpoint& b() const;
-            inline const STLpoint& c() const;
-            inline unsigned short region() const;
+    inline const STLpoint& normal() const
+    {
+        return normal_;
+    }
 
-        // Read
+    inline const STLpoint& a() const
+    {
+        return a_;
+    }
 
-            //- Read from istream (binary)
-            inline void read(istream&);
+    inline const STLpoint& b() const
+    {
+        return b_;
+    }
 
-        // Write
+    inline const STLpoint& c() const
+    {
+        return c_;
+    }
 
-            //- Write to istream (binary)
-            inline void write(ostream&);
+    inline unsigned short attrib() const
+    {
+        return attrib_;
+    }
+
+    // Read
+
+    //- Read from istream (binary)
+    inline void read(istream& is)
+    {
+        is.read(reinterpret_cast<char*>(this), 4*sizeof(STLpoint));
+        is.read(reinterpret_cast<char*>(&attrib_), sizeof(STLattrib));
+    }
+
+
+    // Write
+
+    //- Write to ostream (binary)
+    inline void write(ostream& os)
+    {
+        os.write(reinterpret_cast<char*>(this), 4*sizeof(STLpoint));
+        os.write(reinterpret_cast<char*>(&attrib_), sizeof(STLattrib));
+    }
 
 
     // Ostream operator
 
-        inline friend Ostream& operator<<(Ostream&, const STLtriangle&);
+    inline friend Ostream& operator<<(Ostream& os, const STLtriangle& stlt)
+    {
+        os  << stlt.normal_ << token::SPACE
+            << stlt.a_ << token::SPACE
+            << stlt.b_ << token::SPACE
+            << stlt.c_ << token::SPACE
+            << stlt.attrib_;
+
+        return os;
+    }
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "STLtriangleI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

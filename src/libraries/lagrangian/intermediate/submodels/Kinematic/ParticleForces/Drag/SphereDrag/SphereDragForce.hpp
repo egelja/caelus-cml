@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,7 +22,15 @@ Class
     CML::SphereDragForce
 
 Description
-    Drag model based on assumption of solid spheres
+    Drag model for spheres.
+
+    Reference:
+    \verbatim
+        Amsden, A. A., Butler, T. D., & O'Rourke, P. J. (1987).
+        The KIVA-II computer program for transient multidimensional chemically
+        reactive flows with sprays
+        SAE Technical Paper.
+    \endverbatim
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,6 +43,7 @@ Description
 
 namespace CML
 {
+
 /*---------------------------------------------------------------------------*\
                        Class SphereDragForce Declaration
 \*---------------------------------------------------------------------------*/
@@ -44,13 +53,13 @@ class SphereDragForce
 :
     public ParticleForce<CloudType>
 {
-    // Private Member Functions
+public:
+
+    // Static Member Functions
 
         //- Drag coefficient multiplied by Reynolds number
-        scalar CdRe(const scalar Re) const;
+        static scalar CdRe(const scalar Re);
 
-
-public:
 
     //- Runtime type information
     TypeName("sphereDrag");
@@ -91,6 +100,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -103,10 +113,10 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+// * * * * * * * * * * * * *  Static Member Functions  * * * * * * * * * * * //
 
 template<class CloudType>
-CML::scalar CML::SphereDragForce<CloudType>::CdRe(const scalar Re) const
+CML::scalar CML::SphereDragForce<CloudType>::CdRe(const scalar Re)
 {
     if (Re > 1000.0)
     {
@@ -156,17 +166,14 @@ template<class CloudType>
 CML::forceSuSp CML::SphereDragForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
-
-    value.Sp() = mass*0.75*muc*CdRe(Re)/(p.rho()*sqr(p.d()));
-
-    return value;
+    return forceSuSp(Zero, mass*0.75*muc*CdRe(Re)/(p.rho()*sqr(p.d())));
 }
 
 

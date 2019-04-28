@@ -199,7 +199,7 @@ void CML::mixerFvMesh::calcMovingMasks() const
 
     if (movingPointsMaskPtr_)
     {
-        FatalErrorIn("void mixerFvMesh::calcMovingMasks() const")
+        FatalErrorInFunction
             << "point mask already calculated"
             << abort(FatalError);
     }
@@ -300,7 +300,7 @@ CML::mixerFvMesh::mixerFvMesh
         )
     ),
     rpm_(readScalar(motionDict_.lookup("rpm"))),
-    movingPointsMaskPtr_(NULL)
+    movingPointsMaskPtr_(nullptr)
 {
     addZonesAndModifiers();
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -126,7 +126,7 @@ inline void CML::UIndirectList<T>::operator=(const UList<T>& ae)
 {
     if (addressing_.size() != ae.size())
     {
-        FatalErrorIn("UIndirectList<T>::operator=(const UList<T>&)")
+        FatalErrorInFunction
             << "Addressing and list of addressed elements "
                "have different sizes: "
             << addressing_.size() << " " << ae.size()
@@ -145,7 +145,7 @@ inline void CML::UIndirectList<T>::operator=(const UIndirectList<T>& ae)
 {
     if (addressing_.size() != ae.size())
     {
-        FatalErrorIn("UIndirectList<T>::operator=(const UIndirectList<T>&)")
+        FatalErrorInFunction
             << "Addressing and list of addressed elements "
                "have different sizes: "
             << addressing_.size() << " " << ae.size()

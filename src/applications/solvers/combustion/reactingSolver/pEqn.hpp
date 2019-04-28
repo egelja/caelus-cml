@@ -5,11 +5,11 @@ T = thermo.T();
 
 volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p));
 
-#include "compressibleFlux.hpp"
+#include "compressibleFlux_reacting.hpp"
 
 if (pimple.nCorrPISO() <= 1) tUEqn.clear();
 
-#include "compressibleFlux.hpp"
+#include "compressibleFlux_reacting.hpp"
 
 while (pimple.correctNonOrthogonal())
 {

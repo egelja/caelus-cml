@@ -38,7 +38,7 @@ void CML::spectralMethodsFFTBased::checkBins()
 {
     if ((bins_ % 2) == 1)
     {
-        FatalErrorIn("void CML::spectralMethodsFFTBased::checkBins()")
+        FatalErrorInFunction
                 << "The number of frequency bins (" << bins_
                 << ") given in the dictionary" << endl
                 << "is not an even number" << endl << exit(FatalError);
@@ -147,10 +147,7 @@ spectralMethodsFFTBased::spectralMethodsFFTBased
 
     if (overlap <= 0 || step_ == 0)
     {
-        FatalErrorIn
-        (
-            "void CML::spectralMethodsFFTBased::spectralMethodsFFTBased(const fvMesh&, const dictionary&)"
-        )
+        FatalErrorInFunction
         << "The overlap-factor is negative or the overlap is so small"
         << " that the resulting step" << endl
         << "in window size is 0" << endl << exit(FatalError);
@@ -302,10 +299,7 @@ void spectralMethodsFFTBased::initSweep
 
     if (sweeps_ <= 0)
     {
-        FatalErrorIn
-        (
-            "void spectralMethodsFFTBased::initSweep( const scalarField& input)"
-        )
+        FatalErrorInFunction
         << "The input data set is too short relative to the window size"
         << exit(FatalError);
     }

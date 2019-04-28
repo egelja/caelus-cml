@@ -34,7 +34,7 @@ namespace CML {
 
 defineTypeNameAndDebug(GlobalVariablesRepository, 0);
 
-GlobalVariablesRepository *GlobalVariablesRepository::repositoryInstance(NULL);
+GlobalVariablesRepository *GlobalVariablesRepository::repositoryInstance(nullptr);
 
 ExpressionResult GlobalVariablesRepository::zero_;
 
@@ -105,7 +105,7 @@ GlobalVariablesRepository &GlobalVariablesRepository::getGlobalVariables(
         Info << "GlobalVariablesRepository: asking for Singleton" << endl;
     }
 
-    if(ptr==NULL) {
+    if(ptr==nullptr) {
         Pout << "swak: Allocating new repository for sampledGlobalVariables\n";
 
         ptr=new GlobalVariablesRepository(obr);
@@ -151,11 +151,11 @@ const ExpressionResult &GlobalVariablesRepository::get(
         const word &scopeName=scopes[scopeI];
 
         if(!globalVariables_.found(scopeName)) {
-            WarningIn("GlobalVariablesRepository::get")
+            WarningInFunction
                 << "There is no scope " << scopeName
-                    << " in the list of global scopes "
-                    << globalVariables_.toc()
-                    << " when looking for " << name << endl;
+                << " in the list of global scopes "
+                << globalVariables_.toc()
+                << " when looking for " << name << endl;
             continue;
         }
 

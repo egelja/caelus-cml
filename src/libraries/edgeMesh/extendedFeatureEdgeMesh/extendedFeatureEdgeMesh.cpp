@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -85,11 +85,8 @@ CML::extendedFeatureEdgeMesh::extendedFeatureEdgeMesh(const IOobject& io)
     {
         if (readOpt() == IOobject::MUST_READ_IF_MODIFIED)
         {
-            WarningIn
-            (
-                "extendedFeatureEdgeMesh::extendedFeatureEdgeMesh"
-                "(const IOobject&)"
-            )   << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
+            WarningInFunction
+                << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
                 << " does not support automatic rereading."
                 << endl;
         }
@@ -367,15 +364,7 @@ CML::extendedFeatureEdgeMesh::extendedFeatureEdgeMesh
         }
         else if (eStat == NONE)
         {
-            FatalErrorIn
-            (
-                "CML::extendedFeatureEdgeMesh::extendedFeatureEdgeMesh"
-                "("
-                "    const surfaceFeatures& sFeat,"
-                "    const objectRegistry& obr,"
-                "    const fileName& sFeatFileName"
-                ")"
-            )
+            FatalErrorInFunction
                 << nl << "classifyEdge returned NONE on edge "
                 << eds[i]
                 << ". There is a problem with definition of this edge."
@@ -444,15 +433,7 @@ CML::extendedFeatureEdgeMesh::extendedFeatureEdgeMesh
         }
         else if (ptStatus == NONFEATURE)
         {
-            FatalErrorIn
-            (
-                "CML::extendedFeatureEdgeMesh::extendedFeatureEdgeMesh"
-                "("
-                "    const surfaceFeatures& sFeat,"
-                "    const objectRegistry& obr,"
-                "    const fileName& sFeatFileName"
-                ")"
-            )
+            FatalErrorInFunction
                 << nl << "classifyFeaturePoint returned NONFEATURE on point at "
                 << points()[i]
                 << ". There is a problem with definition of this feature point."
@@ -762,17 +743,9 @@ CML::extendedFeatureEdgeMesh::edgeTree() const
 {
     if (edgeTree_.empty())
     {
-        Random rndGen(17301893);
-
         // Slightly extended bb. Slightly off-centred just so on symmetric
         // geometry there are less face/edge aligned items.
-        treeBoundBox bb
-        (
-            treeBoundBox(points()).extend(rndGen, 1E-4)
-        );
-
-        bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        treeBoundBox bb(treeBoundBox(points()).extend(1e-4));
 
         labelList allEdges(identity(edges().size()));
 
@@ -806,17 +779,9 @@ CML::extendedFeatureEdgeMesh::edgeTreesByType() const
     {
         edgeTreesByType_.setSize(nEdgeTypes);
 
-        Random rndGen(872141);
-
         // Slightly extended bb. Slightly off-centred just so on symmetric
         // geometry there are less face/edge aligned items.
-        treeBoundBox bb
-        (
-            treeBoundBox(points()).extend(rndGen, 1E-4)
-        );
-
-        bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        treeBoundBox bb(treeBoundBox(points()).extend(1e-4));
 
         labelListList sliceEdges(nEdgeTypes);
 

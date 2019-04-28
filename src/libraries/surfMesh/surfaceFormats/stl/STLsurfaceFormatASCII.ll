@@ -35,7 +35,7 @@ using namespace CML;
 //! \cond dummy
 int yyFlexLexer::yylex()
 {
-    FatalErrorIn("yyFlexLexer::yylex()")
+    FatalErrorInFunction
         << "Should not have called this function"
         << abort(FatalError);
     return 0;
@@ -367,10 +367,8 @@ endsolid              {space}("endsolid"|"ENDSOLID")({some_space}{word})*
 
 <stlError>.* {
         yy_pop_state();
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormatCore::readASCII(const fileName&)"
-        )   << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
+        FatalErrorInFunction
+            << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
             << "    expected " << stateExpects[YY_START]
             << " but found '" << startError_.c_str() << YYText() << "'"
             << exit(FatalError);

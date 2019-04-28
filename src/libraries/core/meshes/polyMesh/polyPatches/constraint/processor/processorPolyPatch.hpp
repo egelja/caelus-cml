@@ -98,7 +98,7 @@ protected:
             const pointField& nbrCc
         )
         {
-            notImplemented("processorPolyPatch::calcGeometry(..)");
+            NotImplemented;
         }
 
         //- Initialise the patches for moving points

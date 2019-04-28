@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,7 +65,7 @@ CML::scalar CML::face::edgeCos
     label leftEdgeI = left(index);
     label rightEdgeI = right(index);
 
-    // note negate on left edge to get correct left-pointing edge.
+    // Note negate on left edge to get correct left-pointing edge.
     return -(edges[leftEdgeI] & edges[rightEdgeI]);
 }
 
@@ -77,7 +77,7 @@ CML::label CML::face::mostConcaveAngle
     scalar& maxAngle
 ) const
 {
-    vector n(normal(points));
+    vector a(area(points));
 
     label index = 0;
     maxAngle = -GREAT;
@@ -94,7 +94,7 @@ CML::label CML::face::mostConcaveAngle
 
         scalar angle;
 
-        if ((edgeNormal & n) > 0)
+        if ((edgeNormal & a) > 0)
         {
             // Concave angle.
             angle = constant::mathematical::pi + edgeAngle;
@@ -131,12 +131,7 @@ CML::label CML::face::split
 
     if (size() <= 2)
     {
-        FatalErrorIn
-        (
-            "face::split"
-            "(const face::splitMode, const pointField&, label&, label&"
-            ", faceList&, faceList&)"
-        )
+        FatalErrorInFunction
             << "Serious problem: asked to split a face with < 3 vertices"
             << abort(FatalError);
     }
@@ -233,7 +228,7 @@ CML::label CML::face::split
                 minIndex = index;
             }
 
-            // go to next candidate
+            // Go to next candidate
             index = fcIndex(index);
         }
 
@@ -250,7 +245,7 @@ CML::label CML::face::split
         }
         else
         {
-            // folded around
+            // Folded around
             diff = minIndex + size() - startIndex;
         }
 
@@ -402,8 +397,54 @@ int CML::face::compare(const face& a, const face& b)
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+bool CML::face::sameVertices(const face& a, const face& b)
+{
+    label sizeA = a.size();
+    label sizeB = b.size();
 
+    // Trivial reject: faces are different size
+    if (sizeA != sizeB)
+    {
+        return false;
+    }
+    // Check faces with a single vertex
+    else if (sizeA == 1)
+    {
+        if (a[0] == b[0])
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    forAll(a, i)
+    {
+        // Count occurrences of a[i] in a
+        label aOcc = 0;
+        forAll(a, j)
+        {
+            if (a[i] == a[j]) aOcc++;
+        }
+
+        // Count occurrences of a[i] in b
+        label bOcc = 0;
+        forAll(b, j)
+        {
+            if (a[i] == b[j]) bOcc++;
+        }
+
+        // Check if occurrences of a[i] in a and b are the same
+        if (aOcc != bOcc) return false;
+    }
+
+    return true;
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 CML::label CML::face::collapse()
 {
@@ -465,7 +506,7 @@ CML::point CML::face::centre(const pointField& points) const
 
 
     point centrePoint = point::zero;
-    for (register label pI=0; pI<nPoints; ++pI)
+    for (label pI=0; pI<nPoints; ++pI)
     {
         centrePoint += points[operator[](pI)];
     }
@@ -474,7 +515,7 @@ CML::point CML::face::centre(const pointField& points) const
     scalar sumA = 0;
     vector sumAc = vector::zero;
 
-    for (register label pI=0; pI<nPoints; ++pI)
+    for (label pI=0; pI<nPoints; ++pI)
     {
         const point& nextPoint = points[operator[]((pI + 1) % nPoints)];
 
@@ -508,11 +549,11 @@ CML::point CML::face::centre(const pointField& points) const
 }
 
 
-CML::vector CML::face::normal(const pointField& p) const
+CML::vector CML::face::area(const pointField& p) const
 {
     const label nPoints = size();
 
-    // Calculate the normal by summing the face triangle normals.
+    // Calculate the area by summing the face triangle areas.
     // Changed to deal with small concavity by using a central decomposition
     //
 
@@ -526,10 +567,10 @@ CML::vector CML::face::normal(const pointField& p) const
             p[operator[](0)],
             p[operator[](1)],
             p[operator[](2)]
-        ).normal();
+        ).area();
     }
 
-    register label pI;
+    label pI;
 
     point centrePoint = vector::zero;
     for (pI = 0; pI < nPoints; ++pI)
@@ -538,7 +579,7 @@ CML::vector CML::face::normal(const pointField& p) const
     }
     centrePoint /= nPoints;
 
-    vector n = vector::zero;
+    vector a = vector::zero;
 
     point nextPoint = centrePoint;
 
@@ -555,21 +596,29 @@ CML::vector CML::face::normal(const pointField& p) const
 
         // Note: for best accuracy, centre point always comes last
         //
-        n += triPointRef
+        a += triPointRef
         (
             p[operator[](pI)],
             nextPoint,
             centrePoint
-        ).normal();
+        ).area();
     }
 
-    return n;
+    return a;
+}
+
+
+CML::vector CML::face::normal(const pointField& points) const
+{
+    const vector a = area(points);
+    const scalar maga = CML::mag(a);
+    return maga > 0 ? a/maga : Zero;
 }
 
 
 CML::face CML::face::reverseFace() const
 {
-    // reverse the label list and return
+    // Reverse the label list and return
     // The starting points of the original and reverse face are identical.
 
     const labelList& f = *this;
@@ -577,9 +626,9 @@ CML::face CML::face::reverseFace() const
 
     newList[0] = f[0];
 
-    for (label pointI = 1; pointI < newList.size(); pointI++)
+    for (label pointi = 1; pointi < newList.size(); pointi++)
     {
-        newList[pointI] = f[size() - pointI];
+        newList[pointi] = f[size() - pointi];
     }
 
     return face(xferMove(newList));
@@ -643,7 +692,7 @@ CML::scalar CML::face::sweptVol
 
     label nPoints = size();
 
-    for (register label pi=0; pi<nPoints-1; ++pi)
+    for (label pi=0; pi<nPoints-1; ++pi)
     {
         // Note: for best accuracy, centre point always comes last
         sv += triPointRef
@@ -723,12 +772,12 @@ CML::edgeList CML::face::edges() const
 
     edgeList e(points.size());
 
-    for (label pointI = 0; pointI < points.size() - 1; ++pointI)
+    for (label pointi = 0; pointi < points.size() - 1; ++pointi)
     {
-        e[pointI] = edge(points[pointI], points[pointI + 1]);
+        e[pointi] = edge(points[pointi], points[pointi + 1]);
     }
 
-    // add last edge
+    // Add last edge
     e.last() = edge(points.last(), points[0]);
 
     return e;
@@ -743,37 +792,37 @@ int CML::face::edgeDirection(const edge& e) const
         {
             if (operator[](rcIndex(i)) == e.end())
             {
-                // reverse direction
+                // Reverse direction
                 return -1;
             }
             else if (operator[](fcIndex(i)) == e.end())
             {
-                // forward direction
+                // Forward direction
                 return 1;
             }
 
-            // no match
+            // No match
             return 0;
         }
         else if (operator[](i) == e.end())
         {
             if (operator[](rcIndex(i)) == e.start())
             {
-                // forward direction
+                // Forward direction
                 return 1;
             }
             else if (operator[](fcIndex(i)) == e.start())
             {
-                // reverse direction
+                // Reverse direction
                 return -1;
             }
 
-            // no match
+            // No match
             return 0;
         }
     }
 
-    // not found
+    // Not found
     return 0;
 }
 

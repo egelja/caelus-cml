@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -203,7 +203,7 @@ public:
             //- Is element set
             inline bool set(const label) const;
 
-            //- Set element. Return old element (can be NULL).
+            //- Set element. Return old element (can be nullptr).
             //  No checks on new element.
             inline autoPtr<T> set(const label, T*);
 
@@ -410,7 +410,7 @@ inline void CML::PtrList<T>::append
 template<class T>
 inline bool CML::PtrList<T>::set(const label i) const
 {
-    return ptrs_[i] != NULL;
+    return ptrs_[i] != nullptr;
 }
 
 
@@ -459,7 +459,7 @@ inline const T& CML::PtrList<T>::operator[](const label i) const
 {
     if (!ptrs_[i])
     {
-        FatalErrorIn("PtrList::operator[] const")
+        FatalErrorInFunction
             << "hanging pointer, cannot dereference"
             << abort(FatalError);
     }
@@ -473,7 +473,7 @@ inline T& CML::PtrList<T>::operator[](const label i)
 {
     if (!ptrs_[i])
     {
-        FatalErrorIn("PtrList::operator[]")
+        FatalErrorInFunction
             << "hanging pointer, cannot dereference"
             << abort(FatalError);
     }
@@ -735,7 +735,7 @@ CML::PtrList<T>::PtrList(PtrList<T>& a, bool reUse)
         forAll(*this, i)
         {
             ptrs_[i] = a.ptrs_[i];
-            a.ptrs_[i] = NULL;
+            a.ptrs_[i] = nullptr;
         }
         a.setSize(0);
     }
@@ -792,7 +792,7 @@ void CML::PtrList<T>::setSize(const label newSize)
 {
     if (newSize < 0)
     {
-        FatalErrorIn("PtrList<T>::setSize(const label)")
+        FatalErrorInFunction
             << "bad set size " << newSize
             << abort(FatalError);
     }
@@ -823,7 +823,7 @@ void CML::PtrList<T>::setSize(const label newSize)
         register label i;
         for (i=oldSize; i<newSize; i++)
         {
-            ptrs_[i] = NULL;
+            ptrs_[i] = nullptr;
         }
     }
 }
@@ -857,7 +857,7 @@ void CML::PtrList<T>::reorder(const labelUList& oldToNew)
 {
     if (oldToNew.size() != size())
     {
-        FatalErrorIn("PtrList<T>::reorder(const labelUList&)")
+        FatalErrorInFunction
             << "Size of map (" << oldToNew.size()
             << ") not equal to list size (" << size()
             << ")." << abort(FatalError);
@@ -871,7 +871,7 @@ void CML::PtrList<T>::reorder(const labelUList& oldToNew)
 
         if (newI < 0 || newI >= size())
         {
-            FatalErrorIn("PtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "Illegal index " << newI << nl
                 << "Valid indices are 0.." << size()-1
                 << abort(FatalError);
@@ -879,7 +879,7 @@ void CML::PtrList<T>::reorder(const labelUList& oldToNew)
 
         if (newPtrs_[newI])
         {
-            FatalErrorIn("PtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "reorder map is not unique; element " << newI
                 << " already set." << abort(FatalError);
         }
@@ -890,7 +890,7 @@ void CML::PtrList<T>::reorder(const labelUList& oldToNew)
     {
         if (!newPtrs_[i])
         {
-            FatalErrorIn("PtrList<T>::reorder(const labelUList&)")
+            FatalErrorInFunction
                 << "Element " << i << " not set after reordering." << nl
                 << abort(FatalError);
         }
@@ -907,7 +907,7 @@ CML::PtrList<T>& CML::PtrList<T>::operator=(const PtrList<T>& a)
 {
     if (this == &a)
     {
-        FatalErrorIn("PtrList<T>::operator=(const PtrList<T>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -930,7 +930,7 @@ CML::PtrList<T>& CML::PtrList<T>::operator=(const PtrList<T>& a)
     }
     else
     {
-        FatalErrorIn("PtrList::operator=(const PtrList<T>&)")
+        FatalErrorInFunction
             << "bad size: " << a.size()
             << abort(FatalError);
     }
@@ -1013,11 +1013,8 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "PtrList<T>::read(Istream&, const INew&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -1052,11 +1049,8 @@ void CML::PtrList<T>::read(Istream& is, const INew& inewt)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "PtrList<T>::read(Istream&, const INew&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

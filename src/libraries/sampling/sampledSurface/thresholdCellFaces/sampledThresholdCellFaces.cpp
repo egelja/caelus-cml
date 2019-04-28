@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,7 +61,7 @@ bool CML::sampledThresholdCellFaces::updateGeometry() const
 
     // 1. see if field in database
     // 2. see if field can be read
-    const volScalarField* cellFldPtr = NULL;
+    const volScalarField* cellFldPtr = nullptr;
     if (fvm.foundObject<volScalarField>(fieldName_))
     {
         if (debug)
@@ -159,10 +159,7 @@ CML::sampledThresholdCellFaces::sampledThresholdCellFaces
 {
     if (!dict.found("lowerLimit") && !dict.found("upperLimit"))
     {
-        FatalErrorIn
-            (
-                "sampledThresholdCellFaces::sampledThresholdCellFaces(..)"
-            )
+        FatalErrorInFunction
             << "require at least one of 'lowerLimit' or 'upperLimit'" << endl
             << abort(FatalError);
     }

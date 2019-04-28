@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,10 +40,8 @@ void CML::edgeFaceCirculator::setFace
 
     if (!isBoundaryEdge_ && !mesh_.isInternalFace(faceI))
     {
-        FatalErrorIn
-        (
-            "edgeFaceCirculator::setFace(const label, const label)"
-        )   << "Edge is not defined as boundary edge but still walked to"
+        FatalErrorInFunction
+            << "Edge is not defined as boundary edge but still walked to"
             << " boundary face:" << faceI << " on cell:" << cellI
             << abort(FatalError);
     }
@@ -75,7 +73,7 @@ void CML::edgeFaceCirculator::otherFace(const label cellI)
         }
     }
 
-    FatalErrorIn("edgeFaceCirculator::otherFace(const label)")
+    FatalErrorInFunction
         << "Could not find next face stepping"
         << " through cell along edge." << endl
         << "face:" << faceLabel_ << " index in face:" << index_
@@ -193,10 +191,8 @@ bool CML::edgeFaceCirculator::sameOrder(const label v0, const label v1) const
 
     if (fp != index_)
     {
-        FatalErrorIn
-        (
-            "edgeFaceCirculator::sameOrder(const label, const label) const"
-        )   << "v0:" << v1 << " and v1:" << v1
+        FatalErrorInFunction
+            << "v0:" << v1 << " and v1:" << v1
             << " not on position:" << index_ << " on face:" << faceLabel_
             << " verts:" << f << " or not consecutive." << abort(FatalError);
     }
@@ -251,7 +247,7 @@ void CML::edgeFaceCirculator::setCanonical()
             {
                 const face& f = mesh_.faces()[faceLabel_];
 
-                FatalErrorIn("CML::edgeFaceCirculator::setCanonical()")
+                FatalErrorInFunction
                     << "Walked " << i << " cells around edge "
                     << mesh_.points()[f[index_]]
                     << mesh_.points()[f.nextLabel(index_)]
@@ -285,7 +281,7 @@ void CML::edgeFaceCirculator::setCanonical()
             {
                 const face& f = mesh_.faces()[faceLabel_];
 
-                FatalErrorIn("CML::edgeFaceCirculator::setCanonical()")
+                FatalErrorInFunction
                     << "Reached boundary face " << faceLabel_
                     << " when walking around internal edge "
                     << mesh_.points()[f[index_]]
@@ -353,7 +349,7 @@ CML::edgeFaceCirculator::operator++()
 {
     if (faceLabel_ == -1)
     {
-        FatalErrorIn("edgeFaceCirculator::operator++()")
+        FatalErrorInFunction
             << "Already reached end(). Cannot walk any further."
             << abort(FatalError);
     }

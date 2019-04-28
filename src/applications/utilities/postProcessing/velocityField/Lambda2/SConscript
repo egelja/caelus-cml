@@ -8,7 +8,7 @@ Import('env')
 target = 'Lambda2'
 
 sources = Split("""
-Lambda2.cpp
+Lambda2_app.cpp
 """)
 
 caelus_inc = [

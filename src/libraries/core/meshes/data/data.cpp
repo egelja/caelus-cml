@@ -59,12 +59,12 @@ const CML::dictionary& CML::data::solverPerformanceDict() const
 void CML::data::setSolverPerformance
 (
     const word& name,
-    const lduMatrix::solverPerformance& sp
+    const solverPerformance& sp
 ) const
 {
     dictionary& dict = const_cast<dictionary&>(solverPerformanceDict());
 
-    List<lduMatrix::solverPerformance> perfs;
+    List<solverPerformance> perfs;
 
     if (prevTimeIndex_ != this->time().timeIndex())
     {
@@ -86,7 +86,7 @@ void CML::data::setSolverPerformance
 
 void CML::data::setSolverPerformance
 (
-    const lduMatrix::solverPerformance& sp
+    const solverPerformance& sp
 ) const
 {
     setSolverPerformance(sp.fieldName(), sp);

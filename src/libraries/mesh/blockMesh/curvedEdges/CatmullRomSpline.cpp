@@ -128,7 +128,7 @@ CML::point CML::CatmullRomSpline::position
 
 CML::scalar CML::CatmullRomSpline::length() const
 {
-    notImplemented("CatmullRomSpline::length() const");
+    NotImplemented;
     return 1.0;
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,6 +33,7 @@ Description
 #include "volFieldsFwd.hpp"
 #include "surfaceFieldsFwd.hpp"
 #include "surfaceInterpolationScheme.hpp"
+#include "one.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -150,6 +151,13 @@ namespace fvc
     );
 
 
+    //- Interpolate field onto faces using 'interpolate(\<name\>)'
+    template<class Type>
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
+    (
+        const GeometricField<Type, fvPatchField, volMesh>& tvf
+    );
+
     //- Interpolate tmp field onto faces using 'interpolate(\<name\>)'
     template<class Type>
     static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
@@ -157,12 +165,6 @@ namespace fvc
         const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf
     );
 
-    //- Interpolate tmp field onto faces using 'interpolate(\<name\>)'
-    template<class Type>
-    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
-    (
-        const GeometricField<Type, fvPatchField, volMesh>& tvf
-    );
 
     //- Interpolate boundary field onto faces (simply a type conversion)
     template<class Type>
@@ -176,6 +178,49 @@ namespace fvc
     static tmp<FieldField<fvsPatchField, Type> > interpolate
     (
         const tmp<FieldField<fvPatchField, Type> >& tfvpff
+    );
+
+    //- Interpolate 'one' returning 'one'
+    inline one interpolate(const one&)
+    {
+        return one();
+    }
+
+
+    //- Interpolate field onto faces
+    //  and 'dot' with given surfaceVectorField Sf
+    template<class Type>
+    static
+    tmp
+    <
+        GeometricField
+        <
+            typename innerProduct<vector, Type>::type,
+            fvsPatchField,
+            surfaceMesh
+            >
+    > dotInterpolate
+    (
+        const surfaceVectorField& Sf,
+        const GeometricField<Type, fvPatchField, volMesh>& tvf
+    );
+
+    //- Interpolate tmp field onto faces
+    //  and 'dot' with given surfaceVectorField Sf
+    template<class Type>
+    static
+    tmp
+    <
+        GeometricField
+        <
+            typename innerProduct<vector, Type>::type,
+            fvsPatchField,
+            surfaceMesh
+            >
+    > dotInterpolate
+    (
+        const surfaceVectorField& Sf,
+        const tmp<GeometricField<Type, fvPatchField, volMesh>>& tvf
     );
 }
 
@@ -274,11 +319,9 @@ interpolate
 {
     if (surfaceInterpolation::debug)
     {
-        Info<< "interpolate"
-            << "(const GeometricField<Type, fvPatchField, volMesh>&, "
-            << "const surfaceScalarField&, Istream&) : "
+        InfoInFunction
             << "interpolating GeometricField<Type, fvPatchField, volMesh> "
-            << endl;
+            << vf.name() << endl;
     }
 
     return scheme<Type>(faceFlux, schemeData)().interpolate(vf);
@@ -297,12 +340,9 @@ interpolate
 {
     if (surfaceInterpolation::debug)
     {
-        Info<< "interpolate"
-            << "(const GeometricField<Type, fvPatchField, volMesh>&, "
-            << "const surfaceScalarField&, const word&) : "
+        InfoInFunction
             << "interpolating GeometricField<Type, fvPatchField, volMesh> "
-            << "using " << name
-            << endl;
+            << vf.name() << " using " << name << endl;
     }
 
     return scheme<Type>(faceFlux, name)().interpolate(vf);
@@ -375,11 +415,9 @@ interpolate
 {
     if (surfaceInterpolation::debug)
     {
-        Info<< "interpolate"
-            << "(const GeometricField<Type, fvPatchField, volMesh>&, "
-            << "Istream&) : "
+        InfoInFunction
             << "interpolating GeometricField<Type, fvPatchField, volMesh> "
-            << endl;
+            << vf.name() << endl;
     }
 
     return scheme<Type>(vf.mesh(), schemeData)().interpolate(vf);
@@ -396,11 +434,9 @@ interpolate
 {
     if (surfaceInterpolation::debug)
     {
-        Info<< "interpolate"
-            << "(const GeometricField<Type, fvPatchField, volMesh>&, "
-            << "const word&) : "
+        InfoInFunction
             << "interpolating GeometricField<Type, fvPatchField, volMesh> "
-            << "using " << name
+            << vf.name() << " using " << name
             << endl;
     }
 
@@ -435,10 +471,9 @@ interpolate
 {
     if (surfaceInterpolation::debug)
     {
-        Info<< "interpolate"
-            << "(const GeometricField<Type, fvPatchField, volMesh>&) : "
+        InfoInFunction
             << "interpolating GeometricField<Type, fvPatchField, volMesh> "
-            << "using run-time selected scheme"
+            << vf.name() << " using run-time selected scheme"
             << endl;
     }
 
@@ -492,11 +527,72 @@ tmp<FieldField<fvsPatchField, Type> > interpolate
     const tmp<FieldField<fvPatchField, Type> >& tfvpff
 )
 {
-    tmp<FieldField<fvPatchField, Type> > tfvspff = interpolate(tfvpff());
+    tmp<FieldField<fvsPatchField, Type> > tfvspff = interpolate(tfvpff());
     tfvpff.clear();
     return tfvspff;
 }
 
+
+template<class Type>
+tmp
+<
+    GeometricField
+    <
+        typename innerProduct<vector, Type>::type,
+        fvsPatchField,
+        surfaceMesh
+    >
+>
+dotInterpolate
+(
+    const surfaceVectorField& Sf,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    if (surfaceInterpolation::debug)
+    {
+        InfoInFunction
+            << "interpolating GeometricField<Type, fvPatchField, volMesh> "
+            << vf.name() << " using run-time selected scheme"
+            << endl;
+    }
+
+    return scheme<Type>
+    (
+        vf.mesh(),
+        "dotInterpolate(" + Sf.name() + ',' + vf.name() + ')'
+    )().dotInterpolate(Sf, vf);
+}
+
+
+template<class Type>
+tmp
+<
+    GeometricField
+    <
+        typename innerProduct<vector, Type>::type,
+        fvsPatchField,
+        surfaceMesh
+    >
+>
+dotInterpolate
+(
+    const surfaceVectorField& Sf,
+    const tmp<GeometricField<Type, fvPatchField, volMesh>>& tvf
+)
+{
+    tmp
+    <
+        GeometricField
+        <
+            typename innerProduct<vector, Type>::type,
+            fvsPatchField,
+            surfaceMesh
+        >
+    > tsf = dotInterpolate(Sf, tvf());
+    tvf.clear();
+    return tsf;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -282,10 +282,8 @@ void CML::globalIndex::gather
 
             if (!contiguous<Type>())
             {
-                FatalErrorIn
-                (
-                    "void CML::globalIndex::gather(...)"
-                )   << "nonBlocking not supported for non-contiguous data"
+                FatalErrorInFunction
+                    << "nonBlocking not supported for non-contiguous data"
                     << exit(FatalError);
             }
 
@@ -343,10 +341,8 @@ void CML::globalIndex::gather
 
             if (!contiguous<Type>())
             {
-                FatalErrorIn
-                (
-                    "void CML::globalIndex::gather(...)"
-                )   << "nonBlocking not supported for non-contiguous data"
+                FatalErrorInFunction
+                    << "nonBlocking not supported for non-contiguous data"
                     << exit(FatalError);
             }
 
@@ -446,10 +442,8 @@ void CML::globalIndex::scatter
 
             if (!contiguous<Type>())
             {
-                FatalErrorIn
-                (
-                    "void CML::globalIndex::scatter(...)"
-                )   << "nonBlocking not supported for non-contiguous data"
+                FatalErrorInFunction
+                    << "nonBlocking not supported for non-contiguous data"
                     << exit(FatalError);
             }
 
@@ -512,10 +506,7 @@ void CML::globalIndex::scatter
 
             if (!contiguous<Type>())
             {
-                FatalErrorIn
-                (
-                    "void CML::globalIndex::scatter(...)"
-                )
+                FatalErrorInFunction
                     << "nonBlocking not supported for non-contiguous data"
                     << exit(FatalError);
             }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -111,10 +111,8 @@ CML::scalar CML::coordSet::scalarCoord
     }
     else
     {
-        FatalErrorIn
-        (
-            "coordSet::scalarCoord(const label)"
-        )   << "Illegal axis specification " << axis_
+        FatalErrorInFunction
+            << "Illegal axis specification " << axis_
             << " for sampling line " << name_
             << exit(FatalError);
 

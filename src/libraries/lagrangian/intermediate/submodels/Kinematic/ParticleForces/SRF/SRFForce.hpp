@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -99,6 +99,7 @@ public:
             virtual forceSuSp calcNonCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -122,7 +123,7 @@ CML::SRFForce<CloudType>::SRFForce
 )
 :
     ParticleForce<CloudType>(owner, mesh, dict, typeName, false),
-    srfPtr_(NULL)
+    srfPtr_(nullptr)
 {}
 
 
@@ -133,7 +134,7 @@ CML::SRFForce<CloudType>::SRFForce
 )
 :
     ParticleForce<CloudType>(srff),
-    srfPtr_(NULL)
+    srfPtr_(nullptr)
 {}
 
 
@@ -157,7 +158,7 @@ void CML::SRFForce<CloudType>::cacheFields(const bool store)
     }
     else
     {
-        srfPtr_ = NULL;
+        srfPtr_ = nullptr;
     }
 }
 
@@ -166,13 +167,14 @@ template<class CloudType>
 CML::forceSuSp CML::SRFForce<CloudType>::calcNonCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     const typename SRF::SRFModel& srf = *srfPtr_;
 
@@ -182,7 +184,7 @@ CML::forceSuSp CML::SRFForce<CloudType>::calcNonCoupled
 
     // Coriolis and centrifugal acceleration terms
     value.Su() =
-        mass*(1.0 - p.rhoc()/p.rho())
+        mass*(1.0 - td.rhoc()/p.rho())
        *(2.0*(p.U() ^ omega) + (omega ^ (r ^ omega)));
 
     return value;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -82,7 +82,7 @@ CML::surfZoneIOList::surfZoneIOList
 
             if (startFaceI != faceI)
             {
-                FatalErrorIn(functionName)
+                FatalErrorInFunction
                     << "surfZones are not ordered. Start of zone " << zoneI
                     << " does not correspond to sum of preceding zones." << nl
                     << "while reading " << io.objectPath() << endl

@@ -21,6 +21,8 @@ License
 
 #include "regionProperties.hpp"
 #include "IOdictionary.hpp"
+#include "argList.hpp"
+#include "polyMesh.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -47,6 +49,55 @@ CML::regionProperties::regionProperties(const Time& runTime)
 
 CML::regionProperties::~regionProperties()
 {}
+
+
+// * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
+
+const CML::word& CML::regionDir(const word& regionName)
+{
+    return
+        regionName == polyMesh::defaultRegion
+      ? word::null
+      : regionName;
+}
+
+
+CML::wordList CML::selectRegionNames(const argList& args, const Time& runTime)
+{
+    const bool allRegions = args.optionFound("allRegions");
+
+    wordList regionNames;
+
+    if (allRegions)
+    {
+        const regionProperties rp(runTime);
+        forAllConstIter(HashTable<wordList>, rp, iter)
+        {
+            const wordList& regions = iter();
+            forAll(regions, i)
+            {
+                if (findIndex(regionNames, regions[i]) == -1)
+                {
+                    regionNames.append(regions[i]);
+                }
+            }
+        }
+    }
+    else
+    {
+        word regionName;
+        if (args.optionReadIfPresent("region", regionName))
+        {
+            regionNames = wordList(1, regionName);
+        }
+        else
+        {
+            regionNames = wordList(1, polyMesh::defaultRegion);
+        }
+    }
+
+    return regionNames;
+}
 
 
 // ************************************************************************* //

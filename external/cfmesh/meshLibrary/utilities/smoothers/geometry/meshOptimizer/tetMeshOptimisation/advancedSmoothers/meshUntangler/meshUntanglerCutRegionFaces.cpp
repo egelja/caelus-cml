@@ -124,10 +124,8 @@ void meshUntangler::cutRegion::findNewFaces()
                     finished = false;
                     break;
 
-                    FatalErrorIn
-                    (
-                        "void meshUntangler::cutRegion::findNewFaces()"
-                    ) << "Edge has more than two nodes!"
+                    FatalErrorInFunction
+                      << "Edge has more than two nodes!"
                         << abort(FatalError);
                 }
 
@@ -197,11 +195,8 @@ void meshUntangler::cutRegion::findNewFaces()
                 Info << "cEdges " << cEdges << endl;
                 Info << "cFaces " << cFaces << endl;
 
-                FatalErrorIn
-                (
-                    "void meshOptimizer::meshUntangler::"
-                    "cutRegion::findNewFaces()"
-                ) << "Cell is not topologically closed!" << abort(FatalError);
+                FatalErrorInFunction
+                  << "Cell is not topologically closed!" << abort(FatalError);
             }
         # endif
 

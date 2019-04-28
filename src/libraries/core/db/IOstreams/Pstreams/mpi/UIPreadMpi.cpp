@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -123,7 +123,7 @@ CML::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
 {
     if (commsType() != UPstream::scheduled && !buffers.finishedSendsCalled_)
     {
-        FatalErrorIn("UIPstream::UIPstream(const int, PstreamBuffers&)")
+        FatalErrorInFunction
             << "PstreamBuffers::finishedSends() never called." << endl
             << "Please call PstreamBuffers::finishedSends() after doing"
             << " all your sends (using UOPstream) and before doing any"
@@ -236,11 +236,8 @@ CML::label CML::UIPstream::read
             )
         )
         {
-            FatalErrorIn
-            (
-                "UIPstream::read"
-                "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-            )   << "MPI_Recv cannot receive incoming message"
+            FatalErrorInFunction
+                << "MPI_Recv cannot receive incoming message"
                 << CML::abort(FatalError);
 
             return 0;
@@ -262,11 +259,8 @@ CML::label CML::UIPstream::read
 
         if (messageSize > bufSize)
         {
-            FatalErrorIn
-            (
-                "UIPstream::read"
-                "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-            )   << "buffer (" << label(bufSize)
+            FatalErrorInFunction
+                << "buffer (" << label(bufSize)
                 << ") not large enough for incoming message ("
                 << messageSize << ')'
                 << CML::abort(FatalError);
@@ -293,11 +287,8 @@ CML::label CML::UIPstream::read
             )
         )
         {
-            FatalErrorIn
-            (
-                "UIPstream::read"
-                "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-            )   << "MPI_Recv cannot start non-blocking receive"
+            FatalErrorInFunction
+                << "MPI_Recv cannot start non-blocking receive"
                 << CML::abort(FatalError);
 
             return 0;
@@ -319,11 +310,8 @@ CML::label CML::UIPstream::read
     }
     else
     {
-        FatalErrorIn
-        (
-            "UIPstream::read"
-            "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-        )   << "Unsupported communications type "
+        FatalErrorInFunction
+            << "Unsupported communications type "
             << commsType
             << CML::abort(FatalError);
 

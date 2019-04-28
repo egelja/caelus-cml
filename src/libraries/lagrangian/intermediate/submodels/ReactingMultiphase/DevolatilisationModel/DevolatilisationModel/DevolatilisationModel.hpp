@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -96,13 +96,7 @@ public:
         DevolatilisationModel(const DevolatilisationModel<CloudType>& dm);
 
         //- Construct and return a clone
-        virtual autoPtr<DevolatilisationModel<CloudType> > clone() const
-        {
-            return autoPtr<DevolatilisationModel<CloudType> >
-            (
-                new DevolatilisationModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<DevolatilisationModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -132,7 +126,7 @@ public:
             const scalarField& YSolidEff,
             label& canCombust,
             scalarField& dMassDV
-        ) const;
+        ) const = 0;
 
         //- Add to devolatilisation mass
         void addToDevolatilisationMass(const scalar dMass);
@@ -151,34 +145,34 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeDevolatilisationModel(CloudType)                                  \
-                                                                              \
-    typedef CloudType::reactingMultiphaseCloudType                            \
-        reactingMultiphaseCloudType;                                          \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        DevolatilisationModel<reactingMultiphaseCloudType>,                   \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        DevolatilisationModel<reactingMultiphaseCloudType>,                   \
-        dictionary                                                            \
+#define makeDevolatilisationModel(CloudType)                                   \
+                                                                               \
+    typedef CloudType::reactingMultiphaseCloudType                             \
+        reactingMultiphaseCloudType;                                           \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        DevolatilisationModel<reactingMultiphaseCloudType>,                    \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        DevolatilisationModel<reactingMultiphaseCloudType>,                    \
+        dictionary                                                             \
     );
 
 
-#define makeDevolatilisationModelType(SS, CloudType)                          \
-                                                                              \
-    typedef CloudType::reactingMultiphaseCloudType                            \
-        reactingMultiphaseCloudType;                                          \
-    defineNamedTemplateTypeNameAndDebug(SS<reactingMultiphaseCloudType>, 0);  \
-                                                                              \
-    DevolatilisationModel<reactingMultiphaseCloudType>::                      \
-        adddictionaryConstructorToTable<SS<reactingMultiphaseCloudType> >     \
+#define makeDevolatilisationModelType(SS, CloudType)                           \
+                                                                               \
+    typedef CloudType::reactingMultiphaseCloudType                             \
+        reactingMultiphaseCloudType;                                           \
+    defineNamedTemplateTypeNameAndDebug                                        \
+        (SS<reactingMultiphaseCloudType>, 0);                                  \
+                                                                               \
+    DevolatilisationModel<reactingMultiphaseCloudType>::                       \
+        adddictionaryConstructorToTable                                        \
+        <SS<reactingMultiphaseCloudType> >      \
         add##SS##CloudType##reactingMultiphaseCloudType##ConstructorToTable_;
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -227,40 +221,6 @@ CML::DevolatilisationModel<CloudType>::~DevolatilisationModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void CML::DevolatilisationModel<CloudType>::calculate
-(
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalarField&,
-    const scalarField&,
-    const scalarField&,
-    label&,
-    scalarField&
-) const
-{
-    notImplemented
-    (
-        "void CML::DevolatilisationModel<CloudType>::calculate"
-        "("
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalarField&, "
-            "const scalarField&, "
-            "const scalarField&, "
-            "label&, "
-            "scalarField&"
-        ") const"
-    );
-}
-
-
-template<class CloudType>
 void CML::DevolatilisationModel<CloudType>::addToDevolatilisationMass
 (
     const scalar dMass
@@ -278,7 +238,7 @@ void CML::DevolatilisationModel<CloudType>::info(Ostream& os)
 
     Info<< "    Mass transfer devolatilisation  = " << massTotal << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setBaseProperty("mass", massTotal);
         dMass_ = 0.0;
@@ -306,14 +266,8 @@ CML::DevolatilisationModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "DevolatilisationModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown devolatilisation model type "
+        FatalErrorInFunction
+            << "Unknown devolatilisation model type "
             << modelType << nl << nl
             << "Valid devolatilisation model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

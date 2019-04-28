@@ -106,10 +106,9 @@ const labelList &GeneralSurfacesPluginFunction::meshCells()
 
     reduce(wrongCellNr,plusOp<label>());
     if(wrongCellNr>0) {
-        WarningIn("GeneralSurfacesPluginFunction::meshCells()")
+        WarningInFunction
             << "No cell found for " << wrongCellNr << " faces"
-                << endl;
-
+            << endl;
     }
     return meshCells_();
 }

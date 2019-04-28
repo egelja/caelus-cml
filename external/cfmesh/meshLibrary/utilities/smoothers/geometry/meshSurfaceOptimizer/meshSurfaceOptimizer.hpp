@@ -347,11 +347,8 @@ inline const partTriMesh& meshSurfaceOptimizer::triMesh() const
 inline void meshSurfaceOptimizer::updateTriMesh(const labelLongList& selPoints)
 {
     if( !triMeshPtr_ )
-        FatalErrorIn
-        (
-            "inline void meshSurfaceOptimizer::updateTriMesh"
-            "(const labelLongList&)"
-        ) << "triMeshPtr_ is not allocated " << abort(FatalError);
+        FatalErrorInFunction
+          << "triMeshPtr_ is not allocated " << abort(FatalError);
 
     triMeshPtr_->updateVertices(selPoints);
 }
@@ -359,10 +356,8 @@ inline void meshSurfaceOptimizer::updateTriMesh(const labelLongList& selPoints)
 inline void meshSurfaceOptimizer::updateTriMesh()
 {
     if( !triMeshPtr_ )
-        FatalErrorIn
-        (
-            "inline void meshSurfaceOptimizer::updateTriMesh()"
-        ) << "triMeshPtr_ is not allocated " << abort(FatalError);
+        FatalErrorInFunction
+          << "triMeshPtr_ is not allocated " << abort(FatalError);
 
     triMeshPtr_->updateVertices();
 }

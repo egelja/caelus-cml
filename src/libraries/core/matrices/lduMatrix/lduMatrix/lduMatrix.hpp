@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2016 OpenCFD Ltd
+Copyright (C) 2016 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,7 +29,7 @@ Description
 
     Addressing arrays must be supplied for the upper and lower triangles.
 
-    It might be better if this class were organised as a hierarchy starting
+    It might be better if this class were organised as a hierachy starting
     from an empty matrix, then deriving diagonal, symmetric and asymmetric
     matrices.
 
@@ -54,6 +54,7 @@ SourceFiles
 #include "typeInfo.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
+#include "solverPerformance.hpp"
 #include "profiling.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -64,7 +65,10 @@ namespace CML
 // Forward declaration of friend functions and operators
 
 class lduMatrix;
+
+
 Ostream& operator<<(Ostream&, const lduMatrix&);
+
 
 
 /*---------------------------------------------------------------------------*\
@@ -84,174 +88,6 @@ class lduMatrix
 
 public:
 
-    //- Class returned by the solver, containing performance statistics
-    class solverPerformance
-    {
-        word   solverName_;
-        word   fieldName_;
-        scalar initialResidual_;
-        scalar finalResidual_;
-        label  noIterations_;
-        bool   converged_;
-        bool   singular_;
-
-
-    public:
-
-        // Constructors
-
-            //- Construct null
-            solverPerformance()
-            :
-                initialResidual_(0),
-                finalResidual_(0),
-                noIterations_(0),
-                converged_(false),
-                singular_(false)
-            {}
-
-            //- Construct from components
-            solverPerformance
-            (
-                const word&  solverName,
-                const word&  fieldName,
-                const scalar iRes = 0,
-                const scalar fRes = 0,
-                const label  nIter = 0,
-                const bool   converged = false,
-                const bool   singular = false
-            )
-            :
-                solverName_(solverName),
-                fieldName_(fieldName),
-                initialResidual_(iRes),
-                finalResidual_(fRes),
-                noIterations_(nIter),
-                converged_(converged),
-                singular_(singular)
-            {}
-
-            //- Construct from Istream
-            solverPerformance(Istream&);
-
-
-        // Member functions
-
-            //- Return solver name
-            const word& solverName() const
-            {
-                return solverName_;
-            }
-
-            //- Return solver name
-            word& solverName()
-            {
-                return solverName_;
-            }
-
-
-            //- Return field name
-            const word& fieldName() const
-            {
-                return fieldName_;
-            }
-
-
-            //- Return initial residual
-            scalar initialResidual() const
-            {
-                return initialResidual_;
-            }
-
-            //- Return initial residual
-            scalar& initialResidual()
-            {
-                return initialResidual_;
-            }
-
-
-            //- Return final residual
-            scalar finalResidual() const
-            {
-                return finalResidual_;
-            }
-
-            //- Return final residual
-            scalar& finalResidual()
-            {
-                return finalResidual_;
-            }
-
-
-            //- Return number of iterations
-            label nIterations() const
-            {
-                return noIterations_;
-            }
-
-            //- Return number of iterations
-            label& nIterations()
-            {
-                return noIterations_;
-            }
-
-
-            //- Has the solver converged?
-            bool converged() const
-            {
-                return converged_;
-            }
-
-            //- Is the matrix singular?
-            bool singular() const
-            {
-                return singular_;
-            }
-
-            //- Convergence test
-            bool checkConvergence
-            (
-                const scalar tolerance,
-                const scalar relTolerance,
-                const label  iter,
-                const label  minIter
-            );
-
-            bool checkConvergence
-            (
-                const scalar tolerance,
-                const label  iter,
-                const label  minIter
-            );
-
-            //- Singularity test
-            bool checkSingularity(const scalar residual);
-
-            //- Print summary of solver performance
-            void print() const;
-
-        // Member Operators
-
-            bool operator!=(const solverPerformance&) const;
-
-
-        // Friend functions
-
-            //- Return the element-wise maximum of two solverPerformances
-            friend solverPerformance max
-            (
-                const solverPerformance&,
-                const solverPerformance&
-            );
-
-
-        // Ostream Operator
-
-            friend Istream& operator>>(Istream&, solverPerformance&);
-            friend Ostream& operator<<(Ostream&, const solverPerformance&);
-    };
-
-
     //- Abstract base-class for lduMatrix solvers
     class solver
     {
@@ -265,13 +101,13 @@ public:
             const FieldField<Field, scalar>& interfaceIntCoeffs_;
             lduInterfaceFieldPtrsList interfaces_;
 
-            //- dictionary of controls
+            //- Dictionary of controls
             dictionary controlDict_;
 
             //- Maximum number of iterations in the solver
             label maxIter_;
 
-            //- Mainimum number of iterations in the solver
+            //- Minimum number of iterations in the solver
             label minIter_;
 
             //- Threshold value for switching from relative to absolute
@@ -284,7 +120,7 @@ public:
             //- Convergence tolerance relative to the initial
             scalar relTol_;
 
-            profiling::Trigger profiling_;
+            profilingTrigger profiling_;
 
         // Protected Member Functions
 
@@ -669,12 +505,7 @@ public:
                 const direction cmpt=0
             ) const
             {
-                notImplemented
-                (
-                    type() +"::preconditionT"
-                    "(scalarField& wT, const scalarField& rT, "
-                    "const direction cmpt)"
-                );
+                NotImplemented;
             }
     };
 
@@ -971,12 +802,12 @@ CML::lduMatrix::faceH(const Field<Type>& psi) const
     }
     else
     {
-        FatalErrorIn("lduMatrix::faceH(const Field<Type>& psi) const")
+        FatalErrorInFunction
             << "Cannot calculate faceH"
                " the matrix does not have any off-diagonal coefficients."
             << exit(FatalError);
 
-        return tmp<Field<Type> >(NULL);
+        return tmp<Field<Type> >(nullptr);
     }
 }
 

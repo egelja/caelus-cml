@@ -282,10 +282,8 @@ void lineRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void lineRefinement::operator=(const dictionary& d)"
-        ) << "Entry p0 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry p0 is not specified!" << exit(FatalError);
         p0_ = vector::zero;
     }
 
@@ -296,10 +294,8 @@ void lineRefinement::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void lineRefinement::operator=(const dictionary& d)"
-        ) << "Entry p1 is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry p1 is not specified!" << exit(FatalError);
         p1_ = vector::zero;
     }
 }

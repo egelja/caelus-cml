@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -16,7 +16,11 @@ psiChemistryModel  ODEChemistryModel<gasThermoPhysics>;
 
 chemistry           on;
 
-chemistrySolver     ode;
+chemistryType
+{
+    solver ode;
+    method standard;
+}
 
 initialChemicalTimeStep 1e-7; // initially 1e-7
 

@@ -64,12 +64,12 @@ int main(int argc, char *argv[])
 
     bool cacheFields=args.options().found("cacheFields");
     if(cacheFields) {
-        WarningIn("main()")
+        WarningInFunction
             << "The current behaviour is to cache fields that were read from disc. "
-                << "This may lead to unexpected behaviour as previous modifications "
-                << "will not be visible."
-                << endl;
-            }
+            << "This may lead to unexpected behaviour as previous modifications "
+            << "will not be visible."
+            << endl;
+    }
 
 #   include "createTime.hpp"
     CML::instantList timeDirs = CML::timeSelector::select0(runTime, args);

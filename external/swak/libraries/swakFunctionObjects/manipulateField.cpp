@@ -48,9 +48,9 @@ CML::manipulateField::manipulateField
     if (!isA<fvMesh>(obr_))
     {
         active_=false;
-        WarningIn("manipulateField::manipulateField")
+        WarningInFunction
             << "Not a fvMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
     read(dict);
     write();
@@ -183,10 +183,10 @@ void CML::manipulateField::write()
         driver.parse(maskExpression_);
 
         if(!driver.isLogical()) {
-            FatalErrorIn("manipulateField::execute()")
+            FatalErrorInFunction
                 << maskExpression_ << " does not evaluate to a logical expression"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
 
         if(driver.resultIsTyp<volScalarField>(true)) {
@@ -221,11 +221,11 @@ void CML::manipulateField::write()
                     conditionField
                 );
             } else {
-                WarningIn("CML::manipulateField::execute()")
+                WarningInFunction
                     << "Expression '" << expression_
-                        << "' evaluated to an unsupported type "
-                        << driver.typ() << " that is incompatible with a mask defined on cells"
-                        << endl;
+                    << "' evaluated to an unsupported type "
+                    << driver.typ() << " that is incompatible with a mask defined on cells"
+                    << endl;
             }
         } else if(driver.resultIsTyp<surfaceScalarField>(true)) {
             surfaceScalarField conditionField(driver.getResult<surfaceScalarField>());
@@ -259,11 +259,11 @@ void CML::manipulateField::write()
                     conditionField
                 );
             } else {
-                WarningIn("CML::manipulateField::execute()")
+                WarningInFunction
                     << "Expression '" << expression_
-                        << "' evaluated to an unsupported type "
-                        << driver.typ() << " that is incompatible with a mask defined on faces"
-                        << endl;
+                    << "' evaluated to an unsupported type "
+                    << driver.typ() << " that is incompatible with a mask defined on faces"
+                    << endl;
             }
         } else if(driver.resultIsTyp<pointScalarField>(true)) {
             pointScalarField conditionField(driver.getResult<pointScalarField>());
@@ -302,17 +302,17 @@ void CML::manipulateField::write()
                     "points"
                 );
             } else {
-                WarningIn("CML::manipulateField::execute()")
+                WarningInFunction
                     << "Expression '" << expression_
-                        << "' evaluated to an unsupported type "
-                        << driver.typ() << " that is incompatible with a mask defined on faces"
-                        << endl;
+                    << "' evaluated to an unsupported type "
+                    << driver.typ() << " that is incompatible with a mask defined on faces"
+                    << endl;
             }
         } else {
-                WarningIn("CML::manipulateField::execute()")
+                WarningInFunction
                     << "Mask " << maskExpression_ << " evaluates to type "
-                        << driver.typ() << " which is an unsupported field type for logical"
-                        << endl;
+                    << driver.typ() << " which is an unsupported field type for logical"
+                    << endl;
         }
     }
 

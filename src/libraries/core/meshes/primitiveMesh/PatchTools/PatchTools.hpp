@@ -538,10 +538,7 @@ CML::PatchTools::edgeOwner
 
             if (edgeOwner[edgeI] == -1)
             {
-                FatalErrorIn
-                (
-                    "PatchTools::edgeOwner()"
-                )
+                FatalErrorInFunction
                     << "Edge " << edgeI << " vertices:" << edges[edgeI]
                     << " is used by faces " << nbrFaces
                     << " vertices:"
@@ -826,18 +823,7 @@ CML::PatchTools::markZone
                         }
                         else if (faceZone[nbrFacei] != currentZone)
                         {
-                            FatalErrorIn
-                            (
-                                "PatchTools::markZone"
-                                "("
-                                    "const PrimitivePatch<Face, FaceList, "
-                                        "PointField, PointType>& p,"
-                                    "const BoolListType& borderEdge,"
-                                    "const label facei,"
-                                    "const label currentZone,"
-                                    "labelList&  faceZone"
-                                ")"
-                            )
+                            FatalErrorInFunction
                                 << "Zones " << faceZone[nbrFacei]
                                 << " at face " << nbrFacei
                                 << " connects to zone " << currentZone
@@ -1222,7 +1208,7 @@ CML::PatchTools::sortedPointEdges
             nVisitedEdges++;
             if (nVisitedEdges > nPointEdges)
             {
-                WarningIn("CML::PatchTools::sortedPointEdges()")
+                WarningInFunction
                     << "Unable to order pointEdges as the face connections "
                     << "are not circular" << nl
                     << "    Original pointEdges = " << pEdges << nl
@@ -1242,7 +1228,7 @@ CML::PatchTools::sortedPointEdges
             {
                 if (findIndex(newEdgeList, pEdges[eI]) == -1)
                 {
-                    WarningIn("CML::PatchTools::sortedPointEdges()")
+                    WarningInFunction
                         << "Cannot find all original edges in the new list"
                         << nl
                         << "    Original pointEdges = " << pEdges << nl

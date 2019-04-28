@@ -146,7 +146,7 @@ public:
 
      bool writeData(Ostream&) const
         {
-            notImplemented("searchableCylinderWithDirections::writeData(Ostream&) const");
+            NotImplemented;
             return false;
         }
 };

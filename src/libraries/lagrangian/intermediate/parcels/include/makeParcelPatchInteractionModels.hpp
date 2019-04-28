@@ -29,19 +29,17 @@ License
 #include "NoInteraction.hpp"
 #include "Rebound.hpp"
 #include "StandardWallInteraction.hpp"
-#include "MultiInteraction.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParcelPatchInteractionModels(CloudType)                           \
-                                                                              \
-    makePatchInteractionModel(CloudType);                                     \
-                                                                              \
-    makePatchInteractionModelType(LocalInteraction, CloudType);               \
-    makePatchInteractionModelType(NoInteraction, CloudType);                  \
-    makePatchInteractionModelType(Rebound, CloudType);                        \
-    makePatchInteractionModelType(StandardWallInteraction, CloudType);        \
-    makePatchInteractionModelType(MultiInteraction, CloudType);
+#define makeParcelPatchInteractionModels(CloudType)                            \
+                                                                               \
+    makePatchInteractionModel(CloudType);                                      \
+                                                                               \
+    makePatchInteractionModelType(LocalInteraction, CloudType);                \
+    makePatchInteractionModelType(NoInteraction, CloudType);                   \
+    makePatchInteractionModelType(Rebound, CloudType);                         \
+    makePatchInteractionModelType(StandardWallInteraction, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

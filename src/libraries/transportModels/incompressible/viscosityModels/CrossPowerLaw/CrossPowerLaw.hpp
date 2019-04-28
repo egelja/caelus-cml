@@ -54,10 +54,11 @@ class CrossPowerLaw
 
         dictionary CrossPowerLawCoeffs_;
 
-        dimensionedScalar nu0_;
-        dimensionedScalar nuInf_;
-        dimensionedScalar m_;
+        dimensionedScalar mu0_;
+        dimensionedScalar muInf_;
+        dimensionedScalar lambda_;
         dimensionedScalar n_;
+        dimensionedScalar rhoRef_;
 
         volScalarField nu_;
 
@@ -99,10 +100,7 @@ public:
         }
 
         //- Correct the laminar viscosity
-        void correct()
-        {
-            nu_ = calcNu();
-        }
+        void correct();
 
         //- Read transportProperties dictionary
         bool read(const dictionary& viscosityProperties);

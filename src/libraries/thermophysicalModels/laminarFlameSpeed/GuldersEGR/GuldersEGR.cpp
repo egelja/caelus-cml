@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,7 +44,7 @@ namespace laminarFlameSpeedModels
 CML::laminarFlameSpeedModels::GuldersEGR::GuldersEGR
 (
     const dictionary& dict,
-    const hhuCombustionThermo& ct
+    const psiuReactionThermo& ct
 )
 :
     laminarFlameSpeed(dict, ct),
@@ -59,43 +59,7 @@ CML::laminarFlameSpeedModels::GuldersEGR::GuldersEGR
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::laminarFlameSpeedModels::GuldersEGR::~GuldersEGR()
-{}
-
-
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
-inline CML::scalar CML::laminarFlameSpeedModels::GuldersEGR::SuRef
-(
-    scalar phi
-) const
-{
-    if (phi > SMALL)
-    {
-        return W_*pow(phi, eta_)*exp(-xi_*sqr(phi - 1.075));
-    }
-    else
-    {
-        return 0.0;
-    }
-}
-
-
-inline CML::scalar CML::laminarFlameSpeedModels::GuldersEGR::Su0pTphi
-(
-    scalar p,
-    scalar Tu,
-    scalar phi,
-    scalar Yres
-) const
-{
-    static const scalar Tref = 300.0;
-    static const scalar pRef = 1.013e5;
-
-    return SuRef(phi)*pow((Tu/Tref), alpha_)*pow((p/pRef), beta_)*(1 - f_*Yres);
-}
 
 
 CML::tmp<CML::volScalarField>
@@ -116,7 +80,8 @@ CML::laminarFlameSpeedModels::GuldersEGR::Su0pTphi
                 p.time().timeName(),
                 p.db(),
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             p.mesh(),
             dimensionedScalar("Su0", dimVelocity, 0.0)
@@ -168,7 +133,8 @@ CML::laminarFlameSpeedModels::GuldersEGR::Su0pTphi
                 p.time().timeName(),
                 p.db(),
                 IOobject::NO_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             ),
             p.mesh(),
             dimensionedScalar("Su0", dimVelocity, 0.0)
@@ -206,35 +172,32 @@ CML::laminarFlameSpeedModels::GuldersEGR::operator()() const
 {
     if
     (
-        hhuCombustionThermo_.composition().contains("ft")
-     && hhuCombustionThermo_.composition().contains("egr")
+        psiuReactionThermo_.composition().contains("ft")
+     && psiuReactionThermo_.composition().contains("egr")
     )
     {
         return Su0pTphi
         (
-            hhuCombustionThermo_.p(),
-            hhuCombustionThermo_.Tu(),
+            psiuReactionThermo_.p(),
+            psiuReactionThermo_.Tu(),
             dimensionedScalar
             (
-                hhuCombustionThermo_.lookup("stoichiometricAirFuelMassRatio")
+                psiuReactionThermo_.lookup("stoichiometricAirFuelMassRatio")
             )/
             (
-                scalar(1)/hhuCombustionThermo_.composition().Y("ft")
+                scalar(1)/psiuReactionThermo_.composition().Y("ft")
               - scalar(1)
             ),
-            hhuCombustionThermo_.composition().Y("egr")
+            psiuReactionThermo_.composition().Y("egr")
         );
     }
     else
     {
         return Su0pTphi
         (
-            hhuCombustionThermo_.p(),
-            hhuCombustionThermo_.Tu(),
+            psiuReactionThermo_.p(),
+            psiuReactionThermo_.Tu(),
             equivalenceRatio_
         );
     }
 }
-
-
-// ************************************************************************* //

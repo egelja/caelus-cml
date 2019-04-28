@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,14 +18,16 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::thermoSingleLayer
+    CML::regionModels::surfaceFilmModels::thermoSingleLayer
 
 Description
     Thermodynamic form of single-cell layer surface film model
 
     Note: defining enthalpy as Cp(T - Tstd) - when using liquids from the
     thermophysical library, their enthalpies are calculated similarly, where
-    Tstd = 298.15 K
+    Tstd = 298.15K.  This is clearly non-conservative unless the heat-capacity
+    is constant and should be rewritten to use the standard thermodynamics
+    packages.
 
 SourceFiles
     thermoSingleLayer.C
@@ -48,6 +50,7 @@ namespace surfaceFilmModels
 {
 
 // Forward declaration of classes
+class filmViscosityModel;
 class heatTransferModel;
 class phaseChangeModel;
 class filmRadiationModel;
@@ -60,8 +63,6 @@ class thermoSingleLayer
 :
     public kinematicSingleLayer
 {
-private:
-
     // Private member functions
 
         //- Disallow default bitwise copy construct
@@ -83,40 +84,50 @@ protected:
             //- Reference to the SLGThermo
             const SLGThermo& thermo_;
 
-            // Single component
-
-                //- Id of component in thermo database
-                label liquidId_;
-
 
             // Fields
 
-                //- Specific heat capacity / [J/kg/K]
+                //- Specific heat capacity [J/kg/K]
                 volScalarField Cp_;
 
-                //- Thermal conductivity / [W/m/K]
+                //- Thermal conductivity [W/m/K]
                 volScalarField kappa_;
 
-                //- Temperature - mean / [K]
+                //- Temperature - mean [K]
                 volScalarField T_;
 
-                //- Temperature - surface / [K]
+                //- Temperature - surface [K]
                 volScalarField Ts_;
 
-                //- Temperature - wall / [K]
+                //- Temperature - wall [K]
                 volScalarField Tw_;
 
-                //- Sensible enthalpy / [J/kg]
+                //- Sensible enthalpy [J/kg]
                 volScalarField hs_;
 
 
             // Transfer fields - to the primary region
 
-                //- Film mass evolved via phase change
-                volScalarField primaryMassPCTrans_;
+                //- Film energy transfer
+                volScalarField primaryEnergyTrans_;
 
-                //- Film energy evolved via phase change
-                volScalarField primaryEnergyPCTrans_;
+
+        //- Threshold film thickness beyond which the film is considered 'wet'
+        scalar deltaWet_;
+
+
+        // Hyprophilic/phobic properties
+
+            //- Activation flag
+            bool hydrophilic_;
+
+            //- Length scale applied to deltaWet_ to determine when a wet
+            //  surface becomes dry, typically 0.5
+            scalar hydrophilicDryScale_;
+
+            //- Length scale applied to deltaWet_ to determine when a dry
+            //  surface becomes wet, typically 0.001
+            scalar hydrophilicWetScale_;
 
 
         // Source term fields
@@ -125,28 +136,31 @@ protected:
             // Note: need boundary value mapped from primary region, and then
             // pushed into the patch internal field
 
-                //- Energy / [J/m2/s]
+                //- Energy [J/m2/s]
                 volScalarField hsSp_;
 
 
             // Primary region - registered to the primary region mesh
             // Internal use only - not read-in
 
-                //- Energy / [J/m2/s]
+                //- Energy [J/m2/s]
                 volScalarField hsSpPrimary_;
 
 
         // Fields mapped from primary region - registered to the film region
         // Note: need both boundary AND patch internal fields to be mapped
 
-            //- Temperature / [K]
+            //- Temperature [K]
             volScalarField TPrimary_;
 
-            //- List of specie mass fractions / [0-1]
+            //- List of specie mass fractions [0-1]
             PtrList<volScalarField> YPrimary_;
 
 
         // Sub-models
+
+            //- Viscosity model
+            autoPtr<filmViscosityModel> viscosity_;
 
             //- Heat transfer coefficient between film surface and primary
             //  region [W/m2/K]
@@ -161,6 +175,14 @@ protected:
             //- Radiation
             autoPtr<filmRadiationModel> radiation_;
 
+
+        // Limits
+
+            //- Minimum temperature limit (optional)
+            scalar Tmin_;
+
+            //- Maximum temperature limit (optional)
+            scalar Tmax_;
 
 
     // Protected member functions
@@ -185,6 +207,9 @@ protected:
 
         //- Transfer source fields from the primary region to the film region
         virtual void transferPrimaryRegionSourceFields();
+
+        //- Correct film coverage field
+        virtual void correctAlpha();
 
         //- Update the film sub-models
         virtual void updateSubmodels();
@@ -213,6 +238,7 @@ public:
             const word& modelType,
             const fvMesh& mesh,
             const dimensionedVector& g,
+            const word& regionType,
             const bool readFields = true
         );
 
@@ -227,11 +253,6 @@ public:
 
             //- Return const reference to the SLGThermo object
             inline const SLGThermo& thermo() const;
-
-            // Single component
-
-                //- Return the Id of component in thermo database
-                inline label liquidId() const;
 
 
             // Fields
@@ -255,13 +276,6 @@ public:
                 virtual const volScalarField& hs() const;
 
 
-
-            // Transfer fields - to the primary region
-
-                //- Return mass transfer source - Eulerian phase only
-                virtual tmp<volScalarField> primaryMassTrans() const;
-
-
             // Helper functions
 
                 //- Return sensible enthalpy as a function of temperature
@@ -269,7 +283,7 @@ public:
                 inline tmp<scalarField> hs
                 (
                     const scalarField& T,
-                    const label patchI
+                    const label patchi
                 ) const;
 
                 //- Return sensible enthalpy as a function of temperature
@@ -290,8 +304,8 @@ public:
             //- External hook to add sources to the film
             virtual void addSources
             (
-                const label patchI,            // patchI on primary region
-                const label faceI,             // faceI of patchI
+                const label patchi,            // patchi on primary region
+                const label facei,             // facei of patchi
                 const scalar massSource,       // [kg]
                 const vector& momentumSource,  // [kg.m/s] (tangential momentum)
                 const scalar pressureSource,   // [kg.m/s] (normal momentum)
@@ -303,22 +317,22 @@ public:
 
             // Film region
 
-                //- Energy / [J/m2/s]
+                //- Energy [J/m2/s]
                 inline const volScalarField& hsSp() const;
 
 
             // Primary region
 
-                //- Energy / [J/m2/s]
+                //- Energy [J/m2/s]
                 inline const volScalarField& hsSpPrimary() const;
 
 
         // Fields mapped from the primary region
 
-            //- Temperature / [K]
+            //- Temperature [K]
             inline const volScalarField& TPrimary() const;
 
-            //- Specie mass fractions / [0-1]
+            //- Specie mass fractions [0-1]
             inline const PtrList<volScalarField>& YPrimary() const;
 
 
@@ -336,6 +350,15 @@ public:
 
             //- Return const access to the radiation model
             inline const filmRadiationModel& radiation() const;
+
+
+        // Derived fields (calculated on-the-fly)
+
+            //- Return the convective heat energy from film to wall
+            inline tmp<scalarField> Qconvw(const label patchi) const;
+
+            //- Return the convective heat energy from primary region to film
+            inline tmp<scalarField> Qconvp(const label patchi) const;
 
 
         // Evolution
@@ -367,7 +390,7 @@ public:
        // I-O
 
             //- Provide some feedback
-            virtual void info() const;
+            virtual void info();
 };
 
 

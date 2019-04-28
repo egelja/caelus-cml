@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,6 +39,7 @@ SourceFiles
 #include "geometricSurfacePatchList.hpp"
 #include "surfacePatchList.hpp"
 #include "triFaceList.hpp"
+#include "triSurfaceFieldsFwd.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,6 +48,13 @@ namespace CML
 
 class Time;
 class IFstream;
+
+// Forward declaration of friend functions and operators
+
+class triSurface;
+
+Ostream& operator<<(Ostream&, const triSurface&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class triSurface Declaration
@@ -187,7 +195,7 @@ class triSurface
             const label defaultRegion = 0
         );
 
-        //- helper function to print triangle info
+        //- Helper function to print triangle info
         static void printTriangle
         (
             Ostream&,
@@ -196,8 +204,9 @@ class triSurface
             const pointField&
         );
 
-        //- read non-comment line
+        //- Read non-comment line
         static string getLineNoComment(IFstream&);
+
 
 protected:
 
@@ -214,6 +223,7 @@ protected:
         {
             return static_cast<List<Face>&>(*this);
         }
+
 
 public:
 
@@ -252,7 +262,7 @@ public:
             List<labelledTri>&,
             const geometricSurfacePatchList&,
             pointField&,
-            const bool reUse
+            const bool reuse
         );
 
         //- Construct from triangles, points. Set patchnames to default.
@@ -273,7 +283,6 @@ public:
 
         //- Construct as copy
         triSurface(const triSurface&);
-
 
 
     //- Destructor
@@ -312,6 +321,7 @@ public:
             //  If >2 neighbours: undetermined.
             const labelList& edgeOwner() const;
 
+
         // Edit
 
             //- Move points
@@ -330,12 +340,12 @@ public:
             void cleanup(const bool verbose);
 
             //- Fill faceZone with currentZone for every face reachable
-            //  from faceI without crossing edge marked in borderEdge.
+            //  from facei without crossing edge marked in borderEdge.
             //  Note: faceZone has to be sized nFaces before calling this fun.
             void markZone
             (
                 const boolList& borderEdge,
-                const label faceI,
+                const label facei,
                 const label currentZone,
                 labelList& faceZone
             ) const;
@@ -368,6 +378,33 @@ public:
                 labelList& pointMap,
                 labelList& faceMap
             ) const;
+
+
+        // Conversion
+
+            //- Return the list of triangles as a faceList
+            faceList faces() const;
+
+
+        // Analysis
+
+            scalar pointNormalWeight
+            (
+                const triFace& f,
+                const label pi,
+                const vector& fa,
+                const pointField& points
+            ) const;
+
+            //- Return the surface point normals
+            tmp<vectorField> pointNormals2() const;
+
+            //- Return the curvature of surface at the points
+            tmp<triSurfacePointScalarField> pointCoordSys() const;
+
+            //- Return the curvature of surface at the points
+            tmp<triSurfacePointScalarField> curvature() const;
+
 
         // Write
 

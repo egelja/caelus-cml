@@ -34,7 +34,7 @@ void CML::enrichedPatch::calcMasterPointFaces() const
 {
     if (masterPointFacesPtr_)
     {
-        FatalErrorIn("void enrichedPatch::calcMasterPointFaces() const")
+        FatalErrorInFunction
             << "Master point face addressing already calculated."
             << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,11 +72,8 @@ CML::Istream& CML::ITstream::read(token& t)
     {
         if (eof())
         {
-            FatalIOErrorIn
-            (
-                "ITstream::read(token&)",
-                *this
-            )   << "attempt to read beyond EOF"
+            FatalIOErrorInFunction(*this)
+                << "attempt to read beyond EOF"
                 << exit(FatalIOError);
 
             setBad();
@@ -104,49 +101,49 @@ CML::Istream& CML::ITstream::read(token& t)
 
 CML::Istream& CML::ITstream::read(char&)
 {
-    notImplemented("Istream& ITstream::read(char&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(word&)
 {
-    notImplemented("Istream& ITstream::read(word&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(string&)
 {
-    notImplemented("Istream& ITstream::read(string&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(label&)
 {
-    notImplemented("Istream& ITstream::read(label&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(floatScalar&)
 {
-    notImplemented("Istream& ITstream::read(floatScalar&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(doubleScalar&)
 {
-    notImplemented("Istream& ITstream::read(doubleScalar&)");
+    NotImplemented;
     return *this;
 }
 
 
 CML::Istream& CML::ITstream::read(char*, std::streamsize)
 {
-    notImplemented("Istream& ITstream::read(char*, std::streamsize)");
+    NotImplemented;
     return *this;
 }
 

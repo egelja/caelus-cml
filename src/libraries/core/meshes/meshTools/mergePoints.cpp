@@ -25,13 +25,12 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool CML::mergePoints
+CML::label CML::mergePoints
 (
     const UList<point>& points,
     const scalar mergeTol,
     const bool verbose,
     labelList& pointMap,
-    List<point>& newPoints,
     const point& origin
 )
 {
@@ -49,12 +48,9 @@ bool CML::mergePoints
     pointMap.setSize(points.size());
     pointMap = -1;
 
-    // Storage for merged points
-    newPoints.setSize(points.size());
-
     if (points.empty())
     {
-        return false;
+        return points.size();
     }
 
     // We're comparing distance squared to origin first.
@@ -66,88 +62,138 @@ bool CML::mergePoints
     //     x^2+y^2+z^2 + 2*mergeTol*(x+z+y) + mergeTol^2*...
     // so the difference will be 2*mergeTol*(x+y+z)
 
-    const scalar mergeTolSqr = sqr(mergeTol);
+    const scalar mergeTolSqr = CML::sqr(scalar(mergeTol));
 
     // Sort points by magSqr
     const pointField d(points - compareOrigin);
-    SortableList<scalar> sortedMagSqr(magSqr(d));
-    scalarField sortedTol(points.size());
-    forAll(sortedMagSqr.indices(), sortI)
+
+    List<scalar> magSqrD(d.size());
+    forAll(d, pointi)
     {
-        const point& pt = d[sortedMagSqr.indices()[sortI]];
+        magSqrD[pointi] = magSqr(d[pointi]);
+    }
+    labelList order;
+    sortedOrder(magSqrD, order);
+
+
+    Field<scalar> sortedTol(points.size());
+    forAll(order, sortI)
+    {
+        label pointi = order[sortI];
+
+        // Convert to scalar precision
+        const point pt
+        (
+            scalar(d[pointi].x()),
+            scalar(d[pointi].y()),
+            scalar(d[pointi].z())
+        );
         sortedTol[sortI] = 2*mergeTol*(mag(pt.x())+mag(pt.y())+mag(pt.z()));
     }
 
-    bool hasMerged = false;
-
-    label newPointI = 0;
+    label newPointi = 0;
 
 
     // Handle 0th point separately (is always unique)
-    label pointI = sortedMagSqr.indices()[0];
-    pointMap[pointI] = newPointI;
-    newPoints[newPointI++] = points[pointI];
+    label pointi = order[0];
+    pointMap[pointi] = newPointi++;
 
 
-    for (label sortI = 1; sortI < sortedMagSqr.size(); sortI++)
+    for (label sortI = 1; sortI < order.size(); sortI++)
     {
         // Get original point index
-        label pointI = sortedMagSqr.indices()[sortI];
+        label pointi = order[sortI];
+        const scalar mag2 = magSqrD[order[sortI]];
+        // Convert to scalar precision
+        const point pt
+        (
+            scalar(points[pointi].x()),
+            scalar(points[pointi].y()),
+            scalar(points[pointi].z())
+        );
+
 
         // Compare to previous points to find equal one.
-        label equalPointI = -1;
+        label equalPointi = -1;
 
         for
         (
             label prevSortI = sortI - 1;
             prevSortI >= 0
-         && mag
-            (
-                sortedMagSqr[prevSortI]
-             -  sortedMagSqr[sortI]
-            ) <= sortedTol[sortI];
+         && (mag(magSqrD[order[prevSortI]] - mag2) <= sortedTol[sortI]);
             prevSortI--
         )
         {
-            label prevPointI = sortedMagSqr.indices()[prevSortI];
+            label prevPointi = order[prevSortI];
+            const point prevPt
+            (
+                scalar(points[prevPointi].x()),
+                scalar(points[prevPointi].y()),
+                scalar(points[prevPointi].z())
+            );
 
-            if (magSqr(points[pointI] - points[prevPointI]) <= mergeTolSqr)
+            if (magSqr(pt - prevPt) <= mergeTolSqr)
             {
                 // Found match.
-                equalPointI = prevPointI;
+                equalPointi = prevPointi;
 
                 break;
             }
         }
 
 
-        if (equalPointI != -1)
+        if (equalPointi != -1)
         {
-            // Same coordinate as equalPointI. Map to same new point.
-            pointMap[pointI] = pointMap[equalPointI];
-
-            hasMerged = true;
+            // Same coordinate as equalPointi. Map to same new point.
+            pointMap[pointi] = pointMap[equalPointi];
 
             if (verbose)
             {
                 Pout<< "CML::mergePoints : Merging points "
-                    << pointI << " and " << equalPointI
-                    << " with coordinates:" << points[pointI]
-                    << " and " << points[equalPointI]
+                    << pointi << " and " << equalPointi
+                    << " with coordinates:" << points[pointi]
+                    << " and " << points[equalPointi]
                     << endl;
             }
         }
         else
         {
             // Differs. Store new point.
-            pointMap[pointI] = newPointI;
-            newPoints[newPointI++] = points[pointI];
+            pointMap[pointi] = newPointi++;
         }
     }
 
-    newPoints.setSize(newPointI);
+    return newPointi;
+}
 
-    return hasMerged;
+
+
+bool CML::mergePoints
+(
+    const UList<point>& points,
+    const scalar mergeTol,
+    const bool verbose,
+    labelList& pointMap,
+    List<point>& newPoints,
+    const point& origin
+)
+{
+    label nUnique = mergePoints
+    (
+        points,
+        mergeTol,
+        verbose,
+        pointMap,
+        origin
+    );
+
+    newPoints.setSize(nUnique);
+    forAll(pointMap, pointi)
+    {
+        newPoints[pointMap[pointi]] = points[pointi];
+    }
+
+    return (nUnique != points.size());
 }
 
 

@@ -46,10 +46,8 @@ void topologicalCleaner::checkInvalidConnectionsForVerticesCells
     {
         return;
 
-        FatalErrorIn
-        (
-            "void topologicalCleaner::checkInvalidConnectionsForVerticesCells()"
-        ) << "This does not run in parallel!" << exit(FatalError);
+        FatalErrorInFunction
+          << "This does not run in parallel!" << exit(FatalError);
     }
 
     polyMeshGenModifier meshModifier(mesh_);

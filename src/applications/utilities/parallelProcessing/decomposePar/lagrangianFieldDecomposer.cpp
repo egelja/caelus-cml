@@ -39,10 +39,17 @@ CML::lagrangianFieldDecomposer::lagrangianFieldDecomposer
 )
 :
     procMesh_(procMesh),
-    positions_(procMesh, cloudName, false),
+    positions_(procMesh, cloudName, IDLList<passiveParticle>()),
     particleIndices_(lagrangianPositions.size())
 {
     label pi = 0;
+
+    labelList decodedProcFaceAddressing(faceProcAddressing.size());
+
+    forAll(faceProcAddressing, i)
+    {
+        decodedProcFaceAddressing[i] = mag(faceProcAddressing[i]) - 1;
+    }
 
     forAll(cellProcAddressing, procCelli)
     {
@@ -57,14 +64,28 @@ CML::lagrangianFieldDecomposer::lagrangianFieldDecomposer
                 const indexedParticle& ppi = *iter();
                 particleIndices_[pi++] = ppi.index();
 
+                label mappedTetFace = findIndex
+                (
+                    decodedProcFaceAddressing,
+                    ppi.tetFace()
+                );
+
+                if (mappedTetFace == -1)
+                {
+                    FatalErrorInFunction
+                        << "Face lookup failure." << nl
+                        << abort(FatalError);
+                }
+
                 positions_.append
                 (
                     new passiveParticle
                     (
                         procMesh,
-                        ppi.position(),
+                        ppi.coordinates(),
                         procCelli,
-                        false
+                        mappedTetFace,
+                        ppi.procTetPt(procMesh, procCelli, mappedTetFace)
                     )
                 );
             }

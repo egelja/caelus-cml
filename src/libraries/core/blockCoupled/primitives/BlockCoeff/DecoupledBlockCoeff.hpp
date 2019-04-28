@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak All rights reserved
 Copyright (C) 2015   V. Vukcevic
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -264,11 +265,8 @@ DecoupledBlockCoeff<Type>::toScalar()
         // Debug check: demotion
         if (linearCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "DecoupledBlockCoeff<Type>::scalarType& "
-                "DecoupledBlockCoeff<Type>::toScalar()"
-            )   << "Detected demotion to scalar.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to scalar.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -303,8 +301,8 @@ DecoupledBlockCoeff<Type>::toLinear()
 template<class Type>
 DecoupledBlockCoeff<Type>::DecoupledBlockCoeff()
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr)
 {}
 
 
@@ -314,8 +312,8 @@ DecoupledBlockCoeff<Type>::DecoupledBlockCoeff
     const DecoupledBlockCoeff<Type>& f
 )
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr)
 {
     if (f.scalarCoeffPtr_)
     {
@@ -331,8 +329,8 @@ DecoupledBlockCoeff<Type>::DecoupledBlockCoeff
 template<class Type>
 DecoupledBlockCoeff<Type>::DecoupledBlockCoeff(Istream& is)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr)
 {
     // Read keyword and pick up allocated field
     word key(is);
@@ -362,11 +360,8 @@ DecoupledBlockCoeff<Type>::DecoupledBlockCoeff(Istream& is)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "DecoupledBlockCoeff<Type>::DecoupledBlockCoeff(Istream& is)",
-            is
-        )   << "invalid keyword while reading: " << key
+        FatalIOErrorInFunction(is)
+            << "invalid keyword while reading: " << key
             << exit(FatalIOError);
     }
 }
@@ -426,10 +421,8 @@ void DecoupledBlockCoeff<Type>::checkActive() const
 
     if (nActive > 1)
     {
-        FatalErrorIn
-        (
-            "void CML::DecoupledBlockCoeff<Type>::checkActive() const"
-        )   << "Activation/deactivation error.  nActive = " << nActive
+        FatalErrorInFunction
+            << "Activation/deactivation error.  nActive = " << nActive
             << abort(FatalError);
     }
 }
@@ -441,11 +434,8 @@ DecoupledBlockCoeff<Type>::asScalar() const
 {
     if (not scalarCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledBlockCoeff<Type>::scalarType& "
-            "DecoupledBlockCoeff<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -461,11 +451,8 @@ DecoupledBlockCoeff<Type>::asLinear() const
 {
     if (not linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledBlockCoeff<Type>::linearType& "
-            "DecoupledBlockCoeff<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -481,11 +468,8 @@ DecoupledBlockCoeff<Type>::asScalar()
 {
     if (linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledBlockCoeff<Type>::scalarType& "
-            "DecoupledBlockCoeff<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -527,11 +511,8 @@ DecoupledBlockCoeff<Type>::component(const direction dir) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "tmp<DecoupledBlockCoeff<Type>::scalarType>"
-            "DecoupledBlockCoeff<Type>::component(const direction dir) const"
-        )   << " not allocated."
+        FatalErrorInFunction
+            << " not allocated."
             << abort(FatalError);
     }
 
@@ -549,11 +530,8 @@ void DecoupledBlockCoeff<Type>::operator=
 {
     if (this == &f)
     {
-        FatalErrorIn
-        (
-            "DecoupledBlockCoeff<Type>::operator=("
-            "const DecoupledBlockCoeff<Type>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 

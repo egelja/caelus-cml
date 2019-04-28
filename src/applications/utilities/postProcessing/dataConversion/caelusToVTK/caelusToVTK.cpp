@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,73 +23,73 @@ Application
 Description
     Legacy VTK file format writer.
 
-    - handles volScalar, volVector, pointScalar, pointVector, surfaceScalar
+    - Handles volFields, pointFields, surfaceScalarField, surfaceVectorField
       fields.
-    - mesh topo changes.
-    - both ascii and binary.
-    - single time step writing.
-    - write subset only.
-    - automatic decomposition of cells; polygons on boundary undecomposed since
+    - Mesh topo changes.
+    - Both ascii and binary.
+    - Single time step writing.
+    - Write subset only.
+    - Automatic decomposition of cells; polygons on boundary undecomposed since
       handled by vtk.
 
 Usage
+    \b foamToVTK [OPTION]
 
-    - caelusToVTK [OPTION]
+    Options:
+      - \par -ascii
+        Write VTK data in ASCII format instead of binary.
 
-    \param -ascii \n
-    Write VTK data in ASCII format instead of binary.
+      - \par -mesh \<name\>
+        Use a different mesh name (instead of -region)
 
-    \param -mesh \<name\>\n
-    Use a different mesh name (instead of -region)
+      - \par -fields \<fields\>
+        Convert selected fields only. For example,
+        \verbatim
+          -fields "( p T U )"
+        \endverbatim
+        The quoting is required to avoid shell expansions and to pass the
+        information as a single argument.
 
-    \param -fields \<fields\>\n
-    Convert selected fields only. For example,
-    \verbatim
-         -fields "( p T U )"
-    \endverbatim
-    The quoting is required to avoid shell expansions and to pass the
-    information as a single argument.
+      - \par -surfaceFields
+        Write surfaceScalarFields (e.g., phi)
 
-    \param -surfaceFields \n
-    Write surfaceScalarFields (e.g., phi)
+      - \par -cellSet \<name\>
+      - \par -faceSet \<name\>
+      - \par -pointSet \<name\>
+        Restrict conversion to the cellSet, faceSet or pointSet.
 
-    \param -cellSet \<name\>\n
-    \param -faceSet \<name\>\n
-    \param -pointSet \<name\>\n
-    Restrict conversion to the cellSet, faceSet or pointSet.
+      - \par -nearCellValue
+        Output cell value on patches instead of patch value itself
 
-    \param -nearCellValue \n
-    Output cell value on patches instead of patch value itself
+      - \par -noInternal
+        Do not generate file for mesh, only for patches
 
-    \param -noInternal \n
-    Do not generate file for mesh, only for patches
+      - \par -noPointValues
+        No pointFields
 
-    \param -noPointValues \n
-    No pointFields
+      - \par -noFaceZones
+        No faceZones
 
-    \param -noFaceZones \n
-    No faceZones
+      - \par -noLinks
+        (in parallel) do not link processor files to master
 
-    \param -noLinks \n
-    (in parallel) do not link processor files to master
+      - \par poly
+        write polyhedral cells without tet/pyramid decomposition
 
-    \param poly \n
-    write polyhedral cells without tet/pyramid decomposition
+      - \par -allPatches
+        Combine all patches into a single file
 
-    \param -allPatches \n
-    Combine all patches into a single file
+      - \par -excludePatches \<patchNames\>
+        Specify patches (wildcards) to exclude. For example,
+        \verbatim
+          -excludePatches '( inlet_1 inlet_2 "proc.*")'
+        \endverbatim
+        The quoting is required to avoid shell expansions and to pass the
+        information as a single argument. The double quotes denote a regular
+        expression.
 
-    \param -excludePatches \<patchNames\>\n
-    Specify patches (wildcards) to exclude. For example,
-    \verbatim
-         -excludePatches '( inlet_1 inlet_2 "proc.*")'
-    \endverbatim
-    The quoting is required to avoid shell expansions and to pass the
-    information as a single argument. The double quotes denote a regular
-    expression.
-
-    \param -useTimeName \n
-    use the time index in the VTK file name instead of the time index
+      - \par -useTimeName
+        use the time index in the VTK file name instead of the time index
 
 Note
     mesh subset is handled by vtkMesh. Slight inconsistency in
@@ -101,7 +101,7 @@ Note
     whole-mesh values onto the subset patch.
 
 Note
-    new file format: \n
+    \par new file format:
     no automatic timestep recognition.
     However can have .pvd file format which refers to time simulation
     if XML *.vtu files are available:
@@ -144,7 +144,7 @@ Note
 #include "stringListOps.hpp"
 
 #include "vtkMesh.hpp"
-#include "readFields.hpp"
+#include "readFields_vtk.hpp"
 #include "writeFuns.hpp"
 
 #include "internalWriter.hpp"
@@ -320,25 +320,26 @@ int main(int argc, char *argv[])
     const bool doWriteInternal = !args.optionFound("noInternal");
     const bool doFaceZones     = !args.optionFound("noFaceZones");
     const bool doLinks         = !args.optionFound("noLinks");
-    const bool binary          = !args.optionFound("ascii");
+    bool binary                = !args.optionFound("ascii");
     const bool useTimeName     = args.optionFound("useTimeName");
 
-    // decomposition of polyhedral cells into tets/pyramids cells
+    // Decomposition of polyhedral cells into tets/pyramids cells
     vtkTopo::decomposePoly     = !args.optionFound("poly");
 
     if (binary && (sizeof(floatScalar) != 4 || sizeof(label) != 4))
     {
-        FatalErrorIn(args.executable())
-            << "floatScalar and/or label are not 4 bytes in size" << nl
-            << "Hence cannot use binary VTK format. Please use -ascii"
-            << exit(FatalError);
+        WarningInFunction
+            << "Using ASCII rather than binary VTK format because "
+               "floatScalar and/or label are not 4 bytes in size."
+            << nl << endl;
+        binary = false;
     }
 
     const bool nearCellValue = args.optionFound("nearCellValue");
 
     if (nearCellValue)
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Using neighbouring cell value instead of patch value"
             << nl << endl;
     }
@@ -347,7 +348,7 @@ int main(int argc, char *argv[])
 
     if (noPointValues)
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Outputting cell values only" << nl << endl;
     }
 
@@ -391,6 +392,7 @@ int main(int argc, char *argv[])
 
     // VTK/ directory in the case
     fileName fvPath(runTime.path()/"VTK");
+
     // Directory of mesh (region0 gets filtered out)
     fileName regionPrefix = "";
 
@@ -425,7 +427,7 @@ int main(int argc, char *argv[])
     mkDir(fvPath);
 
 
-    // mesh wrapper; does subsetting and decomposition
+    // Mesh wrapper; does subsetting and decomposition
     vtkMesh vMesh(mesh, cellSetName);
 
 
@@ -676,9 +678,7 @@ int main(int argc, char *argv[])
 
         if (doWriteInternal)
         {
-            //
             // Create file and write header
-            //
             fileName vtkFileName
             (
                 fvPath/vtkName
@@ -887,9 +887,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            forAll(patches, patchI)
+            forAll(patches, patchi)
             {
-                const polyPatch& pp = patches[patchI];
+                const polyPatch& pp = patches[patchi];
 
                 if (!findStrings(excludePatches, pp.name()))
                 {
@@ -922,7 +922,7 @@ int main(int argc, char *argv[])
                         binary,
                         nearCellValue,
                         patchFileName,
-                        labelList(1, patchI)
+                        labelList(1, patchi)
                     );
 
                     if (!isA<emptyPolyPatch>(pp))
@@ -1046,7 +1046,6 @@ int main(int argc, char *argv[])
 
                 surfaceMeshWriter writer
                 (
-                    vMesh,
                     binary,
                     pp,
                     fz.name(),
@@ -1232,7 +1231,7 @@ int main(int argc, char *argv[])
                     );
                     if (system(cmd.c_str()) == -1)
                     {
-                        WarningIn(args.executable())
+                        WarningInFunction
                             << "Could not execute command " << cmd << endl;
                     }
                 }

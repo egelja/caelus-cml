@@ -90,17 +90,7 @@ public:
             Ostream&
         ) const
         {
-            notImplemented
-            (
-                "jplotSetWriter<Type>::write\n"
-                "(\n"
-                "    const bool,\n"
-                "    const PtrList<coordSet>&,\n"
-                "    const wordList&,\n"
-                "    const List<List<Field<Type> > >&,\n"
-                "    Ostream&\n"
-                ") const"
-            );
+            NotImplemented;
         }
 };
 

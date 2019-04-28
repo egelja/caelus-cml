@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright Niels G. Jacobsen, Deltares.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -57,6 +58,11 @@ namespace CML
 {
 
 class fvMesh;
+class jjc2014Zone;
+
+// Forward declaration of friend functions and operators
+Ostream& operator<<(Ostream&, const jjc2014Zone&);
+
 
 /*---------------------------------------------------------------------------*\
                         Class jjc2014Zone Declaration
@@ -141,8 +147,8 @@ public:
         //- Return clone
         autoPtr<jjc2014Zone> clone() const
         {
-            notImplemented("autoPtr<jjc2014Zone> clone() const");
-            return autoPtr<jjc2014Zone>(NULL);
+            NotImplemented;
+            return autoPtr<jjc2014Zone>(nullptr);
         }
 
         //- Return pointer to new jjc2014Zone created on freestore from Istream

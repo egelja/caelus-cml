@@ -248,7 +248,7 @@ void CML::fvMeshAdder::MapVolField
             newPatchi++
         )
         {
-            bfld.set(newPatchi, NULL);
+            bfld.set(newPatchi, nullptr);
         }
 
 
@@ -453,7 +453,7 @@ void CML::fvMeshAdder::MapVolFields
         }
         else
         {
-            WarningIn("fvMeshAdder::MapVolFields(..)")
+            WarningInFunction
                 << "Not mapping field " << fld.name()
                 << " since not present on mesh to add"
                 << endl;
@@ -568,7 +568,7 @@ void CML::fvMeshAdder::MapSurfaceField
             newPatchi++
         )
         {
-            bfld.set(newPatchi, NULL);
+            bfld.set(newPatchi, nullptr);
         }
 
 
@@ -764,7 +764,7 @@ void CML::fvMeshAdder::MapSurfaceFields
         }
         else
         {
-            WarningIn("fvMeshAdder::MapSurfaceFields(..)")
+            WarningInFunction
                 << "Not mapping field " << fld.name()
                 << " since not present on mesh to add"
                 << endl;
@@ -840,7 +840,7 @@ void CML::fvMeshAdder::MapDimFields
         }
         else
         {
-            WarningIn("fvMeshAdder::MapDimFields(..)")
+            WarningInFunction
                 << "Not mapping field " << fld.name()
                 << " since not present on mesh to add"
                 << endl;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 - 2016 Applied CCM
+Copyright (C) 2014 - 2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -105,7 +105,7 @@ public:
             order_ = readScalar(schemeData);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, Istream& is)", schemeData)
+                FatalIOErrorInFunction(schemeData)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);
@@ -142,7 +142,7 @@ public:
             order_ = readScalar(schemeData);
             if (order_ < 0 || order_ > 1)
             {
-                FatalIOErrorIn("linearUpwindBJ(fvMesh const&, surfaceScalarField const& faceFlux, Istream& is)", schemeData)
+                FatalIOErrorInFunction(schemeData)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

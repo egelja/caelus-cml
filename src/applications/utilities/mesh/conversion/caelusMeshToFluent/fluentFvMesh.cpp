@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -245,7 +245,7 @@ void CML::fluentFvMesh::writeFluentMesh() const
             {
                 hasWarned = true;
 
-                WarningIn("void fluentFvMesh::writeFluentMesh() const")
+                WarningInFunction
                     << "caelusMeshToFluent: cell shape for cell "
                     << cellI << " only supported by Fluent polyhedral meshes."
                     << nl

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -55,7 +55,7 @@ autoPtr<interpolationWeights> interpolationWeights::New
 {
     if (debug)
     {
-        InfoIn("interpolationWeights::New")
+        InfoInFunction
             << "Selecting interpolationWeights "
             << type << endl;
     }
@@ -65,11 +65,8 @@ autoPtr<interpolationWeights> interpolationWeights::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "interpolationWeights::New(const word&, "
-            "const scalarField&)"
-        )   << "Unknown interpolationWeights type "
+        FatalErrorInFunction
+            << "Unknown interpolationWeights type "
             << type
             << endl << endl
             << "Valid interpolationWeights types are :" << endl

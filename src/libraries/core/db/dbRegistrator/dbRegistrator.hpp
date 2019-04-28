@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 David L. F. Gaden
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -112,7 +112,7 @@ CML::dbRegistrator<Type>::dbRegistrator(IOobject const& io ) : regIOobject(io)
      || (io.writeOpt() != IOobject::NO_WRITE)
     )
     {
-        FatalErrorIn("dbRegistrator<Type>::dbRegistrator")
+        FatalErrorInFunction
             << "dbRegistrator can only be NO_READ, NO_WRITE."
             << abort(FatalError);
     }
@@ -133,7 +133,7 @@ template <typename Type> CML::dbRegistrator<Type>::dbRegistrator
      || (io.writeOpt() != IOobject::NO_WRITE)
     )
     {
-        FatalErrorIn("dbRegistrator<Type>::dbRegistrator")
+        FatalErrorInFunction
             << "dbRegistrator can only be NO_READ, NO_WRITE."
             << abort(FatalError);
     }
@@ -156,10 +156,7 @@ Type const& CML::dbRegistrator<Type>::operator()() const
 {
     if (!typePtr_)
     {
-        FatalErrorIn
-        (
-            "dbRegistrator<Type>::operator()"
-        )
+        FatalErrorInFunction
             << "Attempting to derefence a null typePtr - use dbRegistrator::set"
             << "first."
             << abort(FatalError);

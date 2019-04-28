@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -219,10 +219,8 @@ CML::autoPtr< CML::writer<Type> > CML::writer<Type>::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "writer::New(const word&)"
-        )   << "Unknown write type "
+        FatalErrorInFunction
+            << "Unknown write type "
             << writeType << nl << nl
             << "Valid write types : " << endl
             << wordConstructorTablePtr_->sortedToc()

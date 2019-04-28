@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ bool CML::triSurface::readOFF(const fileName& OFFfileName)
 
     if (!OFFfile.good())
     {
-        FatalErrorIn("triSurface::readOFF(const fileName&)")
+        FatalErrorInFunction
             << "Cannot read file " << OFFfileName
             << exit(FatalError);
     }
@@ -43,7 +43,7 @@ bool CML::triSurface::readOFF(const fileName& OFFfileName)
     string hdr = getLineNoComment(OFFfile);
     if (hdr != "OFF")
     {
-        FatalErrorIn("triSurface::readOFF(const fileName&)")
+        FatalErrorInFunction
             << "OFF file " << OFFfileName
             << " does not start with 'OFF'"
             << exit(FatalError);

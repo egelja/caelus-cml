@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,7 +84,7 @@ CML::label CML::walkPatch::getNeighbour
 
     if (nbrEdgeI == -1)
     {
-        FatalErrorIn("getNeighbour")
+        FatalErrorInFunction
             << "Did not find edge on face " << faceI << " that uses vertices"
             << v0 << " and " << v1 << abort(FatalError);
     }
@@ -111,7 +111,7 @@ CML::label CML::walkPatch::getNeighbour
     }
     else
     {
-        FatalErrorIn("getNeighbour")
+        FatalErrorInFunction
             << "Illegal surface on patch. Face " << faceI
             << " at vertices " << v0 << ',' << v1
             << " has fewer than 1 or more than 2 neighbours"

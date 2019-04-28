@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -167,7 +167,7 @@ void CML::scotchDecomp::check(const int retVal, const char* str)
 {
     if (retVal)
     {
-        FatalErrorIn("scotchDecomp::decompose(..)")
+        FatalErrorInFunction
             << "Call to scotch routine " << str << " failed."
             << exit(FatalError);
     }
@@ -386,19 +386,15 @@ CML::label CML::scotchDecomp::decomposeOneProc
     {
         if (minWeights <= 0)
         {
-            WarningIn
-            (
-                "scotchDecomp::decompose(...)"
-            )   << "Illegal minimum weight " << minWeights
+            WarningInFunction
+                << "Illegal minimum weight " << minWeights
                 << endl;
         }
 
         if (cWeights.size() != xadj.size()-1)
         {
-            FatalErrorIn
-            (
-                "scotchDecomp::decompose(...)"
-            )   << "Number of cell weights " << cWeights.size()
+            FatalErrorInFunction
+                << "Number of cell weights " << cWeights.size()
                 << " does not equal number of cells " << xadj.size()-1
                 << exit(FatalError);
         }
@@ -413,10 +409,8 @@ CML::label CML::scotchDecomp::decomposeOneProc
             // rangeScale tipping the subsequent sum over the integer limit.
             rangeScale = 0.9*scalar(INT_MAX - 1)/velotabSum;
 
-            WarningIn
-            (
-                "scotchDecomp::decompose(...)"
-            )   << "Sum of weights has overflowed integer: " << velotabSum
+            WarningInFunction
+                << "Sum of weights has overflowed integer: " << velotabSum
                 << ", compressing weight scale by a factor of " << rangeScale
                 << endl;
         }
@@ -444,10 +438,10 @@ CML::label CML::scotchDecomp::decomposeOneProc
             xadj.begin(),           // verttab, start index per cell into adjncy
             &xadj[1],               // vendtab, end index  ,,
             velotab.begin(),        // velotab, vertex weights
-            NULL,                   // vlbltab
+            nullptr,                   // vlbltab
             adjncy.size(),          // edgenbr, number of arcs
             adjncy.begin(),         // edgetab
-            NULL                    // edlotab, edge weights
+            nullptr                    // edlotab, edge weights
         ),
         "SCOTCH_graphBuild"
     );
@@ -493,7 +487,7 @@ CML::label CML::scotchDecomp::decomposeOneProc
 
 
     //SCOTCH_Mapping mapdat;
-    //SCOTCH_graphMapInit(&grafdat, &mapdat, &archdat, NULL);
+    //SCOTCH_graphMapInit(&grafdat, &mapdat, &archdat, nullptr);
     //SCOTCH_graphMapCompute(&grafdat, &mapdat, &stradat); /* Perform mapping */
     //SCOTCH_graphMapExit(&grafdat, &mapdat);
 
@@ -571,11 +565,8 @@ CML::labelList CML::scotchDecomp::decompose
 {
     if (points.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "scotchDecomp::decompose(const polyMesh&, const pointField&"
-            ", const scalarField&)"
-        )   << "Can use this decomposition method only for the whole mesh"
+        FatalErrorInFunction
+            << "Can use this decomposition method only for the whole mesh"
             << endl
             << "and supply one coordinate (cellCentre) for every cell." << endl
             << "The number of coordinates " << points.size() << endl
@@ -618,12 +609,8 @@ CML::labelList CML::scotchDecomp::decompose
 {
     if (agglom.size() != mesh.nCells())
     {
-        FatalErrorIn
-        (
-            "scotchDecomp::decompose"
-            "(const polyMesh&, const labelList&, const pointField&"
-            ", const scalarField&)"
-        )   << "Size of cell-to-coarse map " << agglom.size()
+        FatalErrorInFunction
+            << "Size of cell-to-coarse map " << agglom.size()
             << " differs from number of cells in mesh " << mesh.nCells()
             << exit(FatalError);
     }
@@ -664,11 +651,8 @@ CML::labelList CML::scotchDecomp::decompose
 {
     if (cellCentres.size() != globalCellCells.size())
     {
-        FatalErrorIn
-        (
-            "scotchDecomp::decompose"
-            "(const labelListList&, const pointField&, const scalarField&)"
-        )   << "Inconsistent number of cells (" << globalCellCells.size()
+        FatalErrorInFunction
+            << "Inconsistent number of cells (" << globalCellCells.size()
             << ") and number of cell centres (" << cellCentres.size()
             << ")." << exit(FatalError);
     }

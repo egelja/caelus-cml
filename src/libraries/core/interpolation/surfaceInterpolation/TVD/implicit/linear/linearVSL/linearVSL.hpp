@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011 - 2015 OpenFOAM Foundation
 Copyright (C) 2016 - 2017 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -69,7 +69,7 @@ public:
     {
         if (k_ < 0 || k_ > 2)
         {
-            FatalIOErrorIn("linearVSL(Istream& is)", is)
+            FatalIOErrorInFunction(is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 2"
                 << exit(FatalIOError);
@@ -84,7 +84,7 @@ public:
             order_ = readScalar(is);
             if (order_ < 0 || order_ > 2)
             {
-                FatalIOErrorIn("linearVSL(fvMesh const&, Istream&)", is)
+                FatalIOErrorInFunction(is)
                         << "coefficient = " << order_
                         << " should be >= 0 and <= 2"
                         << exit(FatalIOError);

@@ -33,7 +33,7 @@ void polyMeshGenAddressing::calcPointFaces() const
 {
     if( pfPtr_)
     {
-        FatalErrorIn("polyMeshGenAddressing::calcPointFaces()")
+        FatalErrorInFunction
             << "pointFaces already calculated"
             << abort(FatalError);
     }
@@ -59,10 +59,8 @@ const VRWGraph& polyMeshGenAddressing::pointFaces() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const VRWGraph& polyMeshGenAddressing::pointFaces() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,7 +50,7 @@ class WallModel;
 
 
 /*---------------------------------------------------------------------------*\
-                        Class PairCollision Declaration
+                     Class PairCollision Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
@@ -148,10 +148,10 @@ public:
         PairCollision(const dictionary& dict, CloudType& owner);
 
         //- Construct copy
-        PairCollision(PairCollision<CloudType>& cm);
+        PairCollision(const PairCollision<CloudType>& cm);
 
         //- Construct and return a clone
-        virtual autoPtr<CollisionModel<CloudType> > clone()
+        virtual autoPtr<CollisionModel<CloudType> > clone() const
         {
             return autoPtr<CollisionModel<CloudType> >
             (
@@ -169,10 +169,6 @@ public:
         //- Return the number of times to subcycle the current
         //  timestep to meet the criteria of the collision model.
         virtual label nSubCycles() const;
-
-        //- Indicates whether model determines wall collisions or not,
-        //  used to determine what value to use for wallImpactDistance
-        virtual bool controlsWallInteraction() const;
 
         // Collision function
         virtual void collide();
@@ -204,9 +200,9 @@ void CML::PairCollision<CloudType>::preInteraction()
     {
         typename CloudType::parcelType& p = iter();
 
-        p.f() = vector::zero;
+        p.f() = Zero;
 
-        p.torque() = vector::zero;
+        p.torque() = Zero;
     }
 }
 
@@ -234,23 +230,23 @@ void CML::PairCollision<CloudType>::realRealInteraction()
     // Direct interaction list (dil)
     const labelListList& dil = il_.dil();
 
-    typename CloudType::parcelType* pA_ptr = NULL;
-    typename CloudType::parcelType* pB_ptr = NULL;
+    typename CloudType::parcelType* pA_ptr = nullptr;
+    typename CloudType::parcelType* pB_ptr = nullptr;
 
     List<DynamicList<typename CloudType::parcelType*> >& cellOccupancy =
         this->owner().cellOccupancy();
 
-    forAll(dil, realCellI)
+    forAll(dil, realCelli)
     {
         // Loop over all Parcels in cell A (a)
-        forAll(cellOccupancy[realCellI], a)
+        forAll(cellOccupancy[realCelli], a)
         {
-            pA_ptr = cellOccupancy[realCellI][a];
+            pA_ptr = cellOccupancy[realCelli][a];
 
-            forAll(dil[realCellI], interactingCells)
+            forAll(dil[realCelli], interactingCells)
             {
                 List<typename CloudType::parcelType*> cellBParcels =
-                    cellOccupancy[dil[realCellI][interactingCells]];
+                    cellOccupancy[dil[realCelli][interactingCells]];
 
                 // Loop over all Parcels in cell B (b)
                 forAll(cellBParcels, b)
@@ -262,9 +258,9 @@ void CML::PairCollision<CloudType>::realRealInteraction()
             }
 
             // Loop over the other Parcels in cell A (aO)
-            forAll(cellOccupancy[realCellI], aO)
+            forAll(cellOccupancy[realCelli], aO)
             {
-                pB_ptr = cellOccupancy[realCellI][aO];
+                pB_ptr = cellOccupancy[realCelli][aO];
 
                 // Do not double-evaluate, compare pointers, arbitrary
                 // order
@@ -291,12 +287,12 @@ void CML::PairCollision<CloudType>::realReferredInteraction()
         this->owner().cellOccupancy();
 
     // Loop over all referred cells
-    forAll(ril, refCellI)
+    forAll(ril, refCelli)
     {
         IDLList<typename CloudType::parcelType>& refCellRefParticles =
-            referredParticles[refCellI];
+            referredParticles[refCelli];
 
-        const labelList& realCells = ril[refCellI];
+        const labelList& realCells = ril[refCelli];
 
         // Loop over all referred parcels in the referred cell
 
@@ -310,10 +306,10 @@ void CML::PairCollision<CloudType>::realReferredInteraction()
             // Loop over all real cells in that the referred cell is
             // to supply interactions to
 
-            forAll(realCells, realCellI)
+            forAll(realCells, realCelli)
             {
                 List<typename CloudType::parcelType*> realCellParcels =
-                    cellOccupancy[realCells[realCellI]];
+                    cellOccupancy[realCells[realCelli]];
 
                 forAll(realCellParcels, realParcelI)
                 {
@@ -356,13 +352,13 @@ void CML::PairCollision<CloudType>::wallInteraction()
     DynamicList<scalar> sharpSiteExclusionDistancesSqr;
     DynamicList<WallSiteData<vector> > sharpSiteData;
 
-    forAll(dil, realCellI)
+    forAll(dil, realCelli)
     {
         // The real wall faces in range of this real cell
-        const labelList& realWallFaces = directWallFaces[realCellI];
+        const labelList& realWallFaces = directWallFaces[realCelli];
 
         // Loop over all Parcels in cell
-        forAll(cellOccupancy[realCellI], cellParticleI)
+        forAll(cellOccupancy[realCelli], cellParticleI)
         {
             flatSitePoints.clear();
             flatSiteExclusionDistancesSqr.clear();
@@ -375,7 +371,7 @@ void CML::PairCollision<CloudType>::wallInteraction()
             sharpSiteData.clear();
 
             typename CloudType::parcelType& p =
-                *cellOccupancy[realCellI][cellParticleI];
+                *cellOccupancy[realCelli][cellParticleI];
 
             const point& pos = p.position();
 
@@ -383,11 +379,11 @@ void CML::PairCollision<CloudType>::wallInteraction()
 
             // real wallFace interactions
 
-            forAll(realWallFaces, realWallFaceI)
+            forAll(realWallFaces, realWallFacei)
             {
-                label realFaceI = realWallFaces[realWallFaceI];
+                label realFacei = realWallFaces[realWallFacei];
 
-                pointHit nearest = mesh.faces()[realFaceI].nearestPoint
+                pointHit nearest = mesh.faces()[realFacei].nearestPoint
                 (
                     pos,
                     mesh.points()
@@ -395,7 +391,7 @@ void CML::PairCollision<CloudType>::wallInteraction()
 
                 if (nearest.distance() < r)
                 {
-                    vector normal = mesh.faceAreas()[realFaceI];
+                    vector normal = mesh.faceAreas()[realFacei];
 
                     normal /= mag(normal);
 
@@ -403,21 +399,20 @@ void CML::PairCollision<CloudType>::wallInteraction()
 
                     vector pW = nearPt - pos;
 
-                    scalar normalAlignment = normal & pW/mag(pW);
+                    scalar normalAlignment = normal & pW/(mag(pW) + SMALL);
 
                     // Find the patchIndex and wallData for WallSiteData object
-                    label patchI = patchID[realFaceI - mesh.nInternalFaces()];
+                    label patchi = patchID[realFacei - mesh.nInternalFaces()];
 
-                    label patchFaceI =
-                        realFaceI - mesh.boundaryMesh()[patchI].start();
+                    label patchFacei =
+                        realFacei - mesh.boundaryMesh()[patchi].start();
 
                     WallSiteData<vector> wSD
                     (
-                        patchI,
-                        U.boundaryField()[patchI][patchFaceI]
+                        patchi,
+                        U.boundaryField()[patchi][patchFacei]
                     );
 
-                    bool particleHit = false;
                     if (normalAlignment > cosPhiMinFlatWall)
                     {
                         // Guard against a flat interaction being
@@ -442,8 +437,6 @@ void CML::PairCollision<CloudType>::wallInteraction()
                             );
 
                             flatSiteData.append(wSD);
-
-                            particleHit = true;
                         }
                     }
                     else
@@ -453,37 +446,21 @@ void CML::PairCollision<CloudType>::wallInteraction()
                         otherSiteDistances.append(nearest.distance());
 
                         otherSiteData.append(wSD);
-
-                        particleHit = true;
                     }
-
-                    if (particleHit)
-                    {
-                        bool keep = true;
-                        this->owner().functions().postFace(p, realFaceI, keep);
-                        this->owner().functions().postPatch
-                        (
-                            p,
-                            mesh.boundaryMesh()[patchI],
-                            1.0,
-                            p.currentTetIndices(),
-                            keep
-                        );
-                     }
                 }
             }
 
             // referred wallFace interactions
 
             // The labels of referred wall faces in range of this real cell
-            const labelList& cellRefWallFaces = il_.rwfilInverse()[realCellI];
+            const labelList& cellRefWallFaces = il_.rwfilInverse()[realCelli];
 
             forAll(cellRefWallFaces, rWFI)
             {
-                label refWallFaceI = cellRefWallFaces[rWFI];
+                label refWallFacei = cellRefWallFaces[rWFI];
 
                 const referredWallFace& rwf =
-                    il_.referredWallFaces()[refWallFaceI];
+                    il_.referredWallFaces()[refWallFacei];
 
                 const pointField& pts = rwf.points();
 
@@ -491,10 +468,7 @@ void CML::PairCollision<CloudType>::wallInteraction()
 
                 if (nearest.distance() < r)
                 {
-                    vector normal = rwf.normal(pts);
-
-                    normal /= mag(normal);
-
+                    const vector normal = rwf.normal(pts);
                     const vector& nearPt = nearest.rawPoint();
 
                     vector pW = nearPt - pos;
@@ -506,10 +480,9 @@ void CML::PairCollision<CloudType>::wallInteraction()
                     WallSiteData<vector> wSD
                     (
                         rwf.patchIndex(),
-                        il_.referredWallData()[refWallFaceI]
+                        il_.referredWallData()[refWallFacei]
                     );
 
-                    bool particleHit = false;
                     if (normalAlignment > cosPhiMinFlatWall)
                     {
                         // Guard against a flat interaction being
@@ -534,8 +507,6 @@ void CML::PairCollision<CloudType>::wallInteraction()
                             );
 
                             flatSiteData.append(wSD);
-
-                            particleHit = false;
                         }
                     }
                     else
@@ -545,14 +516,6 @@ void CML::PairCollision<CloudType>::wallInteraction()
                         otherSiteDistances.append(nearest.distance());
 
                         otherSiteData.append(wSD);
-
-                        particleHit = false;
-                    }
-
-                    if (particleHit)
-                    {
-                        // TODO: call cloud function objects for referred
-                        //       wall particle interactions
                     }
                 }
             }
@@ -748,26 +711,24 @@ CML::PairCollision<CloudType>::PairCollision
                 false
             )
         ),
-        this->coeffDict().lookupOrDefault("UName", word("U"))
+        this->coeffDict().lookupOrDefault("U", word("U"))
     )
 {}
 
 
 template<class CloudType>
-CML::PairCollision<CloudType>::PairCollision(PairCollision<CloudType>& cm)
+CML::PairCollision<CloudType>::PairCollision
+(
+    const PairCollision<CloudType>& cm
+)
 :
     CollisionModel<CloudType>(cm),
-    pairModel_(NULL),
-    wallModel_(NULL),
+    pairModel_(nullptr),
+    wallModel_(nullptr),
     il_(cm.owner().mesh())
 {
-    notImplemented
-    (
-        "CML::PairCollision<CloudType>::PairCollision"
-        "("
-            "PairCollision<CloudType>& cm"
-        ")"
-    );
+    // Need to clone to PairModel and WallModel
+    NotImplemented;
 }
 
 
@@ -806,13 +767,6 @@ CML::label CML::PairCollision<CloudType>::nSubCycles() const
     }
 
     return nSubCycles;
-}
-
-
-template<class CloudType>
-bool CML::PairCollision<CloudType>::controlsWallInteraction() const
-{
-    return true;
 }
 
 

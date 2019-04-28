@@ -444,14 +444,7 @@ CML::scalar CML::isoAdvection::timeIntegratedFaceFlux
 
         if (debug)
         {
-            WarningIn
-            (
-                "CML::scalar CML::isoAdvection::timeIntegratedFaceFlux"
-                "("
-                     "const label, const vector&, const vector&, const scalar,"
-                     "const scalar, const scalar, const scalar, const scalar"
-                ")"
-            )
+            WarningInFunction
                 << "mag(n0) = " << mag(n0)
                 << " so timeIntegratedFlux calculates dVf from upwind"
                 << " cell alpha value: " << alphaf << endl;
@@ -538,14 +531,7 @@ CML::scalar CML::isoAdvection::timeIntegratedFaceFlux
         {
             if (debug)
             {
-                WarningIn
-                (
-                    "CML::scalar CML::isoAdvection::timeIntegratedFaceFlux"
-                    "("
-                         "const label, const vector&, const vector&, const scalar,"
-                         "const scalar, const scalar, const scalar, const scalar"
-                    ")"
-                )
+                WarningInFunction
                     << "Warning: nShifts = " << nShifts << " on face " << facei
                     << " with pTimes = " << pTimes << " owned by cell "
                     << mesh_.faceOwner()[facei] << endl;
@@ -562,14 +548,7 @@ CML::scalar CML::isoAdvection::timeIntegratedFaceFlux
 
         if (debug)
         {
-            WarningIn
-            (
-                "CML::scalar CML::isoAdvection::timeIntegratedFaceFlux"
-                "("
-                     "const label, const vector&, const vector&, const scalar,"
-                     "const scalar, const scalar, const scalar, const scalar"
-                ")"
-            )
+            WarningInFunction
               << "Un0 is almost zero (" << Un0
               << ") - calculating dVf on face " << facei
               << " using subFaceFraction giving alphaf = " << alphaf
@@ -589,11 +568,7 @@ void CML::isoAdvection::setDownwindFaces
 {
     if (debug)
     {
-        InfoIn
-        (
-            "void CML::isoAdvection::setDownwindFaces"
-            "(const label, DynamicLabelList&) const"
-        )
+        InfoInFunction
           << endl;
     }
     // Get necessary mesh data and cell information
@@ -631,10 +606,7 @@ void CML::isoAdvection::limitFluxes()
 {
     if (debug)
     {
-        InfoIn
-        (
-            "void CML::isoAdvection::limitFluxes()"
-        )
+        InfoInFunction
           << endl;
     }
 
@@ -731,11 +703,7 @@ void CML::isoAdvection::boundFromAbove
 {
     if (debug)
     {
-       InfoIn
-       (
-           "void CML::isoAdvection::boundFromAbove"
-           "(const scalarField&, surfaceScalarField&, DynamicList<label>&)"
-       )
+       InfoInFunction
          << endl;
     }
 
@@ -1011,10 +979,7 @@ void CML::isoAdvection::advect()
 {
     if (debug)
     {
-        InfoIn
-        (
-            "void CML::isoAdvection::advect()"
-        )
+        InfoInFunction
           << endl;
     }
 

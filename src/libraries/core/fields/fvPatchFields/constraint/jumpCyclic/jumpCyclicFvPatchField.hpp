@@ -22,7 +22,8 @@ Class
     CML::jumpCyclicFvPatchField
 
 Description
-    CML::jumpCyclicFvPatchField
+    This boundary condition provides a base class for coupled-cyclic
+    conditions with a specified 'jump' (or offset) between the values
 
 
 \*---------------------------------------------------------------------------*/
@@ -38,7 +39,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class cyclicFvPatch Declaration
+                   Class jumpCyclicFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -104,7 +105,7 @@ public:
             }
 
             //- Return the "jump" across the patch as a "half" field
-            virtual tmp<Field<scalar> > jump() const = 0;
+            virtual tmp<Field<Type> > jump() const = 0;
 
 
         // Evaluation functions
@@ -124,20 +125,26 @@ public:
             ) const;
 };
 
+//- Update result field based on interface functionality
+template<>
+void jumpCyclicFvPatchField<scalar>::updateInterfaceMatrix
+(
+    const scalarField& psiInternal,
+    scalarField& result,
+    const lduMatrix&,
+    const scalarField& coeffs,
+    const direction cmpt,
+    const Pstream::commsTypes commsType
+) const;
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace CML
-{
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
+CML::jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF
@@ -148,7 +155,7 @@ jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 
 
 template<class Type>
-jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
+CML::jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 (
     const jumpCyclicFvPatchField<Type>& ptf,
     const fvPatch& p,
@@ -161,7 +168,7 @@ jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 
 
 template<class Type>
-jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
+CML::jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
@@ -176,18 +183,17 @@ jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 
 
 template<class Type>
-jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
+CML::jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 (
     const jumpCyclicFvPatchField<Type>& ptf
 )
 :
-    cyclicLduInterfaceField(),
     cyclicFvPatchField<Type>(ptf)
 {}
 
 
 template<class Type>
-jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
+CML::jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 (
     const jumpCyclicFvPatchField<Type>& ptf,
     const DimensionedField<Type, volMesh>& iF
@@ -200,7 +206,8 @@ jumpCyclicFvPatchField<Type>::jumpCyclicFvPatchField
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<Field<Type> > jumpCyclicFvPatchField<Type>::patchNeighbourField() const
+CML::tmp<CML::Field<Type> >
+CML::jumpCyclicFvPatchField<Type>::patchNeighbourField() const
 {
     const Field<Type>& iField = this->internalField();
     const labelUList& nbrFaceCells =
@@ -209,12 +216,11 @@ tmp<Field<Type> > jumpCyclicFvPatchField<Type>::patchNeighbourField() const
     tmp<Field<Type> > tpnf(new Field<Type>(this->size()));
     Field<Type>& pnf = tpnf();
 
-    tmp<Field<scalar> > tjf = jump();
+    Field<Type> jf(this->jump());
     if (!this->cyclicPatch().owner())
     {
-        tjf = -tjf;
+        jf *= -1.0;
     }
-    const Field<scalar>& jf = tjf();
 
     if (this->doTransform())
     {
@@ -223,15 +229,14 @@ tmp<Field<Type> > jumpCyclicFvPatchField<Type>::patchNeighbourField() const
             pnf[facei] = transform
             (
                 this->forwardT()[0], iField[nbrFaceCells[facei]]
-	     ) - pTraits<Type>::one*jf[facei];
+            ) - jf[facei];
         }
     }
     else
     {
         forAll(*this, facei)
         {
-            pnf[facei] = 
-                iField[nbrFaceCells[facei]] - pTraits<Type>::one*jf[facei];
+            pnf[facei] = iField[nbrFaceCells[facei]] - jf[facei];
         }
     }
 
@@ -240,7 +245,7 @@ tmp<Field<Type> > jumpCyclicFvPatchField<Type>::patchNeighbourField() const
 
 
 template<class Type>
-void jumpCyclicFvPatchField<Type>::updateInterfaceMatrix
+void CML::jumpCyclicFvPatchField<Type>::updateInterfaceMatrix
 (
     const scalarField& psiInternal,
     scalarField& result,
@@ -250,58 +255,8 @@ void jumpCyclicFvPatchField<Type>::updateInterfaceMatrix
     const Pstream::commsTypes
 ) const
 {
-    scalarField pnf(this->size());
-
-    const labelUList& nbrFaceCells =
-        this->cyclicPatch().neighbFvPatch().faceCells();
-
-    // CAELUSFIX: use of reinterpret_cast should be safe
-    // Compiler is tryin to instantiate all templates and we need 
-    // only scalarField here
-    if (&psiInternal 
-        == 
-        reinterpret_cast<const scalarField*>(&this->internalField())
-       )
-    {
-        tmp<Field<scalar> > tjf = jump();
-        if (!this->cyclicPatch().owner())
-        {
-            tjf = -tjf;
-        }
-        const Field<scalar>& jf = tjf();
-
-        forAll(*this, facei)
-        {
-            pnf[facei] = psiInternal[nbrFaceCells[facei]] - jf[facei];
-        }
-    }
-    else
-    {
-        forAll(*this, facei)
-        {
-            pnf[facei] = psiInternal[nbrFaceCells[facei]];
-        }
-    }
-
-    // Transform according to the transformation tensors
-    this->transformCoupleField(pnf, cmpt);
-
-    // Multiply the field by coefficients and add into the result
-    const labelUList& faceCells = this->cyclicPatch().faceCells();
-    forAll(faceCells, elemI)
-    {
-        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
-    }
+    NotImplemented;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace CML
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

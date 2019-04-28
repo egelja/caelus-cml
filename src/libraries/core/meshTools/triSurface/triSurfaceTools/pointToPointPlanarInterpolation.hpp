@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -174,11 +174,8 @@ CML::tmp<CML::Field<Type> > CML::pointToPointPlanarInterpolation::interpolate
 {
     if (nPoints_ != sourceFld.size())
     {
-        FatalErrorIn
-        (
-            "pointToPointPlanarInterpolation::interpolate"
-            "(const Field<Type>&) const"
-        )   << "Number of source points = " << nPoints_
+        FatalErrorInFunction
+            << "Number of source points = " << nPoints_
             << " number of values = " << sourceFld.size()
             << exit(FatalError);
     }

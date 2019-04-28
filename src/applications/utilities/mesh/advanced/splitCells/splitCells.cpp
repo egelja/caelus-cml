@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -254,7 +254,7 @@ bool splitHex
 
     if (leftI == -1 || rightI == -1)
     {
-        FatalErrorIn("splitHex") << "Problem : leftI:" << leftI
+        FatalErrorInFunction << "Problem : leftI:" << leftI
             << " rightI:" << rightI << abort(FatalError);
     }
 

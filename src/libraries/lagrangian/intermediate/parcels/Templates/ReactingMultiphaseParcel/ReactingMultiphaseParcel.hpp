@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -59,6 +59,12 @@ class ReactingMultiphaseParcel
 :
     public ParcelType
 {
+    // Private data
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
+
+
 public:
 
     // IDs of phases in ReacingParcel phase list (Y)
@@ -76,14 +82,14 @@ public:
         // Private data
 
             //- Devolatilisation activation temperature [K]
-            scalar TDevol_;
+            demandDrivenEntry<scalar> TDevol_;
 
             //- Latent heat of devolatilisation [J/kg]
-            scalar LDevol_;
+            demandDrivenEntry<scalar> LDevol_;
 
             //- Fraction of enthalpy retained by parcel due to surface
             //  reactions
-            scalar hRetentionCoeff_;
+            demandDrivenEntry<scalar> hRetentionCoeff_;
 
 
     public:
@@ -96,12 +102,8 @@ public:
             //- Copy constructor
             constantProperties(const constantProperties& cp);
 
-            //- Constructor from dictionary
-            constantProperties
-            (
-                const dictionary& parentDict,
-                const bool readFields = true
-            );
+            //- Construct from dictionary
+            constantProperties(const dictionary& parentDict);
 
 
         // Access
@@ -118,15 +120,20 @@ public:
     };
 
 
+    //- Use base tracking data
+    typedef typename ParcelType::trackingData trackingData;
+
+
 private:
 
     // Private Member Functions
 
         //- Return the mixture effective specific heat capacity
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar CpEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -135,10 +142,11 @@ private:
         ) const;
 
         //- Return the mixture effective sensible enthalpy
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar HsEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -147,10 +155,11 @@ private:
         ) const;
 
         //- Return the mixture effective latent heat
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar LEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -195,10 +204,11 @@ protected:
     // Protected Member Functions
 
         //- Calculate Devolatilisation
-        template<class TrackData>
+        template<class TrackCloudType>
         void calcDevolatilisation
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
             const scalar age,          // age
             const scalar Ts,           // surface temperature
@@ -218,12 +228,12 @@ protected:
         ) const;
 
         //- Calculate surface reactions
-        template<class TrackData>
+        template<class TrackCloudType>
         void calcSurfaceReactions
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
-            const label cellI,         // owner cell
             const scalar d,            // diameter
             const scalar T,            // temperature
             const scalar mass,         // mass
@@ -261,26 +271,34 @@ public:
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, position and topology
         //  Other properties initialised as null
         inline ReactingMultiphaseParcel
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti
         );
 
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline ReactingMultiphaseParcel
+        (
+            const polyMesh& mesh,
+            const vector& position,
+            const label celli
+        );
 
         //- Construct from components
         inline ReactingMultiphaseParcel
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const label typeId,
             const scalar nParticle0,
             const scalar d0,
@@ -387,30 +405,25 @@ public:
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
-            (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
-            );
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label cellI
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
 
@@ -463,9 +476,9 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::
 constantProperties()
 :
     ParcelType::constantProperties(),
-    TDevol_(0.0),
-    LDevol_(0.0),
-    hRetentionCoeff_(0.0)
+    TDevol_(this->dict_, 0.0),
+    LDevol_(this->dict_, 0.0),
+    hRetentionCoeff_(this->dict_, 0.0)
 {}
 
 
@@ -487,47 +500,27 @@ template<class ParcelType>
 inline CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::
 constantProperties
 (
-    const dictionary& parentDict,
-    const bool readFields
+    const dictionary& parentDict
 )
 :
-    ParcelType::constantProperties(parentDict, readFields),
-    TDevol_(0.0),
-    LDevol_(0.0),
-    hRetentionCoeff_(0.0)
-{
-    if (readFields)
-    {
-        this->dict().lookup("TDevol") >> TDevol_;
-        this->dict().lookup("LDevol") >> LDevol_;
-        this->dict().lookup("hRetentionCoeff") >> hRetentionCoeff_;
-
-        if ((hRetentionCoeff_ < 0) || (hRetentionCoeff_ > 1))
-        {
-            FatalErrorIn
-            (
-                "ReactingMultiphaseParcel<ParcelType>::constantProperties::"
-                "constantProperties"
-            )   << "hRetentionCoeff must be in the range 0 to 1" << nl
-                << exit(FatalError) << endl;
-        }
-
-        hRetentionCoeff_ = max(1e-06, hRetentionCoeff_);
-    }
-}
+    ParcelType::constantProperties(parentDict),
+    TDevol_(this->dict_, "TDevol"),
+    LDevol_(this->dict_, "LDevol"),
+    hRetentionCoeff_(this->dict_, "hRetentionCoeff")
+{}
 
 
 template<class ParcelType>
 inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti
 )
 :
-    ParcelType(mesh, position, cellI, tetFaceI, tetPtI),
+    ParcelType(mesh, coordinates, celli, tetFacei, tetPti),
     YGas_(0),
     YLiquid_(0),
     YSolid_(0),
@@ -540,9 +533,25 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const label celli
+)
+:
+    ParcelType(mesh, position, celli),
+    YGas_(0),
+    YLiquid_(0),
+    YSolid_(0),
+    canCombust_(0)
+{}
+
+
+template<class ParcelType>
+inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
+(
+    const polyMesh& mesh,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const label typeId,
     const scalar nParticle0,
     const scalar d0,
@@ -561,10 +570,10 @@ inline CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     ParcelType
     (
         mesh,
-        position,
-        cellI,
-        tetFaceI,
-        tetPtI,
+        coordinates,
+        celli,
+        tetFacei,
+        tetPti,
         typeId,
         nParticle0,
         d0,
@@ -589,7 +598,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::TDevol() const
 {
-    return TDevol_;
+    return TDevol_.value();
 }
 
 
@@ -597,7 +606,7 @@ template<class ParcelType>
 inline CML::scalar
 CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::LDevol() const
 {
-    return LDevol_;
+    return LDevol_.value();
 }
 
 
@@ -606,7 +615,16 @@ inline CML::scalar
 CML::ReactingMultiphaseParcel<ParcelType>::constantProperties::
 hRetentionCoeff() const
 {
-    return hRetentionCoeff_;
+    scalar value = hRetentionCoeff_.value();
+
+    if ((value < 0) || (value > 1))
+    {
+        FatalErrorInFunction
+            << "hRetentionCoeff must be in the range 0 to 1" << nl
+            << exit(FatalError) << endl;
+    }
+
+    return value;
 }
 
 
@@ -691,10 +709,11 @@ const CML::label CML::ReactingMultiphaseParcel<ParcelType>::SLD(2);
 // * * * * * * * * * * * *  Private Member Functions * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::CpEff
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar p,
     const scalar T,
     const label idG,
@@ -703,17 +722,18 @@ CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::CpEff
 ) const
 {
     return
-        this->Y_[GAS]*td.cloud().composition().Cp(idG, YGas_, p, T)
-      + this->Y_[LIQ]*td.cloud().composition().Cp(idL, YLiquid_, p, T)
-      + this->Y_[SLD]*td.cloud().composition().Cp(idS, YSolid_, p, T);
+        this->Y_[GAS]*cloud.composition().Cp(idG, YGas_, p, T)
+      + this->Y_[LIQ]*cloud.composition().Cp(idL, YLiquid_, p, T)
+      + this->Y_[SLD]*cloud.composition().Cp(idS, YSolid_, p, T);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::HsEff
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar p,
     const scalar T,
     const label idG,
@@ -722,17 +742,18 @@ CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::HsEff
 ) const
 {
     return
-        this->Y_[GAS]*td.cloud().composition().Hs(idG, YGas_, p, T)
-      + this->Y_[LIQ]*td.cloud().composition().Hs(idL, YLiquid_, p, T)
-      + this->Y_[SLD]*td.cloud().composition().Hs(idS, YSolid_, p, T);
+        this->Y_[GAS]*cloud.composition().Hs(idG, YGas_, p, T)
+      + this->Y_[LIQ]*cloud.composition().Hs(idL, YLiquid_, p, T)
+      + this->Y_[SLD]*cloud.composition().Hs(idS, YSolid_, p, T);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::LEff
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar p,
     const scalar T,
     const label idG,
@@ -741,9 +762,9 @@ CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::LEff
 ) const
 {
     return
-        this->Y_[GAS]*td.cloud().composition().L(idG, YGas_, p, T)
-      + this->Y_[LIQ]*td.cloud().composition().L(idL, YLiquid_, p, T)
-      + this->Y_[SLD]*td.cloud().composition().L(idS, YSolid_, p, T);
+        this->Y_[GAS]*cloud.composition().L(idG, YGas_, p, T)
+      + this->Y_[LIQ]*cloud.composition().L(idL, YLiquid_, p, T)
+      + this->Y_[SLD]*cloud.composition().L(idS, YSolid_, p, T);
 }
 
 
@@ -778,44 +799,43 @@ CML::scalar CML::ReactingMultiphaseParcel<ParcelType>::updateMassFractions
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ReactingMultiphaseParcel<ParcelType>::setCellValues
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td
 )
 {
-    ParcelType::setCellValues(td, dt, cellI);
+    ParcelType::setCellValues(cloud, td);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ReactingMultiphaseParcel<ParcelType>::cellValueSourceCorrection
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
     // Re-use correction from reacting parcel
-    ParcelType::cellValueSourceCorrection(td, dt, cellI);
+    ParcelType::cellValueSourceCorrection(cloud, td, dt);
 }
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ReactingMultiphaseParcel<ParcelType>::calc
 (
-    TrackData& td,
-    const scalar dt,
-    const label cellI
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt
 )
 {
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    typedef typename TrackCloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+        cloud.composition();
 
 
     // Define local properties at beginning of timestep
@@ -827,7 +847,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     const scalar T0 = this->T_;
     const scalar mass0 = this->mass();
 
-    const scalar pc = this->pc_;
+    const scalar pc = td.pc();
 
     const scalarField& YMix = this->Y_;
     const label idG = composition.idGas();
@@ -837,21 +857,21 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
 
     // Calc surface values
     scalar Ts, rhos, mus, Prs, kappas;
-    this->calcSurfaceValues(td, cellI, T0, Ts, rhos, mus, Prs, kappas);
-    scalar Res = this->Re(U0, d0, rhos, mus);
+    this->calcSurfaceValues(cloud, td, T0, Ts, rhos, mus, Prs, kappas);
+    scalar Res = this->Re(rhos, U0, td.Uc(), d0, mus);
 
 
     // Sources
     //~~~~~~~~
 
     // Explicit momentum source for particle
-    vector Su = vector::zero;
+    vector Su = Zero;
 
     // Linearised momentum source coefficient
     scalar Spu = 0.0;
 
     // Momentum transfer from the particle to the carrier phase
-    vector dUTrans = vector::zero;
+    vector dUTrans = Zero;
 
     // Explicit enthalpy source for particle
     scalar Sh = 0.0;
@@ -884,9 +904,9 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     // Calc mass and enthalpy transfer due to phase change
     this->calcPhaseChange
     (
+        cloud,
         td,
         dt,
-        cellI,
         Res,
         Prs,
         Ts,
@@ -914,6 +934,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     // Calc mass and enthalpy transfer due to devolatilisation
     calcDevolatilisation
     (
+        cloud,
         td,
         dt,
         this->age_,
@@ -946,9 +967,9 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     // Calc mass and enthalpy transfer due to surface reactions
     calcSurfaceReactions
     (
+        cloud,
         td,
         dt,
-        cellI,
         d0,
         T0,
         mass0,
@@ -976,10 +997,10 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     scalar mass1 =
         updateMassFractions(mass0, dMassGas, dMassLiquid, dMassSolid);
 
-    this->Cp_ = CpEff(td, pc, T0, idG, idL, idS);
+    this->Cp_ = CpEff(cloud, td, pc, T0, idG, idL, idS);
 
     // Update particle density or diameter
-    if (td.cloud().constProps().constantVolume())
+    if (cloud.constProps().constantVolume())
     {
         this->rho_ = mass1/this->volume();
     }
@@ -989,46 +1010,49 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     }
 
     // Remove the particle when mass falls below minimum threshold
-    if (np0*mass1 < td.cloud().constProps().minParcelMass())
+    if (np0*mass1 < cloud.constProps().minParcelMass())
     {
         td.keepParticle = false;
 
-        if (td.cloud().solution().coupled())
+        if (cloud.solution().coupled())
         {
             scalar dm = np0*mass0;
 
             // Absorb parcel into carrier phase
             forAll(YGas_, i)
             {
-                label gid = composition.localToGlobalCarrierId(GAS, i);
-                td.cloud().rhoTrans(gid)[cellI] += dm*YMix[GAS]*YGas_[i];
+                label gid = composition.localToCarrierId(GAS, i);
+                cloud.rhoTrans(gid)[this->cell()] += dm*YMix[GAS]*YGas_[i];
             }
             forAll(YLiquid_, i)
             {
-                label gid = composition.localToGlobalCarrierId(LIQ, i);
-                td.cloud().rhoTrans(gid)[cellI] += dm*YMix[LIQ]*YLiquid_[i];
+                label gid = composition.localToCarrierId(LIQ, i);
+                cloud.rhoTrans(gid)[this->cell()] += dm*YMix[LIQ]*YLiquid_[i];
             }
-/*
+
             // No mapping between solid components and carrier phase
+            /*
             forAll(YSolid_, i)
             {
-                label gid = composition.localToGlobalCarrierId(SLD, i);
-                td.cloud().rhoTrans(gid)[cellI] += dm*YMix[SLD]*YSolid_[i];
+                label gid = composition.localToCarrierId(SLD, i);
+                cloud.rhoTrans(gid)[this->cell()] += dm*YMix[SLD]*YSolid_[i];
             }
-*/
-            td.cloud().UTrans()[cellI] += dm*U0;
+            */
 
-            td.cloud().hsTrans()[cellI] += dm*HsEff(td, pc, T0, idG, idL, idS);
+            cloud.UTrans()[this->cell()] += dm*U0;
 
-            td.cloud().phaseChange().addToPhaseChangeMass(np0*mass1);
+            cloud.hsTrans()[this->cell()] +=
+                dm*HsEff(cloud, td, pc, T0, idG, idL, idS);
+
+            cloud.phaseChange().addToPhaseChangeMass(np0*mass1);
         }
 
         return;
     }
 
     // Correct surface values due to emitted species
-    this->correctSurfaceValues(td, cellI, Ts, Cs, rhos, mus, Prs, kappas);
-    Res = this->Re(U0, this->d_, rhos, mus);
+    this->correctSurfaceValues(cloud, td, Ts, Cs, rhos, mus, Prs, kappas);
+    Res = this->Re(rhos, U0, td.Uc(), this->d_, mus);
 
 
     // 3. Compute heat- and momentum transfers
@@ -1041,9 +1065,9 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
     this->T_ =
         this->calcHeatTransfer
         (
+            cloud,
             td,
             dt,
-            cellI,
             Res,
             Prs,
             kappas,
@@ -1054,7 +1078,7 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
         );
 
 
-    this->Cp_ = CpEff(td, pc, this->T_, idG, idL, idS);
+    this->Cp_ = CpEff(cloud, td, pc, this->T_, idG, idL, idS);
 
 
     // Motion
@@ -1062,80 +1086,85 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calc
 
     // Calculate new particle velocity
     this->U_ =
-        this->calcVelocity(td, dt, cellI, Res, mus, mass1, Su, dUTrans, Spu);
+        this->calcVelocity(cloud, td, dt, Res, mus, mass1, Su, dUTrans, Spu);
 
 
     // 4. Accumulate carrier phase source terms
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if (td.cloud().solution().coupled())
+    if (cloud.solution().coupled())
     {
         // Transfer mass lost to carrier mass, momentum and enthalpy sources
         forAll(YGas_, i)
         {
             scalar dm = np0*dMassGas[i];
-            label gid = composition.localToGlobalCarrierId(GAS, i);
-            scalar hs = composition.carrier().Hs(gid, T0);
-            td.cloud().rhoTrans(gid)[cellI] += dm;
-            td.cloud().UTrans()[cellI] += dm*U0;
-            td.cloud().hsTrans()[cellI] += dm*hs;
+            label gid = composition.localToCarrierId(GAS, i);
+            scalar hs = composition.carrier().Hs(gid, pc, T0);
+            cloud.rhoTrans(gid)[this->cell()] += dm;
+            cloud.UTrans()[this->cell()] += dm*U0;
+            cloud.hsTrans()[this->cell()] += dm*hs;
         }
         forAll(YLiquid_, i)
         {
             scalar dm = np0*dMassLiquid[i];
-            label gid = composition.localToGlobalCarrierId(LIQ, i);
-            scalar hs = composition.carrier().Hs(gid, T0);
-            td.cloud().rhoTrans(gid)[cellI] += dm;
-            td.cloud().UTrans()[cellI] += dm*U0;
-            td.cloud().hsTrans()[cellI] += dm*hs;
+            label gid = composition.localToCarrierId(LIQ, i);
+            scalar hs = composition.carrier().Hs(gid, pc, T0);
+            cloud.rhoTrans(gid)[this->cell()] += dm;
+            cloud.UTrans()[this->cell()] += dm*U0;
+            cloud.hsTrans()[this->cell()] += dm*hs;
         }
-/*
+
         // No mapping between solid components and carrier phase
+        /*
         forAll(YSolid_, i)
         {
             scalar dm = np0*dMassSolid[i];
-            label gid = composition.localToGlobalCarrierId(SLD, i);
-            scalar hs = composition.carrier().Hs(gid, T0);
-            td.cloud().rhoTrans(gid)[cellI] += dm;
-            td.cloud().UTrans()[cellI] += dm*U0;
-            td.cloud().hsTrans()[cellI] += dm*hs;
+            label gid = composition.localToCarrierId(SLD, i);
+            scalar hs = composition.carrier().Hs(gid, pc, T0);
+            cloud.rhoTrans(gid)[this->cell()] += dm;
+            cloud.UTrans()[this->cell()] += dm*U0;
+            cloud.hsTrans()[this->cell()] += dm*hs;
         }
-*/
+        */
+
         forAll(dMassSRCarrier, i)
         {
             scalar dm = np0*dMassSRCarrier[i];
-            scalar hs = composition.carrier().Hs(i, T0);
-            td.cloud().rhoTrans(i)[cellI] += dm;
-            td.cloud().UTrans()[cellI] += dm*U0;
-            td.cloud().hsTrans()[cellI] += dm*hs;
+            scalar hs = composition.carrier().Hs(i, pc, T0);
+            cloud.rhoTrans(i)[this->cell()] += dm;
+            cloud.UTrans()[this->cell()] += dm*U0;
+            cloud.hsTrans()[this->cell()] += dm*hs;
         }
 
         // Update momentum transfer
-        td.cloud().UTrans()[cellI] += np0*dUTrans;
-        td.cloud().UCoeff()[cellI] += np0*Spu;
+        cloud.UTrans()[this->cell()] += np0*dUTrans;
+        cloud.UCoeff()[this->cell()] += np0*Spu;
 
         // Update sensible enthalpy transfer
-        td.cloud().hsTrans()[cellI] += np0*dhsTrans;
-        td.cloud().hsCoeff()[cellI] += np0*Sph;
+        cloud.hsTrans()[this->cell()] += np0*dhsTrans;
+        cloud.hsCoeff()[this->cell()] += np0*Sph;
 
         // Update radiation fields
-        if (td.cloud().radiation())
+        if (cloud.radiation())
         {
             const scalar ap = this->areaP();
-            const scalar T4 = pow4(this->T_);
-            td.cloud().radAreaP()[cellI] += dt*np0*ap;
-            td.cloud().radT4()[cellI] += dt*np0*T4;
-            td.cloud().radAreaPT4()[cellI] += dt*np0*ap*T4;
+            const scalar T4 = pow4(T0);
+            cloud.radAreaP()[this->cell()] += dt*np0*ap;
+            cloud.radT4()[this->cell()] += dt*np0*T4;
+            cloud.radAreaPT4()[this->cell()] += dt*np0*ap*T4;
         }
     }
 }
 
 
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar dt,
     const scalar age,
     const scalar Ts,
@@ -1154,24 +1183,34 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
     scalarField& Cs
 ) const
 {
-    // Check that model is active, and that the parcel temperature is
-    // within necessary limits for devolatilisation to occur
-    if
-    (
-        !td.cloud().devolatilisation().active()
-     || T < td.cloud().constProps().Tvap()
-    )
+    // Check that model is active
+    if (!cloud.devolatilisation().active())
+    {
+        if (canCombust != -1)
+        {
+            canCombust = 1;
+        }
+        return;
+    }
+
+    // Initialise demand-driven constants
+    (void)cloud.constProps().TDevol();
+    (void)cloud.constProps().LDevol();
+
+    // Check that the parcel temperature is within necessary limits for
+    // devolatilisation to occur
+    if (T < cloud.constProps().TDevol() || canCombust == -1)
     {
         return;
     }
 
-    typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
+    typedef typename TrackCloudType::reactingCloudType reactingCloudType;
     const CompositionModel<reactingCloudType>& composition =
-        td.cloud().composition();
+        cloud.composition();
 
 
     // Total mass of volatiles evolved
-    td.cloud().devolatilisation().calculate
+    cloud.devolatilisation().calculate
     (
         dt,
         age,
@@ -1187,19 +1226,18 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
 
     scalar dMassTot = sum(dMassDV);
 
-    td.cloud().devolatilisation().addToDevolatilisationMass
+    cloud.devolatilisation().addToDevolatilisationMass
     (
         this->nParticle_*dMassTot
     );
 
-    Sh -= dMassTot*td.cloud().constProps().LDevol()/dt;
+    Sh -= dMassTot*cloud.constProps().LDevol()/dt;
 
     // Update molar emissions
-    if (td.cloud().heatTransfer().BirdCorrection())
+    if (cloud.heatTransfer().BirdCorrection())
     {
         // Molar average molecular weight of carrier mix
-        const scalar Wc =
-            max(SMALL, this->rhoc_*specie::RR*this->Tc_/this->pc_);
+        const scalar Wc = max(SMALL, td.rhoc()*RR*td.Tc()/td.pc());
 
         // Note: hardcoded gaseous diffusivities for now
         // TODO: add to carrier thermo
@@ -1207,16 +1245,16 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
 
         forAll(dMassDV, i)
         {
-            const label id = composition.localToGlobalCarrierId(GAS, i);
-            const scalar Cp = composition.carrier().Cp(id, Ts);
-            const scalar W = composition.carrier().W(id);
+            const label id = composition.localToCarrierId(GAS, i);
+            const scalar Cp = composition.carrier().Cp(id, td.pc(), Ts);
+            const scalar W = composition.carrier().Wi(id);
             const scalar Ni = dMassDV[i]/(this->areaS(d)*dt*W);
 
             // Dab calc'd using API vapour mass diffusivity function
             const scalar Dab =
                 3.6059e-3*(pow(1.8*Ts, 1.75))
                *sqrt(1.0/W + 1.0/Wc)
-               /(this->pc_*beta);
+               /(td.pc()*beta);
 
             N += Ni;
             NCpW += Ni*Cp*W;
@@ -1227,12 +1265,12 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
 
 
 template<class ParcelType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::ReactingMultiphaseParcel<ParcelType>::calcSurfaceReactions
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    trackingData& td,
     const scalar dt,
-    const label cellI,
     const scalar d,
     const scalar T,
     const scalar mass,
@@ -1251,21 +1289,32 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcSurfaceReactions
 ) const
 {
     // Check that model is active
-    if (!td.cloud().surfaceReaction().active() || !canCombust)
+    if (!cloud.surfaceReaction().active())
     {
         return;
     }
 
+    // Initialise demand-driven constants
+    (void)cloud.constProps().hRetentionCoeff();
+    (void)cloud.constProps().TMax();
+
+    // Check that model is active
+    if (canCombust != 1)
+    {
+        return;
+    }
+
+
     // Update surface reactions
-    const scalar hReaction = td.cloud().surfaceReaction().calculate
+    const scalar hReaction = cloud.surfaceReaction().calculate
     (
         dt,
-        cellI,
+        this->cell(),
         d,
         T,
-        this->Tc_,
-        this->pc_,
-        this->rhoc_,
+        td.Tc(),
+        td.pc(),
+        td.rhoc(),
         mass,
         YGas,
         YLiquid,
@@ -1278,15 +1327,15 @@ void CML::ReactingMultiphaseParcel<ParcelType>::calcSurfaceReactions
         dMassSRCarrier
     );
 
-    td.cloud().surfaceReaction().addToSurfaceReactionMass
+    cloud.surfaceReaction().addToSurfaceReactionMass
     (
         this->nParticle_
        *(sum(dMassSRGas) + sum(dMassSRLiquid) + sum(dMassSRSolid))
     );
 
-    const scalar xsi = min(T/td.cloud().constProps().TMax(), 1.0);
+    const scalar xsi = min(T/cloud.constProps().TMax(), 1.0);
     const scalar coeff =
-        (1.0 - xsi*xsi)*td.cloud().constProps().hRetentionCoeff();
+        (1.0 - xsi*xsi)*cloud.constProps().hRetentionCoeff();
 
     Sh += coeff*hReaction/dt;
 
@@ -1332,6 +1381,12 @@ template<class ParcelType>
 CML::string CML::ReactingMultiphaseParcel<ParcelType>::propertyList_ =
     CML::ReactingMultiphaseParcel<ParcelType>::propertyList();
 
+template<class ParcelType>
+const std::size_t CML::ReactingMultiphaseParcel<ParcelType>::sizeofFields_
+(
+    0
+);
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -1369,15 +1424,7 @@ CML::ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel
     }
 
     // Check state of Istream
-    is.check
-    (
-        "ReactingMultiphaseParcel<ParcelType>::ReactingMultiphaseParcel"
-        "("
-            "const polyMesh&, "
-            "Istream&, "
-            "bool"
-        ")"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 

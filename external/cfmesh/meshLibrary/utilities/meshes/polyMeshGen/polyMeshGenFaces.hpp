@@ -201,10 +201,8 @@ inline label polyMeshGenFaces::nInternalFaces() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline label polyMeshGenFaces::nInternalFaces() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -220,10 +218,8 @@ inline const labelList& polyMeshGenFaces::owner() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline label polyMeshGenFaces::owner() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 
@@ -239,10 +235,8 @@ inline const labelList& polyMeshGenFaces::neighbour() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline label polyMeshGenFaces::neighbour() const"
-            ) << "Calculating addressing inside a parallel region."
+            FatalErrorInFunction
+                << "Calculating addressing inside a parallel region."
                 << " This is not thread safe" << exit(FatalError);
         # endif
 

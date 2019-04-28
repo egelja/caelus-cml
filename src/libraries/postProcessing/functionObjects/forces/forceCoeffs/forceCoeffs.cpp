@@ -104,7 +104,7 @@ void CML::forceCoeffs::writeFileHeader(const label i)
     }
     else
     {
-        FatalErrorIn("void CML::forces::writeFileHeader(const label)")
+        FatalErrorInFunction
             << "Unhandled file index: " << i
             << abort(FatalError);
     }

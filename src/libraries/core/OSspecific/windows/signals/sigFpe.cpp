@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,7 +30,14 @@ Class
 #include "OSspecific.hpp"
 #include "IOstreams.hpp"
 
+// We need to unset the strict ANSI marker, so that we can use the special
+// signal functions
+#ifdef __STRICT_ANSI__
+#undef __STRICT_ANSI__
+#endif
+
 #include <float.h> // *fp functions
+#include <limits>
 
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -38,6 +46,10 @@ __p_sig_fn_t CML::sigFpe::oldAction_ = SIG_DFL;
 
 static unsigned int fpOld_ = 0;
 
+void CML::sigFpe::fillNan(UList<scalar>& lst)
+{
+    lst = std::numeric_limits<scalar>::signaling_NaN();
+}
 
 static void clearFpe()
 {
@@ -53,10 +65,8 @@ void CML::sigFpe::sigFpeHandler(int)
     // Reset old handling
     if (SIG_ERR == success)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::sigFpeHandler()"
-        )   << "Cannot reset SIGFPE trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGFPE trapping"
             << abort(FatalError);    
     }
 
@@ -94,17 +104,15 @@ CML::sigFpe::~sigFpe()
 
         if (SIG_ERR == success)
         {
-            FatalErrorIn
-            (
-                "CML::sigFpe::~sigFpe()"
-            )   << "Cannot reset SIGFPE trapping"
+            FatalErrorInFunction
+                << "Cannot reset SIGFPE trapping"
                 << abort(FatalError);    
         }
     }
 
     if (env("CAELUS_SETNAN"))
     {
-        WarningIn("CML::sigFpe::~sigFpe()")
+        WarningInFunction
             << "CAELUS_SETNAN not supported under MSwindows "
             << endl;
     }
@@ -117,10 +125,8 @@ void CML::sigFpe::set(const bool verbose)
 {
     if (SIG_DFL != oldAction_)
     {
-        FatalErrorIn
-        (
-            "CML::sigFpe::set()"
-        )   << "Cannot call sigFpe::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigFpe::set() more than once"
             << abort(FatalError);
     }
 
@@ -143,10 +149,8 @@ void CML::sigFpe::set(const bool verbose)
         {
             oldAction_ = SIG_DFL;
 
-            FatalErrorIn
-            (
-                "CML::sigFpe::set()"
-            )   << "Cannot set SIGFPE trapping"
+            FatalErrorInFunction
+                << "Cannot set SIGFPE trapping"
                 << abort(FatalError);    
         }
     }
@@ -156,7 +160,7 @@ void CML::sigFpe::set(const bool verbose)
     {
         if (verbose)
         {
-            WarningIn("CML::sigFpe::set()")
+            WarningInFunction
               << "CAELUS_SETNAN not supported under MSwindows "
               << endl;
         }

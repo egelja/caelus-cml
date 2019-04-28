@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -800,7 +800,7 @@ CML::Map<CML::label> CML::surfaceFeatures::nearestSamples
 
         if (!info.hit())
         {
-            FatalErrorIn("surfaceFeatures::nearestSamples")
+            FatalErrorInFunction
                 << "Problem for point "
                 << surfPointI << " in tree " << ppTree.bb()
                 << abort(FatalError);
@@ -1269,19 +1269,15 @@ void CML::surfaceFeatures::operator=(const surfaceFeatures& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::surfaceFeatures::operator=(const CML::surfaceFeatures&)"
-        )   << "Attempted assignment to self"
+        FatalErrorInFunction
+            << "Attempted assignment to self"
             << abort(FatalError);
     }
 
     if (&surf_ != &rhs.surface())
     {
-        FatalErrorIn
-        (
-            "CML::surfaceFeatures::operator=(const CML::surfaceFeatures&)"
-        )   << "Operating on different surfaces"
+        FatalErrorInFunction
+            << "Operating on different surfaces"
             << abort(FatalError);
     }
 

@@ -676,24 +676,16 @@ CML::Field<Type>::Field
                 is >> static_cast<List<Type>&>(*this);
                 if (this->size() != s)
                 {
-                    FatalIOErrorIn
-                    (
-                        "Field<Type>::Field"
-                        "(const word& keyword, const dictionary&, const label)",
-                        dict
-                    )   << "size " << this->size()
+                    FatalIOErrorInFunction(dict)
+                        << "size " << this->size()
                         << " is not equal to the given value of " << s
                         << exit(FatalIOError);
                 }
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "Field<Type>::Field"
-                    "(const word& keyword, const dictionary&, const label)",
-                    dict
-                )   << "expected keyword 'uniform' or 'nonuniform', found "
+                FatalIOErrorInFunction(dict)
+                    << "expected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.wordToken()
                     << exit(FatalIOError);
             }
@@ -702,12 +694,8 @@ CML::Field<Type>::Field
         {
             if (is.version() == 2.0)
             {
-                IOWarningIn
-                (
-                    "Field<Type>::Field"
-                    "(const word& keyword, const dictionary&, const label)",
-                    dict
-                )   << "expected keyword 'uniform' or 'nonuniform', "
+                IOWarningInFunction(dict)
+                    << "expected keyword 'uniform' or 'nonuniform', "
                        "assuming deprecated Field format from "
                        "CML version 2.0." << endl;
 
@@ -718,12 +706,8 @@ CML::Field<Type>::Field
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "Field<Type>::Field"
-                    "(const word& keyword, const dictionary&, const label)",
-                    dict
-                )   << "expected keyword 'uniform' or 'nonuniform', found "
+                FatalIOErrorInFunction(dict)
+                    << "expected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.info()
                     << exit(FatalIOError);
             }
@@ -799,15 +783,8 @@ void CML::Field<Type>::map
 
     if (mapWeights.size() != mapAddressing.size())
     {
-        FatalErrorIn
-        (
-            "void Field<Type>::map\n"
-            "(\n"
-            "    const UList<Type>& mapF,\n"
-            "    const labelListList& mapAddressing,\n"
-            "    const scalarListList& mapWeights\n"
-            ")"
-        ) << "Weights and addressing map have different sizes.  Weights size: "
+        FatalErrorInFunction
+            << "Weights and addressing map have different sizes.  Weights size: "
             << mapWeights.size() << " map size: " << mapAddressing.size()
             << abort(FatalError);
     }
@@ -1161,7 +1138,7 @@ void CML::Field<Type>::operator=(const Field<Type>& rhs)
 {
     if (this == &rhs)
     {
-        FatalErrorIn("Field<Type>::operator=(const Field<Type>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -1189,7 +1166,7 @@ void CML::Field<Type>::operator=(const tmp<Field>& rhs)
 {
     if (this == &(rhs()))
     {
-        FatalErrorIn("Field<Type>::operator=(const tmp<Field>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -2087,7 +2064,7 @@ Type average(const UList<Type>& f)
     }
     else
     {
-        WarningIn("average(const UList<Type>&)")
+        WarningInFunction
             << "empty field, returning zero" << endl;
 
         return pTraits<Type>::zero;
@@ -2158,7 +2135,7 @@ Type gAverage
     }
     else
     {
-        WarningIn("gAverage(const UList<Type>&)")
+        WarningInFunction
             << "empty field, returning zero." << endl;
 
         return pTraits<Type>::zero;

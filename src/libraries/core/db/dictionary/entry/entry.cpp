@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -60,7 +60,7 @@ void CML::entry::operator=(const entry& e)
     // check for assignment to self
     if (this == &e)
     {
-        FatalErrorIn("entry::operator=(const entry&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }

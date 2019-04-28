@@ -66,9 +66,9 @@ CML::patchWriter::patchWriter
         nPoints_ += pp.nPoints();
         nFaces_ += pp.size();
 
-        forAll(pp, faceI)
+        forAll(pp, facei)
         {
-            nFaceVerts += pp[faceI].size() + 1;
+            nFaceVerts += pp[facei].size() + 1;
         }
     }
 
@@ -94,9 +94,9 @@ CML::patchWriter::patchWriter
     {
         const polyPatch& pp = patches[patchIDs_[i]];
 
-        forAll(pp, faceI)
+        forAll(pp, facei)
         {
-            const face& f = pp.localFaces()[faceI];
+            const face& f = pp.localFaces()[facei];
 
             vertLabels.append(f.size());
             writeFuns::insert(f + offset, vertLabels);
@@ -119,13 +119,13 @@ void CML::patchWriter::writePatchIDs()
 
     forAll(patchIDs_, i)
     {
-        label patchI = patchIDs_[i];
+        label patchi = patchIDs_[i];
 
-        const polyPatch& pp = mesh.boundaryMesh()[patchI];
+        const polyPatch& pp = mesh.boundaryMesh()[patchi];
 
         if (!isA<emptyPolyPatch>(pp))
         {
-            writeFuns::insert(scalarField(pp.size(), patchI), fField);
+            writeFuns::insert(scalarField(pp.size(), patchi), fField);
         }
     }
     writeFuns::write(os_, binary_, fField);

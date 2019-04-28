@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -144,14 +145,8 @@ void BlockDiagonalPrecon<Type>::precondition
     }
     else
     {
-        FatalErrorIn
-        (
-            "void BlockDiagonalPrecon<Type>:solve:\n"
-            "(\n"
-            "    Field<Type>& x,\n"
-            "    const Field<Type>& b\n"
-            ") const"
-        )   << "Problem with coefficient type morphing."
+        FatalErrorInFunction
+            << "Problem with coefficient type morphing."
             << abort(FatalError);
     }
 }

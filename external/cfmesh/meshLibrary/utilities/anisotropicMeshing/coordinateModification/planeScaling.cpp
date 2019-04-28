@@ -217,10 +217,8 @@ void planeScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void planeScaling::operator=(const dictionary& d)"
-        ) << "Entry origin is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry origin is not specified!" << exit(FatalError);
 
         origin_ = vector::zero;
     }
@@ -232,10 +230,8 @@ void planeScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void planeScaling::operator=(const dictionary& d)"
-        ) << "Entry lengthX is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry lengthX is not specified!" << exit(FatalError);
 
         normal_ = vector(1, 1, 1);
     }
@@ -247,10 +243,8 @@ void planeScaling::operator=(const dictionary& d)
     }
     else
     {
-        FatalErrorIn
-        (
-            "void planeScaling::operator=(const dictionary& d)"
-        ) << "Entry scalingDistance is not specified!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Entry scalingDistance is not specified!" << exit(FatalError);
 
         scalingDistance_ = 0.0;
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,7 +40,7 @@ void CML::primitiveMesh::calcCellEdges() const
         {
             // For checking calls:abort so we can quickly hunt down
             // origin of call
-            FatalErrorIn("primitiveMesh::calcCellEdges()")
+            FatalErrorInFunction
                 << abort(FatalError);
         }
     }
@@ -49,7 +49,7 @@ void CML::primitiveMesh::calcCellEdges() const
     // if the pointer is already set
     if (cePtr_)
     {
-        FatalErrorIn("primitiveMesh::calcCellEdges() const")
+        FatalErrorInFunction
             << "cellEdges already calculated"
             << abort(FatalError);
     }

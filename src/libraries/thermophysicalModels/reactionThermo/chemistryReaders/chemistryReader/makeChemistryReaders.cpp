@@ -21,6 +21,7 @@ License
 
 #include "makeReactionThermo.hpp"
 #include "thermoPhysicsTypes.hpp"
+#include "solidThermoPhysicsTypes.hpp"
 
 #include "chemistryReader.hpp"
 #include "caelusChemistryReader.hpp"
@@ -32,20 +33,65 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-makeChemistryReader(constGasThermoPhysics);
-makeChemistryReader(gasThermoPhysics);
-makeChemistryReader(constIsobaricGasThermoPhysics);
-makeChemistryReader(isobaricGasThermoPhysics);
-makeChemistryReader(icoPoly8ThermoPhysics);
+// Solid chemistry readers based on sensibleEnthalpy
 
-makeChemistryReaderType(caelusChemistryReader, constGasThermoPhysics);
-makeChemistryReaderType(caelusChemistryReader, gasThermoPhysics);
-makeChemistryReaderType(caelusChemistryReader, constIsobaricGasThermoPhysics);
-makeChemistryReaderType(caelusChemistryReader, isobaricGasThermoPhysics);
-makeChemistryReaderType(caelusChemistryReader, icoPoly8ThermoPhysics);
+makeChemistryReader(constGasHThermoPhysics);
+makeChemistryReader(gasHThermoPhysics);
+makeChemistryReader(constIncompressibleGasHThermoPhysics);
+makeChemistryReader(incompressibleGasHThermoPhysics);
+makeChemistryReader(icoPoly8HThermoPhysics);
+makeChemistryReader(constFluidHThermoPhysics);
+makeChemistryReader(constAdiabaticFluidHThermoPhysics);
+makeChemistryReader(constHThermoPhysics);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+makeChemistryReaderType(caelusChemistryReader, constGasHThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, gasHThermoPhysics);
+makeChemistryReaderType
+(
+    caelusChemistryReader,
+    constIncompressibleGasHThermoPhysics
+);
+makeChemistryReaderType(caelusChemistryReader, incompressibleGasHThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, icoPoly8HThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constFluidHThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constAdiabaticFluidHThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constHThermoPhysics);
+
+
+// Solid chemistry readers based on sensibleInternalEnergy
+
+makeChemistryReader(constGasEThermoPhysics);
+makeChemistryReader(gasEThermoPhysics);
+makeChemistryReader(constIncompressibleGasEThermoPhysics);
+makeChemistryReader(incompressibleGasEThermoPhysics);
+makeChemistryReader(icoPoly8EThermoPhysics);
+makeChemistryReader(constFluidEThermoPhysics);
+makeChemistryReader(constAdiabaticFluidEThermoPhysics);
+makeChemistryReader(constEThermoPhysics);
+
+makeChemistryReaderType(caelusChemistryReader, constGasEThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, gasEThermoPhysics);
+makeChemistryReaderType
+(
+    caelusChemistryReader,
+    constIncompressibleGasEThermoPhysics
+);
+makeChemistryReaderType(caelusChemistryReader, incompressibleGasEThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, icoPoly8EThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constFluidEThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constAdiabaticFluidEThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, constEThermoPhysics);
+
+
+// Solid chemistry readers for solids based on sensibleInternalEnergy
+
+makeChemistryReader(hConstSolidThermoPhysics);
+makeChemistryReader(hPowerSolidThermoPhysics);
+makeChemistryReader(hExpKappaConstSolidThermoPhysics);
+
+makeChemistryReaderType(caelusChemistryReader, hConstSolidThermoPhysics);
+//makeChemistryReaderType(caelusChemistryReader, hPowerSolidThermoPhysics);
+makeChemistryReaderType(caelusChemistryReader, hExpKappaConstSolidThermoPhysics);
+
 
 } // End namespace CML
-
-// ************************************************************************* //

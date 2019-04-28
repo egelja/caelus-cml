@@ -8,7 +8,7 @@ target = 'barotropicCompressibilityModel'
 sources = Split("""
 barotropicCompressibilityModel/barotropicCompressibilityModel.cpp
 barotropicCompressibilityModel/barotropicCompressibilityModelNew.cpp
-linear/linear.cpp
+linear/linearCompressibility.cpp
 Wallis/Wallis.cpp
 Chung/Chung.cpp
 """)

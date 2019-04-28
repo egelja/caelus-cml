@@ -40,7 +40,7 @@ CML::refineCell::refineCell(const label cellI, const vector& direction)
 
     if (magDir < SMALL)
     {
-        FatalErrorIn("refineCell(const label, const vector&)")
+        FatalErrorInFunction
             << "(almost)zero vector as direction for cell " << cellNo_
             << abort(FatalError);
     }
@@ -61,7 +61,7 @@ CML::refineCell::refineCell(Istream& is)
 
     if (magDir < SMALL)
     {
-        FatalErrorIn("refineCell(Istream&)")
+        FatalErrorInFunction
             << "(almost)zero vector as direction for cell " << cellNo_
             << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,6 +43,11 @@ Description
 #include "IOmanip.hpp"
 #include "globalIndex.hpp"
 #include "DynamicField.hpp"
+#include "PatchTools.hpp"
+#include "slipPointPatchFields.hpp"
+#include "fixedValuePointPatchFields.hpp"
+#include "calculatedPointPatchFields.hpp"
+#include "cyclicSlipPointPatchFields.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -66,7 +71,7 @@ void CML::autoLayerDriver::dumpDisplacement
 )
 {
     OFstream dispStr(prefix + "_disp.obj");
-    Info<< "Writing all displacements to " << dispStr.name() << nl << endl;
+    Info<< "Writing all displacements to " << dispStr.name() << endl;
 
     label vertI = 0;
 
@@ -82,7 +87,7 @@ void CML::autoLayerDriver::dumpDisplacement
 
 
     OFstream illStr(prefix + "_illegal.obj");
-    Info<< "Writing invalid displacements to " << illStr.name() << nl << endl;
+    Info<< "Writing invalid displacements to " << illStr.name() << endl;
 
     vertI = 0;
 
@@ -284,6 +289,46 @@ void CML::autoLayerDriver::handleNonManifolds
         }
     }
 
+    // 3. Remote check for end of layer across coupled boundaries
+    {
+        PackedBoolList isCoupledEdge(mesh.nEdges());
+
+        const labelList& cpEdges = mesh.globalData().coupledPatchMeshEdges();
+        forAll(cpEdges, i)
+        {
+            isCoupledEdge[cpEdges[i]] = true;
+        }
+        syncTools::syncEdgeList
+        (
+            mesh,
+            isCoupledEdge,
+            orEqOp<unsigned int>(),
+            0
+        );
+
+        forAll(edgeGlobalFaces, edgeI)
+        {
+            label meshEdgeI = meshEdges[edgeI];
+
+            if
+            (
+                pp.edgeFaces()[edgeI].size() == 1
+             && edgeGlobalFaces[edgeI].size() == 1
+             && isCoupledEdge[meshEdgeI]
+            )
+            {
+                // Edge of patch but no continuation across processor.
+                const edge& e = pp.edges()[edgeI];
+                //Pout<< "** Stopping extrusion on edge "
+                //    << pp.localPoints()[e[0]]
+                //    << pp.localPoints()[e[1]] << endl;
+                nonManifoldPoints.insert(pp.meshPoints()[e[0]]);
+                nonManifoldPoints.insert(pp.meshPoints()[e[1]]);
+            }
+        }
+    }
+
+
 
     label nNonManif = returnReduce(nonManifoldPoints.size(), sumOp<label>());
 
@@ -308,7 +353,6 @@ void CML::autoLayerDriver::handleNonManifolds
             }
         }
     }
-
 
     Info<< "Set displacement to zero for all " << nNonManif
         << " non-manifold points" << endl;
@@ -510,7 +554,7 @@ void CML::autoLayerDriver::handleWarpedFaces
 }
 
 
-//// No extrusion on cells with multiple patch faces. There usually is a reason
+//// No extrusion on cells with multiple patch faces. There ususally is a reason
 //// why combinePatchFaces hasn't succeeded.
 //void CML::autoLayerDriver::handleMultiplePatchFaces
 //(
@@ -613,7 +657,6 @@ void CML::autoLayerDriver::handleWarpedFaces
 //}
 
 
-// No extrusion on faces with differing number of layers for points
 void CML::autoLayerDriver::setNumLayers
 (
     const labelList& patchToNLayers,
@@ -621,7 +664,8 @@ void CML::autoLayerDriver::setNumLayers
     const indirectPrimitivePatch& pp,
     pointField& patchDisp,
     labelList& patchNLayers,
-    List<extrudeMode>& extrudeStatus
+    List<extrudeMode>& extrudeStatus,
+    label& nAddedCells
 ) const
 {
     const fvMesh& mesh = meshRefiner_.mesh();
@@ -677,7 +721,7 @@ void CML::autoLayerDriver::setNumLayers
     {
         if (maxLayers[i] == labelMin || minLayers[i] == labelMax)
         {
-            FatalErrorIn("setNumLayers(..)")
+            FatalErrorInFunction
                 << "Patchpoint:" << i << " coord:" << pp.localPoints()[i]
                 << " maxLayers:" << maxLayers
                 << " minLayers:" << minLayers
@@ -708,11 +752,101 @@ void CML::autoLayerDriver::setNumLayers
         }
     }
 
+
+    // Calculate number of cells to create
+    nAddedCells = 0;
+    forAll(pp.localFaces(), faceI)
+    {
+        const face& f = pp.localFaces()[faceI];
+
+        // Get max of extrusion per point
+        label nCells = 0;
+        forAll(f, fp)
+        {
+            nCells = max(nCells, patchNLayers[f[fp]]);
+        }
+
+        nAddedCells += nCells;
+    }
+    reduce(nAddedCells, sumOp<label>());
+
     //reduce(nConflicts, sumOp<label>());
     //
     //Info<< "Set displacement to zero for " << nConflicts
     //    << " points due to points being on multiple regions"
     //    << " with inconsistent nLayers specification." << endl;
+}
+
+
+// Construct pointVectorField with correct boundary conditions for adding
+// layers
+CML::tmp<CML::pointVectorField>
+CML::autoLayerDriver::makeLayerDisplacementField
+(
+    const pointMesh& pMesh,
+    const labelList& numLayers
+)
+{
+    // Construct displacement field.
+    const pointBoundaryMesh& pointPatches = pMesh.boundary();
+
+    wordList patchFieldTypes
+    (
+        pointPatches.size(),
+        slipPointPatchVectorField::typeName
+    );
+    wordList actualPatchTypes(patchFieldTypes.size());
+    forAll(pointPatches, patchI)
+    {
+        actualPatchTypes[patchI] = pointPatches[patchI].type();
+    }
+
+    forAll(numLayers, patchI)
+    {
+        //  0 layers: do not allow lslip so fixedValue 0
+        // >0 layers: fixedValue which gets adapted
+        if (numLayers[patchI] >= 0)
+        {
+            patchFieldTypes[patchI] = fixedValuePointPatchVectorField::typeName;
+        }
+    }
+
+    forAll(pointPatches, patchI)
+    {
+        if (isA<processorPointPatch>(pointPatches[patchI]))
+        {
+            patchFieldTypes[patchI] = calculatedPointPatchVectorField::typeName;
+        }
+        else if (isA<cyclicPointPatch>(pointPatches[patchI]))
+        {
+            patchFieldTypes[patchI] = cyclicSlipPointPatchVectorField::typeName;
+        }
+    }
+
+
+    const polyMesh& mesh = pMesh();
+
+    // Note: time().timeName() instead of meshRefinement::timeName() since
+    // postprocessable field.
+    tmp<pointVectorField> tfld
+    (
+        new pointVectorField
+        (
+            IOobject
+            (
+                "pointDisplacement",
+                mesh.time().timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            pMesh,
+            dimensionedVector("displacement", dimLength, vector::zero),
+            patchFieldTypes,
+            actualPatchTypes
+        )
+    );
+    return tfld;
 }
 
 
@@ -870,11 +1004,10 @@ void CML::autoLayerDriver::determineSidePatches
             patchDict.add("nFaces", 0);
             patchDict.add("startFace", mesh.nFaces());
 
-            Pout<< "Adding patch " << patchI
-                << " name:" << name
-                << " between " << Pstream::myProcNo()
-                << " and " << nbrProcI
-                << endl;
+            //Pout<< "Adding patch " << patchI
+            //    << " name:" << name
+            //    << " between " << Pstream::myProcNo()
+            //    << " and " << nbrProcI << endl;
 
             label procPatchI = meshRefiner_.appendPatch
             (
@@ -907,12 +1040,7 @@ void CML::autoLayerDriver::calculateLayerThickness
 (
     const indirectPrimitivePatch& pp,
     const labelList& patchIDs,
-    const scalarField& patchExpansionRatio,
-
-    const bool relativeSizes,
-    const scalarField& patchFinalLayerThickness,
-    const scalarField& patchMinThickness,
-
+    const layerParameters& layerParams,
     const labelList& cellLevel,
     const labelList& patchNLayers,
     const scalar edge0Len,
@@ -928,12 +1056,13 @@ void CML::autoLayerDriver::calculateLayerThickness
 
     // Rework patch-wise layer parameters into minimum per point
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Note: only layer parameters consistent with layer specification
+    // method (see layerParameters) will be correct.
+    scalarField firstLayerThickness(pp.nPoints(), GREAT);
+    scalarField finalLayerThickness(pp.nPoints(), GREAT);
+    scalarField totalThickness(pp.nPoints(), GREAT);
+    scalarField expRatio(pp.nPoints(), GREAT);
 
-    // Reuse input fields
-    expansionRatio.setSize(pp.nPoints());
-    expansionRatio = GREAT;
-    thickness.setSize(pp.nPoints());
-    thickness = GREAT;
     minThickness.setSize(pp.nPoints());
     minThickness = GREAT;
 
@@ -947,20 +1076,30 @@ void CML::autoLayerDriver::calculateLayerThickness
         {
             label ppPointI = pp.meshPointMap()[meshPoints[patchPointI]];
 
-            expansionRatio[ppPointI] = min
+            firstLayerThickness[ppPointI] = min
             (
-                expansionRatio[ppPointI],
-                patchExpansionRatio[patchI]
+                firstLayerThickness[ppPointI],
+                layerParams.firstLayerThickness()[patchI]
             );
-            thickness[ppPointI] = min
+            finalLayerThickness[ppPointI] = min
             (
-                thickness[ppPointI],
-                patchFinalLayerThickness[patchI]
+                finalLayerThickness[ppPointI],
+                layerParams.finalLayerThickness()[patchI]
+            );
+            totalThickness[ppPointI] = min
+            (
+                totalThickness[ppPointI],
+                layerParams.thickness()[patchI]
+            );
+            expRatio[ppPointI] = min
+            (
+                expRatio[ppPointI],
+                layerParams.expansionRatio()[patchI]
             );
             minThickness[ppPointI] = min
             (
                 minThickness[ppPointI],
-                patchMinThickness[patchI]
+                layerParams.minThickness()[patchI]
             );
         }
     }
@@ -969,7 +1108,7 @@ void CML::autoLayerDriver::calculateLayerThickness
     (
         mesh,
         pp.meshPoints(),
-        expansionRatio,
+        firstLayerThickness,
         minEqOp<scalar>(),
         GREAT               // null value
     );
@@ -977,7 +1116,23 @@ void CML::autoLayerDriver::calculateLayerThickness
     (
         mesh,
         pp.meshPoints(),
-        thickness,
+        finalLayerThickness,
+        minEqOp<scalar>(),
+        GREAT               // null value
+    );
+    syncTools::syncPointList
+    (
+        mesh,
+        pp.meshPoints(),
+        totalThickness,
+        minEqOp<scalar>(),
+        GREAT               // null value
+    );
+    syncTools::syncPointList
+    (
+        mesh,
+        pp.meshPoints(),
+        expRatio,
         minEqOp<scalar>(),
         GREAT               // null value
     );
@@ -999,14 +1154,18 @@ void CML::autoLayerDriver::calculateLayerThickness
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // by multiplying with the internal cell size.
 
-    if (relativeSizes)
+    if (layerParams.relativeSizes())
     {
-        if (min(patchMinThickness) < 0 || max(patchMinThickness) > 2)
+        if
+        (
+            min(layerParams.minThickness()) < 0
+         || max(layerParams.minThickness()) > 2
+        )
         {
-            FatalErrorIn("calculateLayerThickness(..)")
+            FatalErrorInFunction
                 << "Thickness should be factor of local undistorted cell size."
                 << " Valid values are [0..2]." << nl
-                << " minThickness:" << patchMinThickness
+                << " minThickness:" << layerParams.minThickness()
                 << exit(FatalError);
         }
 
@@ -1042,38 +1201,114 @@ void CML::autoLayerDriver::calculateLayerThickness
         {
             // Find undistorted edge size for this level.
             scalar edgeLen = edge0Len/(1<<maxPointLevel[pointI]);
-            thickness[pointI] *= edgeLen;
+            firstLayerThickness[pointI] *= edgeLen;
+            finalLayerThickness[pointI] *= edgeLen;
+            totalThickness[pointI] *= edgeLen;
             minThickness[pointI] *= edgeLen;
         }
     }
 
 
 
-    // Rework thickness (of final layer) into overall thickness of all layers
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Rework thickness parameters into overall thickness
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    forAll(thickness, pointI)
+    forAll(firstLayerThickness, pointI)
     {
-        // Calculate layer thickness based on expansion ratio
-        // and final layer height
-        if (expansionRatio[pointI] == 1)
-        {
-            thickness[pointI] *= patchNLayers[pointI];
-        }
-        else
-        {
+        thickness[pointI] = layerParams.layerThickness
+        (
+            patchNLayers[pointI],
+            firstLayerThickness[pointI],
+            finalLayerThickness[pointI],
+            totalThickness[pointI],
+            expRatio[pointI]
+        );
 
-            scalar invExpansion = 1.0 / expansionRatio[pointI];
-            label nLay = patchNLayers[pointI];
-            thickness[pointI] *=
-                (1.0 - pow(invExpansion, nLay))
-              / (1.0 - invExpansion);
-        }
+        expansionRatio[pointI] = layerParams.layerExpansionRatio
+        (
+            patchNLayers[pointI],
+            firstLayerThickness[pointI],
+            finalLayerThickness[pointI],
+            totalThickness[pointI],
+            expRatio[pointI]
+        );
     }
-
 
     //Info<< "calculateLayerThickness : min:" << gMin(thickness)
     //    << " max:" << gMax(thickness) << endl;
+
+    // Print a bit
+    {
+        const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+        // Find maximum length of a patch name, for a nicer output
+        label maxPatchNameLen = 0;
+        forAll(patchIDs, i)
+        {
+            label patchI = patchIDs[i];
+            word patchName = patches[patchI].name();
+            maxPatchNameLen = max(maxPatchNameLen, label(patchName.size()));
+        }
+
+        Info<< nl
+            << setf(ios_base::left) << setw(maxPatchNameLen) << "patch"
+            << setw(0) << " faces    layers avg thickness[m]" << nl
+            << setf(ios_base::left) << setw(maxPatchNameLen) << " "
+            << setw(0) << "                 near-wall overall" << nl
+            << setf(ios_base::left) << setw(maxPatchNameLen) << "-----"
+            << setw(0) << " -----    ------ --------- -------" << endl;
+
+        forAll(patchIDs, i)
+        {
+            label patchI = patchIDs[i];
+
+            const labelList& meshPoints = patches[patchI].meshPoints();
+
+            scalar sumThickness = 0;
+            scalar sumNearWallThickness = 0;
+
+            forAll(meshPoints, patchPointI)
+            {
+                label ppPointI = pp.meshPointMap()[meshPoints[patchPointI]];
+
+                sumThickness += thickness[ppPointI];
+                sumNearWallThickness += layerParams.firstLayerThickness
+                (
+                    patchNLayers[ppPointI],
+                    firstLayerThickness[ppPointI],
+                    finalLayerThickness[ppPointI],
+                    thickness[ppPointI],
+                    expansionRatio[ppPointI]
+                );
+            }
+
+            label totNPoints = returnReduce(meshPoints.size(), sumOp<label>());
+
+            // For empty patches, totNPoints is 0.
+            scalar avgThickness = 0;
+            scalar avgNearWallThickness = 0;
+
+            if (totNPoints > 0)
+            {
+                avgThickness =
+                    returnReduce(sumThickness, sumOp<scalar>())
+                  / totNPoints;
+                avgNearWallThickness =
+                    returnReduce(sumNearWallThickness, sumOp<scalar>())
+                  / totNPoints;
+            }
+
+            Info<< setf(ios_base::left) << setw(maxPatchNameLen)
+                << patches[patchI].name() << setprecision(3)
+                << " " << setw(8)
+                << returnReduce(patches[patchI].size(), sumOp<scalar>())
+                << " " << setw(6) << layerParams.numLayers()[patchI]
+                << " " << setw(8) << avgNearWallThickness
+                << "  " << setw(8) << avgThickness
+                << endl;
+        }
+        Info<< endl;
+    }
 }
 
 
@@ -1227,49 +1462,11 @@ void CML::autoLayerDriver::getPatchDisplacement
     const vectorField& faceNormals = pp.faceNormals();
     const labelListList& pointFaces = pp.pointFaces();
     const pointField& localPoints = pp.localPoints();
-    const labelList& meshPoints = pp.meshPoints();
 
     // Determine pointNormal
     // ~~~~~~~~~~~~~~~~~~~~~
 
-    pointField pointNormals(pp.nPoints(), vector::zero);
-    {
-        labelList nPointFaces(pp.nPoints(), 0);
-
-        forAll(faceNormals, faceI)
-        {
-            const face& f = pp.localFaces()[faceI];
-
-            forAll(f, fp)
-            {
-                pointNormals[f[fp]] += faceNormals[faceI];
-                nPointFaces[f[fp]] ++;
-            }
-        }
-
-        syncTools::syncPointList
-        (
-            mesh,
-            meshPoints,
-            pointNormals,
-            plusEqOp<vector>(),
-            vector::zero        // null value
-        );
-
-        syncTools::syncPointList
-        (
-            mesh,
-            meshPoints,
-            nPointFaces,
-            plusEqOp<label>(),
-            label(0)            // null value
-        );
-
-        forAll(pointNormals, i)
-        {
-            pointNormals[i] /= nPointFaces[i];
-        }
-    }
+    pointField pointNormals(PatchTools::pointNormals(mesh, pp));
 
 
     // Determine local length scale on patch
@@ -1393,7 +1590,7 @@ void CML::autoLayerDriver::getVertexString
 
     if (fp == -1)
     {
-        FatalErrorIn("autoLayerDriver::getVertexString(..)")
+        FatalErrorInFunction
             << "problem." << abort(FatalError);
     }
 
@@ -1481,7 +1678,7 @@ CML::label CML::autoLayerDriver::truncateDisplacement
 
         if (mesh.isInternalFace(faceI))
         {
-            FatalErrorIn("truncateDisplacement(..)")
+            FatalErrorInFunction
                 << "Faceset " << illegalPatchFaces.name()
                 << " contains internal face " << faceI << nl
                 << "It should only contain patch faces" << abort(FatalError);
@@ -1611,7 +1808,7 @@ CML::label CML::autoLayerDriver::truncateDisplacement
         // ~~~~~~~~~
 
         // Make sure that a string of edges becomes a single face so
-        // not a butterfly. Occasionally an 'edge' will have a single dangling
+        // not a butterfly. Occassionally an 'edge' will have a single dangling
         // vertex due to face combining. These get extruded as a single face
         // (with a dangling vertex) so make sure this extrusion forms a single
         // shape.
@@ -1807,15 +2004,6 @@ void CML::autoLayerDriver::setupLayerInfoTruncation
             }
         }
         nPatchPointLayers = patchNLayers;
-
-        // Set any unset patch face layers
-        forAll(nPatchFaceLayers, patchFaceI)
-        {
-            if (nPatchFaceLayers[patchFaceI] == -1)
-            {
-                nPatchFaceLayers[patchFaceI] = 0;
-            }
-        }
     }
     else
     {
@@ -2254,6 +2442,8 @@ void CML::autoLayerDriver::mergePatchFacesUndo
         << "      (0=straight, 180=fully concave)" << nl
         << endl;
 
+    const fvMesh& mesh = meshRefiner_.mesh();
+
     label nChanged = meshRefiner_.mergePatchFacesUndo
     (
         minCos,
@@ -2281,7 +2471,11 @@ void CML::autoLayerDriver::addLayers
     // Create baffles (pairs of faces that share the same points)
     // Baffles stored as owner and neighbour face that have been created.
     List<labelPair> baffles;
-    meshRefiner_.createZoneBaffles(globalToPatch_, baffles);
+    meshRefiner_.createZoneBaffles
+    (
+        globalToPatch_,
+        baffles
+    );
 
     if (debug)
     {
@@ -2345,10 +2539,10 @@ void CML::autoLayerDriver::addLayers
             mesh,
             pp(),
             patchIDs,
-            meshRefinement::makeDisplacementField
+            makeLayerDisplacementField
             (
                 pointMesh::New(mesh),
-                patchIDs
+                layerParams.numLayers()
             ),
             motionDict
         )
@@ -2365,8 +2559,12 @@ void CML::autoLayerDriver::addLayers
     // extrudeStatus = EXTRUDE.
     labelList patchNLayers(pp().nPoints(), 0);
 
+    // Ideal number of cells added
+    label nIdealAddedCells = 0;
+
     // Whether to add edge for all pp.localPoints.
     List<extrudeMode> extrudeStatus(pp().nPoints(), EXTRUDE);
+
 
     {
         // Get number of layer per point from number of layers per patch
@@ -2380,7 +2578,8 @@ void CML::autoLayerDriver::addLayers
 
             patchDisp,
             patchNLayers,
-            extrudeStatus
+            extrudeStatus,
+            nIdealAddedCells
         );
 
         // Precalculate mesh edge labels for patch edges
@@ -2416,22 +2615,27 @@ void CML::autoLayerDriver::addLayers
 
         // Disable extrusion on warped faces
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // It is hard to calculate some length scale if not in relative
+        // mode so disable this check.
+        if (layerParams.relativeSizes())
+        {
+            // Undistorted edge length
+            const scalar edge0Len =
+                meshRefiner_.meshCutter().level0EdgeLength();
+            const labelList& cellLevel = meshRefiner_.meshCutter().cellLevel();
 
-        // Undistorted edge length
-        const scalar edge0Len = meshRefiner_.meshCutter().level0EdgeLength();
-        const labelList& cellLevel = meshRefiner_.meshCutter().cellLevel();
+            handleWarpedFaces
+            (
+                pp,
+                layerParams.maxFaceThicknessRatio(),
+                edge0Len,
+                cellLevel,
 
-        handleWarpedFaces
-        (
-            pp,
-            layerParams.maxFaceThicknessRatio(),
-            edge0Len,
-            cellLevel,
-
-            patchDisp,
-            patchNLayers,
-            extrudeStatus
-        );
+                patchDisp,
+                patchNLayers,
+                extrudeStatus
+            );
+        }
 
         //// Disable extrusion on cells with multiple patch faces
         //// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2464,7 +2668,8 @@ void CML::autoLayerDriver::addLayers
     const scalar edge0Len = meshRefiner_.meshCutter().level0EdgeLength();
     const labelList& cellLevel = meshRefiner_.meshCutter().cellLevel();
 
-    // Determine (wanted) point-wise layer thickness and expansion ratio
+    // Determine (wanted) point-wise overall layer thickness and expansion
+    // ratio
     scalarField thickness(pp().nPoints());
     scalarField minThickness(pp().nPoints());
     scalarField expansionRatio(pp().nPoints());
@@ -2472,12 +2677,7 @@ void CML::autoLayerDriver::addLayers
     (
         pp,
         meshMover().adaptPatchIDs(),
-        layerParams.expansionRatio(),
-
-        layerParams.relativeSizes(),        // thickness relative to cellsize?
-        layerParams.finalLayerThickness(),  // wanted thicknes
-        layerParams.minThickness(),         // minimum thickness
-
+        layerParams,
         cellLevel,
         patchNLayers,
         edge0Len,
@@ -2487,87 +2687,6 @@ void CML::autoLayerDriver::addLayers
         expansionRatio
     );
 
-
-    // Print a bit
-    {
-        const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-        // Find maximum length of a patch name, for a nicer output
-        label maxPatchNameLen = 0;
-        forAll(meshMover().adaptPatchIDs(), i)
-        {
-            label patchI = meshMover().adaptPatchIDs()[i];
-            word patchName = patches[patchI].name();
-            maxPatchNameLen = max(maxPatchNameLen, label(patchName.size()));
-        }
-
-        Info<< nl
-            << setf(ios_base::left) << setw(maxPatchNameLen) << "patch"
-            << setw(0) << " faces    layers avg thickness[m]" << nl
-            << setf(ios_base::left) << setw(maxPatchNameLen) << " "
-            << setw(0) << "                 near-wall overall" << nl
-            << setf(ios_base::left) << setw(maxPatchNameLen) << "-----"
-            << setw(0) << " -----    ------ --------- -------" << endl;
-
-        forAll(meshMover().adaptPatchIDs(), i)
-        {
-            label patchI = meshMover().adaptPatchIDs()[i];
-
-            const labelList& meshPoints = patches[patchI].meshPoints();
-
-            scalar sumThickness = 0;
-            scalar sumNearWallThickness = 0;
-
-            forAll(meshPoints, patchPointI)
-            {
-                label ppPointI = pp().meshPointMap()[meshPoints[patchPointI]];
-
-                sumThickness += thickness[ppPointI];
-
-                label nLay = patchNLayers[ppPointI];
-                if (nLay > 0)
-                {
-                    if (expansionRatio[ppPointI] == 1)
-                    {
-                        sumNearWallThickness += thickness[ppPointI]/nLay;
-                    }
-                    else
-                    {
-                        scalar s =
-                            (1.0-pow(expansionRatio[ppPointI], nLay))
-                          / (1.0-expansionRatio[ppPointI]);
-                        sumNearWallThickness += thickness[ppPointI]/s;
-                    }
-                }
-            }
-
-            label totNPoints = returnReduce(meshPoints.size(), sumOp<label>());
-
-            // For empty patches, totNPoints is 0.
-            scalar avgThickness = 0;
-            scalar avgNearWallThickness = 0;
-
-            if (totNPoints > 0)
-            {
-                avgThickness =
-                    returnReduce(sumThickness, sumOp<scalar>())
-                  / totNPoints;
-                avgNearWallThickness =
-                    returnReduce(sumNearWallThickness, sumOp<scalar>())
-                  / totNPoints;
-            }
-
-            Info<< setf(ios_base::left) << setw(maxPatchNameLen)
-                << patches[patchI].name() << setprecision(3)
-                << " " << setw(8)
-                << returnReduce(patches[patchI].size(), sumOp<scalar>())
-                << " " << setw(6) << layerParams.numLayers()[patchI]
-                << " " << setw(8) << avgNearWallThickness
-                << "  " << setw(8) << avgThickness
-                << endl;
-        }
-        Info<< endl;
-    }
 
 
     // Calculate wall to medial axis distance for smoothing displacement
@@ -2585,7 +2704,7 @@ void CML::autoLayerDriver::addLayers
             false
         ),
         meshMover().pMesh(),
-        dimensionedScalar("pointMedialDist", dimless, 0.0)
+        dimensionedScalar("pointMedialDist", dimLength, 0.0)
     );
 
     pointVectorField dispVec
@@ -2600,7 +2719,7 @@ void CML::autoLayerDriver::addLayers
             false
         ),
         meshMover().pMesh(),
-        dimensionedVector("dispVec", dimless, vector::zero)
+        dimensionedVector("dispVec", dimLength, vector::zero)
     );
 
     pointScalarField medialRatio
@@ -2618,6 +2737,21 @@ void CML::autoLayerDriver::addLayers
         dimensionedScalar("medialRatio", dimless, 0.0)
     );
 
+    pointVectorField medialVec
+    (
+        IOobject
+        (
+            "medialVec",
+            meshRefiner_.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        meshMover().pMesh(),
+        dimensionedVector("medialVec", dimLength, vector::zero)
+    );
+
     // Setup information for medial axis smoothing. Calculates medial axis
     // and a smoothed displacement direction.
     // - pointMedialDist : distance to medial axis
@@ -2630,10 +2764,12 @@ void CML::autoLayerDriver::addLayers
         layerParams.nSmoothNormals(),
         layerParams.nSmoothSurfaceNormals(),
         layerParams.minMedianAxisAngleCos(),
+        layerParams.slipFeatureAngle(),
 
         dispVec,
         medialRatio,
-        pointMedialDist
+        pointMedialDist,
+        medialVec
     );
 
 
@@ -2725,6 +2861,7 @@ void CML::autoLayerDriver::addLayers
                 dispVec,
                 medialRatio,
                 pointMedialDist,
+                medialVec,
 
                 extrudeStatus,
                 patchDisp,
@@ -2757,7 +2894,7 @@ void CML::autoLayerDriver::addLayers
         {
             dumpDisplacement
             (
-                mesh.time().path()/"layer",
+                mesh.time().path()/"layer_" + meshRefiner_.timeName(),
                 pp(),
                 patchDisp,
                 extrudeStatus
@@ -2786,8 +2923,8 @@ void CML::autoLayerDriver::addLayers
         // Determine per point/per face number of layers to extrude. Also
         // handles the slow termination of layers when going switching layers
 
-        labelList nPatchPointLayers(pp().nPoints(),-1);
-        labelList nPatchFaceLayers(pp().localFaces().size(),-1);
+        labelList nPatchPointLayers(pp().nPoints(), -1);
+        labelList nPatchFaceLayers(pp().size(), -1);
         setupLayerInfoTruncation
         (
             meshMover(),
@@ -2798,31 +2935,22 @@ void CML::autoLayerDriver::addLayers
             nPatchFaceLayers
         );
 
-        // Calculate displacement for first layer for addPatchLayer.
-        // (first layer = layer of cells next to the original mesh)
-        vectorField firstDisp(patchNLayers.size(), vector::zero);
+        // Calculate displacement for final layer for addPatchLayer.
+        // (layer of cells next to the original mesh)
+        vectorField finalDisp(patchNLayers.size(), vector::zero);
 
         forAll(nPatchPointLayers, i)
         {
-            if (nPatchPointLayers[i] > 0)
-            {
-                if (expansionRatio[i] == 1.0)
-                {
-                    firstDisp[i] = patchDisp[i]/nPatchPointLayers[i];
-                }
-                else
-                {
-                    label nLay = nPatchPointLayers[i];
-                    scalar h =
-                        pow(expansionRatio[i], nLay - 1)
-                      * (1.0 - expansionRatio[i])
-                      / (1.0 - pow(expansionRatio[i], nLay));
-                    firstDisp[i] = h*patchDisp[i];
-                }
-            }
+            scalar ratio = layerParams.finalLayerThicknessRatio
+            (
+                nPatchPointLayers[i],
+                expansionRatio[i]
+            );
+            finalDisp[i] = ratio*patchDisp[i];
         }
 
-        const scalarField invExpansionRatio(1.0 / expansionRatio);
+
+        const scalarField invExpansionRatio(1.0/expansionRatio);
 
         // Add topo regardless of whether extrudeStatus is extruderemove.
         // Not add layer if patchDisp is zero.
@@ -2837,7 +2965,7 @@ void CML::autoLayerDriver::addLayers
             labelList(0),       // exposed patchIDs, not used for adding layers
             nPatchFaceLayers,   // layers per face
             nPatchPointLayers,  // layers per point
-            firstDisp,          // thickness of layer nearest internal mesh
+            finalDisp,          // thickness of layer nearest internal mesh
             meshMod
         );
 
@@ -2851,7 +2979,7 @@ void CML::autoLayerDriver::addLayers
 
 
         // With the stored topo changes we create a new mesh so we can
-        // undo if necessary.
+        // undo if neccesary.
 
         autoPtr<fvMesh> newMeshPtr;
         autoPtr<mapPolyMesh> map = meshMod.makeMesh
@@ -2863,7 +2991,7 @@ void CML::autoLayerDriver::addLayers
                 mesh.name(),
                 static_cast<polyMesh&>(mesh).instance(),
                 mesh.time(),  // register with runTime
-                static_cast<polyMesh&>(mesh).readOpt(),
+                IOobject::NO_READ,
                 static_cast<polyMesh&>(mesh).writeOpt()
             ),              // io params from original mesh but new name
             mesh,           // original mesh
@@ -2871,7 +2999,7 @@ void CML::autoLayerDriver::addLayers
         );
         fvMesh& newMesh = newMeshPtr();
 
-        //?necessary? Update fields
+        //?neccesary? Update fields
         newMesh.updateMesh(map);
 
         newMesh.setInstance(meshRefiner_.timeName());
@@ -2953,10 +3081,24 @@ void CML::autoLayerDriver::addLayers
 
         label nExtruded = countExtrusion(pp, extrudeStatus);
         label nTotFaces = returnReduce(pp().size(), sumOp<label>());
+        label nAddedCells = 0;
+        {
+            forAll(flaggedCells, cellI)
+            {
+                if (flaggedCells[cellI])
+                {
+                    nAddedCells++;
+                }
+            }
+            reduce(nAddedCells, sumOp<label>());
+        }
         Info<< "Extruding " << nExtruded
             << " out of " << nTotFaces
             << " faces (" << 100.0*nExtruded/nTotFaces << "%)."
             << " Removed extrusion at " << nTotChanged << " faces."
+            << endl
+            << "Added " << nAddedCells << " out of " << nIdealAddedCells
+            << " cells (" << 100.0*nAddedCells/nIdealAddedCells << "%)."
             << endl;
 
         if (nTotChanged == 0)
@@ -3117,7 +3259,7 @@ void CML::autoLayerDriver::doLayers
     // Merge coplanar boundary faces
     mergePatchFacesUndo(layerParams, motionDict);
 
-    // Per patch the number of layers (0 if no layer)
+    // Per patch the number of layers (-1 or 0 if no layer)
     const labelList& numLayers = layerParams.numLayers();
 
     // Patches that need to get a layer
@@ -3129,15 +3271,15 @@ void CML::autoLayerDriver::doLayers
         {
             const polyPatch& pp = mesh.boundaryMesh()[patchI];
 
-            if (!polyPatch::constraintType(pp.type()))
+            if (!pp.coupled())
             {
                 patchIDs.append(patchI);
                 nFacesWithLayers += mesh.boundaryMesh()[patchI].size();
             }
             else
             {
-                WarningIn("autoLayerDriver::doLayers(..)")
-                    << "Ignoring layers on constraint patch " << pp.name()
+                WarningInFunction
+                    << "Ignoring layers on coupled patch " << pp.name()
                     << endl;
             }
         }

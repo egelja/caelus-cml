@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -163,11 +163,8 @@ void CML::CompactIOList<T, BaseType>::readFromStream()
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CompactIOList<T, BaseType>::readFromStream()",
-            is
-        )   << "unexpected class name " << headerClassName()
+        FatalIOErrorInFunction(is)
+            << "unexpected class name " << headerClassName()
             << " expected " << typeName << " or " << IOList<T>::typeName
             << endl
             << "    while reading object " << name()

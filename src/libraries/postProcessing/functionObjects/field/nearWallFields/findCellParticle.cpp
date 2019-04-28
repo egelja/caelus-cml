@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013 OpenFOAM Foundation
+Copyright (C) 2013-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -26,15 +26,32 @@ License
 CML::findCellParticle::findCellParticle
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
-    const label tetPtI,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
+    const label tetPti,
     const point& end,
     const label data
 )
 :
-    particle(mesh, position, cellI, tetFaceI, tetPtI),
+    particle(mesh, coordinates, celli, tetFacei, tetPti),
+    start_(position()),
+    end_(end),
+    data_(data)
+{}
+
+
+CML::findCellParticle::findCellParticle
+(
+    const polyMesh& mesh,
+    const vector& position,
+    const label celli,
+    const point& end,
+    const label data
+)
+:
+    particle(mesh, position, celli),
+    start_(this->position()),
     end_(end),
     data_(data)
 {}
@@ -53,25 +70,20 @@ CML::findCellParticle::findCellParticle
     {
         if (is.format() == IOstream::ASCII)
         {
-            is >> end_;
+            is >> start_ >> end_;
             data_ = readLabel(is);
         }
         else
         {
             is.read
             (
-                reinterpret_cast<char*>(&end_),
-                sizeof(end_) + sizeof(data_)
+                reinterpret_cast<char*>(&start_),
+                sizeof(start_) + sizeof(end_) + sizeof(data_)
             );
         }
     }
 
-    // Check state of Istream
-    is.check
-    (
-        "findCellParticle::findCellParticle"
-        "(const Cloud<findCellParticle>&, Istream&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -79,6 +91,7 @@ CML::findCellParticle::findCellParticle
 
 bool CML::findCellParticle::move
 (
+    Cloud<findCellParticle>& cloud,
     trackingData& td,
     const scalar maxTrackLen
 )
@@ -86,21 +99,13 @@ bool CML::findCellParticle::move
     td.switchProcessor = false;
     td.keepParticle = true;
 
-    scalar tEnd = (1.0 - stepFraction())*maxTrackLen;
-    scalar dtMax = tEnd;
-
-    while (td.keepParticle && !td.switchProcessor && tEnd > SMALL)
+    while (td.keepParticle && !td.switchProcessor && stepFraction() < 1)
     {
-        // set the lagrangian time-step
-        scalar dt = min(dtMax, tEnd);
-
-        dt *= trackToFace(end_, td);
-
-        tEnd -= dt;
-        stepFraction() = 1.0 - tEnd/maxTrackLen;
+        const scalar f = 1 - stepFraction();
+        trackToAndHitFace(f*(end_ - start_), f, cloud, td);
     }
 
-    if (tEnd < SMALL || !td.keepParticle)
+    if (stepFraction() == 1 || !td.keepParticle)
     {
         // Hit endpoint or patch. If patch hit could do fancy stuff but just
         // to use the patch point is good enough for now.
@@ -112,14 +117,7 @@ bool CML::findCellParticle::move
 }
 
 
-bool CML::findCellParticle::hitPatch
-(
-    const polyPatch&,
-    trackingData& td,
-    const label patchI,
-    const scalar trackFraction,
-    const tetIndices& tetIs
-)
+bool CML::findCellParticle::hitPatch(Cloud<findCellParticle>&, trackingData&)
 {
     return false;
 }
@@ -127,7 +125,7 @@ bool CML::findCellParticle::hitPatch
 
 void CML::findCellParticle::hitWedgePatch
 (
-    const wedgePolyPatch&,
+    Cloud<findCellParticle>&,
     trackingData& td
 )
 {
@@ -138,7 +136,7 @@ void CML::findCellParticle::hitWedgePatch
 
 //void CML::findCellParticle::hitSymmetryPlanePatch
 //(
-//    const symmetryPlanePolyPatch&,
+//    Cloud<findCellParticle>&,
 //    trackingData& td
 //)
 //{
@@ -149,7 +147,7 @@ void CML::findCellParticle::hitWedgePatch
 
 void CML::findCellParticle::hitSymmetryPatch
 (
-    const symmetryPolyPatch&,
+    Cloud<findCellParticle>&,
     trackingData& td
 )
 {
@@ -160,8 +158,32 @@ void CML::findCellParticle::hitSymmetryPatch
 
 void CML::findCellParticle::hitCyclicPatch
 (
-    const cyclicPolyPatch&,
+    Cloud<findCellParticle>&,
     trackingData& td
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+void CML::findCellParticle::hitCyclicAMIPatch
+(
+    Cloud<findCellParticle>&,
+    trackingData& td,
+    const vector&
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+void CML::findCellParticle::hitCyclicACMIPatch
+(
+    Cloud<findCellParticle>&,
+    trackingData& td,
+    const vector&
 )
 {
     // Remove particle
@@ -171,7 +193,7 @@ void CML::findCellParticle::hitCyclicPatch
 
 void CML::findCellParticle::hitProcessorPatch
 (
-    const processorPolyPatch&,
+    Cloud<findCellParticle>&,
     trackingData& td
 )
 {
@@ -182,19 +204,7 @@ void CML::findCellParticle::hitProcessorPatch
 
 void CML::findCellParticle::hitWallPatch
 (
-    const wallPolyPatch& wpp,
-    trackingData& td,
-    const tetIndices&
-)
-{
-    // Remove particle
-    td.keepParticle = false;
-}
-
-
-void CML::findCellParticle::hitPatch
-(
-    const polyPatch& wpp,
+    Cloud<findCellParticle>&,
     trackingData& td
 )
 {
@@ -210,6 +220,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const findCellParticle& p)
     if (os.format() == IOstream::ASCII)
     {
         os  << static_cast<const particle&>(p)
+            << token::SPACE << p.start_
             << token::SPACE << p.end_
             << token::SPACE << p.data_;
     }
@@ -218,14 +229,12 @@ CML::Ostream& CML::operator<<(Ostream& os, const findCellParticle& p)
         os  << static_cast<const particle&>(p);
         os.write
         (
-            reinterpret_cast<const char*>(&p.end_),
-            sizeof(p.end_) + sizeof(p.data_)
+            reinterpret_cast<const char*>(&p.start_),
+            sizeof(p.start_) + sizeof(p.end_) + sizeof(p.data_)
         );
     }
 
-    // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const findCellParticle&)");
-
+    os.check(FUNCTION_NAME);
     return os;
 }
 

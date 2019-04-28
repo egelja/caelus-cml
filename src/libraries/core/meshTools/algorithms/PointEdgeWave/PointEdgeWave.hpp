@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -462,11 +462,8 @@ void CML::PointEdgeWave<Type, TrackingData>::transform
     }
     else
     {
-        FatalErrorIn
-        (
-            "PointEdgeWave<Type, TrackingData>::transform"
-            "(const tensorField&, List<Type>&)"
-        )   << "Non-uniform transformation on patch " << patch.name()
+        FatalErrorInFunction
+            << "Non-uniform transformation on patch " << patch.name()
             << " of type " << patch.type()
             << " not supported for point fields"
             << abort(FatalError);
@@ -966,12 +963,8 @@ CML::PointEdgeWave<Type, TrackingData>::PointEdgeWave
 {
     if (allPointInfo_.size() != mesh_.nPoints())
     {
-        FatalErrorIn
-        (
-            "PointEdgeWave<Type, TrackingData>::PointEdgeWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "size of pointInfo work array is not equal to the number"
+        FatalErrorInFunction
+            << "size of pointInfo work array is not equal to the number"
             << " of points in the mesh" << endl
             << "    pointInfo   :" << allPointInfo_.size() << endl
             << "    mesh.nPoints:" << mesh_.nPoints()
@@ -979,12 +972,8 @@ CML::PointEdgeWave<Type, TrackingData>::PointEdgeWave
     }
     if (allEdgeInfo_.size() != mesh_.nEdges())
     {
-        FatalErrorIn
-        (
-            "PointEdgeWave<Type, TrackingData>::PointEdgeWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "size of edgeInfo work array is not equal to the number"
+        FatalErrorInFunction
+            << "size of edgeInfo work array is not equal to the number"
             << " of edges in the mesh" << endl
             << "    edgeInfo   :" << allEdgeInfo_.size() << endl
             << "    mesh.nEdges:" << mesh_.nEdges()
@@ -1006,12 +995,8 @@ CML::PointEdgeWave<Type, TrackingData>::PointEdgeWave
 
     if ((maxIter > 0) && (iter >= maxIter))
     {
-        FatalErrorIn
-        (
-            "PointEdgeWave<Type, TrackingData>::PointEdgeWave"
-            "(const polyMesh&, const labelList&, const List<Type>,"
-            " List<Type>&, List<Type>&, const label maxIter)"
-        )   << "Maximum number of iterations reached. Increase maxIter." << endl
+        FatalErrorInFunction
+            << "Maximum number of iterations reached. Increase maxIter." << endl
             << "    maxIter:" << maxIter << endl
             << "    nChangedPoints:" << nChangedPoints_ << endl
             << "    nChangedEdges:" << nChangedEdges_ << endl
@@ -1122,7 +1107,7 @@ CML::label CML::PointEdgeWave<Type, TrackingData>::edgeToPoint()
 
         if (!changedEdge_[edgeI])
         {
-            FatalErrorIn("PointEdgeWave<Type, TrackingData>::edgeToPoint()")
+            FatalErrorInFunction
                 << "edge " << edgeI
                 << " not marked as having been changed" << nl
                 << "This might be caused by multiple occurrences of the same"
@@ -1200,7 +1185,7 @@ CML::label CML::PointEdgeWave<Type, TrackingData>::pointToEdge()
 
         if (!changedPoint_[pointI])
         {
-            FatalErrorIn("PointEdgeWave<Type, TrackingData>::pointToEdge()")
+            FatalErrorInFunction
                 << "Point " << pointI
                 << " not marked as having been changed" << nl
                 << "This might be caused by multiple occurrences of the same"

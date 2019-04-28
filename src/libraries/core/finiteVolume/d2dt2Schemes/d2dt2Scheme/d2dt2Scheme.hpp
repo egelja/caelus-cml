@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -228,11 +228,8 @@ tmp<d2dt2Scheme<Type> > d2dt2Scheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "d2dt2Scheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "D2dt2 scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "D2dt2 scheme not specified" << endl << endl
             << "Valid d2dt2 schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -245,11 +242,8 @@ tmp<d2dt2Scheme<Type> > d2dt2Scheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "d2dt2Scheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "Unknown d2dt2 scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown d2dt2 scheme " << schemeName << nl << nl
             << "Valid d2dt2 schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);

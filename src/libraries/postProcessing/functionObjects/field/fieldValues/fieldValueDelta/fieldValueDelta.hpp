@@ -250,14 +250,7 @@ Type CML::fieldValues::fieldValueDelta::applyOperation
         }
         default:
         {
-            FatalErrorIn
-            (
-                "Type CML::fieldValues::fieldValueDelta::applyOperation"
-                "("
-                    "const Type&, "
-                    "const Type&"
-                ") const"
-            )
+            FatalErrorInFunction
                 << "Unable to process operation "
                 << operationTypeNames_[operation_]
                 << abort(FatalError);

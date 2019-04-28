@@ -174,7 +174,7 @@ bool relaxationShapeRectangular::insideZone
 
 const pointField& relaxationShapeRectangular::pointSet()
 {
-    notImplemented("pointSet is not implemented for this shape");
+    NotImplemented;
 }
 
 
@@ -184,7 +184,7 @@ scalar relaxationShapeRectangular::interpolation
     const point& p0
 ) const
 {
-    notImplemented("interpolation is not implemented for this shape");
+    NotImplemented;
     return 0.0;
 }
 

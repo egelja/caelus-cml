@@ -46,10 +46,8 @@ CML::autoPtr<CML::cellLooper> CML::cellLooper::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "cellLooper::New(const word&, const polyMesh&)"
-        )   << "Unknown set type "
+        FatalErrorInFunction
+            << "Unknown set type "
             << type << nl << nl
             << "Valid cellLooper types : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -120,10 +118,8 @@ CML::label CML::cellLooper::getFirstVertEdge
         }
     }
 
-    FatalErrorIn
-    (
-        "getFirstVertEdge(const label, const label)"
-    )   << "Can not find edge on face " << faceI
+    FatalErrorInFunction
+        << "Can not find edge on face " << faceI
         << " using vertex " << vertI
         << abort(FatalError);
 

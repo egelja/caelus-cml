@@ -59,7 +59,7 @@ void CML::topoCellLooper::subsetList
         // changed)
         if (freeI < 0)
         {
-            FatalErrorIn("topoCellLooper::subsetList")
+            FatalErrorInFunction
                 << "startI:" << startI << "  freeI:" << freeI
                 << "  lst:" << lst << abort(FatalError);
         }
@@ -76,7 +76,7 @@ void CML::topoCellLooper::subsetList
 
         if ((freeI - startI) < 0)
         {
-            FatalErrorIn("topoCellLooper::subsetList")
+            FatalErrorInFunction
                 << "startI:" << startI << "  freeI:" << freeI
                 << "  lst:" << lst << abort(FatalError);
         }
@@ -456,7 +456,7 @@ void CML::topoCellLooper::walkSplitHex
             // On edge
             if (edgeI == -1)
             {
-                FatalErrorIn("walkSplitHex") << "Illegal edge and vert"
+                FatalErrorInFunction << "Illegal edge and vert"
                     << abort(FatalError);
             }
 
@@ -647,7 +647,7 @@ void CML::topoCellLooper::walkSplitHex
                 }
                 else
                 {
-                    FatalErrorIn("walkFromVert") << "Not yet implemented"
+                    FatalErrorInFunction << "Not yet implemented"
                         << "Choosing from more than "
                         << "two candidates:" << nextFaces
                         << " when coming from vertex " << vertI << " on cell "

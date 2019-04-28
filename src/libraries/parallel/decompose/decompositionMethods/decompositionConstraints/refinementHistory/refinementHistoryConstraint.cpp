@@ -80,7 +80,7 @@ void CML::refinementHistoryConstraint::add
 ) const
 {
     autoPtr<const refinementHistory> storagePtr;
-    refinementHistory const* refPtr = NULL;
+    refinementHistory const* refPtr = nullptr;
 
     if (mesh.foundObject<refinementHistory>("refinementHistory"))
     {
@@ -147,7 +147,7 @@ void CML::refinementHistoryConstraint::apply
 ) const
 {
     autoPtr<const refinementHistory> storagePtr;
-    refinementHistory const* refPtr = NULL;
+    refinementHistory const* refPtr = nullptr;
 
     if (mesh.foundObject<refinementHistory>("refinementHistory"))
     {

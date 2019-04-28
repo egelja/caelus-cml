@@ -127,7 +127,7 @@ void CML::lagrangianWriter::writeIOField(const wordList& objects)
 
         IOField<Type> fld(header);
 
-        os_ << object << ' ' << pTraits<Type>::nComponents << ' '
+        os_ << object << ' ' << int(pTraits<Type>::nComponents) << ' '
             << fld.size() << " float" << std::endl;
 
         DynamicList<floatScalar> fField(pTraits<Type>::nComponents*fld.size());
@@ -137,10 +137,6 @@ void CML::lagrangianWriter::writeIOField(const wordList& objects)
         writeFuns::write(os_, binary_, fField);
     }
 }
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

@@ -55,14 +55,14 @@ distributionFunctionObject::distributionFunctionObject
     startTime_("none")
 {
     if(writeTimeline_ && writeDistribution_) {
-        WarningIn("distributionFunctionObject::distributionFunctionObject")
+        WarningInFunction
             << "Both 'writeTimeline' and 'writeDistribution' set in " << name
                 << ". "
                 << "This is usually not a good idea because of the amount of data written"
                 << endl;
     }
     if(!writeTimeline_ && writeDistribution_) {
-        WarningIn("distributionFunctionObject::distributionFunctionObject")
+        WarningInFunction
             << "Both 'writeTimeline' and 'writeDistribution' not set. "
                 << "This makes calculating the distribution futile"
                 << endl;
@@ -152,7 +152,7 @@ void distributionFunctionObject::write() {
     }
 
     if(zeroDistribution) {
-        WarningIn("distributionFunctionObject::write")
+        WarningInFunction
             << "Distribution for " << name() << " has size 0. "
                 << "Doing nothing"
                 << endl;
@@ -195,7 +195,7 @@ wordList distributionFunctionObject::fileNames() {
 }
 
 stringList distributionFunctionObject::componentNames() {
-    const char * const *names=NULL;
+    const char * const *names=nullptr;
     direction nComp=0;
 
     if(distScalar_.valid()) {
@@ -214,7 +214,7 @@ stringList distributionFunctionObject::componentNames() {
         names=pTraits<sphericalTensor>::componentNames;
         nComp=pTraits<sphericalTensor>::nComponents;
     } else {
-        WarningIn("distributionFunctionObject::componentNames()")
+        WarningInFunction
             << "Can't determine type"
                 << endl;
 

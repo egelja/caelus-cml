@@ -83,11 +83,7 @@ void CML::fileFormats::VTKedgeFormat::write
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::VTKedgeFormat::write"
-            "(const fileName&, const edgeMesh&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }

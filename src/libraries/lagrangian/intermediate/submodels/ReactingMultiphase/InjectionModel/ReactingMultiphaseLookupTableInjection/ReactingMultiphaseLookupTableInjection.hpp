@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,7 +36,7 @@ Description
         u, v, w  = global cartesian velocity components [m/s]
         d        = diameter [m]
         rho      = density [kg/m3]
-        mDot     = mass flow rate [kg/m3]
+        mDot     = mass flow rate [kg/s]
         T        = temperature [K]
         cp       = specific heat capacity [J/kg/K]
         Y(3)     = total mass fraction of gas (Y0), liquid (Y1), solid (Y3)
@@ -155,8 +155,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -336,15 +336,15 @@ void CML::ReactingMultiphaseLookupTableInjection<CloudType>::setPositionAndCell
     const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     label injectorI = 0;
     if (randomise_)
     {
-        cachedRandom& rnd = this->owner().rndGen();
-        injectorI = rnd.position<label>(0, injectorCells_.size() - 1);
+        Random& rnd = this->owner().rndGen();
+        injectorI = rnd.sampleAB<label>(0, injectorCells_.size());
     }
     else
     {
@@ -353,8 +353,8 @@ void CML::ReactingMultiphaseLookupTableInjection<CloudType>::setPositionAndCell
 
     position = injectors_[injectorI].x();
     cellOwner = injectorCells_[injectorI];
-    tetFaceI = injectorTetFaces_[injectorI];
-    tetPtI = injectorTetPts_[injectorI];
+    tetFacei = injectorTetFaces_[injectorI];
+    tetPti = injectorTetPts_[injectorI];
 }
 
 

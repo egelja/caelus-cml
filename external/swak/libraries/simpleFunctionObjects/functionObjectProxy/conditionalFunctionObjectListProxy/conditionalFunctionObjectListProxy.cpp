@@ -73,7 +73,7 @@ void conditionalFunctionObjectListProxy::readElse(const dictionary &dict)
         new dictionary(dict.subDict("else"))
     );
     if(!elseDict_->found("functions")) {
-        FatalErrorIn("conditionalFunctionObjectListProxy::readElse(const dictionary &dict)")
+        FatalErrorInFunction
             << "Dictionary " << dict.name() << " has an 'else'-entry but that "
                 << "has no 'functions'-entry"
                 << endl

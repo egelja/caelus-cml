@@ -1,0 +1,40 @@
+/*---------------------------------------------------------------------------*
+Caelus 9.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 300;
+
+boundaryField
+{
+    bottom
+    {
+        type                compressible::thermalBaffle;
+        kappaMethod         solidThermo;
+        value               uniform 300;
+    }
+    side
+    {
+        type                zeroGradient;
+    }
+    top
+    {
+        type                compressible::thermalBaffle;
+        kappaMethod         solidThermo;
+        value               uniform 300;
+    }
+}
+
+
+// ************************************************************************* //

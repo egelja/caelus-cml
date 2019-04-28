@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef gradientUnburntEnthalpyFvPatchScalarField_H
-#define gradientUnburntEnthalpyFvPatchScalarField_H
+#ifndef gradientUnburntEnthalpyFvPatchScalarField_HPP
+#define gradientUnburntEnthalpyFvPatchScalarField_HPP
 
 #include "fixedGradientFvPatchFields.hpp"
 
@@ -53,83 +53,77 @@ public:
     TypeName("gradientUnburntEnthalpy");
 
 
-    // Constructors
+    //- Construct from patch and internal field
+    gradientUnburntEnthalpyFvPatchScalarField
+    (
+        const fvPatch&,
+        const DimensionedField<scalar, volMesh>&
+    );
 
-        //- Construct from patch and internal field
-        gradientUnburntEnthalpyFvPatchScalarField
+    //- Construct from patch, internal field and dictionary
+    gradientUnburntEnthalpyFvPatchScalarField
+    (
+        const fvPatch&,
+        const DimensionedField<scalar, volMesh>&,
+        const dictionary&
+    );
+
+    //- Construct by mapping given gradientUnburntEnthalpyFvPatchScalarField
+    // onto a new patch
+    gradientUnburntEnthalpyFvPatchScalarField
+    (
+        const gradientUnburntEnthalpyFvPatchScalarField&,
+        const fvPatch&,
+        const DimensionedField<scalar, volMesh>&,
+        const fvPatchFieldMapper&
+    );
+
+    //- Construct as copy
+    gradientUnburntEnthalpyFvPatchScalarField
+    (
+        const gradientUnburntEnthalpyFvPatchScalarField&
+    );
+
+    //- Construct and return a clone
+    virtual tmp<fvPatchScalarField> clone() const
+    {
+        return tmp<fvPatchScalarField>
         (
-            const fvPatch&,
-            const DimensionedField<scalar, volMesh>&
+            new gradientUnburntEnthalpyFvPatchScalarField(*this)
         );
+    }
 
-        //- Construct from patch, internal field and dictionary
-        gradientUnburntEnthalpyFvPatchScalarField
+    //- Construct as copy setting internal field reference
+    gradientUnburntEnthalpyFvPatchScalarField
+    (
+        const gradientUnburntEnthalpyFvPatchScalarField&,
+        const DimensionedField<scalar, volMesh>&
+    );
+
+    //- Construct and return a clone setting internal field reference
+    virtual tmp<fvPatchScalarField> clone
+    (
+        const DimensionedField<scalar, volMesh>& iF
+    ) const
+    {
+        return tmp<fvPatchScalarField>
         (
-            const fvPatch&,
-            const DimensionedField<scalar, volMesh>&,
-            const dictionary&
+            new gradientUnburntEnthalpyFvPatchScalarField(*this, iF)
         );
-
-        //- Construct by mapping given gradientUnburntEnthalpyFvPatchScalarField
-        // onto a new patch
-        gradientUnburntEnthalpyFvPatchScalarField
-        (
-            const gradientUnburntEnthalpyFvPatchScalarField&,
-            const fvPatch&,
-            const DimensionedField<scalar, volMesh>&,
-            const fvPatchFieldMapper&
-        );
-
-        //- Construct as copy
-        gradientUnburntEnthalpyFvPatchScalarField
-        (
-            const gradientUnburntEnthalpyFvPatchScalarField&
-        );
-
-        //- Construct and return a clone
-        virtual tmp<fvPatchScalarField> clone() const
-        {
-            return tmp<fvPatchScalarField>
-            (
-                new gradientUnburntEnthalpyFvPatchScalarField(*this)
-            );
-        }
-
-        //- Construct as copy setting internal field reference
-        gradientUnburntEnthalpyFvPatchScalarField
-        (
-            const gradientUnburntEnthalpyFvPatchScalarField&,
-            const DimensionedField<scalar, volMesh>&
-        );
-
-        //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone
-        (
-            const DimensionedField<scalar, volMesh>& iF
-        ) const
-        {
-            return tmp<fvPatchScalarField>
-            (
-                new gradientUnburntEnthalpyFvPatchScalarField(*this, iF)
-            );
-        }
+    }
 
 
     // Member functions
 
-        // Evaluation functions
+    // Evaluation functions
 
-            //- Update the coefficients associated with the patch field
-            virtual void updateCoeffs();
+    //- Update the coefficients associated with the patch field
+    virtual void updateCoeffs();
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

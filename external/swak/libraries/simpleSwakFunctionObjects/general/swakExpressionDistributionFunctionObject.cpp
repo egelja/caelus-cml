@@ -119,9 +119,9 @@ void swakExpressionDistributionFunctionObject::getDistribution()
             weightValuesSphericalTensor_
         );
     } else {
-        WarningIn("swakExpressionDistributionFunctionObject::getDistribution()")
+        WarningInFunction
             << "Don't know how to handle type " << rType
-                << endl;
+            << endl;
     }
 }
 
@@ -180,11 +180,11 @@ void swakExpressionDistributionFunctionObject::write()
             driver_->getResult<sphericalTensor>().ptr()
         );
     } else {
-        FatalErrorIn("swakExpressionDistributionFunctionObject::write()")
+        FatalErrorInFunction
             << "Don't know how to handle weight expressions of type "
-                << driver_->CommonValueExpressionDriver::getResultType()
-                << endl
-                << exit(FatalError);
+            << driver_->CommonValueExpressionDriver::getResultType()
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -212,11 +212,11 @@ void swakExpressionDistributionFunctionObject::write()
             }
         }
     } else {
-        FatalErrorIn("swakExpressionDistributionFunctionObject::write()")
+        FatalErrorInFunction
             << "Don't know how to handle logical expressions of type "
-                << driver_->CommonValueExpressionDriver::getResultType()
-                << endl
-                << exit(FatalError);
+            << driver_->CommonValueExpressionDriver::getResultType()
+            << endl
+            << exit(FatalError);
 
     }
 

@@ -83,19 +83,11 @@ groovyFlowRateInletVelocityFvPatchVectorField
     ),
     driver_(dict,this->patch())
 {
-    WarningIn(
-        "groovyFlowRateInletVelocityFvPatchVectorField::"
-        "groovyFlowRateInletVelocityFvPatchVectorField"
-        "("
-        "const fvPatch& p,"
-        "const DimensionedField<vector, volMesh>& iF,"
-        "const dictionary& dict"
-        ")"
-    ) 
+    WarningInFunction
         << "Starting with OF 2.1 this boundary condition is deprecated. Use the"
-            << " regular flowRateInletVelocityFvPatch with the swak-DataEntry"
-            << endl
-            << endl;
+        << " regular flowRateInletVelocityFvPatch with the swak-DataEntry"
+        << endl
+        << endl;
 }
 
 
@@ -166,10 +158,8 @@ void CML::groovyFlowRateInletVelocityFvPatchVectorField::updateCoeffs()
     }
     else
     {
-        FatalErrorIn
-        (
-            "flowRateInletVelocityFvPatchVectorField::updateCoeffs()"
-        )   << "dimensions of " << phiName_ << " are incorrect" << nl
+        FatalErrorInFunction
+            << "dimensions of " << phiName_ << " are incorrect" << nl
             << "    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()
             << " in file " << this->dimensionedInternalField().objectPath()

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
 
@@ -42,9 +42,8 @@ CML::autoPtr<CML::reactionRateFlameArea> CML::reactionRateFlameArea::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
+        FatalIOErrorInFunction
         (
-            "reactionRateFlameArea::New(const hsCombustionThermo&)",
             dict
         )   << "Unknown reactionRateFlameArea type "
             << reactionRateFlameAreaType << endl << endl
@@ -60,6 +59,3 @@ CML::autoPtr<CML::reactionRateFlameArea> CML::reactionRateFlameArea::New
     return autoPtr<reactionRateFlameArea>
         (cstrIter()(className, dict, mesh, combModel));
 }
-
-
-// ************************************************************************* //

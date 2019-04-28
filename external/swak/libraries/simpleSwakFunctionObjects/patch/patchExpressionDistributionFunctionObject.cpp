@@ -84,10 +84,10 @@ patchExpressionDistributionFunctionObject::patchExpressionDistributionFunctionOb
         const word &name=patchNames_[i];
         patchIDs_[i]=mesh.boundaryMesh().findPatchID(name);
         if(patchIDs_[i]<0) {
-            FatalErrorIn("patchExpressionDistributionFunctionObject::patchExpressionDistributionFunctionObject")
+            FatalErrorInFunction
                 << "Patch name " << name << " is not a valid patch"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
     }
 }
@@ -117,9 +117,9 @@ word patchExpressionDistributionFunctionObject::baseName()
 void patchExpressionDistributionFunctionObject::getDistribution()
 {
     if(drivers_.size()<=0) {
-        WarningIn("patchExpressionDistributionFunctionObject::getDistribution")
+        WarningInFunction
             << "No drivers/patches specified"
-                << endl;
+            << endl;
         return;
     }
 

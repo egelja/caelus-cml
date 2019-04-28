@@ -117,10 +117,10 @@ exprString &exprString::operator=(const string &o)
 
 bool exprString::isValid() {
     if(find('$')!=std::string::npos) {
-        FatalErrorIn("exprString::isValid()")
+        FatalErrorInFunction
             << "There is a '$' in " << *this
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
         return false;
     }

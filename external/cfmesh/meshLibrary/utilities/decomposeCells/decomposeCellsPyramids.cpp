@@ -109,13 +109,8 @@ void decomposeCells::findAddressingForCell
             Info << "faceEdges " << faceEdges << endl;
             Info << "edgeFaces " << edgeFaces << endl;
             mesh_.write();
-            FatalErrorIn
-            (
-                "void decomposeCells::findAddressingForCell"
-                "(const label, DynList<label, 32>&, DynList<edge, 64>&"
-                ", DynList<DynList<label, 8> >&"
-                ", DynList<DynList<label, 2>, 64>&) const"
-            ) << "Cell " << cellI << " is not topologically closed!"
+            FatalErrorInFunction
+                << "Cell " << cellI << " is not topologically closed!"
                 << abort(FatalError);
         }
 }

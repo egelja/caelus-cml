@@ -229,14 +229,8 @@ groovyBCFvPatchField<Type>::groovyBCFvPatchField
     else
     {
         fvPatchField<Type>::operator=(this->refValue());
-        WarningIn(
-            "groovyBCFvPatchField<Type>::groovyBCFvPatchField"
-            "("
-            "const fvPatch& p,"
-            "const DimensionedField<Type, volMesh>& iF,"
-            "const dictionary& dict"
-            ")"
-        ) << "No value defined for " << this->dimensionedInternalField().name()
+        WarningInFunction
+            << "No value defined for " << this->dimensionedInternalField().name()
             << " on " << this->patch().name() << " therefore using "
             << this->refValue()
             << endl;

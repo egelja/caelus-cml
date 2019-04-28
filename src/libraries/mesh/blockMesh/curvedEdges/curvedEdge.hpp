@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,6 +43,13 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class curvedEdge;
+
+Ostream& operator<<(Ostream&, const curvedEdge&);
+
 
 /*---------------------------------------------------------------------------*\
                          Class curvedEdge Declaration

@@ -169,14 +169,6 @@ CloudProxyForReactingMultiphaseParcel<CloudType>::CloudProxyForReactingMultiphas
         );
     }
 
-    this->addScalarFunction(
-        "pc",
-        "Owner cell pressure",
-        new typename baseType::template ParticleMethodWrapperValue<scalar>(
-            &CloudType::particleType::pc
-        )
-    );
-
     //- constant Properties
     const typename CloudType::particleType::constantProperties &constProps=
         this->theCloud().constProps();

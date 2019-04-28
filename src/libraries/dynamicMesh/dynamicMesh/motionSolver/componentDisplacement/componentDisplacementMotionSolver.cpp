@@ -51,10 +51,7 @@ CML::direction CML::componentDisplacementMotionSolver::cmpt
     }
     else
     {
-        FatalErrorIn
-            (
-               "componentDisplacementMotionSolver::cmpt(const word&) const"
-            )
+        FatalErrorInFunction
             << "Given component name " << cmptName << " should be x, y or z"
             << exit(FatalError);
 
@@ -106,11 +103,7 @@ CML::componentDisplacementMotionSolver::componentDisplacementMotionSolver
 {
     if (points0_.size() != mesh.nPoints())
     {
-        FatalErrorIn
-            (
-                "componentDisplacementMotionSolver::componentDisplacementMotionSolver"
-                "(const polyMesh&, const IOdictionary&, const word&)"
-            )
+        FatalErrorInFunction
             << "Number of points in mesh " << mesh.nPoints()
             << " differs from number of points " << points0_.size()
             << " read from file "
@@ -191,10 +184,7 @@ void CML::componentDisplacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
         }
         else
         {
-            FatalErrorIn
-                (
-                    "componentDisplacementMotionSolver::updateMesh(const mapPolyMesh&)"
-                )
+            FatalErrorInFunction
                 << "Cannot work out coordinates of introduced vertices."
                 << " New vertex " << pointi << " at coordinate "
                 << points[pointi] << exit(FatalError);

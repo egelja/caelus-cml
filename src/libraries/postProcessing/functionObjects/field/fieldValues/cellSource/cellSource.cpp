@@ -80,7 +80,7 @@ void CML::fieldValues::cellSource::setCellZoneCells()
 
             if (zoneId < 0)
             {
-                FatalErrorIn("cellSource::cellSource::setCellZoneCells()")
+                FatalErrorInFunction
                     << "Unknown cell zone name: " << sourceName_
                     << ". Valid cell zones are: " << mesh().cellZones().names()
                     << nl << exit(FatalError);
@@ -100,7 +100,7 @@ void CML::fieldValues::cellSource::setCellZoneCells()
 
         default:
         {
-            FatalErrorIn("cellSource::setCellZoneCells()")
+            FatalErrorInFunction
                << "Unknown source type. Valid source types are:"
                 << sourceTypeNames_ << nl << exit(FatalError);
         }
@@ -127,10 +127,8 @@ void CML::fieldValues::cellSource::initialise(const dictionary& dict)
 
     if (nCells_ == 0)
     {
-        WarningIn
-        (
-            "CML::fieldValues::cellSource::initialise(const dictionary&)"
-        )   << type() << " " << name_ << ": "
+        WarningInFunction
+            << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
             << "    Source has no cells - deactivating" << endl;
 
@@ -257,7 +255,7 @@ void CML::fieldValues::cellSource::write()
 
             if (!processed)
             {
-                WarningIn("void CML::fieldValues::cellSource::write()")
+                WarningInFunction
                     << "Requested field " << fieldName
                     << " not found in database and not processed"
                     << endl;

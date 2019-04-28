@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -119,9 +119,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         );
 
 
@@ -154,8 +152,8 @@ CML::LocalInteraction<CloudType>::LocalInteraction
     nStick_(patchData_.size(), 0),
     massStick_(patchData_.size(), 0.0),
     writeFields_(this->coeffDict().lookupOrDefault("writeFields", false)),
-    massEscapePtr_(NULL),
-    massStickPtr_(NULL)
+    massEscapePtr_(nullptr),
+    massStickPtr_(nullptr)
 {
     if (writeFields_)
     {
@@ -173,17 +171,17 @@ CML::LocalInteraction<CloudType>::LocalInteraction
     }
 
     // check that interactions are valid/specified
-    forAll(patchData_, patchI)
+    forAll(patchData_, patchi)
     {
         const word& interactionTypeName =
-            patchData_[patchI].interactionTypeName();
+            patchData_[patchi].interactionTypeName();
         const typename PatchInteractionModel<CloudType>::interactionType& it =
             this->wordToInteractionType(interactionTypeName);
 
         if (it == PatchInteractionModel<CloudType>::itOther)
         {
-            const word& patchName = patchData_[patchI].patchName();
-            FatalErrorIn("LocalInteraction(const dictionary&, CloudType&)")
+            const word& patchName = patchData_[patchi].patchName();
+            FatalErrorInFunction
                 << "Unknown patch interaction type "
                 << interactionTypeName << " for patch " << patchName
                 << ". Valid selections are:"
@@ -207,8 +205,8 @@ CML::LocalInteraction<CloudType>::LocalInteraction
     nStick_(pim.nStick_),
     massStick_(pim.massStick_),
     writeFields_(pim.writeFields_),
-    massEscapePtr_(NULL),
-    massStickPtr_(NULL)
+    massEscapePtr_(nullptr),
+    massStickPtr_(nullptr)
 {}
 
 
@@ -284,14 +282,12 @@ bool CML::LocalInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
-    bool& keepParticle,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    bool& keepParticle
 )
 {
-    label patchI = patchData_.applyToPatch(pp.index());
+    label patchi = patchData_.applyToPatch(pp.index());
 
-    if (patchI >= 0)
+    if (patchi >= 0)
     {
         vector& U = p.U();
         bool& active = p.active();
@@ -299,20 +295,24 @@ bool CML::LocalInteraction<CloudType>::correct
         typename PatchInteractionModel<CloudType>::interactionType it =
             this->wordToInteractionType
             (
-                patchData_[patchI].interactionTypeName()
+                patchData_[patchi].interactionTypeName()
             );
 
         switch (it)
         {
+            case PatchInteractionModel<CloudType>::itNone:
+            {
+                return false;
+            }
             case PatchInteractionModel<CloudType>::itEscape:
             {
                 scalar dm = p.mass()*p.nParticle();
 
                 keepParticle = false;
                 active = false;
-                U = vector::zero;
-                nEscape_[patchI]++;
-                massEscape_[patchI] += dm;
+                U = Zero;
+                nEscape_[patchi]++;
+                massEscape_[patchi] += dm;
                 if (writeFields_)
                 {
                     label pI = pp.index();
@@ -327,9 +327,9 @@ bool CML::LocalInteraction<CloudType>::correct
 
                 keepParticle = true;
                 active = false;
-                U = vector::zero;
-                nStick_[patchI]++;
-                massStick_[patchI] += dm;
+                U = Zero;
+                nStick_[patchi]++;
+                massStick_[patchi] += dm;
                 if (writeFields_)
                 {
                     label pI = pp.index();
@@ -346,7 +346,7 @@ bool CML::LocalInteraction<CloudType>::correct
                 vector nw;
                 vector Up;
 
-                this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
+                this->owner().patchData(p, pp, nw, Up);
 
                 // Calculate motion relative to patch velocity
                 U -= Up;
@@ -356,10 +356,10 @@ bool CML::LocalInteraction<CloudType>::correct
 
                 if (Un > 0)
                 {
-                    U -= (1.0 + patchData_[patchI].e())*Un*nw;
+                    U -= (1.0 + patchData_[patchi].e())*Un*nw;
                 }
 
-                U -= patchData_[patchI].mu()*Ut;
+                U -= patchData_[patchi].mu()*Ut;
 
                 // Return velocity to global space
                 U += Up;
@@ -368,20 +368,11 @@ bool CML::LocalInteraction<CloudType>::correct
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "bool LocalInteraction<CloudType>::correct"
-                    "("
-                        "typename CloudType::parcelType&, "
-                        "const polyPatch&, "
-                        "bool&, "
-                        "const scalar, "
-                        "const tetIndices&"
-                    ") const"
-                )   << "Unknown interaction type "
-                    << patchData_[patchI].interactionTypeName()
+                FatalErrorInFunction
+                    << "Unknown interaction type "
+                    << patchData_[patchi].interactionTypeName()
                     << "(" << it << ") for patch "
-                    << patchData_[patchI].patchName()
+                    << patchData_[patchi].patchName()
                     << ". Valid selections are:" << this->interactionTypeNames_
                     << endl << abort(FatalError);
             }
@@ -438,7 +429,7 @@ void CML::LocalInteraction<CloudType>::info(Ostream& os)
             << ", " << mps[i] << nl;
     }
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setModelProperty("nEscape", npe);
         nEscape_ = 0;

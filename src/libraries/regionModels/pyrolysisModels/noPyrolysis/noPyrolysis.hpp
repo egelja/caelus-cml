@@ -33,6 +33,8 @@ SourceFiles
 
 #include "pyrolysisModel.hpp"
 #include "volFieldsFwd.hpp"
+#include "basicSolidChemistryModel.hpp"
+#include "radiationModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -72,14 +74,17 @@ protected:
         //- Read control parameters from dictionary
         virtual bool read(const dictionary& dict);
 
-        //- Reset solidChemistryModel and basicSolidThermo pointers
+        //- Reset solidChemistryModel and solidThermo pointers
         void constructThermoChemistry();
 
-        //- Reference to the solid chemistry model
-        autoPtr<solidChemistryModel> solidChemistry_;
-
         //- Reference to solid thermo
-        autoPtr<basicSolidThermo> solidThermo_;
+        autoPtr<solidReactionThermo> solidThermo_;
+
+        //- Reference to the solid chemistry model
+        autoPtr<basicSolidChemistryModel> solidChemistry_;
+
+         //- Pointer to radiation model
+        autoPtr<radiation::radiationModel> radiation_;
 
 
 public:
@@ -91,14 +96,20 @@ public:
     // Constructors
 
         //- Construct from type name and mesh
-        noPyrolysis(const word& modelType, const fvMesh& mesh);
+        noPyrolysis
+        (
+            const word& modelType,
+            const fvMesh& mesh,
+            const word& regionType
+        );
 
         //- Construct from type name and mesh and dict
         noPyrolysis
         (
             const word& modelType,
             const fvMesh& mesh,
-            const dictionary& dict
+            const dictionary& dict,
+            const word& regionType
         );
 
 
@@ -120,10 +131,10 @@ public:
             virtual const tmp<volScalarField> Cp() const;
 
             //- Return the region absorptivity [1/m]
-            virtual const volScalarField& kappa() const;
+            virtual tmp<volScalarField> kappaRad() const;
 
             //- Return the region thermal conductivity [W/m/k]
-            virtual const volScalarField& K() const;
+            virtual tmp<volScalarField> kappa() const;
 
             //- Return the total gas mass flux to primary region [kg/m2/s]
             virtual const surfaceScalarField& phiGas() const;

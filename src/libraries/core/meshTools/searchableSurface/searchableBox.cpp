@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -54,7 +54,7 @@ void CML::searchableBox::projectOntoCoordPlane
     }
     else
     {
-        FatalErrorIn("searchableBox::projectOntoCoordPlane(..)")
+        FatalErrorInFunction
             << "Point on plane " << planePt
             << " is not on coordinate " << min()[dir]
             << " nor " << max()[dir] << abort(FatalError);
@@ -168,14 +168,8 @@ CML::searchableBox::searchableBox
 {
     if (!contains(midpoint()))
     {
-        FatalErrorIn
-        (
-            "CML::searchableBox::searchableBox\n"
-            "(\n"
-            "    const IOobject& io,\n"
-            "    const treeBoundBox& bb\n"
-            ")\n"
-        )   << "Illegal bounding box specification : "
+        FatalErrorInFunction
+            << "Illegal bounding box specification : "
             << static_cast<const treeBoundBox>(*this) << exit(FatalError);
     }
 
@@ -194,14 +188,8 @@ CML::searchableBox::searchableBox
 {
     if (!contains(midpoint()))
     {
-        FatalErrorIn
-        (
-            "CML::searchableBox::searchableBox\n"
-            "(\n"
-            "    const IOobject& io,\n"
-            "    const treeBoundBox& bb\n"
-            ")\n"
-        )   << "Illegal bounding box specification : "
+        FatalErrorInFunction
+            << "Illegal bounding box specification : "
             << static_cast<const treeBoundBox>(*this) << exit(FatalError);
     }
 
@@ -373,11 +361,7 @@ CML::pointIndexHit CML::searchableBox::findNearest
     point& linePoint
 ) const
 {
-    notImplemented
-    (
-        "searchableBox::findNearest"
-        "(const linePointRef&, treeBoundBox&, point&)"
-    );
+    NotImplemented;
     return pointIndexHit();
 }
 
@@ -433,7 +417,7 @@ CML::pointIndexHit CML::searchableBox::findLine
 
         if (info.index() == -1)
         {
-            FatalErrorIn("searchableBox::findLine(const point&, const point&)")
+            FatalErrorInFunction
                 << "point " << info.rawPoint()
                 << " on segment " << start << end
                 << " should be on face of " << *this

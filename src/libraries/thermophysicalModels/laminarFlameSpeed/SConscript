@@ -11,6 +11,7 @@ laminarFlameSpeed/laminarFlameSpeedNew.cpp
 constant/constant.cpp
 Gulders/Gulders.cpp
 GuldersEGR/GuldersEGR.cpp
+RaviPetersen/RaviPetersen.cpp
 """)
 
 caelus_inc = [

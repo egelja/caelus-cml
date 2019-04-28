@@ -214,10 +214,10 @@ tmp<vectorField> FaceSetValueExpressionDriver::makePositionField() const
 
 tmp<scalarField> FaceSetValueExpressionDriver::makeCellVolumeField() const
 {
-    FatalErrorIn("FaceSetValueExpressionDriver::makeCellVolumeField()")
+    FatalErrorInFunction
         << "faceSet knows nothing about cells"
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
 
     return tmp<scalarField>(
         new scalarField(0)
@@ -227,7 +227,7 @@ tmp<scalarField> FaceSetValueExpressionDriver::makeCellVolumeField() const
 
 // tmp<vectorField> FaceSetValueExpressionDriver::makePointField()
 // {
-//     notImplemented("FaceSetValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<scalarField> FaceSetValueExpressionDriver::makeFaceFlipField() const
@@ -285,18 +285,18 @@ tmp<scalarField> FaceSetValueExpressionDriver::makeFaceFlipField() const
             }
             else
             {
-                FatalErrorIn("tmp<scalarField> FaceSetValueExpressionDriver::makeFaceFlipField()")
+                FatalErrorInFunction
                     << "One of owner or neighbour of internal face "
-                        << faceI << " should be in cellSet " << cells.name()
-                        << " to be able to determine orientation." << endl
-                        << "Face:" << faceI
-                        << " own:" << mesh.faceOwner()[faceI]
-                        << " OwnInCellSet:"
-                        << cells.found(mesh.faceOwner()[faceI])
-                        << " nei:" << mesh.faceNeighbour()[faceI]
-                        << " NeiInCellSet:"
-                        << cells.found(mesh.faceNeighbour()[faceI])
-                        << exit(FatalError);
+                    << faceI << " should be in cellSet " << cells.name()
+                    << " to be able to determine orientation." << endl
+                    << "Face:" << faceI
+                    << " own:" << mesh.faceOwner()[faceI]
+                    << " OwnInCellSet:"
+                    << cells.found(mesh.faceOwner()[faceI])
+                    << " nei:" << mesh.faceNeighbour()[faceI]
+                    << " NeiInCellSet:"
+                    << cells.found(mesh.faceNeighbour()[faceI])
+                    << exit(FatalError);
             }
         }
         else
@@ -382,11 +382,11 @@ tmp<scalarField> FaceSetValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Face size: " << faceSize << endl;
 
-        FatalErrorIn("FaceSetValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
 
     return tmp<scalarField>(makeFaceAreaMagField());

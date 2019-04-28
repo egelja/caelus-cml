@@ -38,7 +38,7 @@ Author
 
 #include "fvCFD.hpp"
 #include "complexExp.hpp"
-#include "scalarSquareMatrix.hpp"
+#include "scalarMatrices.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

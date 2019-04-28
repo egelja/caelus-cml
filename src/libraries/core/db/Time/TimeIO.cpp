@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2016 OpenCFD Ltd
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -101,7 +101,7 @@ void CML::Time::readDict()
     {
         if (writeControl_ == wcTimeStep && label(writeInterval_) < 1)
         {
-            FatalIOErrorIn("Time::readDict()", controlDict_)
+            FatalIOErrorInFunction(controlDict_)
                 << "writeInterval < 1 for writeControl timeStep"
                 << exit(FatalIOError);
         }
@@ -135,7 +135,7 @@ void CML::Time::readDict()
              && label(secondaryWriteInterval_) < 1
             )
             {
-                FatalIOErrorIn("Time::readDict()", controlDict_)
+                FatalIOErrorInFunction(controlDict_)
                     << "secondaryWriteInterval < 1"
                     << " for secondaryWriteControl timeStep"
                     << exit(FatalIOError);
@@ -195,7 +195,7 @@ void CML::Time::readDict()
     {
         if (purgeWrite_ < 0)
         {
-            WarningIn("Time::readDict()")
+            WarningInFunction
                 << "invalid value for purgeWrite " << purgeWrite_
                 << ", should be >= 0, setting to 0"
                 << endl;
@@ -222,7 +222,7 @@ void CML::Time::readDict()
         }
         else
         {
-            WarningIn("Time::readDict()")
+            WarningInFunction
                 << "unsupported time format " << formatName
                 << endl;
         }
@@ -301,7 +301,7 @@ void CML::Time::readDict()
          && writeCompression_ == IOstream::COMPRESSED
         )
         {
-            IOWarningIn("Time::readDict()", controlDict_)
+            IOWarningInFunction(controlDict_)
                 << "Selecting compressed binary is inefficient and ineffective"
                 << ", resetting to uncompressed binary"
                 << endl;

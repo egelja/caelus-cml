@@ -212,14 +212,8 @@ point boundaryLayers::createNewVertex
 
             if( otherVertex == -1 )
             {
-                FatalErrorIn
-                (
-                    "void boundaryLayers::createNewVertices"
-                    "("
-                        "const boolList& treatPatches,"
-                        "labelList& newLabelForVertex"
-                    ")"
-                ) << "Cannot find moving vertex!" << exit(FatalError);
+                FatalErrorInFunction
+                    << "Cannot find moving vertex!" << exit(FatalError);
             }
 
             //- normal vector is co-linear with that edge
@@ -230,14 +224,8 @@ point boundaryLayers::createNewVertex
         }
         else
         {
-            FatalErrorIn
-            (
-                "void boundaryLayers::createNewVertices"
-                "("
-                    "const boolList& treatPatches,"
-                    "labelList& newLabelForVertex"
-                ") const"
-            ) << "There are more than 3 patches meeting at this vertex!"
+            FatalErrorInFunction
+                << "There are more than 3 patches meeting at this vertex!"
                 << pPatches[bpI] << abort(FatalError);
         }
 
@@ -263,14 +251,8 @@ point boundaryLayers::createNewVertex
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void boundaryLayers::createNewVertices"
-                        "("
-                            "const boolList& treatPatches,"
-                            "labelList& newLabelForVertex"
-                        ") const"
-                    ) << "Face does not contains this vertex!"
+                    FatalErrorInFunction
+                        << "Face does not contains this vertex!"
                         << abort(FatalError);
                 }
             }
@@ -382,13 +364,8 @@ void boundaryLayers::createNewVertices(const boolList& treatPatches)
     }
 
     if( nPoints_ != points.size() )
-        FatalErrorIn
-        (
-            "void boundaryLayers::createNewVertices("
-            "const meshSurfaceEngine& mse,"
-            "const boolList& treatPatches,"
-            "labelList& newLabelForVertex)"
-        ) << "Number of vertices " << nPoints_
+        FatalErrorInFunction
+            << "Number of vertices " << nPoints_
             << " does not match the list size "
             << abort(FatalError);
 
@@ -650,12 +627,8 @@ void boundaryLayers::createNewVertices(const labelList& patchLabels)
         }
         else
         {
-            FatalErrorIn
-            (
-                "void boundaryLayers::createNewVertices("
-                "const labelList& patchLabels, labelLongList& newLabelForVertex,"
-                "std::map<label, std::map<std::pair<label, label>, label> >&)"
-            ) << "Boundary node " << bpI << " is not at an edge!"
+            FatalErrorInFunction
+                << "Boundary node " << bpI << " is not at an edge!"
                 << abort(FatalError);
         }
     }
@@ -914,15 +887,8 @@ void boundaryLayers::createNewEdgeVerticesParallel
         }
         else
         {
-            FatalErrorIn
-            (
-                "void boundaryLayers::createNewEdgeVerticesParallel("
-                    "const labelLongList& procPoints,"
-                    "const List<direction>& pVertices,"
-                    "const boolList& treatPatches,"
-                    "labelList& newLabelForVertex"
-                ") const"
-            ) << "There are more than 3 patches meeting at this vertex!"
+            FatalErrorInFunction
+                << "There are more than 3 patches meeting at this vertex!"
                 << abort(FatalError);
         }
     }
@@ -1042,16 +1008,8 @@ void boundaryLayers::createNewEdgeVerticesParallel
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void boundaryLayers::createNewEdgeVerticesParallel"
-                        "("
-                            "const labelLongList& procPoints,"
-                            "const List<direction>& pVertices,"
-                            "const boolList& treatPatches,"
-                            "labelList& newLabelForVertex"
-                        ") const"
-                    ) << "Face does not contains this vertex!"
+                    FatalErrorInFunction
+                        << "Face does not contains this vertex!"
                         << abort(FatalError);
                 }
             }

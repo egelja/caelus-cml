@@ -8,7 +8,7 @@ Import('env')
 target = 'vorticity'
 
 sources = Split("""
-vorticity.cpp
+vorticity_app.cpp
 """)
 
 caelus_inc = [

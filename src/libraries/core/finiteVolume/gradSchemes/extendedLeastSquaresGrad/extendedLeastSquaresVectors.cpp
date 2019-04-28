@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,10 +42,10 @@ CML::extendedLeastSquaresVectors::extendedLeastSquaresVectors
 :
     MeshObject<fvMesh, extendedLeastSquaresVectors>(mesh),
     minDet_(minDet),
-    pVectorsPtr_(NULL),
-    nVectorsPtr_(NULL),
-    additionalCellsPtr_(NULL),
-    additionalVectorsPtr_(NULL)
+    pVectorsPtr_(nullptr),
+    nVectorsPtr_(nullptr),
+    additionalCellsPtr_(nullptr),
+    additionalVectorsPtr_(nullptr)
 {}
 
 
@@ -128,10 +128,8 @@ void CML::extendedLeastSquaresVectors::makeLeastSquaresVectors() const
 
     if (nDims == 1)
     {
-        FatalErrorIn
-        (
-            "extendedLeastSquaresVectors::makeLeastSquaresVectors() const"
-        )   << "Found a mesh with only one geometric dimension : "
+        FatalErrorInFunction
+            << "Found a mesh with only one geometric dimension : "
             << mesh.geometricD()
             << exit(FatalError);
     }
@@ -223,11 +221,8 @@ void CML::extendedLeastSquaresVectors::makeLeastSquaresVectors() const
         {
             if (nAddCells == maxNaddCells)
             {
-                FatalErrorIn
-                (
-                    "extendedLeastSquaresVectors::"
-                    "makeLeastSquaresVectors() const"
-                )   << "nAddCells exceeds maxNaddCells ("
+                FatalErrorInFunction
+                    << "nAddCells exceeds maxNaddCells ("
                     << maxNaddCells << ")"
                     << exit(FatalError);
             }

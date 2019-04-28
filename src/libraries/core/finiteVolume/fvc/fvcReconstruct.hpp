@@ -73,7 +73,7 @@ namespace fvc
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "fvMesh.hpp"
-#include "zeroGradientFvPatchFields.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -132,7 +132,7 @@ reconstruct
                 IOobject::NO_WRITE
             ),
             inv(surfaceSum(mesh.Sf()*faceVols))&surfaceSum(faceVols*ssf),
-            zeroGradientFvPatchField<GradType>::typeName
+            extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
     );
 

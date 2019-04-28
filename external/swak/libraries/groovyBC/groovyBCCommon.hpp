@@ -145,11 +145,11 @@ exprString groovyBCCommon<Type>::nullValue()
 template<class Type>
 const fvPatch &groovyBCCommon<Type>::getFvPatch(const pointPatch &pp) {
     if(!isA<fvMesh>(pp.boundaryMesh().mesh().db())) {
-        FatalErrorIn("getFvPatch(const pointPatch &pp)")
+        FatalErrorInFunction
             << " This will only work if I can find a fvMesh, but I only found a "
-                << typeid(pp.boundaryMesh().mesh().db()).name()
-                << endl
-                << exit(FatalError);
+            << typeid(pp.boundaryMesh().mesh().db()).name()
+            << endl
+            << exit(FatalError);
     }
     const fvMesh &fv=dynamic_cast<const fvMesh &>(pp.boundaryMesh().mesh().db());
     return fv.boundary()[pp.index()];
@@ -239,13 +239,13 @@ groovyBCCommon<Type>::groovyBCCommon
         &&
         Pstream::defaultCommsType == Pstream::blocking
     ) {
-        WarningIn("groovyBCCommon<Type>::groovyBCCommon")
+        WarningInFunction
             << "The commsType is set to 'blocking'. This might cause the run to"
-                << " fail for groovyBC (or similar) like " << dict.name() << nl
-                << "If you experience a MPI-related failure of this run go to "
-                << "the file '$WM_PROJECT_DIR/etc/controlDict' and change the "
-                << "setting 'commsType' to something different than 'blocking'"
-                << endl;
+            << " fail for groovyBC (or similar) like " << dict.name() << nl
+            << "If you experience a MPI-related failure of this run go to "
+            << "the file '$WM_PROJECT_DIR/etc/controlDict' and change the "
+            << "setting 'commsType' to something different than 'blocking'"
+            << endl;
     }
 }
 

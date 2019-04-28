@@ -23,6 +23,19 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+template<class Name>
+inline CML::word CML::IOobject::groupName(Name name, const word& group)
+{
+    if (group != word::null)
+    {
+        return name + ('.' + group);
+    }
+    else
+    {
+        return name;
+    }
+}
+
 template<class Stream>
 inline Stream& CML::IOobject::writeBanner(Stream& os, bool noHint)
 {

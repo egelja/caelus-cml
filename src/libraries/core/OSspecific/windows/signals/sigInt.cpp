@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,10 +41,8 @@ void CML::sigInt::sigIntHandler(int)
 
     if (SIG_ERR == success)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::sigIntHandler()"
-        )   << "Cannot reset SIGINT trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGINT trapping"
             << abort(FatalError);
     }
 
@@ -73,10 +72,8 @@ CML::sigInt::~sigInt()
 
     if (SIG_ERR == success)
     {
-         FatalErrorIn
-        (
-            "CML::sigInt::~sigInt()"
-        )   << "Cannot reset SIGINT trapping"
+         FatalErrorInFunction
+            << "Cannot reset SIGINT trapping"
             << abort(FatalError);    
     }
 }
@@ -88,10 +85,8 @@ void CML::sigInt::set(const bool verbose)
 {
     if (SIG_DFL != oldAction_)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::set()"
-        )   << "Cannot call sigInt::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigInt::set() more than once"
             << abort(FatalError);
     }
 
@@ -101,10 +96,8 @@ void CML::sigInt::set(const bool verbose)
     {
         oldAction_ = SIG_DFL;
  
-        FatalErrorIn
-        (
-            "CML::sigInt::set()"
-        )   << "Cannot set SIGINT trapping"
+        FatalErrorInFunction
+            << "Cannot set SIGINT trapping"
             << abort(FatalError);    
     }
 }

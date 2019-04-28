@@ -115,7 +115,7 @@ inline bool CML::refinementData::updateCell
 {
     if (!valid(td))
     {
-        FatalErrorIn("refinementData::updateCell") << "problem"
+        FatalErrorInFunction << "problem"
             << abort(FatalError);
         return false;
     }

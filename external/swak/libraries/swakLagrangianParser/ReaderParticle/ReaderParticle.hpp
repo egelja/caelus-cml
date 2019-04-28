@@ -68,7 +68,7 @@ public:
         ReaderParticle
         (
             const polyMesh& mesh,
-            const vector& position,
+            const barycentric& position,
             const label celli,
             const label tetFaceI,
             const label tetPtI
@@ -86,7 +86,7 @@ public:
             bool doCellFacePt = true
         )
         :
-            ReaderParticleBaseClass(mesh, position, cellI, doCellFacePt)
+            ReaderParticleBaseClass(mesh, position, cellI)
         {}
 
         //- Construct from Istream

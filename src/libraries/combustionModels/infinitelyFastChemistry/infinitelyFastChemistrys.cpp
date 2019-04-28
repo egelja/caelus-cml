@@ -22,33 +22,73 @@ License
 #include "makeCombustionTypes.hpp"
 
 #include "thermoPhysicsTypes.hpp"
-#include "psiCombustionModel.hpp"
-#include "rhoCombustionModel.hpp"
+#include "psiReactionThermo.hpp"
+#include "rhoReactionThermo.hpp"
 #include "infinitelyFastChemistry.hpp"
-#include "singleStepCombustion.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+namespace CML
+{
+
+// Combustion models based on sensibleEnthalpy
+
 makeCombustionTypesThermo
 (
     infinitelyFastChemistry,
-    psiCombustionModel,
-    gasThermoPhysics
+    psiReactionThermo,
+    gasHThermoPhysics
 );
 
 makeCombustionTypesThermo
 (
     infinitelyFastChemistry,
-    psiCombustionModel,
-    constGasThermoPhysics
+    psiReactionThermo,
+    constGasHThermoPhysics
 );
 
 makeCombustionTypesThermo
 (
     infinitelyFastChemistry,
-    rhoCombustionModel,
-    gasThermoPhysics
+    rhoReactionThermo,
+    gasHThermoPhysics
 );
 
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    rhoReactionThermo,
+    constGasHThermoPhysics
+);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Combustion models based on sensibleInternalEnergy
+
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    psiReactionThermo,
+    gasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    psiReactionThermo,
+    constGasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    rhoReactionThermo,
+    gasEThermoPhysics
+);
+
+makeCombustionTypesThermo
+(
+    infinitelyFastChemistry,
+    rhoReactionThermo,
+    constGasEThermoPhysics
+);
+
+}

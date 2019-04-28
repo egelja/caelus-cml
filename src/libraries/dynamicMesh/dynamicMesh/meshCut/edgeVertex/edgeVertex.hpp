@@ -105,10 +105,8 @@ public:
         {
             if (eVert < 0 || eVert >= (mesh.nPoints() + mesh.nEdges()))
             {
-                FatalErrorIn
-                (
-                    "edgeVertex::isEdge(const primitiveMesh&, const label)"
-                )   << "EdgeVertex " << eVert << " out of range "
+                FatalErrorInFunction
+                    << "EdgeVertex " << eVert << " out of range "
                     << mesh.nPoints() << " to "
                     << (mesh.nPoints() + mesh.nEdges() - 1)
                     << abort(FatalError);
@@ -126,10 +124,8 @@ public:
         {
             if (!isEdge(mesh, eVert))
             {
-                FatalErrorIn
-                (
-                    "edgeVertex::getEdge(const primitiveMesh&, const label)"
-                )   << "EdgeVertex " << eVert << " not an edge"
+                FatalErrorInFunction
+                    << "EdgeVertex " << eVert << " not an edge"
                     << abort(FatalError);
             }
             return eVert - mesh.nPoints();
@@ -144,10 +140,8 @@ public:
         {
             if (isEdge(mesh, eVert) || (eVert < 0))
             {
-                FatalErrorIn
-                (
-                    "edgeVertex::getVertex(const primitiveMesh&, const label)"
-                )   << "EdgeVertex " << eVert << " not a vertex"
+                FatalErrorInFunction
+                    << "EdgeVertex " << eVert << " not a vertex"
                     << abort(FatalError);
             }
             return eVert;
@@ -162,10 +156,8 @@ public:
         {
             if ((vertI < 0) || (vertI >= mesh.nPoints()))
             {
-                FatalErrorIn
-                (
-                    "edgeVertex::vertToEVert(const primitiveMesh&, const label)"
-                )   << "Illegal vertex number " << vertI
+                FatalErrorInFunction
+                    << "Illegal vertex number " << vertI
                     << abort(FatalError);
             }
             return vertI;
@@ -180,10 +172,8 @@ public:
         {
             if ((edgeI < 0) || (edgeI >= mesh.nEdges()))
             {
-                FatalErrorIn
-                (
-                    "edgeVertex::edgeToEVert(const primitiveMesh&const label)"
-                )   << "Illegal edge number " << edgeI
+                FatalErrorInFunction
+                    << "Illegal edge number " << edgeI
                     << abort(FatalError);
             }
             return mesh.nPoints() + edgeI;

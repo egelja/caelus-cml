@@ -61,21 +61,21 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
     os  << "POLYGONS " << size() << ' ' << 4*size() << nl;
 
     labelList faceMap;
-    surfacePatchList myPatches(calcPatches(faceMap));
+    surfacePatchList patches(calcPatches(faceMap));
 
     if (writeSorted)
     {
         label faceIndex = 0;
 
-        forAll(myPatches, patchI)
+        forAll(patches, patchi)
         {
             // Print all faces belonging to this patch
 
             for
             (
-                label patchFaceI = 0;
-                patchFaceI < myPatches[patchI].size();
-                patchFaceI++
+                label patchFacei = 0;
+                patchFacei < patches[patchi].size();
+                patchFacei++
             )
             {
                 if (faceIndex > 0 && (faceIndex % 10) == 0)
@@ -87,12 +87,12 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
                     os  << ' ';
                 }
 
-                const label faceI = faceMap[faceIndex++];
+                const label facei = faceMap[faceIndex++];
 
                 os  << "3 "
-                    << operator[](faceI)[0] << ' '
-                    << operator[](faceI)[1] << ' '
-                    << operator[](faceI)[2];
+                    << operator[](facei)[0] << ' '
+                    << operator[](facei)[1] << ' '
+                    << operator[](facei)[2];
             }
         }
         os  << nl;
@@ -106,13 +106,13 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
 
         faceIndex = 0;
 
-        forAll(myPatches, patchI)
+        forAll(patches, patchi)
         {
             for
             (
-                label patchFaceI = 0;
-                patchFaceI < myPatches[patchI].size();
-                patchFaceI++
+                label patchFacei = 0;
+                patchFacei < patches[patchi].size();
+                patchFacei++
             )
             {
                 if (faceIndex > 0 && (faceIndex % 10) == 0)
@@ -124,18 +124,18 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
                     os  << ' ';
                 }
 
-                const label faceI = faceMap[faceIndex++];
+                const label facei = faceMap[faceIndex++];
 
-                os  << operator[](faceI).region();
+                os  << operator[](facei).region();
             }
         }
         os  << nl;
     }
     else
     {
-        forAll(*this, faceI)
+        forAll(*this, facei)
         {
-            if (faceI > 0 && (faceI % 10) == 0)
+            if (facei > 0 && (facei % 10) == 0)
             {
                 os  << nl;
             }
@@ -144,9 +144,9 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
                 os  << ' ';
             }
             os  << "3 "
-                << operator[](faceI)[0] << ' '
-                << operator[](faceI)[1] << ' '
-                << operator[](faceI)[2];
+                << operator[](facei)[0] << ' '
+                << operator[](facei)[1] << ' '
+                << operator[](facei)[2];
         }
         os  << nl;
 
@@ -154,9 +154,9 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
         os  << "FIELD attributes 1" << nl;
         os  << "region 1 " << size() << " float" << nl;
 
-        forAll(*this, faceI)
+        forAll(*this, facei)
         {
-            if (faceI > 0 && (faceI % 10) == 0)
+            if (facei > 0 && (facei % 10) == 0)
             {
                 os  << nl;
             }
@@ -164,7 +164,7 @@ void triSurface::writeVTK(const bool writeSorted, Ostream& os) const
             {
                 os  << ' ';
             }
-            os  << operator[](faceI).region();
+            os  << operator[](facei).region();
         }
         os  << nl;
     }

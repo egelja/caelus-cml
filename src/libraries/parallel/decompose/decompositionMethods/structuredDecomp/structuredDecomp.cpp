@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -78,7 +78,7 @@ CML::labelList CML::structuredDecomp::decompose
 
         if (patchIDs[i] == -1)
         {
-            FatalErrorIn("structuredDecomp::decompose(..)")
+            FatalErrorInFunction
                 << "Cannot find patch " << patches_[i] << endl
                 << "Valid patches are " << pbm.names()
                 << exit(FatalError);
@@ -154,7 +154,7 @@ CML::labelList CML::structuredDecomp::decompose
         {
             if (!haveWarned)
             {
-                WarningIn("structuredDecomp::decompose(..)")
+                WarningInFunction
                     << "Did not visit some cells, e.g. cell " << cellI
                     << " at " << mesh.cellCentres()[cellI] << endl
                     << "Assigning  these cells to domain 0." << endl;
@@ -179,15 +179,7 @@ CML::labelList CML::structuredDecomp::decompose
     const scalarField& pointWeights
 )
 {
-    notImplemented
-    (
-        "structuredDecomp::decompose\n"
-        "(\n"
-        "    const labelListList&,\n"
-        "    const pointField&,\n"
-        "    const scalarField&\n"
-        ")\n"
-    );
+    NotImplemented;
 
     return labelList::null();
 }

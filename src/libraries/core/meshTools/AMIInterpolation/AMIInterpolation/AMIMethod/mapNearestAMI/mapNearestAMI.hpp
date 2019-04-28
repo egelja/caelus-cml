@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -225,17 +225,7 @@ void CML::mapNearestAMI<SourcePatch, TargetPatch>::setNextNearestFaces
             {
                 const vectorField& srcCf = this->srcPatch_.faceCentres();
 
-                FatalErrorIn
-                (
-                    "void CML::mapNearestAMI<SourcePatch, TargetPatch>::"
-                    "setNextNearestFaces"
-                    "("
-                        "boolList&, "
-                        "label&, "
-                        "label&, "
-                        "label&"
-                    ") const"
-                )
+                FatalErrorInFunction
                     << "Unable to find target face for source face "
                     << srcFaceI << " with face centre " << srcCf[srcFaceI]
                     << abort(FatalError);

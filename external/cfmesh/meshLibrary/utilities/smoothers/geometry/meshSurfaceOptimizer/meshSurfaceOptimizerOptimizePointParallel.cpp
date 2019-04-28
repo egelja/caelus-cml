@@ -511,13 +511,8 @@ void meshSurfaceOptimizer::exchangeData
         pIter = m.find(gpI);
         if( pIter == m.end() )
         {
-            FatalErrorIn
-            (
-                "void meshSurfaceOptimizer::exchangeData("
-                "const labelLongList& nodesToSmooth,"
-                "map<label, DynList<parTriFace> >& m"
-                ") const"
-            ) << "Unknown point " << gpI << abort(FatalError);
+            FatalErrorInFunction
+              << "Unknown point " << gpI << abort(FatalError);
         }
 
         pIter->second.append(receivedData[tI]);

@@ -70,3 +70,5 @@ volVectorField U
     ),
     Urel + SRF->U()
 );
+
+mesh.setFluxRequired(p.name());

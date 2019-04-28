@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -99,33 +99,6 @@ public:
 
         // Access
 
-            // Gas properties
-
-                //- Return the list of gas mass fractions
-                const scalarField& YGas0() const;
-
-                //- Return the total gas mass fraction
-                scalar YGasTot0() const;
-
-
-            // Liquid properties
-
-                //- Return the list of liquid mass fractions
-                const scalarField& YLiquid0() const;
-
-                //- Return the total liquid mass fraction
-                scalar YLiquidTot0() const;
-
-
-            // Solid properties
-
-                //- Return the list of solid mass fractions
-                const scalarField& YSolid0() const;
-
-                //- Return the total solid mass fraction
-                scalar YSolidTot0() const;
-
-
             // Mixture properties
 
                 //- Return the list of mixture mass fractions
@@ -156,17 +129,13 @@ void CML::SinglePhaseMixture<CloudType>::constructIds()
 {
     if (this->phaseProps().size() == 0)
     {
-        FatalErrorIn
-        (
-            "void CML::SinglePhaseMixture<CloudType>::constructIds()"
-        )   << "Phase list is empty" << exit(FatalError);
+        FatalErrorInFunction
+            << "Phase list is empty" << exit(FatalError);
     }
     else if (this->phaseProps().size() > 1)
     {
-        FatalErrorIn
-        (
-            "void CML::SinglePhaseMixture<CloudType>::constructIds()"
-        )   << "Only one phase permitted" << exit(FatalError);
+        FatalErrorInFunction
+            << "Only one phase permitted" << exit(FatalError);
     }
 
     switch (this->phaseProps()[0].phase())
@@ -188,10 +157,8 @@ void CML::SinglePhaseMixture<CloudType>::constructIds()
         }
         default:
         {
-            FatalErrorIn
-            (
-                "void CML::SinglePhaseMixture<CloudType>::constructIds()"
-            )   << "Unknown phase enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown phase enumeration" << abort(FatalError);
         }
     }
 }
@@ -236,45 +203,6 @@ CML::SinglePhaseMixture<CloudType>::~SinglePhaseMixture()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-const CML::scalarField&
-CML::SinglePhaseMixture<CloudType>::YGas0() const
-{
-    notImplemented
-    (
-        "const CML::scalarField& "
-        "CML::SinglePhaseMixture<CloudType>::YGas0() const"
-    );
-    return this->phaseProps()[0].Y();
-}
-
-
-template<class CloudType>
-const CML::scalarField&
-CML::SinglePhaseMixture<CloudType>::YLiquid0() const
-{
-    notImplemented
-    (
-        "const CML::scalarField& "
-        "CML::SinglePhaseMixture<CloudType>::YLiquid0() const"
-    );
-    return this->phaseProps()[0].Y();
-}
-
-
-template<class CloudType>
-const CML::scalarField&
-CML::SinglePhaseMixture<CloudType>::YSolid0() const
-{
-    notImplemented
-    (
-        "const CML::scalarField& "
-        "CML::SinglePhaseMixture<CloudType>::YSolid0() const"
-    );
-    return this->phaseProps()[0].Y();
-}
-
 
 template<class CloudType>
 const CML::scalarField&

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,13 +25,21 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef thermoPhysicsTypes_H
-#define thermoPhysicsTypes_H
+#ifndef thermoPhysicsTypes_HPP
+#define thermoPhysicsTypes_HPP
 
+#include "specie.hpp"
 #include "perfectGas.hpp"
-#include "isobaricPerfectGas.hpp"
+#include "incompressiblePerfectGas.hpp"
+#include "perfectFluid.hpp"
+#include "adiabaticPerfectFluid.hpp"
+#include "rhoConst.hpp"
 #include "hConstThermo.hpp"
+#include "eConstThermo.hpp"
 #include "janafThermo.hpp"
+
+#include "sensibleEnthalpy.hpp"
+#include "sensibleInternalEnergy.hpp"
 #include "specieThermo.hpp"
 #include "sutherlandTransport.hpp"
 #include "constTransport.hpp"
@@ -44,35 +52,227 @@ Description
 
 namespace CML
 {
-    typedef constTransport<specieThermo<hConstThermo<perfectGas> > >
-        constGasThermoPhysics;
-
-    typedef sutherlandTransport<specieThermo<janafThermo<perfectGas> > >
-        gasThermoPhysics;
-
-    typedef constTransport<specieThermo<hConstThermo<isobaricPerfectGas> > >
-        constIsobaricGasThermoPhysics;
-
-    typedef sutherlandTransport<specieThermo<janafThermo<isobaricPerfectGas> > >
-        isobaricGasThermoPhysics;
-
-    typedef polynomialTransport
+    // thermo physics types based on sensibleEnthalpy
+    typedef
+    constTransport
+    <
+        species::thermo
         <
-            specieThermo
+            hConstThermo
             <
-                hPolynomialThermo
-                <
-                    icoPolynomial<8>,
-                    8
-                >
+                perfectGas<specie>
             >,
-            8
+            sensibleEnthalpy
         >
-        icoPoly8ThermoPhysics;
+    > constGasHThermoPhysics;
+
+    typedef
+    sutherlandTransport
+    <
+        species::thermo
+        <
+            janafThermo
+            <
+                perfectGas<specie>
+            >,
+            sensibleEnthalpy
+        >
+    > gasHThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            hConstThermo
+            <
+                incompressiblePerfectGas<specie>
+            >,
+            sensibleEnthalpy
+        >
+    > constIncompressibleGasHThermoPhysics;
+
+    typedef
+    sutherlandTransport
+    <
+        species::thermo
+        <
+            janafThermo
+            <
+                incompressiblePerfectGas<specie>
+            >,
+            sensibleEnthalpy
+        >
+    > incompressibleGasHThermoPhysics;
+
+    typedef
+    polynomialTransport
+    <
+        species::thermo
+        <
+            hPolynomialThermo
+            <
+                icoPolynomial<specie, 8>,
+                8
+            >,
+            sensibleEnthalpy
+        >,
+        8
+    > icoPoly8HThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            hConstThermo
+            <
+                perfectFluid<specie>
+            >,
+            sensibleEnthalpy
+        >
+    >
+    constFluidHThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            hConstThermo
+            <
+                adiabaticPerfectFluid<specie>
+            >,
+            sensibleEnthalpy
+        >
+    >
+    constAdiabaticFluidHThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            hConstThermo
+            <
+                rhoConst<specie>
+            >,
+            sensibleEnthalpy
+        >
+    >
+    constHThermoPhysics;
+
+
+    // thermo physics types based on sensibleInternalEnergy
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            eConstThermo
+            <
+                perfectGas<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    > constGasEThermoPhysics;
+
+    typedef
+    sutherlandTransport
+    <
+        species::thermo
+        <
+            janafThermo
+            <
+                perfectGas<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    > gasEThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            eConstThermo
+            <
+                incompressiblePerfectGas<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    > constIncompressibleGasEThermoPhysics;
+
+    typedef
+    sutherlandTransport
+    <
+        species::thermo
+        <
+            janafThermo
+            <
+                incompressiblePerfectGas<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    > incompressibleGasEThermoPhysics;
+
+    typedef
+    polynomialTransport
+    <
+        species::thermo
+        <
+            hPolynomialThermo
+            <
+                icoPolynomial<specie, 8>,
+                8
+            >,
+            sensibleInternalEnergy
+        >,
+        8
+    > icoPoly8EThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            eConstThermo
+            <
+                perfectFluid<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    >
+    constFluidEThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            eConstThermo
+            <
+                adiabaticPerfectFluid<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    >
+    constAdiabaticFluidEThermoPhysics;
+
+    typedef
+    constTransport
+    <
+        species::thermo
+        <
+            eConstThermo
+            <
+                rhoConst<specie>
+            >,
+            sensibleInternalEnergy
+        >
+    >
+    constEThermoPhysics;
 }
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

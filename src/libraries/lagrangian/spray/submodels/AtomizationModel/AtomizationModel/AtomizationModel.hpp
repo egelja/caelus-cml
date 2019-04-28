@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,13 +84,7 @@ public:
         AtomizationModel(const AtomizationModel<CloudType>& am);
 
         //- Construct and return a clone
-        virtual autoPtr<AtomizationModel<CloudType> > clone() const
-        {
-            return autoPtr<AtomizationModel<CloudType> >
-            (
-                new AtomizationModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<AtomizationModel<CloudType>> clone() const = 0;
 
 
     //- Destructor
@@ -107,14 +101,14 @@ public:
 
     // Member Functions
 
-        //- initial value of liquidCore
-        virtual scalar initLiquidCore() const;
-
         //- Average temperature calculation
         scalar Taverage(const scalar& Tliq, const scalar& Tc) const;
 
-        //- flag to indicate if chi needs to be calculated
-        virtual bool calcChi() const;
+        //- Initial value of liquidCore
+        virtual scalar initLiquidCore() const = 0;
+
+        //- Flag to indicate if chi needs to be calculated
+        virtual bool calcChi() const = 0;
 
         virtual void update
         (
@@ -132,8 +126,8 @@ public:
             const vector& injectionPos,
             const scalar pAmbient,
             const scalar chi,
-            cachedRandom& rndGen
-        ) const;
+            Random& rndGen
+        ) const = 0;
 };
 
 
@@ -143,28 +137,29 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeAtomizationModel(CloudType)                                       \
-                                                                              \
-    typedef CloudType::sprayCloudType sprayCloudType;                         \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        AtomizationModel<sprayCloudType>,                                     \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        AtomizationModel<sprayCloudType>,                                     \
-        dictionary                                                            \
+#define makeAtomizationModel(CloudType)                                        \
+                                                                               \
+    typedef CloudType::sprayCloudType sprayCloudType;                          \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        AtomizationModel<sprayCloudType>,                                      \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        AtomizationModel<sprayCloudType>,                                      \
+        dictionary                                                             \
     );
 
 
-#define makeAtomizationModelType(SS, CloudType)                               \
-                                                                              \
-    typedef CloudType::sprayCloudType sprayCloudType;                         \
-    defineNamedTemplateTypeNameAndDebug(SS<sprayCloudType>, 0);               \
-                                                                              \
-    AtomizationModel<sprayCloudType>::                                        \
-        adddictionaryConstructorToTable<SS<sprayCloudType> >                  \
+#define makeAtomizationModelType(SS, CloudType)                                \
+                                                                               \
+    typedef CloudType::sprayCloudType sprayCloudType;                          \
+    defineNamedTemplateTypeNameAndDebug(SS<sprayCloudType>, 0);                \
+                                                                               \
+    AtomizationModel<sprayCloudType>::                                         \
+        adddictionaryConstructorToTable<SS<sprayCloudType> >                   \
             add##SS##CloudType##sprayCloudType##ConstructorToTable_;
 
 
@@ -212,19 +207,6 @@ CML::AtomizationModel<CloudType>::~AtomizationModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::scalar CML::AtomizationModel<CloudType>::initLiquidCore() const
-{
-    notImplemented
-    (
-        "CML::scalar "
-        "CML::AtomizationModel<CloudType>::initLiquidCore() const"
-    );
-
-    return 0.0;
-}
-
-
-template<class CloudType>
 CML::scalar CML::AtomizationModel<CloudType>::Taverage
 (
     const scalar& Tl,
@@ -232,59 +214,6 @@ CML::scalar CML::AtomizationModel<CloudType>::Taverage
 ) const
 {
     return (2.0*Tl + Tc)/3.0;
-}
-
-
-template<class CloudType>
-bool CML::AtomizationModel<CloudType>::calcChi() const
-{
-    notImplemented("bool CML::AtomizationModel<CloudType>::calcChi()");
-
-    return false;
-}
-
-
-template<class CloudType>
-void CML::AtomizationModel<CloudType>::update
-(
-    const scalar dt,
-    scalar& d,
-    scalar& liquidCore,
-    scalar& tc,
-    const scalar rho,
-    const scalar mu,
-    const scalar sigma,
-    const scalar volFlowRate,
-    const scalar rhoAv,
-    const scalar Urel,
-    const vector& pos,
-    const vector& injectionPos,
-    const scalar pAmbient,
-    const scalar chi,
-    cachedRandom& rndGen
-) const
-{
-    notImplemented
-    (
-        "void CML::AtomizationModel<CloudType>::update"
-        "("
-            "const scalar, "
-            "scalar&, "
-            "scalar&, "
-            "scalar&, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const scalar, "
-            "const vector&, "
-            "const vector&, "
-            "const scalar, "
-            "const scalar, "
-            "cachedRandom&"
-        ") const"
-    );
 }
 
 
@@ -307,14 +236,8 @@ CML::AtomizationModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "AtomizationModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown AtomizationModelType type "
+        FatalErrorInFunction
+            << "Unknown AtomizationModelType type "
             << AtomizationModelType
             << ", constructor not in hash table" << nl << nl
             << "    Valid AtomizationModel types are:" << nl

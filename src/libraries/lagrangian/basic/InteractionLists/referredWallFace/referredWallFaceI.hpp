@@ -37,13 +37,13 @@ CML::pointField& CML::referredWallFace::points()
 
 CML::label CML::referredWallFace::patchIndex() const
 {
-    return patchI_;
+    return patchi_;
 }
 
 
 CML::label& CML::referredWallFace::patchIndex()
 {
-    return patchI_;
+    return patchi_;
 }
 
 

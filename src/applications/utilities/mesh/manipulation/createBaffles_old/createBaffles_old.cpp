@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -109,7 +109,7 @@ label findPatchID(const polyMesh& mesh, const word& name)
 
     if (patchI == -1)
     {
-        FatalErrorIn("findPatchID(const polyMesh&, const word&)")
+        FatalErrorInFunction
             << "Cannot find patch " << name << endl
             << "Valid patches are " << mesh.boundaryMesh().names()
             << exit(FatalError);
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 
     if (zoneID.index() == -1)
     {
-        FatalErrorIn(args.executable()) << "Cannot find faceZone "
+        FatalErrorInFunction << "Cannot find faceZone "
             << zoneID.name() << endl
             << "Valid zones are " << faceZones.names()
             << exit(FatalError);
@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
                     {
                         if (patchWarned.insert(patchI))
                         {
-                            WarningIn(args.executable())
+                            WarningInFunction
                                 << "Found boundary face (in patch " << pp.name()
                                 << ") in faceZone " << fZone.name()
                                 << " to convert to baffle patch "
@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
                 if (!hasWarned)
                 {
                     hasWarned = true;
-                    WarningIn(args.executable())
+                    WarningInFunction
                         << "Setting field on boundary faces to zero." << endl
                         << "You might have to edit these fields." << endl;
                 }

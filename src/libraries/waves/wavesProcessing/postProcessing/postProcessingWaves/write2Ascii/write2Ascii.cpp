@@ -130,7 +130,7 @@ void write2Ascii::evaluate()
         }
         else
         {
-            FatalErrorIn("void write2Ascii::evaluate()")
+            FatalErrorInFunction
                     << "The field type" << fileHeader.headerClassName() << endl
                     << "is not supported." << endl << exit(FatalError);
         }

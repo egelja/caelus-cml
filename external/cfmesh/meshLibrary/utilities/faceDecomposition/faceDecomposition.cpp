@@ -57,10 +57,8 @@ label faceDecomposition::concaveVertex() const
         {
             if( concaveVrt != -1 )
             {
-                FatalErrorIn
-                (
-                    "label faceDecomposition::concaveVertex(const label faceI) const"
-                ) << "Face " << f_ << " has more than one concave vertex."
+                FatalErrorInFunction
+                    << "Face " << f_ << " has more than one concave vertex."
                     << " Cannot continue ..." << exit(FatalError);
             }
 

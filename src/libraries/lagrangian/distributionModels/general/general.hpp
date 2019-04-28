@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::general
+    CML::distributionModels::general
 
 Description
     general distribution model
@@ -58,7 +58,7 @@ class general
 
         label nEntries_;
 
-        //- min and max values of the distribution
+        //- Min and max values of the distribution
         scalar minValue_;
         scalar maxValue_;
 
@@ -76,7 +76,7 @@ public:
     // Constructors
 
         //- Construct from components
-        general(const dictionary& dict, cachedRandom& rndGen);
+        general(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         general(const general& p);

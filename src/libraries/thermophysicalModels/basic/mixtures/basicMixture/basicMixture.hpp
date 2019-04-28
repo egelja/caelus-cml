@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,10 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef basicMixture_H
-#define basicMixture_H
-
-#include "typeInfo.hpp"
+#ifndef basicMixture_HPP
+#define basicMixture_HPP
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,27 +48,18 @@ class basicMixture
 
 public:
 
-    // Runtime type information
-    TypeName("basicMixture");
+    //- The base class of the mixture
+    typedef basicMixture basicMixtureType;
 
 
-    // Constructors
+    //- Construct from dictionary, mesh and phase name
+    basicMixture(const dictionary&, const fvMesh&, const word&)
+    {}
 
-        //- Construct from dictionary and mesh
-        basicMixture(const dictionary&, const fvMesh&);
-
-
-    //- Destructor
-    virtual ~basicMixture();
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

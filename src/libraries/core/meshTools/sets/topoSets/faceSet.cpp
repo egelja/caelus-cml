@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -129,7 +129,7 @@ void faceSet::sync(const polyMesh& mesh)
         }
         else if (found(faceI))
         {
-            FatalErrorIn("faceSet::sync(const polyMesh&)")
+            FatalErrorInFunction
                 << "Problem : syncing removed faces from set."
                 << abort(FatalError);
         }

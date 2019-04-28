@@ -5156,7 +5156,7 @@ using namespace CML;
 //! \cond dummy
 int yyFlexLexer::yylex()
 {
-    FatalErrorIn("yyFlexLexer::yylex()")
+    FatalErrorInFunction
         << "Should not have called this function"
         << abort(FatalError);
     return 0;
@@ -5703,10 +5703,8 @@ YY_RULE_SETUP
 #line 372 "surfMesh\\surfaceFormats\\stl\\STLsurfaceFormatASCII.ll"
 {
         yy_pop_state();
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormatCore::readASCII(const fileName&)"
-        )   << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
+        FatalErrorInFunction
+            << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
             << "    expected " << stateExpects[YY_START]
             << " but found '" << startError_.c_str() << YYText() << "'"
             << exit(FatalError);

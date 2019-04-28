@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,7 +39,7 @@ CML::Istream& CML::regIOobject::readStream()
 
     if (readOpt() == NO_READ)
     {
-        FatalErrorIn("regIOobject::readStream()")
+        FatalErrorInFunction
             << "NO_READ specified for read-constructor of object " << name()
             << " of class " << headerClassName()
             << abort(FatalError);
@@ -48,7 +48,6 @@ CML::Istream& CML::regIOobject::readStream()
     // Construct object stream and read header if not already constructed
     if (!isPtr_)
     {
-
         fileName objPath;
         if (watchIndex_ != -1)
         {
@@ -88,7 +87,7 @@ CML::Istream& CML::regIOobject::readStream()
         }
         else if (!readHeader(*isPtr_))
         {
-            FatalIOErrorIn("regIOobject::readStream()", *isPtr_)
+            FatalIOErrorInFunction(*isPtr_)
                 << "problem while reading header for object " << name()
                 << exit(FatalIOError);
         }
@@ -129,7 +128,7 @@ CML::Istream& CML::regIOobject::readStream(const word& expectName)
          && headerClassName() != "dictionary"
         )
         {
-            FatalIOErrorIn("regIOobject::readStream(const word&)", *isPtr_)
+            FatalIOErrorInFunction(*isPtr_)
                 << "unexpected class name " << headerClassName()
                 << " expected " << expectName << endl
                 << "    while reading object " << name()
@@ -153,7 +152,7 @@ void CML::regIOobject::close()
     if (isPtr_)
     {
         delete isPtr_;
-        isPtr_ = NULL;
+        isPtr_ = nullptr;
     }
 }
 
@@ -243,8 +242,9 @@ bool CML::regIOobject::read()
             ok = readData(fromAbove);
         }
 
-        // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        // Send to my downstairs neighbours. Note reverse order not
+        // nessecary here - just for consistency reasons.
+        forAllReverse(myComm.below(), belowI)
         {
             OPstream toBelow
             (

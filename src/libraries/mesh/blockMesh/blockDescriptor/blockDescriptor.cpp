@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,13 +45,8 @@ CML::blockDescriptor::blockDescriptor
 {
     if (expand_.size() != 12)
     {
-        FatalErrorIn
-        (
-            "blockDescriptor::blockDescriptor"
-            "(const cellShape&, const pointField& blockPointField, "
-            "const curvedEdgeList&, const Vector<label>& meshDensity, "
-            "const scalarList& expand, const word& zoneName)"
-        )   << "Unknown definition of expansion ratios"
+        FatalErrorInFunction
+            << "Unknown definition of expansion ratios"
             << exit(FatalError);
     }
 
@@ -102,12 +97,8 @@ CML::blockDescriptor::blockDescriptor
         }
         else
         {
-            FatalIOErrorIn
-            (
-                "blockDescriptor::blockDescriptor"
-                "(const pointField&, const curvedEdgeList&, Istream&)",
-                is
-            )   << "incorrect token while reading n, expected '(', found "
+            FatalIOErrorInFunction(is)
+                << "incorrect token while reading n, expected '(', found "
                 << t.info()
                 << exit(FatalIOError);
         }
@@ -159,11 +150,8 @@ CML::blockDescriptor::blockDescriptor
     }
     else
     {
-        FatalErrorIn
-        (
-            "blockDescriptor::blockDescriptor"
-            "(const pointField&, const curvedEdgeList&, Istream&)"
-        )   << "Unknown definition of expansion ratios: " << expRatios
+        FatalErrorInFunction
+            << "Unknown definition of expansion ratios: " << expRatios
             << exit(FatalError);
     }
 
@@ -275,7 +263,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const blockDescriptor& bd)
 
     const List<gradingDescriptors>& expand = bd.expand_;
 
-    // can we use a compact notation?
+    // Can we use a compact notation?
     if
     (
         // x-direction
@@ -302,13 +290,13 @@ CML::Ostream& CML::operator<<(Ostream& os, const blockDescriptor& bd)
     }
     else
     {
-        forAll(expand, edgeI)
+        forAll(expand, edgei)
         {
-            if (edgeI)
+            if (edgei)
             {
                 os  << ' ';
             }
-            os  << expand[edgeI];
+            os  << expand[edgei];
         }
     }
 

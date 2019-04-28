@@ -90,7 +90,7 @@ CML::Switch::switchType CML::Switch::asEnum
 
     if (!allowInvalid)
     {
-        FatalErrorIn("Switch::asEnum(const std::string&, const bool)")
+        FatalErrorInFunction
             << "unknown switch word " << str << nl
             << abort(FatalError);
     }

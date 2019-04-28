@@ -102,10 +102,7 @@ public:
             //- Correct for topo change.
             void updateMesh(const mapPolyMesh&)
             {
-                notImplemented
-                (
-                    "mapDistributeLagrangian::updateMesh(const mapPolyMesh&)"
-                );
+                NotImplemented;
             }
 };
 

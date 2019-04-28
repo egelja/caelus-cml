@@ -10,7 +10,7 @@ import utils
 
 cxxflags = dict(
     general = "-m64 -ftemplate-depth-100",
-    warnings = "-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor",
+    warnings = "-Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor -Wno-attributes -Wno-invalid-offsetof",
     debug = "-O0 -fdefault-inline -ggdb3 -DFULLDEBUG",
     prof = "-O2 -pg",
     opt = "-O3"
@@ -19,10 +19,10 @@ cxxflags = dict(
 gcc_flags = dict(**cxxflags)
 
 intel_flags = dict(**cxxflags)
-intel_flags['warnings'] = "-wd327,654,819,1125,1476,1505,1572"
+intel_flags['warnings'] = "-wd327,654,819,1125,1292,1476,1505,1572"
 
 clang_flags = dict(**cxxflags)
-clang_flags['warnings'] = "-Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wno-overloaded-virtual -Wno-unused-comparison -Wno-deprecated-register"
+clang_flags['warnings'] = "-Wall -Wextra -Wno-unused-parameter -Wno-old-style-cast -Wno-overloaded-virtual -Wno-unused-comparison -Wno-invalid-offsetof -Wno-undefined-var-template"
 
 #gcc_flags['warnings'] = clang_flags['warnings']
 
@@ -47,6 +47,7 @@ _compiler_flags_map = {
 
 def windows_flags(env):
     """Windows specific compiler flags"""
+    env.Append(CXXFLAGS = '-std=c++11')
     env.Append(
         CPPPATH = [
             env['MPI_INC_PATH'],
@@ -63,6 +64,7 @@ def windows_flags(env):
 
 def linux_flags(env):
     """Linux specific compiler flags"""
+    env.Append(CXXFLAGS = '-std=c++11')
     if env['INT_TYPE'] == '64':
         env.Append(CXXFLAGS = '-DCAELUS_LABEL64')
     env.Append(
@@ -108,7 +110,7 @@ def update_compiler_settings(env):
     keys = _compiler_map.keys()
     cname = os.path.basename(cxx)
     for k in keys:
-        if k in cname:
+        if k == cname:
             cname = k
             break
     cflags = _compiler_flags_map[_compiler_map[cname]]

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,7 +23,7 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-#include "hhuCombustionThermo.hpp"
+#include "psiuReactionThermo.hpp"
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -94,17 +94,18 @@ void CML::fixedUnburntEnthalpyFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    const hhuCombustionThermo& thermo = db().lookupObject<hhuCombustionThermo>
+    const psiuReactionThermo& thermo = db().lookupObject<psiuReactionThermo>
     (
-        "thermophysicalProperties"
+        basicThermo::dictName
     );
 
     const label patchi = patch().index();
 
+    const scalarField& pw = thermo.p().boundaryField()[patchi];
     fvPatchScalarField& Tw =
         const_cast<fvPatchScalarField&>(thermo.Tu().boundaryField()[patchi]);
     Tw.evaluate();
-    operator==(thermo.hu(Tw, patchi));
+    operator==(thermo.heu(pw, Tw, patchi));
 
     fixedValueFvPatchScalarField::updateCoeffs();
 }
@@ -120,5 +121,3 @@ namespace CML
         fixedUnburntEnthalpyFvPatchScalarField
     );
 }
-
-// ************************************************************************* //

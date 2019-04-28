@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,6 +45,13 @@ namespace CML
 class polyMesh;
 class mapPolyMesh;
 class polyBoundaryMesh;
+
+// Forward declaration of friend functions and operators
+
+class polyTopoChanger;
+
+Ostream& operator<<(Ostream&, const polyTopoChanger&);
+
 
 /*---------------------------------------------------------------------------*\
                       Class polyTopoChanger Declaration

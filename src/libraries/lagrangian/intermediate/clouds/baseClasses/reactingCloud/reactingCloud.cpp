@@ -35,7 +35,7 @@ CML::reactingCloud::reactingCloud()
 {}
 
 
-// * * * * * * * * * * * * * * * *  Destructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * *  Destructor   * * * * * * * * * * * * * * //
 
 CML::reactingCloud::~reactingCloud()
 {}

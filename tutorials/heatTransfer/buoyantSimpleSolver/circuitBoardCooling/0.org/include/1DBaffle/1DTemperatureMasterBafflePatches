@@ -1,0 +1,34 @@
+/*---------------------------------------------------------------------------*
+Caelus 9.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+
+T
+{
+    type   compressible::thermalBaffle1D<hConstSolidThermoPhysics>;
+
+    thickness       uniform 0.005;  // thickness [m]
+    Qs              uniform 100;    // heat flux [W/m2]
+
+    specie
+    {
+        molWeight       20;
+    }
+    transport
+    {
+        kappa           1;
+    }
+    thermodynamics
+    {
+        Hf              0;
+        Cp              10;
+    }
+    equationOfState
+    {
+        rho             10;
+    }
+
+    value               uniform 300;
+}
+
+// ************************************************************************* //

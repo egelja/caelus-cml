@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -98,7 +98,7 @@ void CML::writeRegisteredObject::write()
         }
         else
         {
-            WarningIn("CML::writeRegisteredObject::write()")
+            WarningInFunction
                 << "Object " << objectNames_[i] << " not found in "
                 << "database. Available objects:" << nl << obr_.sortedToc()
                 << endl;

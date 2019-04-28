@@ -99,10 +99,8 @@ autoPtr<wavesPorosityModel> wavesPorosityModel::New
 
     if (cstrIter == wavesPorosityModelConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "wavesPorosityModel::New(const fvMesh&)"
-        )   << "Unknown porosity model of type " << wavesPorosityModelTypeName
+        FatalErrorInFunction
+            << "Unknown porosity model of type " << wavesPorosityModelTypeName
             << endl << endl
             << "Valid porosity models are :" << endl
             << wavesPorosityModelConstructorTablePtr_->toc()

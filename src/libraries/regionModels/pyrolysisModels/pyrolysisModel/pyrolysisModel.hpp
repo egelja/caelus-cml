@@ -18,9 +18,10 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::pyrolysisModel
+    CML::regionModels::pyrolysisModels::pyrolysisModel
 
 Description
+    Base class for pyrolysis models
 
 SourceFiles
     pyrolysisModelI.H
@@ -33,8 +34,6 @@ SourceFiles
 
 #include "runTimeSelectionTables.hpp"
 #include "volFieldsFwd.hpp"
-#include "solidChemistryModel.hpp"
-#include "basicSolidThermo.hpp"
 #include "regionModel1D.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -78,18 +77,6 @@ private:
 
 protected:
 
-    // Protected Data
-
-        //- Flag to indicate whether pyrolysis region coupled to a film region
-        bool filmCoupled_;
-
-        //- Pointer to film thickness field
-        autoPtr<volScalarField> filmDeltaPtr_;
-
-        //- Film height below which reactions can occur [m]
-        scalar reactionDeltaMin_;
-
-
     // Protected Member Functions
 
         //- Read control parameters
@@ -113,10 +100,11 @@ public:
             pyrolysisModel,
             mesh,
             (
-            const word& modelType,
-            const fvMesh& mesh
+                const word& modelType,
+                const fvMesh& mesh,
+                const word& regionType
             ),
-            (modelType, mesh)
+            (modelType, mesh, regionType)
         );
 
         declareRunTimeSelectionTable
@@ -125,73 +113,65 @@ public:
             pyrolysisModel,
             dictionary,
             (
-            const word& modelType,
-            const fvMesh& mesh,
-            const dictionary& dict
+                const word& modelType,
+                const fvMesh& mesh,
+                const dictionary& dict,
+                const word& regionType
             ),
-            (modelType, mesh, dict)
+            (modelType, mesh, dict, regionType)
         );
 
 
     // Constructors
 
         //- Construct null from mesh
-        pyrolysisModel(const fvMesh& mesh);
+        pyrolysisModel
+        (
+            const fvMesh& mesh,
+            const word& regionType
+        );
 
         //- Construct from type name and mesh
-        pyrolysisModel(const word& modelType, const fvMesh& mesh);
+        pyrolysisModel
+        (
+            const word& modelType,
+            const fvMesh& mesh,
+            const word& regionType
+        );
 
         //- Construct from type name and mesh and dictionary
         pyrolysisModel
         (
             const word& modelType,
             const fvMesh& mesh,
-            const dictionary& dict
+            const dictionary& dict,
+            const word& regionType
         );
 
         //- Return clone
         autoPtr<pyrolysisModel> clone() const
         {
-            notImplemented("autoPtr<pyrolysisModel> clone() const");
-            return autoPtr<pyrolysisModel>(NULL);
+            NotImplemented;
+            return autoPtr<pyrolysisModel>(nullptr);
         }
 
 
     // Selectors
 
-        //- Return a reference to the selected pyrolysis film model
-        static autoPtr<pyrolysisModel> New(const fvMesh& mesh);
+        //- Return a reference to the selected pyrolysis model
+        static autoPtr<pyrolysisModel> New
+        (
+            const fvMesh& mesh,
+            const word& regionType = "pyrolysis"
+        );
 
         //- Return a reference to a named selected pyrolysis model
         static autoPtr<pyrolysisModel> New
         (
             const fvMesh& mesh,
-            const dictionary& dict
+            const dictionary& dict,
+            const word& regionType = "pyrolysis"
         );
-
-         //- Return pointer to new pyrolysis created on freestore from Istream
-        class iNew
-        {
-            const fvMesh& mesh_;
-
-        public:
-
-            iNew(const fvMesh& mesh)
-            :
-                mesh_(mesh)
-            {}
-
-            autoPtr<pyrolysisModel> operator()(Istream& is) const
-            {
-                keyType key(is);
-                dictionary dict(is);
-
-                return autoPtr<pyrolysisModel>
-                (
-                    pyrolysisModel::New(mesh_, dict)
-                );
-            }
-        };
 
 
     //- Destructor
@@ -214,28 +194,23 @@ public:
                 virtual const tmp<volScalarField> Cp() const = 0;
 
                 //- Return the region absorptivity [1/m]
-                virtual const volScalarField& kappa() const = 0;
+                virtual tmp<volScalarField> kappaRad() const = 0;
 
                 //- Return the region thermal conductivity [W/m/k]
-                virtual const volScalarField& K() const = 0;
+                virtual tmp<volScalarField> kappa() const = 0;
 
                 //- Return the total gas mass flux to primary region [kg/m2/s]
                 virtual const surfaceScalarField& phiGas() const = 0;
+
 
             // Sources
 
                 //- External hook to add mass to the primary region
                 virtual scalar addMassSources
                 (
-                    const label patchI,
-                    const label faceI
+                    const label patchi,
+                    const label facei
                 );
-
-
-        // Evolution
-
-            //- Pre-evolve region
-            virtual void preEvolveRegion();
 
 
         // Helper function

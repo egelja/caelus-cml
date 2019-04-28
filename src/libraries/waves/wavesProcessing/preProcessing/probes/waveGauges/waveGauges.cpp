@@ -135,14 +135,12 @@ void waveGauges::evaluate(const word& name)
     gauges() << incrIndent << indent << name << nl << indent
              << token::BEGIN_BLOCK << nl << incrIndent;
     gauges() << indent << "type               surfaceElevation;" << nl;
-    gauges() << indent << "functionObjectLibs ( \"libwaves.so\" );" << nl;
+    gauges() << indent << "functionObjectLibs ( \"libwavesSampling.so\" );" << nl;
     gauges() << nl;
-    gauges() << indent << "outputControl      timeStep;"
-             << " // Alternative: outputTime" << nl;
-    gauges() << indent << "outputInterval      1;" << nl << nl;
-    gauges() << indent << "//Additional output controls in waves" << nl;
-    gauges() << indent << "//samplingStartTime  -1;" << nl;
-    gauges() << indent << "//surfaceSampleDeltaT 0.025;" << nl;
+    word wc(gaugeDict_.lookup("writeControl"));
+    scalar wi = readScalar(gaugeDict_.lookup("writeInterval"));
+    gauges() << indent << "writeControl      " << wc << ";" << nl;
+    gauges() << indent << "writeInterval      " << wi << ";" << nl;
     gauges() << nl;
     gauges() << indent << "setFormat          raw;" << nl;
     gauges() << indent << "interpolationScheme cellPointFace;" << nl;

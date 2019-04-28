@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,16 +25,6 @@ License
 
 /* * * * * * * * * * * * * * * public constants  * * * * * * * * * * * * * * */
 
-//- Universal gas constant (default in [J/(kmol K)])
-const CML::scalar CML::specie::RR = constant::physicoChemical::R.value()*1000;
-
-//- Standard pressure (default in [Pa])
-const CML::scalar CML::specie::Pstd = constant::standard::Pstd.value();
-
-//- Standard temperature (default in [K])
-const CML::scalar CML::specie::Tstd = constant::standard::Tstd.value();
-
-
 namespace CML
 {
     defineTypeNameAndDebug(specie, 0);
@@ -43,20 +33,10 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-CML::specie::specie(Istream& is)
-:
-    name_(is),
-    nMoles_(readScalar(is)),
-    molWeight_(readScalar(is))
-{
-    is.check("specie::specie(Istream& is)");
-}
-
-
 CML::specie::specie(const dictionary& dict)
 :
     name_(dict.dictName()),
-    nMoles_(readScalar(dict.subDict("specie").lookup("nMoles"))),
+    Y_(dict.subDict("specie").lookupOrDefault("massFraction", 1.0)),
     molWeight_(readScalar(dict.subDict("specie").lookup("molWeight")))
 {}
 
@@ -66,7 +46,10 @@ CML::specie::specie(const dictionary& dict)
 void CML::specie::write(Ostream& os) const
 {
     dictionary dict("specie");
-    dict.add("nMoles", nMoles_);
+    if (Y_ != 1)
+    {
+        dict.add("massFraction", Y_);
+    }
     dict.add("molWeight", molWeight_);
     os  << indent << dict.dictName() << dict;
 }
@@ -76,13 +59,7 @@ void CML::specie::write(Ostream& os) const
 
 CML::Ostream& CML::operator<<(Ostream& os, const specie& st)
 {
-    os  << st.name_ << tab
-        << st.nMoles_ << tab
-        << st.molWeight_;
-
+    st.write(os);
     os.check("Ostream& operator<<(Ostream& os, const specie& st)");
     return os;
 }
-
-
-// ************************************************************************* //

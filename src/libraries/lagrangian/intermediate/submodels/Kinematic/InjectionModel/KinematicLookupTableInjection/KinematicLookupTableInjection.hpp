@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,19 +25,23 @@ Description
     Particle injection sources read from look-up table. Each row corresponds to
     an injection site.
 
+    \verbatim
     (
         (x y z) (u v w) d rho mDot   // injector 1
         (x y z) (u v w) d rho mDot   // injector 2
         ...
         (x y z) (u v w) d rho mDot   // injector N
     );
+    \endverbatim
 
     where:
-        x, y, z = global cartesian co-ordinates [m]
-        u, v, w = global cartesian velocity components [m/s]
-        d       = diameter [m]
-        rho     = density [kg/m3]
-        mDot    = mass flow rate [kg/m3]
+    \plaintable
+        x, y, z | global cartesian co-ordinates [m]
+        u, v, w | global cartesian velocity components [m/s]
+        d       | diameter [m]
+        rho     | density [kg/m3]
+        mDot    | mass flow rate [kg/s]
+    \endplaintable
 
 
 \*---------------------------------------------------------------------------*/
@@ -151,8 +155,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -327,25 +331,25 @@ void CML::KinematicLookupTableInjection<CloudType>::setPositionAndCell
     const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     label injectorI = 0;
     if (randomise_)
     {
-        cachedRandom& rnd = this->owner().rndGen();
-        injectorI = rnd.position<label>(0, injectorCells_.size() - 1);
+        Random& rnd = this->owner().rndGen();
+        injectorI = rnd.sampleAB<label>(0, injectorCells_.size());
     }
     else
     {
-        injectorI = parcelI*injectorCells_.size()/nParcels;
+        injectorI = parcelI*injectors_.size()/nParcels;
     }
 
     position = injectors_[injectorI].x();
     cellOwner = injectorCells_[injectorI];
-    tetFaceI = injectorTetFaces_[injectorI];
-    tetPtI = injectorTetPts_[injectorI];
+    tetFacei = injectorTetFaces_[injectorI];
+    tetPti = injectorTetPts_[injectorI];
 }
 
 
@@ -358,7 +362,7 @@ void CML::KinematicLookupTableInjection<CloudType>::setProperties
     typename CloudType::parcelType& parcel
 )
 {
-    label injectorI = parcelI*injectorCells_.size()/nParcels;
+    label injectorI = parcelI*injectors_.size()/nParcels;
 
     // set particle velocity
     parcel.U() = injectors_[injectorI].U();

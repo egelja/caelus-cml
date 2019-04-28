@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2013 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -152,14 +152,8 @@ void CML::nastranSurfaceWriter::writeCoord
         }
         default:
         {
-            FatalErrorIn
-            (
-                "void CML::nastranSurfaceWriter::writeCoord"
-                "("
-                    "Ostream&, "
-                    "const point&"
-                ") const"
-            )   << "Unknown writeFormat enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown writeFormat enumeration" << abort(FatalError);
         }
     }
 }
@@ -251,16 +245,8 @@ void CML::nastranSurfaceWriter::writeFace
         }
         default:
         {
-            FatalErrorIn
-            (
-                "void CML::nastranSurfaceWriter::writeFace"
-                "("
-                    "const word&"
-                    "const labelList&"
-                    "label&"
-                    "Ostream&, "
-                ") const"
-            )   << "Unknown writeFormat enumeration" << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown writeFormat enumeration" << abort(FatalError);
         }
     }
 

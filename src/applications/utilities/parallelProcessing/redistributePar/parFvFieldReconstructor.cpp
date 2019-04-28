@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -29,7 +29,6 @@ void CML::parFvFieldReconstructor::createPatchFaceMaps()
     const fvBoundaryMesh& fvb = procMesh_.boundary();
 
     patchFaceMaps_.setSize(fvb.size());
-
     forAll(fvb, patchI)
     {
         if (!isA<processorFvPatch>(fvb[patchI]))
@@ -54,7 +53,6 @@ void CML::parFvFieldReconstructor::createPatchFaceMaps()
             // Compact out unused elements
             labelList oldToNewSub;
             labelList oldToNewConstruct;
-
             patchFaceMaps_[patchI].compact
             (
                 faceIsUsed,
@@ -63,11 +61,8 @@ void CML::parFvFieldReconstructor::createPatchFaceMaps()
                 oldToNewConstruct,
                 UPstream::msgType()
             );
-
-//            Pout<< "patchMap:" << patchFaceMaps_[patchI] << endl;
+            //Pout<< "patchMap:" << patchFaceMaps_[patchI] << endl;
         }
-
-
     }
 }
 

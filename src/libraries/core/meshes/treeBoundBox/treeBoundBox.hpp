@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,6 +65,17 @@ namespace CML
 {
 
 class Random;
+
+// Forward declaration of friend functions and operators
+
+class treeBoundBox;
+
+bool operator==(const treeBoundBox&, const treeBoundBox&);
+bool operator!=(const treeBoundBox&, const treeBoundBox&);
+
+Istream& operator>>(Istream& is, treeBoundBox&);
+Ostream& operator<<(Ostream& os, const treeBoundBox&);
+
 
 /*---------------------------------------------------------------------------*\
                         Class treeBoundBox Declaration
@@ -199,7 +210,7 @@ public:
             //- Typical dimension length,height,width
             inline scalar typDim() const;
 
-            //- vertex coordinates. In octant coding.
+            //- Vertex coordinates. In octant coding.
             tmp<pointField> points() const;
 
 
@@ -332,21 +343,25 @@ public:
             //   0 : none of the above.
             label distanceCmp(const point&, const treeBoundBox& other) const;
 
-            //- Return slightly wider bounding box
-            //  Extends all dimensions with s*span*Random::scalar01()
-            //  and guarantees in any direction s*mag(span) minimum width
-            inline treeBoundBox extend(Random&, const scalar s) const;
+            //- Return asymetrically extended bounding box, with guaranteed
+            //  minimum width of s*mag(span) in any direction
+            inline treeBoundBox extend(const scalar s) const;
+
+    // Write
+
+        void writeOBJ(const fileName& fName) const;
+
 
     // Friend Operators
 
         friend bool operator==(const treeBoundBox&, const treeBoundBox&);
         friend bool operator!=(const treeBoundBox&, const treeBoundBox&);
 
+
     // IOstream operator
 
         friend Istream& operator>>(Istream& is, treeBoundBox&);
         friend Ostream& operator<<(Ostream& os, const treeBoundBox&);
-
 };
 
 
@@ -647,31 +662,21 @@ inline void CML::treeBoundBox::searchOrder
 }
 
 
-//- Return slightly wider bounding box
-inline CML::treeBoundBox CML::treeBoundBox::extend
-(
-    Random& rndGen,
-    const scalar s
-) const
+inline CML::treeBoundBox CML::treeBoundBox::extend(const scalar s) const
 {
+    // Numbers that don't approximate rational fractions with which to make the
+    // box asymmetric. These are between one and two.
+    static const vector a = vector::uniform(sqrt(1.25) + 0.5);
+    static const vector b = vector::uniform(sqrt(2.0));
+
     treeBoundBox bb(*this);
 
-    vector newSpan = bb.span();
-
-    // Make 3D
-    scalar minSpan = s * CML::mag(newSpan);
-
-    for (direction dir = 0; dir < vector::nComponents; dir++)
-    {
-        newSpan[dir] = CML::max(newSpan[dir], minSpan);
-    }
-
-    bb.min() -= cmptMultiply(s * rndGen.vector01(), newSpan);
-    bb.max() += cmptMultiply(s * rndGen.vector01(), newSpan);
+    const scalar delta = s*CML::mag(bb.span());
+    bb.min() -= CML::max(delta*a, vector::uniform(ROOTVSMALL));
+    bb.max() += CML::max(delta*b, vector::uniform(ROOTVSMALL));
 
     return bb;
 }
-
 
 
 #include "FixedList.hpp"
@@ -692,11 +697,8 @@ CML::treeBoundBox::treeBoundBox
     // points may be empty, but a FixedList is never empty
     if (points.empty())
     {
-        WarningIn
-        (
-            "treeBoundBox::treeBoundBox"
-            "(const UList<point>&, const FixedList<label, Size>&)"
-        )   << "cannot find bounding box for zero-sized pointField, "
+        WarningInFunction
+            << "cannot find bounding box for zero-sized pointField, "
             << "returning zero" << endl;
 
         return;

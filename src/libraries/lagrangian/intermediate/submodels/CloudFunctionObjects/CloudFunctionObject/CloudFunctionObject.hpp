@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
- Copyright (C) 2011-2012 OpenFOAM Foundation
+ Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,10 +61,10 @@ class CloudFunctionObject
 
 
     // Private Member Functions
-    
+
         //- Inherite write from CloudSubModelBase
         using CloudSubModelBase<CloudType>::write;
-    
+
         //- Write post-processing info
         virtual void write();
 
@@ -144,7 +144,6 @@ public:
             virtual void postMove
             (
                 typename CloudType::parcelType& p,
-                const label cellI,
                 const scalar dt,
                 const point& position0,
                 bool& keepParticle
@@ -155,8 +154,6 @@ public:
             (
                 const typename CloudType::parcelType& p,
                 const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
                 bool& keepParticle
             );
 
@@ -164,7 +161,6 @@ public:
             virtual void postFace
             (
                 const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 
@@ -185,28 +181,28 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeCloudFunctionObject(CloudType)                                    \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        CloudFunctionObject<kinematicCloudType>,                              \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        CloudFunctionObject<kinematicCloudType>,                              \
-        dictionary                                                            \
+#define makeCloudFunctionObject(CloudType)                                     \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        CloudFunctionObject<kinematicCloudType>,                               \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        CloudFunctionObject<kinematicCloudType>,                               \
+        dictionary                                                             \
     );
 
 
-#define makeCloudFunctionObjectType(SS, CloudType)                            \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);           \
-                                                                              \
-    CloudFunctionObject<kinematicCloudType>::                                 \
-        adddictionaryConstructorToTable<SS<kinematicCloudType> >              \
+#define makeCloudFunctionObjectType(SS, CloudType)                             \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);            \
+                                                                               \
+    CloudFunctionObject<kinematicCloudType>::                                  \
+        adddictionaryConstructorToTable<SS<kinematicCloudType> >               \
             add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
 
 
@@ -215,7 +211,7 @@ public:
 template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::write()
 {
-    notImplemented("void CML::CloudFunctionObject<CloudType>::write()");
+    NotImplemented;
 }
 
 
@@ -255,6 +251,7 @@ CML::CloudFunctionObject<CloudType>::CloudFunctionObject
     {
         outputDir_ = outputDir_/relPath;
     }
+    outputDir_.clean();
 }
 
 
@@ -280,13 +277,7 @@ CML::CloudFunctionObject<CloudType>::~CloudFunctionObject()
 
 template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::preEvolve()
-{
-    FatalErrorIn
-    (
-        "CloudFunctionObject<CloudType>::preEvolve()"
-    )   << "Execution reached a point where it should not "<< nl
-        << exit(FatalError);
-}
+{}
 
 
 template<class CloudType>
@@ -303,25 +294,11 @@ template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::postMove
 (
     typename CloudType::parcelType&,
-    const label,
     const scalar,
     const point&,
     bool&
 )
-{
-    FatalErrorIn
-    (
-        "CloudFunctionObject<CloudType>::postMove"
-        "("
-            "const typename CloudType::parcelType&,"
-            "const label,"
-            "const scalar,"
-            "const point&,"
-            "bool&"
-        ")"
-    )   << "Execution reached a point where it should not "<< nl
-        << exit(FatalError);
-}
+{}
 
 
 template<class CloudType>
@@ -329,45 +306,18 @@ void CML::CloudFunctionObject<CloudType>::postPatch
 (
     const typename CloudType::parcelType&,
     const polyPatch&,
-    const scalar,
-    const tetIndices&,
     bool&
 )
-{
-    FatalErrorIn
-    (
-        "CloudFunctionObject<CloudType>::postPatch"
-        "("
-            "const typename CloudType::parcelType&,"
-            "const polyPatch&,"
-            "const scalar,"
-            "const tetIndices&,"
-            "bool&"
-        ")"
-    )   << "Execution reached a point where it should not "<< nl
-        << exit(FatalError);
-}
+{}
 
 
 template<class CloudType>
 void CML::CloudFunctionObject<CloudType>::postFace
 (
     const typename CloudType::parcelType&,
-    const label,
     bool&
 )
-{
-    FatalErrorIn
-    (
-        "CloudFunctionObject<CloudType>::postFace"
-        "("
-            "const typename CloudType::parcelType&,"
-            "const label,"
-            "bool&"
-        ")"
-    )   << "Execution reached a point where it should not "<< nl
-        << exit(FatalError);
-}
+{}
 
 
 template<class CloudType>
@@ -404,16 +354,8 @@ CML::CloudFunctionObject<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "CloudFunctionObject<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&, "
-                "const word&, "
-                "const word&"
-            ")"
-        )   << "Unknown cloud function type "
+        FatalErrorInFunction
+            << "Unknown cloud function type "
             << objectType << nl << nl
             << "Valid cloud function types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

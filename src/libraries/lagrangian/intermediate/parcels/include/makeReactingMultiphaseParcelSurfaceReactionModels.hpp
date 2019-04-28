@@ -29,9 +29,9 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeReactingMultiphaseParcelSurfaceReactionModels(CloudType)          \
-                                                                              \
-    makeSurfaceReactionModel(CloudType);                                      \
+#define makeReactingMultiphaseParcelSurfaceReactionModels(CloudType)           \
+                                                                               \
+    makeSurfaceReactionModel(CloudType);                                       \
     makeSurfaceReactionModelType(NoSurfaceReaction, CloudType);
 
 

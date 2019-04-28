@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,8 @@ Class
     CML::Matrix
 
 Description
-    A templated 2D matrix of objects of \<T\>, where the n x m matrix
-    dimensions are known and used for subscript bounds checking, etc.
+    A templated (m x n) matrix of objects of \<T\>.
 
-SourceFiles
-    Matrix.cpp
-    MatrixI.hpp
-    MatrixIO.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -38,7 +33,8 @@ SourceFiles
 #include "bool.hpp"
 #include "label.hpp"
 #include "uLabel.hpp"
-#include "List.hpp"
+#include "Field.hpp"
+#include "zero.hpp"
 #include "autoPtr.hpp"
 #include "restrict.hpp"
 
@@ -63,6 +59,12 @@ template<class Form, class Type> Ostream& operator<<
     const Matrix<Form, Type>&
 );
 
+template<class MatrixType>
+class ConstMatrixBlock;
+
+template<class MatrixType>
+class MatrixBlock;
+
 
 /*---------------------------------------------------------------------------*\
                            Class Matrix Declaration
@@ -74,22 +76,28 @@ class Matrix
     // Private data
 
         //- Number of rows and columns in Matrix.
-        label n_, m_;
+        label mRows_, nCols_;
 
         //- Row pointers
-        Type** RESTRICT v_;
+        Type* RESTRICT v_;
 
-        //- Allocate the storage for the row-pointers and the data
-        //  and set the row pointers
+        //- Allocate the storage for the element vector
         void allocate();
 
 
 public:
 
+    //- Matrix type
+    typedef Matrix<Form, Type> mType;
+
+    //- Component type
+    typedef Type cmptType;
+
+
     // Static Member Functions
 
         //- Return a null Matrix
-        inline static const Matrix<Form, Type>& null();
+        inline static const mType& null();
 
 
     // Constructors
@@ -98,20 +106,36 @@ public:
         inline Matrix();
 
         //- Construct given number of rows and columns.
-        Matrix(const label n, const label m);
+        Matrix(const label m, const label n);
 
         //- Construct with given number of rows and columns
-        //  and value for all elements.
-        Matrix(const label n, const label m, const Type&);
+        //  initializing all elements to zero
+        Matrix(const label m, const label n, const zero);
+
+        //- Construct with given number of rows and columns
+        //  initializing all elements to the given value
+        Matrix(const label m, const label n, const Type&);
 
         //- Copy constructor.
-        Matrix(const Matrix<Form, Type>&);
+        Matrix(const mType&);
+
+        //- Copy constructor from matrix of a different form
+        template<class Form2>
+        explicit Matrix(const Matrix<Form2, Type>&);
+
+        //- Construct from a block of another matrix
+        template<class MatrixType>
+        Matrix(const ConstMatrixBlock<MatrixType>&);
+
+        //- Construct from a block of another matrix
+        template<class MatrixType>
+        Matrix(const MatrixBlock<MatrixType>&);
 
         //- Construct from Istream.
         Matrix(Istream&);
 
         //- Clone
-        inline autoPtr<Matrix<Form, Type> > clone() const;
+        inline autoPtr<mType> clone() const;
 
 
     //- Destructor
@@ -123,21 +147,87 @@ public:
         // Access
 
             //- Return the number of rows
-            inline label n() const;
-
-            //- Return the number of columns
             inline label m() const;
 
-            //- Return the number of elements in matrix (n*m)
+            //- Return the number of columns
+            inline label n() const;
+
+            //- Return the number of elements in matrix (m*n)
             inline label size() const;
+
+            //- Return element vector of the constant Matrix
+            inline const Type* v() const;
+
+            //- Return element vector of the Matrix
+            inline Type* v();
+
+
+        // Block access
+
+            inline ConstMatrixBlock<mType> block
+            (
+                const label m,
+                const label n,
+                const label mStart,
+                const label nStart
+            ) const;
+
+            template<class VectorSpace>
+            inline ConstMatrixBlock<mType> block
+            (
+                const label mStart,
+                const label nStart
+            ) const;
+
+            inline ConstMatrixBlock<mType> col
+            (
+                const label m,
+                const label rowStart
+            ) const;
+
+            inline ConstMatrixBlock<mType> col
+            (
+                const label m,
+                const label mStart,
+                const label nStart
+            ) const;
+
+
+            inline MatrixBlock<mType> block
+            (
+                const label m,
+                const label n,
+                const label mStart,
+                const label nStart
+            );
+
+            template<class VectorSpace>
+            inline MatrixBlock<mType> block
+            (
+                const label mStart,
+                const label nStart
+            );
+
+            inline MatrixBlock<mType> col
+            (
+                const label m,
+                const label rowStart
+            );
+
+            inline MatrixBlock<mType> col
+            (
+                const label m,
+                const label mStart,
+                const label nStart
+            );
 
 
         // Check
 
-            //- Check index i is within valid range (0 ... n-1).
+            //- Check index i is within valid range (0 ... m-1).
             inline void checki(const label i) const;
 
-            //- Check index j is within valid range (0 ... m-1).
+            //- Check index j is within valid range (0 ... n-1).
             inline void checkj(const label j) const;
 
 
@@ -148,7 +238,13 @@ public:
 
             //- Transfer the contents of the argument Matrix into this Matrix
             //  and annul the argument Matrix.
-            void transfer(Matrix<Form, Type>&);
+            void transfer(mType&);
+
+            //- Resize the matrix preserving the elements
+            void setSize(const label m, const label n);
+
+            //- Resize the matrix without reallocating storage (unsafe)
+            inline void shallowResize(const label m, const label n);
 
 
         //- Return the transpose of the matrix
@@ -163,10 +259,27 @@ public:
         //- Return subscript-checked row of constant Matrix.
         inline const Type* operator[](const label) const;
 
-        //- Assignment operator. Takes linear time.
-        void operator=(const Matrix<Form, Type>&);
+        //- (i, j) const element access operator
+        inline const Type& operator()(const label i, const label j) const;
 
-        //- Assignment of all entries to the given value
+        //- (i, j) element access operator
+        inline Type& operator()(const label i, const label j);
+
+        //- Assignment operator. Takes linear time.
+        void operator=(const mType&);
+
+        //- Assignment to a block of another matrix
+        template<class MatrixType>
+        void operator=(const ConstMatrixBlock<MatrixType>&);
+
+        //- Assignment to a block of another matrix
+        template<class MatrixType>
+        void operator=(const MatrixBlock<MatrixType>&);
+
+        //- Assignment of all elements to zero
+        void operator=(const zero);
+
+        //- Assignment of all elements to the given value
         void operator=(const Type&);
 
 
@@ -176,58 +289,91 @@ public:
         friend Istream& operator>> <Form, Type>
         (
             Istream&,
-            Matrix<Form, Type>&
+            mType&
         );
 
-        // Write Matrix to Ostream.
+        //- Write Matrix to Ostream.
         friend Ostream& operator<< <Form, Type>
         (
             Ostream&,
-            const Matrix<Form, Type>&
+            const mType&
         );
 };
 
 
 // Global functions and operators
 
-template<class Form, class Type> const Type& max(const Matrix<Form, Type>&);
-template<class Form, class Type> const Type& min(const Matrix<Form, Type>&);
+template<class Form, class Type>
+const Type& max(const Matrix<Form, Type>&);
 
-template<class Form, class Type> Form operator-(const Matrix<Form, Type>&);
+template<class Form, class Type>
+const Type& min(const Matrix<Form, Type>&);
 
-template<class Form, class Type> Form operator+
+template<class Form, class Type>
+Form operator-(const Matrix<Form, Type>&);
+
+template<class Form, class Type>
+Form operator+
 (
     const Matrix<Form, Type>&,
     const Matrix<Form, Type>&
 );
 
-template<class Form, class Type> Form operator-
+template<class Form, class Type>
+Form operator-
 (
     const Matrix<Form, Type>&,
     const Matrix<Form, Type>&
 );
 
-template<class Form, class Type> Form operator*
+template<class Form, class Type>
+Form operator*
 (
     const scalar,
     const Matrix<Form, Type>&
 );
 
+template<class Form, class Type>
+Form operator*
+(
+    const Matrix<Form, Type>&,
+    const scalar
+);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Form, class Type>
+Form operator/
+(
+    const Matrix<Form, Type>&,
+    const scalar
+);
+
+template<class Form1, class Form2, class Type>
+typename typeOfInnerProduct<Type, Form1, Form2>::type
+operator*
+(
+    const Matrix<Form1, Type>& a,
+    const Matrix<Form2, Type>& b
+);
+
+template<class Form, class Type>
+tmp<Field<Type>> operator*
+(
+    const Matrix<Form, Type>&,
+    const Field<Type>&
+);
+
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Form, class Type>
 inline CML::Matrix<Form, Type>::Matrix()
 :
-    n_(0),
-    m_(0),
-    v_(NULL)
+    mRows_(0),
+    nCols_(0),
+    v_(nullptr)
 {}
 
 
@@ -238,112 +384,460 @@ clone() const
     return autoPtr<Matrix<Form, Type> >(new Matrix<Form, Type>(*this));
 }
 
+template<class Form, class Type>
+template<class MatrixType>
+inline CML::Matrix<Form, Type>::Matrix
+(
+    const ConstMatrixBlock<MatrixType>& Mb
+)
+:
+    mRows_(Mb.m()),
+    nCols_(Mb.n())
+{
+    allocate();
+
+    for (label i=0; i<mRows_; i++)
+    {
+        for (label j=0; j<nCols_; j++)
+        {
+            (*this)(i,j) = Mb(i,j);
+        }
+    }
+}
+
+
+template<class Form, class Type>
+template<class MatrixType>
+inline CML::Matrix<Form, Type>::Matrix
+(
+    const MatrixBlock<MatrixType>& Mb
+)
+:
+    mRows_(Mb.m()),
+    nCols_(Mb.n())
+{
+    allocate();
+
+    for (label i=0; i<mRows_; i++)
+    {
+        for (label j=0; j<nCols_; j++)
+        {
+            (*this)(i,j) = Mb(i,j);
+        }
+    }
+}
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
 inline const CML::Matrix<Form, Type>& CML::Matrix<Form, Type>::null()
 {
-    return NullSingletonRef< Matrix<Form, Type> >();
-}
-
-
-//- Return the number of rows
-template<class Form, class Type>
-inline CML::label CML::Matrix<Form, Type>::n() const
-{
-    return n_;
+    return NullSingletonRef<Matrix<Form, Type> >();
 }
 
 
 template<class Form, class Type>
 inline CML::label CML::Matrix<Form, Type>::m() const
 {
-    return m_;
+    return mRows_;
+}
+
+
+template<class Form, class Type>
+inline CML::label CML::Matrix<Form, Type>::n() const
+{
+    return nCols_;
 }
 
 
 template<class Form, class Type>
 inline CML::label CML::Matrix<Form, Type>::size() const
 {
-    return n_*m_;
+    return mRows_*nCols_;
 }
 
 
 template<class Form, class Type>
 inline void CML::Matrix<Form, Type>::checki(const label i) const
 {
-    if (!n_)
+    #ifdef FULLDEBUG
+    if (!mRows_ || !nCols_)
     {
-        FatalErrorIn("Matrix<Form, Type>::checki(const label)")
-            << "attempt to access element from zero sized row"
+        FatalErrorInFunction
+            << "Attempt to access element from empty matrix"
             << abort(FatalError);
     }
-    else if (i<0 || i>=n_)
+    else if (i<0 || i>=mRows_)
     {
-        FatalErrorIn("Matrix<Form, Type>::checki(const label)")
-            << "index " << i << " out of range 0 ... " << n_-1
+        FatalErrorInFunction
+            << "Index " << i << " out of range 0 ... " << mRows_-1
             << abort(FatalError);
     }
+    #endif
 }
 
 
 template<class Form, class Type>
 inline void CML::Matrix<Form, Type>::checkj(const label j) const
 {
-    if (!m_)
+    #ifdef FULLDEBUG
+    if (!mRows_ || !nCols_)
     {
-        FatalErrorIn("Matrix<Form, Type>::checkj(const label)")
-            << "attempt to access element from zero sized column"
+        FatalErrorInFunction
+            << "Attempt to access element from empty matrix"
             << abort(FatalError);
     }
-    else if (j<0 || j>=m_)
+    else if (j<0 || j>=nCols_)
     {
-        FatalErrorIn("Matrix<Form, Type>::checkj(const label)")
-            << "index " << j << " out of range 0 ... " << m_-1
+        FatalErrorInFunction
+            << "index " << j << " out of range 0 ... " << nCols_-1
             << abort(FatalError);
     }
+    #endif
+}
+
+
+template<class Form, class Type>
+inline const Type* CML::Matrix<Form, Type>::v() const
+{
+    return v_;
+}
+
+
+template<class Form, class Type>
+inline Type* CML::Matrix<Form, Type>::v()
+{
+    return v_;
+}
+
+
+template<class Form, class Type>
+inline CML::ConstMatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::block
+(
+    const label m,
+    const label n,
+    const label mStart,
+    const label nStart
+) const
+{
+    return ConstMatrixBlock<mType>
+    (
+        *this,
+        m,
+        n,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+template<class VectorSpace>
+inline CML::ConstMatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::block
+(
+    const label mStart,
+    const label nStart
+) const
+{
+    return ConstMatrixBlock<mType>
+    (
+        *this,
+        VectorSpace::mRows,
+        VectorSpace::nCols,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+inline CML::ConstMatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::col
+(
+    const label m,
+    const label mStart
+) const
+{
+    return ConstMatrixBlock<mType>
+    (
+        *this,
+        m,
+        1,
+        mStart,
+        0
+    );
+}
+
+
+template<class Form, class Type>
+inline CML::ConstMatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::col
+(
+    const label m,
+    const label mStart,
+    const label nStart
+) const
+{
+    return ConstMatrixBlock<mType>
+    (
+        *this,
+        m,
+        1,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+inline CML::MatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::block
+(
+    const label m,
+    const label n,
+    const label mStart,
+    const label nStart
+)
+{
+    return MatrixBlock<mType>
+    (
+        *this,
+        m,
+        n,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+template<class VectorSpace>
+inline CML::MatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::block(const label mStart, const label nStart)
+{
+    return MatrixBlock<mType>
+    (
+        *this,
+        VectorSpace::mRows,
+        VectorSpace::nCols,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+inline CML::MatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::col(const label m, const label mStart)
+{
+    return MatrixBlock<mType>
+    (
+        *this,
+        m,
+        1,
+        mStart,
+        0
+    );
+}
+
+
+template<class Form, class Type>
+inline CML::MatrixBlock<CML::Matrix<Form, Type> >
+CML::Matrix<Form, Type>::col
+(
+    const label m,
+    const label mStart,
+    const label nStart
+)
+{
+    return MatrixBlock<mType>
+    (
+        *this,
+        m,
+        1,
+        mStart,
+        nStart
+    );
+}
+
+
+template<class Form, class Type>
+void CML::Matrix<Form, Type>::shallowResize(const label m, const label n)
+{
+    mRows_ = m;
+    nCols_ = n;
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
-inline Type* CML::Matrix<Form, Type>::operator[](const label i)
+inline const Type& CML::Matrix<Form, Type>::operator()
+(
+    const label i,
+    const label j
+) const
 {
-#   ifdef FULLDEBUG
     checki(i);
-#   endif
-    return v_[i];
+    checkj(j);
+    return v_[i*nCols_ + j];
+}
+
+
+template<class Form, class Type>
+inline Type& CML::Matrix<Form, Type>::operator()
+(
+    const label i,
+    const label j
+)
+{
+    checki(i);
+    checkj(j);
+    return v_[i*nCols_ + j];
 }
 
 
 template<class Form, class Type>
 inline const Type* CML::Matrix<Form, Type>::operator[](const label i) const
 {
-#   ifdef FULLDEBUG
     checki(i);
-#   endif
-    return v_[i];
+    return v_ + i*nCols_;
 }
 
 
+template<class Form, class Type>
+inline Type* CML::Matrix<Form, Type>::operator[](const label i)
+{
+    checki(i);
+    return v_ + i*nCols_;
+}
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 template<class Form, class Type>
 void CML::Matrix<Form, Type>::allocate()
 {
-    if (n_ && m_)
+    if (mRows_ && nCols_)
     {
-        v_ = new Type*[n_];
-        v_[0] = new Type[n_*m_];
+        v_ = new Type[size()];
+    }
+}
 
-        for (register label i=1; i<n_; i++)
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class Form, class Type>
+CML::Matrix<Form, Type>::Matrix(const label m, const label n)
+:
+    mRows_(m),
+    nCols_(n),
+    v_(nullptr)
+{
+    if (mRows_ < 0 || nCols_ < 0)
+    {
+        FatalErrorInFunction
+            << "Incorrect m, n " << mRows_ << ", " << nCols_
+            << abort(FatalError);
+    }
+
+    allocate();
+}
+
+
+template<class Form, class Type>
+CML::Matrix<Form, Type>::Matrix(const label m, const label n, const zero)
+:
+    mRows_(m),
+    nCols_(n),
+    v_(nullptr)
+{
+    if (mRows_ < 0 || nCols_ < 0)
+    {
+        FatalErrorInFunction
+            << "Incorrect m, n " << mRows_ << ", " << nCols_
+            << abort(FatalError);
+    }
+
+    allocate();
+
+    if (v_)
+    {
+        const label mn = size();
+        for (label i=0; i<mn; i++)
         {
-            v_[i] = v_[i-1] + m_;
+            v_[i] = Zero;
+        }
+    }
+}
+
+
+template<class Form, class Type>
+CML::Matrix<Form, Type>::Matrix(const label m, const label n, const Type& s)
+:
+    mRows_(m),
+    nCols_(n),
+    v_(nullptr)
+{
+    if (mRows_ < 0 || nCols_ < 0)
+    {
+        FatalErrorInFunction
+            << "Incorrect m, n " << mRows_ << ", " << nCols_
+            << abort(FatalError);
+    }
+
+    allocate();
+
+    if (v_)
+    {
+        const label mn = size();
+        for (label i=0; i<mn; i++)
+        {
+            v_[i] = s;
+        }
+    }
+}
+
+
+template<class Form, class Type>
+CML::Matrix<Form, Type>::Matrix(const Matrix<Form, Type>& M)
+:
+    mRows_(M.mRows_),
+    nCols_(M.nCols_),
+    v_(nullptr)
+{
+    if (M.v_)
+    {
+        allocate();
+
+        const label mn = size();
+        for (label i=0; i<mn; i++)
+        {
+            v_[i] = M.v_[i];
+        }
+    }
+}
+
+
+template<class Form, class Type>
+template<class Form2>
+CML::Matrix<Form, Type>::Matrix(const Matrix<Form2, Type>& M)
+:
+    mRows_(M.m()),
+    nCols_(M.n()),
+    v_(nullptr)
+{
+    if (M.v())
+    {
+        allocate();
+
+        const label mn = size();
+        for (label i=0; i<mn; i++)
+        {
+            v_[i] = M.v()[i];
         }
     }
 }
@@ -356,7 +850,6 @@ CML::Matrix<Form, Type>::~Matrix()
 {
     if (v_)
     {
-        delete[] (v_[0]);
         delete[] v_;
     }
 }
@@ -365,104 +858,52 @@ CML::Matrix<Form, Type>::~Matrix()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
-CML::Matrix<Form, Type>::Matrix(const label n, const label m)
-:
-    n_(n),
-    m_(m),
-    v_(NULL)
-{
-    if (n_ < 0 || m_ < 0)
-    {
-        FatalErrorIn("Matrix<Form, Type>::Matrix(const label n, const label m)")
-            << "bad n, m " << n_ << ", " << m_
-            << abort(FatalError);
-    }
-
-    allocate();
-}
-
-
-template<class Form, class Type>
-CML::Matrix<Form, Type>::Matrix(const label n, const label m, const Type& a)
-:
-    n_(n),
-    m_(m),
-    v_(NULL)
-{
-    if (n_ < 0 || m_ < 0)
-    {
-        FatalErrorIn
-        (
-            "Matrix<Form, Type>::Matrix(const label n, const label m, const T&)"
-        )   << "bad n, m " << n_ << ", " << m_
-            << abort(FatalError);
-    }
-
-    allocate();
-
-    if (v_)
-    {
-        Type* v = v_[0];
-
-        label nm = n_*m_;
-
-        for (register label i=0; i<nm; i++)
-        {
-            v[i] = a;
-        }
-    }
-}
-
-
-template<class Form, class Type>
-CML::Matrix<Form, Type>::Matrix(const Matrix<Form, Type>& a)
-:
-    n_(a.n_),
-    m_(a.m_),
-    v_(NULL)
-{
-    if (a.v_)
-    {
-        allocate();
-        Type* v = v_[0];
-        const Type* av = a.v_[0];
-
-        label nm = n_*m_;
-        for (register label i=0; i<nm; i++)
-        {
-            v[i] = av[i];
-        }
-    }
-}
-
-
-template<class Form, class Type>
 void CML::Matrix<Form, Type>::clear()
 {
     if (v_)
     {
-        delete[] (v_[0]);
         delete[] v_;
+        v_ = nullptr;
     }
-    n_ = 0;
-    m_ = 0;
-    v_ = NULL;
+
+    mRows_ = 0;
+    nCols_ = 0;
 }
 
 
 template<class Form, class Type>
-void CML::Matrix<Form, Type>::transfer(Matrix<Form, Type>& a)
+void CML::Matrix<Form, Type>::transfer(Matrix<Form, Type>& M)
 {
     clear();
 
-    n_ = a.n_;
-    a.n_ = 0;
+    mRows_ = M.mRows_;
+    M.mRows_ = 0;
 
-    m_ = a.m_;
-    a.m_ = 0;
+    nCols_ = M.nCols_;
+    M.nCols_ = 0;
 
-    v_ = a.v_;
-    a.v_ = NULL;
+    v_ = M.v_;
+    M.v_ = nullptr;
+}
+
+
+template<class Form, class Type>
+void CML::Matrix<Form, Type>::setSize(const label m, const label n)
+{
+    mType newMatrix(m, n, Zero);
+
+    label minM = min(m, mRows_);
+    label minN = min(n, nCols_);
+
+    for (label i=0; i<minM; i++)
+    {
+        for (label j=0; j<minN; j++)
+        {
+            newMatrix(i, j) = (*this)(i, j);
+        }
+    }
+
+    transfer(newMatrix);
 }
 
 
@@ -470,13 +911,13 @@ template<class Form, class Type>
 Form CML::Matrix<Form, Type>::T() const
 {
     const Matrix<Form, Type>& A = *this;
-    Form At(m(), n());
+    Form At(n(), m());
 
-    for (register label i=0; i<n(); i++)
+    for (label i=0; i<m(); i++)
     {
-        for (register label j=0; j<m(); j++)
+        for (label j=0; j<n(); j++)
         {
-            At[j][i] = A[i][j];
+            At(j, i) = A(i, j);
         }
     }
 
@@ -487,49 +928,91 @@ Form CML::Matrix<Form, Type>::T() const
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
-void CML::Matrix<Form, Type>::operator=(const Type& t)
+void CML::Matrix<Form, Type>::operator=(const Matrix<Form, Type>& M)
 {
-    if (v_)
+    if (this == &M)
     {
-        Type* v = v_[0];
-
-        label nm = n_*m_;
-        for (register label i=0; i<nm; i++)
-        {
-            v[i] = t;
-        }
-    }
-}
-
-
-// Assignment operator. Takes linear time.
-template<class Form, class Type>
-void CML::Matrix<Form, Type>::operator=(const Matrix<Form, Type>& a)
-{
-    if (this == &a)
-    {
-        FatalErrorIn("Matrix<Form, Type>::operator=(const Matrix<Form, Type>&)")
-            << "attempted assignment to self"
+        FatalErrorInFunction
+            << "Attempted assignment to self"
             << abort(FatalError);
     }
 
-    if (n_ != a.n_ || m_ != a.m_)
+    if (mRows_ != M.mRows_ || nCols_ != M.nCols_)
     {
         clear();
-        n_ = a.n_;
-        m_ = a.m_;
+        mRows_ = M.mRows_;
+        nCols_ = M.nCols_;
         allocate();
     }
 
     if (v_)
     {
-        Type* v = v_[0];
-        const Type* av = a.v_[0];
-
-        label nm = n_*m_;
-        for (register label i=0; i<nm; i++)
+        const label mn = size();
+        for (label i=0; i<mn; i++)
         {
-            v[i] = av[i];
+            v_[i] = M.v_[i];
+        }
+    }
+}
+
+
+template<class Form, class Type>
+template<class MatrixType>
+void CML::Matrix<Form, Type>::operator=
+(
+    const ConstMatrixBlock<MatrixType>& Mb
+)
+{
+    for (label i=0; i<mRows_; i++)
+    {
+        for (label j=0; j<nCols_; j++)
+        {
+            (*this)(i,j) = Mb(i,j);
+        }
+    }
+}
+
+
+template<class Form, class Type>
+template<class MatrixType>
+void CML::Matrix<Form, Type>::operator=
+(
+    const MatrixBlock<MatrixType>& Mb
+)
+{
+    for (label i=0; i<mRows_; i++)
+    {
+        for (label j=0; j<nCols_; j++)
+        {
+            (*this)(i,j) = Mb(i,j);
+        }
+    }
+}
+
+
+template<class Form, class Type>
+void CML::Matrix<Form, Type>::operator=(const Type& s)
+{
+    if (v_)
+    {
+        const label mn = size();
+        for (label i=0; i<mn; i++)
+        {
+            v_[i] = s;
+        }
+    }
+}
+
+
+template<class Form, class Type>
+void CML::Matrix<Form, Type>::operator=(const zero)
+{
+    if (v_)
+    {
+        const label mn = size();
+        for (label i=0; i<mn; i++)
+        {
+            v_[i] = Zero;
         }
     }
 }
@@ -538,65 +1021,65 @@ void CML::Matrix<Form, Type>::operator=(const Matrix<Form, Type>& a)
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
-const Type& CML::max(const Matrix<Form, Type>& a)
+const Type& CML::max(const Matrix<Form, Type>& M)
 {
-    label nm = a.n()*a.m();
+    const label mn = M.size();
 
-    if (nm)
+    if (mn)
     {
         label curMaxI = 0;
-        const Type* v = a[0];
+        const Type* Mv = M.v();
 
-        for (register label i=1; i<nm; i++)
+        for (label i=1; i<mn; i++)
         {
-            if (v[i] > v[curMaxI])
+            if (Mv[i] > Mv[curMaxI])
             {
                 curMaxI = i;
             }
         }
 
-        return v[curMaxI];
+        return Mv[curMaxI];
     }
     else
     {
-        FatalErrorIn("max(const Matrix<Form, Type>&)")
-            << "matrix is empty"
+        FatalErrorInFunction
+            << "Matrix is empty"
             << abort(FatalError);
 
         // Return in error to keep compiler happy
-        return a[0][0];
+        return M(0, 0);
     }
 }
 
 
 template<class Form, class Type>
-const Type& CML::min(const Matrix<Form, Type>& a)
+const Type& CML::min(const Matrix<Form, Type>& M)
 {
-    label nm = a.n()*a.m();
+    const label mn = M.size();
 
-    if (nm)
+    if (mn)
     {
         label curMinI = 0;
-        const Type* v = a[0];
+        const Type* Mv = M.v();
 
-        for (register label i=1; i<nm; i++)
+        for (label i=1; i<mn; i++)
         {
-            if (v[i] < v[curMinI])
+            if (Mv[i] < Mv[curMinI])
             {
                 curMinI = i;
             }
         }
 
-        return v[curMinI];
+        return Mv[curMinI];
     }
     else
     {
-        FatalErrorIn("min(const Matrix<Form, Type>&)")
-            << "matrix is empty"
+        FatalErrorInFunction
+            << "Matrix is empty"
             << abort(FatalError);
 
         // Return in error to keep compiler happy
-        return a[0][0];
+        return M(0, 0);
     }
 }
 
@@ -604,129 +1087,231 @@ const Type& CML::min(const Matrix<Form, Type>& a)
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
 template<class Form, class Type>
-Form CML::operator-(const Matrix<Form, Type>& a)
+Form CML::operator-(const Matrix<Form, Type>& M)
 {
-    Form na(a.n(), a.m());
+    Form nM(M.m(), M.n());
 
-    if (a.n() && a.m())
+    if (M.m() && M.n())
     {
-        Type* nav = na[0];
-        const Type* av = a[0];
+        Type* nMv = nM.v();
+        const Type* Mv = M.v();
 
-        label nm = a.n()*a.m();
-        for (register label i=0; i<nm; i++)
+        const label mn = M.size();
+        for (label i=0; i<mn; i++)
         {
-            nav[i] = -av[i];
+            nMv[i] = -Mv[i];
         }
     }
 
-    return na;
+    return nM;
 }
 
 
 template<class Form, class Type>
-Form CML::operator+(const Matrix<Form, Type>& a, const Matrix<Form, Type>& b)
+Form CML::operator+(const Matrix<Form, Type>& A, const Matrix<Form, Type>& B)
 {
-    if (a.n() != b.n())
+    if (A.m() != B.m())
     {
-        FatalErrorIn
-        (
-            "Matrix<Form, Type>::operator+"
-            "(const Matrix<Form, Type>&, const Matrix<Form, Type>&)"
-        )   << "attempted add matrices with different number of rows: "
-            << a.n() << ", " << b.n()
+        FatalErrorInFunction
+            << "Attempt to add matrices with different numbers of rows: "
+            << A.m() << ", " << B.m()
             << abort(FatalError);
     }
 
-    if (a.m() != b.m())
+    if (A.n() != B.n())
     {
-        FatalErrorIn
-        (
-            "Matrix<Form, Type>::operator+"
-            "(const Matrix<Form, Type>&, const Matrix<Form, Type>&)"
-        )   << "attempted add matrices with different number of columns: "
-            << a.m() << ", " << b.m()
+        FatalErrorInFunction
+            << "Attempt to add matrices with different numbers of columns: "
+            << A.n() << ", " << B.n()
             << abort(FatalError);
     }
 
-    Form ab(a.n(), a.m());
+    Form AB(A.m(), A.n());
 
-    Type* abv = ab[0];
-    const Type* av = a[0];
-    const Type* bv = b[0];
+    Type* ABv = AB.v();
+    const Type* Av = A.v();
+    const Type* Bv = B.v();
 
-    label nm = a.n()*a.m();
-    for (register label i=0; i<nm; i++)
+    const label mn = A.size();
+    for (label i=0; i<mn; i++)
     {
-        abv[i] = av[i] + bv[i];
+        ABv[i] = Av[i] + Bv[i];
     }
 
-    return ab;
+    return AB;
 }
 
 
 template<class Form, class Type>
-Form CML::operator-(const Matrix<Form, Type>& a, const Matrix<Form, Type>& b)
+Form CML::operator-(const Matrix<Form, Type>& A, const Matrix<Form, Type>& B)
 {
-    if (a.n() != b.n())
+    if (A.m() != B.m())
     {
-        FatalErrorIn
-        (
-            "Matrix<Form, Type>::operator-"
-            "(const Matrix<Form, Type>&, const Matrix<Form, Type>&)"
-        )   << "attempted add matrices with different number of rows: "
-            << a.n() << ", " << b.n()
+        FatalErrorInFunction
+            << "Attempt to add matrices with different numbers of rows: "
+            << A.m() << ", " << B.m()
             << abort(FatalError);
     }
 
-    if (a.m() != b.m())
+    if (A.n() != B.n())
     {
-        FatalErrorIn
-        (
-            "Matrix<Form, Type>::operator-"
-            "(const Matrix<Form, Type>&, const Matrix<Form, Type>&)"
-        )   << "attempted add matrices with different number of columns: "
-            << a.m() << ", " << b.m()
+        FatalErrorInFunction
+            << "Attempt to add matrices with different numbers of columns: "
+            << A.n() << ", " << B.n()
             << abort(FatalError);
     }
 
-    Form ab(a.n(), a.m());
+    Form AB(A.m(), A.n());
 
-    Type* abv = ab[0];
-    const Type* av = a[0];
-    const Type* bv = b[0];
+    Type* ABv = AB.v();
+    const Type* Av = A.v();
+    const Type* Bv = B.v();
 
-    label nm = a.n()*a.m();
-    for (register label i=0; i<nm; i++)
+    const label mn = A.size();
+    for (label i=0; i<mn; i++)
     {
-        abv[i] = av[i] - bv[i];
+        ABv[i] = Av[i] - Bv[i];
     }
 
-    return ab;
+    return AB;
 }
 
 
 template<class Form, class Type>
-Form CML::operator*(const scalar s, const Matrix<Form, Type>& a)
+Form CML::operator*(const scalar s, const Matrix<Form, Type>& M)
 {
-    Form sa(a.n(), a.m());
+    Form sM(M.m(), M.n());
 
-    if (a.n() && a.m())
+    if (M.m() && M.n())
     {
-        Type* sav = sa[0];
-        const Type* av = a[0];
+        Type* sMv = sM.v();
+        const Type* Mv = M.v();
 
-        label nm = a.n()*a.m();
-        for (register label i=0; i<nm; i++)
+        const label mn = M.size();
+        for (label i=0; i<mn; i++)
         {
-            sav[i] = s*av[i];
+            sMv[i] = s*Mv[i];
         }
     }
 
-    return sa;
+    return sM;
 }
 
 
+template<class Form, class Type>
+Form CML::operator*(const Matrix<Form, Type>& M, const scalar s)
+{
+    Form sM(M.m(), M.n());
+
+    if (M.m() && M.n())
+    {
+        Type* sMv = sM.v();
+        const Type* Mv = M.v();
+
+        const label mn = M.size();
+        for (label i=0; i<mn; i++)
+        {
+            sMv[i] = Mv[i]*s;
+        }
+    }
+
+    return sM;
+}
+
+
+template<class Form, class Type>
+Form CML::operator/(const Matrix<Form, Type>& M, const scalar s)
+{
+    Form sM(M.m(), M.n());
+
+    if (M.m() && M.n())
+    {
+        Type* sMv = sM.v();
+        const Type* Mv = M.v();
+
+        const label mn = M.size();
+        for (label i=0; i<mn; i++)
+        {
+            sMv[i] = Mv[i]/s;
+        }
+    }
+
+    return sM;
+}
+
+
+template<class Form1, class Form2, class Type>
+typename CML::typeOfInnerProduct<Type, Form1, Form2>::type
+CML::operator*
+(
+    const Matrix<Form1, Type>& A,
+    const Matrix<Form2, Type>& B
+)
+{
+    if (A.n() != B.m())
+    {
+        FatalErrorInFunction
+            << "Attempt to multiply incompatible matrices:" << nl
+            << "Matrix A : " << A.m() << " x " << A.n() << nl
+            << "Matrix B : " << B.m() << " x " << B.n() << nl
+            << "In order to multiply matrices, columns of A must equal "
+            << "rows of B"
+            << abort(FatalError);
+    }
+
+    typename typeOfInnerProduct<Type, Form1, Form2>::type AB
+    (
+        A.m(),
+        B.n(),
+        Zero
+    );
+
+    for (label i=0; i<AB.m(); i++)
+    {
+        for (label j=0; j<AB.n(); j++)
+        {
+            for (label k=0; k<B.m(); k++)
+            {
+                AB(i, j) += A(i, k)*B(k, j);
+            }
+        }
+    }
+
+    return AB;
+}
+
+
+template<class Form, class Type>
+inline CML::tmp<CML::Field<Type> > CML::operator*
+(
+    const Matrix<Form, Type>& M,
+    const Field<Type>& f
+)
+{
+    if (M.n() != f.size())
+    {
+        FatalErrorInFunction
+            << "Attempt to multiply incompatible matrix and field:" << nl
+            << "Matrix : " << M.m() << " x " << M.n() << nl
+            << "Field : " << f.size() << " rows" << nl
+            << "In order to multiply a matrix M and field f, "
+               "columns of M must equal rows of f"
+            << abort(FatalError);
+    }
+
+    tmp<Field<Type> > tMf(new Field<Type>(M.m(), Zero));
+    Field<Type>& Mf = tMf.ref();
+
+    for (label i=0; i<M.m(); i++)
+    {
+        for (label j=0; j<M.n(); j++)
+        {
+            Mf[i] += M(i, j)*f[j];
+        }
+    }
+
+    return tMf;
+}
 // * * * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * //
 
 #include "Istream.hpp"
@@ -739,9 +1324,9 @@ Form CML::operator*(const scalar s, const Matrix<Form, Type>& a)
 template<class Form, class Type>
 CML::Matrix<Form, Type>::Matrix(Istream& is)
 :
-    n_(0),
-    m_(0),
-    v_(NULL)
+    mRows_(0),
+    nCols_(0),
+    v_(nullptr)
 {
     operator>>(is, *this);
 }
@@ -764,10 +1349,10 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
 
     if (firstToken.isLabel())
     {
-        M.n_ = firstToken.labelToken();
-        M.m_ = readLabel(is);
+        M.mRows_ = firstToken.labelToken();
+        M.nCols_ = readLabel(is);
 
-        label nm = M.n_*M.m_;
+        label mn = M.mRows_*M.nCols_;
 
         // Read list contents depending on data format
         if (is.format() == IOstream::ASCII || !contiguous<Type>())
@@ -775,21 +1360,21 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
             // Read beginning of contents
             char listDelimiter = is.readBeginList("Matrix");
 
-            if (nm)
+            if (mn)
             {
                 M.allocate();
-                Type* v = M.v_[0];
+                Type* v = M.v_;
 
                 if (listDelimiter == token::BEGIN_LIST)
                 {
                     label k = 0;
 
                     // loop over rows
-                    for (register label i=0; i<M.n(); i++)
+                    for (label i=0; i<M.m(); i++)
                     {
                         listDelimiter = is.readBeginList("MatrixRow");
 
-                        for (register label j=0; j<M.m(); j++)
+                        for (label j=0; j<M.n(); j++)
                         {
                             is >> v[k++];
 
@@ -814,7 +1399,7 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
                         "reading the single entry"
                     );
 
-                    for (register label i=0; i<nm; i++)
+                    for (label i=0; i<mn; i++)
                     {
                         v[i] = element;
                     }
@@ -826,12 +1411,12 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
         }
         else
         {
-            if (nm)
+            if (mn)
             {
                 M.allocate();
-                Type* v = M.v_[0];
+                Type* v = M.v_;
 
-                is.read(reinterpret_cast<char*>(v), nm*sizeof(Type));
+                is.read(reinterpret_cast<char*>(v), mn*sizeof(Type));
 
                 is.fatalCheck
                 (
@@ -843,7 +1428,7 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
     }
     else
     {
-        FatalIOErrorIn("operator>>(Istream&, Matrix<Form, Type>&)", is)
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int>, found "
             << firstToken.info()
             << exit(FatalIOError);
@@ -856,24 +1441,24 @@ CML::Istream& CML::operator>>(Istream& is, Matrix<Form, Type>& M)
 template<class Form, class Type>
 CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
 {
-    label nm = M.n_*M.m_;
+    label mn = M.mRows_*M.nCols_;
 
-    os  << M.n() << token::SPACE << M.m();
+    os  << M.m() << token::SPACE << M.n();
 
     // Write list contents depending on data format
     if (os.format() == IOstream::ASCII || !contiguous<Type>())
     {
-        if (nm)
+        if (mn)
         {
             bool uniform = false;
 
-            const Type* v = M.v_[0];
+            const Type* v = M.v_;
 
-            if (nm > 1 && contiguous<Type>())
+            if (mn > 1 && contiguous<Type>())
             {
                 uniform = true;
 
-                for (register label i=0; i< nm; i++)
+                for (label i=0; i<mn; i++)
                 {
                     if (v[i] != v[0])
                     {
@@ -894,7 +1479,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
                 // Write end of contents delimiter
                 os << token::END_BLOCK;
             }
-            else if (nm < 10 && contiguous<Type>())
+            else if (mn < 10 && contiguous<Type>())
             {
                 // Write size of list and start contents delimiter
                 os  << token::BEGIN_LIST;
@@ -902,12 +1487,12 @@ CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
                 label k = 0;
 
                 // loop over rows
-                for (register label i=0; i< M.n(); i++)
+                for (label i=0; i<M.m(); i++)
                 {
                     os  << token::BEGIN_LIST;
 
                     // Write row
-                    for (register label j=0; j< M.m(); j++)
+                    for (label j=0; j< M.n(); j++)
                     {
                         if (j > 0) os << token::SPACE;
                         os << v[k++];
@@ -927,12 +1512,12 @@ CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
                 label k = 0;
 
                 // loop over rows
-                for (register label i=0; i< M.n(); i++)
+                for (label i=0; i<M.m(); i++)
                 {
                     os  << nl << token::BEGIN_LIST;
 
                     // Write row
-                    for (register label j=0; j< M.m(); j++)
+                    for (label j=0; j< M.n(); j++)
                     {
                         os << nl << v[k++];
                     }
@@ -951,9 +1536,9 @@ CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
     }
     else
     {
-        if (nm)
+        if (mn)
         {
-            os.write(reinterpret_cast<const char*>(M.v_[0]), nm*sizeof(Type));
+            os.write(reinterpret_cast<const char*>(M.v_), mn*sizeof(Type));
         }
     }
 
@@ -963,9 +1548,6 @@ CML::Ostream& CML::operator<<(Ostream& os, const Matrix<Form, Type>& M)
     return os;
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

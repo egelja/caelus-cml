@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ namespace surfaceFilmModels
 
 autoPtr<phaseChangeModel> phaseChangeModel::New
 (
-    const surfaceFilmModel& model,
+    surfaceFilmRegionModel& model,
     const dictionary& dict
 )
 {
@@ -47,10 +47,8 @@ autoPtr<phaseChangeModel> phaseChangeModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "phaseChangeModel::New(const surfaceFilmModel&, const dictionary&)"
-        )   << "Unknown phaseChangeModel type " << modelType
+        FatalErrorInFunction
+            << "Unknown phaseChangeModel type " << modelType
             << nl << nl << "Valid phaseChangeModel types are:" << nl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -70,10 +70,8 @@ void CML::transformList(const tensorField& rotTensor, UList<T>& field)
     }
     else
     {
-        FatalErrorIn
-        (
-            "transformList(const tensorField&, UList<T>&)"
-        )   << "Sizes of field and transformation not equal. field:"
+        FatalErrorInFunction
+            << "Sizes of field and transformation not equal. field:"
             << field.size() << " transformation:" << rotTensor.size()
             << abort(FatalError);
     }
@@ -102,10 +100,8 @@ void CML::transformList(const tensorField& rotTensor, Map<T>& field)
     }
     else
     {
-        FatalErrorIn
-        (
-            "transformList(const tensorField&, Map<T>&)"
-        )   << "Multiple transformation tensors not supported. field:"
+        FatalErrorInFunction
+            << "Multiple transformation tensors not supported. field:"
             << field.size() << " transformation:" << rotTensor.size()
             << abort(FatalError);
     }
@@ -134,10 +130,8 @@ void CML::transformList(const tensorField& rotTensor, EdgeMap<T>& field)
     }
     else
     {
-        FatalErrorIn
-        (
-            "transformList(const tensorField&, EdgeMap<T>&)"
-        )   << "Multiple transformation tensors not supported. field:"
+        FatalErrorInFunction
+            << "Multiple transformation tensors not supported. field:"
             << field.size() << " transformation:" << rotTensor.size()
             << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -60,10 +60,8 @@ void CML::motionSmoother::testSyncPositions
     {
         if (mag(syncedFld[i] - fld[i]) > maxMag)
         {
-            FatalErrorIn
-            (
-                "motionSmoother::testSyncPositions(const pointField&)"
-            )   << "On point " << i << " point:" << fld[i]
+            FatalErrorInFunction
+                << "On point " << i << " point:" << fld[i]
                 << " synchronised point:" << syncedFld[i]
                 << abort(FatalError);
         }
@@ -242,7 +240,7 @@ void CML::motionSmoother::checkFld(const pointScalarField& fld)
         {}
         else
         {
-            FatalErrorIn("motionSmoother::checkFld")
+            FatalErrorInFunction
                 << "Problem : point:" << pointI << " value:" << val
                 << abort(FatalError);
         }
@@ -806,7 +804,7 @@ CML::tmp<CML::scalarField> CML::motionSmoother::movePoints
 
         if (mesh_.globalData().parallel())
         {
-            WarningIn("motionSmoother::movePoints(pointField& newPoints)")
+            WarningInFunction
                 << "2D mesh-motion probably not correct in parallel" << endl;
         }
 
@@ -844,7 +842,7 @@ CML::tmp<CML::scalarField> CML::motionSmoother::movePoints
 
     // Move actual mesh points. Make sure to delete tetBasePtIs so it
     // gets rebuilt.
-    mesh_.clearAdditionalGeom();
+    mesh_.clearTetBasePtIs();
     tmp<scalarField> tsweptVol = mesh_.movePoints(newPoints);
 
     pp_.movePoints(mesh_.points());
@@ -917,7 +915,7 @@ bool CML::motionSmoother::scaleMesh
 {
     if (!smoothMesh && adaptPatchIDs_.empty())
     {
-        FatalErrorIn("motionSmoother::scaleMesh(const bool")
+        FatalErrorInFunction
             << "You specified both no movement on the internal mesh points"
             << " (smoothMesh = false)" << nl
             << "and no movement on the patch (adaptPatchIDs is empty)" << nl
@@ -1154,10 +1152,8 @@ void CML::motionSmoother::updateMesh()
             )
         )
         {
-            FatalErrorIn
-            (
-                "motionSmoother::motionSmoother"
-            )   << "Patch " << patches[patchI].name()
+            FatalErrorInFunction
+                << "Patch " << patches[patchI].name()
                 << " has wrong boundary condition "
                 << displacement_.boundaryField()[patchI].type()
                 << " on field " << displacement_.name() << nl

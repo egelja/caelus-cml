@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,7 +47,7 @@ CML::vectorField CML::turbGen::U()
 
     forAll(K, i)
     {
-        s[i] = RanGen.vector01();
+        s[i] = RanGen.sample01<vector>();
         rndPhases[i] = RanGen.scalar01();
     }
 

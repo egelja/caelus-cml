@@ -66,7 +66,7 @@ inline bool CML::refinementDistanceData::update
     {
         if (!neighbourInfo.valid(td))
         {
-            FatalErrorIn("refinementDistanceData::update(..)")
+            FatalErrorInFunction
                 << "problem" << abort(FatalError);
         }
         operator=(neighbourInfo);

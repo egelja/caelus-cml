@@ -203,12 +203,7 @@ slicedFvsPatchField<Type>::slicedFvsPatchField
 :
     fvsPatchField<Type>(ptf, p, iF, mapper)
 {
-    notImplemented
-    (
-        "slicedFvsPatchField<Type>::"
-        "slicedFvsPatchField(const slicedFvsPatchField<Type>&, "
-        "const fvPatch&, const Field<Type>&, const fvPatchFieldMapper&)"
-    );
+    NotImplemented;
 }
 
 
@@ -222,11 +217,7 @@ slicedFvsPatchField<Type>::slicedFvsPatchField
 :
     fvsPatchField<Type>(p, iF, Field<Type>("value", dict, p.size()))
 {
-    notImplemented
-    (
-        "slicedFvsPatchField<Type>::"
-        "slicedFvsPatchField(const Field<Type>&, const dictionary&)"
-    );
+    NotImplemented;
 }
 
 
@@ -287,9 +278,9 @@ tmp<fvsPatchField<Type> > slicedFvsPatchField<Type>::clone
 template<class Type>
 slicedFvsPatchField<Type>::~slicedFvsPatchField<Type>()
 {
-    // Set the fvsPatchField storage pointer to NULL before its destruction
+    // Set the fvsPatchField storage pointer to nullptr before its destruction
     // to protect the field it a slice of.
-    UList<Type>::operator=(UList<Type>(NULL, 0));
+    UList<Type>::operator=(UList<Type>(nullptr, 0));
 }
 
 

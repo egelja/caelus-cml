@@ -38,29 +38,29 @@ void CML::SIBS::polyExtrapolate
 
     x[iest] = xest;
 
-    for (register label j=0; j<n; j++)
+    for (label j=0; j<n; j++)
     {
         dy[j] = yz[j] = yest[j];
     }
 
     if (iest == 0)
     {
-        for (register label j=0; j<n; j++)
+        for (label j=0; j<n; j++)
         {
-            d[j][0] = yest[j];
+            d(j, 0) = yest[j];
         }
     }
     else
     {
         scalarField c(yest);
 
-        for (register label k1=0; k1<iest; k1++)
+        for (label k1=0; k1<iest; k1++)
         {
             scalar delta = 1.0/(x[iest - k1 - 1] - xest);
             scalar f1 = xest*delta;
             scalar f2 = x[iest - k1 - 1]*delta;
 
-            for (register label j=0; j<n; j++)
+            for (label j=0; j<n; j++)
             {
                 scalar q = d[j][k1];
                 d[j][k1] = dy[j];
@@ -71,7 +71,7 @@ void CML::SIBS::polyExtrapolate
             }
         }
 
-        for (register label j=0; j<n; j++)
+        for (label j=0; j<n; j++)
         {
             d[j][iest] = dy[j];
         }

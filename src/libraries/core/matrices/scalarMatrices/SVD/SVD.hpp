@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,7 +41,6 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
 /*---------------------------------------------------------------------------*\
                       Class SVD Declaration
 \*---------------------------------------------------------------------------*/
@@ -53,14 +52,14 @@ class SVD
         //- Rectangular matrix with the same dimensions as the input
         scalarRectangularMatrix U_;
 
-        //- square matrix V
+        //- Square matrix V
         scalarRectangularMatrix V_;
 
         //- The singular values
         DiagonalMatrix<scalar> S_;
 
-        //- The matrix product V S^(-1) U^T
-        scalarRectangularMatrix VSinvUt_;
+        //- Convergence flag
+        bool converged_;
 
         //- The number of zero singular values
         label nZeros_;
@@ -97,14 +96,17 @@ public:
         //- Return the singular values
         inline const scalarDiagonalMatrix& S() const;
 
-        //- Return VSinvUt (the pseudo inverse)
-        inline const scalarRectangularMatrix& VSinvUt() const;
+        //- Return the minimum non-zero singular value
+        inline bool converged() const;
 
         //- Return the number of zero singular values
         inline label nZeros() const;
 
         //- Return the minimum non-zero singular value
         inline scalar minNonZeroS() const;
+
+        //- Return the matrix product V S^(-1) U^T (the pseudo inverse)
+        scalarRectangularMatrix VSinvUt() const;
 };
 
 

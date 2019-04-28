@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,8 +34,7 @@ License
 namespace CML
 {
     defineTypeNameAndDebug(faceCoupleInfo, 0);
-
-    const scalar faceCoupleInfo::angleTol_ = 1E-3;
+    const scalar faceCoupleInfo::angleTol_ = 1e-3;
 }
 
 
@@ -56,7 +55,7 @@ void CML::faceCoupleInfo::writeOBJ
 
     if (compact)
     {
-        label newPointI = 0;
+        label newPointi = 0;
 
         forAll(edges, edgeI)
         {
@@ -64,22 +63,22 @@ void CML::faceCoupleInfo::writeOBJ
 
             forAll(e, eI)
             {
-                label pointI = e[eI];
+                label pointi = e[eI];
 
-                if (pointMap[pointI] == -1)
+                if (pointMap[pointi] == -1)
                 {
-                    pointMap[pointI] = newPointI++;
+                    pointMap[pointi] = newPointi++;
 
-                    meshTools::writeOBJ(str, points[pointI]);
+                    meshTools::writeOBJ(str, points[pointi]);
                 }
             }
         }
     }
     else
     {
-        forAll(points, pointI)
+        forAll(points, pointi)
         {
-            meshTools::writeOBJ(str, points[pointI]);
+            meshTools::writeOBJ(str, points[pointi]);
         }
 
         pointMap = identity(points.size());
@@ -170,22 +169,22 @@ void CML::faceCoupleInfo::writePointsFaces() const
 
         pointField equivMasterFaces(c.size());
 
-        forAll(cutToMasterFaces(), cutFaceI)
+        forAll(cutToMasterFaces(), cutFacei)
         {
-            label masterFaceI = cutToMasterFaces()[cutFaceI];
+            label masterFacei = cutToMasterFaces()[cutFacei];
 
-            if (masterFaceI != -1)
+            if (masterFacei != -1)
             {
-                equivMasterFaces[cutFaceI] = m[masterFaceI].centre(m.points());
+                equivMasterFaces[cutFacei] = m[masterFacei].centre(m.points());
             }
             else
             {
-                WarningIn("writePointsFaces()")
-                    << "No master face for cut face " << cutFaceI
-                    << " at position " << c[cutFaceI].centre(c.points())
+                WarningInFunction
+                    << "No master face for cut face " << cutFacei
+                    << " at position " << c[cutFacei].centre(c.points())
                     << endl;
 
-                equivMasterFaces[cutFaceI] = vector::zero;
+                equivMasterFaces[cutFacei] = Zero;
             }
         }
 
@@ -202,11 +201,11 @@ void CML::faceCoupleInfo::writePointsFaces() const
 
         pointField equivSlaveFaces(c.size());
 
-        forAll(cutToSlaveFaces(), cutFaceI)
+        forAll(cutToSlaveFaces(), cutFacei)
         {
-            label slaveFaceI = cutToSlaveFaces()[cutFaceI];
+            label slaveFacei = cutToSlaveFaces()[cutFacei];
 
-            equivSlaveFaces[cutFaceI] = s[slaveFaceI].centre(s.points());
+            equivSlaveFaces[cutFacei] = s[slaveFacei].centre(s.points());
         }
 
         writeOBJ
@@ -353,17 +352,17 @@ bool CML::faceCoupleInfo::regionEdge
 
         forAll(eFaces, i)
         {
-            label faceI = eFaces[i];
+            label facei = eFaces[i];
 
-            label meshFaceI = slavePatch().addressing()[faceI];
+            label meshFacei = slavePatch().addressing()[facei];
 
-            label patchI = slaveMesh.boundaryMesh().whichPatch(meshFaceI);
+            label patchi = slaveMesh.boundaryMesh().whichPatch(meshFacei);
 
             if (patch0 == -1)
             {
-                patch0 = patchI;
+                patch0 = patchi;
             }
-            else if (patchI != patch0)
+            else if (patchi != patch0)
             {
                 // Found two different patches connected to this edge.
                 return true;
@@ -384,21 +383,25 @@ CML::label CML::faceCoupleInfo::mostAlignedCutEdge
     const bool patchDivision,
     const labelList& cutToMasterEdges,
     const labelList& cutToSlaveEdges,
-    const label pointI,
+    const label pointi,
     const label edgeStart,
     const label edgeEnd
 ) const
 {
+    // Find edge using pointi that is most aligned with vector between master
+    // points. Patchdivision tells us whether or not to use patch information to
+    // match edges.
+
     const pointField& localPoints = cutFaces().localPoints();
 
-    const labelList& pEdges = cutFaces().pointEdges()[pointI];
+    const labelList& pEdges = cutFaces().pointEdges()[pointi];
 
     if (report)
     {
         Pout<< "mostAlignedEdge : finding nearest edge among "
             << UIndirectList<edge>(cutFaces().edges(), pEdges)()
-            << " connected to point " << pointI
-            << " coord:" << localPoints[pointI]
+            << " connected to point " << pointi
+            << " coord:" << localPoints[pointi]
             << " running between " << edgeStart << " coord:"
             << localPoints[edgeStart]
             << " and " << edgeEnd << " coord:"
@@ -429,9 +432,9 @@ CML::label CML::faceCoupleInfo::mostAlignedCutEdge
         {
             const edge& e = cutFaces().edges()[edgeI];
 
-            label otherPointI = e.otherVertex(pointI);
+            label otherPointi = e.otherVertex(pointi);
 
-            if (otherPointI == edgeEnd)
+            if (otherPointi == edgeEnd)
             {
                 // Shortcut: found edge end point.
                 if (report)
@@ -444,16 +447,16 @@ CML::label CML::faceCoupleInfo::mostAlignedCutEdge
 
             // Get angle between edge and edge to masterEnd
 
-            vector eVec(localPoints[otherPointI] - localPoints[pointI]);
+            vector eVec(localPoints[otherPointi] - localPoints[pointi]);
 
             scalar magEVec = mag(eVec);
 
             if (magEVec < VSMALL)
             {
-                WarningIn("faceCoupleInfo::mostAlignedEdge")
+                WarningInFunction
                     << "Crossing zero sized edge " << edgeI
-                    << " coords:" << localPoints[otherPointI]
-                    << localPoints[pointI]
+                    << " coords:" << localPoints[otherPointi]
+                    << localPoints[pointi]
                     << " when walking from " << localPoints[edgeStart]
                     << " to " << localPoints[edgeEnd]
                     << endl;
@@ -462,15 +465,15 @@ CML::label CML::faceCoupleInfo::mostAlignedCutEdge
 
             eVec /= magEVec;
 
-            vector eToEndPoint(localPoints[edgeEnd] - localPoints[otherPointI]);
+            vector eToEndPoint(localPoints[edgeEnd] - localPoints[otherPointi]);
             eToEndPoint /= mag(eToEndPoint);
 
             scalar cosAngle = eVec & eToEndPoint;
 
             if (report)
             {
-                Pout<< "    edge:" << e << " points:" << localPoints[pointI]
-                    << localPoints[otherPointI]
+                Pout<< "    edge:" << e << " points:" << localPoints[pointi]
+                    << localPoints[otherPointi]
                     << "  vec:" << eVec
                     << "  vecToEnd:" << eToEndPoint
                     << " cosAngle:" << cosAngle
@@ -522,18 +525,15 @@ void CML::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
     {
         const edge& masterE = masterPatch().edges()[masterEdgeI];
 
-        //Pout<< "Master:" << masterPatch().localPoints()[masterE[0]] << ' '
+        // Pout<< "Master:" << masterPatch().localPoints()[masterE[0]] << ' '
         //    << masterPatch().localPoints()[masterE[1]] << endl;
 
         const labelList& stringedEdges = masterToCutEdges[masterEdgeI];
 
         if (stringedEdges.empty())
         {
-            FatalErrorIn
-            (
-                "faceCoupleInfo::setCutEdgeToPoints"
-                "(const labelList&)"
-            )   << "Did not match all of master edges to cutFace edges"
+            FatalErrorInFunction
+                << "Did not match all of master edges to cutFace edges"
                 << nl
                 << "First unmatched edge:" << masterEdgeI << " endPoints:"
                 << masterPatch().localPoints()[masterE[0]]
@@ -546,7 +546,7 @@ void CML::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
         else if (stringedEdges.size() > 1)
         {
             // String up the edges between e[0] and e[1]. Store the points
-            // inbetween e[0] and e[1] (all in cutFaces() labels)
+            // in between e[0] and e[1] (all in cutFaces() labels)
 
             DynamicList<label> splitPoints(stringedEdges.size()-1);
 
@@ -578,7 +578,7 @@ void CML::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
                     {
                         const edge& e = cutEdges[edgeI];
 
-                        //Pout<< "    cut:" << e << " at:"
+                        // Pout<< "    cut:" << e << " at:"
                         //    << cutFaces().localPoints()[e[0]]
                         //    << ' ' << cutFaces().localPoints()[e[1]] << endl;
 
@@ -608,18 +608,15 @@ void CML::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
                 // Check
                 if (oldStart == startVertI)
                 {
-                    FatalErrorIn
-                    (
-                        "faceCoupleInfo::setCutEdgeToPoints"
-                        "(const labelList&)"
-                    )   << " unsplitEdge:" << unsplitEdge
+                    FatalErrorInFunction
+                        << " unsplitEdge:" << unsplitEdge
                         << " does not correspond to split edges "
                         << UIndirectList<edge>(cutEdges, stringedEdges)()
                         << abort(FatalError);
                 }
             }
 
-            //Pout<< "For master edge:"
+            // Pout<< "For master edge:"
             //    << unsplitEdge
             //    << " Found stringed points "
             //    <<  UIndirectList<point>
@@ -649,12 +646,8 @@ CML::label CML::faceCoupleInfo::matchFaces
 {
     if (f0.size() != f1.size())
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::matchFaces"
-            "(const scalar, const face&, const pointField&"
-            ", const face&, const pointField&)"
-        )   << "Different sizes for supposedly matching faces." << nl
+        FatalErrorInFunction
+            << "Different sizes for supposedly matching faces." << nl
             << "f0:" << f0 << " coords:" << UIndirectList<point>(points0, f0)()
             << nl
             << "f1:" << f1 << " coords:" << UIndirectList<point>(points1, f1)()
@@ -705,12 +698,8 @@ CML::label CML::faceCoupleInfo::matchFaces
 
     if (matchFp == -1)
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::matchFaces"
-            "(const scalar, const face&, const pointField&"
-            ", const face&, const pointField&)"
-        )   << "No unique match between two faces" << nl
+        FatalErrorInFunction
+            << "No unique match between two faces" << nl
             << "Face " << f0 << " coords "
             << UIndirectList<point>(points0, f0)() << nl
             << "Face " << f1 << " coords "
@@ -743,6 +732,10 @@ bool CML::faceCoupleInfo::matchPointsThroughFaces
     labelList& compactToCut         // inverse ,,
 )
 {
+    // Find correspondence from patch points to cut points. This might detect
+    // shared points so the output is a patch-to-cut point list and a compaction
+    // list for the cut points (which will always be equal or more connected
+    // than the patch).  Returns true if there are any duplicates.
 
     // From slave to cut point
     patchToCutPoints.setSize(patchPoints.size());
@@ -753,12 +746,12 @@ bool CML::faceCoupleInfo::matchPointsThroughFaces
     labelList cutPointRegion(cutPoints.size(), -1);
     DynamicList<label> cutPointRegionMaster;
 
-    forAll(patchFaces, patchFaceI)
+    forAll(patchFaces, patchFacei)
     {
-        const face& patchF = patchFaces[patchFaceI];
+        const face& patchF = patchFaces[patchFacei];
 
-        //const face& cutF = cutFaces[patchToCutFaces[patchFaceI]];
-        const face& cutF = cutFaces[patchFaceI];
+        // const face& cutF = cutFaces[patchToCutFaces[patchFacei]];
+        const face& cutF = cutFaces[patchFacei];
 
         // Do geometric matching to get position of cutF[0] in patchF
         label patchFp = matchFaces
@@ -773,47 +766,47 @@ bool CML::faceCoupleInfo::matchPointsThroughFaces
 
         forAll(cutF, cutFp)
         {
-            label cutPointI = cutF[cutFp];
-            label patchPointI = patchF[patchFp];
+            label cutPointi = cutF[cutFp];
+            label patchPointi = patchF[patchFp];
 
-            //const point& cutPt = cutPoints[cutPointI];
-            //const point& patchPt = patchPoints[patchPointI];
-            //if (mag(cutPt - patchPt) > SMALL)
+            // const point& cutPt = cutPoints[cutPointi];
+            // const point& patchPt = patchPoints[patchPointi];
+            // if (mag(cutPt - patchPt) > SMALL)
             //{
-            //    FatalErrorIn("matchPointsThroughFaces")
+            //    FatalErrorInFunction
             //    << "cutP:" << cutPt
             //    << " patchP:" << patchPt
             //    << abort(FatalError);
             //}
 
-            if (patchToCutPoints[patchPointI] == -1)
+            if (patchToCutPoints[patchPointi] == -1)
             {
-                patchToCutPoints[patchPointI] = cutPointI;
+                patchToCutPoints[patchPointi] = cutPointi;
             }
-            else if (patchToCutPoints[patchPointI] != cutPointI)
+            else if (patchToCutPoints[patchPointi] != cutPointi)
             {
                 // Multiple cut points connecting to same patch.
                 // Check if already have region & region master for this set
-                label otherCutPointI = patchToCutPoints[patchPointI];
+                label otherCutPointi = patchToCutPoints[patchPointi];
 
-                //Pout<< "PatchPoint:" << patchPt
-                //    << " matches to:" << cutPointI
-                //    << " coord:" << cutPoints[cutPointI]
-                //    << " and to:" << otherCutPointI
-                //    << " coord:" << cutPoints[otherCutPointI]
+                // Pout<< "PatchPoint:" << patchPt
+                //    << " matches to:" << cutPointi
+                //    << " coord:" << cutPoints[cutPointi]
+                //    << " and to:" << otherCutPointi
+                //    << " coord:" << cutPoints[otherCutPointi]
                 //    << endl;
 
-                if (cutPointRegion[otherCutPointI] != -1)
+                if (cutPointRegion[otherCutPointi] != -1)
                 {
                     // Have region for this set. Copy.
-                    label region = cutPointRegion[otherCutPointI];
-                    cutPointRegion[cutPointI] = region;
+                    label region = cutPointRegion[otherCutPointi];
+                    cutPointRegion[cutPointi] = region;
 
                     // Update region master with min point label
                     cutPointRegionMaster[region] = min
                     (
                         cutPointRegionMaster[region],
-                        cutPointI
+                        cutPointi
                     );
                 }
                 else
@@ -822,10 +815,10 @@ bool CML::faceCoupleInfo::matchPointsThroughFaces
                     label region = cutPointRegionMaster.size();
                     cutPointRegionMaster.append
                     (
-                        min(cutPointI, otherCutPointI)
+                        min(cutPointi, otherCutPointi)
                     );
-                    cutPointRegion[cutPointI] = region;
-                    cutPointRegion[otherCutPointI] = region;
+                    cutPointRegion[cutPointi] = region;
+                    cutPointRegion[otherCutPointi] = region;
                 }
             }
 
@@ -844,33 +837,33 @@ bool CML::faceCoupleInfo::matchPointsThroughFaces
     compactToCut.setSize(cutPointRegion.size());
     cutToCompact.setSize(cutPointRegion.size());
     cutToCompact = -1;
-    label compactPointI = 0;
+    label compactPointi = 0;
 
     forAll(cutPointRegion, i)
     {
         if (cutPointRegion[i] == -1)
         {
             // Unduplicated point. Allocate new compacted point.
-            cutToCompact[i] = compactPointI;
-            compactToCut[compactPointI] = i;
-            compactPointI++;
+            cutToCompact[i] = compactPointi;
+            compactToCut[compactPointi] = i;
+            compactPointi++;
         }
         else
         {
             // Duplicate point. Get master.
 
-            label masterPointI = cutPointRegionMaster[cutPointRegion[i]];
+            label masterPointi = cutPointRegionMaster[cutPointRegion[i]];
 
-            if (cutToCompact[masterPointI] == -1)
+            if (cutToCompact[masterPointi] == -1)
             {
-                cutToCompact[masterPointI] = compactPointI;
-                compactToCut[compactPointI] = masterPointI;
-                compactPointI++;
+                cutToCompact[masterPointi] = compactPointi;
+                compactToCut[compactPointi] = masterPointi;
+                compactPointi++;
             }
-            cutToCompact[i] = cutToCompact[masterPointI];
+            cutToCompact[i] = cutToCompact[masterPointi];
         }
     }
-    compactToCut.setSize(compactPointI);
+    compactToCut.setSize(compactPointi);
 
     return compactToCut.size() != cutToCompact.size();
 }
@@ -1004,8 +997,6 @@ void CML::faceCoupleInfo::findSlavesCoveringMaster
 
     treeBoundBox overallBb(mesh0.points());
 
-    Random rndGen(123456);
-
     indexedOctree<treeDataFace> tree
     (
         treeDataFace    // all information needed to search faces
@@ -1014,7 +1005,7 @@ void CML::faceCoupleInfo::findSlavesCoveringMaster
             mesh0,
             bndFaces                    // boundary faces only
         ),
-        overallBb.extend(rndGen, 1E-4), // overall search domain
+        overallBb.extend(1e-4),         // overall search domain
         8,                              // maxLevel
         10,                             // leafsize
         3.0                             // duplicity
@@ -1033,12 +1024,12 @@ void CML::faceCoupleInfo::findSlavesCoveringMaster
 
     for
     (
-        label mesh1FaceI = mesh1.nInternalFaces();
-        mesh1FaceI < mesh1.nFaces();
-        mesh1FaceI++
+        label mesh1Facei = mesh1.nInternalFaces();
+        mesh1Facei < mesh1.nFaces();
+        mesh1Facei++
     )
     {
-        const face& f1 = mesh1.faces()[mesh1FaceI];
+        const face& f1 = mesh1.faces()[mesh1Facei];
 
         // Generate face centre (prevent cellCentres() reconstruction)
         point fc(f1.centre(mesh1.points()));
@@ -1047,7 +1038,7 @@ void CML::faceCoupleInfo::findSlavesCoveringMaster
 
         if (nearInfo.hit())
         {
-            label mesh0FaceI = tree.shapes().faceLabels()[nearInfo.index()];
+            label mesh0Facei = tree.shapes().faceLabels()[nearInfo.index()];
 
             // Check if points of f1 actually lie on top of mesh0 face
             // This is the bit that might fail since if f0 is severely warped
@@ -1060,14 +1051,14 @@ void CML::faceCoupleInfo::findSlavesCoveringMaster
                 (
                     f1,
                     mesh1.points(),
-                    mesh0.faces()[mesh0FaceI],
+                    mesh0.faces()[mesh0Facei],
                     mesh0.points()
                 );
 
             if (dist < absTol)
             {
-                mesh0Set.insert(mesh0FaceI);
-                mesh1Set.insert(mesh1FaceI);
+                mesh0Set.insert(mesh0Facei);
+                mesh1Set.insert(mesh1Facei);
             }
         }
     }
@@ -1106,17 +1097,17 @@ CML::label CML::faceCoupleInfo::growCutFaces
 
         label nChanged = 0;
 
-        forAll(cutToMasterFaces_, cutFaceI)
+        forAll(cutToMasterFaces_, cutFacei)
         {
-            const label masterFaceI = cutToMasterFaces_[cutFaceI];
+            const label masterFacei = cutToMasterFaces_[cutFacei];
 
-            if (masterFaceI != -1)
+            if (masterFacei != -1)
             {
                 // We now have a cutFace for which we have already found a
                 // master face. Grow this masterface across any internal edge
                 // (internal: no corresponding master edge)
 
-                const labelList& fEdges = cutFaceEdges[cutFaceI];
+                const labelList& fEdges = cutFaceEdges[cutFacei];
 
                 forAll(fEdges, i)
                 {
@@ -1127,22 +1118,22 @@ CML::label CML::faceCoupleInfo::growCutFaces
                         // So this edge:
                         // - internal to the cutPatch (since all region edges
                         //   marked before)
-                        // - on cutFaceI which corresponds to masterFace.
+                        // - on cutFacei which corresponds to masterFace.
                         // Mark all connected faces with this masterFace.
 
                         const labelList& eFaces = cutEdgeFaces[cutEdgeI];
 
                         forAll(eFaces, j)
                         {
-                            const label faceI = eFaces[j];
+                            const label facei = eFaces[j];
 
-                            if (cutToMasterFaces_[faceI] == -1)
+                            if (cutToMasterFaces_[facei] == -1)
                             {
-                                cutToMasterFaces_[faceI] = masterFaceI;
-                                candidates.erase(faceI);
+                                cutToMasterFaces_[facei] = masterFacei;
+                                candidates.erase(facei);
                                 nChanged++;
                             }
-                            else if (cutToMasterFaces_[faceI] != masterFaceI)
+                            else if (cutToMasterFaces_[facei] != masterFacei)
                             {
                                 const pointField& cutPoints =
                                     cutFaces().points();
@@ -1151,22 +1142,19 @@ CML::label CML::faceCoupleInfo::growCutFaces
 
                                 const edge& e = cutFaces().edges()[cutEdgeI];
 
-                                label myMaster = cutToMasterFaces_[faceI];
+                                label myMaster = cutToMasterFaces_[facei];
                                 const face& myF = masterPatch()[myMaster];
 
-                                const face& nbrF = masterPatch()[masterFaceI];
+                                const face& nbrF = masterPatch()[masterFacei];
 
-                                FatalErrorIn
-                                (
-                                    "faceCoupleInfo::growCutFaces"
-                                    "(const labelList&, Map<labelList>&)"
-                                )   << "Cut face "
-                                    << cutFaces()[faceI].points(cutPoints)
+                                FatalErrorInFunction
+                                    << "Cut face "
+                                    << cutFaces()[facei].points(cutPoints)
                                     << " has master "
                                     << myMaster
                                     << " but also connects to nbr face "
-                                    << cutFaces()[cutFaceI].points(cutPoints)
-                                    << " with master " << masterFaceI
+                                    << cutFaces()[cutFacei].points(cutPoints)
+                                    << " with master " << masterFacei
                                     << nl
                                     << "myMasterFace:"
                                     << myF.points(masterPoints)
@@ -1218,35 +1206,32 @@ void CML::faceCoupleInfo::checkMatch(const labelList& cutToMasterEdges) const
             // Internal edge. Check that master face is same on both sides.
             const labelList& cutEFaces = cutFaces().edgeFaces()[cutEdgeI];
 
-            label masterFaceI = -1;
+            label masterFacei = -1;
 
             forAll(cutEFaces, i)
             {
-                label cutFaceI = cutEFaces[i];
+                label cutFacei = cutEFaces[i];
 
-                if (cutToMasterFaces_[cutFaceI] != -1)
+                if (cutToMasterFaces_[cutFacei] != -1)
                 {
-                    if (masterFaceI == -1)
+                    if (masterFacei == -1)
                     {
-                        masterFaceI = cutToMasterFaces_[cutFaceI];
+                        masterFacei = cutToMasterFaces_[cutFacei];
                     }
-                    else if (masterFaceI != cutToMasterFaces_[cutFaceI])
+                    else if (masterFacei != cutToMasterFaces_[cutFacei])
                     {
-                        label myMaster = cutToMasterFaces_[cutFaceI];
+                        label myMaster = cutToMasterFaces_[cutFacei];
                         const face& myF = masterLocalFaces[myMaster];
 
-                        const face& nbrF = masterLocalFaces[masterFaceI];
+                        const face& nbrF = masterLocalFaces[masterFacei];
 
-                        FatalErrorIn
-                        (
-                            "faceCoupleInfo::checkMatch(const labelList&) const"
-                        )
+                        FatalErrorInFunction
                             << "Internal CutEdge " << e
                             << " coord:"
                             << cutLocalPoints[e[0]]
                             << cutLocalPoints[e[1]]
                             << " connects to master " << myMaster
-                            << " and to master " << masterFaceI << nl
+                            << " and to master " << masterFacei << nl
                             << "myMasterFace:"
                             << myF.points(masterLocalPoints)
                             << "  nbrMasterFace:"
@@ -1260,16 +1245,17 @@ void CML::faceCoupleInfo::checkMatch(const labelList& cutToMasterEdges) const
 }
 
 
-// Extends matching information by elimination across cutFaces using more
-// than one region edge. Updates cutToMasterFaces_ and sets candidates
-// which is for every cutface on a region edge the possible master faces.
 CML::label CML::faceCoupleInfo::matchEdgeFaces
 (
     const labelList& cutToMasterEdges,
     Map<labelList>& candidates
 )
 {
-    // For every unassigned cutFaceI the possible list of master faces.
+    // Extends matching information by elimination across cutFaces using more
+    // than one region edge. Updates cutToMasterFaces_ and sets candidates which
+    // is for every cutface on a region edge the possible master faces.
+
+    // For every unassigned cutFacei the possible list of master faces.
     candidates.clear();
     candidates.resize(cutFaces().size());
 
@@ -1290,24 +1276,24 @@ CML::label CML::faceCoupleInfo::matchEdgeFaces
 
             forAll(cutEFaces, i)
             {
-                label cutFaceI = cutEFaces[i];
+                label cutFacei = cutEFaces[i];
 
-                if (cutToMasterFaces_[cutFaceI] == -1)
+                if (cutToMasterFaces_[cutFacei] == -1)
                 {
-                    // So this face (cutFaceI) is on an edge (cutEdgeI) that
+                    // So this face (cutFacei) is on an edge (cutEdgeI) that
                     // is used by some master faces (masterEFaces). Check if
-                    // the cutFaceI and some of these masterEFaces share more
+                    // the cutFacei and some of these masterEFaces share more
                     // than one edge (which uniquely defines face)
 
                     // Combine master faces with current set of candidate
                     // master faces.
-                    Map<labelList>::iterator fnd = candidates.find(cutFaceI);
+                    Map<labelList>::iterator fnd = candidates.find(cutFacei);
 
                     if (fnd == candidates.end())
                     {
-                        // No info yet for cutFaceI. Add all master faces as
+                        // No info yet for cutFacei. Add all master faces as
                         // candidates
-                        candidates.insert(cutFaceI, masterEFaces);
+                        candidates.insert(cutFacei, masterEFaces);
                     }
                     else
                     {
@@ -1330,14 +1316,14 @@ CML::label CML::faceCoupleInfo::matchEdgeFaces
                         {
                             // We found a perfect match. Delete entry from
                             // candidates map.
-                            cutToMasterFaces_[cutFaceI] = newCandidates[0];
-                            candidates.erase(cutFaceI);
+                            cutToMasterFaces_[cutFacei] = newCandidates[0];
+                            candidates.erase(cutFacei);
                             nChanged++;
                         }
                         else
                         {
                             // Should not happen?
-                            //Pout<< "On edge:" << cutEdgeI
+                            // Pout<< "On edge:" << cutEdgeI
                             //    << " have connected masterFaces:"
                             //    << masterEFaces
                             //    << " and from previous edge we have"
@@ -1390,21 +1376,21 @@ CML::label CML::faceCoupleInfo::geometricMatchEdgeFaces
 
     forAllConstIter(Map<labelList>, candidates, iter)
     {
-        label cutFaceI = iter.key();
+        label cutFacei = iter.key();
 
-        const face& cutF = cutFaces()[cutFaceI];
+        const face& cutF = cutFaces()[cutFacei];
 
-        if (cutToMasterFaces_[cutFaceI] == -1)
+        if (cutToMasterFaces_[cutFacei] == -1)
         {
             const labelList& masterFaces = iter();
 
             // Find the best matching master face.
             scalar minDist = GREAT;
-            label minMasterFaceI = -1;
+            label minMasterFacei = -1;
 
             forAll(masterFaces, i)
             {
-                label masterFaceI = masterFaces[i];
+                label masterFacei = masterFaces[i];
 
                 if (masterToCutFaces[masterFaces[i]].empty())
                 {
@@ -1412,33 +1398,33 @@ CML::label CML::faceCoupleInfo::geometricMatchEdgeFaces
                     (
                         cutF,
                         cutPoints,
-                        masterPatch()[masterFaceI],
+                        masterPatch()[masterFacei],
                         masterPatch().points()
                     );
 
                     if (dist < minDist)
                     {
                         minDist = dist;
-                        minMasterFaceI = masterFaceI;
+                        minMasterFacei = masterFacei;
                     }
                 }
             }
 
-            if (minMasterFaceI != -1)
+            if (minMasterFacei != -1)
             {
-                cutToMasterFaces_[cutFaceI] = minMasterFaceI;
-                masterToCutFaces[minMasterFaceI] = cutFaceI;
+                cutToMasterFaces_[cutFacei] = minMasterFacei;
+                masterToCutFaces[minMasterFacei] = cutFacei;
                 nChanged++;
             }
         }
     }
 
     // (inefficiently) force candidates to be uptodate.
-    forAll(cutToMasterFaces_, cutFaceI)
+    forAll(cutToMasterFaces_, cutFacei)
     {
-        if (cutToMasterFaces_[cutFaceI] != -1)
+        if (cutToMasterFaces_[cutFacei] != -1)
         {
-            candidates.erase(cutFaceI);
+            candidates.erase(cutFacei);
         }
     }
 
@@ -1455,14 +1441,15 @@ CML::label CML::faceCoupleInfo::geometricMatchEdgeFaces
 }
 
 
-// Calculate the set of cut faces inbetween master and slave patch
-// assuming perfect match (and optional face ordering on slave)
 void CML::faceCoupleInfo::perfectPointMatch
 (
     const scalar absTol,
     const bool slaveFacesOrdered
 )
 {
+    // Calculate the set of cut faces in between master and slave patch assuming
+    // perfect match (and optional face ordering on slave)
+
     if (debug)
     {
         Pout<< "perfectPointMatch :"
@@ -1507,6 +1494,7 @@ void CML::faceCoupleInfo::perfectPointMatch
         // Faces do not have to be ordered (but all have
         // to match). Note: Faces will be already ordered if we enter here from
         // construct from meshes.
+
         matchedAllFaces = matchPoints
         (
             calcFaceCentres<List>
@@ -1532,14 +1520,11 @@ void CML::faceCoupleInfo::perfectPointMatch
 
     if (!matchedAllFaces)
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::perfectPointMatch"
-            "(const scalar, const bool)"
-        )   << "Did not match all of the master faces to the slave faces"
+        FatalErrorInFunction
+            << "Did not match all of the master faces to the slave faces"
             << endl
             << "This usually means that the slave patch and master patch"
-            << " do not align to within " << absTol << " meter."
+            << " do not align to within " << absTol << " metre."
             << abort(FatalError);
     }
 
@@ -1682,11 +1667,8 @@ void CML::faceCoupleInfo::subDivisionMatch
 
     if (!matchedAllPoints)
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::subDivisionMatch"
-            "(const polyMesh&, const bool, const scalar)"
-        )   << "Did not match all of the master points to the slave points"
+        FatalErrorInFunction
+            << "Did not match all of the master points to the slave points"
             << endl
             << "This usually means that the slave patch is not a"
             << " subdivision of the master patch"
@@ -1697,7 +1679,7 @@ void CML::faceCoupleInfo::subDivisionMatch
     // Do masterEdges to cutEdges :
     // - mark all edges between two masterEdge endpoints. (geometric test since
     //   this is the only distinction)
-    // - this gives the borders inbetween which all cutfaces come from
+    // - this gives the borders in between which all cutfaces come from
     //   a single master face.
     if (debug)
     {
@@ -1721,10 +1703,10 @@ void CML::faceCoupleInfo::subDivisionMatch
 
         // Find edges between cutPoint0 and cutPoint1.
 
-        label cutPointI = cutPoint0;
+        label cutPointi = cutPoint0;
         do
         {
-            // Find edge (starting at pointI on cut), aligned with master
+            // Find edge (starting at pointi on cut), aligned with master
             // edge.
             label cutEdgeI =
                 mostAlignedCutEdge
@@ -1734,7 +1716,7 @@ void CML::faceCoupleInfo::subDivisionMatch
                     patchDivision,
                     cutToMasterEdges,
                     cutToSlaveEdges,
-                    cutPointI,
+                    cutPointi,
                     cutPoint0,
                     cutPoint1
                 );
@@ -1749,7 +1731,7 @@ void CML::faceCoupleInfo::subDivisionMatch
                     patchDivision,
                     cutToMasterEdges,
                     cutToSlaveEdges,
-                    cutPointI,
+                    cutPointi,
                     cutPoint0,
                     cutPoint1
                 );
@@ -1765,31 +1747,28 @@ void CML::faceCoupleInfo::subDivisionMatch
                         UIndirectList<edge>
                         (
                             cutFaces().edges(),
-                            cutFaces().pointEdges()[cutPointI]
+                            cutFaces().pointEdges()[cutPointi]
                         )
                     ),
                     cutFaces().localPoints(),
                     false
                 );
 
-                FatalErrorIn
-                (
-                    "faceCoupleInfo::subDivisionMatch"
-                    "(const polyMesh&, const bool, const scalar)"
-                )   << "Problem in finding cut edges corresponding to"
+                FatalErrorInFunction
+                    << "Problem in finding cut edges corresponding to"
                     << " master edge " << masterEdge
                     << " points:" << masterPoints[masterEdge[0]]
                     << ' ' << masterPoints[masterEdge[1]]
                     << " corresponding cut edge: (" << cutPoint0
-                    << ' ' << cutPoint1
+                    << ") " << cutPoint1
                     << abort(FatalError);
             }
 
             cutToMasterEdges[cutEdgeI] = masterEdgeI;
 
-            cutPointI = cutEdges[cutEdgeI].otherVertex(cutPointI);
+            cutPointi = cutEdges[cutEdgeI].otherVertex(cutPointi);
 
-        } while (cutPointI != cutPoint1);
+        } while (cutPointi != cutPoint1);
     }
 
     if (debug)
@@ -1798,7 +1777,7 @@ void CML::faceCoupleInfo::subDivisionMatch
         writeEdges(cutToMasterEdges, cutToSlaveEdges);
     }
 
-    // Rework cutToMasterEdges into list of points inbetween two endpoints
+    // Rework cutToMasterEdges into list of points in between two endpoints
     // (cutEdgeToPoints_)
     setCutEdgeToPoints(cutToMasterEdges);
 
@@ -1818,7 +1797,7 @@ void CML::faceCoupleInfo::subDivisionMatch
             << " matching (topological) cut faces to masterPatch" << endl;
     }
 
-    // For every unassigned cutFaceI the possible list of master faces.
+    // For every unassigned cutFacei the possible list of master faces.
     Map<labelList> candidates(cutFaces().size());
 
     cutToMasterFaces_.setSize(cutFaces().size());
@@ -1875,18 +1854,15 @@ void CML::faceCoupleInfo::subDivisionMatch
 
 
     // All cut faces matched?
-    forAll(cutToMasterFaces_, cutFaceI)
+    forAll(cutToMasterFaces_, cutFacei)
     {
-        if (cutToMasterFaces_[cutFaceI] == -1)
+        if (cutToMasterFaces_[cutFacei] == -1)
         {
-            const face& cutF = cutFaces()[cutFaceI];
+            const face& cutF = cutFaces()[cutFacei];
 
-            FatalErrorIn
-            (
-                "faceCoupleInfo::subDivisionMatch"
-                "(const polyMesh&, const bool, const scalar)"
-            )   << "Did not match all of cutFaces to a master face" << nl
-                << "First unmatched cut face:" << cutFaceI << " with points:"
+            FatalErrorInFunction
+                << "Did not match all of cutFaces to a master face" << nl
+                << "First unmatched cut face:" << cutFacei << " with points:"
                 << UIndirectList<point>(cutFaces().points(), cutF)()
                 << nl
                 << "This usually means that the slave patch is not a"
@@ -1919,10 +1895,10 @@ CML::faceCoupleInfo::faceCoupleInfo
     const bool perfectMatch
 )
 :
-    masterPatchPtr_(NULL),
-    slavePatchPtr_(NULL),
+    masterPatchPtr_(nullptr),
+    slavePatchPtr_(nullptr),
     cutPoints_(0),
-    cutFacesPtr_(NULL),
+    cutFacesPtr_(nullptr),
     cutToMasterFaces_(0),
     masterToCutPoints_(0),
     cutToSlaveFaces_(0),
@@ -2030,7 +2006,7 @@ CML::faceCoupleInfo::faceCoupleInfo
         )
     ),
     cutPoints_(0),
-    cutFacesPtr_(NULL),
+    cutFacesPtr_(nullptr),
     cutToMasterFaces_(0),
     masterToCutPoints_(0),
     cutToSlaveFaces_(0),
@@ -2039,11 +2015,8 @@ CML::faceCoupleInfo::faceCoupleInfo
 {
     if (perfectMatch && (masterAddressing.size() != slaveAddressing.size()))
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::faceCoupleInfo(const primitiveMesh&"
-            ", const primitiveMesh&, const scalar, const bool"
-        )   << "Perfect match specified but number of master and slave faces"
+        FatalErrorInFunction
+            << "Perfect match specified but number of master and slave faces"
             << " differ." << endl
             << "master:" << masterAddressing.size()
             << "  slave:" << slaveAddressing.size()
@@ -2056,11 +2029,8 @@ CML::faceCoupleInfo::faceCoupleInfo
      && min(masterAddressing) < masterMesh.nInternalFaces()
     )
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::faceCoupleInfo(const primitiveMesh&"
-            ", const primitiveMesh&, const scalar, const bool"
-        )   << "Supplied internal face on master mesh to couple." << nl
+        FatalErrorInFunction
+            << "Supplied internal face on master mesh to couple." << nl
             << "Faces to be coupled have to be boundary faces."
             << abort(FatalError);
     }
@@ -2070,11 +2040,8 @@ CML::faceCoupleInfo::faceCoupleInfo
      && min(slaveAddressing) < slaveMesh.nInternalFaces()
     )
     {
-        FatalErrorIn
-        (
-            "faceCoupleInfo::faceCoupleInfo(const primitiveMesh&"
-            ", const primitiveMesh&, const scalar, const bool"
-        )   << "Supplied internal face on slave mesh to couple." << nl
+        FatalErrorInFunction
+            << "Supplied internal face on slave mesh to couple." << nl
             << "Faces to be coupled have to be boundary faces."
             << abort(FatalError);
     }
@@ -2109,11 +2076,11 @@ CML::labelList CML::faceCoupleInfo::faceLabels(const polyPatch& pp)
 {
     labelList faces(pp.size());
 
-    label faceI = pp.start();
+    label facei = pp.start();
 
     forAll(pp, i)
     {
-        faces[i] = faceI++;
+        faces[i] = facei++;
     }
     return faces;
 }

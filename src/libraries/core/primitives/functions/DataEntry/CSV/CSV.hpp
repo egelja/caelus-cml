@@ -167,7 +167,7 @@ CML::label CML::DataEntryTypes::CSV<CML::label>::readValue
 {
     if (componentColumns_[0] >= splitted.size())
     {
-        FatalErrorIn("DataEntryTypes::CSV<label>::readValue(const List<string>&)")
+        FatalErrorInFunction
             << "No column " << componentColumns_[0] << " in "
             << splitted << endl
             << exit(FatalError);
@@ -185,7 +185,7 @@ CML::scalar CML::DataEntryTypes::CSV<CML::scalar>::readValue
 {
     if (componentColumns_[0] >= splitted.size())
     {
-        FatalErrorIn("DataEntryTypes::CSV<label>::readValue(const List<string>&)")
+        FatalErrorInFunction
             << "No column " << componentColumns_[0] << " in "
             << splitted << endl
             << exit(FatalError);
@@ -204,7 +204,7 @@ Type CML::DataEntryTypes::CSV<Type>::readValue(const List<string>& splitted)
     {
         if (componentColumns_[i] >= splitted.size())
         {
-            FatalErrorIn("CSV<scalar>::readValue(const List<string>&)")
+            FatalErrorInFunction
             << "No column " << componentColumns_[i] << " in "
                 << splitted << endl
                 << exit(FatalError);
@@ -226,7 +226,7 @@ void CML::DataEntryTypes::CSV<Type>::read()
 
     if (!is.good())
     {
-        FatalIOErrorIn("CSV<Type>::read()", is)
+        FatalIOErrorInFunction(is)
             << "Cannot open CSV file for reading."
             << exit(FatalIOError);
     }
@@ -346,7 +346,7 @@ CML::DataEntryTypes::CSV<Type>::CSV
 {
     if (componentColumns_.size() != pTraits<Type>::nComponents)
     {
-        FatalErrorIn("CML::DataEntryTypes::CSV<Type>::CSV(const word&, Istream&)")
+        FatalErrorInFunction
             << componentColumns_ << " does not have the expected length of "
             << pTraits<Type>::nComponents << endl
             << exit(FatalError);

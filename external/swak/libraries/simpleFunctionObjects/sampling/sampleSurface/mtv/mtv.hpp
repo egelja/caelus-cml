@@ -134,7 +134,7 @@ void CML::mtv<Type>::write
 {
     if (values.size()==faces.size())
     {
-        FatalErrorIn("mtv::write()")
+        FatalErrorInFunction
             << "Only interpolated planes are currently supported."
                 << abort(FatalError);
     }
@@ -187,7 +187,7 @@ void CML::mtv<Type>::write
 
     if (mag(n)<SMALL)
     {
-        FatalErrorIn("mtv::write()")
+        FatalErrorInFunction
             << "Could not determine plane normal direction."
                 << "Maybe the surface was not flat."
                 << "Only flat surfaces are currently supported."

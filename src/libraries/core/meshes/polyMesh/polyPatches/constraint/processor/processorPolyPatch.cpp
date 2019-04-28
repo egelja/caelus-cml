@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -233,10 +233,8 @@ void CML::processorPolyPatch::calcGeometry(PstreamBuffers& pBufs)
                     writeOBJ(ccStr, c0, c1, vertI);
                 }
 
-                FatalErrorIn
-                (
-                    "processorPolyPatch::calcGeometry()"
-                )   << "face " << facei << " area does not match neighbour by "
+                FatalErrorInFunction
+                    << "face " << facei << " area does not match neighbour by "
                     << 100*mag(magSf - nbrMagSf)/avSf
                     << "% -- possible face ordering problem." << endl
                     << "patch:" << name()
@@ -461,7 +459,7 @@ const CML::labelList& CML::processorPolyPatch::neighbPoints() const
 {
     if (!neighbPointsPtr_.valid())
     {
-        FatalErrorIn("processorPolyPatch::neighbPoints() const")
+        FatalErrorInFunction
             << "No extended addressing calculated for patch " << name()
             << abort(FatalError);
     }
@@ -473,7 +471,7 @@ const CML::labelList& CML::processorPolyPatch::neighbEdges() const
 {
     if (!neighbEdgesPtr_.valid())
     {
-        FatalErrorIn("processorPolyPatch::neighbEdges() const")
+        FatalErrorInFunction
             << "No extended addressing calculated for patch " << name()
             << abort(FatalError);
     }
@@ -834,7 +832,7 @@ bool CML::processorPolyPatch::order
                         pts[pI] = localPts[localPtI];
                     }
 
-                    FatalErrorIn("CML::processorPolyPatch::order(...) const")
+                    FatalErrorInFunction
                         << "No match for face " << localFace << nl << pts
                         << abort(FatalError);
                 }
@@ -881,11 +879,8 @@ bool CML::processorPolyPatch::order
 
                 if (masterCtrs.size() != pp.size())
                 {
-                    FatalErrorIn
-                    (
-                        "processorPolyPatch::order(const primitivePatch&"
-                        ", labelList&, labelList&) const"
-                    )   << "in patch:" << name() << " : "
+                    FatalErrorInFunction
+                        << "in patch:" << name() << " : "
                         << "Local size of patch is " << pp.size() << " (faces)."
                         << endl
                         << "Received from neighbour " << masterCtrs.size()
@@ -1004,11 +999,8 @@ bool CML::processorPolyPatch::order
 
             if (!matchedAll)
             {
-                SeriousErrorIn
-                (
-                    "processorPolyPatch::order(const primitivePatch&"
-                    ", labelList&, labelList&) const"
-                )   << "in patch:" << name() << " : "
+                SeriousErrorInFunction
+                    << "in patch:" << name() << " : "
                     << "Cannot match vectors to faces on both sides of patch"
                     << endl
                     << "    masterCtrs[0]:" << masterCtrs[0] << endl
@@ -1043,11 +1035,8 @@ bool CML::processorPolyPatch::order
 
                 if (rotation[newFaceI] == -1)
                 {
-                    SeriousErrorIn
-                    (
-                        "processorPolyPatch::order(const primitivePatch&"
-                        ", labelList&, labelList&) const"
-                    )   << "in patch " << name()
+                    SeriousErrorInFunction
+                        << "in patch " << name()
                         << " : "
                         << "Cannot find point on face " << pp[oldFaceI]
                         << " with vertices "

@@ -1,7 +1,8 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
+    This file is part of Caelus.
 
     CAELUS is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -20,13 +21,15 @@ Class
     CML::combustionModels::noCombustion
 
 Description
+    Dummy combustion model for 'no combustion'
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noCombustion_H
-#define noCombustion_H
+#ifndef noCombustion_HPP
+#define noCombustion_HPP
 
+#include "ThermoCombustion.hpp"
 #include "fvmSup.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -37,13 +40,13 @@ namespace combustionModels
 {
 
 /*---------------------------------------------------------------------------*\
-                            Class noCombustion Declaration
+                        Class noCombustion Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class CombThermoType>
+template<class ReactionThermo>
 class noCombustion
 :
-    public CombThermoType
+    public ThermoCombustion<ReactionThermo>
 {
 
     //- Disallow copy construct
@@ -56,47 +59,40 @@ class noCombustion
 public:
 
     //- Runtime type information
-    TypeName("noCombustion");
+    TypeName("none");
 
 
-    // Constructors
-
-        //- Construct from components
-        noCombustion
-        (
-            const word& modelType,
-            const fvMesh& mesh
-        );
+    //- Construct from components
+    noCombustion
+    (
+        const word& modelType,
+        ReactionThermo& thermo,
+        const compressible::turbulenceModel& turb,
+        const word& combustionProperties
+    );
 
 
     //- Destructor
-    virtual ~noCombustion();
+    virtual ~noCombustion()
+    {}
 
 
     // Member Functions
 
-        // Evolution
+    //- Correct combustion rate
+    virtual void correct();
 
-            //- Correct combustion rate
-            virtual void correct();
+    //- Fuel consumption rate matrix
+    virtual tmp<fvScalarMatrix> R(volScalarField& Y) const;
 
-            //- Fuel consumption rate matrix.
-            virtual tmp<fvScalarMatrix> R(const volScalarField& Y) const;
+    //- Heat release rate [kg/m/s3]
+    virtual tmp<volScalarField> Qdot() const;
 
-            //- Heat release rate calculated from fuel consumption rate matrix
-            virtual tmp<volScalarField> dQ() const;
+    //- Update properties from given dictionary
+    virtual bool read();
 
-            //-  Return source for enthalpy equation [kg/m/s3]
-            virtual tmp<volScalarField> Sh() const;
-
-    // I-O
-
-            //- Update properties from given dictionary
-            virtual bool read();
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace combustionModels
 } // End namespace CML
@@ -104,38 +100,31 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class CombThermoType>
-CML::combustionModels::noCombustion<CombThermoType>::noCombustion
+template<class ReactionThermo>
+CML::combustionModels::noCombustion<ReactionThermo>::noCombustion
 (
     const word& modelType,
-    const fvMesh& mesh
+    ReactionThermo& thermo,
+    const compressible::turbulenceModel& turb,
+    const word& combustionProperties
 )
 :
-    CombThermoType(modelType, mesh)
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-template<class CombThermoType>
-CML::combustionModels::noCombustion<CombThermoType>::~noCombustion()
+    ThermoCombustion<ReactionThermo>(modelType, thermo, turb)
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-template<class CombThermoType>
-void CML::combustionModels::noCombustion<CombThermoType>::correct()
-{
-//  Do Nothing
-}
+template<class ReactionThermo>
+void CML::combustionModels::noCombustion<ReactionThermo>::correct()
+{}
 
 
-template<class CombThermoType>
+template<class ReactionThermo>
 CML::tmp<CML::fvScalarMatrix>
-CML::combustionModels::noCombustion<CombThermoType>::R
+CML::combustionModels::noCombustion<ReactionThermo>::R
 (
-    const volScalarField& Y
+    volScalarField& Y
 ) const
 {
     tmp<fvScalarMatrix> tSu
@@ -147,17 +136,17 @@ CML::combustionModels::noCombustion<CombThermoType>::R
 }
 
 
-template<class CombThermoType>
+template<class ReactionThermo>
 CML::tmp<CML::volScalarField>
-CML::combustionModels::noCombustion<CombThermoType>::dQ() const
+CML::combustionModels::noCombustion<ReactionThermo>::Qdot() const
 {
-    tmp<volScalarField> tdQ
+    return tmp<volScalarField>
     (
         new volScalarField
         (
             IOobject
             (
-                "dQ",
+                this->thermo().phasePropertyName(typeName + ":Qdot"),
                 this->mesh().time().timeName(),
                 this->mesh(),
                 IOobject::NO_READ,
@@ -165,46 +154,16 @@ CML::combustionModels::noCombustion<CombThermoType>::dQ() const
                 false
             ),
             this->mesh(),
-            dimensionedScalar("dQ", dimEnergy/dimTime, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            dimensionedScalar("Qdot", dimEnergy/dimVolume/dimTime, 0.0)
         )
     );
-
-    return tdQ;
 }
 
 
-template<class CombThermoType>
-CML::tmp<CML::volScalarField>
-CML::combustionModels::noCombustion<CombThermoType>::Sh() const
+template<class ReactionThermo>
+bool CML::combustionModels::noCombustion<ReactionThermo>::read()
 {
-    tmp<volScalarField> tSh
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "Sh",
-                this->mesh().time().timeName(),
-                this->mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            this->mesh(),
-            dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0),
-            zeroGradientFvPatchScalarField::typeName
-        )
-    );
-
-    return tSh;
-}
-
-
-template<class CombThermoType>
-bool CML::combustionModels::noCombustion<CombThermoType>::read()
-{
-    if (CombThermoType::read())
+    if (ThermoCombustion<ReactionThermo>::read())
     {
         return true;
     }
@@ -216,5 +175,3 @@ bool CML::combustionModels::noCombustion<CombThermoType>::read()
 
 
 #endif
-
-// ************************************************************************* //

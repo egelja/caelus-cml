@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -86,16 +86,7 @@ void CML::patchCloudSet::calcSamples
         bb.min() = min(bb.min(), patchBb.min());
         bb.max() = max(bb.max(), patchBb.max());
     }
-
-    // Not very random
-    Random rndGen(123456);
-    // Make bb asymetric just to avoid problems on symmetric meshes
-    bb = bb.extend(rndGen, 1e-4);
-
-    // Make sure bb is 3D.
-    bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-    bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-
+    bb = bb.extend(1e-4);
 
     indexedOctree<treeDataFace> patchTree
     (
@@ -197,11 +188,11 @@ void CML::patchCloudSet::calcSamples
         {
             if (nearest[sampleI].second().second() == Pstream::myProcNo())
             {
-                label faceI = nearInfo.index();
+                label facei = nearInfo.index();
 
                 samplingPts.append(nearInfo.hitPoint());
-                samplingCells.append(mesh().faceOwner()[faceI]);
-                samplingFaces.append(faceI);
+                samplingCells.append(mesh().faceOwner()[facei]);
+                samplingFaces.append(facei);
                 samplingSegments.append(0);
                 samplingCurveDist.append(1.0 * sampleI);
             }

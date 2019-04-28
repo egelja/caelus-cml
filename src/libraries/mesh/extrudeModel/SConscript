@@ -1,0 +1,42 @@
+# -*- mode: python -*-
+
+import os
+from build import build_lib
+Import('env')
+
+target = 'extrudeModel'
+
+sources = Split("""
+extrudeModel/extrudeModel.cpp
+extrudeModel/extrudeModelNew.cpp
+linearNormal/linearNormal.cpp
+planeExtrusion/planeExtrusion.cpp
+linearDirection/linearDirection.cpp
+linearRadial/linearRadial.cpp
+radial/radial.cpp
+sigmaRadial/sigmaRadial.cpp
+sector/sector.cpp
+cyclicSector/cyclicSector.cpp
+wedge/wedge.cpp
+""")
+
+caelus_inc = [
+'dynamicMesh/dynamicMesh/lnInclude'
+]
+
+caelus_libs = [
+'core'
+]
+
+local_dir = env.Dir(".").srcnode().abspath
+model_dir = os.path.join(local_dir, 'lnInclude')
+
+append_args = {}
+append_args = { 'CPPPATH' : [os.path.normpath(model_dir)] }
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          append_args=append_args)

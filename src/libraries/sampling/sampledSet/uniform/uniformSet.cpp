@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -88,10 +88,7 @@ bool CML::uniformSet::trackToBoundary
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    // Alias
-    const point& trackPt = singleParticle.position();
-
-    particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
+    point trackPt = singleParticle.position();
 
     while(true)
     {
@@ -143,36 +140,14 @@ bool CML::uniformSet::trackToBoundary
         {
             Pout<< "Searching along trajectory from "
                 << "  trackPt:" << trackPt
-                << "  trackCellI:" << singleParticle.cell()
+                << "  trackCelli:" << singleParticle.cell()
                 << "  to:" << samplePt << endl;
         }
 
-        point oldPos = trackPt;
-        label facei = -1;
-        do
-        {
-            singleParticle.stepFraction() = 0;
-            singleParticle.track(samplePt, trackData);
+        singleParticle.track(samplePt - trackPt, 0);
+        trackPt = singleParticle.position();
 
-            if (debug)
-            {
-                Pout<< "Result of tracking "
-                    << "  trackPt:" << trackPt
-                    << "  trackCellI:" << singleParticle.cell()
-                    << "  trackFaceI:" << singleParticle.face()
-                    << "  onBoundary:" << singleParticle.onBoundary()
-                    << "  samplePt:" << samplePt
-                    << "  smallDist:" << smallDist
-                    << endl;
-            }
-        }
-        while
-        (
-            !singleParticle.onBoundary()
-         && (mag(trackPt - oldPos) < smallDist)
-        );
-
-        if (singleParticle.onBoundary())
+        if (singleParticle.onBoundaryFace())
         {
             //Pout<< "trackToBoundary : reached boundary" << endl;
             if (mag(trackPt - samplePt) < smallDist)
@@ -182,7 +157,7 @@ bool CML::uniformSet::trackToBoundary
                 // Reached samplePt on boundary
                 samplingPts.append(trackPt);
                 samplingCells.append(singleParticle.cell());
-                samplingFaces.append(facei);
+                samplingFaces.append(singleParticle.face());
                 samplingCurveDist.append(mag(trackPt - start_));
             }
 
@@ -213,7 +188,7 @@ void CML::uniformSet::calcSamples
     // distance vector between sampling points
     if ((nPoints_ < 2) || (mag(end_ - start_) < SMALL))
     {
-        FatalErrorIn("uniformSet::calcSamples()")
+        FatalErrorInFunction
             << "Incorrect sample specification. Either too few points or"
             << " start equals end point." << endl
             << "nPoints:" << nPoints_
@@ -239,19 +214,19 @@ void CML::uniformSet::calcSamples
     );
 
     point bPoint(GREAT, GREAT, GREAT);
-    label bFaceI = -1;
+    label bFacei = -1;
 
     if (bHits.size())
     {
         bPoint = bHits[0].hitPoint();
-        bFaceI = bHits[0].index();
+        bFacei = bHits[0].index();
     }
 
-    // Get first tracking point. Use bPoint, bFaceI if provided.
+    // Get first tracking point. Use bPoint, bFacei if provided.
 
     point trackPt;
-    label trackCellI = -1;
-    label trackFaceI = -1;
+    label trackCelli = -1;
+    label trackFacei = -1;
 
     bool isSample =
         getTrackingPoint
@@ -259,14 +234,14 @@ void CML::uniformSet::calcSamples
             offset,
             start_,
             bPoint,
-            bFaceI,
+            bFacei,
 
             trackPt,
-            trackCellI,
-            trackFaceI
+            trackCelli,
+            trackFacei
         );
 
-    if (trackCellI == -1)
+    if (trackCelli == -1)
     {
         // Line start_ - end_ does not intersect domain at all.
         // (or is along edge)
@@ -278,8 +253,8 @@ void CML::uniformSet::calcSamples
     if (isSample)
     {
         samplingPts.append(start_);
-        samplingCells.append(trackCellI);
-        samplingFaces.append(trackFaceI);
+        samplingCells.append(trackCelli);
+        samplingFaces.append(trackFacei);
         samplingCurveDist.append(0.0);
     }
 
@@ -302,7 +277,7 @@ void CML::uniformSet::calcSamples
     while(true)
     {
         // Initialize tracking starting from trackPt
-        passiveParticle singleParticle(mesh(), trackPt, trackCellI);
+        passiveParticle singleParticle(mesh(), trackPt, trackCelli);
 
         bool reachedBoundary = trackToBoundary
         (
@@ -372,9 +347,9 @@ void CML::uniformSet::calcSamples
         }
 
         // Update starting point for tracking
-        trackFaceI = bFaceI;
-        trackPt = pushIn(bPoint, trackFaceI);
-        trackCellI = getBoundaryCell(trackFaceI);
+        trackFacei = bFacei;
+        trackPt = pushIn(bPoint, trackFacei);
+        trackCelli = getBoundaryCell(trackFacei);
 
         segmentI++;
 

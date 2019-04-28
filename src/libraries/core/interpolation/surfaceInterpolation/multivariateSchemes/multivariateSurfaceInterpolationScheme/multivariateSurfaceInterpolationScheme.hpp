@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -280,13 +280,8 @@ multivariateSurfaceInterpolationScheme<Type>::New
 
     if (constructorIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "multivariateSurfaceInterpolationScheme<Type>::New"
-            "(const fvMesh& mesh, const fieldTable&, "
-            "const surfaceScalarField&, Istream&)",
-            schemeData
-        )   << "Unknown discretisation scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown discretisation scheme " << schemeName << nl << nl
             << "Valid schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);

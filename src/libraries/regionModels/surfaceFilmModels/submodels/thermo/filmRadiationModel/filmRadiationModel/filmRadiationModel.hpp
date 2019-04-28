@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,14 +18,14 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::filmRadiationModel
+    CML::regionModels::surfaceFilmModels::filmRadiationModel
 
 Description
     Base class for film radiation models
 
 SourceFiles
-    filmRadiationModel.C
-    filmRadiationModelNew.C
+    filmRadiationModel.cpp
+    filmRadiationModelNew.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -77,22 +77,22 @@ public:
              filmRadiationModel,
              dictionary,
              (
-                 const surfaceFilmModel& owner,
+                 surfaceFilmRegionModel& film,
                  const dictionary& dict
              ),
-             (owner, dict)
+             (film, dict)
          );
 
     // Constructors
 
         //- Construct null
-        filmRadiationModel(const surfaceFilmModel& owner);
+        filmRadiationModel(surfaceFilmRegionModel& film);
 
         //- Construct from type name, dictionary and surface film model
         filmRadiationModel
         (
-            const word& type,
-            const surfaceFilmModel& owner,
+            const word& modelType,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 
@@ -102,7 +102,7 @@ public:
         //- Return a reference to the selected phase change model
         static autoPtr<filmRadiationModel> New
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

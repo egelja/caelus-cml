@@ -290,12 +290,8 @@ bool meshOctreeCubeCoordinates::isPositionInside
     }
     else
     {
-        FatalErrorIn
-        (
-            "bool meshOctreeCubeCoordinates::isPositionInside"
-            "(const label px,const label py,"
-            "const label pz,const direction l)"
-        ) << "Cannot find exact position of finer cube" << exit(FatalError);
+        FatalErrorInFunction
+          << "Cannot find exact position of finer cube" << exit(FatalError);
     }
 
     return false;

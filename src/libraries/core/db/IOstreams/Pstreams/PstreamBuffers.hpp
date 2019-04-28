@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,24 +34,24 @@ Description
 
         PstreamBuffers pBuffers(Pstream::nonBlocking);
 
-        for (label procI = 0; procI < Pstream::nProcs(); procI++)
+        for (label proci = 0; proci < Pstream::nProcs(); proci++)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
                 someObject vals;
 
-                UOPstream str(procI, pBuffers);
+                UOPstream str(proci, pBuffers);
                 str << vals;
             }
         }
 
         pBuffers.finishedSends();   // no-op for blocking
 
-        for (label procI = 0; procI < Pstream::nProcs(); procI++)
+        for (label proci = 0; proci < Pstream::nProcs(); proci++)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
-                UIPstream str(procI, pBuffers);
+                UIPstream str(proci, pBuffers);
                 someObject vals(str);
             }
         }
@@ -96,18 +96,16 @@ class PstreamBuffers
 
         const IOstream::versionNumber version_;
 
-        //- send buffer
+        //- Send buffer
         List<DynamicList<char> > sendBuf_;
 
-        //- receive buffer
+        //- Receive buffer
         List<DynamicList<char> > recvBuf_;
 
-        //- read position in recvBuf_
+        //- Read position in recvBuf_
         labelList recvBufPos_;
 
         bool finishedSendsCalled_;
-
-    // Private Member Functions
 
 public:
 
@@ -145,9 +143,9 @@ public:
         void finishedSends(const bool block = true);
 
         //- Mark all sends as having been done. Same as above but also returns
-        //  sizes (bytes) transferred. Note:currently only valid for
+        //  sizes (bytes) received. Note:currently only valid for
         //  non-blocking.
-        void finishedSends(labelListList& sizes, const bool block = true);
+        void finishedSends(labelList& recvSizes, const bool block = true);
 
         //- Clear storage and reset
         void clear();

@@ -139,28 +139,28 @@ public:
         //- Return local-to-global transformation tensor
         virtual const tensor& R() const
         {
-            notImplemented("const tensor& localAxesRotation::R() const");
+            NotImplemented;
             return tensor::zero;
         }
 
         //- Return global-to-local transformation tensor
         virtual const tensor& Rtr() const
         {
-             notImplemented("const tensor& localAxesRotation::Rtr() const");
+             NotImplemented;
              return tensor::zero;
         }
 
         //- Return local Cartesian x-axis
         virtual const vector e1() const
         {
-            notImplemented("const tensor& localAxesRotation::e1() const");
+            NotImplemented;
             return vector::zero;
         }
 
         //- Return local Cartesian y-axis
         virtual const vector e2() const
         {
-            notImplemented("const tensor& localAxesRotation::e2() const");
+            NotImplemented;
             return vector::zero;
         }
 

@@ -103,7 +103,7 @@ protected:
         const string &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &string)");
+        NotImplemented;
     }
 
     //- set a primitive argument
@@ -112,7 +112,7 @@ protected:
         const word &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &word)");
+        NotImplemented;
     }
 
     //- set a primitive argument
@@ -121,7 +121,7 @@ protected:
         const scalar &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &scalar)");
+        NotImplemented;
     }
 
     //- set a primitive argument
@@ -130,7 +130,7 @@ protected:
         const label &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &label)");
+        NotImplemented;
     }
 
     //- set a primitive argument
@@ -139,7 +139,7 @@ protected:
         const vector &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &vector)");
+        NotImplemented;
     }
 
     //- set a primitive argument
@@ -148,7 +148,7 @@ protected:
         const bool &value
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const &bool)");
+        NotImplemented;
     }
 
     //- wrapper for argument reading
@@ -165,14 +165,14 @@ protected:
         const CommonValueExpressionDriver &driver
     ) {
         // should be overwritten by the function itself
-        notImplemented("setArgument(label index,const string &content,const CommonValueExpressionDriver&)");
+        NotImplemented;
     }
 
     //- get an addtional ID for the parser of argument i
     virtual word getID(
         label index
     ) {
-        return "method_getID_notImplemented";
+        return "method_getID_NotImplemented";
     }
 
     //- do the actual evaluation

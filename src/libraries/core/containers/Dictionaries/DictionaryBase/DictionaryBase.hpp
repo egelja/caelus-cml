@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -106,10 +106,10 @@ public:
             //- Search DictionaryBase for given keyword
             bool found(const word&) const;
 
-            //- Find and return an entry if present, otherwise return NULL
+            //- Find and return an entry if present, otherwise return nullptr
             const T* lookupPtr(const word&) const;
 
-            //- Find and return an entry if present, otherwise return NULL
+            //- Find and return an entry if present, otherwise return nullptr
             T* lookupPtr(const word&);
 
             //- Find and return entry
@@ -134,7 +134,7 @@ public:
             void append(const word&, T*);
 
             //- Remove and return entry specified by keyword.
-            //  Return NULL if the keyword was not found.
+            //  Return nullptr if the keyword was not found.
             T* remove(const word&);
 
             //- Clear the dictionary
@@ -247,7 +247,7 @@ bool CML::DictionaryBase<IDLListType, T>::found(const word& keyword) const
 }
 
 
-// Find and return T*, return NULL if not found
+// Find and return T*, return nullptr if not found
 template<class IDLListType, class T>
 const T* CML::DictionaryBase<IDLListType, T>::lookupPtr
 (
@@ -262,12 +262,12 @@ const T* CML::DictionaryBase<IDLListType, T>::lookupPtr
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
 
-// Find and return T*, return NULL if not found
+// Find and return T*, return nullptr if not found
 template<class IDLListType, class T>
 T* CML::DictionaryBase<IDLListType, T>::lookupPtr(const word& keyword)
 {
@@ -279,7 +279,7 @@ T* CML::DictionaryBase<IDLListType, T>::lookupPtr(const word& keyword)
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -292,10 +292,8 @@ const T* CML::DictionaryBase<IDLListType, T>::lookup(const word& keyword) const
 
     if (iter == hashedTs_.end())
     {
-        FatalErrorIn
-        (
-            "DictionaryBase<IDLListType, T>::lookup(const word&) const"
-        )   << keyword << " is undefined"
+        FatalErrorInFunction
+            << keyword << " is undefined"
             << exit(FatalError);
     }
 
@@ -311,10 +309,8 @@ T* CML::DictionaryBase<IDLListType, T>::lookup(const word& keyword)
 
     if (iter == hashedTs_.end())
     {
-        FatalErrorIn
-        (
-            "DictionaryBase<IDLListType, T>::lookup(const word&)"
-        )   << keyword << " is undefined"
+        FatalErrorInFunction
+            << keyword << " is undefined"
             << exit(FatalError);
     }
 
@@ -383,7 +379,7 @@ T* CML::DictionaryBase<IDLListType, T>::remove(const word& keyword)
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -418,7 +414,7 @@ void CML::DictionaryBase<IDLListType, T>::operator=
     // Check for assignment to self
     if (this == &dict)
     {
-        FatalErrorIn("DictionaryBase::operator=(const DictionaryBase&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }

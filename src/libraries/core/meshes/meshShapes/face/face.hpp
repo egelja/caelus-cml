@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -185,10 +185,13 @@ public:
         template<class Type>
         Type average(const pointField&, const Field<Type>&) const;
 
-        //- Magnitude of face area
+        //- Return vector area
+        vector area(const pointField&) const;
+
+        //- Return scalar magnitude
         inline scalar mag(const pointField&) const;
 
-        //- Vector normal; magnitude is equal to area of face
+        //- Return unit normal
         vector normal(const pointField&) const;
 
         //- Return face with reverse direction
@@ -362,11 +365,14 @@ public:
                 faceList& quadFaces
             ) const;
 
-        //- compare faces
+        //- Compare faces
         //   0: different
         //  +1: identical
         //  -1: same face, but different orientation
         static int compare(const face&, const face&);
+
+        //- Return true if the faces have the same vertices
+        static bool sameVertices(const face&, const face&);
 
 
     // Friend Operators
@@ -489,9 +495,9 @@ inline CML::pointField CML::face::points(const pointField& meshPoints) const
 }
 
 
-inline CML::scalar CML::face::mag(const pointField& p) const
+inline CML::scalar CML::face::mag(const pointField& points) const
 {
-    return ::CML::mag(normal(p));
+    return ::CML::mag(area(points));
 }
 
 

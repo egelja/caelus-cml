@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak All rights reserved
 Copyright (C) 2015   V. Vukcevic
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -347,11 +348,8 @@ BlockCoeff<Type>::toScalar()
         // Debug check: demotion
         if (linearCoeffPtr_ || squareCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "BlockCoeff<Type>::scalarType& "
-                "BlockCoeff<Type>::toScalar()"
-            )   << "Detected demotion to scalar.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to scalar.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -371,11 +369,8 @@ BlockCoeff<Type>::toLinear()
         // Debug check: demotion
         if (squareCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "BlockCoeff<Type>::linearType& "
-                "BlockCoeff<Type>::toLinear()"
-            )   << "Detected demotion to linear.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to linear.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -424,18 +419,18 @@ BlockCoeff<Type>::toSquare()
 template<class Type>
 BlockCoeff<Type>::BlockCoeff()
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr)
 {}
 
 
 template<class Type>
 BlockCoeff<Type>::BlockCoeff(const BlockCoeff<Type>& f)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr)
 {
     if (f.scalarCoeffPtr_)
     {
@@ -455,9 +450,9 @@ BlockCoeff<Type>::BlockCoeff(const BlockCoeff<Type>& f)
 template<class Type>
 BlockCoeff<Type>::BlockCoeff(Istream& is)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
-    squareCoeffPtr_(NULL)
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
+    squareCoeffPtr_(nullptr)
 {
     // Read keyword and pick up allocated field
     word key(is);
@@ -495,11 +490,8 @@ BlockCoeff<Type>::BlockCoeff(Istream& is)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "BlockCoeff<Type>::BlockCoeff(Istream& is)",
-            is
-        )   << "invalid keyword while reading: " << key
+        FatalIOErrorInFunction(is)
+            << "invalid keyword while reading: " << key
             << exit(FatalIOError);
     }
 }
@@ -564,7 +556,7 @@ void BlockCoeff<Type>::checkActive() const
 
     if (nActive > 1)
     {
-        FatalErrorIn("void CML::BlockCoeff<Type>::checkActive() const")
+        FatalErrorInFunction
             << "Activation/deactivation error.  nActive = " << nActive
             << abort(FatalError);
     }
@@ -577,11 +569,8 @@ BlockCoeff<Type>::asScalar() const
 {
     if (not scalarCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<Type>::scalarType& "
-            "BlockCoeff<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -597,11 +586,8 @@ BlockCoeff<Type>::asLinear() const
 {
     if (not linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<Type>::linearType& "
-            "BlockCoeff<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -617,11 +603,8 @@ BlockCoeff<Type>::asSquare() const
 {
     if (not squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<Type>::squareType& "
-            "BlockCoeff<Type>::asSquare()"
-        )   << "Requested square but active type is: "
+        FatalErrorInFunction
+            << "Requested square but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -637,11 +620,8 @@ BlockCoeff<Type>::asScalar()
 {
     if (linearCoeffPtr_ || squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<Type>::scalarType& "
-            "BlockCoeff<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -662,11 +642,8 @@ BlockCoeff<Type>::asLinear()
 {
     if (squareCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<Type>::linearType& "
-            "BlockCoeff<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -715,11 +692,8 @@ BlockCoeff<Type>::component(const direction dir) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "tmp<BlockCoeff<Type>::scalarType>"
-            "BlockCoeff<Type>::component(const direction dir) const"
-        )   << " not allocated."
+        FatalErrorInFunction
+            << " not allocated."
             << abort(FatalError);
     }
 
@@ -734,7 +708,7 @@ void BlockCoeff<Type>::operator=(const BlockCoeff<Type>& f)
 {
     if (this == &f)
     {
-        FatalErrorIn("BlockCoeff<Type>::operator=(const BlockCoeff<Type>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }

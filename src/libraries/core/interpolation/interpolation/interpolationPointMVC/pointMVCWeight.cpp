@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -142,7 +142,7 @@ void CML::pointMVCWeight::calcWeights
         // Make sure v points towards the polygon
         //if (((v&u[0]) < 0) != (mesh.faceOwner()[faceI] != cellIndex_))
         //{
-        //    FatalErrorIn("pointMVCWeight::calcWeights(..)")
+        //    FatalErrorInFunction
         //        << "v:" << v << " u[0]:" << u[0]
         //        << exit(FatalError);
         //}

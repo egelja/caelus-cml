@@ -76,7 +76,7 @@ void surfaceSlipDisplacementPointPatchVectorField::calcProjection
 
 
     // Get fixed points (bit of a hack)
-    const pointZone* zonePtr = NULL;
+    const pointZone* zonePtr = nullptr;
 
     if (frozenPointsZone_.size() > 0)
     {

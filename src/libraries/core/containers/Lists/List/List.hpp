@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -216,7 +216,10 @@ public:
         void operator=(const BiIndirectList<T>&);
 
         //- Assignment of all entries to the given value
-        inline void operator=(const T&);
+        inline void operator=(const T& val);
+
+        //- Assignment of all entries to zero
+        inline void operator=(const zero);
 
 
     // Istream operator
@@ -324,10 +327,8 @@ inline void CML::List<T>::append(const UList<T>& lst)
 {
     if (this == &lst)
     {
-        FatalErrorIn
-        (
-            "List<T>::append(const UList<T>&)"
-        )   << "attempted appending to self" << abort(FatalError);
+        FatalErrorInFunction
+            << "attempted appending to self" << abort(FatalError);
     }
 
     label nextFree = this->size();
@@ -361,6 +362,11 @@ inline void CML::List<T>::operator=(const T& t)
     UList<T>::operator=(t);
 }
 
+template<class T>
+inline void CML::List<T>::operator=(const zero)
+{
+    UList<T>::operator=(Zero);
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -382,11 +388,11 @@ inline void CML::List<T>::operator=(const T& t)
 template<class T>
 CML::List<T>::List(const label s)
 :
-    UList<T>(NULL, s)
+    UList<T>(nullptr, s)
 {
     if (this->size_ < 0)
     {
-        FatalErrorIn("List<T>::List(const label size)")
+        FatalErrorInFunction
             << "bad size " << this->size_
             << abort(FatalError);
     }
@@ -402,11 +408,11 @@ CML::List<T>::List(const label s)
 template<class T>
 CML::List<T>::List(const label s, const T& a)
 :
-    UList<T>(NULL, s)
+    UList<T>(nullptr, s)
 {
     if (this->size_ < 0)
     {
-        FatalErrorIn("List<T>::List(const label size, const T&)")
+        FatalErrorInFunction
             << "bad size " << this->size_
             << abort(FatalError);
     }
@@ -427,7 +433,7 @@ CML::List<T>::List(const label s, const T& a)
 template<class T>
 CML::List<T>::List(const List<T>& a)
 :
-    UList<T>(NULL, a.size_)
+    UList<T>(nullptr, a.size_)
 {
     if (this->size_)
     {
@@ -463,7 +469,7 @@ CML::List<T>::List(const Xfer<List<T> >& lst)
 template<class T>
 CML::List<T>::List(List<T>& a, bool reUse)
 :
-    UList<T>(NULL, a.size_)
+    UList<T>(nullptr, a.size_)
 {
     if (reUse)
     {
@@ -497,7 +503,7 @@ CML::List<T>::List(List<T>& a, bool reUse)
 template<class T>
 CML::List<T>::List(const UList<T>& a, const labelUList& map)
 :
-    UList<T>(NULL, map.size())
+    UList<T>(nullptr, map.size())
 {
     if (this->size_)
     {
@@ -550,7 +556,7 @@ template<class T>
 template<unsigned Size>
 CML::List<T>::List(const FixedList<T, Size>& lst)
 :
-    UList<T>(NULL, Size)
+    UList<T>(nullptr, Size)
 {
     if (this->size_)
     {
@@ -568,7 +574,7 @@ CML::List<T>::List(const FixedList<T, Size>& lst)
 template<class T>
 CML::List<T>::List(const PtrList<T>& lst)
 :
-    UList<T>(NULL, lst.size())
+    UList<T>(nullptr, lst.size())
 {
     if (this->size_)
     {
@@ -586,7 +592,7 @@ CML::List<T>::List(const PtrList<T>& lst)
 template<class T>
 CML::List<T>::List(const SLList<T>& lst)
 :
-    UList<T>(NULL, lst.size())
+    UList<T>(nullptr, lst.size())
 {
     if (this->size_)
     {
@@ -610,7 +616,7 @@ CML::List<T>::List(const SLList<T>& lst)
 template<class T>
 CML::List<T>::List(const UIndirectList<T>& lst)
 :
-    UList<T>(NULL, lst.size())
+    UList<T>(nullptr, lst.size())
 {
     if (this->size_)
     {
@@ -628,7 +634,7 @@ CML::List<T>::List(const UIndirectList<T>& lst)
 template<class T>
 CML::List<T>::List(const BiIndirectList<T>& lst)
 :
-    UList<T>(NULL, lst.size())
+    UList<T>(nullptr, lst.size())
 {
     if (this->size_)
     {
@@ -659,7 +665,7 @@ void CML::List<T>::setSize(const label newSize)
 {
     if (newSize < 0)
     {
-        FatalErrorIn("List<T>::setSize(const label)")
+        FatalErrorInFunction
             << "bad set size " << newSize
             << abort(FatalError);
     }
@@ -802,7 +808,7 @@ void CML::List<T>::operator=(const List<T>& a)
 {
     if (this == &a)
     {
-        FatalErrorIn("List<T>::operator=(const List<T>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
@@ -889,7 +895,7 @@ void CML::List<T>::operator=(const BiIndirectList<T>& lst)
 template<class T>
 CML::List<T>::List(Istream& is)
 :
-    UList<T>(NULL, 0)
+    UList<T>(nullptr, 0)
 {
     operator>>(is, *this);
 }
@@ -983,7 +989,7 @@ CML::Istream& CML::operator>>(Istream& is, List<T>& L)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn("operator>>(Istream&, List<T>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected '(', found "
                 << firstToken.info()
                 << exit(FatalIOError);
@@ -1000,7 +1006,7 @@ CML::Istream& CML::operator>>(Istream& is, List<T>& L)
     }
     else
     {
-        FatalIOErrorIn("operator>>(Istream&, List<T>&)", is)
+        FatalIOErrorInFunction(is)
             << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
@@ -1021,7 +1027,7 @@ CML::List<T> CML::readList(Istream& is)
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn("readList<T>(Istream&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected '(', found "
                 << firstToken.info()
                 << exit(FatalIOError);

@@ -5,6 +5,7 @@ tasks:
         case_dir: ./motorBikeSS
         tasks:
         - clean_case:
+            purge_generated: True
             remove_zero: yes
             remove_mesh: no
             preserve: [ "0.org" ]
@@ -21,10 +22,12 @@ tasks:
             cmd_name: potentialSolver
             cmd_args: "-initialiseUBCs -noFunctionObjects"
             parallel: True
+            num_ranks: 4
 
         - run_command:
             cmd_name: simpleSolver
             parallel: True
+            num_ranks: 4
 
         - run_command:
             cmd_name: reconstructPar
@@ -39,6 +42,7 @@ tasks:
         case_dir: ./motorBikeLES
         tasks:
         - clean_case:
+            purge_generated: True
             remove_zero: no
             remove_mesh: yes
             remove_extra:
@@ -63,6 +67,7 @@ tasks:
         - run_command:
             cmd_name: pimpleSolver
             parallel: True
+            num_ranks: 4
 
         - run_command:
             cmd_name: reconstructPar

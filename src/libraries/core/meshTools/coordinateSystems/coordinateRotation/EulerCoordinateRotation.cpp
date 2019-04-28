@@ -66,12 +66,8 @@ CML::tmp<CML::vectorField> CML::EulerCoordinateRotation::transform
     const vectorField& st
 ) const
 {
-    notImplemented
-    (
-        "tmp<vectorField> CML::EulerCoordinateRotation:: "
-        "transform(const vectorField& st) const"
-    );
-    return tmp<vectorField>(NULL);
+    NotImplemented;
+    return tmp<vectorField>(nullptr);
 }
 
 
@@ -80,21 +76,14 @@ CML::tmp<CML::vectorField> CML::EulerCoordinateRotation::invTransform
     const vectorField& st
 ) const
 {
-    notImplemented
-    (
-        "tmp<vectorField>  CML::EulerCoordinateRotation::"
-        "invTransform(const vectorField& st) const"
-    );
-    return tmp<vectorField>(NULL);
+    NotImplemented;
+    return tmp<vectorField>(nullptr);
 }
 
 
 const CML::tensorField& CML::EulerCoordinateRotation::Tr() const
 {
-    notImplemented
-    (
-        "const tensorField& EulerCoordinateRotation::Tr() const"
-    );
+    NotImplemented;
     return NullSingletonRef<const tensorField>();
 }
 
@@ -104,11 +93,8 @@ CML::tmp<CML::tensorField> CML::EulerCoordinateRotation::transformTensor
     const tensorField& st
 ) const
 {
-     notImplemented
-    (
-        "const tensorField& EulerCoordinateRotation::transformTensor() const"
-    );
-    return tmp<tensorField>(NULL);
+     NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 
@@ -127,14 +113,8 @@ CML::tmp<CML::tensorField> CML::EulerCoordinateRotation::transformTensor
     const labelList& cellMap
 ) const
 {
-    notImplemented
-    (
-        "tmp<CML::tensorField> EulerCoordinateRotation::transformTensor "
-        " const tensorField& st,"
-        " const labelList& cellMap "
-        ") const"
-    );
-    return tmp<tensorField>(NULL);
+    NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 

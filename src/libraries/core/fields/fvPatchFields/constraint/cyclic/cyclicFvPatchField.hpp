@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -175,11 +175,7 @@ public:
                 const Pstream::commsTypes commsType
             ) const
             {
-                notImplemented
-                (
-                    "cyclicFvPatchField<Type>::"
-                    "updateInterfaceMatrix for block matrices"
-                );
+                NotImplemented;
             }
   
          // Cyclic coupled interface functions
@@ -257,16 +253,8 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
 {
     if (!isA<cyclicFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "cyclicFvPatchField<Type>::cyclicFvPatchField"
-            "("
-                "const cyclicFvPatchField<Type>& ,"
-                "const fvPatch&, "
-                "const DimensionedField<Type, volMesh>&, "
-                "const fvPatchFieldMapper&"
-            ")"
-        )   << "    patch type '" << p.type()
+        FatalErrorInFunction
+            << "    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -289,16 +277,8 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
 {
     if (!isA<cyclicFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "cyclicFvPatchField<Type>::cyclicFvPatchField"
-            "("
-                "const fvPatch&, "
-                "const Field<Type>&, "
-                "const dictionary&"
-            ")",
-            dict
-        )   << "    patch type '" << p.type()
+        FatalIOErrorInFunction(dict)
+            << "    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()

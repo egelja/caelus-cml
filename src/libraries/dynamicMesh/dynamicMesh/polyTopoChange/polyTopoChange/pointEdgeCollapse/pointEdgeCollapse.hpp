@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,6 +42,14 @@ namespace CML
 // Forward declaration of classes
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class pointEdgeCollapse;
+
+Istream& operator>>(Istream&, pointEdgeCollapse&);
+Ostream& operator<<(Ostream&, const pointEdgeCollapse&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class pointEdgeCollapse Declaration
@@ -235,7 +243,7 @@ inline bool CML::pointEdgeCollapse::update
 {
     if (!w2.valid(td))
     {
-        FatalErrorIn("pointEdgeCollapse::update(..)")
+        FatalErrorInFunction
             << "problem." << abort(FatalError);
     }
 

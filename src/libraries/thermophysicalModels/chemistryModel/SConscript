@@ -7,12 +7,9 @@ target = 'chemistryModel'
 
 sources = Split("""
 chemistryModel/basicChemistryModel/basicChemistryModel.cpp
-chemistryModel/psiChemistryModel/psiChemistryModel.cpp
-chemistryModel/psiChemistryModel/psiChemistryModelNew.cpp
-chemistryModel/psiChemistryModel/psiChemistryModels.cpp
-chemistryModel/rhoChemistryModel/rhoChemistryModel.cpp
-chemistryModel/rhoChemistryModel/rhoChemistryModelNew.cpp
-chemistryModel/rhoChemistryModel/rhoChemistryModels.cpp
+chemistryModel/BasicChemistryModel_/BasicChemistryModels.cpp
+chemistryModel/TDACChemistryModel/reduction/makeChemistryReductionMethods.cpp
+chemistryModel/TDACChemistryModel/tabulation/makeChemistryTabulationMethods.cpp
 chemistrySolver/chemistrySolver/makeChemistrySolvers.cpp
 """)
 
@@ -20,18 +17,15 @@ caelus_inc = [
 'thermophysicalModels/specie/lnInclude',
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/reactionThermo/lnInclude',
-'thermophysicalModels/thermophysicalFunctions/lnInclude',
 'thermophysicalModels/functions/Polynomial/lnInclude',
-'turbulenceModels/compressible/lnInclude',
 'ODE/lnInclude',
 ]
 
 caelus_libs = [
 'core',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'reactionThermophysicalModels',
 'specie',
-'thermophysicalFunctions',
 'ODE'
 ]
 

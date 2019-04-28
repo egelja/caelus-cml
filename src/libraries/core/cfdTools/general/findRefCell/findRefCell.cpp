@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,18 +48,8 @@ void CML::setRefCell
 
                 if (refCelli < 0 || refCelli >= field.mesh().nCells())
                 {
-                    FatalIOErrorIn
-                    (
-                        "void CML::setRefCell\n"
-                         "(\n"
-                         "    const volScalarField&,\n"
-                         "    const volScalarField&,\n"
-                         "    const dictionary&,\n"
-                         "    label& scalar&,\n"
-                         "    bool\n"
-                         ")",
-                        dict
-                    )   << "Illegal master cellID " << refCelli
+                    FatalIOErrorInFunction(dict)
+                        << "Illegal master cellID " << refCelli
                         << ". Should be 0.." << field.mesh().nCells()
                         << exit(FatalIOError);
                 }
@@ -87,18 +77,8 @@ void CML::setRefCell
             label sumHasRef = returnReduce<label>(hasRef, sumOp<label>());
             if (sumHasRef != 1)
             {
-                FatalIOErrorIn
-                (
-                    "void CML::setRefCell\n"
-                     "(\n"
-                     "    const volScalarField&,\n"
-                     "    const volScalarField&,\n"
-                     "    const dictionary&,\n"
-                     "    label& scalar&,\n"
-                     "    bool\n"
-                     ")",
-                    dict
-                )   << "Unable to set reference cell for field " << field.name()
+                FatalIOErrorInFunction(dict)
+                    << "Unable to set reference cell for field " << field.name()
                     << nl << "    Reference point " << refPointName
                     << " " << refPointi
                     << " found on " << sumHasRef << " domains (should be one)"
@@ -107,18 +87,8 @@ void CML::setRefCell
         }
         else
         {
-            FatalIOErrorIn
-            (
-                "void CML::setRefCell\n"
-                 "(\n"
-                 "    const volScalarField&,\n"
-                 "    const volScalarField&,\n"
-                 "    const dictionary&,\n"
-                 "    label& scalar&,\n"
-                 "    bool\n"
-                 ")",
-                dict
-            )   << "Unable to set reference cell for field " << field.name()
+            FatalIOErrorInFunction(dict)
+                << "Unable to set reference cell for field " << field.name()
                 << nl
                 << "    Please supply either " << refCellName
                 << " or " << refPointName << nl << exit(FatalIOError);

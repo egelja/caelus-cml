@@ -57,7 +57,7 @@ void CML::RBFMotionSolver::makeControlIDs()
 
         if (patchIndex < 0)
         {
-            FatalErrorIn("void RBFMotionSolver::makeControlIDs()")
+            FatalErrorInFunction
                 << "Patch " << movingPatches_[patchI] << " not found.  "
                 << "valid patch names: " << mesh().boundaryMesh().names()
                 << abort(FatalError);
@@ -111,7 +111,7 @@ void CML::RBFMotionSolver::makeControlIDs()
 
         if (patchIndex < 0)
         {
-            FatalErrorIn("void RBFMotionSolver::makeControlPoints()")
+            FatalErrorInFunction
                 << "Patch " << staticPatches_[patchI] << " not found.  "
                 << "valid patch names: " << mesh().boundaryMesh().names()
                 << abort(FatalError);
@@ -305,10 +305,8 @@ void CML::RBFMotionSolver::setMotion(const vectorField& m)
 {
     if (m.size() != movingIDs_.size())
     {
-        FatalErrorIn
-        (
-            "void RBFMotionSolver::setMotion(const vectorField& m)"
-        )   << "Incorrect size of motion points: m = " << m.size()
+        FatalErrorInFunction
+            << "Incorrect size of motion points: m = " << m.size()
             << " movingIDs = " << movingIDs_.size()
             << abort(FatalError);
     }

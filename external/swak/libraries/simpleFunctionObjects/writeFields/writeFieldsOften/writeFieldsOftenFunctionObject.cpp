@@ -87,7 +87,7 @@ bool writeFieldsOftenFunctionObject::start()
 
     writeInterval_ = readScalar(dict_.lookup("writeIntervall"));
     if(writeControl_ == Time::wcTimeStep && label(writeInterval_) <1) {
-        WarningIn("bool writeFieldsOftenFunctionObject::start()")
+        WarningInFunction
             << "writeInterval " << writeInterval_
                 << " < 1 for writeControl timeStep. Reseting to 1 "<< endl;
         writeInterval_=1;
@@ -97,7 +97,7 @@ bool writeFieldsOftenFunctionObject::start()
         << "with writeControl " << wcName << " and intervall " << writeInterval_ << endl;
 
     if(writeControl_ == Time::wcAdjustableRunTime) {
-        WarningIn("bool writeFieldsOftenFunctionObject::start()")
+        WarningInFunction
             << "Cant adjust the run-time. Defaulting to runTime" << endl;
 
     }

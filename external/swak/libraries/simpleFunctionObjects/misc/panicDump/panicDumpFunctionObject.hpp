@@ -182,7 +182,7 @@ bool panicDumpFunctionObject::check() const
                     lastTimes_->write();
             }
 
-            FatalErrorIn("panicDumpFunctionObject")
+            FatalErrorInFunction
                 << " Finishing run, because the field " << fieldName_
                     << " exceeds the valid limits [ " << minimum_ << " , "
                     << maximum_ << " ] with the current limits [ "

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,15 +21,16 @@ License
 
 #include "makeCombustionTypes.hpp"
 
-#include "psiCombustionModel.hpp"
-#include "rhoCombustionModel.hpp"
+#include "psiReactionThermo.hpp"
+#include "rhoReactionThermo.hpp"
 #include "noCombustion.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-makeCombustionTypes(noCombustion, psiCombustionModel);
+namespace CML
+{
 
-makeCombustionTypes(noCombustion, rhoCombustionModel);
+makeCombustionTypes(noCombustion, psiReactionThermo);
+makeCombustionTypes(noCombustion, rhoReactionThermo);
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+}

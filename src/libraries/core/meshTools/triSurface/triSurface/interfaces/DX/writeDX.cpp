@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -187,10 +187,8 @@ void triSurface::writeDX(const scalarField& field, Ostream& os) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "writeDX(const scalarField&, Ostream&)"
-        )   << "Illegal field size " << field.size() << " is not equal "
+        FatalErrorInFunction
+            << "Illegal field size " << field.size() << " is not equal "
             << " to number of faces " << size() << " or to number "
             << " of points " << nPoints() << exit(FatalError);
     }
@@ -236,10 +234,8 @@ void triSurface::writeDX(const vectorField& field, Ostream& os) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "writeDX(const vectorField&, Ostream&)"
-        )   << "Illegal field size " << field.size() << " is not equal "
+        FatalErrorInFunction
+            << "Illegal field size " << field.size() << " is not equal "
             << " to number of faces " << size() << " or to number "
             << " of points " << nPoints() << exit(FatalError);
     }

@@ -98,7 +98,7 @@ class WallSpringSliderDashpot
     // Private Member Functions
 
         //- Find the appropriate properties for determining the minimum
-        //- allowable timestep
+        //- Allowable timestep
         void findMinMaxProperties
         (
             scalar& rMin,
@@ -284,14 +284,11 @@ void CML::WallSpringSliderDashpot<CloudType>::evaluateWall
 
             fT_PW = -mu_*mag(fN_PW)*USlip_PW/mag(USlip_PW);
 
-            tangentialOverlap_PW = vector::zero;
+            tangentialOverlap_PW = Zero;
         }
         else
         {
-            fT_PW =
-                -kT*tangentialOverlapMag
-               *tangentialOverlap_PW/tangentialOverlapMag
-              - etaT*USlip_PW;
+            fT_PW = - kT*tangentialOverlap_PW - etaT*USlip_PW;
         }
 
         p.f() += fT_PW;

@@ -49,19 +49,19 @@ TimeCloneList::TimeCloneList(const dictionary &dict)
     Dbug << "Construction" << endl;
     label nrSteps=readLabel(dict.lookup("numberOfTimestepsToStore"));
     if(nrSteps<1) {
-        FatalErrorIn("TimeCloneList::TimeCloneList(const dictionary &dict)")
+        FatalErrorInFunction
             << "Number of timesteps must be bigger than 0 in " << dict.name()
                 << endl
                 << exit(FatalError);
     }
-    storedTimes_.resize(nrSteps,NULL);
+    storedTimes_.resize(nrSteps,nullptr);
     if(count_>0) {
         bool ok=dict.lookupOrDefault<bool>(
             "moreThanOneInstanceOfTimeCloneListIsOK",
             false
         );
         if(!ok) {
-            FatalErrorIn("TimeCloneList::TimeCloneList(const dictionary &dict)")
+            FatalErrorInFunction
                 << "There are already " << count_ << " other instances of "
                     << "TimeCloneList. " << nl
                     << "As this data structure potentially uses a lot of "
@@ -93,10 +93,10 @@ void TimeCloneList::clear()
 {
     Dbug << "clear" << endl;
     forAll(storedTimes_,i) {
-        if(storedTimes_[i]!=NULL) {
+        if(storedTimes_[i]!=nullptr) {
             Dbug << "Removing entry " << i << endl;
             delete storedTimes_[i];
-            storedTimes_[i]=NULL;
+            storedTimes_[i]=nullptr;
         }
     }
 }
@@ -108,7 +108,7 @@ void TimeCloneList::copy(const Time &t)
     if(storedTimes_[last]!=0) {
         Dbug << "Removing last entry" << endl;
         delete storedTimes_[last];
-        storedTimes_[last]=NULL;
+        storedTimes_[last]=nullptr;
     }
     Dbug << "Shifting entries" << endl;
     for(label i=last;i>0;i--) {
@@ -126,7 +126,7 @@ bool TimeCloneList::write(const bool force)
     Dbug << "write. Force: " << force << endl;
 
     forAll(storedTimes_,i) {
-        if(storedTimes_[i]!=NULL) {
+        if(storedTimes_[i]!=nullptr) {
             Dbug << "Writing entry " << i << endl;
             storedTimes_[i]->write(force);
         }

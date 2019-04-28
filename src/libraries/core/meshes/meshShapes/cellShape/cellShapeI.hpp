@@ -26,7 +26,7 @@ License
 
 inline CML::cellShape::cellShape()
 :
-    m(NULL)
+    m(nullptr)
 {}
 
 

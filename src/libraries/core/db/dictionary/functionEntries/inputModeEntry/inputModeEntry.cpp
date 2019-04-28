@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -81,7 +81,7 @@ void CML::functionEntries::inputModeEntry::setMode(Istream& is)
     }
     else
     {
-        WarningIn("CML::functionEntries::inputModeEntry::setMode(Istream&)")
+        WarningInFunction
             << "unsupported input mode '" << mode
             << "' ... defaulting to 'merge'"
             << endl;

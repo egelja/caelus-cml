@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,16 +21,52 @@ Class
     CML::polynomialTransport
 
 Description
-    Transport package using polynomial functions for mu and kappa
+    Transport package using polynomial functions for \c mu and \c kappa.
+
+Usage
+
+    \table
+        Property        | Description
+        muCoeffs<8>     | Dynamic viscosity polynomial coefficients
+        kappaCoeffs<8>  | Thermal conductivity polynomial coefficients
+    \endtable
+
+    Example of the specification of the transport properties:
+    \verbatim
+    transport
+    {
+        muCoeffs<8>     ( 1000 -0.05 0.003 0 0 0 0 0 );
+        kappaCoeffs<8>  ( 2000 -0.15 0.023 0 0 0 0 0 );
+    }
+    \endverbatim
+
+    The polynomial expressions are evaluated as so:
+
+        \f[
+            \mu    = 1000 - 0.05 T + 0.003 T^2
+        \f]
+
+        \f[
+            \kappa = 2000 - 0.15 T + 0.023 T^2
+        \f]
+
+Note
+    - Dynamic viscosity polynomial coefficients evaluate to an expression in
+      [Pa.s], but internally uses [Pa.s/kmol].
+    - Thermal conductivity polynomial coefficients evaluate to an expression in
+      [W/m/K], but internally uses [W/m/K/kmol].
 
 SourceFiles
     polynomialTransportI.hpp
     polynomialTransport.cpp
 
+See also
+    CML::Polynomial
+
 \*---------------------------------------------------------------------------*/
 
-#ifndef polynomialTransport_H
-#define polynomialTransport_H
+#ifndef polynomialTransport_HPP
+#define polynomialTransport_HPP
 
 #include "Polynomial_.hpp"
 
@@ -51,23 +87,9 @@ inline polynomialTransport<Thermo, PolySize> operator+
 );
 
 template<class Thermo, int PolySize>
-inline polynomialTransport<Thermo, PolySize> operator-
-(
-    const polynomialTransport<Thermo, PolySize>&,
-    const polynomialTransport<Thermo, PolySize>&
-);
-
-template<class Thermo, int PolySize>
 inline polynomialTransport<Thermo, PolySize> operator*
 (
     const scalar,
-    const polynomialTransport<Thermo, PolySize>&
-);
-
-template<class Thermo, int PolySize>
-inline polynomialTransport<Thermo, PolySize> operator==
-(
-    const polynomialTransport<Thermo, PolySize>&,
     const polynomialTransport<Thermo, PolySize>&
 );
 
@@ -83,119 +105,100 @@ Ostream& operator<<
                      Class polynomialTransport Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class Thermo, int PolySize>
+template<class Thermo, int PolySize=8>
 class polynomialTransport
 :
     public Thermo
 {
     // Private data
 
-        //- Dynamic viscosity polynomial coefficients
-        //  Note: input in [Pa.s], but internally uses [Pa.s/kmol]
-        Polynomial<PolySize> muCoeffs_;
+    //- Dynamic viscosity polynomial coefficients
+    Polynomial<PolySize> muCoeffs_;
 
-        //- Thermal conductivity polynomial coefficients
-        //  Note: input in [W/m/K], but internally uses [W/m/K/kmol]
-        Polynomial<PolySize> kappaCoeffs_;
+    //- Thermal conductivity polynomial coefficients
+    Polynomial<PolySize> kappaCoeffs_;
 
 
     // Private Member Functions
 
-        //- Construct from components
-        inline polynomialTransport
-        (
-            const Thermo& t,
-            const Polynomial<PolySize>& muPoly,
-            const Polynomial<PolySize>& kappaPoly
-        );
+    //- Construct from components
+    inline polynomialTransport
+    (
+        const Thermo& t,
+        const Polynomial<PolySize>& muPoly,
+        const Polynomial<PolySize>& kappaPoly
+    );
 
 
 public:
 
-    // Constructors
 
-        //- Construct copy
-        inline polynomialTransport(const polynomialTransport&);
+    //- Construct as named copy
+    inline polynomialTransport(const word&, const polynomialTransport&);
 
-        //- Construct as named copy
-        inline polynomialTransport(const word&, const polynomialTransport&);
+    //- Construct from dictionary
+    polynomialTransport(const dictionary& dict);
 
-        //- Construct from Istream
-        polynomialTransport(Istream& is);
+    //- Construct and return a clone
+    inline autoPtr<polynomialTransport> clone() const;
 
-        //- Construct from dictionary
-        polynomialTransport(const dictionary& dict);
-
-        //- Construct and return a clone
-        inline autoPtr<polynomialTransport> clone() const;
-
-        // Selector from Istream
-        inline static autoPtr<polynomialTransport> New(Istream& is);
-
-        // Selector from dictionary
-        inline static autoPtr<polynomialTransport> New(const dictionary& dict);
+    // Selector from dictionary
+    inline static autoPtr<polynomialTransport> New(const dictionary& dict);
 
 
     // Member functions
 
-        //- Dynamic viscosity [kg/ms]
-        inline scalar mu(const scalar T) const;
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "polynomial<" + Thermo::typeName() + '>';
+    }
 
-        //- Thermal conductivity [W/mK]
-        inline scalar kappa(const scalar T) const;
+    //- Dynamic viscosity [kg/ms]
+    inline scalar mu(const scalar p, const scalar T) const;
 
-        //- Thermal diffusivity for enthalpy [kg/ms]
-        inline scalar alpha(const scalar T) const;
+    //- Thermal conductivity [W/mK]
+    inline scalar kappa(const scalar p, const scalar T) const;
 
-        // Species diffusivity
-        //inline scalar D(const scalar T) const;
+    //- Thermal diffusivity of enthalpy [kg/ms]
+    inline scalar alphah(const scalar p, const scalar T) const;
 
-        //- Write to Ostream
-        void write(Ostream& os) const;
+    // Species diffusivity
+    // inline scalar D(const scalar p, const scalar T) const;
+
+    //- Write to Ostream
+    void write(Ostream& os) const;
 
 
     // Member operators
 
-        inline polynomialTransport& operator=(const polynomialTransport&);
-        inline void operator+=(const polynomialTransport&);
-        inline void operator-=(const polynomialTransport&);
-        inline void operator*=(const scalar);
+    inline void operator=(const polynomialTransport&);
+
+    inline void operator+=(const polynomialTransport&);
+
+    inline void operator*=(const scalar);
 
 
     // Friend operators
+    friend polynomialTransport operator+ <Thermo, PolySize>
+    (
+        const polynomialTransport&,
+        const polynomialTransport&
+    );
 
-        friend polynomialTransport operator+ <Thermo, PolySize>
-        (
-            const polynomialTransport&,
-            const polynomialTransport&
-        );
-
-        friend polynomialTransport operator- <Thermo, PolySize>
-        (
-            const polynomialTransport&,
-            const polynomialTransport&
-        );
-
-        friend polynomialTransport operator* <Thermo, PolySize>
-        (
-            const scalar,
-            const polynomialTransport&
-        );
-
-        friend polynomialTransport operator== <Thermo, PolySize>
-        (
-            const polynomialTransport&,
-            const polynomialTransport&
-        );
+    friend polynomialTransport operator* <Thermo, PolySize>
+    (
+        const scalar,
+        const polynomialTransport&
+    );
 
 
     // Ostream Operator
-
-        friend Ostream& operator<< <Thermo, PolySize>
-        (
-            Ostream&,
-            const polynomialTransport&
-        );
+    friend Ostream& operator<< <Thermo, PolySize>
+    (
+        Ostream&,
+        const polynomialTransport&
+    );
 };
 
 
@@ -206,18 +209,6 @@ public:
 #include "specie.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class Thermo, int PolySize>
-inline CML::polynomialTransport<Thermo, PolySize>::polynomialTransport
-(
-    const polynomialTransport& pt
-)
-:
-    Thermo(pt),
-    muCoeffs_(pt.muCoeffs_),
-    kappaCoeffs_(pt.kappaCoeffs_)
-{}
-
 
 template<class Thermo, int PolySize>
 inline CML::polynomialTransport<Thermo, PolySize>::polynomialTransport
@@ -259,17 +250,6 @@ CML::polynomialTransport<Thermo, PolySize>::clone() const
 
 template<class Thermo, int PolySize>
 inline CML::autoPtr<CML::polynomialTransport<Thermo, PolySize> >
-CML::polynomialTransport<Thermo, PolySize>::New(Istream& is)
-{
-    return autoPtr<polynomialTransport<Thermo, PolySize> >
-    (
-        new polynomialTransport<Thermo, PolySize>(is)
-    );
-}
-
-
-template<class Thermo, int PolySize>
-inline CML::autoPtr<CML::polynomialTransport<Thermo, PolySize> >
 CML::polynomialTransport<Thermo, PolySize>::New(const dictionary& dict)
 {
     return autoPtr<polynomialTransport<Thermo, PolySize> >
@@ -284,43 +264,39 @@ CML::polynomialTransport<Thermo, PolySize>::New(const dictionary& dict)
 template<class Thermo, int PolySize>
 inline CML::scalar CML::polynomialTransport<Thermo, PolySize>::mu
 (
+    const scalar p,
     const scalar T
 ) const
 {
-    return muCoeffs_.value(T)/this->W();
+    return muCoeffs_.value(T);
 }
 
 
 template<class Thermo, int PolySize>
 inline CML::scalar CML::polynomialTransport<Thermo, PolySize>::kappa
 (
+    const scalar p,
     const scalar T
 ) const
 {
-    return kappaCoeffs_.value(T)/this->W();
+    return kappaCoeffs_.value(T);
 }
 
 
 template<class Thermo, int PolySize>
-inline CML::scalar CML::polynomialTransport<Thermo, PolySize>::alpha
+inline CML::scalar CML::polynomialTransport<Thermo, PolySize>::alphah
 (
-    const scalar T
+    const scalar p, const scalar T
 ) const
 {
-    scalar deltaT = T - specie::Tstd;
-    scalar CpBar =
-        (deltaT*(this->H(T) - this->H(specie::Tstd)) + this->Cp(T))
-       /(sqr(deltaT) + 1);
-
-    return kappa(T)/CpBar;
+    return kappa(p, T)/this->Cp(p, T);
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Thermo, int PolySize>
-inline CML::polynomialTransport<Thermo, PolySize>&
-CML::polynomialTransport<Thermo, PolySize>::operator=
+inline void CML::polynomialTransport<Thermo, PolySize>::operator=
 (
     const polynomialTransport<Thermo, PolySize>& pt
 )
@@ -329,8 +305,6 @@ CML::polynomialTransport<Thermo, PolySize>::operator=
 
     muCoeffs_ = pt.muCoeffs_;
     kappaCoeffs_ = pt.kappaCoeffs_;
-
-    return *this;
 }
 
 
@@ -340,33 +314,18 @@ inline void CML::polynomialTransport<Thermo, PolySize>::operator+=
     const polynomialTransport<Thermo, PolySize>& pt
 )
 {
-    scalar molr1 = this->nMoles();
+    scalar Y1 = this->Y();
 
     Thermo::operator+=(pt);
 
-    molr1 /= this->nMoles();
-    scalar molr2 = pt.nMoles()/this->nMoles();
+    if (mag(this->Y()) > SMALL)
+    {
+        Y1 /= this->Y();
+        scalar Y2 = pt.Y()/this->Y();
 
-    muCoeffs_ = molr1*muCoeffs_ + molr2*pt.muCoeffs_;
-    kappaCoeffs_ = molr1*kappaCoeffs_ + molr2*pt.kappaCoeffs_;
-}
-
-
-template<class Thermo, int PolySize>
-inline void CML::polynomialTransport<Thermo, PolySize>::operator-=
-(
-    const polynomialTransport<Thermo, PolySize>& pt
-)
-{
-    scalar molr1 = this->nMoles();
-
-    Thermo::operator-=(pt);
-
-    molr1 /= this->nMoles();
-    scalar molr2 = pt.nMoles()/this->nMoles();
-
-    muCoeffs_ = molr1*muCoeffs_ - molr2*pt.muCoeffs_;
-    kappaCoeffs_ = molr1*kappaCoeffs_ - molr2*pt.kappaCoeffs_;
+        muCoeffs_ = Y1*muCoeffs_ + Y2*pt.muCoeffs_;
+        kappaCoeffs_ = Y1*kappaCoeffs_ + Y2*pt.kappaCoeffs_;
+    }
 }
 
 
@@ -394,39 +353,28 @@ inline CML::polynomialTransport<Thermo, PolySize> CML::operator+
         static_cast<const Thermo&>(pt1) + static_cast<const Thermo&>(pt2)
     );
 
-    scalar molr1 = pt1.nMoles()/t.nMoles();
-    scalar molr2 = pt2.nMoles()/t.nMoles();
+    if (mag(t.Y()) < SMALL)
+    {
+        return polynomialTransport<Thermo>
+        (
+            t,
+            0,
+            pt1.muCoeffs_,
+            pt1.kappaCoeffs_
+        );
+    }
+    else
+    {
+        scalar Y1 = pt1.Y()/t.Y();
+        scalar Y2 = pt2.Y()/t.Y();
 
-    return polynomialTransport<Thermo, PolySize>
-    (
-        t,
-        molr1*pt1.muCoeffs_ + molr2*pt2.muCoeffs_,
-        molr1*pt1.kappaCoeffs_ + molr2*pt2.kappaCoeffs_
-    );
-}
-
-
-template<class Thermo, int PolySize>
-inline CML::polynomialTransport<Thermo, PolySize> CML::operator-
-(
-    const polynomialTransport<Thermo, PolySize>& pt1,
-    const polynomialTransport<Thermo, PolySize>& pt2
-)
-{
-    Thermo t
-    (
-        static_cast<const Thermo&>(pt1) - static_cast<const Thermo&>(pt2)
-    );
-
-    scalar molr1 = pt1.nMoles()/t.nMoles();
-    scalar molr2 = pt2.nMoles()/t.nMoles();
-
-    return polynomialTransport<Thermo, PolySize>
-    (
-        t,
-        molr1*pt1.muCoeffs_ - molr2*pt2.muCoeffs_,
-        molr1*pt1.kappaCoeffs_ - molr2*pt2.kappaCoeffs_
-    );
+        return polynomialTransport<Thermo, PolySize>
+        (
+            t,
+            Y1*pt1.muCoeffs_ + Y2*pt2.muCoeffs_,
+            Y1*pt1.kappaCoeffs_ + Y2*pt2.kappaCoeffs_
+        );
+    }
 }
 
 
@@ -446,31 +394,9 @@ inline CML::polynomialTransport<Thermo, PolySize> CML::operator*
 }
 
 
-template<class Thermo, int PolySize>
-inline CML::polynomialTransport<Thermo, PolySize> CML::operator==
-(
-    const polynomialTransport<Thermo, PolySize>& pt1,
-    const polynomialTransport<Thermo, PolySize>& pt2
-)
-{
-    return pt2 - pt1;
-}
-
-
 #include "IOstreams.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class Thermo, int PolySize>
-CML::polynomialTransport<Thermo, PolySize>::polynomialTransport(Istream& is)
-:
-    Thermo(is),
-    muCoeffs_("muCoeffs<" + CML::name(PolySize) + '>', is),
-    kappaCoeffs_("kappaCoeffs<" + CML::name(PolySize) + '>', is)
-{
-    muCoeffs_ *= this->W();
-    kappaCoeffs_ *= this->W();
-}
 
 
 template<class Thermo, int PolySize>
@@ -494,10 +420,7 @@ CML::polynomialTransport<Thermo, PolySize>::polynomialTransport
             "kappaCoeffs<" + CML::name(PolySize) + '>'
         )
     )
-{
-    muCoeffs_ *= this->W();
-    kappaCoeffs_ *= this->W();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -514,12 +437,12 @@ void CML::polynomialTransport<Thermo, PolySize>::write(Ostream& os) const
     dict.add
     (
         word("muCoeffs<" + CML::name(PolySize) + '>'),
-        muCoeffs_/this->W()
+        muCoeffs_
     );
     dict.add
     (
         word("kappaCoeffs<" + CML::name(PolySize) + '>'),
-        kappaCoeffs_/this->W()
+        kappaCoeffs_
     );
     os  << indent << dict.dictName() << dict;
 
@@ -536,27 +459,10 @@ CML::Ostream& CML::operator<<
     const polynomialTransport<Thermo, PolySize>& pt
 )
 {
-    os  << static_cast<const Thermo&>(pt) << tab
-        << "muCoeffs<" << CML::name(PolySize) << '>' << tab
-        << pt.muCoeffs_/pt.W() << tab
-        << "kappaCoeffs<" << CML::name(PolySize) << '>' << tab
-        << pt.kappaCoeffs_/pt.W();
-
-    os.check
-    (
-        "Ostream& operator<<"
-        "("
-            "Ostream&, "
-            "const polynomialTransport<Thermo, PolySize>&"
-        ")"
-    );
-
+    pt.write(os);
     return os;
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

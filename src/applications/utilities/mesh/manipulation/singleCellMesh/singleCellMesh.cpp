@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
     if (regionName == singleCellName)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Cannot convert region " << singleCellName
             << " since result would overwrite it. Please rename your region."
             << exit(FatalError);

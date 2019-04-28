@@ -128,7 +128,7 @@ CML::point CML::BSpline::position
 
 CML::scalar CML::BSpline::length() const
 {
-    notImplemented("BSpline::length() const");
+    NotImplemented;
     return 1.0;
 }
 

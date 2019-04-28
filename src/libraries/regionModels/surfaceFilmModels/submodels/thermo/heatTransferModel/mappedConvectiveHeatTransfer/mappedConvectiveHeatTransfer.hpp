@@ -85,7 +85,7 @@ public:
         //- Construct from surface film model and dictionary
         mappedConvectiveHeatTransfer
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,13 +26,11 @@ License
 #include "fvcSnGrad.hpp"
 #include "fvcReconstruct.hpp"
 #include "fvcVolumeIntegrate.hpp"
+#include "fvcFlux.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "mappedWallPolyPatch.hpp"
 #include "mapDistribute.hpp"
-
-#include "cachedRandom.hpp"
-#include "normal.hpp"
-#include "mathematicalConstants.hpp"
+#include "filmThermoModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,17 +45,17 @@ namespace surfaceFilmModels
 
 defineTypeNameAndDebug(kinematicSingleLayer, 0);
 
-addToRunTimeSelectionTable(surfaceFilmModel, kinematicSingleLayer, mesh);
+addToRunTimeSelectionTable(surfaceFilmRegionModel, kinematicSingleLayer, mesh);
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 bool kinematicSingleLayer::read()
 {
-    if (surfaceFilmModel::read())
+    if (surfaceFilmRegionModel::read())
     {
         const dictionary& solution = this->solution().subDict("PISO");
         solution.lookup("momentumPredictor") >> momentumPredictor_;
-        solution.lookup("nOuterCorr") >> nOuterCorr_;
+        solution.readIfPresent("nOuterCorr", nOuterCorr_);
         solution.lookup("nCorr") >> nCorr_;
         solution.lookup("nNonOrthCorr") >> nNonOrthCorr_;
 
@@ -72,22 +70,9 @@ bool kinematicSingleLayer::read()
 
 void kinematicSingleLayer::correctThermoFields()
 {
-    if (thermoModel_ == tmConstant)
-    {
-        const dictionary& constDict(coeffs_.subDict("constantThermoCoeffs"));
-        rho_ == dimensionedScalar(constDict.lookup("rho0"));
-        mu_ == dimensionedScalar(constDict.lookup("mu0"));
-        sigma_ == dimensionedScalar(constDict.lookup("sigma0"));
-    }
-    else
-    {
-        FatalErrorIn
-        (
-            "void CML::surfaceFilmModels::kinematicSingleLayer::"
-            "correctThermo()"
-        )   << "Kinematic surface film must use "
-            << thermoModelTypeNames_[tmConstant] << "thermodynamics" << endl;
-    }
+    rho_ == filmThermo_->rho();
+    mu_ == filmThermo_->mu();
+    sigma_ == filmThermo_->sigma();
 }
 
 
@@ -95,11 +80,11 @@ void kinematicSingleLayer::resetPrimaryRegionSourceTerms()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::resetPrimaryRegionSourceTerms()" << endl;
+        InfoInFunction << endl;
     }
 
     rhoSpPrimary_ == dimensionedScalar("zero", rhoSp_.dimensions(), 0.0);
-    USpPrimary_ == dimensionedVector("zero", USp_.dimensions(), vector::zero);
+    USpPrimary_ == dimensionedVector("zero", USp_.dimensions(), Zero);
     pSpPrimary_ == dimensionedScalar("zero", pSp_.dimensions(), 0.0);
 }
 
@@ -108,8 +93,7 @@ void kinematicSingleLayer::transferPrimaryRegionThermoFields()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::"
-            << "transferPrimaryRegionThermoFields()" << endl;
+        InfoInFunction << endl;
     }
 
     // Update fields from primary region via direct mapped
@@ -125,20 +109,22 @@ void kinematicSingleLayer::transferPrimaryRegionSourceFields()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::"
-            << "transferPrimaryRegionSourceFields()" << endl;
+        InfoInFunction << endl;
     }
 
     // Convert accummulated source terms into per unit area per unit time
     const scalar deltaT = time_.deltaTValue();
-    forAll(rhoSpPrimary_.boundaryField(), patchI)
+    forAll(rhoSpPrimary_.boundaryField(), patchi)
     {
-        const scalarField& priMagSf =
-            primaryMesh().magSf().boundaryField()[patchI];
+        scalarField rpriMagSfdeltaT
+        (
+            (1.0/deltaT)
+           /primaryMesh().magSf().boundaryField()[patchi]
+        );
 
-        rhoSpPrimary_.boundaryField()[patchI] /= priMagSf*deltaT;
-        USpPrimary_.boundaryField()[patchI] /= priMagSf*deltaT;
-        pSpPrimary_.boundaryField()[patchI] /= priMagSf*deltaT;
+        rhoSpPrimary_.boundaryField()[patchi] *= rpriMagSfdeltaT;
+        USpPrimary_.boundaryField()[patchi] *= rpriMagSfdeltaT;
+        pSpPrimary_.boundaryField()[patchi] *= rpriMagSfdeltaT;
     }
 
     // Retrieve the source fields from the primary region via direct mapped
@@ -148,6 +134,16 @@ void kinematicSingleLayer::transferPrimaryRegionSourceFields()
     rhoSp_.correctBoundaryConditions();
     USp_.correctBoundaryConditions();
     pSp_.correctBoundaryConditions();
+
+    // update addedMassTotal counter
+    if (time().outputTime())
+    {
+        scalar addedMassTotal = 0.0;
+        outputProperties().readIfPresent("addedMassTotal", addedMassTotal);
+        addedMassTotal += returnReduce(addedMassTotal_, sumOp<scalar>());
+        outputProperties().add("addedMassTotal", addedMassTotal, true);
+        addedMassTotal_ = 0.0;
+    }
 }
 
 
@@ -159,7 +155,7 @@ tmp<volScalarField> kinematicSingleLayer::pu()
         (
             IOobject
             (
-                "pu",
+                typeName + ":pu",
                 time_.timeName(),
                 regionMesh(),
                 IOobject::NO_READ,
@@ -181,7 +177,7 @@ tmp<volScalarField> kinematicSingleLayer::pp()
         (
             IOobject
             (
-                "pp",
+                typeName + ":pp",
                 time_.timeName(),
                 regionMesh(),
                 IOobject::NO_READ,
@@ -193,19 +189,29 @@ tmp<volScalarField> kinematicSingleLayer::pp()
 }
 
 
+void kinematicSingleLayer::correctAlpha()
+{
+    alpha_ == pos(delta_ - deltaSmall_);
+}
+
+
 void kinematicSingleLayer::updateSubmodels()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::updateSubmodels()" << endl;
+        InfoInFunction << endl;
     }
 
     // Update injection model - mass returned is mass available for injection
     injection_.correct(availableMass_, cloudMassTrans_, cloudDiameterTrans_);
 
-    // Update source fields
-    const dimensionedScalar deltaT = time().deltaT();
-    rhoSp_ += cloudMassTrans_/magSf()/deltaT;
+    // Update transfer model - mass returned is mass available for transfer
+    transfer_.correct(availableMass_, cloudMassTrans_);
+
+    // Update mass source field
+    rhoSp_ += cloudMassTrans_/magSf()/time().deltaT();
+
+    turbulence_->correct();
 }
 
 
@@ -234,7 +240,8 @@ void kinematicSingleLayer::continuityCheck()
 
         cumulativeContErr_ += globalContErr;
 
-        Info<< "Surface film: " << type() << nl
+        InfoInFunction
+            << "Surface film: " << type() << nl
             << "    time step continuity errors: sum local = "
             << sumLocalContErr << ", global = " << globalContErr
             << ", cumulative = " << cumulativeContErr_ << endl;
@@ -246,7 +253,7 @@ void kinematicSingleLayer::solveContinuity()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::solveContinuity()" << endl;
+        InfoInFunction << endl;
     }
 
     solve
@@ -264,17 +271,15 @@ void kinematicSingleLayer::updateSurfaceVelocities()
     // Push boundary film velocity values into internal field
     for (label i=0; i<intCoupledPatchIDs_.size(); i++)
     {
-        label patchI = intCoupledPatchIDs_[i];
-        const polyPatch& pp = regionMesh().boundaryMesh()[patchI];
+        label patchi = intCoupledPatchIDs_[i];
+        const polyPatch& pp = regionMesh().boundaryMesh()[patchi];
         UIndirectList<vector>(Uw_, pp.faceCells()) =
-            U_.boundaryField()[patchI];
+            U_.boundaryField()[patchi];
     }
     Uw_ -= nHat()*(Uw_ & nHat());
     Uw_.correctBoundaryConditions();
 
-    // TODO: apply quadratic profile to determine surface velocity
-    Us_ = U_;
-    Us_.correctBoundaryConditions();
+    Us_ = turbulence_->Us();
 }
 
 
@@ -286,10 +291,8 @@ tmp<CML::fvVectorMatrix> kinematicSingleLayer::solveMomentum
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::solveMomentum()" << endl;
+        InfoInFunction << endl;
     }
-
-    updateSurfaceVelocities();
 
     // Momentum
     tmp<fvVectorMatrix> tUEqn
@@ -298,8 +301,10 @@ tmp<CML::fvVectorMatrix> kinematicSingleLayer::solveMomentum
       + fvm::div(phi_, U_)
      ==
       - USp_
-      - fvm::SuSp(rhoSp_, U_)
+   // - fvm::SuSp(rhoSp_, U_)
+      - rhoSp_*U_
       + forces_.correct(U_)
+      + turbulence_->Su(U_)
     );
 
     fvVectorMatrix& UEqn = tUEqn();
@@ -322,7 +327,7 @@ tmp<CML::fvVectorMatrix> kinematicSingleLayer::solveMomentum
                       + fvc::snGrad(pp, "snGrad(p)")*fvc::interpolate(delta_)
                       + fvc::snGrad(delta_)*fvc::interpolate(pp)
                     )
-                  - (fvc::interpolate(rho_*gTan()) & regionMesh().Sf())
+                  - fvc::flux(rho_*gTan())
                 )
             )
         );
@@ -345,7 +350,7 @@ void kinematicSingleLayer::solveThickness
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::solveThickness()" << endl;
+        InfoInFunction << endl;
     }
 
     volScalarField rUA(1.0/UEqn.A());
@@ -362,15 +367,14 @@ void kinematicSingleLayer::solveThickness
             fvc::snGrad(pu, "snGrad(p)")
           + fvc::snGrad(pp, "snGrad(p)")*fvc::interpolate(delta_)
         )
-      - (fvc::interpolate(rho_*gTan()) & regionMesh().Sf())
+      - fvc::flux(rho_*gTan())
     );
     constrainFilmField(phiAdd, 0.0);
 
     surfaceScalarField phid
     (
         "phid",
-        (fvc::interpolate(U_*rho_) & regionMesh().Sf())
-      - deltarUAf*phiAdd*rhof
+        fvc::flux(U_*rho_) - deltarUAf*phiAdd*rhof
     );
     constrainFilmField(phid, 0.0);
 
@@ -379,7 +383,8 @@ void kinematicSingleLayer::solveThickness
         "deltaCoeff",
         fvc::interpolate(delta_)*deltarUAf*rhof*fvc::interpolate(pp)
     );
-//    constrainFilmField(ddrhorUAppf, 0.0);
+
+    regionMesh().setFluxRequired(delta_.name());
 
     for (int nonOrth=0; nonOrth<=nNonOrthCorr_; nonOrth++)
     {
@@ -429,13 +434,14 @@ kinematicSingleLayer::kinematicSingleLayer
     const word& modelType,
     const fvMesh& mesh,
     const dimensionedVector& g,
+    const word& regionType,
     const bool readFields
 )
 :
-    surfaceFilmModel(modelType, mesh, g),
+    surfaceFilmRegionModel(modelType, mesh, g, regionType),
 
     momentumPredictor_(solution().subDict("PISO").lookup("momentumPredictor")),
-    nOuterCorr_(readLabel(solution().subDict("PISO").lookup("nOuterCorr"))),
+    nOuterCorr_(solution().subDict("PISO").lookupOrDefault("nOuterCorr", 1)),
     nCorr_(readLabel(solution().subDict("PISO").lookup("nCorr"))),
     nNonOrthCorr_
     (
@@ -443,6 +449,9 @@ kinematicSingleLayer::kinematicSingleLayer
     ),
 
     cumulativeContErr_(0.0),
+
+    deltaSmall_("deltaSmall", dimLength, SMALL),
+    deltaCoLimit_(solution().lookupOrDefault("deltaCoLimit", 1e-4)),
 
     rho_
     (
@@ -498,6 +507,20 @@ kinematicSingleLayer::kinematicSingleLayer
             IOobject::AUTO_WRITE
         ),
         regionMesh()
+    ),
+    alpha_
+    (
+        IOobject
+        (
+            "alpha",
+            time().timeName(),
+            regionMesh(),
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        regionMesh(),
+        dimensionedScalar("zero", dimless, 0.0),
+        zeroGradientFvPatchScalarField::typeName
     ),
     U_
     (
@@ -559,11 +582,11 @@ kinematicSingleLayer::kinematicSingleLayer
             "phi",
             time().timeName(),
             regionMesh(),
-            IOobject::READ_IF_PRESENT,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         regionMesh(),
-        dimLength*dimMass/dimTime
+        dimensionedScalar("0", dimLength*dimMass/dimTime, 0.0)
     ),
 
     primaryMassTrans_
@@ -622,7 +645,7 @@ kinematicSingleLayer::kinematicSingleLayer
         regionMesh(),
         dimensionedVector
         (
-            "zero", dimMass*dimVelocity/dimArea/dimTime, vector::zero
+            "zero", dimMass*dimVelocity/dimArea/dimTime, Zero
         ),
         this->mappedPushedFieldPatchTypes<vector>()
     ),
@@ -666,7 +689,7 @@ kinematicSingleLayer::kinematicSingleLayer
             IOobject::NO_WRITE
         ),
         primaryMesh(),
-        dimensionedVector("zero", USp_.dimensions(), vector::zero)
+        dimensionedVector("zero", USp_.dimensions(), Zero)
     ),
     pSpPrimary_
     (
@@ -706,7 +729,7 @@ kinematicSingleLayer::kinematicSingleLayer
             IOobject::NO_WRITE
         ),
         regionMesh(),
-        dimensionedVector("zero", dimVelocity, vector::zero),
+        dimensionedVector("zero", dimVelocity, Zero),
         this->mappedFieldAndInternalPatchTypes<vector>()
     ),
     pPrimary_
@@ -741,7 +764,7 @@ kinematicSingleLayer::kinematicSingleLayer
     (
         IOobject
         (
-            "mu", // must have same name as mu to enable mapping
+            "thermo:mu", // must have same name as mu to enable mapping
             time().timeName(),
             regionMesh(),
             IOobject::NO_READ,
@@ -752,9 +775,15 @@ kinematicSingleLayer::kinematicSingleLayer
         this->mappedFieldAndInternalPatchTypes<scalar>()
     ),
 
+    filmThermo_(filmThermoModel::New(*this, coeffs_)),
+
     availableMass_(regionMesh().nCells(), 0.0),
 
     injection_(*this, coeffs_),
+
+    transfer_(*this, coeffs_),
+
+    turbulence_(filmTurbulenceModel::New(*this, coeffs_)),
 
     forces_(*this, coeffs_),
 
@@ -764,10 +793,27 @@ kinematicSingleLayer::kinematicSingleLayer
     {
         transferPrimaryRegionThermoFields();
 
+        correctAlpha();
+
         correctThermoFields();
 
         deltaRho_ == delta_*rho_;
-        phi_ = fvc::interpolate(deltaRho_*U_) & regionMesh().Sf();
+
+        surfaceScalarField phi0
+        (
+            IOobject
+            (
+                "phi",
+                time().timeName(),
+                regionMesh(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            fvc::flux(deltaRho_*U_)
+        );
+
+        phi_ == phi0;
     }
 }
 
@@ -782,8 +828,8 @@ kinematicSingleLayer::~kinematicSingleLayer()
 
 void kinematicSingleLayer::addSources
 (
-    const label patchI,
-    const label faceI,
+    const label patchi,
+    const label facei,
     const scalar massSource,
     const vector& momentumSource,
     const scalar pressureSource,
@@ -792,15 +838,16 @@ void kinematicSingleLayer::addSources
 {
     if (debug)
     {
-        Info<< "\nSurface film: " << type() << ": adding to film source:" << nl
+        InfoInFunction
+            << "\nSurface film: " << type() << ": adding to film source:" << nl
             << "    mass     = " << massSource << nl
             << "    momentum = " << momentumSource << nl
             << "    pressure = " << pressureSource << endl;
     }
 
-    rhoSpPrimary_.boundaryField()[patchI][faceI] -= massSource;
-    USpPrimary_.boundaryField()[patchI][faceI] -= momentumSource;
-    pSpPrimary_.boundaryField()[patchI][faceI] -= pressureSource;
+    rhoSpPrimary_.boundaryField()[patchi][facei] -= massSource;
+    USpPrimary_.boundaryField()[patchi][facei] -= momentumSource;
+    pSpPrimary_.boundaryField()[patchi][facei] -= pressureSource;
 
     addedMassTotal_ += massSource;
 }
@@ -810,8 +857,10 @@ void kinematicSingleLayer::preEvolveRegion()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::preEvolveRegion()" << endl;
+        InfoInFunction << endl;
     }
+
+    surfaceFilmRegionModel::preEvolveRegion();
 
     transferPrimaryRegionThermoFields();
 
@@ -820,10 +869,10 @@ void kinematicSingleLayer::preEvolveRegion()
     transferPrimaryRegionSourceFields();
 
     // Reset transfer fields
-//    availableMass_ = mass();
-    availableMass_ = netMass();
+    availableMass_ = mass();
     cloudMassTrans_ == dimensionedScalar("zero", dimMass, 0.0);
     cloudDiameterTrans_ == dimensionedScalar("zero", dimLength, 0.0);
+    primaryMassTrans_ == dimensionedScalar("zero", dimMass, 0.0);
 }
 
 
@@ -831,9 +880,16 @@ void kinematicSingleLayer::evolveRegion()
 {
     if (debug)
     {
-        Info<< "kinematicSingleLayer::evolveRegion()" << endl;
+        InfoInFunction << endl;
     }
 
+    // Update film coverage indicator
+    correctAlpha();
+
+    // Update film wall and surface velocities
+    updateSurfaceVelocities();
+
+    // Update sub-models to provide updated source contributions
     updateSubmodels();
 
     // Solve continuity for deltaRho_
@@ -842,7 +898,7 @@ void kinematicSingleLayer::evolveRegion()
     // Implicit pressure source coefficient - constant
     tmp<volScalarField> tpp(this->pp());
 
-    for (int oCorr=0; oCorr<nOuterCorr_; oCorr++)
+    for (int oCorr=1; oCorr<=nOuterCorr_; oCorr++)
     {
         // Explicit pressure source contribution - varies with delta_
         tmp<volScalarField> tpu(this->pu());
@@ -861,9 +917,6 @@ void kinematicSingleLayer::evolveRegion()
     // Update deltaRho_ with new delta_
     deltaRho_ == delta_*rho_;
 
-    // Update film wall and surface velocities
-    updateSurfaceVelocities();
-
     // Reset source terms for next time integration
     resetPrimaryRegionSourceTerms();
 }
@@ -875,22 +928,21 @@ scalar kinematicSingleLayer::CourantNumber() const
 
     if (regionMesh().nInternalFaces() > 0)
     {
-        const scalar deltaT = time_.deltaTValue();
-
-        const surfaceScalarField SfUfbyDelta
+        const scalarField sumPhi
         (
-            regionMesh().surfaceInterpolation::deltaCoeffs()*mag(phi_)
+            fvc::surfaceSum(mag(phi_))().internalField()
+          / (deltaRho_.internalField() + ROOTVSMALL)
         );
-        const surfaceScalarField rhoDelta(fvc::interpolate(rho_*delta_));
-        const surfaceScalarField& magSf = regionMesh().magSf();
 
-        forAll(rhoDelta, i)
+        forAll(delta_, i)
         {
-            if (rhoDelta[i] > ROOTVSMALL)
+            if (delta_[i] > deltaCoLimit_)
             {
-                CoNum = max(CoNum, SfUfbyDelta[i]/rhoDelta[i]/magSf[i]*deltaT);
+                CoNum = max(CoNum, sumPhi[i]/(delta_[i]*magSf()[i]));
             }
         }
+
+        CoNum *= 0.5*time_.deltaTValue();
     }
 
     reduce(CoNum, maxOp<scalar>());
@@ -919,6 +971,12 @@ const volVectorField& kinematicSingleLayer::Uw() const
 }
 
 
+const volScalarField& kinematicSingleLayer::deltaRho() const
+{
+    return deltaRho_;
+}
+
+
 const surfaceScalarField& kinematicSingleLayer::phi() const
 {
     return phi_;
@@ -933,10 +991,8 @@ const volScalarField& kinematicSingleLayer::rho() const
 
 const volScalarField& kinematicSingleLayer::T() const
 {
-    FatalErrorIn
-    (
-        "const volScalarField& kinematicSingleLayer::T() const"
-    )   << "T field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "T field not available for " << type() << abort(FatalError);
 
     return volScalarField::null();
 }
@@ -944,10 +1000,8 @@ const volScalarField& kinematicSingleLayer::T() const
 
 const volScalarField& kinematicSingleLayer::Ts() const
 {
-    FatalErrorIn
-    (
-        "const volScalarField& kinematicSingleLayer::Ts() const"
-    )   << "Ts field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "Ts field not available for " << type() << abort(FatalError);
 
     return volScalarField::null();
 }
@@ -955,10 +1009,17 @@ const volScalarField& kinematicSingleLayer::Ts() const
 
 const volScalarField& kinematicSingleLayer::Tw() const
 {
-    FatalErrorIn
-    (
-        "const volScalarField& kinematicSingleLayer::Tw() const"
-    )   << "Tw field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "Tw field not available for " << type() << abort(FatalError);
+
+    return volScalarField::null();
+}
+
+
+const volScalarField& kinematicSingleLayer::hs() const
+{
+    FatalErrorInFunction
+        << "hs field not available for " << type() << abort(FatalError);
 
     return volScalarField::null();
 }
@@ -966,10 +1027,8 @@ const volScalarField& kinematicSingleLayer::Tw() const
 
 const volScalarField& kinematicSingleLayer::Cp() const
 {
-    FatalErrorIn
-    (
-        "const volScalarField& kinematicSingleLayer::Cp() const"
-    )   << "Cp field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "Cp field not available for " << type() << abort(FatalError);
 
     return volScalarField::null();
 }
@@ -977,10 +1036,8 @@ const volScalarField& kinematicSingleLayer::Cp() const
 
 const volScalarField& kinematicSingleLayer::kappa() const
 {
-    FatalErrorIn
-    (
-        "const volScalarField& kinematicSingleLayer::kappa() const"
-    )   << "kappa field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "kappa field not available for " << type() << abort(FatalError);
 
     return volScalarField::null();
 }
@@ -988,23 +1045,7 @@ const volScalarField& kinematicSingleLayer::kappa() const
 
 tmp<volScalarField> kinematicSingleLayer::primaryMassTrans() const
 {
-    return tmp<volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "kinematicSingleLayer::primaryMassTrans",
-                time().timeName(),
-                primaryMesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            primaryMesh(),
-            dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
-        )
-    );
+    return primaryMassTrans_;
 }
 
 
@@ -1020,20 +1061,28 @@ const volScalarField& kinematicSingleLayer::cloudDiameterTrans() const
 }
 
 
-void kinematicSingleLayer::info() const
+void kinematicSingleLayer::info()
 {
     Info<< "\nSurface film: " << type() << endl;
 
-    Info<< indent << "added mass         = "
-        << returnReduce<scalar>(addedMassTotal_, sumOp<scalar>()) << nl
+    const scalarField& deltaInternal = delta_;
+    const vectorField& Uinternal = U_;
+    scalar addedMassTotal = 0.0;
+    outputProperties().readIfPresent("addedMassTotal", addedMassTotal);
+    addedMassTotal += returnReduce(addedMassTotal_, sumOp<scalar>());
+
+    Info<< indent << "added mass         = " << addedMassTotal << nl
         << indent << "current mass       = "
         << gSum((deltaRho_*magSf())()) << nl
-        << indent << "min/max(mag(U))    = " << min(mag(U_)).value() << ", "
-        << max(mag(U_)).value() << nl
-        << indent << "min/max(delta)     = " << min(delta_).value() << ", "
-        << max(delta_).value() << nl;
+        << indent << "min/max(mag(U))    = " << gMin(mag(Uinternal)) << ", "
+        << gMax(mag(Uinternal)) << nl
+        << indent << "min/max(delta)     = " << gMin(deltaInternal) << ", "
+        << gMax(deltaInternal) << nl
+        << indent << "coverage           = "
+        << gSum(alpha_.internalField()*magSf())/gSum(magSf()) <<  nl;
 
     injection_.info(Info);
+    transfer_.info(Info);
 }
 
 
@@ -1045,7 +1094,7 @@ tmp<DimensionedField<scalar, volMesh> > kinematicSingleLayer::Srho() const
         (
             IOobject
             (
-                "kinematicSingleLayer::Srho",
+                typeName + ":Srho",
                 time().timeName(),
                 primaryMesh(),
                 IOobject::NO_READ,
@@ -1070,7 +1119,7 @@ tmp<DimensionedField<scalar, volMesh> > kinematicSingleLayer::Srho
         (
             IOobject
             (
-                "kinematicSingleLayer::Srho(" + CML::name(i) + ")",
+                typeName + ":Srho(" + CML::name(i) + ")",
                 time().timeName(),
                 primaryMesh(),
                 IOobject::NO_READ,
@@ -1092,7 +1141,7 @@ tmp<DimensionedField<scalar, volMesh> > kinematicSingleLayer::Sh() const
         (
             IOobject
             (
-                "kinematicSingleLayer::Sh",
+                typeName + ":Sh",
                 time().timeName(),
                 primaryMesh(),
                 IOobject::NO_READ,

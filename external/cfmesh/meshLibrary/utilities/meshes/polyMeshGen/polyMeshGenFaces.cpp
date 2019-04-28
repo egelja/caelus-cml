@@ -61,8 +61,8 @@ polyMeshGenFaces::polyMeshGenFaces(const Time& runTime)
     boundaries_(),
     faceSubsets_(),
     nIntFaces_(0),
-    ownerPtr_(NULL),
-    neighbourPtr_(NULL)
+    ownerPtr_(nullptr),
+    neighbourPtr_(nullptr)
 {}
 
 //- Construct from components without the boundary
@@ -89,8 +89,8 @@ polyMeshGenFaces::polyMeshGenFaces
     boundaries_(),
     faceSubsets_(),
     nIntFaces_(0),
-    ownerPtr_(NULL),
-    neighbourPtr_(NULL)
+    ownerPtr_(nullptr),
+    neighbourPtr_(nullptr)
 {}
 
 //- Construct from components with the boundary
@@ -120,20 +120,12 @@ polyMeshGenFaces::polyMeshGenFaces
     boundaries_(),
     faceSubsets_(),
     nIntFaces_(0),
-    ownerPtr_(NULL),
-    neighbourPtr_(NULL)
+    ownerPtr_(nullptr),
+    neighbourPtr_(nullptr)
 {
     if( Pstream::parRun() )
-        FatalErrorIn
-        (
-            "polyMeshGenFaces::polyMeshGenFaces("
-            "const Time& runTime,"
-            "const pointField& points,"
-            "const faceList& faces,"
-            "const wordList& patchNames,"
-            "const labelList& patchStart,"
-            "const labelList& nFacesInPatch)"
-        ) << "Cannot do this in parallel!" << exit(FatalError);
+        FatalErrorInFunction
+          << "Cannot do this in parallel!" << exit(FatalError);
 
     boundaries_.setSize(patchNames.size());
     forAll(patchNames, patchI)
@@ -230,10 +222,8 @@ word polyMeshGenFaces::getPatchName(const label patchID) const
 {
     if((patchID < 0) || (patchID >= boundaries_.size()))
     {
-         FatalErrorIn
-         (
-             "polyMeshGenFaces::getPatchName(const label patchID) const"
-         )   << "invalid patch ID supplied"
+         FatalErrorInFunction
+             << "invalid patch ID supplied"
              << abort(FatalError);
     }
 
@@ -248,7 +238,7 @@ labelList polyMeshGenFaces::findPatches(const word& patchName) const
 
     if(patchIDs.empty())
     {
-        WarningIn("polyMeshGenFaces::findPatches(const word&)")
+        WarningInFunction
             << "Cannot find any patch names matching " << patchName << endl;
     }
 

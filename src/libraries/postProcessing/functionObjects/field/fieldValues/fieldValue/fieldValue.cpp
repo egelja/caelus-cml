@@ -88,16 +88,8 @@ CML::fieldValue::fieldValue
     }
     else
     {
-        WarningIn
-        (
-            "fieldValue::fieldValue"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name << nl
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name << nl
             << endl;
         active_ = false;
     }

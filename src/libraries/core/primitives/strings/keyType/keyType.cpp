@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,7 +89,7 @@ CML::Istream& CML::operator>>(Istream& is, keyType& kw)
         if (kw.empty())
         {
             is.setBad();
-            FatalIOErrorIn("operator>>(Istream&, keyType&)", is)
+            FatalIOErrorInFunction(is)
                 << "empty word/expression "
                 << exit(FatalIOError);
             return is;
@@ -98,7 +98,7 @@ CML::Istream& CML::operator>>(Istream& is, keyType& kw)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, keyType&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected word or string, found "
             << t.info()
             << exit(FatalIOError);

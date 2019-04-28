@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -182,25 +182,25 @@ CML::label CML::cellDistFuncs::getPointNeighbours
 
             if (!nbs.found(nb))
             {
-                SeriousErrorIn("CML::cellDistFuncs::getPointNeighbours")
+                SeriousErrorInFunction
                     << "getPointNeighbours : patchFaceI:" << patchFaceI
                     << " verts:" << f << endl;
 
                 forAll(f, fp)
                 {
-                    SeriousErrorIn("CML::cellDistFuncs::getPointNeighbours")
+                    SeriousErrorInFunction
                         << "point:" << f[fp] << " pointFaces:"
                         << patch.pointFaces()[f[fp]] << endl;
                 }
 
                 for (label i = 0; i < nNeighbours; i++)
                 {
-                    SeriousErrorIn("CML::cellDistFuncs::getPointNeighbours")
+                    SeriousErrorInFunction
                         << "fast nbr:" << neighbours[i]
                         << endl;
                 }
 
-                FatalErrorIn("getPointNeighbours")
+                FatalErrorInFunction
                     << "Problem: fast pointNeighbours routine included " << nb
                     << " which is not in proper neighbour list " << nbs.toc()
                     << abort(FatalError);
@@ -210,7 +210,7 @@ CML::label CML::cellDistFuncs::getPointNeighbours
 
         if (nbs.size())
         {
-            FatalErrorIn("getPointNeighbours")
+            FatalErrorInFunction
                 << "Problem: fast pointNeighbours routine did not find "
                 << nbs.toc() << abort(FatalError);
         }

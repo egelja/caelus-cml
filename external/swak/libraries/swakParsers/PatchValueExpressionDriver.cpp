@@ -102,11 +102,11 @@ label getPatchID(const fvMesh &mesh,const word &name)
 {
     label result=mesh.boundaryMesh().findPatchID(name);
     if(result<0) {
-        FatalErrorIn("getPatchID(const fvMesh &mesh,const word &name)")
+        FatalErrorInFunction
             << "The patch " << name << " was not found in "
-                << mesh.boundaryMesh().names()
-                << endl
-                << exit(FatalError);
+            << mesh.boundaryMesh().names()
+            << endl
+            << exit(FatalError);
 
     }
     return result;
@@ -476,22 +476,22 @@ const word PatchValueExpressionDriver::getInterpolationScheme(const word &name)
     if(mappingInterpolationSchemes_.found(name)) {
         return word(mappingInterpolationSchemes_.lookup(name));
     } else if(mappingInterpolationSchemes_.found("default")) {
-        WarningIn("PatchValueExpressionDriver::getInterpolationScheme(const word &name)")
+        WarningInFunction
             << "No entry for " << name << " in "
-                << mappingInterpolationSchemes_.name()
-                << ". Using 'default'"
-                << endl;
+            << mappingInterpolationSchemes_.name()
+            << ". Using 'default'"
+            << endl;
 
         word scheme(word(mappingInterpolationSchemes_.lookup("default")));
         mappingInterpolationSchemes_.add(name,scheme);
 
         return scheme;
     } else {
-        FatalErrorIn("PatchValueExpressionDriver::getInterpolationScheme(const word &name)")
+        FatalErrorInFunction
             << "No entry for " << name << " or 'default' in "
-                << mappingInterpolationSchemes_.name()
-                << endl
-                << exit(FatalError);
+            << mappingInterpolationSchemes_.name()
+            << endl
+            << exit(FatalError);
     }
 
     return word("nixDaGefunden");
@@ -538,10 +538,10 @@ autoPtr<ExpressionResult> PatchValueExpressionDriver::getRemoteResult(
     }
 
     if(driver.result().isPoint()) {
-        WarningIn("PatchValueExpressionDriver::getRemoteResult")
+        WarningInFunction
             << "Can not map point fields (though everyting else "
-                << "is OK for mapping"
-                << endl;
+            << "is OK for mapping"
+            << endl;
         return CommonValueExpressionDriver::getRemoteResult(otherDriver);
     }
 
@@ -590,11 +590,11 @@ autoPtr<ExpressionResult> PatchValueExpressionDriver::getRemoteResult(
             )
         );
     } else {
-        FatalErrorIn("")
+        FatalErrorInFunction
             << "Mapping for result type " << driver.result().valueType()
-                << " undefined"
-                << endl
-                << exit(FatalError);
+            << " undefined"
+            << endl
+            << exit(FatalError);
         return autoPtr<ExpressionResult>(); // this should never be reached
     }
 }
@@ -611,11 +611,11 @@ tmp<scalarField> PatchValueExpressionDriver::weightsNonPoint(
         Pout << "Expected size: " << size
             << " Face size: " << faceSize << endl;
 
-        FatalErrorIn("PatchValueExpressionDriver::weightsNonPoint")
+        FatalErrorInFunction
             << "Can not construct weight field of the expected size. "
-                << " For sizes on the processors see above"
-                << endl
-                << exit(FatalError);
+            << " For sizes on the processors see above"
+            << endl
+            << exit(FatalError);
     }
 
     return tmp<scalarField>(new scalarField(patch().magSf()));

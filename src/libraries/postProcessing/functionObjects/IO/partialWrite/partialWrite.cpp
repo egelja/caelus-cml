@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2014-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -75,7 +75,7 @@ void CML::partialWrite::read(const dictionary& dict)
 
     if (writeInterval_ < 1)
     {
-        FatalIOErrorIn("partialWrite::read(const dictionary&)", dict)
+        FatalIOErrorInFunction(dict)
             << "Illegal value for writeInterval " << writeInterval_
             << ". It should be >= 1."
             << exit(FatalIOError);

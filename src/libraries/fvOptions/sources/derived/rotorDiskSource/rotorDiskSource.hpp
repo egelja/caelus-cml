@@ -42,7 +42,6 @@ Description
     rotorDiskSourceCoeffs
     {
         fieldNames      (U);    // names of fields on which to apply source
-        rhoName         rho;    // density field if compressible case
         nBlades         3;      // number of blades
         tipEffect       0.96;   // normalised radius above which lift = 0
 
@@ -154,10 +153,7 @@ protected:
 
     // Protected data
 
-    //- Name of density field
-    word rhoName_;
-
-    //- Reference density for rhoName = 'none'
+    //- Reference density for incompressible case
     scalar rhoRef_;
 
     //- Rotor Debug Mode
@@ -264,6 +260,7 @@ public:
     //- Runtime type information
     TypeName("rotorDisk");
 
+
     // Constructors
 
     //- Construct from components
@@ -283,7 +280,7 @@ public:
     // Member Functions
 
         // Access
-        //- Return the reference density for rhoName = 'none'
+        //- Return the reference density for incompressible case
         inline scalar rhoRef() const;
 
         //- Return the cell centre positions in local rotor frame
@@ -296,12 +293,6 @@ public:
         //- Return the rotational speed [rad/s]
         //  Positive anti-clockwise when looking along -ve lift direction
         inline scalar omega() const;
-
-        //- Return true if solving a compressible case
-        inline bool compressible() const;
-
-        //- Return the density field [kg/m3]
-        inline tmp<volScalarField> rho() const;
 
         // Evaluation
         //- Calculate forces
@@ -379,25 +370,6 @@ CML::scalar CML::fv::rotorDiskSource::omega() const
     return omega;
 }
 
-
-bool CML::fv::rotorDiskSource::compressible() const
-{
-    return rhoName_ != "none";
-}
-
-
-CML::tmp<CML::volScalarField> CML::fv::rotorDiskSource::rho() const
-{
-    if (compressible())
-    {
-        return mesh_.lookupObject<volScalarField>(rhoName_);
-    }
-    else
-    {
-        return volScalarField::null();
-    }
-}
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "volFields.hpp"
@@ -417,8 +389,6 @@ void CML::fv::rotorDiskSource::calculate
 {
     const vectorField& C = mesh_.C();
     const scalarField& V = mesh_.V();
-
-    const bool compressible = this->compressible();
 
     // Logging info
     scalar dragEff = 0.0;
@@ -442,7 +412,8 @@ void CML::fv::rotorDiskSource::calculate
     {
         if (area_[i] > ROOTVSMALL)
         {
-            const label cellI = cells_[i];
+            const label celli = cells_[i];
+
             const scalar radius = x_[i].x();
             const scalar psi = x_[i].y();
 
@@ -450,7 +421,7 @@ void CML::fv::rotorDiskSource::calculate
             // This assumes that the Uz is the same as the rotorDiskPlane normal axis.
 
             // Aligning U to the pitch bank angle plane
-            vector Upb = PB_ & U[cellI];
+            vector Upb = PB_ & U[celli];
             vector Uc = vector
                 (
                     Upb.x()*cos(psi)+Upb.y()*sin(psi), -Upb.x()*sin(psi)+Upb.y()*cos(psi), Upb.z()
@@ -533,16 +504,7 @@ void CML::fv::rotorDiskSource::calculate
             scalar tipFactor = neg(radius/rMax_ - tipEffect_);
 
             // Calculate forces perpendicular to blade
-            scalar pDyn = 0.5*magSqr(Uc);
-
-	        if (compressible)
-	        {
-                pDyn *= rho[cellI];
-	        }
-	        else
-	        {
-		        pDyn *= rhoRef_;
-	        }
+            scalar pDyn = 0.5*rho[celli]*magSqr(Uc);
 
             scalar f = pDyn*chord*nBlades_*area_[i]/radius/mathematical::twoPi;
 
@@ -553,18 +515,18 @@ void CML::fv::rotorDiskSource::calculate
             vector localForce = vector(0.0, -ftc, fnc);
 
             // Accumulate forces
-            dragEff += localForce.y();
-            liftEff += localForce.z();
+            dragEff += rhoRef_*localForce.y();
+            liftEff += rhoRef_*localForce.z();
 
             if (rotorDebug_)
             {
                 if (i == 0)
                 {
-                    Info << "CellI    psi    radius    alphaEff    "
+                    Info << "Celli    psi    radius    alphaEff    "
                          << "eps    Cl    Cd     f    fn    fth" << nl << endl;
                 }
 
-                Info << cellI << "    " << psiList_[cellI] << "    " << radius << "    "
+                Info << celli << "    " << psiList_[celli] << "    " << radius << "    "
                      << radToDeg(alphaEff) << "    "
                      << radToDeg(eps) << "    "
                      << Cl << "    " << Cd << "    "
@@ -584,11 +546,11 @@ void CML::fv::rotorDiskSource::calculate
                     localForce.z()
                 );
 
-            force[cellI] = invPB_ & localForce;
-            vector moment = force[cellI]^(C[cellI] - coordSys_.origin());
+            force[celli] = invPB_ & localForce;
+            vector moment = force[celli]^(C[celli] - coordSys_.origin());
 
             // Calculate global thrust
-            totalThrust += force[cellI] & coordSys_.R().e3();
+            totalThrust += force[celli] & coordSys_.R().e3();
             totalPitchingMoment += moment & coordSys_.R().e2();
             totalRollingMoment += moment & coordSys_.R().e1();
             totalRotorTorque += moment & coordSys_.R().e3();
@@ -596,7 +558,7 @@ void CML::fv::rotorDiskSource::calculate
             if (divideVolume)
             {
                 // Calculate momentum source
-                force[cellI] /= V[cellI];
+                force[celli] /= V[celli];
             }
         }
     }
@@ -680,14 +642,14 @@ void CML::fv::rotorDiskSource::writeField
 
         if (cells_.size() != values.size())
         {
-            FatalErrorIn("") << "cells_.size() != values_.size()"
+            FatalErrorInFunction << "cells_.size() != values_.size()"
                 << abort(FatalError);
         }
 
         forAll(cells_, i)
         {
-            const label cellI = cells_[i];
-            fld[cellI] = values[i];
+            const label celli = cells_[i];
+            fld[celli] = values[i];
         }
 
         tfld().write();

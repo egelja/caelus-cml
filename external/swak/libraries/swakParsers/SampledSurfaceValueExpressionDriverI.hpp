@@ -128,10 +128,10 @@ namespace CML {
         }
 
         if(!result.valid()) {
-            FatalErrorIn("SampledSurfaceValueExpressionDriver::sampleOrInterpolateInternal(const word &name)")
+            FatalErrorInFunction
                 << "No valid result"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
 
         if(debug) {

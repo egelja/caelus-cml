@@ -54,6 +54,9 @@ private:
         //- Copy of the original patch face areas
         mutable vectorField faceAreas0_;
 
+        //- Fraction of face area below which face is considered disconnected
+        static const scalar tolerance_;
+
         //- Name of non-overlapping patch
         const word nonOverlapPatchName_;
 
@@ -71,9 +74,6 @@ private:
 
 
 protected:
-
-        static const scalar tolerance_;
-
 
     // Protected Member Functions
 
@@ -269,6 +269,8 @@ public:
             //- Mask field where 1 = overlap, 0 = no-overlap
             inline const scalarField& mask() const;
 
+            //- Overlap tolerance
+            inline static scalar tolerance();
 
             // Interpolations
 
@@ -396,6 +398,12 @@ inline const CML::scalarField& CML::cyclicACMIPolyPatch::mask() const
     {
         return neighbPatch().tgtMask();
     }
+}
+
+
+inline CML::scalar CML::cyclicACMIPolyPatch::tolerance()
+{
+    return tolerance_;
 }
 
 

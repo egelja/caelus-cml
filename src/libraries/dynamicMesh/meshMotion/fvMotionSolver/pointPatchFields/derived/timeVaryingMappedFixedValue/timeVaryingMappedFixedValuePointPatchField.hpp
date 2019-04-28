@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -218,7 +218,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(iF.name()),
     setAverage_(false),
     perturb_(0),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -246,7 +246,7 @@ timeVaryingMappedFixedValuePointPatchField
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
     mapMethod_(ptf.mapMethod_),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -258,7 +258,7 @@ timeVaryingMappedFixedValuePointPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -285,7 +285,7 @@ timeVaryingMappedFixedValuePointPatchField
             "planarInterpolation"
         )
     ),
-    mapperPtr_(NULL),
+    mapperPtr_(nullptr),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -345,7 +345,7 @@ timeVaryingMappedFixedValuePointPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -376,7 +376,7 @@ timeVaryingMappedFixedValuePointPatchField
     (
         ptf.offset_.valid()
       ? ptf.offset_().clone().ptr()
-      : NULL
+      : nullptr
     )
 {}
 
@@ -527,10 +527,8 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
 
     if (!foundTime)
     {
-        FatalErrorIn
-        (
-            "timeVaryingMappedFixedValuePointPatchField<Type>::checkTable"
-        )   << "Cannot find starting sampling values for current time "
+        FatalErrorInFunction
+            << "Cannot find starting sampling values for current time "
             << this->db().time().value() << nl
             << "Have sampling values for times "
             << pointToPointPlanarInterpolation::timeNames(sampleTimes_) << nl
@@ -592,11 +590,8 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
 
             if (vals.size() != mapperPtr_().sourceSize())
             {
-                FatalErrorIn
-                (
-                    "timeVaryingMappedFixedValuePointPatchField<Type>::"
-                    "checkTable()"
-                )   << "Number of values (" << vals.size()
+                FatalErrorInFunction
+                    << "Number of values (" << vals.size()
                     << ") differs from the number of points ("
                     <<  mapperPtr_().sourceSize()
                     << ") in file " << vals.objectPath() << exit(FatalError);
@@ -649,11 +644,8 @@ void CML::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
 
             if (vals.size() != mapperPtr_().sourceSize())
             {
-                FatalErrorIn
-                (
-                    "timeVaryingMappedFixedValuePointPatchField<Type>::"
-                    "checkTable()"
-                )   << "Number of values (" << vals.size()
+                FatalErrorInFunction
+                    << "Number of values (" << vals.size()
                     << ") differs from the number of points ("
                     <<  mapperPtr_().sourceSize()
                     << ") in file " << vals.objectPath() << exit(FatalError);

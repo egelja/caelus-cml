@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,17 +65,7 @@ bool CML::mapNearestMethod::findInitialSeeds
             }
             else
             {
-                FatalErrorIn
-                (
-                    "bool CML::mapNearestMethod::findInitialSeeds"
-                    "("
-                        "const labelList&, "
-                        "const boolList&, "
-                        "const label, "
-                        "label&, "
-                        "label&"
-                    ") const"
-                )
+                FatalErrorInFunction
                     << "Unable to find nearest target cell"
                     << " for source cell " << srcI
                     << " with centre " << srcCc

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,7 @@ inline Type& CML::regIOobject::store(Type* tPtr)
 {
     if (!tPtr)
     {
-        FatalErrorIn("Type& regIOobject::store(Type*)")
+        FatalErrorInFunction
             << "object deallocated"
             << abort(FatalError);
     }
@@ -56,11 +56,9 @@ inline Type& CML::regIOobject::store(autoPtr<Type>& atPtr)
 
     if (!tPtr)
     {
-        FatalErrorIn
-            (
-                "Type& regIOobject::store(autoPtr<Type>&)"
-            )   << "object deallocated"
-                << abort(FatalError);
+        FatalErrorInFunction
+            << "object deallocated"
+            << abort(FatalError);
     }
 
     tPtr->regIOobject::ownedByRegistry_ = true;

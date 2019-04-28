@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,11 +38,8 @@ CML::autoPtr<CML::coordinateSystem> CML::coordinateSystem::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "coordinateSystem::New(const objectRegistry&, const dictionary&)",
-            dict
-        )   << "Unknown coordinateSystem type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown coordinateSystem type "
             << coordType << nl << nl
             << "Valid coordinateSystem types are :" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

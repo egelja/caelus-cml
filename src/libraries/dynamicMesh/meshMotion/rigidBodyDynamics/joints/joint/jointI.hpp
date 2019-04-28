@@ -66,10 +66,7 @@ inline CML::quaternion CML::RBD::joint::unitQuaternion
 {
     if (!unitQuaternion())
     {
-        FatalErrorIn
-        (
-            "RBD::joint::unitQuaternion(const scalarField&) const"
-        )
+        FatalErrorInFunction
             << "Attempt to get the quaternion for a non-spherical joint"
             << abort(FatalError);
     }
@@ -86,10 +83,7 @@ inline void CML::RBD::joint::unitQuaternion
 {
     if (!unitQuaternion())
     {
-        FatalErrorIn
-        (
-            "RBD::joint::unitQuaternion(const scalarField&) const"
-        )
+        FatalErrorInFunction
             << "Attempt to set quaternion for a non-spherical joint"
             << abort(FatalError);
     }

@@ -54,12 +54,12 @@ CML::searchableSphereWithFix::searchableSphereWithFix
     centre_(dict.lookup("centre")),
     radius_(readScalar(dict.lookup("radius")))
 {
-    WarningIn("searchableSphereWithFix::searchableSphereWithFix")
+    WarningInFunction
         << "This class is only a workaround for the original"
-            << " searchableSphere-implementation which cause a division "
-            << "by zero and is present in OF up to 2.2. Should not be used "
-            << "for versions where this is fixed"
-            << endl;
+        << " searchableSphere-implementation which cause a division "
+        << "by zero and is present in OF up to 2.2. Should not be used "
+        << "for versions where this is fixed"
+        << endl;
 }
 
 

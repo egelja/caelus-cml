@@ -21,7 +21,7 @@ License
 #include "relaxation.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvm.hpp"
-#include "LESModel.hpp"
+#include "compressibleLESModel.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -53,7 +53,10 @@ CML::reactionRateFlameAreaModels::relaxation::relaxation
     reactionRateFlameArea(modelType, dict, mesh, combModel),
     correlation_(dict.subDict(typeName + "Coeffs").subDict(fuel_)),
     C_(readScalar(dict.subDict(typeName + "Coeffs").lookup("C"))),
-    alpha_(readScalar(dict.subDict(typeName + "Coeffs").lookup("alpha")))
+    alpha_
+    (
+        readScalar(dict.subDict(typeName + "Coeffs").lookup("alpha"))
+    )
 {}
 
 
@@ -70,7 +73,6 @@ void CML::reactionRateFlameAreaModels::relaxation::correct
     const volScalarField& sigma
 )
 {
-
     dimensionedScalar omega0
     (
         "omega0",
@@ -92,13 +94,19 @@ void CML::reactionRateFlameAreaModels::relaxation::correct
         1e-4
     );
 
-    const compressible::LESModel& lesModel =
-        omega_.db().lookupObject<compressible::LESModel>("LESProperties");
+    dimensionedScalar kMin
+    (
+        "kMin",
+        sqr(dimVelocity),
+        SMALL
+    );
 
-    // Total strain : resolved and sub-grid (just LES for now)
+    const compressible::turbulenceModel& turbulence = combModel_.turbulence();
+
+    // Total strain
     const volScalarField sigmaTotal
     (
-        sigma + alpha_*lesModel.epsilon()/(lesModel.k() + lesModel.kMin())
+        sigma + alpha_*turbulence.epsilon()/(turbulence.k() + kMin)
     );
 
     const volScalarField omegaInf(correlation_.omega0Sigma(sigmaTotal));
@@ -113,8 +121,9 @@ void CML::reactionRateFlameAreaModels::relaxation::correct
        /(sqr(omega0 - omegaInf) + sqr(omegaMin))
     );
 
-    const volScalarField rho(combModel_.rho());
-    const surfaceScalarField phi(combModel_.phi());
+    const volScalarField& rho = combModel_.rho();
+    const tmp<surfaceScalarField> tphi = combModel_.phi();
+    const surfaceScalarField& phi = tphi();
 
     solve
     (
@@ -151,5 +160,3 @@ bool  CML::reactionRateFlameAreaModels::relaxation::read
         return false;
     }
 }
-
-// ************************************************************************* //

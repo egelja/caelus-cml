@@ -8,21 +8,14 @@ target = 'reactionThermophysicalModels'
 sources = Split("""
 chemistryReaders/chemistryReader/makeChemistryReaders.cpp
 mixtures/basicMultiComponentMixture/basicMultiComponentMixture.cpp
-combustionThermo/hCombustionThermo/hCombustionThermo.cpp
-combustionThermo/hCombustionThermo/hCombustionThermoNew.cpp
-combustionThermo/hCombustionThermo/hCombustionThermos.cpp
-combustionThermo/hsCombustionThermo/hsCombustionThermo.cpp
-combustionThermo/hsCombustionThermo/hsCombustionThermoNew.cpp
-combustionThermo/hsCombustionThermo/hsCombustionThermos.cpp
-combustionThermo/hhuCombustionThermo/hhuCombustionThermo.cpp
-combustionThermo/hhuCombustionThermo/hhuCombustionThermoNew.cpp
-combustionThermo/hhuCombustionThermo/hhuCombustionThermos.cpp
-reactionThermo/hReactionThermo/hReactionThermo.cpp
-reactionThermo/hReactionThermo/hReactionThermoNew.cpp
-reactionThermo/hReactionThermo/hReactionThermos.cpp
-reactionThermo/hsReactionThermo/hsReactionThermo.cpp
-reactionThermo/hsReactionThermo/hsReactionThermoNew.cpp
-reactionThermo/hsReactionThermo/hsReactionThermos.cpp
+mixtures/basicSpecieMixture/basicSpecieMixture.cpp
+mixtures/basicCombustionMixture/basicCombustionMixture.cpp
+psiReactionThermo/psiReactionThermo.cpp
+psiReactionThermo/psiReactionThermos.cpp
+psiuReactionThermo/psiuReactionThermo.cpp
+psiuReactionThermo/psiuReactionThermos.cpp
+rhoReactionThermo/rhoReactionThermo.cpp
+rhoReactionThermo/rhoReactionThermos.cpp
 derivedFvPatchFields/fixedUnburntEnthalpy/fixedUnburntEnthalpyFvPatchScalarField.cpp
 derivedFvPatchFields/gradientUnburntEnthalpy/gradientUnburntEnthalpyFvPatchScalarField.cpp
 derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField.cpp
@@ -30,13 +23,15 @@ derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField
 
 caelus_inc = [
 'thermophysicalModels/specie/lnInclude',
-'thermophysicalModels/basic/lnInclude'
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/solidSpecie/lnInclude'
 ]
 
 caelus_libs = [
 'core',
 'specie',
-'basicThermophysicalModels'
+'solidSpecie',
+'fluidThermophysicalModels'
 ]
 
 build_lib(env,

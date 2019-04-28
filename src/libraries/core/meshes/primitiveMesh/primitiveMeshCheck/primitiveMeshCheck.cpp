@@ -713,11 +713,8 @@ bool CML::primitiveMesh::checkFaceAngles
 
     if (maxDeg < -SMALL || maxDeg > 180+SMALL)
     {
-        FatalErrorIn
-        (
-            "primitiveMesh::checkFaceAngles"
-            "(const bool, const scalar, labelHashSet*)"
-        )   << "maxDeg should be [0..180] but is now " << maxDeg
+        FatalErrorInFunction
+            << "maxDeg should be [0..180] but is now " << maxDeg
             << exit(FatalError);
     }
 
@@ -802,11 +799,8 @@ bool CML::primitiveMesh::checkFaceFlatness
 
     if (warnFlatness < 0 || warnFlatness > 1)
     {
-        FatalErrorIn
-        (
-            "primitiveMesh::checkFaceFlatness"
-            "(const bool, const scalar, labelHashSet*)"
-        )   << "warnFlatness should be [0..1] but is now " << warnFlatness
+        FatalErrorInFunction
+            << "warnFlatness should be [0..1] but is now " << warnFlatness
             << exit(FatalError);
     }
 

@@ -86,7 +86,7 @@ public:
         gaussGrad(const fvMesh& mesh, Istream& is)
         :
             gradScheme<Type>(mesh),
-            tinterpScheme_(NULL)
+            tinterpScheme_(nullptr)
         {
             if (is.eof())
             {
@@ -155,7 +155,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "zeroGradientFvPatchField.hpp"
+#include "extrapolatedCalculatedFvPatchField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -198,7 +198,7 @@ CML::fv::gaussGrad<Type>::gradf
                 ssf.dimensions()/dimLength,
                 pTraits<GradType>::zero
             ),
-            zeroGradientFvPatchField<GradType>::typeName
+            extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
     );
     GeometricField<GradType, fvPatchField, volMesh>& gGrad = tgGrad();

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2013 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -365,20 +365,7 @@ void CML::nastranSurfaceWriter::writeTemplate
 {
     if (!fieldMap_.found(fieldName))
     {
-        WarningIn
-        (
-            "void CML::nastranSurfaceWriter::writeTemplate"
-            "("
-                "const fileName&, "
-                "const fileName&, "
-                "const pointField&, "
-                "const faceList&, "
-                "const word&, "
-                "const Field<Type>&, "
-                "const bool, "
-                "const bool"
-            ") const"
-        )
+        WarningInFunction
             << "No mapping found between field " << fieldName
             << " and corresponding Nastran field.  Available types are:"
             << fieldMap_

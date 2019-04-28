@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::forceList
+    CML::regionModels::surfaceFilmModels::forceList
 
 Description
     List container for film sources
@@ -56,12 +56,12 @@ public:
     // Constructors
 
         //- Construct null
-        forceList(const surfaceFilmModel& owner);
+        forceList(surfaceFilmRegionModel& film);
 
         //- Construct from type name, dictionary and surface film model
         forceList
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

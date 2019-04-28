@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -99,7 +99,7 @@ void CML::IDDESDelta::calcDelta()
     }
     else if (nD == 2)
     {
-        WarningIn("IDDESDelta::calcDelta()")
+        WarningInFunction
             << "Case is 2D, LES is not strictly applicable\n"
             << endl;
 
@@ -113,7 +113,7 @@ void CML::IDDESDelta::calcDelta()
     }
     else
     {
-        FatalErrorIn("IDDESDelta::calcDelta()")
+        FatalErrorInFunction
             << "Case is not 3D or 2D, LES is not strictly applicable"
             << exit(FatalError);
     }

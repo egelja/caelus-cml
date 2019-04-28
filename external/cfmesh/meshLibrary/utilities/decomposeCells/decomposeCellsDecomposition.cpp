@@ -213,10 +213,8 @@ void decomposeCells::addNewCells()
             if( bf == faces[pointFaces(bf[0], pfI)] )
                 found = true;
         if( !found )
-            FatalErrorIn
-            (
-                "void decomposeCells::addNewCells()"
-            ) << "Face " << bf << " does not exist in the mesh"
+            FatalErrorInFunction
+                << "Face " << bf << " does not exist in the mesh"
                 << abort(FatalError);
         #endif
 

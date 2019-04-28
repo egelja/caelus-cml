@@ -91,10 +91,8 @@ void exportFeatureEdges
     file << nl;
 
     if( !file )
-        FatalErrorIn
-        (
-            "void exportFeatureEdges(const triSurf&, const fileName&)"
-        ) << "Writting of feature edges failed!" << exit(FatalError);
+        FatalErrorInFunction
+            << "Writting of feature edges failed!" << exit(FatalError);
 }
 
 int main(int argc, char *argv[])

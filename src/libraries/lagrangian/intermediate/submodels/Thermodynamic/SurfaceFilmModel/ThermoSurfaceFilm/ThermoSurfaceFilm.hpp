@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ Description
         Bai and Gosman, `Mathematical modelling of wall films formed by
         impinging sprays', SAE 960626, 1996
 
-        Bai et al, `Modelling off gasoline spray impingement', Atom. Sprays,
+        Bai et al, `Modelling of gasoline spray impingement', Atom. Sprays,
         vol 12, pp 1-27, 2002
 
 
@@ -94,7 +94,7 @@ protected:
         typedef typename CloudType::parcelType parcelType;
 
         //- Reference to the cloud random number generator
-        cachedRandom& rndGen_;
+        Random& rndGen_;
 
         //- Reference to the cloud thermo package
         const SLGThermo& thermo_;
@@ -164,10 +164,10 @@ protected:
             //- Absorb parcel into film
             void absorbInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
-                const label faceI,
+                const label facei,
                 const scalar mass,
                 bool& keepParticle
             );
@@ -177,37 +177,37 @@ protected:
             (
                 parcelType& p,
                 const polyPatch& pp,
-                const label faceI,
+                const label facei,
                 bool& keepParticle
             ) const;
 
             //- Parcel interaction with dry surface
             void drySplashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
-                const label faceI,
+                const label facei,
                 bool& keepParticle
             );
 
             //- Parcel interaction with wetted surface
             void wetSplashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 parcelType& p,
                 const polyPatch& pp,
-                const label faceI,
+                const label facei,
                 bool& keepParticle
             );
 
             //- Bai parcel splash interaction model
             void splashInteraction
             (
-                regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+                regionModels::surfaceFilmModels::surfaceFilmRegionModel&,
                 const parcelType& p,
                 const polyPatch& pp,
-                const label faceI,
+                const label facei,
                 const scalar mRatio,
                 const scalar We,
                 const scalar Wec,
@@ -221,9 +221,9 @@ protected:
             //- Cache the film fields in preparation for injection
             virtual void cacheFilmFields
             (
-                const label filmPatchI,
-                const label primaryPatchI,
-                const regionModels::surfaceFilmModels::surfaceFilmModel&
+                const label filmPatchi,
+                const label primaryPatchi,
+                const regionModels::surfaceFilmModels::surfaceFilmRegionModel&
                     filmModel
             );
 
@@ -231,7 +231,7 @@ protected:
             virtual void setParcelProperties
             (
                 parcelType& p,
-                const label filmFaceI
+                const label filmFacei
             ) const;
 
 
@@ -317,14 +317,8 @@ CML::ThermoSurfaceFilm<CloudType>::interactionTypeEnum(const word& it) const
         }
     }
 
-    FatalErrorIn
-    (
-        "ThermoSurfaceFilm<CloudType>::interactionType "
-        "ThermoSurfaceFilm<CloudType>::interactionTypeEnum"
-        "("
-            "const word& it"
-        ") const"
-    )   << "Unknown interaction type " << it
+    FatalErrorInFunction
+        << "Unknown interaction type " << it
         << ". Valid interaction types include: " << interactionTypeNames_
         << abort(FatalError);
 
@@ -340,19 +334,15 @@ CML::word CML::ThermoSurfaceFilm<CloudType>::interactionTypeStr
 {
     if (it >= interactionTypeNames_.size())
     {
-        FatalErrorIn
-        (
-            "ThermoSurfaceFilm<CloudType>::interactionType "
-            "ThermoSurfaceFilm<CloudType>::interactionTypeStr"
-            "("
-                "const interactionType& it"
-            ") const"
-        )   << "Unknown interaction type enumeration" << abort(FatalError);
+        FatalErrorInFunction
+            << "Unknown interaction type enumeration" << abort(FatalError);
     }
 
     return interactionTypeNames_[it];
 }
 
+
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 template<class CloudType>
 CML::vector CML::ThermoSurfaceFilm<CloudType>::tangentVector
@@ -360,7 +350,7 @@ CML::vector CML::ThermoSurfaceFilm<CloudType>::tangentVector
     const vector& v
 ) const
 {
-    vector tangent = vector::zero;
+    vector tangent = Zero;
     scalar magTangent = 0.0;
 
     while (magTangent < SMALL)
@@ -382,13 +372,13 @@ CML::vector CML::ThermoSurfaceFilm<CloudType>::splashDirection
     const vector& nf
 ) const
 {
-    // azimuthal angle [rad]
+    // Azimuthal angle [rad]
     const scalar phiSi = twoPi*rndGen_.sample01<scalar>();
 
-    // ejection angle [rad]
+    // Ejection angle [rad]
     const scalar thetaSi = pi/180.0*(rndGen_.sample01<scalar>()*(50 - 5) + 5);
 
-    // direction vector of new parcel
+    // Direction vector of new parcel
     const scalar alpha = sin(thetaSi);
     const scalar dcorr = cos(thetaSi);
     const vector normal = alpha*(tanVec1*cos(phiSi) + tanVec2*sin(phiSi));
@@ -402,10 +392,10 @@ CML::vector CML::ThermoSurfaceFilm<CloudType>::splashDirection
 template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::absorbInteraction
 (
-    regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+    regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
     const parcelType& p,
     const polyPatch& pp,
-    const label faceI,
+    const label facei,
     const scalar mass,
     bool& keepParticle
 )
@@ -416,10 +406,10 @@ void CML::ThermoSurfaceFilm<CloudType>::absorbInteraction
     }
 
     // Patch face normal
-    const vector& nf = pp.faceNormals()[faceI];
+    const vector& nf = pp.faceNormals()[facei];
 
     // Patch velocity
-    const vector& Up = this->owner().U().boundaryField()[pp.index()][faceI];
+    const vector& Up = this->owner().U().boundaryField()[pp.index()][facei];
 
     // Relative parcel velocity
     const vector Urel = p.U() - Up;
@@ -433,7 +423,7 @@ void CML::ThermoSurfaceFilm<CloudType>::absorbInteraction
     filmModel.addSources
     (
         pp.index(),
-        faceI,
+        facei,
         mass,                           // mass
         mass*Ut,                        // tangential momentum
         mass*mag(Un),                   // impingement pressure
@@ -451,7 +441,7 @@ void CML::ThermoSurfaceFilm<CloudType>::bounceInteraction
 (
     parcelType& p,
     const polyPatch& pp,
-    const label faceI,
+    const label facei,
     bool& keepParticle
 ) const
 {
@@ -461,10 +451,10 @@ void CML::ThermoSurfaceFilm<CloudType>::bounceInteraction
     }
 
     // Patch face normal
-    const vector& nf = pp.faceNormals()[faceI];
+    const vector& nf = pp.faceNormals()[facei];
 
     // Patch velocity
-    const vector& Up = this->owner().U().boundaryField()[pp.index()][faceI];
+    const vector& Up = this->owner().U().boundaryField()[pp.index()][facei];
 
     // Relative parcel velocity
     const vector Urel = p.U() - Up;
@@ -479,10 +469,10 @@ void CML::ThermoSurfaceFilm<CloudType>::bounceInteraction
 template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::drySplashInteraction
 (
-    regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+    regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
     const parcelType& p,
     const polyPatch& pp,
-    const label faceI,
+    const label facei,
     bool& keepParticle
 )
 {
@@ -494,10 +484,10 @@ void CML::ThermoSurfaceFilm<CloudType>::drySplashInteraction
     const liquidProperties& liq = thermo_.liquids().properties()[0];
 
     // Patch face velocity and normal
-    const vector& Up = this->owner().U().boundaryField()[pp.index()][faceI];
-    const vector& nf = pp.faceNormals()[faceI];
+    const vector& Up = this->owner().U().boundaryField()[pp.index()][facei];
+    const vector& nf = pp.faceNormals()[facei];
 
-    // local pressure
+    // Local pressure
     const scalar pc = thermo_.thermo().p()[p.cell()];
 
     // Retrieve parcel properties
@@ -518,16 +508,16 @@ void CML::ThermoSurfaceFilm<CloudType>::drySplashInteraction
     // Critical Weber number
     const scalar Wec = Adry_*pow(La, -0.183);
 
-    if (We < Wec) // adhesion - assume absorb
+    if (We < Wec) // Adhesion - assume absorb
     {
-        absorbInteraction(filmModel, p, pp, faceI, m, keepParticle);
+        absorbInteraction(filmModel, p, pp, facei, m, keepParticle);
     }
-    else // splash
+    else // Splash
     {
-        // ratio of incident mass to splashing mass
+        // Ratio of incident mass to splashing mass
         const scalar mRatio = 0.2 + 0.6*rndGen_.sample01<scalar>();
         splashInteraction
-            (filmModel, p, pp, faceI, mRatio, We, Wec, sigma, keepParticle);
+            (filmModel, p, pp, facei, mRatio, We, Wec, sigma, keepParticle);
     }
 }
 
@@ -535,10 +525,10 @@ void CML::ThermoSurfaceFilm<CloudType>::drySplashInteraction
 template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::wetSplashInteraction
 (
-    regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+    regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
     parcelType& p,
     const polyPatch& pp,
-    const label faceI,
+    const label facei,
     bool& keepParticle
 )
 {
@@ -550,10 +540,10 @@ void CML::ThermoSurfaceFilm<CloudType>::wetSplashInteraction
     const liquidProperties& liq = thermo_.liquids().properties()[0];
 
     // Patch face velocity and normal
-    const vector& Up = this->owner().U().boundaryField()[pp.index()][faceI];
-    const vector& nf = pp.faceNormals()[faceI];
+    const vector& Up = this->owner().U().boundaryField()[pp.index()][facei];
+    const vector& nf = pp.faceNormals()[facei];
 
-    // local pressure
+    // Local pressure
     const scalar pc = thermo_.thermo().p()[p.cell()];
 
     // Retrieve parcel properties
@@ -576,35 +566,35 @@ void CML::ThermoSurfaceFilm<CloudType>::wetSplashInteraction
     // Critical Weber number
     const scalar Wec = Awet_*pow(La, -0.183);
 
-    if (We < 1) // adhesion - assume absorb
+    if (We < 2) // Adhesion - assume absorb
     {
-        absorbInteraction(filmModel, p, pp, faceI, m, keepParticle);
+        absorbInteraction(filmModel, p, pp, facei, m, keepParticle);
     }
-    else if ((We >= 1) && (We < 20)) // bounce
+    else if ((We >= 2) && (We < 20)) // Bounce
     {
-        // incident angle of impingement
+        // Incident angle of impingement
         const scalar theta = pi/2 - acos(U/mag(U) & nf);
 
-        // restitution coefficient
+        // Restitution coefficient
         const scalar epsilon = 0.993 - theta*(1.76 - theta*(1.56 - theta*0.49));
 
-        // update parcel velocity
-        U = -epsilon*(Un) + 5/7*(Ut);
+        // Update parcel velocity
+        U = -epsilon*(Un) + 5.0/7.0*(Ut);
 
         keepParticle = true;
         return;
     }
-    else if ((We >= 20) && (We < Wec)) // spread - assume absorb
+    else if ((We >= 20) && (We < Wec)) // Spread - assume absorb
     {
-        absorbInteraction(filmModel, p, pp, faceI, m, keepParticle);
+        absorbInteraction(filmModel, p, pp, facei, m, keepParticle);
     }
-    else    // splash
+    else    // Splash
     {
-        // ratio of incident mass to splashing mass
+        // Ratio of incident mass to splashing mass
         // splash mass can be > incident mass due to film entrainment
         const scalar mRatio = 0.2 + 0.9*rndGen_.sample01<scalar>();
         splashInteraction
-            (filmModel, p, pp, faceI, mRatio, We, Wec, sigma, keepParticle);
+            (filmModel, p, pp, facei, mRatio, We, Wec, sigma, keepParticle);
     }
 }
 
@@ -612,10 +602,10 @@ void CML::ThermoSurfaceFilm<CloudType>::wetSplashInteraction
 template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
 (
-    regionModels::surfaceFilmModels::surfaceFilmModel& filmModel,
+    regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel,
     const parcelType& p,
     const polyPatch& pp,
-    const label faceI,
+    const label facei,
     const scalar mRatio,
     const scalar We,
     const scalar Wec,
@@ -625,8 +615,8 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
 {
     // Patch face velocity and normal
     const fvMesh& mesh = this->owner().mesh();
-    const vector& Up = this->owner().U().boundaryField()[pp.index()][faceI];
-    const vector& nf = pp.faceNormals()[faceI];
+    const vector& Up = this->owner().U().boundaryField()[pp.index()][facei];
+    const vector& nf = pp.faceNormals()[facei];
 
     // Determine direction vectors tangential to patch normal
     const vector tanVec1 = tangentVector(nf);
@@ -640,26 +630,26 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
     const vector Un = nf*(Urel & nf);
     const vector Ut = Urel - Un;
     const vector& posC = mesh.C()[p.cell()];
-    const vector& posCf = mesh.Cf().boundaryField()[pp.index()][faceI];
+    const vector& posCf = mesh.Cf().boundaryField()[pp.index()][facei];
 
-    // total mass of (all) splashed parcels
+    // Total mass of (all) splashed parcels
     const scalar mSplash = m*mRatio;
 
-    // number of splashed particles per incoming particle
+    // Number of splashed particles per incoming particle
     const scalar Ns = 5.0*(We/Wec - 1.0);
 
-    // average diameter of splashed particles
+    // Average diameter of splashed particles
     const scalar dBarSplash = 1/cbrt(6.0)*cbrt(mRatio/Ns)*d + ROOTVSMALL;
 
-    // cumulative diameter splash distribution
+    // Cumulative diameter splash distribution
     const scalar dMax = 0.9*cbrt(mRatio)*d;
     const scalar dMin = 0.1*dMax;
     const scalar K = exp(-dMin/dBarSplash) - exp(-dMax/dBarSplash);
 
-    // surface energy of secondary parcels [J]
+    // Surface energy of secondary parcels [J]
     scalar ESigmaSec = 0;
 
-    // sample splash distribution to detrmine secondary parcel diameters
+    // Sample splash distribution to determine secondary parcel diameters
     scalarList dNew(parcelsPerSplash_);
     scalarList npNew(parcelsPerSplash_);
     forAll(dNew, i)
@@ -670,26 +660,26 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
         ESigmaSec += npNew[i]*sigma*p.areaS(dNew[i]);
     }
 
-    // incident kinetic energy [J]
-    const scalar EKIn = 0.5*m*magSqr(Urel);
+    // Incident kinetic energy [J]
+    const scalar EKIn = 0.5*m*magSqr(Un);
 
-    // incident surface energy [J]
+    // Incident surface energy [J]
     const scalar ESigmaIn = np*sigma*p.areaS(d);
 
-    // dissipative energy
+    // Dissipative energy
     const scalar Ed = max(0.8*EKIn, np*Wec/12*pi*sigma*sqr(d));
 
-    // total energy [J]
+    // Total energy [J]
     const scalar EKs = EKIn + ESigmaIn - ESigmaSec - Ed;
 
-    // switch to absorb if insufficient energy for splash
+    // Switch to absorb if insufficient energy for splash
     if (EKs <= 0)
     {
-        absorbInteraction(filmModel, p, pp, faceI, m, keepParticle);
+        absorbInteraction(filmModel, p, pp, facei, m, keepParticle);
         return;
     }
 
-    // helper variables to calculate magUns0
+    // Helper variables to calculate magUns0
     const scalar logD = log(d);
     const scalar coeff2 = log(dNew[0]) - logD + ROOTVSMALL;
     scalar coeff1 = 0.0;
@@ -698,7 +688,7 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
         coeff1 += sqr(log(dNew[i]) - logD);
     }
 
-    // magnitude of the normal velocity of the first splashed parcel
+    // Magnitude of the normal velocity of the first splashed parcel
     const scalar magUns0 =
         sqrt(2.0*parcelsPerSplash_*EKs/mSplash/(1.0 + coeff1/sqr(coeff2)));
 
@@ -719,8 +709,8 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
             pPtr->typeId() = splashParcelType_;
         }
 
-        // perturb new parcels towards the owner cell centre
-        pPtr->position() += 0.5*rndGen_.sample01<scalar>()*(posC - posCf);
+        // Perturb new parcels towards the owner cell centre
+        pPtr->track(0.5*rndGen_.sample01<scalar>()*(posC - posCf), 0);
 
         pPtr->nParticle() = npNew[i];
 
@@ -737,10 +727,10 @@ void CML::ThermoSurfaceFilm<CloudType>::splashInteraction
         nParcelsSplashed_++;
     }
 
-    // transfer remaining part of parcel to film 0 - splashMass can be -ve
+    // Transfer remaining part of parcel to film 0 - splashMass can be -ve
     // if entraining from the film
     const scalar mDash = m - mSplash;
-    absorbInteraction(filmModel, p, pp, faceI, mDash, keepParticle);
+    absorbInteraction(filmModel, p, pp, facei, mDash, keepParticle);
 }
 
 
@@ -830,72 +820,65 @@ bool CML::ThermoSurfaceFilm<CloudType>::transferParcel
 )
 {
     // Retrieve the film model from the owner database
-    regionModels::surfaceFilmModels::surfaceFilmModel& filmModel =
-        const_cast<regionModels::surfaceFilmModels::surfaceFilmModel&>
+    regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel =
+        const_cast<regionModels::surfaceFilmModels::surfaceFilmRegionModel&>
         (
             this->owner().db().time().objectRegistry::template
-                lookupObject<regionModels::surfaceFilmModels::surfaceFilmModel>
+                lookupObject<regionModels::surfaceFilmModels::surfaceFilmRegionModel>
                 (
                     "surfaceFilmProperties"
                 )
         );
 
-    const label patchI = pp.index();
+    const label patchi = pp.index();
 
-    if (filmModel.isRegionPatch(patchI))
+    if (filmModel.isRegionPatch(patchi))
     {
-        const label faceI = pp.whichFace(p.face());
+        const label facei = pp.whichFace(p.face());
 
         switch (interactionType_)
         {
             case itBounce:
             {
-                bounceInteraction(p, pp, faceI, keepParticle);
+                bounceInteraction(p, pp, facei, keepParticle);
 
                 break;
             }
             case itAbsorb:
             {
                 const scalar m = p.nParticle()*p.mass();
-                absorbInteraction(filmModel, p, pp, faceI, m, keepParticle);
+                absorbInteraction(filmModel, p, pp, facei, m, keepParticle);
 
                 break;
             }
             case itSplashBai:
             {
-                bool dry = this->deltaFilmPatch_[patchI][faceI] < deltaWet_;
+                bool dry = this->deltaFilmPatch_[patchi][facei] < deltaWet_;
 
                 if (dry)
                 {
-                    drySplashInteraction(filmModel, p, pp, faceI, keepParticle);
+                    drySplashInteraction(filmModel, p, pp, facei, keepParticle);
                 }
                 else
                 {
-                    wetSplashInteraction(filmModel, p, pp, faceI, keepParticle);
+                    wetSplashInteraction(filmModel, p, pp, facei, keepParticle);
                 }
 
                 break;
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "bool ThermoSurfaceFilm<CloudType>::transferParcel"
-                    "("
-                        "parcelType&, "
-                        "const polyPatch&, "
-                        "bool&"
-                    ")"
-                )   << "Unknown interaction type enumeration"
+                FatalErrorInFunction
+                    << "Unknown interaction type enumeration"
                     << abort(FatalError);
             }
         }
 
-        // transfer parcel/parcel interactions complete
+        // Transfer parcel/parcel interactions complete
         return true;
     }
 
-    // parcel not interacting with film
+    // Parcel not interacting with film
     return false;
 }
 
@@ -903,23 +886,23 @@ bool CML::ThermoSurfaceFilm<CloudType>::transferParcel
 template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::cacheFilmFields
 (
-    const label filmPatchI,
-    const label primaryPatchI,
-    const regionModels::surfaceFilmModels::surfaceFilmModel& filmModel
+    const label filmPatchi,
+    const label primaryPatchi,
+    const regionModels::surfaceFilmModels::surfaceFilmRegionModel& filmModel
 )
 {
     SurfaceFilmModel<CloudType>::cacheFilmFields
     (
-        filmPatchI,
-        primaryPatchI,
+        filmPatchi,
+        primaryPatchi,
         filmModel
     );
 
-    TFilmPatch_ = filmModel.Ts().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, TFilmPatch_);
+    TFilmPatch_ = filmModel.Ts().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, TFilmPatch_);
 
-    CpFilmPatch_ = filmModel.Cp().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, CpFilmPatch_);
+    CpFilmPatch_ = filmModel.Cp().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, CpFilmPatch_);
 }
 
 
@@ -927,14 +910,14 @@ template<class CloudType>
 void CML::ThermoSurfaceFilm<CloudType>::setParcelProperties
 (
     parcelType& p,
-    const label filmFaceI
+    const label filmFacei
 ) const
 {
-    SurfaceFilmModel<CloudType>::setParcelProperties(p, filmFaceI);
+    SurfaceFilmModel<CloudType>::setParcelProperties(p, filmFacei);
 
     // Set parcel properties
-    p.T() = TFilmPatch_[filmFaceI];
-    p.Cp() = CpFilmPatch_[filmFaceI];
+    p.T() = TFilmPatch_[filmFacei];
+    p.Cp() = CpFilmPatch_[filmFacei];
 }
 
 

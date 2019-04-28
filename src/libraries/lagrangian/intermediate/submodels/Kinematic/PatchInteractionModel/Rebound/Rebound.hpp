@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -86,9 +86,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         );
 };
 
@@ -135,9 +133,7 @@ bool CML::Rebound<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
-    bool& keepParticle,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    bool& keepParticle
 )
 {
     vector& U = p.U();
@@ -148,7 +144,7 @@ bool CML::Rebound<CloudType>::correct
     vector nw;
     vector Up;
 
-    this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
+    this->owner().patchData(p, pp, nw, Up);
 
     // Calculate motion relative to patch velocity
     U -= Up;

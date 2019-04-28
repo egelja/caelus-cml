@@ -216,8 +216,8 @@ public:
         //- Clone
         autoPtr<sampledSet> clone() const
         {
-            notImplemented("autoPtr<sampledSet> clone() const");
-            return autoPtr<sampledSet>(NULL);
+            NotImplemented;
+            return autoPtr<sampledSet>(nullptr);
         }
 
 

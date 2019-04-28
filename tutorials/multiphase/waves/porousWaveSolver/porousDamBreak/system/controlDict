@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -51,21 +51,7 @@ maxDeltaT       1;
 
 functions
 {
-    surfaceElevation
-    {
-        type               surfaceElevation;
-        functionObjectLibs ( "libwavesSampling.so" );
-
-        outputControl      timeStep; // Alternative: outputTime
-        outputInterval     2;
-
-        setFormat          raw;
-        interpolationScheme cellPointFace;
-        fields (alpha1);
-
-        #includeIfPresent "../waveGaugesNProbes/surfaceElevation_sets";
-
-    }
+   #includeIfPresent "../waveGaugesNProbes/surfaceElevation_controlDict";
 }
 
 // ************************************************************************* //

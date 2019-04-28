@@ -57,10 +57,8 @@ void CML::attachDetach::checkDefinition()
      || !slavePatchID_.active()
     )
     {
-        FatalErrorIn
-        (
-            "void CML::attachDetach::checkDefinition()"
-        )   << "Not all zones and patches needed in the definition "
+        FatalErrorInFunction
+            << "Not all zones and patches needed in the definition "
             << "have been found.  Please check your mesh definition."
             << abort(FatalError);
     }
@@ -93,10 +91,8 @@ void CML::attachDetach::checkDefinition()
         // Check if there are faces in the master zone
         if (mesh.faceZones()[faceZoneID_.index()].empty())
         {
-            FatalErrorIn
-            (
-                "void CML::attachDetach::checkDefinition()"
-            )   << "Attach/detach zone contains no faces.  Please check your "
+            FatalErrorInFunction
+                << "Attach/detach zone contains no faces.  Please check your "
                 << "mesh definition."
                 << abort(FatalError);
         }
@@ -118,10 +114,8 @@ void CML::attachDetach::checkDefinition()
 
             if (bouFacesInZone.size())
             {
-                FatalErrorIn
-                (
-                    "void CML::attachDetach::checkDefinition()"
-                )   << "Found boundary faces in the zone defining "
+                FatalErrorInFunction
+                    << "Found boundary faces in the zone defining "
                     << "attach/detach boundary "
                     << " for object " << name()
                     << " : .  This is not allowed." << nl
@@ -154,10 +148,8 @@ void CML::attachDetach::checkDefinition()
             )
         )
         {
-            FatalErrorIn
-            (
-                "void CML::attachDetach::checkDefinition()"
-            )   << "Problem with sizes in mesh modifier. The face zone,"
+            FatalErrorInFunction
+                << "Problem with sizes in mesh modifier. The face zone,"
                 << " master and slave patch should have the same size"
                 << " for object " << name() << ". " << nl
                 << "Zone size: "
@@ -193,10 +185,8 @@ void CML::attachDetach::checkDefinition()
 
             if (zoneProblemFaces.size())
             {
-                FatalErrorIn
-                (
-                    "void CML::attachDetach::checkDefinition()"
-                )   << "Found faces in the zone defining "
+                FatalErrorInFunction
+                    << "Found faces in the zone defining "
                     << "attach/detach boundary which do not belong to "
                     << "either master or slave patch.  "
                     << "This is not allowed." << nl
@@ -220,10 +210,8 @@ void CML::attachDetach::checkDefinition()
      || (triggerTimes_.empty() && !manualTrigger())
     )
     {
-        FatalErrorIn
-        (
-            "void CML::attachDetach::checkDefinition()"
-        )   << "Problem with definition of trigger times: "
+        FatalErrorInFunction
+            << "Problem with definition of trigger times: "
             << triggerTimes_
             << abort(FatalError);
     }
@@ -260,7 +248,7 @@ CML::attachDetach::attachDetach
     triggerIndex_(0),
     state_(UNKNOWN),
     trigger_(false),
-    pointMatchMapPtr_(NULL)
+    pointMatchMapPtr_(nullptr)
 {
     checkDefinition();
 }
@@ -296,7 +284,7 @@ CML::attachDetach::attachDetach
     triggerIndex_(0),
     state_(UNKNOWN),
     trigger_(false),
-    pointMatchMapPtr_(NULL)
+    pointMatchMapPtr_(nullptr)
 {
     checkDefinition();
 }
@@ -435,10 +423,8 @@ void CML::attachDetach::setRefinement(polyTopoChange& ref) const
         }
         else
         {
-            FatalErrorIn
-            (
-                "void attachDetach::setRefinement(polyTopoChange&) const"
-            )   << "Requested attach/detach event and currect state "
+            FatalErrorInFunction
+                << "Requested attach/detach event and currect state "
                 << "is not known."
                 << abort(FatalError);
         }

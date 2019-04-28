@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,12 +27,17 @@ License
 #include "OFstream.hpp"
 #include "Random.hpp"
 #include "treeDataFace.hpp"
+#include "treeDataPoint.hpp"
 #include "indexedOctree.hpp"
 #include "polyMesh.hpp"
 #include "polyPatch.hpp"
 #include "Time.hpp"
 #include "mapDistribute.hpp"
 #include "SubField.hpp"
+#include "triPointRef.hpp"
+#include "syncTools.hpp"
+#include "treeDataCell.hpp"
+#include "DynamicField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,13 +49,15 @@ namespace CML
     const char* CML::NamedEnum
     <
         CML::mappedPatchBase::sampleMode,
-        4
+        6
     >::names[] =
     {
         "nearestCell",
         "nearestPatchFace",
         "nearestPatchFaceAMI",
-        "nearestFace"
+        "nearestPatchPoint",
+        "nearestFace",
+        "nearestOnlyCell"
     };
 
     template<>
@@ -67,7 +74,7 @@ namespace CML
 }
 
 
-const CML::NamedEnum<CML::mappedPatchBase::sampleMode, 4>
+const CML::NamedEnum<CML::mappedPatchBase::sampleMode, 6>
     CML::mappedPatchBase::sampleModeNames_;
 
 const CML::NamedEnum<CML::mappedPatchBase::offsetMode, 3>
@@ -90,18 +97,19 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::facePoints
     tmp<pointField> tfacePoints(new pointField(patch_.size()));
     pointField& facePoints = tfacePoints();
 
-    forAll(pp, faceI)
+    forAll(pp, facei)
     {
-        facePoints[faceI] = facePoint
+        facePoints[facei] = facePoint
         (
             mesh,
-            pp.start()+faceI,
+            pp.start()+facei,
             polyMesh::FACEDIAGTETS
         ).rawPoint();
     }
 
     return tfacePoints;
 }
+
 
 void CML::mappedPatchBase::collectSamples
 (
@@ -162,11 +170,11 @@ void CML::mappedPatchBase::collectSamples
         patchFaceProcs.setSize(patchFaces.size());
 
         label sampleI = 0;
-        forAll(nPerProc, procI)
+        forAll(nPerProc, proci)
         {
-            for (label i = 0; i < nPerProc[procI]; i++)
+            for (label i = 0; i < nPerProc[proci]; i++)
             {
-                patchFaceProcs[sampleI++] = procI;
+                patchFaceProcs[sampleI++] = proci;
             }
         }
     }
@@ -195,39 +203,34 @@ void CML::mappedPatchBase::findSamples
         {
             if (samplePatch_.size() && samplePatch_ != "none")
             {
-                FatalErrorIn
-                (
-                    "mappedPatchBase::findSamples(const pointField&,"
-                    " labelList&, labelList&, pointField&) const"
-                )   << "No need to supply a patch name when in "
+                FatalErrorInFunction
+                    << "No need to supply a patch name when in "
                     << sampleModeNames_[mode_] << " mode." << exit(FatalError);
             }
 
-            // Octree based search engine. Uses min tetDecomp so force
-            // calculation
-            (void)mesh.tetBasePtIs();
-            meshSearch meshSearchEngine(mesh);
+            //- Note: face-diagonal decomposition
+            const indexedOctree<CML::treeDataCell>& tree = mesh.cellTree();
 
             forAll(samples, sampleI)
             {
                 const point& sample = samples[sampleI];
 
-                label cellI = meshSearchEngine.findCell(sample);
+                label celli = tree.findInside(sample);
 
-                if (cellI == -1)
+                if (celli == -1)
                 {
                     nearest[sampleI].second().first() = CML::sqr(GREAT);
                     nearest[sampleI].second().second() = Pstream::myProcNo();
                 }
                 else
                 {
-                    const point& cc = mesh.cellCentres()[cellI];
+                    const point& cc = mesh.cellCentres()[celli];
 
                     nearest[sampleI].first() = pointIndexHit
                     (
                         true,
                         cc,
-                        cellI
+                        celli
                     );
                     nearest[sampleI].second().first() = magSqr(cc-sample);
                     nearest[sampleI].second().second() = Pstream::myProcNo();
@@ -236,10 +239,35 @@ void CML::mappedPatchBase::findSamples
             break;
         }
 
+        case NEARESTONLYCELL:
+        {
+            if (samplePatch_.size() && samplePatch_ != "none")
+            {
+                FatalErrorInFunction
+                    << "No need to supply a patch name when in "
+                    << sampleModeNames_[mode_] << " mode." << exit(FatalError);
+            }
+
+            //- Note: face-diagonal decomposition
+            const indexedOctree<CML::treeDataCell>& tree = mesh.cellTree();
+
+            forAll(samples, sampleI)
+            {
+                const point& sample = samples[sampleI];
+
+                nearest[sampleI].first() = tree.findNearest(sample, sqr(GREAT));
+                nearest[sampleI].second().first() = magSqr
+                (
+                    nearest[sampleI].first().hitPoint()
+                   -sample
+                );
+                nearest[sampleI].second().second() = Pstream::myProcNo();
+            }
+            break;
+        }
+
         case NEARESTPATCHFACE:
         {
-            Random rndGen(123456);
-
             const polyPatch& pp = samplePolyPatch();
 
             if (pp.empty())
@@ -257,14 +285,8 @@ void CML::mappedPatchBase::findSamples
 
                 treeBoundBox patchBb
                 (
-                    treeBoundBox(pp.points(), pp.meshPoints()).extend
-                    (
-                        rndGen,
-                        1E-4
-                    )
+                    treeBoundBox(pp.points(), pp.meshPoints()).extend(1e-4)
                 );
-                patchBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-                patchBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
 
                 indexedOctree<treeDataFace> boundaryTree
                 (
@@ -310,15 +332,75 @@ void CML::mappedPatchBase::findSamples
             break;
         }
 
+        case NEARESTPATCHPOINT:
+        {
+            const polyPatch& pp = samplePolyPatch();
+
+            if (pp.empty())
+            {
+                forAll(samples, sampleI)
+                {
+                    nearest[sampleI].second().first() = CML::sqr(GREAT);
+                    nearest[sampleI].second().second() = Pstream::myProcNo();
+                }
+            }
+            else
+            {
+                // patch (local) points
+                treeBoundBox patchBb
+                (
+                    treeBoundBox(pp.points(), pp.meshPoints()).extend(1e-4)
+                );
+
+                indexedOctree<treeDataPoint> boundaryTree
+                (
+                    treeDataPoint   // all information needed to search faces
+                    (
+                        mesh.points(),
+                        pp.meshPoints() // selection of points to search on
+                    ),
+                    patchBb,        // overall search domain
+                    8,              // maxLevel
+                    10,             // leafsize
+                    3.0             // duplicity
+                );
+
+                forAll(samples, sampleI)
+                {
+                    const point& sample = samples[sampleI];
+
+                    pointIndexHit& nearInfo = nearest[sampleI].first();
+                    nearInfo = boundaryTree.findNearest
+                    (
+                        sample,
+                        magSqr(patchBb.span())
+                    );
+
+                    if (!nearInfo.hit())
+                    {
+                        nearest[sampleI].second().first() = CML::sqr(GREAT);
+                        nearest[sampleI].second().second() =
+                            Pstream::myProcNo();
+                    }
+                    else
+                    {
+                        const point& pt = nearInfo.hitPoint();
+
+                        nearest[sampleI].second().first() = magSqr(pt-sample);
+                        nearest[sampleI].second().second() =
+                            Pstream::myProcNo();
+                    }
+                }
+            }
+            break;
+        }
+
         case NEARESTFACE:
         {
-            if (samplePatch_.size() && samplePatch_ != "none")
+            if (samplePatch().size() && samplePatch() != "none")
             {
-                FatalErrorIn
-                (
-                    "mappedPatchBase::findSamples(const pointField&,"
-                    " labelList&, labelList&, pointField&) const"
-                )   << "No need to supply a patch name when in "
+                FatalErrorInFunction
+                    << "No need to supply a patch name when in "
                     << sampleModeNames_[mode_] << " mode." << exit(FatalError);
             }
 
@@ -329,22 +411,22 @@ void CML::mappedPatchBase::findSamples
             {
                 const point& sample = samples[sampleI];
 
-                label faceI = meshSearchEngine.findNearestFace(sample);
+                label facei = meshSearchEngine.findNearestFace(sample);
 
-                if (faceI == -1)
+                if (facei == -1)
                 {
                     nearest[sampleI].second().first() = CML::sqr(GREAT);
                     nearest[sampleI].second().second() = Pstream::myProcNo();
                 }
                 else
                 {
-                    const point& fc = mesh.faceCentres()[faceI];
+                    const point& fc = mesh.faceCentres()[facei];
 
                     nearest[sampleI].first() = pointIndexHit
                     (
                         true,
                         fc,
-                        faceI
+                        facei
                     );
                     nearest[sampleI].second().first() = magSqr(fc-sample);
                     nearest[sampleI].second().second() = Pstream::myProcNo();
@@ -361,48 +443,34 @@ void CML::mappedPatchBase::findSamples
 
         default:
         {
-            FatalErrorIn("mappedPatchBase::findSamples(..)")
+            FatalErrorInFunction
                 << "problem." << abort(FatalError);
         }
     }
 
 
-    // Find nearest
+    // Find nearest. Combine on master.
     Pstream::listCombineGather(nearest, nearestEqOp());
     Pstream::listCombineScatter(nearest);
 
+
     if (debug)
     {
-        Info<< "mappedPatchBase::findSamples on mesh " << sampleRegion_
-            << " : " << endl;
+        InfoInFunction
+            << "mesh " << sampleRegion() << " : " << endl;
+
         forAll(nearest, sampleI)
         {
-            label procI = nearest[sampleI].second().second();
+            label proci = nearest[sampleI].second().second();
             label localI = nearest[sampleI].first().index();
 
             Info<< "    " << sampleI << " coord:"<< samples[sampleI]
-                << " found on processor:" << procI
-                << " in local cell/face:" << localI
-                << " with cc:" << nearest[sampleI].first().rawPoint() << endl;
+                << " found on processor:" << proci
+                << " in local cell/face/point:" << localI
+                << " with location:" << nearest[sampleI].first().rawPoint()
+                << endl;
         }
     }
-
-    // Check for samples not being found
-    forAll(nearest, sampleI)
-    {
-        if (!nearest[sampleI].first().hit())
-        {
-            FatalErrorIn
-            (
-                "mappedPatchBase::findSamples"
-                "(const pointField&, labelList&"
-                ", labelList&, pointField&)"
-            )   << "Did not find sample " << samples[sampleI]
-                << " on any processor of region " << sampleRegion_
-                << exit(FatalError);
-        }
-    }
-
 
     // Convert back into proc+local index
     sampleProcs.setSize(samples.size());
@@ -411,18 +479,28 @@ void CML::mappedPatchBase::findSamples
 
     forAll(nearest, sampleI)
     {
-        sampleProcs[sampleI] = nearest[sampleI].second().second();
-        sampleIndices[sampleI] = nearest[sampleI].first().index();
-        sampleLocations[sampleI] = nearest[sampleI].first().hitPoint();
+        if (!nearest[sampleI].first().hit())
+        {
+            sampleProcs[sampleI] = -1;
+            sampleIndices[sampleI] = -1;
+            sampleLocations[sampleI] = vector::max;
+        }
+        else
+        {
+            sampleProcs[sampleI] = nearest[sampleI].second().second();
+            sampleIndices[sampleI] = nearest[sampleI].first().index();
+            sampleLocations[sampleI] = nearest[sampleI].first().hitPoint();
+        }
     }
 }
 
 
 void CML::mappedPatchBase::calcMapping() const
 {
+    static bool hasWarned = false;
     if (mapPtr_.valid())
     {
-        FatalErrorIn("mappedPatchBase::calcMapping() const")
+        FatalErrorInFunction
             << "Mapping already calculated" << exit(FatalError);
     }
 
@@ -430,31 +508,26 @@ void CML::mappedPatchBase::calcMapping() const
     // face-diagonal decomposed tets.
     tmp<pointField> patchPoints(facePoints(patch_));
 
+    // Get offsetted points
+    const pointField offsettedPoints(samplePoints(patchPoints()));
 
     // Do a sanity check - am I sampling my own patch?
     // This only makes sense for a non-zero offset.
     bool sampleMyself =
     (
         mode_ == NEARESTPATCHFACE
-     && sampleRegion_ == patch_.boundaryMesh().mesh().name()
-     && samplePatch_ == patch_.name()
+     && sampleRegion() == patch_.boundaryMesh().mesh().name()
+     && samplePatch() == patch_.name()
     );
 
     // Check offset
-    vectorField d(samplePoints()-patch_.faceCentres());
-    if (sampleMyself && gAverage(mag(d)) <= ROOTVSMALL)
+    vectorField d(offsettedPoints-patchPoints());
+    bool coincident = (gAverage(mag(d)) <= ROOTVSMALL);
+
+    if (sampleMyself && coincident)
     {
-        WarningIn
-        (
-            "mappedPatchBase::mappedPatchBase\n"
-            "(\n"
-            "    const polyPatch& pp,\n"
-            "    const word& sampleRegion,\n"
-            "    const sampleMode mode,\n"
-            "    const word& samplePatch,\n"
-            "    const vector& offset\n"
-            ")\n"
-        )   << "Invalid offset " << d << endl
+        WarningInFunction
+            << "Invalid offset " << d << endl
             << "Offset is the vector added to the patch face centres to"
             << " find the patch face supplying the data." << endl
             << "Setting it to " << d
@@ -462,12 +535,11 @@ void CML::mappedPatchBase::calcMapping() const
             << " will find the faces themselves which does not make sense"
             << " for anything but testing." << endl
             << "patch_:" << patch_.name() << endl
-            << "sampleRegion_:" << sampleRegion_ << endl
+            << "sampleRegion_:" << sampleRegion() << endl
             << "mode_:" << sampleModeNames_[mode_] << endl
-            << "samplePatch_:" << samplePatch_ << endl
+            << "samplePatch_:" << samplePatch() << endl
             << "offsetMode_:" << offsetModeNames_[offsetMode_] << endl;
     }
-
 
     // Get global list of all samples and the processor and face they come from.
     pointField samples;
@@ -489,28 +561,111 @@ void CML::mappedPatchBase::calcMapping() const
     pointField sampleLocations;
     findSamples(samples, sampleProcs, sampleIndices, sampleLocations);
 
+    // Check for samples that were not found. This will only happen for
+    // NEARESTCELL since finds cell containing a location
+    if (mode_ == NEARESTCELL)
+    {
+        label nNotFound = 0;
+        forAll(sampleProcs, sampleI)
+        {
+            if (sampleProcs[sampleI] == -1)
+            {
+                nNotFound++;
+            }
+        }
+        reduce(nNotFound, sumOp<label>());
+
+        if (nNotFound > 0)
+        {
+            if (!hasWarned)
+            {
+                WarningInFunction
+                    << "Did not find " << nNotFound
+                    << " out of " << sampleProcs.size() << " total samples."
+                    << " Sampling these on owner cell centre instead." << endl
+                    << "On patch " << patch_.name()
+                    << " on region " << sampleRegion()
+                    << " in mode " << sampleModeNames_[mode_] << endl
+                    << "with offset mode " << offsetModeNames_[offsetMode_]
+                    << ". Suppressing further warnings from " << type() << endl;
+
+                hasWarned = true;
+            }
+
+            // Collect the samples that cannot be found
+            DynamicList<label> subMap;
+            DynamicField<point> subSamples;
+
+            forAll(sampleProcs, sampleI)
+            {
+                if (sampleProcs[sampleI] == -1)
+                {
+                    subMap.append(sampleI);
+                    subSamples.append(samples[sampleI]);
+                }
+            }
+
+            // And re-search for pure nearest (should not fail)
+            labelList subSampleProcs;
+            labelList subSampleIndices;
+            pointField subSampleLocations;
+            findSamples
+            (
+                subSamples,
+                subSampleProcs,
+                subSampleIndices,
+                subSampleLocations
+            );
+
+            // Insert
+            UIndirectList<label>(sampleProcs, subMap) = subSampleProcs;
+            UIndirectList<label>(sampleIndices, subMap) = subSampleIndices;
+            UIndirectList<point>(sampleLocations, subMap) = subSampleLocations;
+        }
+    }
 
     // Now we have all the data we need:
-    // - where sample originates from (so destination when mapping):
-    //   patchFaces, patchFaceProcs.
-    // - cell/face sample is in (so source when mapping)
-    //   sampleIndices, sampleProcs.
+    //   - where sample originates from (so destination when mapping):
+    //     patchFaces, patchFaceProcs.
+    //   - cell/face sample is in (so source when mapping)
+    //     sampleIndices, sampleProcs.
 
-    //forAll(samples, i)
-    //{
-    //    Info<< i << " need data in region "
-    //        << patch_.boundaryMesh().mesh().name()
-    //        << " for proc:" << patchFaceProcs[i]
-    //        << " face:" << patchFaces[i]
-    //        << " at:" << patchFc[i] << endl
-    //        << "Found data in region " << sampleRegion_
-    //        << " at proc:" << sampleProcs[i]
-    //        << " face:" << sampleIndices[i]
-    //        << " at:" << sampleLocations[i]
-    //        << nl << endl;
-    //}
+    // forAll(samples, i)
+    // {
+    //     Info<< i << " need data in region "
+    //         << patch_.boundaryMesh().mesh().name()
+    //         << " for proc:" << patchFaceProcs[i]
+    //         << " face:" << patchFaces[i]
+    //         << " at:" << patchFc[i] << endl
+    //         << "Found data in region " << sampleRegion()
+    //         << " at proc:" << sampleProcs[i]
+    //         << " face:" << sampleIndices[i]
+    //         << " at:" << sampleLocations[i]
+    //         << nl << endl;
+    // }
 
+    bool mapSucceeded = true;
 
+    forAll(samples, i)
+    {
+        if (sampleProcs[i] == -1)
+        {
+            mapSucceeded = false;
+            break;
+        }
+    }
+
+    if (!mapSucceeded)
+    {
+        FatalErrorInFunction
+            << "Mapping failed for " << nl
+            << "    patch: " << patch_.name() << nl
+            << "    sampleRegion: " << sampleRegion() << nl
+            << "    mode: " << sampleModeNames_[mode_] << nl
+            << "    samplePatch: " << samplePatch() << nl
+            << "    offsetMode: " << offsetModeNames_[offsetMode_]
+            << exit(FatalError);
+    }
 
     if (debug && Pstream::master())
     {
@@ -521,7 +676,8 @@ void CML::mappedPatchBase::calcMapping() const
           + "_mapped.obj"
         );
         Pout<< "Dumping mapping as lines from patch faceCentres to"
-            << " sampled cell/faceCentres to file " << str.name() << endl;
+            << " sampled cell/faceCentres/points to file " << str.name()
+            << endl;
 
         label vertI = 0;
 
@@ -535,7 +691,6 @@ void CML::mappedPatchBase::calcMapping() const
         }
     }
 
-
     // Determine schedule.
     mapPtr_.reset(new mapDistribute(sampleProcs, patchFaceProcs));
 
@@ -545,26 +700,26 @@ void CML::mappedPatchBase::calcMapping() const
     labelListList& subMap = mapPtr_().subMap();
     labelListList& constructMap = mapPtr_().constructMap();
 
-    forAll(subMap, procI)
+    forAll(subMap, proci)
     {
-        subMap[procI] = UIndirectList<label>
+        subMap[proci] = UIndirectList<label>
         (
             sampleIndices,
-            subMap[procI]
+            subMap[proci]
         );
-        constructMap[procI] = UIndirectList<label>
+        constructMap[proci] = UIndirectList<label>
         (
             patchFaces,
-            constructMap[procI]
+            constructMap[proci]
         );
 
-        //if (debug)
+        // if (debug)
         //{
-        //    Pout<< "To proc:" << procI << " sending values of cells/faces:"
-        //        << subMap[procI] << endl;
-        //    Pout<< "From proc:" << procI
+        //    Pout<< "To proc:" << proci << " sending values of cells/faces:"
+        //        << subMap[proci] << endl;
+        //    Pout<< "From proc:" << proci
         //        << " receiving values of patch faces:"
-        //        << constructMap[procI] << endl;
+        //        << constructMap[proci] << endl;
         //}
     }
 
@@ -575,35 +730,35 @@ void CML::mappedPatchBase::calcMapping() const
     {
         // Check that all elements get a value.
         PackedBoolList used(patch_.size());
-        forAll(constructMap, procI)
+        forAll(constructMap, proci)
         {
-            const labelList& map = constructMap[procI];
+            const labelList& map = constructMap[proci];
 
             forAll(map, i)
             {
-                label faceI = map[i];
+                label facei = map[i];
 
-                if (used[faceI] == 0)
+                if (used[facei] == 0)
                 {
-                    used[faceI] = 1;
+                    used[facei] = 1;
                 }
                 else
                 {
-                    FatalErrorIn("mappedPatchBase::calcMapping() const")
+                    FatalErrorInFunction
                         << "On patch " << patch_.name()
-                        << " patchface " << faceI
+                        << " patchface " << facei
                         << " is assigned to more than once."
                         << abort(FatalError);
                 }
             }
         }
-        forAll(used, faceI)
+        forAll(used, facei)
         {
-            if (used[faceI] == 0)
+            if (used[facei] == 0)
             {
-                FatalErrorIn("mappedPatchBase::calcMapping() const")
+                FatalErrorInFunction
                     << "On patch " << patch_.name()
-                    << " patchface " << faceI
+                    << " patchface " << facei
                     << " is never assigned to."
                     << abort(FatalError);
             }
@@ -648,43 +803,39 @@ void CML::mappedPatchBase::calcAMI() const
 {
     if (AMIPtr_.valid())
     {
-        FatalErrorIn("mappedPatchBase::calcAMI() const")
+        FatalErrorInFunction
             << "AMI already calculated" << exit(FatalError);
     }
 
     AMIPtr_.clear();
-/*
-    const polyPatch& nbr = samplePolyPatch();
-
-//    pointField nbrPoints(samplePoints());
-    pointField nbrPoints(nbr.localPoints());
 
     if (debug)
     {
+        const polyPatch& nbr = samplePolyPatch();
+
+        pointField nbrPoints(nbr.localPoints());
+
         OFstream os(patch_.name() + "_neighbourPatch-org.obj");
         meshTools::writeOBJ(os, samplePolyPatch().localFaces(), nbrPoints);
-    }
 
-    // transform neighbour patch to local system
-    primitivePatch nbrPatch0
-    (
-        SubList<face>
+        // transform neighbour patch to local system
+        primitivePatch nbrPatch0
         (
-            nbr.localFaces(),
-            nbr.size()
-        ),
-        nbrPoints
-    );
+            SubList<face>
+            (
+                nbr.localFaces(),
+                nbr.size()
+            ),
+            nbrPoints
+        );
 
-    if (debug)
-    {
         OFstream osN(patch_.name() + "_neighbourPatch-trans.obj");
         meshTools::writeOBJ(osN, nbrPatch0, nbrPoints);
 
         OFstream osO(patch_.name() + "_ownerPatch.obj");
         meshTools::writeOBJ(osO, patch_.localFaces(), patch_.localPoints());
     }
-*/
+
     // Construct/apply AMI interpolation to determine addressing and weights
     AMIPtr_.reset
     (
@@ -735,10 +886,8 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::readListOrField
                 is >> static_cast<List<vector>&>(fld);
                 if (fld.size() != size)
                 {
-                    FatalIOErrorIn
+                    FatalIOErrorInFunction
                     (
-                        "mappedPatchBase::readListOrField"
-                        "(const word& keyword, const dictionary&, const label)",
                         dict
                     )   << "size " << fld.size()
                         << " is not equal to the given value of " << size
@@ -747,10 +896,8 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::readListOrField
             }
             else
             {
-                FatalIOErrorIn
+                FatalIOErrorInFunction
                 (
-                    "mappedPatchBase::readListOrField"
-                    "(const word& keyword, const dictionary&, const label)",
                     dict
                 )   << "expected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.wordToken()
@@ -761,13 +908,11 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::readListOrField
         {
             if (is.version() == 2.0)
             {
-                IOWarningIn
+                IOWarningInFunction
                 (
-                    "mappedPatchBase::readListOrField"
-                    "(const word& keyword, const dictionary&, const label)",
                     dict
                 )   << "expected keyword 'uniform' or 'nonuniform', "
-                       "assuming List format for backwards compatibility. "
+                       "assuming List format for backwards compatibility."
                        "CML version 2.0." << endl;
 
                 is.putBack(firstToken);
@@ -789,16 +934,17 @@ CML::mappedPatchBase::mappedPatchBase
     patch_(pp),
     sampleRegion_(patch_.boundaryMesh().mesh().name()),
     mode_(NEARESTPATCHFACE),
-    samplePatch_("none"),
+    samplePatch_(""),
+    coupleGroup_(),
     offsetMode_(UNIFORM),
-    offset_(vector::zero),
+    offset_(Zero),
     offsets_(pp.size(), offset_),
     distance_(0),
     sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(false),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(fileName("surface"))
 {}
 
@@ -816,15 +962,16 @@ CML::mappedPatchBase::mappedPatchBase
     sampleRegion_(sampleRegion),
     mode_(mode),
     samplePatch_(samplePatch),
+    coupleGroup_(),
     offsetMode_(NONUNIFORM),
-    offset_(vector::zero),
+    offset_(Zero),
     offsets_(offsets),
     distance_(0),
     sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(false),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(fileName("surface"))
 {}
 
@@ -842,15 +989,16 @@ CML::mappedPatchBase::mappedPatchBase
     sampleRegion_(sampleRegion),
     mode_(mode),
     samplePatch_(samplePatch),
+    coupleGroup_(),
     offsetMode_(UNIFORM),
     offset_(offset),
     offsets_(0),
     distance_(0),
     sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(false),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(fileName("surface"))
 {}
 
@@ -868,15 +1016,16 @@ CML::mappedPatchBase::mappedPatchBase
     sampleRegion_(sampleRegion),
     mode_(mode),
     samplePatch_(samplePatch),
+    coupleGroup_(),
     offsetMode_(NORMAL),
-    offset_(vector::zero),
+    offset_(Zero),
     offsets_(0),
     distance_(distance),
     sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(false),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(fileName("surface"))
 {}
 
@@ -888,27 +1037,31 @@ CML::mappedPatchBase::mappedPatchBase
 )
 :
     patch_(pp),
-    sampleRegion_
-    (
-        dict.lookupOrDefault
-        (
-            "sampleRegion",
-            patch_.boundaryMesh().mesh().name()
-        )
-    ),
+    sampleRegion_(dict.lookupOrDefault<word>("sampleRegion", "")),
     mode_(sampleModeNames_.read(dict.lookup("sampleMode"))),
-    samplePatch_(dict.lookup("samplePatch")),
+    samplePatch_(dict.lookupOrDefault<word>("samplePatch", "")),
+    coupleGroup_(dict),
     offsetMode_(UNIFORM),
-    offset_(vector::zero),
+    offset_(Zero),
     offsets_(0),
     distance_(0.0),
     sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(dict.lookupOrDefault<bool>("flipNormals", false)),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(dict.subOrEmptyDict("surface"))
 {
+    if (!coupleGroup_.valid())
+    {
+        if (sampleRegion_.empty())
+        {
+            // If no coupleGroup and no sampleRegion assume local region
+            sampleRegion_ = patch_.boundaryMesh().mesh().name();
+            sameRegion_ = true;
+        }
+    }
+
     if (dict.found("offsetMode"))
     {
         offsetMode_ = offsetModeNames_.read(dict.lookup("offsetMode"));
@@ -923,7 +1076,7 @@ CML::mappedPatchBase::mappedPatchBase
 
             case NONUNIFORM:
             {
-                //offsets_ = pointField(dict.lookup("offsets"));
+                // offsets_ = pointField(dict.lookup("offsets"));
                 offsets_ = readListOrField("offsets", dict, patch_.size());
             }
             break;
@@ -943,22 +1096,65 @@ CML::mappedPatchBase::mappedPatchBase
     else if (dict.found("offsets"))
     {
         offsetMode_ = NONUNIFORM;
-        //offsets_ = pointField(dict.lookup("offsets"));
+        // offsets_ = pointField(dict.lookup("offsets"));
         offsets_ = readListOrField("offsets", dict, patch_.size());
     }
-    else
+    else if (mode_ != NEARESTPATCHFACE && mode_ != NEARESTPATCHFACEAMI)
     {
-        FatalIOErrorIn
+        FatalIOErrorInFunction
         (
-            "mappedPatchBase::mappedPatchBase\n"
-            "(\n"
-            "    const polyPatch&,\n"
-            "    const dictionary&\n"
-            ")\n",
             dict
         )   << "Please supply the offsetMode as one of "
             << NamedEnum<offsetMode, 3>::words()
             << exit(FatalIOError);
+    }
+}
+
+
+CML::mappedPatchBase::mappedPatchBase
+(
+    const polyPatch& pp,
+    const sampleMode mode,
+    const dictionary& dict
+)
+:
+    patch_(pp),
+    sampleRegion_(dict.lookupOrDefault<word>("sampleRegion", "")),
+    mode_(mode),
+    samplePatch_(dict.lookupOrDefault<word>("samplePatch", "")),
+    coupleGroup_(dict), // dict.lookupOrDefault<word>("coupleGroup", "")),
+    offsetMode_(UNIFORM),
+    offset_(Zero),
+    offsets_(0),
+    distance_(0.0),
+    sameRegion_(sampleRegion_ == patch_.boundaryMesh().mesh().name()),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
+    AMIReverse_(dict.lookupOrDefault<bool>("flipNormals", false)),
+    surfPtr_(nullptr),
+    surfDict_(dict.subOrEmptyDict("surface"))
+{
+    if (mode_ != NEARESTPATCHFACE && mode_ != NEARESTPATCHFACEAMI)
+    {
+        FatalIOErrorInFunction
+        (
+            dict
+        )   << "Construct from sampleMode and dictionary only applicable for "
+            << " collocated patches in modes "
+            << sampleModeNames_[NEARESTPATCHFACE] << ','
+            << sampleModeNames_[NEARESTPATCHFACEAMI]
+            << exit(FatalIOError);
+    }
+
+
+    if (!coupleGroup_.valid())
+    {
+        if (sampleRegion_.empty())
+        {
+            // If no coupleGroup and no sampleRegion assume local region
+            sampleRegion_ = patch_.boundaryMesh().mesh().name();
+            sameRegion_ = true;
+        }
     }
 }
 
@@ -973,15 +1169,16 @@ CML::mappedPatchBase::mappedPatchBase
     sampleRegion_(mpb.sampleRegion_),
     mode_(mpb.mode_),
     samplePatch_(mpb.samplePatch_),
+    coupleGroup_(mpb.coupleGroup_),
     offsetMode_(mpb.offsetMode_),
     offset_(mpb.offset_),
     offsets_(mpb.offsets_),
     distance_(mpb.distance_),
     sameRegion_(mpb.sameRegion_),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(mpb.AMIReverse_),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(mpb.surfDict_)
 {}
 
@@ -997,6 +1194,7 @@ CML::mappedPatchBase::mappedPatchBase
     sampleRegion_(mpb.sampleRegion_),
     mode_(mpb.mode_),
     samplePatch_(mpb.samplePatch_),
+    coupleGroup_(mpb.coupleGroup_),
     offsetMode_(mpb.offsetMode_),
     offset_(mpb.offset_),
     offsets_
@@ -1007,10 +1205,10 @@ CML::mappedPatchBase::mappedPatchBase
     ),
     distance_(mpb.distance_),
     sameRegion_(mpb.sameRegion_),
-    mapPtr_(NULL),
-    AMIPtr_(NULL),
+    mapPtr_(nullptr),
+    AMIPtr_(nullptr),
     AMIReverse_(mpb.AMIReverse_),
-    surfPtr_(NULL),
+    surfPtr_(nullptr),
     surfDict_(mpb.surfDict_)
 {}
 
@@ -1037,7 +1235,7 @@ const CML::polyMesh& CML::mappedPatchBase::sampleMesh() const
 {
     return patch_.boundaryMesh().mesh().time().lookupObject<polyMesh>
     (
-        sampleRegion_
+        sampleRegion()
     );
 }
 
@@ -1046,18 +1244,18 @@ const CML::polyPatch& CML::mappedPatchBase::samplePolyPatch() const
 {
     const polyMesh& nbrMesh = sampleMesh();
 
-    const label patchI = nbrMesh.boundaryMesh().findPatchID(samplePatch_);
+    const label patchi = nbrMesh.boundaryMesh().findPatchID(samplePatch());
 
-    if (patchI == -1)
+    if (patchi == -1)
     {
-        FatalErrorIn("mappedPatchBase::samplePolyPatch()")
-            << "Cannot find patch " << samplePatch_
+        FatalErrorInFunction
+            << "Cannot find patch " << samplePatch()
             << " in region " << sampleRegion_ << endl
             << "Valid patches are " << nbrMesh.boundaryMesh().names()
             << exit(FatalError);
     }
 
-    return nbrMesh.boundaryMesh()[patchI];
+    return nbrMesh.boundaryMesh()[patchi];
 }
 
 
@@ -1101,14 +1299,15 @@ CML::tmp<CML::pointField> CML::mappedPatchBase::samplePoints() const
     return samplePoints(facePoints(patch_));
 }
 
+
 CML::pointIndexHit CML::mappedPatchBase::facePoint
 (
     const polyMesh& mesh,
-    const label faceI,
+    const label facei,
     const polyMesh::cellRepresentation decompMode
 )
 {
-    const point& fc = mesh.faceCentres()[faceI];
+    const point& fc = mesh.faceCentres()[facei];
 
     switch (decompMode)
     {
@@ -1117,19 +1316,18 @@ CML::pointIndexHit CML::mappedPatchBase::facePoint
         {
             // For both decompositions the face centre is guaranteed to be
             // on the face
-            return pointIndexHit(true, fc, faceI);
+            return pointIndexHit(true, fc, facei);
         }
         break;
 
         case polyMesh::FACEDIAGTETS:
         {
-            // Find the intersection of a ray from face centre to cell
-            // centre
+            // Find the intersection of a ray from face centre to cell centre
             // Find intersection of (face-centre-decomposition) centre to
             // cell-centre with face-diagonal-decomposition triangles.
 
             const pointField& p = mesh.points();
-            const face& f = mesh.faces()[faceI];
+            const face& f = mesh.faces()[facei];
 
             if (f.size() <= 3)
             {
@@ -1137,11 +1335,11 @@ CML::pointIndexHit CML::mappedPatchBase::facePoint
                 return pointIndexHit(true, fc, 0);
             }
 
-            label cellI = mesh.faceOwner()[faceI];
-            const point& cc = mesh.cellCentres()[cellI];
+            label celli = mesh.faceOwner()[facei];
+            const point& cc = mesh.cellCentres()[celli];
             vector d = fc-cc;
 
-            const label fp0 = mesh.tetBasePtIs()[faceI];
+            const label fp0 = mesh.tetBasePtIs()[facei];
             const point& basePoint = p[f[fp0]];
 
             label fp = f.fcIndex(fp0);
@@ -1174,7 +1372,7 @@ CML::pointIndexHit CML::mappedPatchBase::facePoint
 
         default:
         {
-            FatalErrorIn("mappedPatchBase::facePoint()")
+            FatalErrorInFunction
                 << "problem" << abort(FatalError);
             return pointIndexHit();
         }
@@ -1186,46 +1384,66 @@ void CML::mappedPatchBase::write(Ostream& os) const
 {
     os.writeKeyword("sampleMode") << sampleModeNames_[mode_]
         << token::END_STATEMENT << nl;
-    os.writeKeyword("sampleRegion") << sampleRegion_
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("samplePatch") << samplePatch_
-        << token::END_STATEMENT << nl;
-
-    os.writeKeyword("offsetMode") << offsetModeNames_[offsetMode_]
-        << token::END_STATEMENT << nl;
-
-    switch (offsetMode_)
+    if (!sampleRegion_.empty())
     {
-        case UNIFORM:
-        {
-            os.writeKeyword("offset") << offset_ << token::END_STATEMENT << nl;
-            break;
-        }
-        case NONUNIFORM:
-        {
-            offsets_.writeEntry("offsets", os);
-            break;
-        }
-        case NORMAL:
-        {
-            os.writeKeyword("distance") << distance_ << token::END_STATEMENT
-                << nl;
-            break;
-        }
+        os.writeKeyword("sampleRegion") << sampleRegion_
+            << token::END_STATEMENT << nl;
     }
-
-    if (mode_ == NEARESTPATCHFACEAMI)
+    if (!samplePatch_.empty())
     {
-        if (AMIReverse_)
+        os.writeKeyword("samplePatch") << samplePatch_
+            << token::END_STATEMENT << nl;
+    }
+    coupleGroup_.write(os);
+
+    if
+    (
+        offsetMode_ == UNIFORM
+     && offset_ == vector::zero
+     && (mode_ == NEARESTPATCHFACE || mode_ == NEARESTPATCHFACEAMI)
+    )
+    {
+        // Collocated mode. No need to write offset data
+    }
+    else
+    {
+        os.writeKeyword("offsetMode") << offsetModeNames_[offsetMode_]
+            << token::END_STATEMENT << nl;
+
+        switch (offsetMode_)
         {
-            os.writeKeyword("flipNormals") << AMIReverse_
-                << token::END_STATEMENT << nl;
+            case UNIFORM:
+            {
+                os.writeKeyword("offset") << offset_ << token::END_STATEMENT
+                    << nl;
+                break;
+            }
+            case NONUNIFORM:
+            {
+                offsets_.writeEntry("offsets", os);
+                break;
+            }
+            case NORMAL:
+            {
+                os.writeKeyword("distance") << distance_ << token::END_STATEMENT
+                    << nl;
+                break;
+            }
         }
 
-        if (!surfDict_.empty())
+        if (mode_ == NEARESTPATCHFACEAMI)
         {
-            os.writeKeyword(surfDict_.dictName());
-            os  << surfDict_;
+            if (AMIReverse_)
+            {
+                os.writeKeyword("flipNormals") << AMIReverse_
+                    << token::END_STATEMENT << nl;
+            }
+
+            if (!surfDict_.empty())
+            {
+                os.writeKeyword(surfDict_.dictName());
+                os  << surfDict_;
+            }
         }
     }
 }

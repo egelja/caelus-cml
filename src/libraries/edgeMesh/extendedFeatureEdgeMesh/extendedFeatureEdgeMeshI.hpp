@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -111,7 +111,7 @@ inline CML::vector CML::extendedFeatureEdgeMesh::edgeDirection
     }
     else
     {
-        FatalErrorIn("CML::extendedFeatureEdgeMesh::edgedirection")
+        FatalErrorInFunction
             << "Requested ptI " << ptI << " is not a point on the requested "
             << "edgeI " << edgeI << ". edgeI start and end: "
             << e.start() << " " << e.end()
@@ -166,7 +166,7 @@ inline CML::vectorField CML::extendedFeatureEdgeMesh::featurePointNormals
 {
     if (!featurePoint(ptI))
     {
-        WarningIn("vectorField extendedFeatureEdgeMesh::featurePointNormals")
+        WarningInFunction
             << "Requesting the normals of a non-feature point. "
             << "Returned zero length vectorField."
             << endl;

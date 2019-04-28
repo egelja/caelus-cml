@@ -22,13 +22,16 @@ Class
     CML::ManualInjection
 
 Description
-    Manual injection
-    - User specifies
+    Manual injection.
+
+    User specifies:
       - Total mass to inject
       - Parcel positions in file \c positionsFile
       - Initial parcel velocity
-    - Parcel diameters obtained by distribution model
-    - All parcels introduced at SOI
+
+    Properties:
+      - Parcel diameters obtained by distribution model
+      - All parcels introduced at SOI
 
 
 \*---------------------------------------------------------------------------*/
@@ -48,7 +51,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                          Class ManualInjection Declaration
+                       Class ManualInjection Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
@@ -80,7 +83,7 @@ class ManualInjection
         const vector U0_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
         //- Flag to suppress errors if particle injection site is out-of-bounds
         Switch ignoreOutOfBounds_;
@@ -144,8 +147,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -205,7 +208,7 @@ CML::ManualInjection<CloudType>::ManualInjection
     U0_(this->coeffDict().lookup("U0")),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -351,14 +354,14 @@ void CML::ManualInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     position = positions_[parcelI];
     cellOwner = injectorCells_[parcelI];
-    tetFaceI = injectorTetFaces_[parcelI];
-    tetPtI = injectorTetPts_[parcelI];
+    tetFacei = injectorTetFaces_[parcelI];
+    tetPti = injectorTetPts_[parcelI];
 }
 
 

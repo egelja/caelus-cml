@@ -1,6 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +27,7 @@ Description
     The jump is specified as a fixed value field, applied as an offset to the
     'owner' patch.
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         patchType    | underlying patch type should be \c cyclic| yes |
@@ -38,7 +36,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            fixedJump;
         patchType       cyclic;
@@ -51,16 +49,14 @@ Description
 Note
      The underlying \c patchType should be set to \c cyclic
 
-SeeAlso
+See also
     CML::jumpCyclicFvPatchField
 
-SourceFiles
-    fixedJumpFvPatchField.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fixedJumpFvPatchField_H
-#define fixedJumpFvPatchField_H
+#ifndef fixedJumpFvPatchField_HPP
+#define fixedJumpFvPatchField_HPP
 
 #include "jumpCyclicFvPatchField.hpp"
 
@@ -89,6 +85,8 @@ protected:
 
 public:
 
+    //- Runtime type information
+    TypeName("fixedJump");
 
     // Constructors
 
@@ -156,21 +154,8 @@ public:
 
         // Access
 
-            //- Return the "jump" across the patch.
-            virtual tmp<Field<Type> > jump() const
-            {
-                if (this->cyclicPatch().owner())
-                {
-                    return jump_;
-                }
-                else
-                {
-                    return refCast<const fixedJumpFvPatchField<Type> >
-                    (
-                        this->neighbourPatchField()
-                    ).jump();
-                }
-            }
+            //- Return the "jump" across the patch
+            virtual tmp<Field<Type> > jump() const;
 
 
         // Mapping functions
@@ -198,7 +183,7 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
 CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
@@ -235,8 +220,25 @@ CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
 )
 :
     jumpCyclicFvPatchField<Type>(p, iF),
-    jump_("jump", dict, p.size())
-{}
+    jump_(p.size(), Zero)
+{
+    if (this->cyclicPatch().owner())
+    {
+        jump_ = Field<Type>("jump", dict, p.size());
+    }
+
+    if (dict.found("value"))
+    {
+        fvPatchField<Type>::operator=
+        (
+            Field<Type>("value", dict, p.size())
+        );
+    }
+    else
+    {
+        this->evaluate(Pstream::blocking);
+    }
+}
 
 
 template<class Type>
@@ -245,7 +247,6 @@ CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
     const fixedJumpFvPatchField<Type>& ptf
 )
 :
-    cyclicLduInterfaceField(),
     jumpCyclicFvPatchField<Type>(ptf),
     jump_(ptf.jump_)
 {}
@@ -264,6 +265,23 @@ CML::fixedJumpFvPatchField<Type>::fixedJumpFvPatchField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::fixedJumpFvPatchField<Type>::jump() const
+{
+    if (this->cyclicPatch().owner())
+    {
+        return jump_;
+    }
+    else
+    {
+        return refCast<const fixedJumpFvPatchField<Type> >
+        (
+            this->neighbourPatchField()
+        ).jump();
+    }
+}
+
 
 template<class Type>
 void CML::fixedJumpFvPatchField<Type>::autoMap
@@ -295,14 +313,16 @@ template<class Type>
 void CML::fixedJumpFvPatchField<Type>::write(Ostream& os) const
 {
     fvPatchField<Type>::write(os);
-    os.writeKeyword("patchType") << "cyclic" << token::END_STATEMENT << nl;
-    jump_.writeEntry("jump", os);
+    os.writeKeyword("patchType") << this->interfaceFieldType()
+        << token::END_STATEMENT << nl;
+
+    if (this->cyclicPatch().owner())
+    {
+        jump_.writeEntry("jump", os);
+    }
+
+    this->writeEntry("value", os);
 }
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

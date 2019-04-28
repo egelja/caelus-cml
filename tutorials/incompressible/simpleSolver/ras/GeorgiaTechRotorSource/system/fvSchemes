@@ -1,5 +1,5 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -49,12 +49,6 @@ interpolationSchemes
 snGradSchemes
 {
     default             linear;
-}
-
-fluxRequired
-{
-    default             no;
-    p;
 }
 
 

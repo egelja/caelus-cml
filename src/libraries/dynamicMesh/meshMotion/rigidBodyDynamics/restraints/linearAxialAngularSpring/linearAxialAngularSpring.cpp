@@ -144,11 +144,7 @@ bool CML::RBD::restraints::linearAxialAngularSpring::read
 
     if (mag(mag(refQ_) - sqrt(3.0)) > 1e-9)
     {
-        FatalErrorIn
-        (
-            "RBD::restraints::linearAxialAngularSpring::read"
-            "(const dictionary&)"
-        )
+        FatalErrorInFunction
             << "referenceOrientation " << refQ_ << " is not a rotation tensor. "
             << "mag(referenceOrientation) - sqrt(3) = "
             << mag(refQ_) - sqrt(3.0) << nl
@@ -165,11 +161,7 @@ bool CML::RBD::restraints::linearAxialAngularSpring::read
     }
     else
     {
-        FatalErrorIn
-        (
-            "RBD::restraints::linearAxialAngularSpring::read"
-            "(const dictionary&)"
-        )
+        FatalErrorInFunction
             << "axis has zero length"
             << abort(FatalError);
     }

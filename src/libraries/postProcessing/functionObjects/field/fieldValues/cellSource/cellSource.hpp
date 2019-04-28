@@ -320,15 +320,8 @@ CML::tmp<CML::Field<Type> > CML::fieldValues::cellSource::setFieldValues
 
     if (mustGet)
     {
-        FatalErrorIn
-        (
-            "CML::tmp<CML::Field<Type> > "
-            "CML::fieldValues::cellSource::setFieldValues"
-            "("
-                "const word&, "
-                "const bool"
-            ") const"
-        )   << "Field " << fieldName << " not found in database"
+        FatalErrorInFunction
+           << "Field " << fieldName << " not found in database"
             << abort(FatalError);
     }
 

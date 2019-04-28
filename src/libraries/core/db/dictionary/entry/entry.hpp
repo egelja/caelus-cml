@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -71,6 +71,9 @@ class entry
 
 
     // Private Member Functions
+
+        //- Get the next valid keyword. Return true if is valid keyType.
+        static bool getKeyword(keyType&, token&, Istream&);
 
         //- Get the next valid keyword otherwise return false
         static bool getKeyword(keyType&, Istream&);

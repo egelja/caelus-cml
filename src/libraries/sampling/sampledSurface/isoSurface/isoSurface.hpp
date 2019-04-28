@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -502,7 +502,7 @@ CML::isoSurface::adaptPatchFields
         )
         {
             // Clear old value. Cannot resize it since is a slice.
-            sliceFld.boundaryField().set(patchI, NULL);
+            sliceFld.boundaryField().set(patchI, nullptr);
 
             // Set new value we can change
             sliceFld.boundaryField().set
@@ -907,7 +907,7 @@ void CML::isoSurface::generateTriPoints
      || (snappedPoint.size() != mesh_.nPoints())
     )
     {
-        FatalErrorIn("isoSurface::generateTriPoints(..)")
+        FatalErrorInFunction
             << "Incorrect size." << endl
             << "mesh: nCells:" << mesh_.nCells()
             << " points:" << mesh_.nPoints() << endl
@@ -1174,7 +1174,7 @@ CML::isoSurface::interpolate
         {
             if (nValues[i] == 0)
             {
-                FatalErrorIn("isoSurface::interpolate(..)")
+                FatalErrorInFunction
                     << "point:" << i << " nValues:" << nValues[i]
                     << abort(FatalError);
             }

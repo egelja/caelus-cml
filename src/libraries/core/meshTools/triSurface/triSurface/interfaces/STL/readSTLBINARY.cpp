@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,7 +47,7 @@ bool CML::triSurface::readSTLBINARY(const fileName& STLfileName)
 
     if (!STLfile.good())
     {
-        FatalErrorIn("triSurface::readSTLBINARY(const fileName&)")
+        FatalErrorInFunction
             << "Cannot read file " << STLfileName
             << " or file " << STLfileName + ".gz"
             << exit(FatalError);
@@ -114,7 +114,7 @@ bool CML::triSurface::readSTLBINARY(const fileName& STLfileName)
         rawPoints[rawPointI] = stlTri.c();
         operator[](i)[2] = rawPointI++;
 
-        operator[](i).region() = stlTri.region();
+        operator[](i).region() = stlTri.attrib();
     }
 
     //STLfile.close();

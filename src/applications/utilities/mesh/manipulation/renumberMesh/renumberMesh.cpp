@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -237,11 +237,8 @@ labelList regionFaceOrder
     {
         if (oldToNewFace[faceI] == -1)
         {
-            FatalErrorIn
-            (
-                "polyDualMesh::getFaceOrder"
-                "(const labelList&, const labelList&, const label) const"
-            )   << "Did not determine new position"
+            FatalErrorInFunction
+                << "Did not determine new position"
                 << " for face " << faceI
                 << abort(FatalError);
         }
@@ -695,7 +692,7 @@ int main(int argc, char *argv[])
 
             if (masterFaceI == 0)
             {
-                FatalErrorIn(args.executable()) << "problem faceI:" << faceI
+                FatalErrorInFunction << "problem faceI:" << faceI
                     << " masterFaceI:" << masterFaceI << exit(FatalError);
             }
         }

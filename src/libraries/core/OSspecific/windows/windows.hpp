@@ -21,14 +21,15 @@ Class
     windows
 
 Description
+    Has some auxiliary definitions of methods/functions.
 
 SourceFiles
     windows.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Windows_H
-#define Windows_H
+#ifndef Windows_HPP
+#define Windows_HPP
 
 #include <string>
 

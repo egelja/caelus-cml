@@ -26,34 +26,34 @@ Author
 \*---------------------------------------------------------------------------*/
 
 
-    roeFluxVLimiter    rfvLmtr(p,U,T,thermo());
+    roeFluxVLimiter    rfvLmtr(p,U,T,thermo);
     RiemannSolver*     rfvPtr = &rfvLmtr;
 
-    roeFluxBJLimiter   rfbjLmtr(p,U,T,thermo());
+    roeFluxBJLimiter   rfbjLmtr(p,U,T,thermo);
     RiemannSolver*     rfbjPtr = &rfbjLmtr;
     
-    llfFluxVLimiter    llfvLmtr(p,U,T,thermo());
+    llfFluxVLimiter    llfvLmtr(p,U,T,thermo);
     RiemannSolver*     lfvPtr = &llfvLmtr;
 
-    llfFluxBJLimiter   llfbjLmtr(p,U,T,thermo());
+    llfFluxBJLimiter   llfbjLmtr(p,U,T,thermo);
     RiemannSolver*     lfbjPtr = &llfbjLmtr;
 
-    hllcFluxVLimiter   hllcfvLmtr(p,U,T,thermo());
+    hllcFluxVLimiter   hllcfvLmtr(p,U,T,thermo);
     RiemannSolver*     hfvPtr = &hllcfvLmtr;
 
-    hllcFluxBJLimiter  hllcfbjLmtr(p,U,T,thermo());
+    hllcFluxBJLimiter  hllcfbjLmtr(p,U,T,thermo);
     RiemannSolver*     hfbjPtr = &hllcfbjLmtr;
 
-    ktpFluxVLimiter    ktpfvLmtr(p,U,T,thermo());
+    ktpFluxVLimiter    ktpfvLmtr(p,U,T,thermo);
     RiemannSolver*     kfvPtr = &ktpfvLmtr;
 
-    ktpFluxBJLimiter   ktpfbjLmtr(p,U,T,thermo());
+    ktpFluxBJLimiter   ktpfbjLmtr(p,U,T,thermo);
     RiemannSolver*     kfbjPtr = &ktpfbjLmtr;
 
-    dwFluxVLimiter     dwfvLmtr(p,U,T,thermo());
+    dwFluxVLimiter     dwfvLmtr(p,U,T,thermo);
     RiemannSolver*     dwvPtr = &dwfvLmtr;
 
-    dwFluxBJLimiter    dwfbjLmtr(p,U,T,thermo());
+    dwFluxBJLimiter    dwfbjLmtr(p,U,T,thermo);
     RiemannSolver*     dwbjPtr = &dwfbjLmtr;
 
 

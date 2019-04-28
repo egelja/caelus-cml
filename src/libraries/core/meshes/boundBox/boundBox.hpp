@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,6 +41,9 @@ namespace CML
 
 class boundBox;
 template<class T> class tmp;
+
+bool operator==(const boundBox&, const boundBox&);
+bool operator!=(const boundBox&, const boundBox&);
 
 Istream& operator>>(Istream&, boundBox&);
 Ostream& operator<<(Ostream&, const boundBox&);

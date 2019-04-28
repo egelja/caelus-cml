@@ -190,7 +190,7 @@ void powerSpectraFFT::evaluate()
     }
     else
     {
-        notImplemented("Only scalars and vectors are supported.");
+        NotImplemented;
     }
 }
 

@@ -78,10 +78,8 @@ void decomposeFaces::decomposeMeshFaces(const boolList& decomposeFace)
     faceListPMG& faces = meshModifier.facesAccess();
 
     if( decomposeFace.size() != faces.size() )
-        FatalErrorIn
-        (
-            "void decomposeFaces::decomposeMeshFaces(const boolList&)"
-        ) << "Incorrect size of the decomposeFace list!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Incorrect size of the decomposeFace list!" << abort(FatalError);
 
     nFaces = 0;
     VRWGraph newFaces;
@@ -332,11 +330,8 @@ void decomposeFaces::decomposeConcaveInternalFaces
 {
     if( Pstream::parRun() )
     {
-        FatalErrorIn
-        (
-            "void decomposeFaces::decomposeConcaveInternalFaces"
-            "(const boolList& concaveVertex)"
-        ) << "This procedure is not parallelised!" << exit(FatalError);
+        FatalErrorInFunction
+          << "This procedure is not parallelised!" << exit(FatalError);
     }
 
     done_ = false;
@@ -352,10 +347,8 @@ void decomposeFaces::decomposeConcaveInternalFaces
     faceListPMG& faces = meshModifier.facesAccess();
 
     if( concaveVertex.size() != mesh_.points().size() )
-        FatalErrorIn
-        (
-            "void decomposeFaces::decomposeMeshFaces(const boolList&)"
-        ) << "Incorrect size of the concaveVertex list!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Incorrect size of the concaveVertex list!" << abort(FatalError);
 
     VRWGraph newFaces;
     DynList<label> newF;

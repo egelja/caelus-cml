@@ -35,8 +35,8 @@ namespace CML
 
 const CML::objectRegistry& CML::lduMesh::thisDb() const
 {
-    notImplemented("lduMesh::thisDb() const");
-    const objectRegistry* orPtr_ = NULL;
+    NotImplemented;
+    const objectRegistry* orPtr_ = nullptr;
     return *orPtr_;
 }
 

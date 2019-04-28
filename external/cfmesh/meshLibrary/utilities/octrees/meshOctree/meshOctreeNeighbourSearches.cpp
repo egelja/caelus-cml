@@ -51,10 +51,8 @@ label meshOctree::findLeafContainingVertex
         Info << "Vertex " << p << " is not in the initial cube" << endl;
         # endif
 
-        FatalErrorIn
-        (
-            "label meshOctree::findLeafContainingVertex(const point&) const"
-        ) << "Point " << p << " is not inside the initial cube" << endl;
+        FatalErrorInFunction
+          << "Point " << p << " is not inside the initial cube" << endl;
 
         throw "Found invalid locations of points";
 
@@ -167,12 +165,8 @@ label meshOctree::findNeighbourOverNode
         return sc[7-nodeI];
     }
 
-    FatalErrorIn
-    (
-        "label meshOctree::findNeighbourOverNode("
-        "const meshOctreeCubeCoordinates& cc,"
-        "const label nodeI) const"
-    ) << "Should not be here!" << abort(FatalError);
+    FatalErrorInFunction
+      << "Should not be here!" << abort(FatalError);
 
     return -1;
 }
@@ -473,7 +467,7 @@ meshOctreeCube* meshOctree::findCubeForPosition
         (isQuadtree_ && (cpz != initialCubePtr_->posZ()))
     )
     {
-        return NULL;
+        return nullptr;
     }
 
     meshOctreeCube* neiPtr(initialCubePtr_);

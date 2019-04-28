@@ -42,7 +42,7 @@ surfaceScalarField phiv
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    linearInterpolate(U) & mesh.Sf()
+    flux(U)
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

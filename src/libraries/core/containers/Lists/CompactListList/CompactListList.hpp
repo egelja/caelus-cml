@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -368,10 +368,8 @@ const
 {
     if (i < 0 || i >= m_.size())
     {
-        FatalErrorIn
-        (
-            "CompactListList<T, Container>::whichRow(const label) const"
-        )   << "Index " << i << " outside 0.." << m_.size()
+        FatalErrorInFunction
+            << "Index " << i << " outside 0.." << m_.size()
             << abort(FatalError);
     }
 
@@ -447,11 +445,7 @@ inline CML::UList<T> CML::CompactListList<T, Container>::operator[]
 )
 {
     label start = offsets_[i];
-    return UList<T>
-    (
-        (m_.size() ? m_.begin() + start : NULL),
-        offsets_[i+1] - start
-    );
+    return UList<T>(m_.begin() + start, offsets_[i+1] - start);
 }
 
 
@@ -465,7 +459,7 @@ CML::CompactListList<T, Container>::operator[]
     label start = offsets_[i];
     return UList<T>
     (
-        (m_.size() ? const_cast<T*>(m_.begin() + start) : NULL),
+        const_cast<T*>(m_.begin() + start),
         offsets_[i+1] - start
     );
 }
@@ -614,10 +608,8 @@ void CML::CompactListList<T, Container>::setSize(const label nRows)
     }
     else if (nRows > size())
     {
-        FatalErrorIn
-        (
-            "CompactListList<T, Container>::setSize(const label nRows)"
-        )   << "Cannot be used to extend the list from " << offsets_.size()
+        FatalErrorInFunction
+            << "Cannot be used to extend the list from " << offsets_.size()
             << " to " << nRows << nl
             << "    Please use one of the other setSize member functions"
             << abort(FatalError);

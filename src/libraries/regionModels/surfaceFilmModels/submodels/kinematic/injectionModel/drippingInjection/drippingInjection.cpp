@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,23 +46,23 @@ addToRunTimeSelectionTable(injectionModel, drippingInjection, dictionary);
 
 drippingInjection::drippingInjection
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    injectionModel(type(), owner, dict),
-    deltaStable_(readScalar(coeffs_.lookup("deltaStable"))),
-    particlesPerParcel_(readScalar(coeffs_.lookup("particlesPerParcel"))),
-    rndGen_(label(0), -1),
+    injectionModel(type(), film, dict),
+    deltaStable_(readScalar(coeffDict_.lookup("deltaStable"))),
+    particlesPerParcel_(readScalar(coeffDict_.lookup("particlesPerParcel"))),
+    rndGen_(label(0)),
     parcelDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
-            coeffs_.subDict("parcelDistribution"),
+            coeffDict_.subDict("parcelDistribution"),
             rndGen_
         )
     ),
-    diameter_(owner.regionMesh().nCells(), 0.0)
+    diameter_(film.regionMesh().nCells(), -1.0)
 {
     forAll(diameter_, faceI)
     {
@@ -87,7 +87,7 @@ void drippingInjection::correct
 )
 {
     const kinematicSingleLayer& film =
-        refCast<const kinematicSingleLayer>(this->owner());
+        refCast<const kinematicSingleLayer>(this->film());
 
     const scalar pi = constant::mathematical::pi;
 
@@ -113,31 +113,50 @@ void drippingInjection::correct
 
 
     // Collect the data to be transferred
-    forAll(massToInject, cellI)
+    forAll(massDrip, celli)
     {
-        scalar rhoc = rho[cellI];
-        scalar diam = diameter_[cellI];
-        scalar minMass = particlesPerParcel_*rhoc*pi/6*pow3(diam);
-
-        if (massDrip[cellI] > minMass)
+        if (massDrip[celli] > 0)
         {
-            // All drip mass can be injected
-            massToInject[cellI] += massDrip[cellI];
-            availableMass[cellI] -= massDrip[cellI];
+            // set new particle diameter if not already set
+            if (diameter_[celli] < 0)
+            {
+                diameter_[celli] = parcelDistribution_->sample();
+            }
 
-            // Set particle diameter
-            diameterToInject[cellI] = diameter_[cellI];
+            scalar& diam = diameter_[celli];
+            scalar rhoc = rho[celli];
+            scalar minMass = particlesPerParcel_*rhoc*pi/6*pow3(diam);
 
-            // Retrieve new particle diameter sample
-            diameter_[cellI] = parcelDistribution_->sample();
+            if (massDrip[celli] > minMass)
+            {
+                // All drip mass can be injected
+                massToInject[celli] += massDrip[celli];
+                availableMass[celli] -= massDrip[celli];
+
+                // Set particle diameter
+                diameterToInject[celli] = diam;
+
+                // Retrieve new particle diameter sample
+                diam = parcelDistribution_->sample();
+
+                addToInjectedMass(massDrip[celli]);
+            }
+            else
+            {
+                // Particle mass below minimum threshold - cannot be injected
+                massToInject[celli] = 0.0;
+                diameterToInject[celli] = 0.0;
+            }
         }
         else
         {
             // Mass below minimum threshold - cannot be injected
-            massToInject[cellI] = 0.0;
-            diameterToInject[cellI] = 0.0;
+            massToInject[celli] = 0.0;
+            diameterToInject[celli] = 0.0;
         }
     }
+
+    injectionModel::correct();
 }
 
 

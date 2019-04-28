@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,67 +39,61 @@ namespace CML
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-CML::label CML::sampledSet::getBoundaryCell(const label faceI) const
+CML::label CML::sampledSet::getBoundaryCell(const label facei) const
 {
-    return mesh().faceOwner()[faceI];
+    return mesh().faceOwner()[facei];
 }
 
 
 CML::label CML::sampledSet::getCell
 (
-    const label faceI,
+    const label facei,
     const point& sample
 ) const
 {
-    if (faceI == -1)
+    if (facei == -1)
     {
-        FatalErrorIn
-        (
-            "sampledSet::getCell(const label, const point&)"
-        )   << "Illegal face label " << faceI
+        FatalErrorInFunction
+            << "Illegal face label " << facei
             << abort(FatalError);
     }
 
-    if (faceI >= mesh().nInternalFaces())
+    if (facei >= mesh().nInternalFaces())
     {
-        label cellI = getBoundaryCell(faceI);
+        label celli = getBoundaryCell(facei);
 
-        if (!mesh().pointInCell(sample, cellI, searchEngine_.decompMode()))
+        if (!mesh().pointInCell(sample, celli, searchEngine_.decompMode()))
         {
-            FatalErrorIn
-            (
-                "sampledSet::getCell(const label, const point&)"
-            )   << "Found cell " << cellI << " using face " << faceI
+            FatalErrorInFunction
+                << "Found cell " << celli << " using face " << facei
                 << ". But cell does not contain point " << sample
                 << abort(FatalError);
         }
-        return cellI;
+        return celli;
     }
     else
     {
         // Try owner and neighbour to see which one contains sample
 
-        label cellI = mesh().faceOwner()[faceI];
+        label celli = mesh().faceOwner()[facei];
 
-        if (mesh().pointInCell(sample, cellI, searchEngine_.decompMode()))
+        if (mesh().pointInCell(sample, celli, searchEngine_.decompMode()))
         {
-            return cellI;
+            return celli;
         }
         else
         {
-            cellI = mesh().faceNeighbour()[faceI];
+            celli = mesh().faceNeighbour()[facei];
 
-            if (mesh().pointInCell(sample, cellI, searchEngine_.decompMode()))
+            if (mesh().pointInCell(sample, celli, searchEngine_.decompMode()))
             {
-                return cellI;
+                return celli;
             }
             else
             {
-                FatalErrorIn
-                (
-                    "sampledSet::getCell(const label, const point&)"
-                )   << "None of the neighbours of face "
-                    << faceI << " contains point " << sample
+                FatalErrorInFunction
+                    << "None of the neighbours of face "
+                    << facei << " contains point " << sample
                     << abort(FatalError);
 
                 return -1;
@@ -111,23 +105,23 @@ CML::label CML::sampledSet::getCell
 
 CML::scalar CML::sampledSet::calcSign
 (
-    const label faceI,
+    const label facei,
     const point& sample
 ) const
 {
-    vector vec = sample - mesh().faceCentres()[faceI];
+    vector vec = sample - mesh().faceCentres()[facei];
 
     scalar magVec = mag(vec);
 
     if (magVec < VSMALL)
     {
-        // sample on face centre. Regard as inside
+        // Sample on face centre. Regard as inside
         return -1;
     }
 
     vec /= magVec;
 
-    vector n = mesh().faceAreas()[faceI];
+    vector n = mesh().faceAreas()[facei];
 
     n /= mag(n) + VSMALL;
 
@@ -138,16 +132,16 @@ CML::scalar CML::sampledSet::calcSign
 // Return face (or -1) of face which is within smallDist of sample
 CML::label CML::sampledSet::findNearFace
 (
-    const label cellI,
+    const label celli,
     const point& sample,
     const scalar smallDist
 ) const
 {
-    const cell& myFaces = mesh().cells()[cellI];
+    const cell& myFaces = mesh().cells()[celli];
 
-    forAll(myFaces, myFaceI)
+    forAll(myFaces, myFacei)
     {
-        const face& f = mesh().faces()[myFaces[myFaceI]];
+        const face& f = mesh().faces()[myFaces[myFacei]];
 
         pointHit inter = f.nearestPoint(sample, mesh().points());
 
@@ -164,7 +158,7 @@ CML::label CML::sampledSet::findNearFace
 
         if (dist < smallDist)
         {
-            return myFaces[myFaceI];
+            return myFaces[myFacei];
         }
     }
     return -1;
@@ -176,60 +170,63 @@ CML::label CML::sampledSet::findNearFace
 CML::point CML::sampledSet::pushIn
 (
     const point& facePt,
-    const label faceI
+    const label facei
 ) const
 {
-    label cellI = mesh().faceOwner()[faceI];
-    const point& cC = mesh().cellCentres()[cellI];
+    label celli = mesh().faceOwner()[facei];
+    const point& cC = mesh().cellCentres()[celli];
 
     point newPosition = facePt;
 
     // Taken from particle::initCellFacePt()
-    label tetFaceI;
+    label tetFacei;
     label tetPtI;
-    mesh().findTetFacePt(cellI, facePt, tetFaceI, tetPtI);
+    mesh().findTetFacePt(celli, facePt, tetFacei, tetPtI);
 
-    if (tetFaceI == -1 || tetPtI == -1)
+    // This is the tolerance that was defined as a static constant of the
+    // particle class. It is no longer used by particle, following the switch to
+    // barycentric tracking. The only place in which the tolerance is now used
+    // is here. I'm not sure what the purpose of this code is, but it probably
+    // wants removing. It is doing tet-searches for a particle position. This
+    // should almost certainly be left to the particle class.
+    const scalar trackingCorrectionTol = 1e-5;
+
+    if (tetFacei == -1 || tetPtI == -1)
     {
         newPosition = facePt;
 
-        label trap(1.0/particle::trackingCorrectionTol + 1);
+        label trap(1.0/trackingCorrectionTol + 1);
 
         label iterNo = 0;
 
         do
         {
-            newPosition += particle::trackingCorrectionTol*(cC - facePt);
+            newPosition += trackingCorrectionTol*(cC - facePt);
 
             mesh().findTetFacePt
             (
-                cellI,
+                celli,
                 newPosition,
-                tetFaceI,
+                tetFacei,
                 tetPtI
             );
 
             iterNo++;
 
-        } while (tetFaceI < 0  && iterNo <= trap);
+        } while (tetFacei < 0  && iterNo <= trap);
     }
 
-    if (tetFaceI == -1)
+    if (tetFacei == -1)
     {
-        FatalErrorIn
-        (
-            "sampledSet::pushIn(const point&, const label)"
-        )   << "After pushing " << facePt << " to " << newPosition
-            << " it is still outside face " << faceI
-            << " at " << mesh().faceCentres()[faceI]
-            << " of cell " << cellI
+        FatalErrorInFunction
+            << "After pushing " << facePt << " to " << newPosition
+            << " it is still outside face " << facei
+            << " at " << mesh().faceCentres()[facei]
+            << " of cell " << celli
             << " at " << cC << endl
             << "Please change your starting point"
             << abort(FatalError);
     }
-
-    //Info<< "pushIn : moved " << facePt << " to " << newPosition
-    //    << endl;
 
     return newPosition;
 }
@@ -243,90 +240,79 @@ bool CML::sampledSet::getTrackingPoint
     const vector& offset,
     const point& samplePt,
     const point& bPoint,
-    const label bFaceI,
+    const label bFacei,
 
     point& trackPt,
-    label& trackCellI,
-    label& trackFaceI
+    label& trackCelli,
+    label& trackFacei
 ) const
 {
     const scalar smallDist = mag(tol*offset);
 
     bool isGoodSample = false;
 
-    if (bFaceI == -1)
+    if (bFacei == -1)
     {
         // No boundary intersection. Try and find cell samplePt is in
-        trackCellI = mesh().findCell(samplePt, searchEngine_.decompMode());
+        trackCelli = mesh().findCell(samplePt, searchEngine_.decompMode());
 
         if
         (
-            (trackCellI == -1)
+            (trackCelli == -1)
         || !mesh().pointInCell
             (
                 samplePt,
-                trackCellI,
+                trackCelli,
                 searchEngine_.decompMode()
             )
         )
         {
             // Line samplePt - end_ does not intersect domain at all.
             // (or is along edge)
-            //Info<< "getTrackingPoint : samplePt outside domain : "
-            //    << "  samplePt:" << samplePt
-            //    << endl;
 
-            trackCellI = -1;
-            trackFaceI = -1;
+            trackCelli = -1;
+            trackFacei = -1;
 
             isGoodSample = false;
         }
         else
         {
-            // start is inside. Use it as tracking point
-            //Info<< "getTrackingPoint : samplePt inside :"
-            //    << "  samplePt:" << samplePt
-            //    << "  trackCellI:" << trackCellI
-            //    << endl;
+            // Start is inside. Use it as tracking point
 
             trackPt = samplePt;
-            trackFaceI = -1;
+            trackFacei = -1;
 
             isGoodSample = true;
         }
     }
     else if (mag(samplePt - bPoint) < smallDist)
     {
-        //Info<< "getTrackingPoint : samplePt:" << samplePt
-        //    << " close to bPoint:"
-        //    << bPoint << endl;
-
         // samplePt close to bPoint. Snap to it
-        trackPt = pushIn(bPoint, bFaceI);
-        trackFaceI = bFaceI;
-        trackCellI = getBoundaryCell(trackFaceI);
+        trackPt = pushIn(bPoint, bFacei);
+        trackFacei = bFacei;
+        trackCelli = getBoundaryCell(trackFacei);
 
         isGoodSample = true;
     }
     else
     {
-        scalar sign = calcSign(bFaceI, samplePt);
+        scalar sign = calcSign(bFacei, samplePt);
 
         if (sign < 0)
         {
             // samplePt inside or marginally outside.
             trackPt = samplePt;
-            trackFaceI = -1;
-            trackCellI = mesh().findCell(trackPt, searchEngine_.decompMode());
+            trackFacei = -1;
+            trackCelli = mesh().findCell(trackPt, searchEngine_.decompMode());
 
             isGoodSample = true;
         }
         else
         {
             // samplePt outside. use bPoint
-            trackPt = pushIn(bPoint, bFaceI);
-            trackFaceI = bFaceI;
-            trackCellI = getBoundaryCell(trackFaceI);
+            trackPt = pushIn(bPoint, bFacei);
+            trackFacei = bFacei;
+            trackCelli = getBoundaryCell(trackFacei);
 
             isGoodSample = false;
         }
@@ -334,15 +320,14 @@ bool CML::sampledSet::getTrackingPoint
 
     if (debug)
     {
-        Info<< "sampledSet::getTrackingPoint :"
-            << " offset:" << offset
+        InfoInFunction
             << " samplePt:" << samplePt
             << " bPoint:" << bPoint
-            << " bFaceI:" << bFaceI
+            << " bFacei:" << bFacei
             << endl << "   Calculated first tracking point :"
             << " trackPt:" << trackPt
-            << " trackCellI:" << trackCellI
-            << " trackFaceI:" << trackFaceI
+            << " trackCelli:" << trackCelli
+            << " trackFacei:" << trackFacei
             << " isGoodSample:" << isGoodSample
             << endl;
     }
@@ -374,7 +359,7 @@ void CML::sampledSet::setSamples
      || (curveDist_.size() != size())
     )
     {
-        FatalErrorIn("sampledSet::setSamples()")
+        FatalErrorInFunction
             << "sizes not equal : "
             << "  points:" << size()
             << "  cells:" << cells_.size()
@@ -455,12 +440,8 @@ CML::autoPtr<CML::sampledSet> CML::sampledSet::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "sampledSet::New"
-            "(const word&, const polyMesh&, const meshSearch&"
-            ", const dictionary&)"
-        )   << "Unknown sample type "
+        FatalErrorInFunction
+            << "Unknown sample type "
             << sampleType << nl << nl
             << "Valid sample types : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -484,7 +465,7 @@ CML::Ostream& CML::sampledSet::write(Ostream& os) const
 {
     coordSet::write(os);
 
-    os  << endl << "\t(cellI)\t(faceI)" << endl;
+    os  << endl << "\t(celli)\t(facei)" << endl;
 
     forAll(*this, sampleI)
     {

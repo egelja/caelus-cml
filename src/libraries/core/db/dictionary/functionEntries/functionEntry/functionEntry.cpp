@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,6 +20,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "functionEntry.hpp"
+#include "IOstreams.hpp"
+#include "ISstream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -41,6 +43,34 @@ namespace CML
 }
 
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+CML::token CML::functionEntry::readLine(const word& key, Istream& is)
+{
+    string s;
+    dynamic_cast<ISstream&>(is).getLine(s);
+
+    return token(string(key+s), is.lineNumber());
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+CML::functionEntry::functionEntry
+(
+    const word& key,
+    const dictionary& dict,
+    Istream& is
+)
+:
+    primitiveEntry
+    (
+        word(key+dict.name()+CML::name(is.lineNumber())),
+        readLine(key, is)
+    )
+{}
+
+
 // * * * * * * * * * * * * Member Function Selectors * * * * * * * * * * * * //
 
 bool CML::functionEntry::execute
@@ -58,7 +88,7 @@ bool CML::functionEntry::execute
 
     if (!executedictionaryIstreamMemberFunctionTablePtr_)
     {
-        cerr<<"functionEntry::execute"
+        cerr<< "functionEntry::execute"
             << "(const word&, dictionary&, Istream&)"
             << " not yet initialized, function = "
             << functionName.c_str() << std::endl;
@@ -72,11 +102,8 @@ bool CML::functionEntry::execute
 
     if (mfIter == executedictionaryIstreamMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "functionEntry::execute"
-            "(const word& functionName, dictionary& parentDict, Istream&)"
-        )   << "Unknown functionEntry '" << functionName
+        FatalErrorInFunction
+            << "Unknown functionEntry '" << functionName
             << "' in " << is.name() << " near line " << is.lineNumber()
             << nl << nl
             << "Valid functionEntries are :" << endl
@@ -104,7 +131,7 @@ bool CML::functionEntry::execute
 
     if (!executeprimitiveEntryIstreamMemberFunctionTablePtr_)
     {
-        cerr<<"functionEntry::execute"
+        cerr<< "functionEntry::execute"
             << "(const word&, const dictionary&, primitiveEntry&, Istream&)"
             << " not yet initialized, function = "
             << functionName.c_str() << std::endl;
@@ -118,11 +145,8 @@ bool CML::functionEntry::execute
 
     if (mfIter == executeprimitiveEntryIstreamMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "functionEntry::execute"
-            "(const word&, const dictionary&, primitiveEntry&, Istream&)"
-        )   << "Unknown functionEntry '" << functionName
+        FatalErrorInFunction
+            << "Unknown functionEntry '" << functionName
             << "' in " << is.name() << " near line " << is.lineNumber()
             << nl << nl
             << "Valid functionEntries are :" << endl
@@ -132,5 +156,21 @@ bool CML::functionEntry::execute
 
     return mfIter()(parentDict, entry, is);
 }
+
+
+void CML::functionEntry::write(Ostream& os) const
+{
+    // Contents should be single string token
+    const token& t = operator[](0);
+    const string& s = t.stringToken();
+
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        os.write(s[i]);
+    }
+
+    os << endl;
+}
+
 
 // ************************************************************************* //

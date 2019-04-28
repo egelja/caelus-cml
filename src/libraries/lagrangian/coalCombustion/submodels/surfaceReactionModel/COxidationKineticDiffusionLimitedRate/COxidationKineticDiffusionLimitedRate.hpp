@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    COxidationKineticDiffusionLimitedRate
+    CML::COxidationKineticDiffusionLimitedRate
 
 Description
     Kinetic/diffusion limited rate surface reaction model for coal parcels.
@@ -136,7 +136,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -177,8 +177,8 @@ COxidationKineticDiffusionLimitedRate
     C2_(readScalar(this->coeffDict().lookup("C2"))),
     E_(readScalar(this->coeffDict().lookup("E"))),
     CsLocalId_(-1),
-    O2GlobalId_(owner.composition().globalCarrierId("O2")),
-    CO2GlobalId_(owner.composition().globalCarrierId("CO2")),
+    O2GlobalId_(owner.composition().carrierId("O2")),
+    CO2GlobalId_(owner.composition().carrierId("CO2")),
     WC_(0.0),
     WO2_(0.0),
     HcCO2_(0.0)
@@ -188,8 +188,8 @@ COxidationKineticDiffusionLimitedRate
     CsLocalId_ = owner.composition().localId(idSolid, "C");
 
     // Set local copies of thermo properties
-    WO2_ = owner.thermo().carrier().W(O2GlobalId_);
-    const scalar WCO2 = owner.thermo().carrier().W(CO2GlobalId_);
+    WO2_ = owner.thermo().carrier().Wi(O2GlobalId_);
+    const scalar WCO2 = owner.thermo().carrier().Wi(CO2GlobalId_);
     WC_ = WCO2 - WO2_;
 
     HcCO2_ = owner.thermo().carrier().Hc(CO2GlobalId_);
@@ -235,7 +235,7 @@ template<class CloudType>
 CML::scalar CML::COxidationKineticDiffusionLimitedRate<CloudType>::calculate
 (
     const scalar dt,
-    const label cellI,
+    const label celli,
     const scalar d,
     const scalar T,
     const scalar Tc,
@@ -266,19 +266,19 @@ CML::scalar CML::COxidationKineticDiffusionLimitedRate<CloudType>::calculate
     const SLGThermo& thermo = this->owner().thermo();
 
     // Local mass fraction of O2 in the carrier phase
-    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[cellI];
+    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[celli];
 
     // Diffusion rate coefficient
     const scalar D0 = C1_/d*pow(0.5*(T + Tc), 0.75);
 
     // Kinetic rate
-    const scalar Rk = C2_*exp(-E_/(specie::RR*Tc));
+    const scalar Rk = C2_*exp(-E_/(RR*Tc));
 
     // Particle surface area
     const scalar Ap = constant::mathematical::pi*sqr(d);
 
     // Change in C mass [kg]
-    scalar dmC = Ap*rhoc*specie::RR*Tc*YO2/WO2_*D0*Rk/(D0 + Rk)*dt;
+    scalar dmC = Ap*rhoc*RR*Tc*YO2/WO2_*D0*Rk/(D0 + Rk)*dt;
 
     // Limit mass transfer by availability of C
     dmC = min(mass*fComb, dmC);

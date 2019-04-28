@@ -8,7 +8,7 @@ Import('env')
 target = 'Co'
 
 sources = Split("""
-Co.cpp
+Co_app.cpp
 """)
 
 caelus_inc = [

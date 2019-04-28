@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ const CML::wordRe CML::wordRe::null;
 CML::wordRe::wordRe(Istream& is)
 :
     word(),
-    re_(NULL)
+    re_(nullptr)
 {
     is >> *this;
 }
@@ -64,7 +64,7 @@ CML::Istream& CML::operator>>(Istream& is, wordRe& w)
         if (w.empty())
         {
             is.setBad();
-            FatalIOErrorIn("operator>>(Istream&, wordRe&)", is)
+            FatalIOErrorInFunction(is)
                 << "empty word/expression "
                 << exit(FatalIOError);
             return is;
@@ -73,7 +73,7 @@ CML::Istream& CML::operator>>(Istream& is, wordRe& w)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, wordRe&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected word or string, found "
             << t.info()
             << exit(FatalIOError);

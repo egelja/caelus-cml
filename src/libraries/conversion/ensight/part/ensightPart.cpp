@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -131,11 +131,8 @@ CML::autoPtr<CML::ensightPart> CML::ensightPart::New(Istream& is)
 
     if (cstrIter == istreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "ensightPart::New(Istream&)",
-            is
-        )   << "unknown ensightPart type "
+        FatalIOErrorInFunction(is)
+            << "unknown ensightPart type "
             << partType << nl << nl
             << "Valid ensightPart types are :" << endl
             << istreamConstructorTablePtr_->sortedToc()

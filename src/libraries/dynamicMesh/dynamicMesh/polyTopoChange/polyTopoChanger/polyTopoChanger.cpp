@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,7 +45,7 @@ void CML::polyTopoChanger::readModifiers()
     {
         if (readOpt() == IOobject::MUST_READ_IF_MODIFIED)
         {
-            WarningIn("polyTopoChanger::readModifiers()")
+            WarningInFunction
                 << "Specified IOobject::MUST_READ_IF_MODIFIED but class"
                 << " does not support automatic rereading."
                 << endl;
@@ -290,7 +290,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::polyTopoChanger::changeMesh
     }
     else
     {
-        return autoPtr<mapPolyMesh>(NULL);
+        return autoPtr<mapPolyMesh>(nullptr);
     }
 }
 
@@ -308,11 +308,8 @@ void CML::polyTopoChanger::addTopologyModifiers
     {
         if (tm[tmI]->topoChanger() != *this)
         {
-            FatalErrorIn
-            (
-                "void polyTopoChanger::addTopologyModifiers("
-                "const List<polyMeshModifier*>& tm)"
-            )   << "Mesh modifier created with different mesh reference."
+            FatalErrorInFunction
+                << "Mesh modifier created with different mesh reference."
                 << abort(FatalError);
         }
         set(tmI, tm[tmI]);

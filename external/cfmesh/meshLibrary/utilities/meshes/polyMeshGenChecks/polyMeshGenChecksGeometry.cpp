@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright held by the original author
+Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -69,10 +70,8 @@ bool checkClosedBoundary(const polyMeshGen& mesh, const bool report)
 
     if( maxOpen > SMALL*max(1.0, sumMagClosedBoundary) )
     {
-        SeriousErrorIn
-        (
-            "bool checkClosedBoundary(const polyMeshGen&, const bool report)"
-        )   << "Possible hole in boundary description" << endl;
+        SeriousErrorInFunction
+            << "Possible hole in boundary description" << endl;
 
         Info<< "Boundary openness in x-direction = "
             << sumClosed.component(vector::X) << endl;
@@ -149,11 +148,8 @@ bool checkClosedCells
 
     if( nErrorClosed > 0 )
     {
-        SeriousErrorIn
-        (
-            "bool checkClosedCells("
-            "const polyMeshGen&, const bool, const scalar, labelHashSet*)"
-        )  << nErrorClosed << " cells with invalid face labels found"
+        SeriousErrorInFunction
+            << nErrorClosed << " cells with invalid face labels found"
             << endl;
 
         return true;
@@ -253,11 +249,8 @@ bool checkClosedCells
 
     if( nOpen > 0 )
     {
-        SeriousErrorIn
-        (
-            "bool checkClosedCells("
-            "const polyMeshGen&, const bool, const scalar, labelHashSet*)"
-        )   << nOpen << " open cells found. Max cell openness: "
+        SeriousErrorInFunction
+            << nOpen << " open cells found. Max cell openness: "
             << maxOpenCell << endl;
 
         return true;
@@ -265,11 +258,8 @@ bool checkClosedCells
 
     if( nAspect > 0 )
     {
-        SeriousErrorIn
-        (
-            "bool checkClosedCells("
-            "const polyMeshGen&, const bool, const scalar, labelHashSet*)"
-        )   << nAspect << " high aspect ratio cells found.  "
+        SeriousErrorInFunction
+            << nAspect << " high aspect ratio cells found.  "
             << "Max aspect ratio: " << maxAspectRatio
             << endl;
 
@@ -305,11 +295,8 @@ bool checkCellVolumes
         if( vols[cellI] < VSMALL )
         {
             if( report )
-                SeriousErrorIn
-                (
-                    "bool checkCellVolumes("
-                    "const polyMeshGen&, const bool, labelHashSet*)"
-                )   << "Zero or negative cell volume detected for cell "
+                SeriousErrorInFunction
+                    << "Zero or negative cell volume detected for cell "
                     << cellI << ".  Volume = " << vols[cellI] << endl;
 
             if( setPtr )
@@ -328,11 +315,8 @@ bool checkCellVolumes
 
     if( minVolume < VSMALL )
     {
-        SeriousErrorIn
-        (
-            "bool checkCellVolumes("
-            "const polyMeshGen&, const bool, labelHashSet*)"
-        )   << "Zero or negative cell volume detected.  "
+        SeriousErrorInFunction
+            << "Zero or negative cell volume detected.  "
             << "Minimum negative volume: "
             << minVolume << ".\nNumber of negative volume cells: "
             << nNegVolCells << ".  This mesh is invalid"
@@ -435,12 +419,8 @@ bool checkFaceAreas
 
     if( minArea < VSMALL )
     {
-        SeriousErrorIn
-        (
-            "bool checkFaceAreas("
-            "const polyMeshGen&, const bool, const scalar,"
-            " labelHashSet*, const boolList*)"
-        )   << "Zero or negative face area detected.  Minimum negative area: "
+        SeriousErrorInFunction
+            << "Zero or negative face area detected.  Minimum negative area: "
             << minArea << ". This mesh is invalid"
             << endl;
 
@@ -1623,12 +1603,8 @@ bool checkFaceAngles
 {
     if( maxDeg < -SMALL || maxDeg > 180+SMALL )
     {
-        FatalErrorIn
-        (
-            "bool checkFaceAngles("
-            "const polyMeshGen&, const bool, const scalar,"
-            " labelHashSet*, const boolList*)"
-        )   << "maxDeg should be [0..180] but is now " << maxDeg
+        FatalErrorInFunction
+            << "maxDeg should be [0..180] but is now " << maxDeg
             << abort(FatalError);
     }
 
@@ -1780,12 +1756,8 @@ bool checkFaceFlatness
 {
     if( warnFlatness < 0 || warnFlatness > 1 )
     {
-        FatalErrorIn
-        (
-            "bool checkFaceFlatness("
-            "const polyMeshGen&, const bool, const scalar,"
-            " labelHashSet*, const boolList*)"
-        )   << "warnFlatness should be [0..1] but is now " << warnFlatness
+        FatalErrorInFunction
+            << "warnFlatness should be [0..1] but is now " << warnFlatness
             << abort(FatalError);
     }
 

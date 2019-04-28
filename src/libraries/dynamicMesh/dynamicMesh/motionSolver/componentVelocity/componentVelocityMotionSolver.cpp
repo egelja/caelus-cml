@@ -51,10 +51,7 @@ CML::direction CML::componentVelocityMotionSolver::cmpt
     }
     else
     {
-        FatalErrorIn
-            (
-                "CML::componentVelocityMotionSolver::cmpt(const word&) const"
-            )
+        FatalErrorInFunction
             << "Given component name " << cmptName << " should be x, y or z"
             << exit(FatalError);
 

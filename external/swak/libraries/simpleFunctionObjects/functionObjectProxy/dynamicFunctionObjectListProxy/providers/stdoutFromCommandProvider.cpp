@@ -62,7 +62,7 @@ namespace CML
         string buffer;
         FILE *output = popen(cmd.c_str(), "r");
         if(!output) {
-            FatalErrorIn("stdoutFromCommandProvider::getDictionaryText()")
+            FatalErrorInFunction
                 << "Problem executing " << cmd
                     << endl
                     << exit(FatalError);
@@ -74,7 +74,7 @@ namespace CML
             c=fgetc(output);
         }
         if(ferror(output)) {
-            FatalErrorIn("stdoutFromCommandProvider::getDictionaryText()")
+            FatalErrorInFunction
                 << "Problem while executing" << cmd
                     << endl
                     << exit(FatalError);

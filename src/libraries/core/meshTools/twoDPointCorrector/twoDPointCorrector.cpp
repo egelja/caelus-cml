@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -98,11 +98,8 @@ void CML::twoDPointCorrector::calcAddressing() const
 
     if (mag(pn) < VSMALL)
     {
-        FatalErrorIn
-        (
-            "twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh, "
-            "const vector& n)"
-        )   << "Cannot determine normal vector from patches."
+        FatalErrorInFunction
+            << "Cannot determine normal vector from patches."
             << abort(FatalError);
     }
     else
@@ -147,11 +144,8 @@ void CML::twoDPointCorrector::calcAddressing() const
     {
         if (meshPoints.size() % 2 != 0)
         {
-            WarningIn
-            (
-                "twoDPointCorrector::twoDPointCorrector("
-                "const polyMesh& mesh, const vector& n)"
-            )   << "the number of vertices in the geometry "
+            WarningInFunction
+                << "the number of vertices in the geometry "
                 << "is odd - this should not be the case for a 2-D case. "
                 << "Please check the geometry."
                 << endl;
@@ -159,11 +153,8 @@ void CML::twoDPointCorrector::calcAddressing() const
 
         if (2*nNormalEdges != meshPoints.size())
         {
-            WarningIn
-            (
-                "twoDPointCorrector::twoDPointCorrector("
-                "const polyMesh& mesh, const vector& n)"
-            )   << "The number of points in the mesh is "
+            WarningInFunction
+                << "The number of points in the mesh is "
                 << "not equal to twice the number of edges normal to the plane "
                 << "- this may be OK only for wedge geometries.\n"
                 << "    Please check the geometry or adjust "
@@ -203,8 +194,8 @@ CML::twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
 :
     MeshObject<polyMesh, twoDPointCorrector>(mesh),
     required_(mesh_.nGeometricD() == 2),
-    planeNormalPtr_(NULL),
-    normalEdgeIndicesPtr_(NULL),
+    planeNormalPtr_(nullptr),
+    normalEdgeIndicesPtr_(nullptr),
     isWedge_(false),
     wedgeAxis_(Zero),
     wedgeAngle_(0.0)
@@ -240,7 +231,7 @@ CML::direction CML::twoDPointCorrector::normalDir() const
     }
     else
     {
-        FatalErrorIn("direction twoDPointCorrector::normalDir() const")
+        FatalErrorInFunction
             << "Plane normal not aligned with the coordinate system" << nl
             << "    pn = " << pn
             << abort(FatalError);

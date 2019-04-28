@@ -58,11 +58,7 @@ CML::decompositionConstraint::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "decompositionMethod::New"
-            "(const dictionary&, const word&)"
-        )
+        FatalErrorInFunction
             << "Unknown decompositionConstraint type "
             << modelType << nl << nl
             << "Valid decompositionConstraint types:" << endl

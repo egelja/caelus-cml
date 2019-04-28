@@ -48,17 +48,6 @@ Istream& operator>>
     patchInteractionData& pid
 );
 
-Ostream& operator<<
-(
-    Ostream& os,
-    const patchInteractionData& pid
-);
-
-bool operator!=
-(
-    const patchInteractionData& x, 
-    const patchInteractionData& y
-);
 
 class patchInteractionData
 {
@@ -109,18 +98,6 @@ public:
             (
                 Istream& is,
                 patchInteractionData& pid
-            );
-
-            friend Ostream& operator<<
-            (
-                Ostream& os,
-                const patchInteractionData& pid
-            );
-
-            friend bool operator!=
-            (
-                const patchInteractionData& x, 
-                const patchInteractionData& y
             );
 };
 

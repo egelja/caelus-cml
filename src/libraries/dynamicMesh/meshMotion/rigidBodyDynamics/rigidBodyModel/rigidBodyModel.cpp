@@ -293,7 +293,7 @@ void CML::RBD::rigidBodyModel::makeComposite(const label bodyID)
     if (!isA<compositeBody>(bodies_[bodyID]))
     {
         // Retrieve the un-merged body
-        autoPtr<rigidBody> bodyPtr = bodies_.set(bodyID, NULL);
+        autoPtr<rigidBody> bodyPtr = bodies_.set(bodyID, nullptr);
 
         // Insert the compositeBody containing the original body
         bodies_.set

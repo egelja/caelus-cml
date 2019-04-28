@@ -167,7 +167,7 @@ void cutBySurface
         }
         else
         {
-            FatalErrorIn("cutBySurface")
+            FatalErrorInFunction
                 << "Multiple mesh regions in original mesh" << endl
                 << "Please use splitMeshRegions to separate these"
                 << exit(FatalError);
@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
         label cellI = queryMesh.findCell(outsidePoint, -1, false);
         if (returnReduce(cellI, maxOp<label>()) == -1)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "outsidePoint " << outsidePoint
                 << " is not inside any cell"
                 << exit(FatalError);
@@ -408,9 +408,9 @@ int main(int argc, char *argv[])
 
 
     // Surface
-    autoPtr<triSurface> surf(NULL);
+    autoPtr<triSurface> surf(nullptr);
     // Search engine on surface.
-    autoPtr<triSurfaceSearch> querySurf(NULL);
+    autoPtr<triSurfaceSearch> querySurf(nullptr);
 
     if (useSurface)
     {

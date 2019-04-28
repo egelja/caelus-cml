@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -165,10 +165,7 @@ bool CML::fileFormats::CASsurfaceFormat<Face>::read
     IFstream is(filename);
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::CASsurfaceFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << filename
             << exit(FatalError);
     }
@@ -215,11 +212,7 @@ bool CML::fileFormats::CASsurfaceFormat<Face>::read
 {
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::CASsurfaceFormat::read"
-            "(Istream&, pointField&, List<Face>&, List<surfZone>&)"
-        )
+        FatalErrorInFunction
             << "read error "
             << exit(FatalError);
     }
@@ -267,11 +260,7 @@ bool CML::fileFormats::CASsurfaceFormat<Face>::read
 
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::CASsurfaceFormat::read"
-            "(Istream&, MeshedSurface<Face>&)"
-        )
+        FatalErrorInFunction
             << "read error "
             << exit(FatalError);
     }
@@ -322,11 +311,7 @@ void CML::fileFormats::CASsurfaceFormat<Face>::write
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::CASsurfaceFormat::write"
-            "(const fileName&, const MeshedSurfaceProxy<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }

@@ -199,11 +199,7 @@ public:
                 const point&
             ) const
             {
-                notImplemented
-                (
-                    "treeDataCell::getVolumeType"
-                    "(const indexedOctree<treeDataCell>&, const point&)"
-                );
+                NotImplemented;
                 return volumeType::UNKNOWN;
             }
 

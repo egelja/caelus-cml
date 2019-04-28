@@ -14,13 +14,14 @@ noPyrolysis/noPyrolysis.cpp
 """)
 
 caelus_inc = [
-'turbulenceModels',
-'thermophysicalModels/basic/lnInclude',
-'thermophysicalModels/specie/lnInclude',
-'thermophysicalModels/solid/lnInclude',
 'thermophysicalModels/chemistryModel/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude',
 'thermophysicalModels/solidChemistryModel/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
+'turbulenceModels',
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'turbulenceModels/compressible/LES/lnInclude',
 'turbulenceModels/compressible/RAS/lnInclude',
@@ -32,14 +33,16 @@ caelus_libs = [
 'core',
 'chemistryModel',
 'specie',
-'solid',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'solidChemistryModel',
+'solidThermo',
 'compressibleTurbulenceModel',
 'compressibleRASModels',
 'compressibleLESModels',
 'LESdeltas',
-'regionModels'
+'regionModels',
+'radiationModels',
+'reactionThermophysicalModels'
 ]
 
 build_lib(env,

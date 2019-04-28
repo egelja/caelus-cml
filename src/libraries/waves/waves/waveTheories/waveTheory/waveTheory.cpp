@@ -90,7 +90,7 @@ void waveTheory::checkWaveDirection(const vector& k) const
 {
     if (CML::mag(k & direction_) > SMALL)
     {
-        FatalErrorIn("void waveTheory::checkWaveDirection(const vector& k)")
+        FatalErrorInFunction
             << "The wave number " << k << " is not perpendicular to the \n"
             << "direction of the gravitational vector " << g_ << "\n"
             << endl << endl << exit(FatalError);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -78,17 +78,17 @@ public:
         inline Type interpolate
         (
             const vector& position,
-            const label cellI,
-            const label faceI = -1
+            const label celli,
+            const label facei = -1
         ) const;
 
-        //- Interpolate field to the given point in the tetrahedron
+        //- Interpolate field to the given coordinates in the tetrahedron
         //  defined by the given indices.
         inline Type interpolate
         (
-            const vector& position,
+            const barycentric& coordinates,
             const tetIndices& tetIs,
-            const label faceI = -1
+            const label facei = -1
         ) const;
 };
 
@@ -105,8 +105,8 @@ inline Type CML::interpolationCellPoint<Type>::interpolate
     const cellPointWeight& cpw
 ) const
 {
-    const List<scalar>& weights = cpw.weights();
-    const List<label>& faceVertices = cpw.faceVertices();
+    const barycentric& weights = cpw.weights();
+    const triFace& faceVertices = cpw.faceVertices();
 
     Type t = this->psi_[cpw.cell()]*weights[0];
     t += psip_[faceVertices[0]]*weights[1];
@@ -121,66 +121,45 @@ template<class Type>
 inline Type CML::interpolationCellPoint<Type>::interpolate
 (
     const vector& position,
-    const label cellI,
-    const label faceI
+    const label celli,
+    const label facei
 ) const
 {
-    return interpolate(cellPointWeight(this->pMesh_, position, cellI, faceI));
+    return interpolate(cellPointWeight(this->pMesh_, position, celli, facei));
 }
 
 
 template<class Type>
 inline Type CML::interpolationCellPoint<Type>::interpolate
 (
-    const vector& position,
+    const barycentric& coordinates,
     const tetIndices& tetIs,
-    const label faceI
+    const label facei
 ) const
 {
     // Assumes that the position is consistent with the supplied
-    // tetIndices.  Does not pay attention to whether or not faceI is
+    // tetIndices.  Does not pay attention to whether or not facei is
     // supplied or not - the result will be essentially the same.
     // Performs a consistency check, however.
 
-    if (faceI >= 0)
+    if (facei >= 0)
     {
-        if (faceI != tetIs.face())
+        if (facei != tetIs.face())
         {
-            FatalErrorIn
-            (
-                "inline Type CML::interpolationCellPoint<Type>::interpolate"
-                "("
-                    "const vector& position, "
-                    "const tetIndices& tetIs, "
-                    "const label faceI"
-                ") const"
-            )
-                << "specified face " << faceI << " inconsistent with the face "
+            FatalErrorInFunction
+                << "specified face " << facei << " inconsistent with the face "
                 << "stored by tetIndices: " << tetIs.face()
                 << exit(FatalError);
         }
     }
 
-    List<scalar> weights;
+    const triFace triIs = tetIs.faceTriIs(this->pMesh_);
 
-    tetIs.tet(this->pMesh_).barycentric(position, weights);
-
-    const faceList& pFaces = this->pMesh_.faces();
-
-    const face& f = pFaces[tetIs.face()];
-
-    // Order of weights is the same as that of the vertices of the tet, i.e.
-    // cellCentre, faceBasePt, facePtA, facePtB.
-
-    Type t = this->psi_[tetIs.cell()]*weights[0];
-
-    t += psip_[f[tetIs.faceBasePt()]]*weights[1];
-
-    t += psip_[f[tetIs.facePtA()]]*weights[2];
-
-    t += psip_[f[tetIs.facePtB()]]*weights[3];
-
-    return t;
+    return
+        this->psi_[tetIs.cell()]*coordinates[0]
+      + psip_[triIs[0]]*coordinates[1]
+      + psip_[triIs[1]]*coordinates[2]
+      + psip_[triIs[2]]*coordinates[3];
 }
 
 

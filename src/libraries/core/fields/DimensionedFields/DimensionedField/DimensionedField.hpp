@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014-2015 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -169,18 +169,26 @@ public:
         );
 
         //- Construct as copy of tmp<DimensionedField> deleting argument
-#       ifdef ConstructFromTmp
+        #ifdef ConstructFromTmp
         DimensionedField
         (
             const tmp<DimensionedField<Type, GeoMesh> >&
         );
-#       endif
+        #endif
 
         //- Construct as copy resetting IO parameters
         DimensionedField
         (
             const IOobject&,
             const DimensionedField<Type, GeoMesh>&
+        );
+
+        //- Construct as copy resetting IO parameters and re-use as specified.
+        DimensionedField
+        (
+            const IOobject&,
+            DimensionedField<Type, GeoMesh>&,
+            bool reUse
         );
 
         //- Construct as copy resetting name
@@ -206,13 +214,13 @@ public:
         );
 
         //- Construct as copy resetting name
-#       ifdef ConstructFromTmp
+        #ifdef ConstructFromTmp
         DimensionedField
         (
             const word& newName,
             const tmp<DimensionedField<Type, GeoMesh> >&
         );
-#       endif
+        #endif
 
         //- Clone
         tmp<DimensionedField<Type, GeoMesh> > clone() const;
@@ -401,7 +409,7 @@ namespace CML
 #define checkField(df1, df2, op)                                    \
 if (&(df1).mesh() != &(df2).mesh())                                 \
 {                                                                   \
-    FatalErrorIn("checkField(df1, df2, op)")                        \
+    FatalErrorInFunction                                            \
         << "different mesh for fields "                             \
         << (df1).name() << " and " << (df2).name()                  \
         << " during operatrion " <<  op                             \
@@ -427,12 +435,8 @@ DimensionedField<Type, GeoMesh>::DimensionedField
 {
     if (field.size() && field.size() != GeoMesh::size(mesh))
     {
-        FatalErrorIn
-        (
-            "DimensionedField<Type, GeoMesh>::DimensionedField"
-            "(const IOobject& io,const Mesh& mesh, "
-            "const dimensionSet& dims, const Field<Type>& field)"
-        )   << "size of field = " << field.size()
+        FatalErrorInFunction
+            << "size of field = " << field.size()
             << " is not the same as the size of mesh = "
             << GeoMesh::size(mesh)
             << abort(FatalError);
@@ -560,11 +564,26 @@ DimensionedField<Type, GeoMesh>::DimensionedField
 template<class Type, class GeoMesh>
 DimensionedField<Type, GeoMesh>::DimensionedField
 (
+    const IOobject& io,
+    DimensionedField<Type, GeoMesh>& df,
+    bool reUse
+)
+:
+    regIOobject(io, df),
+    Field<Type>(df, reUse),
+    mesh_(df.mesh_),
+    dimensions_(df.dimensions_)
+{}
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
     const word& newName,
     const DimensionedField<Type, GeoMesh>& df
 )
 :
-    regIOobject(IOobject(newName, df.time().timeName(), df.db())),
+    regIOobject(newName, df, newName == df.name()),
     Field<Type>(df),
     mesh_(df.mesh_),
     dimensions_(df.dimensions_)
@@ -579,7 +598,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     bool reUse
 )
 :
-    regIOobject(IOobject(newName, df.time().timeName(), df.db())),
+    regIOobject(newName, df, true),
     Field<Type>(df, reUse),
     mesh_(df.mesh_),
     dimensions_(df.dimensions_)
@@ -593,7 +612,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     const Xfer<DimensionedField<Type, GeoMesh> >& df
 )
 :
-    regIOobject(IOobject(newName, df->time().timeName(), df->db())),
+    regIOobject(newName, df, true),
     Field<Type>(df),
     mesh_(df->mesh_),
     dimensions_(df->dimensions_)
@@ -608,7 +627,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     const tmp<DimensionedField<Type, GeoMesh> >& tdf
 )
 :
-    regIOobject(IOobject(newName, tdf().time().timeName(), tdf().db())),
+    regIOobject(newName, tdf(), true),
     Field<Type>
     (
         const_cast<DimensionedField<Type, GeoMesh>&>(tdf()),
@@ -782,11 +801,8 @@ void DimensionedField<Type, GeoMesh>::operator=
     // Check for assignment to self
     if (this == &df)
     {
-        FatalErrorIn
-        (
-            "DimensionedField<Type, GeoMesh>::operator="
-            "(const DimensionedField<Type, GeoMesh>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -808,11 +824,8 @@ void DimensionedField<Type, GeoMesh>::operator=
     // Check for assignment to self
     if (this == &df)
     {
-        FatalErrorIn
-        (
-            "DimensionedField<Type, GeoMesh>::operator="
-            "(const tmp<DimensionedField<Type, GeoMesh> >&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 

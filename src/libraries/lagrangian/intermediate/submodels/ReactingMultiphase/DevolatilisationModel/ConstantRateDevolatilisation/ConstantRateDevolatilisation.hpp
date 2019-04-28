@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -135,15 +135,8 @@ CML::ConstantRateDevolatilisation<CloudType>::ConstantRateDevolatilisation
 {
     if (volatileData_.empty())
     {
-        WarningIn
-        (
-            "CML::ConstantRateDevolatilisation<CloudType>::"
-            "ConstantRateDevolatilisation"
-            "("
-                "const dictionary& dict, "
-                "CloudType& owner"
-            ")"
-        )   << "Devolatilisation model selected, but no volatiles defined"
+        WarningInFunction
+            << "Devolatilisation model selected, but no volatiles defined"
             << nl << endl;
     }
     else

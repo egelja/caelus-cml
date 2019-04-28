@@ -23,17 +23,61 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "volFields.hpp"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
 {
+    makePatchFieldsTypeName(jumpCyclic);
+}
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-makePatchFieldsTypeName(jumpCyclic);
+template<>
+void CML::jumpCyclicFvPatchField<CML::scalar>::updateInterfaceMatrix
+(
+    const scalarField& psiInternal,
+    scalarField& result,
+    const lduMatrix&,
+    const scalarField& coeffs,
+    const direction cmpt,
+    const Pstream::commsTypes
+) const
+{
+    scalarField pnf(this->size());
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    const labelUList& nbrFaceCells =
+        this->cyclicPatch().neighbFvPatch().faceCells();
 
-} // End namespace CML
+    // Only apply jump to original field
+    if (&psiInternal == &this->internalField())
+    {
+        Field<scalar> jf(this->jump());
 
-// ************************************************************************* //
+        if (!this->cyclicPatch().owner())
+        {
+            jf *= -1.0;
+        }
+
+        forAll(*this, facei)
+        {
+            pnf[facei] = psiInternal[nbrFaceCells[facei]] - jf[facei];
+        }
+    }
+    else
+    {
+        forAll(*this, facei)
+        {
+            pnf[facei] = psiInternal[nbrFaceCells[facei]];
+        }
+    }
+
+    // Transform according to the transformation tensors
+    this->transformCoupleField(pnf, cmpt);
+
+    // Multiply the field by coefficients and add into the result
+    const labelUList& faceCells = this->cyclicPatch().faceCells();
+    forAll(faceCells, elemI)
+    {
+        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
+    }
+}

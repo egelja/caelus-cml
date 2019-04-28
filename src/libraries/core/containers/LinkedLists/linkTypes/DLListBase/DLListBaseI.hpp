@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -87,7 +87,7 @@ CML::DLListBase::first()
 {
     if (!nElmts_)
     {
-        FatalErrorIn("DLListBase::first()")
+        FatalErrorInFunction
             << "list is empty"
             << abort(FatalError);
     }
@@ -100,7 +100,7 @@ CML::DLListBase::first() const
 {
     if (!nElmts_)
     {
-        FatalErrorIn("DLListBase::first() const")
+        FatalErrorInFunction
             << "list is empty"
             << abort(FatalError);
     }
@@ -113,7 +113,7 @@ CML::DLListBase::last()
 {
     if (!nElmts_)
     {
-        FatalErrorIn("DLListBase::last()")
+        FatalErrorInFunction
             << "list is empty"
             << abort(FatalError);
     }
@@ -126,7 +126,7 @@ CML::DLListBase::last() const
 {
     if (!nElmts_)
     {
-        FatalErrorIn("DLListBase::last() const")
+        FatalErrorInFunction
             << "list is empty"
             << abort(FatalError);
     }
@@ -186,7 +186,7 @@ inline CML::DLListBase::iterator::iterator(DLListBase& s, link* elmt)
 inline CML::DLListBase::iterator::iterator(DLListBase& s)
 :
     curList_(s),
-    curElmt_(NULL),
+    curElmt_(nullptr),
     curLink_()
 {}
 

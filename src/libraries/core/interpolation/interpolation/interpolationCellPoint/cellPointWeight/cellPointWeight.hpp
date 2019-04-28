@@ -32,6 +32,8 @@ SourceFiles
 #define cellPointWeight_H
 
 #include "vector.hpp"
+#include "barycentric.hpp"
+#include "triFace.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,13 +53,14 @@ protected:
     // Protected data
 
        //- Cell index
-       const label cellI_;
+       const label celli_;
 
-       //- Weights applied to tet vertices
-       List<scalar> weights_;
+       //- Weights applied to tet vertices. Equal to the barycentric coordinates
+       //  of the interpolation position.
+       barycentric weights_;
 
        //- Face vertex indices
-       List<label> faceVertices_;
+       triFace faceVertices_;
 
 
     // Protected Member Functions
@@ -66,14 +69,14 @@ protected:
         (
             const polyMesh& mesh,
             const vector& position,
-            const label cellI
+            const label celli
         );
 
         void findTriangle
         (
             const polyMesh& mesh,
             const vector& position,
-            const label faceI
+            const label facei
         );
 
 
@@ -94,8 +97,8 @@ public:
         (
             const polyMesh& mesh,
             const vector& position,
-            const label cellI,
-            const label faceI = -1
+            const label celli,
+            const label facei = -1
         );
 
 
@@ -104,17 +107,17 @@ public:
         //- Cell index
         inline label cell() const
         {
-            return cellI_;
+            return celli_;
         }
 
-        //- interpolation weights
-        inline const List<scalar>& weights() const
+        //- Interpolation weights
+        inline const barycentric& weights() const
         {
             return weights_;
         }
 
-        //- interpolation addressing for points on face
-        inline const List<label>& faceVertices() const
+        //- Interpolation addressing for points on face
+        inline const triFace& faceVertices() const
         {
             return faceVertices_;
         }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -96,7 +96,7 @@ public:
             //- Return const access to the cloud owner
             inline const CloudType& owner() const;
 
-            //- Return reference to the cloud owner
+            //- Return references to the cloud owner
             inline CloudType& owner();
 
             //- Return the mesh database
@@ -121,6 +121,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -131,6 +132,7 @@ public:
             virtual forceSuSp calcNonCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -141,6 +143,7 @@ public:
             virtual scalar massEff
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
             ) const;
 };
@@ -264,7 +267,7 @@ CML::ParticleForceList<CloudType>::ParticleForceList
                         (
                             owner,
                             mesh,
-                            dict,
+                            dictionary::null,
                             model
                         )
                     );
@@ -315,19 +318,20 @@ template<class CloudType>
 CML::forceSuSp CML::ParticleForceList<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     if (calcCoupled_)
     {
         forAll(*this, i)
         {
-            value += this->operator[](i).calcCoupled(p, dt, mass, Re, muc);
+            value += this->operator[](i).calcCoupled(p, td, dt, mass, Re, muc);
         }
     }
 
@@ -339,19 +343,21 @@ template<class CloudType>
 CML::forceSuSp CML::ParticleForceList<CloudType>::calcNonCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     if (calcNonCoupled_)
     {
         forAll(*this, i)
         {
-            value += this->operator[](i).calcNonCoupled(p, dt, mass, Re, muc);
+            value +=
+                this->operator[](i).calcNonCoupled(p, td, dt, mass, Re, muc);
         }
     }
 
@@ -363,13 +369,14 @@ template<class CloudType>
 CML::scalar CML::ParticleForceList<CloudType>::massEff
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar mass
 ) const
 {
     scalar massEff = mass;
     forAll(*this, i)
     {
-        massEff += this->operator[](i).massAdd(p, mass);
+        massEff += this->operator[](i).massAdd(p, td, mass);
     }
 
     return massEff;

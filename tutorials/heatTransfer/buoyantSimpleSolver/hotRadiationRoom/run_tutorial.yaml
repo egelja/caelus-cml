@@ -1,0 +1,16 @@
+
+tasks:
+  - clean_case:
+      purge_generated: True
+      remove_zero: no
+      remove_mesh: yes
+
+  - run_command:
+      cmd_name: blockMesh
+
+  - run_command:
+      cmd_name: buoyantSimpleSolver 
+
+  - process_logs:
+      log_file: buoyantSimpleSolver.log
+

@@ -30,6 +30,9 @@ cflags_map = dict(
     )
 )
 
+if scotch_env['INT_TYPE'] == '64':
+    cflags_map['linux'] = cflags_map['linux'] + "-DCAELUS_LABEL64 "
+
 # Fix C compiler flags
 scotch_env.Replace(CCFLAGS=cflags_map[utils.ostype()])
 

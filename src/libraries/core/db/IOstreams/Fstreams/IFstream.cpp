@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ namespace CML
 
 CML::IFstreamAllocator::IFstreamAllocator(const fileName& pathname)
 :
-    ifPtr_(NULL),
+    ifPtr_(nullptr),
     compression_(IOstream::UNCOMPRESSED)
 {
     if (pathname.empty())
@@ -141,7 +141,7 @@ std::istream& CML::IFstream::stdStream()
 {
     if (!ifPtr_)
     {
-        FatalErrorIn("IFstream::stdStream()")
+        FatalErrorInFunction
             << "No stream allocated" << abort(FatalError);
     }
     return *ifPtr_;
@@ -152,7 +152,7 @@ const std::istream& CML::IFstream::stdStream() const
 {
     if (!ifPtr_)
     {
-        FatalErrorIn("IFstream::stdStream() const")
+        FatalErrorInFunction
             << "No stream allocated" << abort(FatalError);
     }
     return *ifPtr_;
@@ -181,7 +181,7 @@ CML::IFstream& CML::IFstream::operator()() const
         }
         else
         {
-            FatalIOErrorIn("IFstream::operator()", *this)
+            FatalIOErrorInFunction(*this)
                 << "file " << pathname_ << " does not exist"
                 << exit(FatalIOError);
         }

@@ -215,18 +215,18 @@ void CML::writeFuns::write
 
     label nValues = mesh.nCells() + superCells.size();
 
-    os  << vvf.name() << ' ' << pTraits<Type>::nComponents << ' '
+    os  << vvf.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
         << nValues << " float" << std::endl;
 
     DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nValues);
 
     insert(vvf.internalField(), fField);
 
-    forAll(superCells, superCellI)
+    forAll(superCells, superCelli)
     {
-        label origCellI = superCells[superCellI];
+        label origCelli = superCells[superCelli];
 
-        insert(vvf[origCellI], fField);
+        insert(vvf[origCelli], fField);
     }
     write(os, binary, fField);
 }
@@ -247,7 +247,7 @@ void CML::writeFuns::write
     const labelList& addPointCellLabels = topo.addPointCellLabels();
     const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
 
-    os  << pvf.name() << ' ' << pTraits<Type>::nComponents << ' '
+    os  << pvf.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
         << nTotPoints << " float" << std::endl;
 
     DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nTotPoints);
@@ -256,9 +256,9 @@ void CML::writeFuns::write
 
     forAll(addPointCellLabels, api)
     {
-        label origCellI = addPointCellLabels[api];
+        label origCelli = addPointCellLabels[api];
 
-        insert(interpolatePointToCell(pvf, origCellI), fField);
+        insert(interpolatePointToCell(pvf, origCelli), fField);
     }
     write(os, binary, fField);
 }
@@ -280,7 +280,7 @@ void CML::writeFuns::write
     const labelList& addPointCellLabels = topo.addPointCellLabels();
     const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
 
-    os  << vvf.name() << ' ' << pTraits<Type>::nComponents << ' '
+    os  << vvf.name() << ' ' << int(pTraits<Type>::nComponents) << ' '
         << nTotPoints << " float" << std::endl;
 
     DynamicList<floatScalar> fField(pTraits<Type>::nComponents*nTotPoints);
@@ -289,9 +289,9 @@ void CML::writeFuns::write
 
     forAll(addPointCellLabels, api)
     {
-        label origCellI = addPointCellLabels[api];
+        label origCelli = addPointCellLabels[api];
 
-        insert(vvf[origCellI], fField);
+        insert(vvf[origCelli], fField);
     }
     write(os, binary, fField);
 }
@@ -328,9 +328,6 @@ void CML::writeFuns::write
         write(os, binary, flds[i], pInterp.interpolate(flds[i])(), vMesh);
     }
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

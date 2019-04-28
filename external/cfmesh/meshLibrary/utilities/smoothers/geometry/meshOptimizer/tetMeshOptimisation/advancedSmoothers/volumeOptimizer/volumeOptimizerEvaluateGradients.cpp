@@ -172,10 +172,8 @@ void volumeOptimizer::evaluateGradientsExact
             IOstream::defaultPrecision(20);
             Info << "Vstab " << Vs << endl;
 
-            FatalErrorIn
-            (
-                "void nodeDisplacementVolumeOptimizer()"
-            ) << "I cannot continue " << exit(FatalError);
+            FatalErrorInFunction
+              << "I cannot continue " << exit(FatalError);
         }
 
         //- calculate the gradient of the stabilisation volume

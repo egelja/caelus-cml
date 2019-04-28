@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -102,7 +102,7 @@ CML::label CML::sampledSets::classifyFields()
             }
             else
             {
-                WarningIn("sampledSets::classifyFields()")
+                WarningInFunction
                     << "Cannot find field file matching "
                     << fieldSelection_[i] << endl;
             }
@@ -133,7 +133,7 @@ CML::label CML::sampledSets::classifyFields()
             }
             else
             {
-                WarningIn("sampledSets::classifyFields()")
+                WarningInFunction
                     << "Cannot find registered field matching "
                     << fieldSelection_[i] << endl;
             }

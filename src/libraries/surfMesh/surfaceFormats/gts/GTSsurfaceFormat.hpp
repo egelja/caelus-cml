@@ -141,10 +141,7 @@ bool CML::fileFormats::GTSsurfaceFormat<Face>::read
     IFstream is(filename);
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::GTSsurfaceFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << filename
             << exit(FatalError);
     }
@@ -240,10 +237,7 @@ bool CML::fileFormats::GTSsurfaceFormat<Face>::read
         label common01 = e0.commonVertex(e1);
         if (common01 == -1)
         {
-            FatalErrorIn
-            (
-                "fileFormats::GTSsurfaceFormat::read(const fileName&)"
-            )
+            FatalErrorInFunction
                 << "Edges 0 and 1 of triangle " << faceI
                 << " do not share a point.\n"
                 << "    edge0:" << e0 << nl
@@ -257,10 +251,7 @@ bool CML::fileFormats::GTSsurfaceFormat<Face>::read
         label common12 = e1.commonVertex(e2);
         if (common12 == -1)
         {
-            FatalErrorIn
-            (
-                "fileFormats::GTSsurfaceFormat::read(const fileName&)"
-            )
+            FatalErrorInFunction
                 << "Edges 1 and 2 of triangle " << faceI
                 << " do not share a point.\n"
                 << "    edge1:" << e1 << nl
@@ -272,10 +263,7 @@ bool CML::fileFormats::GTSsurfaceFormat<Face>::read
         // Does edge2 sit between edge1 and 0?
         if (common12 != e1Far || e2Far != e0Far)
         {
-            FatalErrorIn
-            (
-                "fileFormats::GTSsurfaceFormat::read(const fileName&)"
-            )
+            FatalErrorInFunction
                 << "Edges of triangle " << faceI
                 << " reference more than three points.\n"
                 << "    edge0:" << e0 << nl
@@ -338,11 +326,7 @@ void CML::fileFormats::GTSsurfaceFormat<Face>::write
 
         if (nNonTris)
         {
-            FatalErrorIn
-            (
-                "fileFormats::GTSsurfaceFormat::write"
-                "(const fileName&, const MeshedSurface<Face>&)"
-            )
+            FatalErrorInFunction
                 << "Surface has " << nNonTris << "/" << faceLst.size()
                 << " non-triangulated faces - not writing!" << endl;
             return;
@@ -353,11 +337,7 @@ void CML::fileFormats::GTSsurfaceFormat<Face>::write
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::GTSsurfaceFormat::write"
-            "(const fileName&, const MeshedSurface<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }
@@ -448,11 +428,7 @@ void CML::fileFormats::GTSsurfaceFormat<Face>::write
 
         if (nNonTris)
         {
-            FatalErrorIn
-            (
-                "fileFormats::GTSsurfaceFormat::write"
-                "(const fileName&, const UnsortedMeshedSurfaces<Face>&)"
-            )
+            FatalErrorInFunction
                 << "Surface has " << nNonTris << "/" << faceLst.size()
                 << " non-triangulated faces - not writing!" << endl;
             return;
@@ -463,11 +439,7 @@ void CML::fileFormats::GTSsurfaceFormat<Face>::write
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::GTSsurfaceFormat::write"
-            "(const fileName&, const UnsortedMeshedSurface<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,7 +37,7 @@ CML::skewCorrectionVectors::skewCorrectionVectors(const fvMesh& mesh)
 :
     MeshObject<fvMesh, skewCorrectionVectors>(mesh),
     skew_(true),
-    skewCorrectionVectors_(NULL)
+    skewCorrectionVectors_(nullptr)
 {}
 
 
@@ -173,7 +173,7 @@ const CML::surfaceVectorField& CML::skewCorrectionVectors::operator()() const
 {
     if (!skew())
     {
-        FatalErrorIn("skewCorrectionVectors::operator()()")
+        FatalErrorInFunction
             << "Cannot return skewCorrectionVectors; mesh is not skewed"
             << abort(FatalError);
     }

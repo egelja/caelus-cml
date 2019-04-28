@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -73,16 +73,8 @@ turbulentIntensityKineticEnergyInletFvPatchScalarField
 
     if (intensity_ < 0 || intensity_ > 1)
     {
-        FatalErrorIn
-        (
-            "turbulentIntensityKineticEnergyInletFvPatchScalarField::"
-            "turbulentIntensityKineticEnergyInletFvPatchScalarField"
-            "("
-                "const fvPatch&, "
-                "const DimensionedField<scalar, volMesh>&, "
-                "const dictionary&"
-            ")"
-        )   << "Turbulence intensity should be specified as a fraction 0-1 "
+        FatalErrorInFunction
+            << "Turbulence intensity should be specified as a fraction 0-1 "
                "of the mean velocity\n"
                "    value given is " << intensity_ << nl
             << "    on patch " << this->patch().name()

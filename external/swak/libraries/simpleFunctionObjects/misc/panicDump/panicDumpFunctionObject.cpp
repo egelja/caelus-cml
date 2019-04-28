@@ -84,7 +84,7 @@ bool panicDumpFunctionObject::start()
             );
         }
     } else {
-        WarningIn("panicDumpFunctionObject::start()")
+        WarningInFunction
             << "storeAndWritePreviousState not set in" << dict_.name() << endl
                 << "Assuming 'false'"
                 << endl;

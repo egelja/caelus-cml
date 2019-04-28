@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -277,10 +277,8 @@ void separateList
     }
     else
     {
-        FatalErrorIn
-        (
-            "separateList(const vectorField&, UList<vector>&)"
-        )   << "Sizes of field and transformation not equal. field:"
+        FatalErrorInFunction
+            << "Sizes of field and transformation not equal. field:"
             << field.size() << " transformation:" << separation.size()
             << abort(FatalError);
     }
@@ -299,11 +297,8 @@ void syncPoints
 {
     if (points.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "syncPoints"
-            "(const polyMesh&, pointField&, const CombineOp&, const point&)"
-        )   << "Number of values " << points.size()
+        FatalErrorInFunction
+            << "Number of values " << points.size()
             << " is not equal to the number of points in the mesh "
             << mesh.nPoints() << abort(FatalError);
     }
@@ -463,11 +458,8 @@ void syncPoints
     {
         if (hasTransformation)
         {
-            WarningIn
-            (
-                "syncPoints"
-                "(const polyMesh&, pointField&, const CombineOp&, const point&)"
-            )   << "There are decomposed cyclics in this mesh with"
+            WarningInFunction
+                << "There are decomposed cyclics in this mesh with"
                 << " transformations." << endl
                 << "This is not supported. The result will be incorrect"
                 << endl;
@@ -689,7 +681,7 @@ int main(int argc, char *argv[])
 
         if (destPatchI == -1)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "patch " << patchName << " not added. Problem."
                 << abort(FatalError);
         }
@@ -746,7 +738,7 @@ int main(int argc, char *argv[])
 
                 if (mesh.isInternalFace(faceI))
                 {
-                    FatalErrorIn(args.executable())
+                    FatalErrorInFunction
                         << "Face " << faceI << " specified in set "
                         << faces.name()
                         << " is not an external face of the mesh." << endl
@@ -765,7 +757,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Invalid source type " << sourceType << endl
                 << "Valid source types are 'patches' 'set'" << exit(FatalError);
         }

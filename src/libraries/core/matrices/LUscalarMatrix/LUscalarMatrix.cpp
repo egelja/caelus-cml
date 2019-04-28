@@ -28,10 +28,14 @@ License
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+CML::LUscalarMatrix::LUscalarMatrix()
+{}
+
+
 CML::LUscalarMatrix::LUscalarMatrix(const scalarSquareMatrix& matrix)
 :
     scalarSquareMatrix(matrix),
-    pivotIndices_(n())
+    pivotIndices_(m())
 {
     LUDecompose(*this, pivotIndices_);
 }
@@ -113,7 +117,7 @@ CML::LUscalarMatrix::LUscalarMatrix
 
     if (Pstream::master())
     {
-        pivotIndices_.setSize(n());
+        pivotIndices_.setSize(m());
         LUDecompose(*this, pivotIndices_);
     }
 }
@@ -135,15 +139,15 @@ void CML::LUscalarMatrix::convert
     const scalar* RESTRICT upperPtr = ldum.upper().begin();
     const scalar* RESTRICT lowerPtr = ldum.lower().begin();
 
-    register const label nCells = ldum.diag().size();
-    register const label nFaces = ldum.upper().size();
+    const label nCells = ldum.diag().size();
+    const label nFaces = ldum.upper().size();
 
-    for (register label cell=0; cell<nCells; cell++)
+    for (label cell=0; cell<nCells; cell++)
     {
         operator[](cell)[cell] = diagPtr[cell];
     }
 
-    for (register label face=0; face<nFaces; face++)
+    for (label face=0; face<nFaces; face++)
     {
         label uCell = uPtr[face];
         label lCell = lPtr[face];
@@ -171,9 +175,9 @@ void CML::LUscalarMatrix::convert
             const scalar* RESTRICT nbrUpperLowerPtr =
                 interfaceCoeffs[nbrInt].begin();
 
-            register label inFaces = interface.faceCells().size();
+            label inFaces = interface.faceCells().size();
 
-            for (register label face=0; face<inFaces; face++)
+            for (label face=0; face<inFaces; face++)
             {
                 label uCell = lPtr[face];
                 label lCell = uPtr[face];
@@ -182,8 +186,6 @@ void CML::LUscalarMatrix::convert
             }
         }
     }
-
-    //printDiagonalDominance();
 }
 
 
@@ -212,16 +214,16 @@ void CML::LUscalarMatrix::convert
         const scalar* RESTRICT upperPtr = lduMatrixi.upper_.begin();
         const scalar* RESTRICT lowerPtr = lduMatrixi.lower_.begin();
 
-        register const label nCells = lduMatrixi.size();
-        register const label nFaces = lduMatrixi.upper_.size();
+        const label nCells = lduMatrixi.size();
+        const label nFaces = lduMatrixi.upper_.size();
 
-        for (register label cell=0; cell<nCells; cell++)
+        for (label cell=0; cell<nCells; cell++)
         {
             label globalCell = cell + offset;
             operator[](globalCell)[globalCell] = diagPtr[cell];
         }
 
-        for (register label face=0; face<nFaces; face++)
+        for (label face=0; face<nFaces; face++)
         {
             label uCell = uPtr[face] + offset;
             label lCell = lPtr[face] + offset;
@@ -244,9 +246,9 @@ void CML::LUscalarMatrix::convert
                 const scalar* RESTRICT upperLowerPtr =
                     interface.coeffs_.begin();
 
-                register label inFaces = interface.faceCells_.size()/2;
+                label inFaces = interface.faceCells_.size()/2;
 
-                for (register label face=0; face<inFaces; face++)
+                for (label face=0; face<inFaces; face++)
                 {
                     label uCell = ulPtr[face] + offset;
                     label lCell = ulPtr[face + inFaces] + offset;
@@ -285,7 +287,7 @@ void CML::LUscalarMatrix::convert
 
                 if (neiInterfacei == -1)
                 {
-                    FatalErrorIn("LUscalarMatrix::convert") << exit(FatalError);
+                    FatalErrorInFunction << exit(FatalError);
                 }
 
                 const procLduInterface& neiInterface =
@@ -299,10 +301,10 @@ void CML::LUscalarMatrix::convert
                 const scalar* RESTRICT lowerPtr =
                     neiInterface.coeffs_.begin();
 
-                register label inFaces = interface.faceCells_.size();
+                label inFaces = interface.faceCells_.size();
                 label neiOffset = procOffsets_[interface.neighbProcNo_];
 
-                for (register label face=0; face<inFaces; face++)
+                for (label face=0; face<inFaces; face++)
                 {
                     label uCell = uPtr[face] + offset;
                     label lCell = lPtr[face] + neiOffset;
@@ -313,17 +315,15 @@ void CML::LUscalarMatrix::convert
             }
         }
     }
-
-    //printDiagonalDominance();
 }
 
 
 void CML::LUscalarMatrix::printDiagonalDominance() const
 {
-    for (label i=0; i<n(); i++)
+    for (label i=0; i<m(); i++)
     {
         scalar sum = 0.0;
-        for (label j=0; j<n(); j++)
+        for (label j=0; j<m(); j++)
         {
             if (i != j)
             {
@@ -331,6 +331,31 @@ void CML::LUscalarMatrix::printDiagonalDominance() const
             }
         }
         Info<< mag(sum)/mag(operator[](i)[i]) << endl;
+    }
+}
+
+
+void CML::LUscalarMatrix::decompose(const scalarSquareMatrix& M)
+{
+    scalarSquareMatrix::operator=(M);
+    pivotIndices_.setSize(m());
+    LUDecompose(*this, pivotIndices_);
+}
+
+
+void CML::LUscalarMatrix::inv(scalarSquareMatrix& M) const
+{
+    scalarField source(m());
+
+    for (label j=0; j<m(); j++)
+    {
+        source = Zero;
+        source[j] = 1;
+        LUBacksubstitute(*this, pivotIndices_, source);
+        for (label i=0; i<m(); i++)
+        {
+            M(i, j) = source[i];
+        }
     }
 }
 

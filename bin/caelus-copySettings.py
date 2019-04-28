@@ -48,7 +48,6 @@ import os
 import os.path
 import re
 
-from Caelus.compat import *
 
 # parse options
 if sys.argv[1] == '-h' or sys.argv[1] == '-help':

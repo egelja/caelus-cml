@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,6 +47,14 @@ namespace CML
 
 class solidParticleCloud;
 
+
+// Forward declaration of friend functions and operators
+
+class solidParticle;
+
+Ostream& operator<<(Ostream&, const solidParticle&);
+
+
 /*---------------------------------------------------------------------------*\
                            Class solidParticle Declaration
 \*---------------------------------------------------------------------------*/
@@ -55,7 +63,10 @@ class solidParticle
 :
     public particle
 {
-    // Private member data
+    // Private data
+
+        //- Size in bytes of the fields
+        static const std::size_t sizeofFields_;
 
         //- Diameter
         scalar d_;
@@ -71,7 +82,7 @@ public:
     //- Class used to pass tracking data to the trackToFace function
     class trackingData
     :
-        public particle::TrackingData<solidParticleCloud>
+        public particle::trackingData
     {
         // Interpolators for continuous phase fields
 
@@ -89,7 +100,7 @@ public:
 
             inline trackingData
             (
-                solidParticleCloud& spc,
+                const solidParticleCloud& spc,
                 const interpolationCellPoint<scalar>& rhoInterp,
                 const interpolationCellPoint<vector>& UInterp,
                 const interpolationCellPoint<scalar>& nuInterp,
@@ -115,10 +126,10 @@ public:
         inline solidParticle
         (
             const polyMesh& mesh,
-            const vector& position,
-            const label cellI,
-            const label tetFaceI,
-            const label tetPtI,
+            const barycentric& coordinates,
+            const label celli,
+            const label tetFacei,
+            const label tetPti,
             const scalar d,
             const vector& U
         );
@@ -174,44 +185,21 @@ public:
         // Tracking
 
             //- Move
-            bool move(trackingData&, const scalar);
+            bool move(solidParticleCloud&, trackingData&, const scalar);
 
 
         // Patch interactions
 
             //- Overridable function to handle the particle hitting a patch
             //  Executed before other patch-hitting functions
-            bool hitPatch
-            (
-                const polyPatch&,
-                trackingData& td,
-                const label patchI,
-                const scalar trackFraction,
-                const tetIndices& tetIs
-            );
+            bool hitPatch(solidParticleCloud& cloud, trackingData& td);
 
             //- Overridable function to handle the particle hitting a
             //  processorPatch
-            void hitProcessorPatch
-            (
-                const processorPolyPatch&,
-                trackingData& td
-            );
+            void hitProcessorPatch(solidParticleCloud& cloud, trackingData& td);
 
             //- Overridable function to handle the particle hitting a wallPatch
-            void hitWallPatch
-            (
-                const wallPolyPatch&,
-                trackingData& td,
-                const tetIndices&
-            );
-
-            //- Overridable function to handle the particle hitting a polyPatch
-            void hitPatch
-            (
-                const polyPatch&,
-                trackingData& td
-            );
+            void hitWallPatch(solidParticleCloud& cloud, trackingData& td);
 
             //- Transform the physical properties of the particle
             //  according to the given transformation tensor
@@ -220,10 +208,6 @@ public:
             //- Transform the physical properties of the particle
             //  according to the given separation vector
             virtual void transformProperties(const vector& separation);
-
-            //- The nearest distance to a wall that
-            //  the particle can be in the n direction
-            virtual scalar wallImpactDistance(const vector& n) const;
 
 
     // I-O

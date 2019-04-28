@@ -101,7 +101,7 @@ const
 
     if (localI < 0 || i >= offsets_[proci+1])
     {
-        FatalErrorIn("globalIndex::toLocal(const label, const label)")
+        FatalErrorInFunction
             << "Global " << i << " does not belong on processor "
             << proci << endl << "Offsets:" << offsets_
             << abort(FatalError);
@@ -120,7 +120,7 @@ inline CML::label CML::globalIndex::whichProcID(const label i) const
 {
     if (i < 0 || i >= offsets_[Pstream::nProcs()])
     {
-        FatalErrorIn("globalIndex::whichProcID(const label)")
+        FatalErrorInFunction
             << "Global " << i << " does not belong on any processor."
             << " Offsets:" << offsets_
             << abort(FatalError);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,20 +29,31 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef specie_H
-#define specie_H
+#ifndef specie_HPP
+#define specie_HPP
 
 #include "word.hpp"
 #include "scalar.hpp"
 #include "dictionary.hpp"
+
+#include "thermodynamicConstants.hpp"
+using namespace CML::constant::thermodynamic;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
 
-class Istream;
-class Ostream;
+// Forward declaration of friend functions and operators
+
+class specie;
+
+inline specie operator+(const specie&, const specie&);
+inline specie operator*(const scalar, const specie&);
+inline specie operator==(const specie&, const specie&);
+
+Ostream& operator<<(Ostream&, const specie&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class specie Declaration
@@ -50,22 +61,15 @@ class Ostream;
 
 class specie
 {
-    // Private data
 
-        //- Name of specie
-        word name_;
+    //- Name of specie
+    word name_;
 
-        //- Number of moles of this component in the mixture
-        scalar nMoles_;
+    //- Number of moles of this component in the mixture
+    scalar Y_;
 
-        //- Molecular weight of specie [kg/kmol]
-        scalar molWeight_;
-
-
-    // Private Member Functions
-
-        //- Construct from components without name
-        inline specie(const scalar nMoles, const scalar molWeight);
+    //- Molecular weight of specie [kg/kmol]
+    scalar molWeight_;
 
 
 public:
@@ -73,103 +77,153 @@ public:
     //- Runtime type information
     ClassName("specie");
 
+    //- Construct from components without name
+    inline specie(const scalar Y, const scalar molWeight)
+    :
+        Y_(Y),
+        molWeight_(molWeight)
+    {}
 
-    // Public constants
+    //- Construct from components with name
+    inline specie
+    (
+        const word& name,
+        const scalar Y,
+        const scalar molWeight
+    )
+    :
+        name_(name),
+        Y_(Y),
+        molWeight_(molWeight)
+    {}
 
-        // Thermodynamic constants
+    //- Construct as named copy
+    inline specie(const word& name, const specie& st)
+    :
+        name_(name),
+        Y_(st.Y_),
+        molWeight_(st.molWeight_)
+    {}
 
-            //- Universal gas constant [J/(kmol K)]
-            static const scalar RR;
-
-            //- Standard pressure [Pa]
-            static const scalar Pstd;
-
-            //- Standard temperature [K]
-            static const scalar Tstd;
-
-
-    // Constructors
-
-        //- Construct from components with name
-        inline specie
-        (
-            const word& name,
-            const scalar nMoles,
-            const scalar molWeight
-        );
-
-        //- Construct as copy
-        inline specie(const specie&);
-
-        //- Construct as named copy
-        inline specie(const word& name, const specie&);
-
-        //- Construct from Istream
-        specie(Istream&);
-
-        //- Construct from dictionary
-        specie(const dictionary& dict);
+    //- Construct from dictionary
+    specie(const dictionary& dict);
 
 
     // Member Functions
 
-        // Access
+    // Access
 
-            //- Name
-            inline const word& name() const;
+    //- Name
+    inline const word& name() const
+    {
+        return name_;
+    }
 
-            //- Molecular weight [kg/kmol]
-            inline scalar W() const;
+    //- Molecular weight [kg/kmol]
+    inline scalar W() const
+    {
+        return molWeight_;
+    }
 
-            //- No of moles of this species in mixture
-            inline scalar nMoles() const;
+    //- No of moles of this species in mixture
+    inline scalar Y() const
+    {
+        return Y_;
+    }
 
-            //- Gas constant [J/(kg K)]
-            inline scalar R() const;
+    //- Gas constant [J/(kg K)]
+    inline scalar R() const
+    {
+        return RR/molWeight_;
+    }
 
 
-        // I-O
+    // I-O
 
-            //- Write to Ostream
-            void write(Ostream& os) const;
+    //- Write to Ostream
+    void write(Ostream& os) const;
 
 
     // Member operators
 
-        inline void operator=(const specie&);
+    inline void operator=(const specie& st)
+    {
+        Y_ = st.Y_;
+        molWeight_ = st.molWeight_;
+    }
 
-        inline void operator+=(const specie&);
-        inline void operator-=(const specie&);
+    inline void operator+=(const specie& st)
+    {
+        const scalar sumY = Y_ + st.Y_;
+        if (mag(sumY) > SMALL)
+        {
+            molWeight_ = sumY/(Y_/molWeight_ + st.Y_/st.molWeight_);
+        }
 
-        inline void operator*=(const scalar);
+        Y_ = sumY;
+    }
+
+    inline void operator*=(const scalar s)
+    {
+        Y_ *= s;
+    }
 
 
     // Friend operators
+    inline friend specie operator+(const specie& st1, const specie& st2)
+    {
+        const scalar sumY = max(st1.Y_ + st2.Y_, SMALL);
 
-        inline friend specie operator+(const specie&, const specie&);
-        inline friend specie operator-(const specie&, const specie&);
+        if (mag(sumY) > SMALL)
+        {
+            return specie
+            (
+                sumY,
+                sumY/(st1.Y_/st1.molWeight_ + st2.Y_/st2.molWeight_)
+            );
+        }
+        else
+        {
+            return st1;
+        }
+    }
 
-        inline friend specie operator*(const scalar, const specie&);
+    inline friend specie operator*(const scalar s, const specie& st)
+    {
+        return specie
+        (
+            s*st.Y_,
+            st.molWeight_
+        );
+    }
 
-        inline friend specie operator==(const specie&, const specie&);
+    inline friend specie operator==(const specie& st1, const specie& st2)
+    {
+        scalar diffY = st2.Y_ - st1.Y_;
+        if (mag(diffY) < SMALL)
+        {
+            diffY = SMALL;
+        }
+
+        const scalar diffRW =
+            st2.Y_/st2.molWeight_ - st1.Y_/st1.molWeight_;
+
+        scalar molWeight = GREAT;
+        if (mag(diffRW) > SMALL)
+        {
+            molWeight = diffY/diffRW;
+        }
+
+        return specie(diffY, molWeight);
+    }
 
 
     // Ostream Operator
-
-        friend Ostream& operator<<(Ostream&, const specie&);
+    friend Ostream& operator<<(Ostream&, const specie&);
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "specieI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

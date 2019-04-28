@@ -27,8 +27,8 @@ Contributors/Copyright:
 #include "FieldValueExpressionDriver.hpp"
 
 #include "HashPtrTable.hpp"
-#include "LESModel.hpp"
-#include "RASModel.hpp"
+#include "compressibleLESModel.hpp"
+#include "compressibleRASModel.hpp"
 
 #include "addToRunTimeSelectionTable.hpp"
 
@@ -43,7 +43,7 @@ swakCompressibleTurbulencePluginFunction::swakCompressibleTurbulencePluginFuncti
     const word &name,
     const word &returnValueType
 ):
-    swakThermophysicalPluginFunction(
+    swakThermophysicalPluginFunction<swakFluidThermoType>(
         parentDriver,
         name,
         returnValueType
@@ -62,6 +62,14 @@ swakCompressibleTurbulencePluginFunction::swakCompressibleTurbulencePluginFuncti
 {
     static HashPtrTable<compressible::turbulenceModel> turb_;
 
+    if(reg.foundObject<compressible::turbulenceModel>("turbulenceProperties")) {
+        if(debug) {
+            Info << "swakCompressibleTurbulencePluginFunction::turbInternal: "
+                << "turbulence already in memory" << endl;
+        }
+        // Somebody else already registered this
+        return reg.lookupObject<compressible::turbulenceModel>("turbulenceProperties");
+    }
     if(reg.foundObject<compressible::LESModel>("LESProperties")) {
         if(debug) {
             Info << "swakCompressibleTurbulencePluginFunction::turbInternal: "
@@ -88,7 +96,8 @@ swakCompressibleTurbulencePluginFunction::swakCompressibleTurbulencePluginFuncti
         turb_.set(
             reg.name(),
             compressible::turbulenceModel::New(
-                reg.lookupObject<volScalarField>("rho"),
+                // reg.lookupObject<volScalarField>("rho"),
+                thermoInternal(reg).rho(),
                 reg.lookupObject<volVectorField>("U"),
                 reg.lookupObject<surfaceScalarField>("phi"),
                 thermoInternal(reg)
@@ -141,6 +150,7 @@ concreteTurbFunction(epsilon,volScalarField);
 concreteTurbFunction(R,volSymmTensorField);
 concreteTurbFunction(devRhoReff,volSymmTensorField);
 
+concreteTurbFunction(kappaEff,volScalarField);
 
 } // namespace
 

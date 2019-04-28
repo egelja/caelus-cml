@@ -157,39 +157,8 @@ public:
 
         // Evaluation
 
-            //- Pre-evolve hook
-            virtual void preEvolve();
-
-            //- Post-evolve hook
-            virtual void postEvolve();
-
-            //- Post-move hook
-            virtual void postMove
-            (
-                typename CloudType::parcelType& p,
-                const label cellI,
-                const scalar dt,
-                const point& position0,
-                bool& keepParticle
-            );
-
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
-
             //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
-                bool& keepParticle
-            );
+            virtual void postFace(const parcelType& p, bool& keepParticle);
 };
 
 
@@ -252,6 +221,8 @@ void CML::FacePostProcessing<CloudType>::makeLogFile
 }
 
 
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
 template<class CloudType>
 void CML::FacePostProcessing<CloudType>::write()
 {
@@ -273,7 +244,7 @@ void CML::FacePostProcessing<CloudType>::write()
         massTotal_[zoneI] += mass_[zoneI];
     }
 
-    const label procI = Pstream::myProcNo();
+    const label proci = Pstream::myProcNo();
 
     Info<< type() << " output:" << nl;
 
@@ -284,7 +255,7 @@ void CML::FacePostProcessing<CloudType>::write()
         const word& zoneName = fzm[faceZoneIDs_[zoneI]].name();
 
         scalarListList allProcMass(Pstream::nProcs());
-        allProcMass[procI] = massTotal_[zoneI];
+        allProcMass[proci] = massTotal_[zoneI];
         Pstream::gatherList(allProcMass);
         zoneMassTotal[zoneI] =
             ListListOps::combine<scalarList>
@@ -294,7 +265,7 @@ void CML::FacePostProcessing<CloudType>::write()
         const scalar sumMassTotal = sum(zoneMassTotal[zoneI]);
 
         scalarListList allProcMassFlowRate(Pstream::nProcs());
-        allProcMassFlowRate[procI] = massFlowRate_[zoneI];
+        allProcMassFlowRate[proci] = massFlowRate_[zoneI];
         Pstream::gatherList(allProcMassFlowRate);
         zoneMassFlowRate[zoneI] =
             ListListOps::combine<scalarList>
@@ -338,7 +309,7 @@ void CML::FacePostProcessing<CloudType>::write()
 
             pointField uniquePoints(mesh.points(), uniqueMeshPointLabels);
             List<pointField> allProcPoints(Pstream::nProcs());
-            allProcPoints[procI] = uniquePoints;
+            allProcPoints[proci] = uniquePoints;
             Pstream::gatherList(allProcPoints);
 
             faceList faces(fZone().localFaces());
@@ -347,7 +318,7 @@ void CML::FacePostProcessing<CloudType>::write()
                 inplaceRenumber(pointToGlobal, faces[i]);
             }
             List<faceList> allProcFaces(Pstream::nProcs());
-            allProcFaces[procI] = faces;
+            allProcFaces[proci] = faces;
             Pstream::gatherList(allProcFaces);
 
             if (Pstream::master())
@@ -474,25 +445,25 @@ CML::FacePostProcessing<CloudType>::FacePostProcessing
             scalar totArea = 0.0;
             forAll(fz, j)
             {
-                label faceI = fz[j];
-                if (faceI < owner.mesh().nInternalFaces())
+                label facei = fz[j];
+                if (facei < owner.mesh().nInternalFaces())
                 {
                     totArea += magSf[fz[j]];
                 }
                 else
                 {
-                    label bFaceI = faceI - owner.mesh().nInternalFaces();
-                    label patchI = pbm.patchID()[bFaceI];
-                    const polyPatch& pp = pbm[patchI];
+                    label bFacei = facei - owner.mesh().nInternalFaces();
+                    label patchi = pbm.patchID()[bFacei];
+                    const polyPatch& pp = pbm[patchi];
 
                     if
                     (
-                        !magSf.boundaryField()[patchI].coupled()
+                        !magSf.boundaryField()[patchi].coupled()
                      || refCast<const coupledPolyPatch>(pp).owner()
                     )
                     {
-                        label localFaceI = pp.whichFace(faceI);
-                        totArea += magSf.boundaryField()[patchI][localFaceI];
+                        label localFacei = pp.whichFace(facei);
+                        totArea += magSf.boundaryField()[patchi][localFacei];
                     }
                 }
             }
@@ -538,52 +509,7 @@ CML::FacePostProcessing<CloudType>::~FacePostProcessing()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void CML::FacePostProcessing<CloudType>::preEvolve()
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::FacePostProcessing<CloudType>::postEvolve()
-{
-    CloudFunctionObject<CloudType>::postEvolve();
-}
-
-template<class CloudType>
-void CML::FacePostProcessing<CloudType>::postMove
-(
-    typename CloudType::parcelType& p,
-    const label cellI,
-    const scalar dt,
-    const point& position0,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-template<class CloudType>
-void CML::FacePostProcessing<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::FacePostProcessing<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool&
-)
+void CML::FacePostProcessing<CloudType>::postFace(const parcelType& p, bool&)
 {
     if
     (
@@ -600,7 +526,7 @@ void CML::FacePostProcessing<CloudType>::postFace
             label faceId = -1;
             forAll(fz, j)
             {
-                if (fz[j] == faceI)
+                if (fz[j] == p.face())
                 {
                     faceId = j;
                     break;

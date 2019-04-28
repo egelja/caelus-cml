@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -95,10 +95,8 @@ bool CML::blockMesh::readPatches
         {
             if (patchNames[nPatches] == patchNames[i])
             {
-                FatalErrorIn
-                (
-                    "blockMesh::createTopology(IOdictionary&)"
-                )   << "Duplicate patch " << patchNames[nPatches]
+                FatalErrorInFunction
+                    << "Duplicate patch " << patchNames[nPatches]
                     << " at line " << patchStream.lineNumber()
                     << ". Exiting !" << nl
                     << exit(FatalError);
@@ -122,7 +120,7 @@ bool CML::blockMesh::readPatches
             word halfA = patchNames[nPatches-1] + "_half0";
             word halfB = patchNames[nPatches-1] + "_half1";
 
-            WarningIn("blockMesh::createTopology(IOdictionary&)")
+            WarningInFunction
                 << "Old-style cyclic definition."
                 << " Splitting patch "
                 << patchNames[nPatches-1] << " into two halves "
@@ -150,10 +148,8 @@ bool CML::blockMesh::readPatches
             // Split faces
             if ((tmpBlocksPatches[nPatches-1].size() % 2) != 0)
             {
-                FatalErrorIn
-                (
-                    "blockMesh::createTopology(IOdictionary&)"
-                )   << "Size of cyclic faces is not a multiple of 2 :"
+                FatalErrorInFunction
+                    << "Size of cyclic faces is not a multiple of 2 :"
                     << tmpBlocksPatches[nPatches-1]
                     << exit(FatalError);
             }
@@ -208,7 +204,7 @@ bool CML::blockMesh::readBoundary
 
         if (!patchInfo.isDict())
         {
-            FatalIOErrorIn("blockMesh::readBoundary(..)", meshDescription)
+            FatalIOErrorInFunction(meshDescription)
                 << "Entry " << patchInfo << " in boundary section is not a"
                 << " valid dictionary." << exit(FatalIOError);
         }
@@ -245,10 +241,8 @@ void CML::blockMesh::createCellShapes
 
         if (tmpBlockCells[blockI].mag(blockPointField_) < 0.0)
         {
-            WarningIn
-            (
-                "blockMesh::createTopology(IOdictionary&)"
-            )   << "negative volume block : " << blockI
+            WarningInFunction
+                << "negative volume block : " << blockI
                 << ", probably defined inside-out" << endl;
         }
     }
@@ -431,7 +425,7 @@ CML::polyMesh* CML::blockMesh::createTopology
     }
 
 
-    polyMesh* blockMeshPtr = NULL;
+    polyMesh* blockMeshPtr = nullptr;
 
     //
     // Create the patches
@@ -461,7 +455,7 @@ CML::polyMesh* CML::blockMesh::createTopology
 
         if (!topologyOK)
         {
-            FatalErrorIn("blockMesh::createTopology(IOdictionary&)")
+            FatalErrorInFunction
                 << "Cannot create mesh due to errors in topology, exiting !"
                 << nl << exit(FatalError);
         }
@@ -506,11 +500,8 @@ CML::polyMesh* CML::blockMesh::createTopology
             }
             else if (word(dict.lookup("type")) != patchTypes[patchI])
             {
-                IOWarningIn
-                (
-                    "blockMesh::createTopology(IOdictionary&)",
-                    meshDescription
-                )   << "For patch " << patchNames[patchI]
+                IOWarningInFunction(meshDescription)
+                    << "For patch " << patchNames[patchI]
                     << " overriding type '" << patchTypes[patchI]
                     << "' with '" << word(dict.lookup("type"))
                     << "' (read from boundary file)"
@@ -561,7 +552,7 @@ CML::polyMesh* CML::blockMesh::createTopology
 
         if (!topologyOK)
         {
-            FatalErrorIn("blockMesh::createTopology(IOdictionary&)")
+            FatalErrorInFunction
                 << "Cannot create mesh due to errors in topology, exiting !"
                 << nl << exit(FatalError);
         }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef ReactionList_H
-#define ReactionList_H
+#ifndef ReactionList_HPP
+#define ReactionList_HPP
 
 #include "PtrList.hpp"
 #include "SLPtrList.hpp"
@@ -52,53 +52,41 @@ class ReactionList
 :
     public SLPtrList<Reaction<ThermoType> >
 {
-    // Private data
 
-        //- Reference to the table of species
-        const speciesTable& species_;
+    //- Reference to the table of species
+    const speciesTable& species_;
 
-        //- Reference to the thermo database
-        const HashPtrTable<ThermoType>& thermoDb_;
+    //- Reference to the thermo database
+    const HashPtrTable<ThermoType>& thermoDb_;
 
-        //- The dictionary used for construction
-        const dictionary dict_;
+    //- The dictionary used for construction
+    const dictionary dict_;
 
 
-    // Private Member Functions
-
-        //- Disallow default bitwise assignment
-        void operator=(const ReactionList&);
+    //- Disallow default bitwise assignment
+    void operator=(const ReactionList&);
 
 
 public:
 
-    // Constructors
 
-        //- Construct null
-        ReactionList
-        (
-            const speciesTable& species,
-            const HashPtrTable<ThermoType>& thermoDatabase
-        );
+    //- Construct null
+    ReactionList
+    (
+        const speciesTable& species,
+        const HashPtrTable<ThermoType>& thermoDatabase
+    );
 
-        //- Construct from dictionary
-        ReactionList
-        (
-            const speciesTable& species,
-            const HashPtrTable<ThermoType>& thermoDatabase,
-            const dictionary& dict
-        );
+    //- Construct from dictionary
+    ReactionList
+    (
+        const speciesTable& species,
+        const HashPtrTable<ThermoType>& thermoDatabase,
+        const dictionary& dict
+    );
 
-        //- Construct from file using (Istream)
-        ReactionList
-        (
-            const speciesTable& species,
-            const HashPtrTable<ThermoType>& thermoDatabase,
-            const fileName& fName
-        );
-
-        //- Construct copy
-        ReactionList(const ReactionList<ThermoType>& reactions);
+    //- Construct copy
+    ReactionList(const ReactionList<ThermoType>& reactions);
 
 
     //- Destructor
@@ -107,17 +95,14 @@ public:
 
     // Public Member Functions
 
-        //- Return the dictionary used for construction
-        const dictionary& dict() const;
+    //- Read reactions from dictionary
+    bool readReactionDict();
 
-        //- Read reactions from dictionary
-        bool readReactionDict();
+    //- Write
+    void write(Ostream& os) const;
 
-        //- Write
-        void write(Ostream& os) const;
 };
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
@@ -158,25 +143,6 @@ CML::ReactionList<ThermoType>::ReactionList
 
 
 template<class ThermoType>
-CML::ReactionList<ThermoType>::ReactionList
-(
-    const speciesTable& species,
-    const HashPtrTable<ThermoType>& thermoDb,
-    const fileName& fName
-)
-:
-    SLPtrList<Reaction<ThermoType> >
-    (
-        dictionary(IFstream(fName)()).lookup("reactions"),
-        Reaction<ThermoType>::iNew(species, thermoDb)
-    ),
-    species_(species),
-    thermoDb_(thermoDb),
-    dict_(dictionary::null)
-{}
-
-
-template<class ThermoType>
 CML::ReactionList<ThermoType>::ReactionList(const ReactionList& reactions)
 :
     SLPtrList<Reaction<ThermoType> >(reactions),
@@ -196,16 +162,16 @@ CML::ReactionList<ThermoType>::~ReactionList()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class ThermoType>
-const CML::dictionary& CML::ReactionList<ThermoType>::dict() const
-{
-    return dict_;
-}
-
-
-template<class ThermoType>
 bool CML::ReactionList<ThermoType>::readReactionDict()
 {
     const dictionary& reactions(dict_.subDict("reactions"));
+
+    // Set general temperature limits from the dictionary
+    Reaction<ThermoType>::TlowDefault =
+        dict_.lookupOrDefault<scalar>("Tlow", 0);
+
+    Reaction<ThermoType>::ThighDefault =
+        dict_.lookupOrDefault<scalar>("Thigh", GREAT);
 
     forAllConstIter(dictionary, reactions, iter)
     {
@@ -246,9 +212,4 @@ void CML::ReactionList<ThermoType>::write(Ostream& os) const
 }
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

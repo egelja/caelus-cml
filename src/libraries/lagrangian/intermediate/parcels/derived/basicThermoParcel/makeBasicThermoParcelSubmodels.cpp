@@ -24,33 +24,31 @@ License
 #include "makeParcelCloudFunctionObjects.hpp"
 
 // Kinematic
-#include "makeThermoParcelForces.hpp" // thermo variant
-#include "makeParcelRASDispersionModels.hpp"
-#include "makeParcelLESDispersionModels.hpp"
-#include "makeThermoParcelInjectionModels.hpp" //thermo variant
+#include "makeParcelForces.hpp"
+#include "makeParcelDispersionModels.hpp"
+#include "makeParcelInjectionModels.hpp"
 #include "makeParcelPatchInteractionModels.hpp"
+#include "makeParcelStochasticCollisionModels.hpp"
+#include "makeThermoParcelSurfaceFilmModels.hpp" // thermo variant
 
 // Thermodynamic
 #include "makeParcelHeatTransferModels.hpp"
-#include "makeThermoParcelSurfaceFilmModels.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace CML
 {
     makeParcelCloudFunctionObjects(basicThermoCloud);
 
     // Kinematic sub-models
-    makeThermoParcelForces(basicThermoCloud);
-    makeParcelRASDispersionModels(basicThermoCloud);
-    makeParcelLESDispersionModels(basicThermoCloud);
-    makeThermoParcelInjectionModels(basicThermoCloud);
+    makeParcelForces(basicThermoCloud);
+    makeParcelDispersionModels(basicThermoCloud);
+    makeParcelInjectionModels(basicThermoCloud);
     makeParcelPatchInteractionModels(basicThermoCloud);
+    makeParcelStochasticCollisionModels(basicThermoCloud);
+    makeParcelSurfaceFilmModels(basicThermoCloud);
 
     // Thermo sub-models
     makeParcelHeatTransferModels(basicThermoCloud);
-    makeParcelSurfaceFilmModels(basicThermoCloud);
 }
-
 
 // ************************************************************************* //

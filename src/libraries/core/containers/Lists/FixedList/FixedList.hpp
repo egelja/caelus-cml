@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
+Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,6 +37,8 @@ Description
 #include "Hash.hpp"
 #include "autoPtr.hpp"
 #include "StaticAssert.hpp"
+#include <type_traits>
+#include <initializer_list>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -90,6 +93,7 @@ public:
         ) const;
     };
 
+
     // Static Member Functions
 
         //- Return a null FixedList
@@ -98,26 +102,32 @@ public:
 
     // Constructors
 
-        //- Null constructor.
+        //- Null constructor
         inline FixedList();
 
-        //- Construct from C-array.
-        explicit inline FixedList(const T v[Size]);
-
         //- Construct from value
-
         explicit FixedList(const T&);
 
-        //- Construct from UList.
+        //- Construct from C-array
+        explicit inline FixedList(const T v[Size]);
+
+        //- Construct given start and end iterators
+        template<class InputIterator>
+        inline FixedList(InputIterator first, InputIterator last);
+
+        //- Construct from brace-enclosed values
+        inline FixedList(std::initializer_list<T>);
+
+        //- Construct from UList
         explicit inline FixedList(const UList<T>&);
 
-        //- Construct from SLList.
+        //- Construct from SLList
         explicit inline FixedList(const SLList<T>&);
 
-        //- Copy constructor.
+        //- Copy constructor
         inline FixedList(const FixedList<T, Size>&);
 
-        //- Construct from Istream.
+        //- Construct from Istream
         FixedList(Istream&);
 
         //- Clone
@@ -139,36 +149,36 @@ public:
 
             //- Return a const pointer to the first data element,
             //  similar to the STL front() method and the string::data() method
-            //  This can be used (with caution) when interfacing with C code.
+            //  This can be used (with caution) when interfacing with C code
             inline const T* cdata() const;
 
             //- Return a pointer to the first data element,
             //  similar to the STL front() method and the string::data() method
-            //  This can be used (with caution) when interfacing with C code.
+            //  This can be used (with caution) when interfacing with C code
             inline T* data();
 
-            //- Return the first element of the list.
+            //- Return the first element of the list
             inline T& first();
 
-            //- Return first element of the list.
+            //- Return first element of the list
             inline const T& first() const;
 
-            //- Return the last element of the list.
+            //- Return the last element of the list
             inline T& last();
 
-            //- Return the last element of the list.
+            //- Return the last element of the list
             inline const T& last() const;
 
 
         // Check
 
-            //- Check start is within valid range (0 ... size-1).
+            //- Check start is within valid range (0 ... size-1)
             inline void checkStart(const label start) const;
 
-            //- Check size is within valid range (0 ... size).
+            //- Check size is within valid range (0 ... size)
             inline void checkSize(const label size) const;
 
-            //- Check index i is within valid range (0 ... size-1).
+            //- Check index i is within valid range (0 ... size-1)
             inline void checkIndex(const label i) const;
 
 
@@ -186,28 +196,22 @@ public:
             //  needed to make FixedList consistent with List
             void transfer(const FixedList<T, Size>&);
 
-        //- Write the FixedList as a dictionary entry
-        void writeEntry(Ostream&) const;
-
-        //- Write the FixedList as a dictionary entry with keyword
-        void writeEntry(const word& keyword, Ostream&) const;
-
 
     // Member operators
 
-        //- Return element of FixedList.
+        //- Return element of FixedList
         inline T& operator[](const label);
 
-        //- Return element of constant FixedList.
+        //- Return element of constant FixedList
         inline const T& operator[](const label) const;
 
-        //- Assignment from array operator. Takes linear time.
+        //- Assignment to array operator. Takes linear time
         inline void operator=(const T v[Size]);
 
-        //- Assignment from UList operator. Takes linear time.
+        //- Assignment to UList operator. Takes linear time
         inline void operator=(const UList<T>&);
 
-        //- Assignment from SLList operator. Takes linear time.
+        //- Assignment to SLList operator. Takes linear time
         inline void operator=(const SLList<T>&);
 
         //- Assignment of all entries to the given value
@@ -216,11 +220,11 @@ public:
 
     // STL type definitions
 
-        //- Type of values the FixedList contains.
+        //- Type of values the FixedList contains
         typedef T value_type;
 
         //- Type that can be used for storing into
-        //  FixedList::value_type objects.
+        //  FixedList::value_type objects
         typedef T& reference;
 
         //- Type that can be used for storing into
@@ -228,85 +232,85 @@ public:
         typedef const T& const_reference;
 
         //- The type that can represent the difference between any two
-        //  FixedList iterator objects.
+        //  FixedList iterator objects
         typedef label difference_type;
 
-        //- The type that can represent the size of a FixedList.
+        //- The type that can represent the size of a FixedList
         typedef label size_type;
 
 
     // STL iterator
 
-        //- Random access iterator for traversing FixedList.
+        //- Random access iterator for traversing FixedList
         typedef T* iterator;
 
-        //- Return an iterator to begin traversing the FixedList.
+        //- Return an iterator to begin traversing the FixedList
         inline iterator begin();
 
-        //- Return an iterator to end traversing the FixedList.
+        //- Return an iterator to end traversing the FixedList
         inline iterator end();
 
 
     // STL const_iterator
 
-        //- Random access iterator for traversing FixedList.
+        //- Random access iterator for traversing FixedList
         typedef const T* const_iterator;
 
-        //- Return const_iterator to begin traversing the constant FixedList.
+        //- Return const_iterator to begin traversing the constant FixedList
         inline const_iterator cbegin() const;
 
-        //- Return const_iterator to end traversing the constant FixedList.
+        //- Return const_iterator to end traversing the constant FixedList
         inline const_iterator cend() const;
 
-        //- Return const_iterator to begin traversing the constant FixedList.
+        //- Return const_iterator to begin traversing the constant FixedList
         inline const_iterator begin() const;
 
-        //- Return const_iterator to end traversing the constant FixedList.
+        //- Return const_iterator to end traversing the constant FixedList
         inline const_iterator end() const;
 
 
     // STL reverse_iterator
 
-        //- Reverse iterator for reverse traversal of FixedList.
+        //- Reverse iterator for reverse traversal of FixedList
         typedef T* reverse_iterator;
 
-        //- Return reverse_iterator to begin reverse traversing the FixedList.
+        //- Return reverse_iterator to begin reverse traversing the FixedList
         inline reverse_iterator rbegin();
 
-        //- Return reverse_iterator to end reverse traversing the FixedList.
+        //- Return reverse_iterator to end reverse traversing the FixedList
         inline reverse_iterator rend();
 
 
     // STL const_reverse_iterator
 
-        //- Reverse iterator for reverse traversal of constant FixedList.
+        //- Reverse iterator for reverse traversal of constant FixedList
         typedef const T* const_reverse_iterator;
 
-        //- Return const_reverse_iterator to begin reverse traversing FixedList.
+        //- Return const_reverse_iterator to begin reverse traversing FixedList
         inline const_reverse_iterator crbegin() const;
 
-        //- Return const_reverse_iterator to end reverse traversing FixedList.
+        //- Return const_reverse_iterator to end reverse traversing FixedList
         inline const_reverse_iterator crend() const;
 
-        //- Return const_reverse_iterator to begin reverse traversing FixedList.
+        //- Return const_reverse_iterator to begin reverse traversing FixedList
         inline const_reverse_iterator rbegin() const;
 
-        //- Return const_reverse_iterator to end reverse traversing FixedList.
+        //- Return const_reverse_iterator to end reverse traversing FixedList
         inline const_reverse_iterator rend() const;
 
 
     // STL member functions
 
-        //- Return the number of elements in the FixedList.
+        //- Return the number of elements in the FixedList
         inline label size() const;
 
-        //- Return size of the largest possible FixedList.
+        //- Return size of the largest possible FixedList
         inline label max_size() const;
 
-        //- Return true if the FixedList is empty (ie, size() is zero).
+        //- Return true if the FixedList is empty (ie, size() is zero)
         inline bool empty() const;
 
-        //- Swap two FixedLists of the same type in constant time.
+        //- Swap two FixedLists of the same type in constant time
         void swap(FixedList<T, Size>&);
 
 
@@ -314,32 +318,45 @@ public:
 
         //- Equality operation on FixedLists of the same type.
         //  Returns true when the FixedLists are elementwise equal
-        //  (using FixedList::value_type::operator==).  Takes linear time.
+        //  (using FixedList::value_type::operator==).  Takes linear time
         bool operator==(const FixedList<T, Size>&) const;
 
-        //- The opposite of the equality operation. Takes linear time.
+        //- The opposite of the equality operation. Takes linear time
         bool operator!=(const FixedList<T, Size>&) const;
 
-        //- Compare two FixedLists lexicographically. Takes linear time.
+        //- Compare two FixedLists lexicographically. Takes linear time
         bool operator<(const FixedList<T, Size>&) const;
 
-        //- Compare two FixedLists lexicographically. Takes linear time.
+        //- Compare two FixedLists lexicographically. Takes linear time
         bool operator>(const FixedList<T, Size>&) const;
 
-        //- Return true if !(a > b). Takes linear time.
+        //- Return true if !(a > b). Takes linear time
         bool operator<=(const FixedList<T, Size>&) const;
 
-        //- Return true if !(a < b). Takes linear time.
+        //- Return true if !(a < b). Takes linear time
         bool operator>=(const FixedList<T, Size>&) const;
+
+    // Writing
+
+        //- Write the FixedList as a dictionary entry
+        void writeEntry(Ostream&) const;
+
+        //- Write the List as a dictionary entry with keyword
+        void writeEntry(const word& keyword, Ostream& os) const;
+
+        //- Write the List, with line-breaks in ASCII if the list length
+        //- exceeds shortListLen.
+        //  Using '0' suppresses line-breaks entirely.
+        Ostream& writeList(Ostream& os, const label shortListLen=0) const;
 
 
     // IOstream operators
 
-        //- Read List from Istream, discarding contents of existing List.
+        //- Read List from Istream, discarding contents of existing List
         friend Istream& operator>> <T, Size>
         (Istream&, FixedList<T, Size>&);
 
-        // Write FixedList to Ostream.
+        //- Write FixedList to Ostream
         friend Ostream& operator<< <T, Size>
         (
             Ostream&,
@@ -366,19 +383,9 @@ inline CML::FixedList<T, Size>::FixedList()
 
 
 template<class T, unsigned Size>
-inline CML::FixedList<T, Size>::FixedList(const T v[Size])
-{
-    for (register unsigned i=0; i<Size; i++)
-    {
-        v_[i] = v[i];
-    }
-}
-
-
-template<class T, unsigned Size>
 inline CML::FixedList<T, Size>::FixedList(const T& t)
 {
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = t;
     }
@@ -386,11 +393,46 @@ inline CML::FixedList<T, Size>::FixedList(const T& t)
 
 
 template<class T, unsigned Size>
+inline CML::FixedList<T, Size>::FixedList(const T v[Size])
+{
+    for (unsigned i=0; i<Size; i++)
+    {
+        v_[i] = v[i];
+    }
+}
+
+
+template<class T, unsigned Size>
+template<class InputIterator>
+CML::FixedList<T, Size>::FixedList
+(
+    InputIterator first,
+    InputIterator last
+)
+{
+    checkSize(std::distance(first, last));
+
+    InputIterator iter = first;
+    for (unsigned i=0; i<Size; i++)
+    {
+        v_[i] = *iter++;
+    }
+}
+
+
+template<class T, unsigned Size>
+inline CML::FixedList<T, Size>::FixedList(std::initializer_list<T> lst)
+:
+    FixedList<T, Size>(lst.begin(), lst.end())
+{}
+
+
+template<class T, unsigned Size>
 inline CML::FixedList<T, Size>::FixedList(const UList<T>& lst)
 {
     checkSize(lst.size());
 
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = lst[i];
     }
@@ -402,15 +444,10 @@ inline CML::FixedList<T, Size>::FixedList(const SLList<T>& lst)
 {
     checkSize(lst.size());
 
-    register label i = 0;
-    for
-    (
-        typename SLList<T>::const_iterator iter = lst.begin();
-        iter != lst.end();
-        ++iter
-    )
+    typename SLList<T>::const_iterator iter = lst.begin();
+    for (unsigned i=0; i<Size; i++)
     {
-        operator[](i++) = iter();
+        v_[i] = *iter++;
     }
 }
 
@@ -418,7 +455,7 @@ inline CML::FixedList<T, Size>::FixedList(const SLList<T>& lst)
 template<class T, unsigned Size>
 inline CML::FixedList<T, Size>::FixedList(const FixedList<T, Size>& lst)
 {
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = lst[i];
     }
@@ -462,7 +499,7 @@ inline void CML::FixedList<T, Size>::checkStart(const label start) const
 {
     if (start < 0 || (start && unsigned(start) >= Size))
     {
-        FatalErrorIn("FixedList<T, Size>::checkStart(const label)")
+        FatalErrorInFunction
             << "start " << start << " out of range 0 ... " << (Size-1)
             << abort(FatalError);
     }
@@ -475,7 +512,7 @@ inline void CML::FixedList<T, Size>::checkSize(const label size) const
 {
     if (size < 0 || unsigned(size) > Size)
     {
-        FatalErrorIn("FixedList<T, Size>::checkSize(const label)")
+        FatalErrorInFunction
             << "size " << size << " out of range 0 ... " << (Size)
             << abort(FatalError);
     }
@@ -489,7 +526,7 @@ inline void CML::FixedList<T, Size>::checkIndex(const label i) const
 {
     if (i < 0 || unsigned(i) >= Size)
     {
-        FatalErrorIn("FixedList<T, Size>::checkIndex(const label)")
+        FatalErrorInFunction
             << "index " << i << " out of range 0 ... " << (Size-1)
             << abort(FatalError);
     }
@@ -499,23 +536,23 @@ inline void CML::FixedList<T, Size>::checkIndex(const label i) const
 template<class T, unsigned Size>
 inline void CML::FixedList<T, Size>::resize(const label s)
 {
-#   ifdef FULLDEBUG
+    #ifdef FULLDEBUG
     checkSize(s);
-#   endif
+    #endif
 }
 
 template<class T, unsigned Size>
 inline void CML::FixedList<T, Size>::setSize(const label s)
 {
-#   ifdef FULLDEBUG
+    #ifdef FULLDEBUG
     checkSize(s);
-#   endif
+    #endif
 }
 
 template<class T, unsigned Size>
 inline void CML::FixedList<T, Size>::transfer(const FixedList<T, Size>& lst)
 {
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = lst[i];
     }
@@ -572,9 +609,9 @@ inline const T& CML::FixedList<T, Size>::last() const
 template<class T, unsigned Size>
 inline T& CML::FixedList<T, Size>::operator[](const label i)
 {
-#   ifdef FULLDEBUG
+    #ifdef FULLDEBUG
     checkIndex(i);
-#   endif
+    #endif
     return v_[i];
 }
 
@@ -583,9 +620,9 @@ inline T& CML::FixedList<T, Size>::operator[](const label i)
 template<class T, unsigned Size>
 inline const T& CML::FixedList<T, Size>::operator[](const label i) const
 {
-#   ifdef FULLDEBUG
+    #ifdef FULLDEBUG
     checkIndex(i);
-#   endif
+    #endif
     return v_[i];
 }
 
@@ -593,7 +630,7 @@ inline const T& CML::FixedList<T, Size>::operator[](const label i) const
 template<class T, unsigned Size>
 inline void CML::FixedList<T, Size>::operator=(const T lst[Size])
 {
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = lst[i];
     }
@@ -604,7 +641,7 @@ inline void CML::FixedList<T, Size>::operator=(const UList<T>& lst)
 {
     checkSize(lst.size());
 
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = lst[i];
     }
@@ -615,7 +652,7 @@ inline void CML::FixedList<T, Size>::operator=(const SLList<T>& lst)
 {
     checkSize(lst.size());
 
-    register label i = 0;
+    label i = 0;
     for
     (
         typename SLList<T>::const_iterator iter = lst.begin();
@@ -630,7 +667,7 @@ inline void CML::FixedList<T, Size>::operator=(const SLList<T>& lst)
 template<class T, unsigned Size>
 inline void CML::FixedList<T, Size>::operator=(const T& t)
 {
-    for (register unsigned i=0; i<Size; i++)
+    for (unsigned i=0; i<Size; i++)
     {
         v_[i] = t;
     }
@@ -766,15 +803,15 @@ inline unsigned CML::FixedList<T, Size>::Hash<HashT>::operator()
 {
     if (contiguous<T>())
     {
-        // hash directly
+        // Hash directly
         return Hasher(lst.v_, sizeof(lst.v_), seed);
     }
     else
     {
-        // hash incrementally
+        // Hash incrementally
         unsigned val = seed;
 
-        for (register unsigned i=0; i<Size; i++)
+        for (unsigned i=0; i<Size; i++)
         {
             val = HashT()(lst[i], val);
         }
@@ -928,7 +965,7 @@ CML::Istream& CML::operator>>(CML::Istream& is, FixedList<T, Size>& L)
         }
         else if (!firstToken.isPunctuation())
         {
-            FatalIOErrorIn("operator>>(Istream&, FixedList<T, Size>&)", is)
+            FatalIOErrorInFunction(is)
                 << "incorrect first token, expected <label> "
                    "or '(' or '{', found "
                 << firstToken.info()
@@ -945,7 +982,7 @@ CML::Istream& CML::operator>>(CML::Istream& is, FixedList<T, Size>& L)
 
         if (delimiter == token::BEGIN_LIST)
         {
-            for (register unsigned i=0; i<Size; i++)
+            for (unsigned i=0; i<Size; i++)
             {
                 is >> L[i];
 
@@ -967,7 +1004,7 @@ CML::Istream& CML::operator>>(CML::Istream& is, FixedList<T, Size>& L)
                 "reading the single entry"
             );
 
-            for (register unsigned i=0; i<Size; i++)
+            for (unsigned i=0; i<Size; i++)
             {
                 L[i] = element;
             }
@@ -998,11 +1035,7 @@ void CML::FixedList<T, Size>::writeEntry(Ostream& os) const
 {
     if
     (
-        size()
-     && token::compound::isCompound
-        (
-            "List<" + word(pTraits<T>::typeName) + '>'
-        )
+        token::compound::isCompound("List<" + word(pTraits<T>::typeName) + '>')
     )
     {
         os  << word("List<" + word(pTraits<T>::typeName) + '>') << " ";
@@ -1022,6 +1055,71 @@ void CML::FixedList<T, Size>::writeEntry
     os.writeKeyword(keyword);
     writeEntry(os);
     os << token::END_STATEMENT << endl;
+}
+
+
+template<class T, unsigned Size>
+CML::Ostream& CML::FixedList<T, Size>::writeList
+(
+    Ostream& os,
+    const label shortListLen
+) const
+{
+    const FixedList<T, Size>& list = *this;
+
+    // Write list contents depending on data format
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
+    {
+        if (contiguous<T>() && list.uniform())
+        {
+            // Two or more entries, and all entries have identical values.
+
+            os << Size << token::BEGIN_BLOCK << list[0] << token::END_BLOCK;
+        }
+        else if
+        (
+            Size <= 1 || !shortListLen
+         || (Size <= unsigned(shortListLen) && contiguous<T>())
+        )
+        {
+            // Start delimiter
+            os << token::BEGIN_LIST;
+
+            // Contents
+            for (unsigned i=0; i<Size; ++i)
+            {
+                if (i) os << token::SPACE;
+                os << list[i];
+            }
+
+            // End delimiter
+            os << token::END_LIST;
+        }
+        else
+        {
+            // Start delimiter
+            os << nl << token::BEGIN_LIST << nl;
+
+            // Contents
+            for (unsigned i=0; i<Size; ++i)
+            {
+                os << list[i] << nl;
+            }
+
+            // End delimiter
+            os << token::END_LIST << nl;
+        }
+    }
+    else
+    {
+        // Binary, contiguous
+
+        // write(...) includes surrounding start/end delimiters
+        os.write(reinterpret_cast<const char*>(list.cdata()), Size*sizeof(T));
+    }
+
+    os.check(FUNCTION_NAME);
+    return os;
 }
 
 
@@ -1058,7 +1156,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const FixedList<T, Size>& L)
             // Write end delimiter
             os << token::END_BLOCK;
         }
-        else if (Size < 11 && contiguous<T>())
+        else if (Size <= 1 ||(Size < 11 && contiguous<T>()))
         {
             // Write start delimiter
             os << token::BEGIN_LIST;

@@ -67,11 +67,8 @@ void CML::multiDirRefinement::addCells
 
         if (iter == splitMap.end())
         {
-            FatalErrorIn
-            (
-                "multiDirRefinement::addCells(const Map<label>&"
-                ", List<refineCell>&)"
-            )   << "Problem : cannot find added cell for cell "
+            FatalErrorInFunction
+                << "Problem : cannot find added cell for cell "
                 << refCell.cellNo() << abort(FatalError);
         }
 
@@ -140,11 +137,8 @@ void CML::multiDirRefinement::addCells
             }
             else if (origCell[slave] != celli)
             {
-                FatalErrorIn
-                (
-                    "multiDirRefinement::addCells(const primitiveMesh&"
-                    ", const Map<label>&"
-                )   << "Added cell " << slave << " has two different masters:"
+                FatalErrorInFunction
+                    << "Added cell " << slave << " has two different masters:"
                     << origCell[slave] << " , " << celli
                     << abort(FatalError);
             }
@@ -164,11 +158,8 @@ void CML::multiDirRefinement::addCells
 
         if (masterI >= addedCells_.size())
         {
-            FatalErrorIn
-            (
-                "multiDirRefinement::addCells(const primitiveMesh&"
-                ", const Map<label>&"
-            )   << "Map of added cells contains master cell " << masterI
+            FatalErrorInFunction
+                << "Map of added cells contains master cell " << masterI
                 << " which is not a valid cell number" << endl
                 << "This means that the mesh is not consistent with the"
                 << " done refinement" << endl
@@ -296,11 +287,8 @@ void CML::multiDirRefinement::refineHex8
 
             if (iter == hexCellSet.end())
             {
-                FatalErrorIn
-                (
-                    "multiDirRefinement::refineHex8"
-                    "(polyMesh&, const labelList&, const bool)"
-                )   << "Resulting mesh would not satisfy 2:1 ratio"
+                FatalErrorInFunction
+                    << "Resulting mesh would not satisfy 2:1 ratio"
                     << " when refining cell " << celli << abort(FatalError);
             }
             else
@@ -315,11 +303,8 @@ void CML::multiDirRefinement::refineHex8
         {
             if (iter() != 2)
             {
-                FatalErrorIn
-                (
-                    "multiDirRefinement::refineHex8"
-                    "(polyMesh&, const labelList&, const bool)"
-                )   << "Resulting mesh would not satisfy 2:1 ratio"
+                FatalErrorInFunction
+                    << "Resulting mesh would not satisfy 2:1 ratio"
                     << " when refining cell " << iter.key()
                     << abort(FatalError);
             }
@@ -467,7 +452,7 @@ void CML::multiDirRefinement::refineFromDict
     // How to walk cell circumference.
     Switch pureGeomCut(dict.lookup("geometricCut"));
 
-    autoPtr<cellLooper> cellWalker(NULL);
+    autoPtr<cellLooper> cellWalker(nullptr);
     if (pureGeomCut)
     {
         cellWalker.reset(new geomCellLooper(mesh));

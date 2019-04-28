@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -59,10 +59,10 @@ public:
         NoCollision(const dictionary& dict, CloudType& owner);
 
         //- Construct copy
-        NoCollision(NoCollision<CloudType>& cm);
+        NoCollision(const NoCollision<CloudType>& cm);
 
         //- Construct and return a clone
-        virtual autoPtr<CollisionModel<CloudType> > clone()
+        virtual autoPtr<CollisionModel<CloudType> > clone() const
         {
             return autoPtr<CollisionModel<CloudType> >
             (
@@ -84,10 +84,6 @@ public:
 
         //- Flag to indicate whether model activates collision model
         virtual bool active() const;
-
-        //- Indicates whether model determines wall collisions or not,
-        //  used to determine what value to use for wallImpactDistance
-        virtual bool controlsWallInteraction() const;
 
         // Collision function
         virtual void collide();
@@ -114,7 +110,7 @@ CML::NoCollision<CloudType>::NoCollision
 template<class CloudType>
 CML::NoCollision<CloudType>::NoCollision
 (
-    NoCollision<CloudType>& cm
+    const NoCollision<CloudType>& cm
 )
 :
     CollisionModel<CloudType>(cm)
@@ -139,13 +135,6 @@ CML::label CML::NoCollision<CloudType>::nSubCycles() const
 
 template<class CloudType>
 bool CML::NoCollision<CloudType>::active() const
-{
-    return false;
-}
-
-
-template<class CloudType>
-bool CML::NoCollision<CloudType>::controlsWallInteraction() const
 {
     return false;
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,14 +84,10 @@ CML::refinementFeatures::refinementFeatures
         // Calculate bb of all points
         treeBoundBox bb(points);
 
-        // Random number generator. Bit dodgy since not exactly random ;-)
-        Random rndGen(65431);
 
         // Slightly extended bb. Slightly off-centred just so on symmetric
         // geometry there are less face/edge aligned items.
-        bb = bb.extend(rndGen, 1E-4);
-        bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        bb = bb.extend(1E-4);
 
         edgeTrees_.set
         (

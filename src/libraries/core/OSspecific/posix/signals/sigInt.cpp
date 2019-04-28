@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,12 +34,10 @@ struct sigaction CML::sigInt::oldAction_;
 void CML::sigInt::sigHandler(int)
 {
     // Reset old handling
-    if (sigaction(SIGINT, &oldAction_, NULL) < 0)
+    if (sigaction(SIGINT, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::sigHandler()"
-        )   << "Cannot reset SIGINT trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGINT trapping"
             << abort(FatalError);
     }
 
@@ -55,7 +53,7 @@ void CML::sigInt::sigHandler(int)
 
 CML::sigInt::sigInt()
 {
-    oldAction_.sa_handler = NULL;
+    oldAction_.sa_handler = nullptr;
 }
 
 
@@ -64,12 +62,10 @@ CML::sigInt::sigInt()
 CML::sigInt::~sigInt()
 {
     // Reset old handling
-    if (sigaction(SIGINT, &oldAction_, NULL) < 0)
+    if (sigaction(SIGINT, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::~sigInt()"
-        )   << "Cannot reset SIGINT trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGINT trapping"
             << abort(FatalError);
     }
 }
@@ -81,10 +77,8 @@ void CML::sigInt::set(const bool)
 {
     if (oldAction_.sa_handler)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::set()"
-        )   << "Cannot call sigInt::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigInt::set() more than once"
             << abort(FatalError);
     }
 
@@ -94,10 +88,8 @@ void CML::sigInt::set(const bool)
     sigemptyset(&newAction.sa_mask);
     if (sigaction(SIGINT, &newAction, &oldAction_) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigInt::set()"
-        )   << "Cannot set SIGINT trapping"
+        FatalErrorInFunction
+            << "Cannot set SIGINT trapping"
             << abort(FatalError);
     }
 }

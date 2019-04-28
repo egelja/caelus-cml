@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -93,10 +93,7 @@ CML::string CML::fileFormats::AC3DsurfaceFormatCore::cueToOrDie
     string args;
     if (!cueTo(is, cmd, args))
     {
-        FatalErrorIn
-        (
-            "fileFormats::AC3DsurfaceFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot find command " << cmd
             << " " << errorMsg
             << exit(FatalError);

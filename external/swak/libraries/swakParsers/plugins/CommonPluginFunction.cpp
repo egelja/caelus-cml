@@ -47,7 +47,13 @@ CommonPluginFunction::CommonPluginFunction(
             Info << "Parsing arguments: " << argumentSpecificationString << endl;
         }
         word next;
-        forAll(argumentSpecificationString,i) {
+        for
+        (
+            string::size_type i = 0;
+            i < argumentSpecificationString.size();
+            ++i
+        )
+        {
             char c=argumentSpecificationString[i];
             if(c!=',') {
                 next+=c;
@@ -83,7 +89,7 @@ CommonPluginFunction::CommonPluginFunction(
         if(
             space1 < 0 || space2 < 0 || space3 > 0
         ) {
-            FatalErrorIn("CommonValueExpressionDriver::CommonPluginFunction::CommonPluginFunction")
+            FatalErrorInFunction
                 << "The argument specification " << spec
                     << " of function " << name_
                     << " does not fit template '<name> <parser> <type>'"
@@ -132,7 +138,7 @@ label CommonPluginFunction::readArgument(
 )
 {
     if(index>=argumentNames_.size()) {
-        FatalErrorIn("CommonPluginFunction::readArgument")
+        FatalErrorInFunction
             << "Index " << index << " too big. Only values from 0 to"
                 << argumentNames_.size()-1 << " possible"
                 << endl
@@ -152,7 +158,7 @@ label CommonPluginFunction::readArgument(
         startSymbol
     );
     if(driver.getResultType()!=argumentTypes_[index]) {
-        FatalErrorIn("CommonPluginFunction::readArgument")
+        FatalErrorInFunction
             << "Result type " << driver.getResultType()
                 << "differs from expected type " << argumentTypes_[index]
                 << endl
@@ -191,7 +197,7 @@ label CommonPluginFunction::readArgument(
             << index << " " << type << " : " << content << endl;
     }
     if(index>=argumentNames_.size()) {
-        FatalErrorIn("CommonPluginFunction::readArgument")
+        FatalErrorInFunction
             << "Index " << index << " too big. Only values from 0 to"
                 << argumentNames_.size()-1 << " possible"
                 << endl
@@ -203,7 +209,13 @@ label CommonPluginFunction::readArgument(
     string tc="";
     {
         bool atStart=true;
-        forAll(content,i){
+        for
+        (
+            string::size_type i = 0;
+            i < content.size();
+            ++i
+        )
+        {
             if(isspace(content[i]) && atStart) {
                 consumed++;
             } else {
@@ -273,7 +285,7 @@ label CommonPluginFunction::readArgument(
         }
         setArgument(index,value);
     } else {
-        FatalErrorIn("CommonPluginFunction::readArgument")
+        FatalErrorInFunction
             << "Unsupported type " << type
                 << endl
                 << "Currently supported: scalar, label, word, string, vector"
@@ -380,7 +392,7 @@ void CommonPluginFunction::evaluateInternal(
         }
 
         if(used<=0) {
-            FatalErrorIn("CommonPluginFunction::evaluate")
+            FatalErrorInFunction
                 << "Evaluation of argument " << i+1
                     << " of " << this->helpText()
                     << " consumed no characters"

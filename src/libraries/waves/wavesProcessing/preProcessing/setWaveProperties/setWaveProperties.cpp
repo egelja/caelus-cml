@@ -247,10 +247,7 @@ autoPtr<setWaveProperties> setWaveProperties::New
 
     if (cstrIter == setWavePropertiesConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "setWaveProperties::New(const fvMesh&, const Time&, ...)"
-        )
+        FatalErrorInFunction
         << "Unknown wave property type " << waveTheoryTypeName << "Properties"
         << endl << endl
         << "Valid wave property types are :" << endl

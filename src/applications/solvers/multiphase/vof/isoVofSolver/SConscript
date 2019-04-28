@@ -36,6 +36,12 @@ caelus_libs = [
 ]
 
 ostype = utils.ostype()
+
+if ostype == 'windows':
+    append_args = dict(CPPPATH = ["..\\vofSolver"])
+else:
+    append_args = dict(CPPPATH = ["../vofSolver"])
+
 prepend_args = {}
 if ostype == 'windows':
    prepend_args = {'LINKFLAGS' :
@@ -47,4 +53,5 @@ build_app(env,
           sources=sources,
           caelus_inc=caelus_inc,
           caelus_libs=caelus_libs,
+          append_args=append_args,
           prepend_args=prepend_args)

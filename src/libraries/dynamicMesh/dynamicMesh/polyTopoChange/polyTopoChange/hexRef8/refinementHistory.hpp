@@ -299,7 +299,7 @@ public:
 
             if (index < 0)
             {
-                FatalErrorIn("refinementHistory::parentIndex(const label)")
+                FatalErrorInFunction
                     << "Cell " << celli << " is not visible"
                     << abort(FatalError);
             }

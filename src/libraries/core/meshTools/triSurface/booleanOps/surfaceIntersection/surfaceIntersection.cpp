@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -181,7 +181,7 @@ bool CML::surfaceIntersection::excludeEdgeHit
 //        }
 //    }
 //
-//    FatalErrorIn("surfaceIntersection::borderEdgeIntersection")
+//    FatalErrorInFunction
 //        << "Did not find intersection of plane " << pl
 //        << " with edges of face " << hitFaceI << " verts:" << f
 //        << abort(FatalError);
@@ -237,13 +237,8 @@ void CML::surfaceIntersection::storeIntersection
 
             if (mag(prevHit - thisHit) < SMALL)
             {
-                WarningIn
-                (
-                    "CML::surfaceIntersection::storeIntersection"
-                    "(const bool isFirstSurf, const labelList& facesA,"
-                    "const label faceB, DynamicList<edge>& allCutEdges,"
-                    "DynamicList<point>& allCutPoints)"
-                )   << "Encountered degenerate edge between face "
+                WarningInFunction
+                    << "Encountered degenerate edge between face "
                     << twoFaces[0] << " on first surface"
                     << " and face " << twoFaces[1] << " on second surface"
                     << endl
@@ -965,7 +960,7 @@ CML::surfaceIntersection::surfaceIntersection
 
             if (!usedPoints.found(pointI))
             {
-                FatalErrorIn("surfaceIntersection::surfaceIntersection")
+                FatalErrorInFunction
                     << "Problem: cut point:" << pointI
                     << " coord:" << cutPoints_[pointI]
                     << " not used by any edge" << abort(FatalError);

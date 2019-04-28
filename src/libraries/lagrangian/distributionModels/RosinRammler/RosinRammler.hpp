@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::RosinRammler
+    CML::distributionModels::RosinRammler
 
 Description
     Rosin-Rammler distributionModel
@@ -78,7 +78,7 @@ public:
     // Constructors
 
         //- Construct from components
-        RosinRammler(const dictionary& dict, cachedRandom& rndGen);
+        RosinRammler(const dictionary& dict, Random& rndGen);
 
         //- Construct copy
         RosinRammler(const RosinRammler& p);
@@ -96,7 +96,7 @@ public:
 
     // Member Functions
 
-         //- Sample the distributionModel
+        //- Sample the distributionModel
         virtual scalar sample() const;
 
         //- Return the minimum value

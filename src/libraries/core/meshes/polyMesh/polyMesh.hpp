@@ -82,7 +82,7 @@ public:
         //- Enumeration defining the state of the mesh after a read update.
         //  Used for post-processing applications, where the mesh
         //  needs to update based on the files written in time
-        //  directores
+        //  directories
         enum readUpdateState
         {
             UNCHANGED,
@@ -92,7 +92,7 @@ public:
         };
 
         //- Enumeration defining the representation of the cell for
-        //  inside checking
+        //  inside/outside test
         enum cellRepresentation
         {
             FACEPLANES,     // cell bound by planes of faces
@@ -140,7 +140,7 @@ private:
             mutable Vector<label> solutionD_;
 
             //- Base point for face decomposition into tets
-            mutable autoPtr<labelList> tetBasePtIsPtr_;
+            mutable autoPtr<labelIOList> tetBasePtIsPtr_;
 
             //- Search tree to allow spatial cell searching
             mutable autoPtr<indexedOctree<treeDataCell> > cellTreePtr_;
@@ -176,6 +176,12 @@ private:
             //- Old points (for the last mesh motion)
             mutable autoPtr<pointField> oldPointsPtr_;
 
+            //- Old cell centres (for the last mesh motion)
+            mutable autoPtr<pointField> oldCellCentresPtr_;
+
+            //- Whether or not to store the old cell centres
+            mutable bool storeOldCellCentres_;
+
 
     // Private Member Functions
 
@@ -197,6 +203,9 @@ private:
         //- Calculate the cell shapes from the primitive
         //  polyhedral information
         void calcCellShapes() const;
+
+        //- Read and return the tetBasePtIs
+        autoPtr<labelIOList> readTetBasePtIs() const;
 
 
         // Helper functions for constructor from cell shapes
@@ -416,6 +425,9 @@ public:
             //- Return old points for mesh motion
             virtual const pointField& oldPoints() const;
 
+            //- Return old points for mesh motion
+            virtual const pointField& oldCellCentres() const;
+
             //- Return boundary mesh
             const polyBoundaryMesh& boundaryMesh() const
             {
@@ -447,7 +459,7 @@ public:
             label nSolutionD() const;
 
             //- Return the tetBasePtIs
-            const labelList& tetBasePtIs() const;
+            const labelIOList& tetBasePtIs() const;
 
             //- Return the cell search tree
             const indexedOctree<treeDataCell>& cellTree() const;
@@ -603,8 +615,8 @@ public:
             //- Clear primitive data (points, faces and cells)
             void clearPrimitives();
 
-            //- Clear geometry not used for CFD (cellTree, tetBasePtIs)
-            void clearAdditionalGeom();
+            //- Clear tet base points
+            void clearTetBasePtIs();
 
             //- Clear cell tree data
             void clearCellTree();
@@ -622,14 +634,14 @@ public:
             virtual bool checkFaceOrthogonality
             (
                 const bool report = false,
-                labelHashSet* setPtr = NULL
+                labelHashSet* setPtr = nullptr
             ) const;
 
             //- Check face skewness
             virtual bool checkFaceSkewness
             (
                 const bool report = false,
-                labelHashSet* setPtr = NULL
+                labelHashSet* setPtr = nullptr
             ) const;
 
             //- Check edge alignment for 1D/2D cases
@@ -659,7 +671,7 @@ public:
             (
                 const bool report,
                 const scalar minWeight = 0.05,
-                labelHashSet* setPtr = NULL
+                labelHashSet* setPtr = nullptr
             ) const;
 
             //- Check for neighbouring cell volumes
@@ -667,43 +679,43 @@ public:
             (
                 const bool report,
                 const scalar minRatio = 0.01,
-                labelHashSet* setPtr = NULL
+                labelHashSet* setPtr = nullptr
             ) const;
 
 
         // Position search functions
 
-            //- Find the cell, tetFaceI and tetPtI for the given position
+            //- Find the cell, tetFacei and tetPti for point p
             void findCellFacePt
             (
-                const point& pt,
-                label& cellI,
-                label& tetFaceI,
-                label& tetPtI
+                const point& p,
+                label& celli,
+                label& tetFacei,
+                label& tetPti
             ) const;
 
-            //- Find the tetFaceI and tetPtI for the given position in
-            //  the supplied cell, tetFaceI and tetPtI = -1 if not found
+            //- Find the tetFacei and tetPti for point p in celli.
+            //  tetFacei and tetPtI are set to -1 if not found
             void findTetFacePt
             (
-                const label cellI,
-                const point& pt,
-                label& tetFaceI,
-                label& tetPtI
+                const label celli,
+                const point& p,
+                label& tetFacei,
+                label& tetPti
             ) const;
 
-            //- Is the point in the cell
+            //- Test if point p is in the celli
             bool pointInCell
             (
-                const point&,
-                label cellI,
+                const point& p,
+                label celli,
                 const cellRepresentation = CELL_TETS
             ) const;
 
             //- Find cell enclosing this location (-1 if not in mesh)
             virtual label findCell
             (
-                const point&,
+                const point& p,
                 const cellRepresentation = CELL_TETS
             ) const;
 };

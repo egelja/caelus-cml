@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -71,7 +71,7 @@ long long CML::readLongLong(Istream& is)
 
         if (!isdigit(c))
         {
-            FatalIOErrorIn("readLongLong(ISstream& is)", is)
+            FatalIOErrorInFunction(is)
                 << "Illegal digit: \"" << c << "\""
                 << exit(FatalIOError);
         }

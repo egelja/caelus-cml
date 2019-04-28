@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -63,7 +63,7 @@ CML::vector CML::cellModel::centre
 
         if (pyrVol > SMALL)
         {
-            WarningIn("cellModel::centre(const labelList&, const pointField&)")
+            WarningInFunction
                 << "zero or negative pyramid volume: " << -pyrVol
                 << " for face " << i
                 << endl;
@@ -121,7 +121,7 @@ CML::scalar CML::cellModel::mag
 
         if (pyrVol > SMALL)
         {
-            WarningIn("cellModel::mag(const labelList&, const pointField&)")
+            WarningInFunction
                 << "zero or negative pyramid volume: " << -pyrVol
                 << " for face " << i
                 << endl;

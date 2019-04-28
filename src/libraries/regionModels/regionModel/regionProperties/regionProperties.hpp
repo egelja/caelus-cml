@@ -72,6 +72,11 @@ public:
 };
 
 
+const word& regionDir(const word& regionName);
+
+wordList selectRegionNames(const argList& args, const Time& runTime);
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML

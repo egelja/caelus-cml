@@ -105,7 +105,7 @@ bool executeIfEnvironmentVariableFunctionObject::condition()
             }
             break;
         default:
-            FatalErrorIn("executeIfEnvironmentVariableFunctionObject::condition()")
+            FatalErrorInFunction
                 << "The fitting mode " << fitVariableModeNames_[fitVariableMode_]
                     << " is not implemented" << endl
                     << exit(FatalError);

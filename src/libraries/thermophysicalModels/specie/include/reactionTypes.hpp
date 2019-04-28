@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,8 +25,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reactionTypes_H
-#define reactionTypes_H
+#ifndef reactionTypes_HPP
+#define reactionTypes_HPP
 
 #include "thermoPhysicsTypes.hpp"
 #include "Reaction.hpp"
@@ -39,19 +39,47 @@ Description
 
 namespace CML
 {
-    typedef Reaction<constGasThermoPhysics> constGasReaction;
+    // Sensible enthalpy based reactions
+    typedef Reaction<constGasHThermoPhysics> constGasHReaction;
 
-    typedef Reaction<gasThermoPhysics> gasReaction;
+    typedef Reaction<gasHThermoPhysics> gasHReaction;
 
-    typedef Reaction<constIsobaricGasThermoPhysics> constIsobaricGasReaction;
+    typedef Reaction<constIncompressibleGasHThermoPhysics>
+        constIncompressibleGasHReaction;
 
-    typedef Reaction<isobaricGasThermoPhysics> isobaricGasReaction;
+    typedef Reaction<incompressibleGasHThermoPhysics>
+        incompressibleGasHReaction;
 
-    typedef Reaction<icoPoly8ThermoPhysics> icoPoly8Reaction;
+    typedef Reaction<icoPoly8HThermoPhysics> icoPoly8HReaction;
+
+    typedef Reaction<constFluidHThermoPhysics> constFluidHReaction;
+
+    typedef Reaction<constAdiabaticFluidHThermoPhysics>
+        constAdiabaticFluidHReaction;
+
+    typedef Reaction<constHThermoPhysics> constHReaction;
+
+
+    // Internal ennergy based reactions
+    typedef Reaction<constGasEThermoPhysics> constGasEReaction;
+
+    typedef Reaction<gasEThermoPhysics> gasEReaction;
+
+    typedef Reaction<constIncompressibleGasEThermoPhysics>
+        constIncompressibleGasEReaction;
+
+    typedef Reaction<incompressibleGasEThermoPhysics>
+        incompressibleGasEReaction;
+
+    typedef Reaction<icoPoly8EThermoPhysics> icoPoly8EReaction;
+
+    typedef Reaction<constFluidEThermoPhysics> constFluidEReaction;
+
+    typedef Reaction<constAdiabaticFluidEThermoPhysics>
+        constAdiabaticFluidEReaction;
+
+    typedef Reaction<constEThermoPhysics> constEReaction;
 }
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

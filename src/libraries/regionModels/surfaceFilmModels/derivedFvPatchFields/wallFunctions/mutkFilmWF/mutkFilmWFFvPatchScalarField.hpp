@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,11 +18,25 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::compressible::RASModels::
-    mutkFilmWallFunctionFvPatchScalarField
+    CML::compressible::RASModels::mutkFilmWallFunctionFvPatchScalarField
 
 Description
-    Wall function boundary condition for use with surface film models.
+    This boundary condition provides a turbulent viscosity condition when
+    using wall functions, based on turbulence kinetic energy, for use with
+    surface film models.
+
+Usage
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            mutkFilmWallFunction;
+        value           uniform 0;
+    }
+    \endverbatim
+
+See also
+    Foam::nutkWallFunctionFvPatchScalarField
 
 SourceFiles
     mutkFilmWallFunctionFvPatchScalarField.C

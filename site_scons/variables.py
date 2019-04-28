@@ -18,7 +18,7 @@ import utils
 
 ### General Variables
 PROJECT_NAME     = "caelus"
-PROJECT_VERSION  = '8.04'
+PROJECT_VERSION  = '9.04'
 METIS_VERSION    = '5.1.0'
 GSL_VERSION      = '2.3'
 SCOTCH_VERSION   = '6.0.4'
@@ -136,6 +136,12 @@ def init_dependent_vars(env):
 
     BUILD_OPTION = (ostype + env['BUILD_ARCH'] +
                     env['CXX'] + env['PRECISION'] + env['BUILD_TYPE'])
+    if env['INT_TYPE'] == '64':
+        LABEL_TYPE = ('Int' + env['INT_TYPE'])
+        BUILD_OPTION = (ostype + env['BUILD_ARCH'] +
+                        env['CXX'] + env['PRECISION'] + LABEL_TYPE +
+                        env['BUILD_TYPE'])
+
     PLATFORM_INSTALL = os.path.join(
         prj_dir,'platforms',BUILD_OPTION)
     BIN_PLATFORM_INSTALL = os.path.join(PLATFORM_INSTALL,'bin')

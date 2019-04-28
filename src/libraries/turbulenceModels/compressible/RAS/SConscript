@@ -6,20 +6,20 @@ Import('env')
 target = 'compressibleRASModels'
 
 sources = Split("""
-RASModel/RASModel.cpp
-laminar/laminar.cpp
-realizableKE/realizableKE.cpp
-kEpsilon/kEpsilon.cpp
-SpalartAllmaras/SpalartAllmaras.cpp
-kOmegaSST/kOmegaSST.cpp
-kOmegaSSTSAS/kOmegaSSTSAS.cpp
-gammaReTheta/gammaReTheta.cpp
+RASModel/compressibleRASModel.cpp
+laminar/compressibleRASLaminar.cpp
+realizableKE/compressibleRealizableKE.cpp
+kEpsilon/compressiblekEpsilon.cpp
+SpalartAllmaras/compressibleSpalartAllmaras.cpp
+kOmegaSST/compressiblekOmegaSST.cpp
+kOmegaSSTSAS/compressiblekOmegaSSTSAS.cpp
+gammaReTheta/compressibleGammaReTheta.cpp
 """)
 
 caelus_inc = [
 'turbulenceModels',
 'thermophysicalModels/basic/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude'
+'thermophysicalModels/solidThermo/lnInclude'
 ]
 
 caelus_libs = [

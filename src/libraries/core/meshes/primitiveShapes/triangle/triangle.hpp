@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,7 +21,7 @@ Class
     CML::triangle
 
 Description
-    A triangle primitive used to calculate face normals and swept volumes.
+    A triangle primitive used to calculate face areas and swept volumes.
 
 SourceFiles
     triangleI.hpp
@@ -36,9 +36,10 @@ SourceFiles
 #include "tensor.hpp"
 #include "pointHit.hpp"
 #include "Random.hpp"
-#include "cachedRandom.hpp"
 #include "FixedList.hpp"
 #include "UList.hpp"
+#include "linePointRef.hpp"
+#include "barycentric2D.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -126,10 +127,13 @@ public:
             //- Return centre (centroid)
             inline Point centre() const;
 
+            //- Return vector area
+            inline vector area() const;
+
             //- Return scalar magnitude
             inline scalar mag() const;
 
-            //- Return vector normal
+            //- Return unit normal
             inline vector normal() const;
 
             //- Return circum-centre
@@ -158,17 +162,18 @@ public:
             //  distribution
             inline Point randomPoint(Random& rndGen) const;
 
-            //- Return a random point on the triangle from a uniform
-            //  distribution
-            inline Point randomPoint(cachedRandom& rndGen) const;
+            //- Calculate the point from the given barycentric coordinates.
+            inline Point barycentricToPoint(const barycentric2D& bary) const;
 
-            //- Calculate the barycentric coordinates of the given
-            //  point, in the same order as a, b, c.  Returns the
-            //  determinant of the solution.
-            inline scalar barycentric
+            //- Calculate the barycentric coordinates from the given point
+            inline barycentric2D pointToBarycentric(const point& pt) const;
+
+            //- Calculate the barycentric coordinates from the given point.
+            //  Returns the determinant.
+            inline scalar pointToBarycentric
             (
                 const point& pt,
-                List<scalar>& bary
+                barycentric2D& bary
             ) const;
 
             //- Return point intersection with a ray.
@@ -221,6 +226,15 @@ public:
                 const point& p,
                 label& nearType,
                 label& nearLabel
+            ) const;
+
+            //- Return nearest point to line on triangle. Returns hit if
+            //  point is inside triangle. Sets edgePoint to point on edge
+            //  (hit if nearest is inside line)
+            inline pointHit nearestPoint
+            (
+                const linePointRef& edge,
+                pointHit& edgePoint
             ) const;
 
 

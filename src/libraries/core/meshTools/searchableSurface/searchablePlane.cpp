@@ -252,11 +252,8 @@ void CML::searchablePlane::getVolumeType
     List<volumeType>& volType
 ) const
 {
-    FatalErrorIn
-    (
-        "searchableCollection::getVolumeType(const pointField&"
-        ", List<volumeType>&) const"
-    )   << "Volume type not supported for plane."
+    FatalErrorInFunction
+        << "Volume type not supported for plane."
         << exit(FatalError);
 }
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -115,7 +115,7 @@ public:
             beta_ = readScalar(schemeData);
             if (beta_ < 0 || beta_ > 1)
             {
-                FatalIOErrorIn("blendedSuperbee(fvMesh const&, Istream& is)", schemeData)
+                FatalIOErrorInFunction(schemeData)
                     << "coefficient = " << beta_
                     << " should be >= 0 and <= 1"
                     << exit(FatalIOError);
@@ -146,7 +146,7 @@ public:
             beta_ = scalar(0.75);
             if (beta_ < 0 || beta_ > 1)
             {
-	        FatalIOErrorIn("blendedSuperbee(fvMesh&, surfaceScalarField const&, Istream& is)", schemeData)
+	        FatalIOErrorInFunction(schemeData)
                     << "coefficient = " << beta_
                     << " should be >= 0 and <= 1"
                     << exit(FatalIOError);

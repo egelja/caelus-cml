@@ -22,9 +22,9 @@ License
 #include "mutkFilmWFFvPatchScalarField.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "volFields.hpp"
-#include "RASModel.hpp"
+#include "compressibleRASModel.hpp"
 #include "addToRunTimeSelectionTable.hpp"
-#include "surfaceFilmModel.hpp"
+#include "surfaceFilmRegionModel.hpp"
 #include "mappedWallPolyPatch.hpp"
 #include "mapDistribute.hpp"
 
@@ -47,49 +47,48 @@ tmp<scalarField> mutkFilmWallFunctionFvPatchScalarField::calcUTau
     tmp<scalarField> tuTau(new scalarField(patch().size(), 0.0));
     scalarField& uTau = tuTau();
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel modelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel modelType;
 
-    bool ok =
-        db().objectRegistry::foundObject<modelType>("surfaceFilmProperties");
+    bool foundFilm =
+        db().time().foundObject<modelType>("surfaceFilmProperties");
 
-    if (!ok)
+    if (!foundFilm)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return tuTau;
     }
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     // Retrieve phase change mass from surface film model
     const modelType& filmModel =
-        db().objectRegistry::lookupObject<modelType>("surfaceFilmProperties");
+        db().time().lookupObject<modelType>("surfaceFilmProperties");
 
-    const label filmPatchI = filmModel.regionPatchID(patchI);
+    const label filmPatchi = filmModel.regionPatchID(patchi);
 
     tmp<volScalarField> mDotFilm(filmModel.primaryMassTrans());
-    scalarField mDotFilmp = mDotFilm().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, mDotFilmp);
+    scalarField mDotFilmp = mDotFilm().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, mDotFilmp);
 
 
     // Retrieve RAS turbulence model
-    const RASModel& rasModel = db().lookupObject<RASModel>("RASProperties");
-    const scalarField& y = rasModel.y()[patchI];
-    const fvPatchScalarField& rhow = rasModel.rho().boundaryField()[patchI];
-    const fvPatchScalarField& muw = rasModel.mu().boundaryField()[patchI];
-    const tmp<volScalarField> tk = rasModel.k();
+    const RASModel& turbModel = db().lookupObject<RASModel>("RASProperties");
+    const scalarField& y = turbModel.y()[patchi];
+    const fvPatchScalarField& muw = turbModel.mu().boundaryField()[patchi];
+    const tmp<volScalarField> tk = turbModel.k();
     const volScalarField& k = tk();
 
     const scalar Cmu25 = pow(Cmu_, 0.25);
 
-    forAll(uTau, faceI)
+    forAll(uTau, facei)
     {
-        label faceCellI = patch().faceCells()[faceI];
+        label faceCelli = patch().faceCells()[facei];
 
-        scalar ut = Cmu25*sqrt(k[faceCellI]);
+        scalar ut = Cmu25*sqrt(k[faceCelli]);
 
-        scalar yPlus = y[faceI]*ut/(muw[faceI]/rhow[faceI]);
+        scalar yPlus = y[facei]*ut/muw[facei];
 
-        scalar mStar = mDotFilmp[faceI]/(y[faceI]*ut);
+        scalar mStar = mDotFilmp[facei]/(y[facei]*ut);
 
         scalar factor = 0.0;
         if (yPlus > yPlusCrit_)
@@ -104,7 +103,7 @@ tmp<scalarField> mutkFilmWallFunctionFvPatchScalarField::calcUTau
             factor = mStar/(expTerm*yPlus - 1.0 + ROOTVSMALL);
         }
 
-        uTau[faceI] = sqrt(max(0, magGradU[faceI]*ut*factor));
+        uTau[facei] = sqrt(max(0, magGradU[facei]*ut*factor));
     }
 
     return tuTau;
@@ -113,13 +112,13 @@ tmp<scalarField> mutkFilmWallFunctionFvPatchScalarField::calcUTau
 
 tmp<scalarField> mutkFilmWallFunctionFvPatchScalarField::calcMut() const
 {
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
-    const RASModel& rasModel = db().lookupObject<RASModel>("RASProperties");
-    const fvPatchVectorField& Uw = rasModel.U().boundaryField()[patchI];
+    const RASModel& turbModel = db().lookupObject<RASModel>("RASProperties");
+    const fvPatchVectorField& Uw = turbModel.U().boundaryField()[patchi];
     const scalarField magGradU(mag(Uw.snGrad()));
-    const scalarField& rhow = rasModel.rho().boundaryField()[patchI];
-    const scalarField& muw = rasModel.mu().boundaryField()[patchI];
+    const scalarField& rhow = turbModel.rho().boundaryField()[patchi];
+    const scalarField& muw = turbModel.mu().boundaryField()[patchi];
 
     return max
     (
@@ -197,13 +196,13 @@ mutkFilmWallFunctionFvPatchScalarField::mutkFilmWallFunctionFvPatchScalarField
 
 tmp<scalarField> mutkFilmWallFunctionFvPatchScalarField::yPlus() const
 {
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
-    const RASModel& rasModel = db().lookupObject<RASModel>("RASProperties");
-    const scalarField& y = rasModel.y()[patchI];
-    const fvPatchVectorField& Uw = rasModel.U().boundaryField()[patchI];
-    const scalarField& rhow = rasModel.rho().boundaryField()[patchI];
-    const scalarField& muw = rasModel.mu().boundaryField()[patchI];
+    const RASModel& turbModel = db().lookupObject<RASModel>("RASProperties");
+    const scalarField& y = turbModel.y()[patchi];
+    const fvPatchVectorField& Uw = turbModel.U().boundaryField()[patchi];
+    const scalarField& rhow = turbModel.rho().boundaryField()[patchi];
+    const scalarField& muw = turbModel.mu().boundaryField()[patchi];
 
     return y*calcUTau(mag(Uw.snGrad()))/(muw/rhow);
 }

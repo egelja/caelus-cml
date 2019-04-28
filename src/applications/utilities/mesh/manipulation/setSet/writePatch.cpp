@@ -21,7 +21,7 @@ License
 
 #include "writePatch.hpp"
 #include "OFstream.hpp"
-#include "writeFuns.hpp"
+#include "writeFuns_setSet.hpp"
 #include "primitiveFacePatch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

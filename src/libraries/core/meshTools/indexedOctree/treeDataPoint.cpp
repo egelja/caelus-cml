@@ -237,11 +237,7 @@ bool CML::treeDataPoint::findIntersectOp::operator()
     point& result
 ) const
 {
-    notImplemented
-    (
-        "treeDataPoint::intersects(const label, const point&,"
-        "const point&, point&)"
-    );
+    NotImplemented;
     return false;
 }
 

@@ -90,13 +90,13 @@ public:
             void setSolverPerformance
             (
                 const word& name,
-                const lduMatrix::solverPerformance&
+                const solverPerformance&
             ) const;
 
             //- Add/set the solverPerformance entry, using its fieldName
             void setSolverPerformance
             (
-                const lduMatrix::solverPerformance&
+                const solverPerformance&
             ) const;
 };
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,22 +32,52 @@ namespace surfaceFilmModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-filmSubModelBase::filmSubModelBase(const surfaceFilmModel& owner)
+filmSubModelBase::filmSubModelBase(surfaceFilmRegionModel& film)
 :
-    owner_(owner),
-    coeffs_(dictionary::null)
+    subModelBase(film.outputProperties()),
+    filmModel_(film)
 {}
 
 
 filmSubModelBase::filmSubModelBase
 (
-    const word& type,
-    const surfaceFilmModel& owner,
-    const dictionary& dict
+    surfaceFilmRegionModel& film,
+    const dictionary& dict,
+    const word& baseName,
+    const word& modelType,
+    const word& dictExt
 )
 :
-    owner_(owner),
-    coeffs_(dict.subDict(type + "Coeffs"))
+    subModelBase
+    (
+        film.outputProperties(),
+        dict,
+        baseName,
+        modelType,
+        dictExt
+    ),
+    filmModel_(film)
+{}
+
+
+filmSubModelBase::filmSubModelBase
+(
+    const word& modelName,
+    surfaceFilmRegionModel& film,
+    const dictionary& dict,
+    const word& baseName,
+    const word& modelType
+)
+:
+    subModelBase
+    (
+        modelName,
+        film.outputProperties(),
+        dict,
+        baseName,
+        modelType
+    ),
+    filmModel_(film)
 {}
 
 
@@ -55,6 +85,14 @@ filmSubModelBase::filmSubModelBase
 
 filmSubModelBase::~filmSubModelBase()
 {}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+bool filmSubModelBase::writeTime() const
+{
+    return active() && filmModel_.time().outputTime();
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

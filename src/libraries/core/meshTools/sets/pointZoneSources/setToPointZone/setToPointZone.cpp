@@ -101,11 +101,8 @@ void CML::setToPointZone::applyToSet
 {
     if (!isA<pointZoneSet>(set))
     {
-        WarningIn
-        (
-            "setToPointZone::applyToSet(const topoSetSource::setAction"
-            ", topoSet"
-        )   << "Operation only allowed on a pointZoneSet." << endl;
+        WarningInFunction
+            << "Operation only allowed on a pointZoneSet." << endl;
     }
     else
     {

@@ -72,9 +72,9 @@ void CML::removeGlobalVariable::execute()
             scope_
         );
         if(!removed) {
-            WarningIn("CML::removeGlobalVariable::read(const dictionary& dict)")
+            WarningInFunction
                 << "Variable " << name << " in scope " << scope_
-                    << " not removed" << endl;
+                << " not removed" << endl;
         }
    }
 }

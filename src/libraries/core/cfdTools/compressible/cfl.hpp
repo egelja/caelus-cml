@@ -35,7 +35,7 @@ surfaceScalarField cSf
 (
     linearInterpolate
     (
-        sqrt(1/thermo->psi())
+        sqrt(1/thermo.psi())
     )
     *
     mesh.magSf()
@@ -56,7 +56,7 @@ if (mesh.nInternalFaces())
 
     CoNum = max(cSfbyDelta/mesh.magSf()).value()*runTime.deltaTValue();
 
-    CoNum += 0.5*gMax(sumPhi/(mesh.V().field()*thermo->rho()))
+    CoNum += 0.5*gMax(sumPhi/(mesh.V().field()*thermo.rho()))
         *runTime.deltaTValue();
 
     meanCoNum =

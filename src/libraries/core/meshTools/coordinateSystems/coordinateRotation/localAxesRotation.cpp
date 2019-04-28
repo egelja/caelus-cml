@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2014 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -148,7 +148,7 @@ CML::localAxesRotation::localAxesRotation(const dictionary& dict)
     origin_(),
     e3_()
 {
-    FatalErrorIn("localAxesRotation(const dictionary&)")
+    FatalErrorInFunction
         << " localAxesRotation can not be constructed from dictionary "
         << " use the construtctor : "
            "("
@@ -206,10 +206,7 @@ CML::tmp<CML::vectorField> CML::localAxesRotation::transform
 {
     if (Rptr_->size() != vf.size())
     {
-        FatalErrorIn
-        (
-            "tmp<vectorField> localAxesRotation::transform(const vectorField&)"
-        )
+        FatalErrorInFunction
             << "vectorField st has different size to tensorField "
             << abort(FatalError);
     }
@@ -220,10 +217,7 @@ CML::tmp<CML::vectorField> CML::localAxesRotation::transform
 
 CML::vector CML::localAxesRotation::transform(const vector& v) const
 {
-    notImplemented
-    (
-        "vector localAxesRotation::transform(const vector&) const"
-    );
+    NotImplemented;
     return vector::zero;
 }
 
@@ -249,10 +243,7 @@ CML::tmp<CML::vectorField> CML::localAxesRotation::invTransform
 
 CML::vector CML::localAxesRotation::invTransform(const vector& v) const
 {
-    notImplemented
-    (
-        "vector localAxesRotation::invTransform(const vector&) const"
-    );
+    NotImplemented;
     return vector::zero;
 }
 
@@ -274,13 +265,7 @@ CML::tmp<CML::tensorField> CML::localAxesRotation::transformTensor
 {
     if (Rptr_->size() != tf.size())
     {
-        FatalErrorIn
-        (
-            "tmp<tensorField> localAxesRotation::transformTensor"
-            "("
-                "const tensorField&"
-            ")"
-        )
+        FatalErrorInFunction
             << "tensorField st has different size to tensorField Tr"
             << abort(FatalError);
     }
@@ -293,10 +278,7 @@ CML::tensor CML::localAxesRotation::transformTensor
     const tensor& t
 ) const
 {
-    notImplemented
-    (
-        "tensor localAxesRotation::transformTensor(const tensor&) const"
-    );
+    NotImplemented;
 
     return tensor::zero;
 }
@@ -310,14 +292,7 @@ CML::tmp<CML::tensorField> CML::localAxesRotation::transformTensor
 {
     if (cellMap.size() != tf.size())
     {
-        FatalErrorIn
-        (
-            "tmp<tensorField> localAxesRotation::transformTensor"
-            "("
-                "const tensorField&, "
-                "const labelList&"
-            ")"
-        )
+        FatalErrorInFunction
             << "tensorField tf has different size to tensorField Tr"
             << abort(FatalError);
     }
@@ -343,7 +318,7 @@ CML::tmp<CML::symmTensorField> CML::localAxesRotation::transformVector
 {
     if (Rptr_->size() != vf.size())
     {
-        FatalErrorIn("localAxesRotation::transformVector(const vectorField&)")
+        FatalErrorInFunction
             << "tensorField vf has different size to tensorField Tr"
             << abort(FatalError);
     }
@@ -365,10 +340,7 @@ CML::symmTensor CML::localAxesRotation::transformVector
     const vector& v
 ) const
 {
-    notImplemented
-    (
-        "tensor localAxesRotation::transformVector(const vector&) const"
-    );
+    NotImplemented;
     return symmTensor::zero;
 }
 

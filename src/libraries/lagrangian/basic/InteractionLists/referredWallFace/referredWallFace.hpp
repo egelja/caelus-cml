@@ -65,7 +65,7 @@ class referredWallFace
         pointField pts_;
 
         //- Index of originating patch
-        label patchI_;
+        label patchi_;
 
 
 public:
@@ -80,7 +80,7 @@ public:
         (
             const face& f,
             const pointField& pts,
-            label patchI
+            label patchi
         );
 
         //- Construct as copy

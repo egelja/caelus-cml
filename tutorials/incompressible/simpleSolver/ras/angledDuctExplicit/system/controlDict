@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -34,7 +34,7 @@ writeFormat     binary;
 
 writePrecision  6;
 
-writeCompression yes;
+writeCompression no;
 
 timeFormat      general;
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -967,8 +967,10 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
            *rDeltaT
            *(
                 (coefft0*phi.oldTime() - coefft00*phi.oldTime().oldTime())
-              - (
-                    fvc::interpolate(coefft0*U.oldTime() - coefft00*U.oldTime().oldTime()) & mesh().Sf()
+              - fvc::dotInterpolate
+                (
+                    mesh().Sf(),
+                    coefft0*U.oldTime() - coefft00*U.oldTime().oldTime()
                 )
             )
         )
@@ -985,21 +987,21 @@ backwardDdtScheme<Type>::fvcDdtUfCorr
     const GeometricField<Type, fvsPatchField, surfaceMesh>& Uf
 )
 {
+    dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
+
+    scalar deltaT = deltaT_();
+    scalar deltaT0 = deltaT0_(U);
+
+    scalar coefft   = 1 + deltaT/(deltaT + deltaT0);
+    scalar coefft00 = deltaT*deltaT/(deltaT0*(deltaT + deltaT0));
+    scalar coefft0  = coefft + coefft00;
+
     if
     (
         U.dimensions() == dimVelocity
      && Uf.dimensions() == rho.dimensions()*dimVelocity
     )
     {
-        dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
-
-        scalar deltaT = deltaT_();
-        scalar deltaT0 = deltaT0_(U);
-
-        scalar coefft   = 1 + deltaT/(deltaT + deltaT0);
-        scalar coefft00 = deltaT*deltaT/(deltaT0*(deltaT + deltaT0));
-        scalar coefft0  = coefft + coefft00;
-
         GeometricField<Type, fvPatchField, volMesh> rhoU0
         (
             rho.oldTime()*U.oldTime()
@@ -1043,7 +1045,7 @@ backwardDdtScheme<Type>::fvcDdtUfCorr
     }
     else
     {
-        FatalErrorIn("backwardDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 
@@ -1061,21 +1063,21 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
     const fluxFieldType& phi
 )
 {
+    dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
+
+    scalar deltaT = deltaT_();
+    scalar deltaT0 = deltaT0_(U);
+
+    scalar coefft   = 1 + deltaT/(deltaT + deltaT0);
+    scalar coefft00 = deltaT*deltaT/(deltaT0*(deltaT + deltaT0));
+    scalar coefft0  = coefft + coefft00;
+
     if
     (
         U.dimensions() == dimVelocity
      && phi.dimensions() == rho.dimensions()*dimVelocity*dimArea
     )
     {
-        dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
-
-        scalar deltaT = deltaT_();
-        scalar deltaT0 = deltaT0_(U);
-
-        scalar coefft   = 1 + deltaT/(deltaT + deltaT0);
-        scalar coefft00 = deltaT*deltaT/(deltaT0*(deltaT + deltaT0));
-        scalar coefft0  = coefft + coefft00;
-
         GeometricField<Type, fvPatchField, volMesh> rhoU0
         (
             rho.oldTime()*U.oldTime()
@@ -1101,8 +1103,10 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
                *rDeltaT
                *(
                     (coefft0*phi.oldTime() - coefft00*phi.oldTime().oldTime())
-                  - (
-                        fvc::interpolate(coefft0*rhoU0 - coefft00*rhoU00) & mesh().Sf()
+                  - fvc::dotInterpolate
+                    (
+                        mesh().Sf(),
+                        coefft0*rhoU0 - coefft00*rhoU00
                     )
                 )
             )
@@ -1118,7 +1122,7 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
     }
     else
     {
-        FatalErrorIn("backwardDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,6 +79,7 @@ UNARY_FUNCTION(scalar, scalar, pow5, pow5)
 UNARY_FUNCTION(scalar, scalar, pow6, pow6)
 UNARY_FUNCTION(scalar, scalar, pow025, pow025)
 UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, cbrt, cbrt)
 UNARY_FUNCTION(scalar, scalar, sign, sign)
 UNARY_FUNCTION(scalar, scalar, pos, pos)
 UNARY_FUNCTION(scalar, scalar, neg, neg)
@@ -483,6 +484,7 @@ tmp<DimensionedField<scalar, GeoMesh> > pow
     return pow(dimensionedScalar(s), tdsf);
 }
 
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 UNARY_FUNCTION(scalar, scalar, pow3, pow3)
@@ -491,6 +493,7 @@ UNARY_FUNCTION(scalar, scalar, pow5, pow5)
 UNARY_FUNCTION(scalar, scalar, pow6, pow6)
 UNARY_FUNCTION(scalar, scalar, pow025, pow025)
 UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, cbrt, cbrt)
 UNARY_FUNCTION(scalar, scalar, sign, sign)
 UNARY_FUNCTION(scalar, scalar, pos, pos)
 UNARY_FUNCTION(scalar, scalar, neg, neg)
@@ -521,79 +524,73 @@ UNARY_FUNCTION(scalar, scalar, y1, trans)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define BesselFunc(func)                                                    \
-                                                                            \
-template<class GeoMesh>                                                     \
-tmp<DimensionedField<scalar, GeoMesh> > func                                \
-(                                                                           \
-    const int n,                                                            \
-    const DimensionedField<scalar, GeoMesh>& dsf                            \
-)                                                                           \
-{                                                                           \
-    if (!dsf.dimensions().dimensionless())                                  \
-    {                                                                       \
-        FatalErrorIn                                                        \
-        (                                                                   \
-            #func"(const int n, "                                           \
-            "const DimensionedField<scalar, GeoMesh>& dsf)"                 \
-        )   << "dsf not dimensionless"                                      \
-            << abort(FatalError);                                           \
-    }                                                                       \
-                                                                            \
-    tmp<DimensionedField<scalar, GeoMesh> > tFunc                           \
-    (                                                                       \
-        new DimensionedField<scalar, GeoMesh>                               \
-        (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + name(n) + ',' + dsf.name() + ')',               \
-                dsf.instance(),                                             \
-                dsf.db()                                                    \
-            ),                                                              \
-            dsf.mesh(),                                                     \
-            dimless                                                         \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc().field(), n, dsf.field());                                  \
-                                                                            \
-    return tFunc;                                                           \
-}                                                                           \
-                                                                            \
-template<class GeoMesh>                                                     \
-tmp<DimensionedField<scalar, GeoMesh> > func                                \
-(                                                                           \
-    const int n,                                                            \
-    const tmp<DimensionedField<scalar, GeoMesh> >& tdsf                     \
-)                                                                           \
-{                                                                           \
-    const DimensionedField<scalar, GeoMesh>& dsf = tdsf();                  \
-                                                                            \
-    if (!dsf.dimensions().dimensionless())                                  \
-    {                                                                       \
-        FatalErrorIn                                                        \
-        (                                                                   \
-            #func"(const int n, "                                           \
-            "const tmp<DimensionedField<scalar, GeoMesh> >& dsf)"           \
-        )   << " : dsf not dimensionless"                                   \
-            << abort(FatalError);                                           \
-    }                                                                       \
-                                                                            \
-    tmp<DimensionedField<scalar, GeoMesh> > tFunc                           \
-    (                                                                       \
-        reuseTmpDimensionedField<scalar, scalar, GeoMesh>::New              \
-        (                                                                   \
-            tdsf,                                                           \
-            #func "(" + name(n) + ',' + dsf.name() + ')',                   \
-            dimless                                                         \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc().field(), n, dsf.field());                                  \
-                                                                            \
-    reuseTmpDimensionedField<scalar, scalar, GeoMesh>::clear(tdsf);         \
-                                                                            \
-    return tFunc;                                                           \
+#define BesselFunc(func)                                                       \
+                                                                               \
+template<class GeoMesh>                                                        \
+tmp<DimensionedField<scalar, GeoMesh> > func                                   \
+(                                                                              \
+    const int n,                                                               \
+    const DimensionedField<scalar, GeoMesh>& dsf                               \
+)                                                                              \
+{                                                                              \
+    if (!dsf.dimensions().dimensionless())                                     \
+    {                                                                          \
+        FatalErrorInFunction                                                   \
+            << "dsf not dimensionless"                                         \
+            << abort(FatalError);                                              \
+    }                                                                          \
+                                                                               \
+    tmp<DimensionedField<scalar, GeoMesh> > tFunc                              \
+    (                                                                          \
+        new DimensionedField<scalar, GeoMesh>                                  \
+        (                                                                      \
+            IOobject                                                           \
+            (                                                                  \
+                #func "(" + name(n) + ',' + dsf.name() + ')',                  \
+                dsf.instance(),                                                \
+                dsf.db()                                                       \
+            ),                                                                 \
+            dsf.mesh(),                                                        \
+            dimless                                                            \
+        )                                                                      \
+    );                                                                         \
+                                                                               \
+    func(tFunc().field(), n, dsf.field());                                     \
+                                                                               \
+    return tFunc;                                                              \
+}                                                                              \
+                                                                               \
+template<class GeoMesh>                                                        \
+tmp<DimensionedField<scalar, GeoMesh> > func                                   \
+(                                                                              \
+    const int n,                                                               \
+    const tmp<DimensionedField<scalar, GeoMesh> >& tdsf                        \
+)                                                                              \
+{                                                                              \
+    const DimensionedField<scalar, GeoMesh>& dsf = tdsf();                     \
+                                                                               \
+    if (!dsf.dimensions().dimensionless())                                     \
+    {                                                                          \
+        FatalErrorInFunction                                                   \
+            << " : dsf not dimensionless"                                      \
+            << abort(FatalError);                                              \
+    }                                                                          \
+                                                                               \
+    tmp<DimensionedField<scalar, GeoMesh> > tFunc                              \
+    (                                                                          \
+        reuseTmpDimensionedField<scalar, scalar, GeoMesh>::New                 \
+        (                                                                      \
+            tdsf,                                                              \
+            #func "(" + name(n) + ',' + dsf.name() + ')',                      \
+            dimless                                                            \
+        )                                                                      \
+    );                                                                         \
+                                                                               \
+    func(tFunc().field(), n, dsf.field());                                     \
+                                                                               \
+    reuseTmpDimensionedField<scalar, scalar, GeoMesh>::clear(tdsf);            \
+                                                                               \
+    return tFunc;                                                              \
 }
 
 BesselFunc(jn)

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -178,11 +178,8 @@ void CML::globalIndexAndTransform::determineTransforms()
                         {
                             if (nextTrans == 6)
                             {
-                                FatalErrorIn
-                                (
-                                     "void CML::globalIndexAndTransform::"
-                                     "determineTransforms()"
-                                )   << "More than six unsigned transforms"
+                                FatalErrorInFunction
+                                    << "More than six unsigned transforms"
                                     << " detected:" << nl << transforms_
                                     << exit(FatalError);
                             }
@@ -218,11 +215,8 @@ void CML::globalIndexAndTransform::determineTransforms()
                         {
                             if (nextTrans == 6)
                             {
-                                FatalErrorIn
-                                (
-                                    "void CML::globalIndexAndTransform::"
-                                    "determineTransforms()"
-                                )   << "More than six unsigned transforms"
+                                FatalErrorInFunction
+                                    << "More than six unsigned transforms"
                                     << " detected:" << nl << transforms_
                                     << exit(FatalError);
                             }
@@ -281,11 +275,7 @@ void CML::globalIndexAndTransform::determineTransforms()
 
                     if (nextTrans > 3)
                     {
-                        FatalErrorIn
-                        (
-                            "void CML::globalIndexAndTransform::"
-                            "determineTransforms()"
-                        )
+                        FatalErrorInFunction
                             << "More than three independent basic "
                             << "transforms detected:" << nl
                             << allTransforms
@@ -303,10 +293,8 @@ void CML::globalIndexAndTransform::determineTransforms()
 
     if (transforms_.size() > 3)
     {
-        WarningIn
-        (
-            "void globalIndexAndTransform::determineTransforms()"
-        )   << "More than three independent basic "
+        WarningInFunction
+            << "More than three independent basic "
             << "transforms detected:" << nl
             << transforms_ << nl
             << "This is not a space filling tiling and will probably"

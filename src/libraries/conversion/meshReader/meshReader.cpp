@@ -193,7 +193,7 @@ CML::meshReader::meshReader
     const scalar scaleFactor
 )
     :
-    pointCellsPtr_(NULL),
+    pointCellsPtr_(nullptr),
     nInternalFaces_(0),
     patchStarts_(0),
     patchSizes_(0),

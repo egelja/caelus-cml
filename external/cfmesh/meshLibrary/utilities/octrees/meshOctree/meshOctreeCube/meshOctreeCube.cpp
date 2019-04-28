@@ -101,8 +101,8 @@ const label meshOctreeCube::hOrient_[24][8] =
 meshOctreeCube::meshOctreeCube(const meshOctreeCubeCoordinates& cc)
 :
     meshOctreeCubeBasic(cc),
-    activeSlotPtr_(NULL),
-    subCubesPtr_(NULL),
+    activeSlotPtr_(nullptr),
+    subCubesPtr_(nullptr),
     cubeLabel_(-1),
     containedElementsLabel_(-1),
     containedEdgesLabel_(-1)
@@ -117,7 +117,7 @@ meshOctreeCube::meshOctreeCube
 :
     meshOctreeCubeBasic(cc),
     activeSlotPtr_(slotPtr),
-    subCubesPtr_(NULL),
+    subCubesPtr_(nullptr),
     cubeLabel_(0),
     containedElementsLabel_(0),
     containedEdgesLabel_(-1)
@@ -140,11 +140,8 @@ meshOctreeCube::~meshOctreeCube()
 FixedList<meshOctreeCube*, 8> meshOctreeCube::subCubes() const
 {
     if( !subCubesPtr_ )
-        FatalErrorIn
-        (
-            "inline  FixedList<meshOctreeCube*, 8>&"
-            " meshOctreeCube::subCubes() const"
-        ) << "Sub cubes do not exist!" << abort(FatalError);
+        FatalErrorInFunction
+          << "Sub cubes do not exist!" << abort(FatalError);
 
     FixedList<meshOctreeCube*, 8> ret;
 

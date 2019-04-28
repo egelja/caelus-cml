@@ -45,10 +45,11 @@ src_osspecific = Split("""
     OSspecific/%(ostype)s/clockTime/clockTime.cpp
     OSspecific/%(ostype)s/fileMonitor.cpp
     OSspecific/%(ostype)s/printStack.cpp
+    OSspecific/%(ostype)s/memInfo/memInfo.cpp
 """%(dict(ostype=osdir)))
 
-if ostype != 'windows':
-   src_osspecific.append("OSspecific/%(ostype)s/memInfo/memInfo.cpp"%(dict(ostype=osdir)))
+#if ostype != 'windows':
+#   src_osspecific.append("OSspecific/%(ostype)s/memInfo/memInfo.cpp"%(dict(ostype=osdir)))
 
 src_core = Split("""
     db/IOstreams/Pstreams/mpi/UOPwriteMpi.cpp
@@ -59,7 +60,9 @@ src_core = Split("""
     global/argList/argList.cpp
     global/clock/clock.cpp
     global/profiling/profiling.cpp
+    global/profiling/profilingInformation.cpp
     global/profiling/profilingSysInfo.cpp
+    global/profiling/profilingTrigger.cpp
     primitives/bools/bool/bool.cpp
     primitives/bools/bool/boolIO.cpp
     primitives/bools/Switch/Switch.cpp
@@ -119,6 +122,7 @@ src_core = Split("""
     primitives/strings/string/stringIOList.cpp
     primitives/strings/word/word.cpp
     primitives/strings/word/wordIO.cpp
+    primitives/strings//word/wordIOList.cpp
     primitives/strings/fileName/fileName.cpp
     primitives/strings/fileName/fileNameIO.cpp
     primitives/strings/keyType/keyType.cpp
@@ -130,7 +134,6 @@ src_core = Split("""
     primitives/hashes/SHA1/SHA1.cpp
     primitives/hashes/SHA1/SHA1Digest.cpp
     primitives/random/Random/Random.cpp
-    primitives/random/cachedRandom/cachedRandom.cpp
     primitives/ranges/labelRange/labelRange.cpp
     primitives/ranges/labelRange/labelRanges.cpp
     primitives/ranges/scalarRange/scalarRange.cpp
@@ -139,6 +142,10 @@ src_core = Split("""
     primitives/spatialVectorAlgebra/SpatialTensor/spatialTensor/spatialTensor.cpp
     primitives/spatialVectorAlgebra/CompactSpatialTensor/compactSpatialTensor/compactSpatialTensor.cpp
     primitives/subModelBase/subModelBase.cpp
+    primitives/Barycentric/barycentric/barycentric.cpp
+    primitives/Barycentric2D/barycentric2D/barycentric2D.cpp
+    primitives/polynomialEqns/cubicEqn/cubicEqn.cpp
+    primitives/polynomialEqns/quadraticEqn/quadraticEqn.cpp
     containers/HashTables/HashTable/HashTableCore.cpp
     containers/HashTables/StaticHashTable/StaticHashTableCore.cpp
     containers/Lists/SortableList/ParSortableListName.cpp
@@ -176,6 +183,8 @@ src_core = Split("""
     db/dictionary/primitiveEntry/primitiveEntryIO.cpp
     db/dictionary/dictionaryEntry/dictionaryEntry.cpp
     db/dictionary/dictionaryEntry/dictionaryEntryIO.cpp
+    db/dictionary/dictionaryListEntry/dictionaryListEntry.cpp
+    db/dictionary/dictionaryListEntry/dictionaryListEntryIO.cpp
     db/dictionary/functionEntries/functionEntry/functionEntry.cpp
     db/dictionary/functionEntries/includeEntry/includeEntry.cpp
     db/dictionary/functionEntries/includeIfPresentEntry/includeIfPresentEntry.cpp
@@ -215,7 +224,6 @@ src_core = Split("""
     dimensionedTypes/dimensionedSymmTensor/dimensionedSymmTensor.cpp
     dimensionedTypes/dimensionedTensor/dimensionedTensor.cpp
     matrices/solution/solution.cpp
-    matrices/scalarMatrices/scalarSquareMatrix.cpp
     matrices/scalarMatrices/scalarMatrices.cpp
     matrices/scalarMatrices/SVD/SVD.cpp
     matrices/LUscalarMatrix/LUscalarMatrix.cpp
@@ -224,7 +232,7 @@ src_core = Split("""
     matrices/lduMatrix/lduMatrix/lduMatrix.cpp
     matrices/lduMatrix/lduMatrix/lduMatrixOperations.cpp
     matrices/lduMatrix/lduMatrix/lduMatrixATmul.cpp
-    matrices/lduMatrix/lduMatrix/lduMatrixTests.cpp
+    matrices/lduMatrix/lduMatrix/solverPerformance.cpp
     matrices/lduMatrix/lduMatrix/lduMatrixUpdateMatrixInterfaces.cpp
     matrices/lduMatrix/lduMatrix/lduMatrixSolver.cpp
     matrices/lduMatrix/lduMatrix/lduMatrixSmoother.cpp
@@ -301,6 +309,7 @@ src_core = Split("""
     meshes/meshShapes/cellShape/cellShapeIO.cpp
     meshes/meshShapes/cellShape/cellShapeIOList.cpp
     meshes/Identifiers/patch/patchIdentifier.cpp
+    meshes/Identifiers/patch/coupleGroupIdentifier.cpp
     meshes/polyMesh/polyPatches/polyPatch/polyPatch.cpp
     meshes/polyMesh/polyPatches/polyPatch/polyPatchNew.cpp
     meshes/polyMesh/polyPatches/basic/coupled/coupledPolyPatch.cpp
@@ -552,6 +561,7 @@ src_core = Split("""
     meshTools/indexedOctree/treeDataPrimitivePatchName.cpp
     meshTools/indexedOctree/treeDataTriSurface.cpp
     meshTools/searchableSurface/searchableBox.cpp
+    meshTools/searchableSurface/searchableRotatedBox.cpp
     meshTools/searchableSurface/searchableCylinder.cpp
     meshTools/searchableSurface/searchableDisk.cpp
     meshTools/searchableSurface/searchablePlane.cpp
@@ -718,6 +728,7 @@ src_core = Split("""
     fields/fvPatchFields/basic/calculated/calculatedFvPatchFields.cpp
     fields/fvPatchFields/basic/coupled/coupledFvPatchFields.cpp
     fields/fvPatchFields/basic/directionMixed/directionMixedFvPatchFields.cpp
+    fields/fvPatchFields/basic/extrapolatedCalculated/extrapolatedCalculatedFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedGradient/fixedGradientFvPatchFields.cpp
     fields/fvPatchFields/basic/fixedValue/fixedValueFvPatchFields.cpp
     fields/fvPatchFields/basic/generic/genericFvPatchFields.cpp
@@ -732,6 +743,7 @@ src_core = Split("""
     fields/fvPatchFields/constraint/cyclicSlip/cyclicSlipFvPatchFields.cpp
     fields/fvPatchFields/constraint/empty/emptyFvPatchFields.cpp
     fields/fvPatchFields/constraint/jumpCyclic/jumpCyclicFvPatchFields.cpp
+    fields/fvPatchFields/constraint/jumpCyclicAMI/jumpCyclicAMIFvPatchFields.cpp
     fields/fvPatchFields/constraint/nonuniformTransformCyclic/nonuniformTransformCyclicFvPatchFields.cpp
     fields/fvPatchFields/constraint/processor/processorFvPatchFields.cpp
     fields/fvPatchFields/constraint/processorCyclic/processorCyclicFvPatchFields.cpp
@@ -750,6 +762,8 @@ src_core = Split("""
     fields/fvPatchFields/derived/fixedFluxPressure/fixedFluxPressureFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedFluxExtrapolatedPressure/fixedFluxExtrapolatedPressureFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedInternalValueFvPatchField/fixedInternalValueFvPatchFields.cpp
+    fields/fvPatchFields/derived/fixedJump/fixedJumpFvPatchFields.cpp
+    fields/fvPatchFields/derived/fixedJumpAMI/fixedJumpAMIFvPatchFields.cpp
     fields/fvPatchFields/derived/fixedNormalSlip/fixedNormalSlipFvPatchFields.cpp
     fields/fvPatchFields/derived/freestream/freestreamFvPatchFields.cpp
     fields/fvPatchFields/derived/freestreamPressure/freestreamPressureFvPatchScalarField.cpp
@@ -757,6 +771,7 @@ src_core = Split("""
     fields/fvPatchFields/derived/flowRateInletVelocity/flowRateInletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/movingWallVelocity/movingWallVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/outletInlet/outletInletFvPatchFields.cpp
+    fields/fvPatchFields/derived/outletMappedUniformInlet/outletMappedUniformInletFvPatchFields.cpp
     fields/fvPatchFields/derived/pressureDirectedInletOutletVelocity/pressureDirectedInletOutletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/pressureDirectedInletVelocity/pressureDirectedInletVelocityFvPatchVectorField.cpp
     fields/fvPatchFields/derived/pressureInletOutletVelocity/pressureInletOutletVelocityFvPatchVectorField.cpp
@@ -777,6 +792,7 @@ src_core = Split("""
     fields/fvPatchFields/derived/maxwellSlipU/maxwellSlipUFvPatchVectorField.cpp
     fields/fvPatchFields/derived/smoluchowskiJumpT/smoluchowskiJumpTFvPatchScalarField.cpp
     fields/fvPatchFields/derived/fixedRho/fixedRhoFvPatchScalarField.cpp
+    fields/fvPatchFields/derived/waveTransmissive/waveTransmissiveFvPatchFields.cpp
     fields/fvsPatchFields/fvsPatchField/fvsPatchFields.cpp
     fields/fvsPatchFields/basic/calculated/calculatedFvsPatchFields.cpp
     fields/fvsPatchFields/basic/coupled/coupledFvsPatchFields.cpp
@@ -940,6 +956,7 @@ src_core = Split("""
     finiteVolume/convectionSchemes/deferredCorrectionScheme/deferredCorrectionScheme.cpp
     finiteVolume/laplacianSchemes/laplacianScheme/laplacianSchemes.cpp
     finiteVolume/laplacianSchemes/gaussLaplacianScheme/gaussLaplacianSchemes.cpp
+    finiteVolume/fvc/fvcFlux.cpp
     finiteVolume/fvc/fvcMeshPhi.cpp
     finiteVolume/fvc/fvcSmooth/fvcSmooth.cpp
     cfdTools/general/findRefCell/findRefCell.cpp
@@ -964,7 +981,7 @@ src_core = Split("""
     cfdTools/general/porosityModel/porosityModel/IOporosityModelList.cpp
     cfdTools/general/porosityModel/DarcyForchheimer/DarcyForchheimer.cpp
     cfdTools/general/porosityModel/fixedCoeff/fixedCoeff.cpp
-    cfdTools/general/porosityModel/powerLaw/powerLaw.cpp
+    cfdTools/general/porosityModel/powerLaw/powerLawPorosity.cpp
     blockCoupled/primitives/hyperVector/hyperVectorLists.cpp
     blockCoupled/fields/hyperVectorFields/hyperVectorFields.cpp
     blockCoupled/fields/hyperVectorFields/hyperTensorFields.cpp

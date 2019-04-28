@@ -98,7 +98,7 @@ void CML::patchSeedSet::calcSamples
         {
             forAll(subset, i)
             {
-                label j = rndGen.integer(0, subset.size()-1);
+                label j = rndGen.sampleAB<label>(0, subset.size());
                 Swap(subset[i], subset[j]);
             }
         }
@@ -130,19 +130,19 @@ void CML::patchSeedSet::calcSamples
 
     forAll(patchFaces, i)
     {
-        label faceI = patchFaces[i];
+        label facei = patchFaces[i];
         pointIndexHit info = mappedPatchBase::facePoint
         (
             mesh(),
-            faceI,
+            facei,
             polyMesh::FACEDIAGTETS
         );
-        label cellI = mesh().faceOwner()[faceI];
+        label celli = mesh().faceOwner()[facei];
 
         if (info.hit())
         {
             // Move the point into the cell
-            const point& cc = mesh().cellCentres()[cellI];
+            const point& cc = mesh().cellCentres()[celli];
             samplingPts.append
             (
                 info.hitPoint() + 1e-1*(cc-info.hitPoint())
@@ -152,8 +152,8 @@ void CML::patchSeedSet::calcSamples
         {
             samplingPts.append(info.rawPoint());
         }
-        samplingCells.append(cellI);
-        samplingFaces.append(faceI);
+        samplingCells.append(celli);
+        samplingFaces.append(facei);
         samplingSegments.append(0);
         samplingCurveDist.append(globalSampleNumbers.toGlobal(i));
     }
@@ -213,8 +213,8 @@ CML::patchSeedSet::patchSeedSet
             wordReList(dict.lookup("patches"))
         )
     ),
-    //searchDist_(readScalar(dict.lookup("maxDistance"))),
-    //offsetDist_(readScalar(dict.lookup("offsetDist"))),
+    // searchDist_(readScalar(dict.lookup("maxDistance"))),
+    // offsetDist_(readScalar(dict.lookup("offsetDist"))),
     maxPoints_(readLabel(dict.lookup("maxPoints")))
 {
     genSamples();

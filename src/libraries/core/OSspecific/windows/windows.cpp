@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +29,10 @@ Description
 #include "fileName.hpp"
 #include "fileStat.hpp"
 
-//Undefine DebugInfo, because we don't need it and it collides with a macro
+// Undefine DebugInfo, because we don't need it and it collides with a macro
+// in windows.h
 #undef DebugInfo
+
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -37,8 +40,9 @@ Description
 
 // Windows system header files
 #include <io.h> // _close
-#include <Windows.h>
+#include <windows.h>
 #include <signal.h>
+
 
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -88,11 +92,11 @@ std::string Windows::getLastError()
         FORMAT_MESSAGE_ALLOCATE_BUFFER | 
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
+        nullptr,
         dw,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL );
+        LPTSTR(&lpMsgBuf),
+        0, nullptr );
 
     lpDisplayBuf = LocalAlloc(LMEM_ZEROINIT, 
         (lstrlen(static_cast<LPCTSTR>(lpMsgBuf))+40)*sizeof(TCHAR)); 
@@ -108,7 +112,7 @@ std::string Windows::getLastError()
 }
 
 
-//-Declared here to avoid polluting Windows.H with Windows.h
+//-Declared here to avoid polluting Windows.hpp with windows.h
 namespace Windows
 {
     //- Get Windows user name
@@ -289,7 +293,11 @@ const fileName & Windows::DirectoryIterator::next()
 
 PID_T pid()
 {
+#ifdef WIN32
     const DWORD processId = ::GetCurrentProcessId();
+#elif WIN64
+    const pid_t processId = (pid_t) ::GetCurrentProcessId();
+#endif
     return processId;
 }
 
@@ -300,7 +308,8 @@ PID_T ppid()
 
     if (Windows::debug)
     {
-        Info<< "ppid not supported under Windows" << endl;
+        InfoInFunction
+            << "ppid not supported under Windows" << endl;
     }
 
     return 0;
@@ -313,7 +322,8 @@ PID_T pgid()
 
     if (Windows::debug)
     {
-        Info<< "pgid not supported under Windows" << endl;
+        InfoInFunction
+            << "pgid not supported under Windows" << endl;
     }
 
     return 0;
@@ -323,7 +333,7 @@ PID_T pgid()
 bool env(const word& envName)
 {
     const DWORD actualBufferSize = 
-      ::GetEnvironmentVariable(envName.c_str(), NULL, 0);
+      ::GetEnvironmentVariable(envName.c_str(), nullptr, 0);
 
     const bool envExists = (0 < actualBufferSize);
     return envExists;
@@ -335,7 +345,7 @@ string getEnv(const word& envName)
     std::string envAsString;
 
     const DWORD actualBufferSize = 
-      ::GetEnvironmentVariable(envName.c_str(), NULL, 0);
+      ::GetEnvironmentVariable(envName.c_str(), nullptr, 0);
 
     if (0 < actualBufferSize) 
     {
@@ -344,7 +354,7 @@ string getEnv(const word& envName)
                                  actualBuffer.get(),
                                  actualBufferSize);
         envAsString = actualBuffer.get();
-	toUnixPath(envAsString);
+        toUnixPath(envAsString);
     }
 
     return envAsString;
@@ -388,20 +398,20 @@ string domainName()
 
 string userName()
 {
-    string name = getEnv("USERNAME");
+    string nameAsString = getEnv("USERNAME");
 
-    if (name.empty()) 
+    if (nameAsString.empty()) 
     {
-        name = Windows::getUserName();
+        nameAsString = Windows::getUserName();
     }
 
-    return name;
+    return nameAsString;
 }
 
 
 bool isAdministrator()
 {
-    // Not supported but assume worst case for CML::dynamicCode::checkSecurity
+    // Not supported assume worst case
     return true;
 }
 
@@ -430,7 +440,7 @@ fileName cwd()
     string currentDirectory;
 
     const DWORD actualBufferSize = 
-      ::GetCurrentDirectory(0, NULL);
+      ::GetCurrentDirectory(0, nullptr);
 
     if (0 < actualBufferSize) 
     {
@@ -442,7 +452,7 @@ fileName cwd()
     }
     else 
     {
-        FatalErrorIn("cwd()")
+        FatalErrorInFunction
             << "Couldn't get the current working directory"
             << exit(FatalError);
     }
@@ -672,9 +682,7 @@ bool mkDir(const fileName& pathName, const mode_t mode)
         return false;
     }
 
-
-    bool success = ::CreateDirectory(pathName.c_str(), NULL);
-
+    bool success = ::CreateDirectory(pathName.c_str(), nullptr);
     if (success)
     {
         chMod(pathName, mode);
@@ -706,7 +714,7 @@ bool mkDir(const fileName& pathName, const mode_t mode)
 
         if (!success) 
         {
-            FatalErrorIn("mkDir(const fileName&, mode_t)")
+            FatalErrorInFunction
               << "Couldn't create directory: " << pathName
               << " " << Windows::getLastError()
               << exit(FatalError);
@@ -745,8 +753,8 @@ fileName::Type type(const fileName& name)
     if (attrs != INVALID_FILE_ATTRIBUTES) 
     {
         fileType = (attrs & FILE_ATTRIBUTE_DIRECTORY) ?
-	  fileName::DIRECTORY :
-	  fileName::FILE;
+            fileName::DIRECTORY :
+            fileName::FILE;
     }
 
     return fileType;
@@ -767,7 +775,11 @@ isGzFile(const fileName& name)
 
 
 // Does the name exist in the filing system?
-bool exists(const fileName& name, const bool checkGzip)
+bool exists
+(
+    const fileName& name,
+    const bool checkGzip
+)
 {
     const DWORD attrs = ::GetFileAttributes(name.c_str());
     const bool success = (attrs != INVALID_FILE_ATTRIBUTES) || 
@@ -789,12 +801,22 @@ bool isDir(const fileName& name)
 
 
 // Does the file exist
-bool isFile(const fileName& name, const bool checkGzip)
+bool isFile
+(
+    const fileName& name,
+    const bool checkGzip
+)
 {
     const DWORD attrs = ::GetFileAttributes(name.c_str());
-    const bool success = ((attrs != INVALID_FILE_ATTRIBUTES) && 
-			  !(attrs & FILE_ATTRIBUTE_DIRECTORY)) || 
-                         (checkGzip && isGzFile(name));
+    const bool success =
+    (
+        (attrs != INVALID_FILE_ATTRIBUTES) && 
+        !(attrs & FILE_ATTRIBUTE_DIRECTORY)
+    )
+     ||
+    (
+        checkGzip && isGzFile(name)
+    );
 
     return success;
 }
@@ -854,7 +876,7 @@ fileNameList readDir
         {
             const fileName & fName = dirIt.next();
 
-            // ignore files beginning with ., i.e. '.', '..' and '.*'
+            // ignore files begining with ., i.e. '.', '..' and '.*'
             if (fName.size() > 0 && fName[size_t(0)] != '.')
             {
                 word fileNameExt = fName.ext();
@@ -895,9 +917,8 @@ fileNameList readDir
     }
     else if (Windows::debug)
     {
-        Info<< "readDir(const fileName&, const fileType, "
-               "const bool filtergz) : cannot open directory "
-            << directory << endl;
+        InfoInFunction
+            << "cannot open directory " << directory << endl;
     }
 
     // Reset the length of the entries list
@@ -937,7 +958,7 @@ bool cp(const fileName& src, const fileName& dest)
         // Use binary mode in case we read binary.
         // Causes Windows reading to fail if we don't.
         std::ifstream srcStream(src.c_str(), 
-                                ios_base::in|ios_base::binary);      
+                                ios_base::in|ios_base::binary);
         if (!srcStream) 
         {
             return false;
@@ -985,7 +1006,8 @@ bool cp(const fileName& src, const fileName& dest)
         {
             if (Windows::debug)
             {
-                Info<< "Copying : " << src/contents[i] 
+                InfoInFunction
+                    << "Copying : " << src/contents[i] 
                     << " to " << destFile/contents[i] << endl;
             }
 
@@ -999,7 +1021,8 @@ bool cp(const fileName& src, const fileName& dest)
         {
             if (Windows::debug)
             {
-                Info<< "Copying : " << src/subdirs[i]
+                InfoInFunction
+                    << "Copying : " << src/subdirs[i]
                     << " to " << destFile << endl;
             }
 
@@ -1021,7 +1044,8 @@ bool ln(const fileName& src, const fileName& dest)
 
     if (Windows::debug)
     {
-        Info<< "Windows does not support ln - softlinking" << endl;
+        InfoInFunction
+            << "Windows does not support ln - softlinking" << endl;
     }
 
     return false;
@@ -1055,7 +1079,8 @@ bool mvBak(const fileName& src, const std::string& ext)
 {
     if (Windows::debug)
     {
-        Info<< "mvBak : " << src << " to extension " << ext << endl;
+        InfoInFunction
+            << "mvBak : " << src << " to extension " << ext << endl;
     }
 
     if (exists(src, false))
@@ -1092,7 +1117,8 @@ bool rm(const fileName& file)
 {
     if (Windows::debug)
     {
-        Info<< "Removing : " << file << endl;
+        InfoInFunction
+            << "Removing : " << file << endl;
     }
 
     bool success = (0 == std::remove(file.c_str()));
@@ -1113,7 +1139,8 @@ bool rmDir(const fileName& directory)
 {
     if (Windows::debug)
     {
-        Info<< "rmdir(const fileName&) : "
+        InfoInFunction
+            << "rmdir(const fileName&) : "
             << "removing directory " << directory << endl;
     }
 
@@ -1138,7 +1165,7 @@ bool rmDir(const fileName& directory)
 
                   if (!success)
                   {
-                      WarningIn("rmdir(const fileName&)")
+                      WarningInFunction
                         << "failed to remove directory " << fName
                         << " while removing directory " << directory
                         << endl;
@@ -1150,7 +1177,7 @@ bool rmDir(const fileName& directory)
 
                   if (!success)
                   {
-                      WarningIn("rmdir(const fileName&)")
+                      WarningInFunction
                         << "failed to remove file " << fName
                         << " while removing directory " << directory
                         << endl;
@@ -1166,7 +1193,7 @@ bool rmDir(const fileName& directory)
 
         if (!success) 
         {
-            WarningIn("rmdir(const fileName&)")
+            WarningInFunction
                 << "failed to remove directory " << directory << endl;
         }
     }
@@ -1192,11 +1219,9 @@ void fdClose(const int fd)
 
     if (0 != result)
     {
-        FatalErrorIn
-        (
-            "CML::fdClose(const int fd)"
-        )   << "close error on " << fd << endl
-            << abort(FatalError);    
+        FatalErrorInFunction
+            << "close error on " << fd << endl
+            << abort(FatalError);
     }
 }
 
@@ -1214,7 +1239,8 @@ bool ping
 
     if (Windows::debug)
     {
-        Info<< "Windows does not support ping" << endl;
+        InfoInFunction
+            << "Windows does not support ping" << endl;
     }
 
     return false;
@@ -1235,8 +1261,7 @@ int system(const std::string& command)
 
 
 // Explicitly track loaded libraries, rather than use
-// EnumerateLoadedModules64 and have to link against 
-// Dbghelp.dll
+// EnumerateLoadedModules64 and have to link against Dbghelp.dll
 // Details at http://msdn.microsoft.com/en-us/library/ms679316(v=vs.85).aspx
 typedef std::map<void*, std::string> OfLoadedLibs;
 
@@ -1254,7 +1279,7 @@ void* dlOpen(const fileName& libName, const bool check)
 {
     if (Windows::debug)
     {
-        Info<< "dlOpen(const fileName&)"
+        InfoInFunction
             << " : LoadLibrary of " << libName << endl;
     }
 
@@ -1265,7 +1290,7 @@ void* dlOpen(const fileName& libName, const bool check)
     winLibName.replace(".so", dllExt);
     void* handle = ::LoadLibrary(winLibName.c_str());
 
-    if (NULL == handle)
+    if (nullptr == handle)
     {
         // Assumes libName = name
         winLibName = "lib";
@@ -1275,13 +1300,13 @@ void* dlOpen(const fileName& libName, const bool check)
         handle = ::LoadLibrary(winLibName.c_str());
     }
 
-    if (NULL != handle) 
+    if (nullptr != handle) 
     {
         getLoadedLibs()[handle] = libName;
     }
     else if (check)
     {
-        WarningIn("dlOpen(const fileName&, const bool)")
+        WarningInFunction
             << "dlopen error : " << Windows::getLastError()
             << endl;
     }
@@ -1302,8 +1327,8 @@ bool dlClose(void* const handle)
 {
     if (Windows::debug)
     {
-        Info<< "dlClose(void*)"
-            << " : FreeLibrary of handle " << handle << endl;
+        InfoInFunction
+            << "FreeLibrary of handle " << handle << endl;
     }
 
     const bool success = 
@@ -1322,17 +1347,22 @@ void* dlSym(void* handle, const std::string& symbol)
 {
     if (Windows::debug)
     {
-        Info<< "dlSym(void*, const std::string&)"
-            << " : GetProcAddress of " << symbol << endl;
+        InfoInFunction
+            << "GetProcAddress of " << symbol << endl;
     }
-    // get address of symbol
-    void* fun = (void*) ::GetProcAddress(static_cast<HMODULE>(handle), symbol.c_str());
 
-    if (NULL == fun)
+    // get address of symbol
+    void* fun = (void *)
+    (
+        ::GetProcAddress(static_cast<HMODULE>(handle), symbol.c_str())
+    );
+
+    if(fun == nullptr)
     {
-        WarningIn("dlSym(void*, const std::string&)")
-	  << "Cannot lookup symbol " << symbol << " : " << Windows::getLastError()
-          << endl;
+        WarningInFunction
+            << "Cannot lookup symbol " << symbol << " : "
+            << Windows::getLastError()
+            << endl;
     }
 
     return fun;
@@ -1345,14 +1375,14 @@ bool dlSymFound(void* handle, const std::string& symbol)
     {
         if (Windows::debug)
         {
-            Info<< "dlSymFound(void*, const std::string&)"
-                << " : GetProcAddress of " << symbol << endl;
+            InfoInFunction
+                << "GetProcAddress of " << symbol << endl;
         }
 
        // get address of symbol
 	void* fun = (void*) ::GetProcAddress(static_cast<HMODULE>(handle), symbol.c_str());
 
-	return (NULL != fun);
+	return (nullptr != fun);
     }
     else
     {
@@ -1367,35 +1397,18 @@ fileNameList dlLoaded()
     OfLoadedLibs & loadedLibs = getLoadedLibs();
 
     for (OfLoadedLibs::const_iterator it = loadedLibs.begin();
-	 it != loadedLibs.end(); ++it)
+         it != loadedLibs.end();
+         ++it)
     {
-	libs.append(it->second);
+        libs.append(it->second);
     }
 
     if (Windows::debug)
     {
-        Info<< "dlLoaded()"
-            << " : determined loaded libraries :" << libs.size() << endl;
+        InfoInFunction
+            << "determined loaded libraries :" << libs.size() << endl;
     }
     return libs;
-}
-
-
-void osRandomSeed(const label seed)
-{
-  std::srand(seed);
-}
-
-
-label osRandomInteger()
-{
-  return std::rand();
-}
-
-
-scalar osRandomDouble()
-{
-  return scalar(std::rand())/RAND_MAX;
 }
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -109,10 +109,8 @@ void CML::distanceSurface::createGeometry()
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void CML::distanceSurface::createGeometry()"
-                    )   << "getVolumeType failure, neither INSIDE or OUTSIDE"
+                    FatalErrorInFunction
+                        << "getVolumeType failure, neither INSIDE or OUTSIDE"
                         << exit(FatalError);
                 }
             }
@@ -161,10 +159,8 @@ void CML::distanceSurface::createGeometry()
                     }
                     else
                     {
-                        FatalErrorIn
-                        (
-                            "void CML::distanceSurface::createGeometry()"
-                        )   << "getVolumeType failure, "
+                        FatalErrorInFunction
+                            << "getVolumeType failure, "
                             << "neither INSIDE or OUTSIDE"
                             << exit(FatalError);
                     }
@@ -220,10 +216,8 @@ void CML::distanceSurface::createGeometry()
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void CML::distanceSurface::createGeometry()"
-                    )   << "getVolumeType failure, neither INSIDE or OUTSIDE"
+                    FatalErrorInFunction
+                        << "getVolumeType failure, neither INSIDE or OUTSIDE"
                         << exit(FatalError);
                 }
             }
@@ -334,9 +328,9 @@ CML::distanceSurface::distanceSurface
     average_(dict.lookupOrDefault("average", false)),
     zoneKey_(keyType::null),
     needsUpdate_(true),
-    isoSurfCellPtr_(NULL),
-    isoSurfPtr_(NULL),
-    facesPtr_(NULL)
+    isoSurfCellPtr_(nullptr),
+    isoSurfPtr_(nullptr),
+    facesPtr_(nullptr)
 {
 //    dict.readIfPresent("zone", zoneKey_);
 //
@@ -388,9 +382,9 @@ CML::distanceSurface::distanceSurface
     average_(average),
     zoneKey_(keyType::null),
     needsUpdate_(true),
-    isoSurfCellPtr_(NULL),
-    isoSurfPtr_(NULL),
-    facesPtr_(NULL)
+    isoSurfCellPtr_(nullptr),
+    isoSurfPtr_(nullptr),
+    facesPtr_(nullptr)
 {}
 
 

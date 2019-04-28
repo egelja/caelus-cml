@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,8 +27,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef NonEquilibriumReversibleReaction_H
-#define NonEquilibriumReversibleReaction_H
+#ifndef NonEquilibriumReversibleReaction_HPP
+#define NonEquilibriumReversibleReaction_HPP
 
 #include "Reaction.hpp"
 
@@ -41,25 +41,27 @@ namespace CML
              Class NonEquilibriumReversibleReaction Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class ReactionThermo, class ReactionRate>
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
 class NonEquilibriumReversibleReaction
 :
-    public Reaction<ReactionThermo>
+    public ReactionType<ReactionThermo>
 {
-    // Private data
 
-        ReactionRate fk_;
-        ReactionRate rk_;
+    ReactionRate fk_;
+    ReactionRate rk_;
 
 
-    // Private Member Functions
-
-        //- Disallow default bitwise assignment
-        void operator=
-        (
-            const NonEquilibriumReversibleReaction
-                <ReactionThermo, ReactionRate>&
-        );
+    //- Disallow default bitwise assignment
+    void operator=
+    (
+        const NonEquilibriumReversibleReaction
+            <ReactionType, ReactionThermo, ReactionRate>&
+    );
 
 
 public:
@@ -68,63 +70,53 @@ public:
     TypeName("nonEquilibriumReversible");
 
 
-    // Constructors
+    //- Construct from components
+    NonEquilibriumReversibleReaction
+    (
+        const ReactionType<ReactionThermo>& reaction,
+        const ReactionRate& forwardReactionRate,
+        const ReactionRate& reverseReactionRate
+    );
 
-        //- Construct from components
-        NonEquilibriumReversibleReaction
+    //- Construct as copy given new speciesTable
+    NonEquilibriumReversibleReaction
+    (
+        const NonEquilibriumReversibleReaction
+            <ReactionType, ReactionThermo, ReactionRate>&,
+        const speciesTable& species
+    );
+
+    //- Construct from dictionary
+    NonEquilibriumReversibleReaction
+    (
+        const speciesTable& species,
+        const HashPtrTable<ReactionThermo>& thermoDatabase,
+        const dictionary& dict
+    );
+
+    //- Construct and return a clone
+    virtual autoPtr<ReactionType<ReactionThermo> > clone() const
+    {
+        return autoPtr<ReactionType<ReactionThermo> >
         (
-            const Reaction<ReactionThermo>& reaction,
-            const ReactionRate& forwardReactionRate,
-            const ReactionRate& reverseReactionRate
+            new NonEquilibriumReversibleReaction
+                <ReactionType, ReactionThermo, ReactionRate>(*this)
         );
+    }
 
-        //- Construct as copy given new speciesTable
-        NonEquilibriumReversibleReaction
+    //- Construct and return a clone with new speciesTable
+    virtual autoPtr<ReactionType<ReactionThermo> > clone
+    (
+        const speciesTable& species
+    ) const
+    {
+        return autoPtr<ReactionType<ReactionThermo> >
         (
-            const NonEquilibriumReversibleReaction
-                <ReactionThermo, ReactionRate>&,
-            const speciesTable& species
+            new NonEquilibriumReversibleReaction
+                <ReactionType, ReactionThermo, ReactionRate>
+                (*this, species)
         );
-
-        //- Construct from Istream
-        NonEquilibriumReversibleReaction
-        (
-            const speciesTable& species,
-            const HashPtrTable<ReactionThermo>& thermoDatabase,
-            Istream& is
-        );
-
-        //- Construct from dictionary
-        NonEquilibriumReversibleReaction
-        (
-            const speciesTable& species,
-            const HashPtrTable<ReactionThermo>& thermoDatabase,
-            const dictionary& dict
-        );
-
-        //- Construct and return a clone
-        virtual autoPtr<Reaction<ReactionThermo> > clone() const
-        {
-            return autoPtr<Reaction<ReactionThermo> >
-            (
-                new NonEquilibriumReversibleReaction
-                    <ReactionThermo, ReactionRate>(*this)
-            );
-        }
-
-        //- Construct and return a clone with new speciesTable
-        virtual autoPtr<Reaction<ReactionThermo> > clone
-        (
-            const speciesTable& species
-        ) const
-        {
-            return autoPtr<Reaction<ReactionThermo> >
-            (
-                new NonEquilibriumReversibleReaction
-                    <ReactionThermo, ReactionRate>
-                    (*this, species)
-            );
-        }
+    }
 
 
     //- Destructor
@@ -134,80 +126,127 @@ public:
 
     // Member Functions
 
-        // NonEquilibriumReversibleReaction rate coefficients
+    // NonEquilibriumReversibleReaction rate coefficients
 
-            //- Forward rate constant
-            virtual scalar kf
-            (
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Forward rate constant
+    virtual scalar kf
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
-            //- Reverse rate constant from the given formard rate constant
-            virtual scalar kr
-            (
-                const scalar kfwd,
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Reverse rate constant from the given formard rate constant
+    virtual scalar kr
+    (
+        const scalar kfwd,
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
-            //- Reverse rate constant.
-            //  Note this evaluates the forward rate constant and divides by the
-            //  equilibrium constant
-            virtual scalar kr
-            (
-                const scalar T,
-                const scalar p,
-                const scalarField& c
-            ) const;
+    //- Reverse rate constant.
+    //  Note this evaluates the forward rate constant and divides by the
+    //  equilibrium constant
+    virtual scalar kr
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
 
 
-        //- Write
-        virtual void write(Ostream&) const;
+    // ReversibleReaction Jacobian functions
+
+    //- Temperature derivative of forward rate
+    virtual scalar dkfdT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
+
+    //- Temperature derivative of backward rate
+    virtual scalar dkrdT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c,
+        const scalar dkfdT,
+        const scalar kr
+    ) const;
+
+    //- Third-body efficiencies (beta = 1-alpha)
+    //  non-empty only for third-body reactions
+    //  with enhanced molecularity (alpha != 1)
+    virtual const List<Tuple2<label, scalar> >& beta() const;
+
+    //- Species concentration derivative of the pressure dependent term
+    //  By default this value is 1 as it multiplies the third-body term
+    virtual void dcidc
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c,
+        scalarField& dcidc
+    ) const;
+
+    //- Temperature derivative of the pressure dependent term
+    //  By default this value is 0 since ddT of molecularity is approx.0
+    virtual scalar dcidT
+    (
+        const scalar p,
+        const scalar T,
+        const scalarField& c
+    ) const;
+
+    //- Write
+    virtual void write(Ostream&) const;
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class ReactionThermo, class ReactionRate>
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::
 NonEquilibriumReversibleReaction
 (
-    const Reaction<ReactionThermo>& reaction,
+    const ReactionType<ReactionThermo>& reaction,
     const ReactionRate& forwardReactionRate,
     const ReactionRate& reverseReactionRate
 )
 :
-    Reaction<ReactionThermo>(reaction),
+    ReactionType<ReactionThermo>(reaction),
     fk_(forwardReactionRate),
     rk_(reverseReactionRate)
 {}
 
 
-
-template<class ReactionThermo, class ReactionRate>
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::
-NonEquilibriumReversibleReaction
-(
-    const speciesTable& species,
-    const HashPtrTable<ReactionThermo>& thermoDatabase,
-    Istream& is
-)
-:
-    Reaction<ReactionThermo>(species, thermoDatabase, is),
-    fk_(species, is),
-    rk_(species, is)
-{}
-
-
-template<class ReactionThermo, class ReactionRate>
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::
 NonEquilibriumReversibleReaction
 (
     const speciesTable& species,
@@ -215,21 +254,36 @@ NonEquilibriumReversibleReaction
     const dictionary& dict
 )
 :
-    Reaction<ReactionThermo>(species, thermoDatabase, dict),
+    ReactionType<ReactionThermo>(species, thermoDatabase, dict),
     fk_(species, dict.subDict("forward")),
     rk_(species, dict.subDict("reverse"))
 {}
 
 
-template<class ReactionThermo, class ReactionRate>
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::
 NonEquilibriumReversibleReaction
 (
-    const NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>& nerr,
+    const NonEquilibriumReversibleReaction
+    <
+        ReactionType,
+        ReactionThermo,
+        ReactionRate
+    >& nerr,
     const speciesTable& species
 )
 :
-    Reaction<ReactionThermo>(nerr, species),
+    ReactionType<ReactionThermo>(nerr, species),
     fk_(nerr.fk_),
     rk_(nerr.rk_)
 {}
@@ -237,48 +291,199 @@ NonEquilibriumReversibleReaction
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class ReactionThermo, class ReactionRate>
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
 CML::scalar
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::kf
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kf
 (
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return fk_(T, p, c);
+    return fk_(p, T, c);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
 CML::scalar
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::kr
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kr
 (
     const scalar,
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return rk_(T, p, c);
+    return rk_(p, T, c);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
 CML::scalar
-CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::kr
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::kr
 (
-    const scalar T,
     const scalar p,
+    const scalar T,
     const scalarField& c
 ) const
 {
-    return rk_(T, p, c);
+    return rk_(p, T, c);
 }
 
 
-template<class ReactionThermo, class ReactionRate>
-void CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::write
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dkfdT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c
+) const
+{
+    return fk_.ddT(p, T, c);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dkrdT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c,
+    const scalar dkfdT,
+    const scalar kr
+) const
+{
+    return rk_.ddT(p, T, c);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+const CML::List<CML::Tuple2<CML::label, CML::scalar> >&
+CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::beta() const
+{
+    return fk_.beta();
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+void CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dcidc
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c,
+    scalarField& dcidc
+) const
+{
+    fk_.dcidc(p, T, c, dcidc);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+CML::scalar CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::dcidT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c
+) const
+{
+    return fk_.dcidT(p, T, c);
+}
+
+
+template
+<
+    template<class> class ReactionType,
+    class ReactionThermo,
+    class ReactionRate
+>
+void CML::NonEquilibriumReversibleReaction
+<
+    ReactionType,
+    ReactionThermo,
+    ReactionRate
+>::write
 (
     Ostream& os
 ) const
@@ -301,8 +506,4 @@ void CML::NonEquilibriumReversibleReaction<ReactionThermo, ReactionRate>::write
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

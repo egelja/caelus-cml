@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef atomicWeights_H
-#define atomicWeights_H
+#ifndef atomicWeights_HPP
+#define atomicWeights_HPP
 
 #include "scalar.hpp"
 #include "HashTable.hpp"
@@ -50,25 +50,22 @@ class atomicWeightTable
 
 public:
 
-    // Public types and data
+    //- Structure to hold the element name and atomic weight pair
+    struct atomicWeight
+    {
+        char name[3];
+        scalar weight;
+    };
 
-        //- Structure to hold the element name and atomic weight pair
-        struct atomicWeight
-        {
-            char name[3];
-            scalar weight;
-        };
+    static const int nElements = 104;
 
-        static const int nElements = 104;
-
-        //- Static table of the weights of all known elements
-        static const atomicWeight atomicWeights[nElements];
+    //- Static table of the weights of all known elements
+    static const atomicWeight atomicWeights[nElements];
 
 
-    // Constructors
+    //- Construct from atomicWeights_
+    atomicWeightTable();
 
-        //- Construct from atomicWeights_
-        atomicWeightTable();
 };
 
 
@@ -78,12 +75,7 @@ public:
 extern atomicWeightTable atomicWeights;
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

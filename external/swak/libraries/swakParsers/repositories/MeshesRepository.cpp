@@ -37,7 +37,7 @@ namespace CML {
 
 defineTypeNameAndDebug(MeshesRepository, 0);
 
-MeshesRepository *MeshesRepository::repositoryInstance(NULL);
+MeshesRepository *MeshesRepository::repositoryInstance(nullptr);
 
 MeshesRepository::MeshesRepository()
 {
@@ -60,7 +60,7 @@ MeshesRepository &MeshesRepository::getRepository()
         Pout << "MeshesRepository: asking for Singleton" << endl;
     }
 
-    if(ptr==NULL) {
+    if(ptr==nullptr) {
         Pout << "swak: Allocating new repository for sampledMeshes\n";
 
         ptr=new MeshesRepository();
@@ -115,7 +115,7 @@ fvMesh &MeshesRepository::addMesh(
                 }
                 return *meshes_[name];
             }
-            FatalErrorIn("MeshesRepository::addMesh")
+            FatalErrorInFunction
                 << "Mesh of case " << usedN << " region " << region
                     << " is already in the repository under the name "
                     << iter.key()
@@ -126,7 +126,7 @@ fvMesh &MeshesRepository::addMesh(
     }
 
     if(meshes_.found(name)) {
-        FatalErrorIn("MeshesRepository::addMesh")
+        FatalErrorInFunction
             << "There is already an entry " << name
                 << " in the repository"
                 << endl
@@ -164,14 +164,14 @@ fvMesh &MeshesRepository::addCoupledMesh(
 )
 {
     if(meshes_.found(name)) {
-        FatalErrorIn("MeshesRepository::addCoupledMesh")
+        FatalErrorInFunction
             << "There is already an entry " << name
                 << " in the repository"
                 << endl
                 << exit(FatalError);
     }
     if(!meshes_.found(masterName)) {
-        FatalErrorIn("MeshesRepository::addCoupledMesh")
+        FatalErrorInFunction
             << "There is no entry " << masterName
                 << " in the repository"
                 << endl

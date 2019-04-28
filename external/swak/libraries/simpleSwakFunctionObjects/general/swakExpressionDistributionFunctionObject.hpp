@@ -151,23 +151,22 @@ void swakExpressionDistributionFunctionObject::getDistributionInternal(
             maskValues_()
         );
     } else {
-        FatalErrorIn("swakExpressionDistributionFunctionObject::getDistributionInternal")
+        FatalErrorInFunction
             << "Weight neither of type " << pTraits<scalar>::typeName
-                << " nor " << pTraits<T>::typeName
-                << endl
-                << "Set weights are: "
-                << pTraits<scalar>::typeName << ":"
-                << weightValuesScalar_.valid() << " "
-                << pTraits<vector>::typeName << ":"
-                << weightValuesVector_.valid() << " "
-                << pTraits<tensor>::typeName << ":"
-                << weightValuesTensor_.valid() << " "
-                << pTraits<symmTensor>::typeName << ":"
-                << weightValuesSymmTensor_.valid() << " "
-                << pTraits<sphericalTensor>::typeName << ":"
-                << weightValuesSphericalTensor_.valid() << " "
-                << exit(FatalError);
-
+            << " nor " << pTraits<T>::typeName
+            << endl
+            << "Set weights are: "
+            << pTraits<scalar>::typeName << ":"
+            << weightValuesScalar_.valid() << " "
+            << pTraits<vector>::typeName << ":"
+            << weightValuesVector_.valid() << " "
+            << pTraits<tensor>::typeName << ":"
+            << weightValuesTensor_.valid() << " "
+            << pTraits<symmTensor>::typeName << ":"
+            << weightValuesSymmTensor_.valid() << " "
+            << pTraits<sphericalTensor>::typeName << ":"
+            << weightValuesSphericalTensor_.valid() << " "
+            << exit(FatalError);
     }
 }
 

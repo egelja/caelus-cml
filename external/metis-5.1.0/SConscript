@@ -26,9 +26,11 @@ cflags_map = dict(
             "-D_FILE_OFFSET_BITS=64 -Dmetis_EXPORTS -D__thread= ")
 )
 
+if metis_env['INT_TYPE'] == '64':
+    cflags_map['linux'] = cflags_map['linux'] + "-DCAELUS_LABEL64 "
+
 # Fix C compiler flags
 metis_env.Replace(CCFLAGS=cflags_map[utils.ostype()])
-
 
 target = 'metis'
 

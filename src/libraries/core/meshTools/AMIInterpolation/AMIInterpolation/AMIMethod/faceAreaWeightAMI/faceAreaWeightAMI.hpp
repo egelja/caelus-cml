@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -429,20 +429,8 @@ void CML::faceAreaWeightAMI<SourcePatch, TargetPatch>::setNextFaces
 
         if (errorOnNotFound)
         {
-            FatalErrorIn
-            (
-                "void CML::faceAreaWeightAMI<SourcePatch, TargetPatch>::"
-                "setNextFaces"
-                "("
-                    "label&, "
-                    "label&, "
-                    "label&, "
-                    "const boolList&, "
-                    "labelList&, "
-                    "const DynamicList<label>&, "
-                    "bool"
-                ") const"
-            )  << "Unable to set source and target faces" << abort(FatalError);
+            FatalErrorInFunction
+               << "Unable to set source and target faces" << abort(FatalError);
         }
     }
 }
@@ -493,15 +481,8 @@ CML::scalar CML::faceAreaWeightAMI<SourcePatch, TargetPatch>::interArea
     }
     else
     {
-        WarningIn
-        (
-            "void CML::faceAreaWeightAMI<SourcePatch, TargetPatch>::"
-            "interArea"
-            "("
-                "const label, "
-                "const label"
-            ") const"
-        )   << "Invalid normal for source face " << srcFaceI
+        WarningInFunction
+            << "Invalid normal for source face " << srcFaceI
             << " points " << UIndirectList<point>(srcPoints, src)
             << " target face " << tgtFaceI
             << " points " << UIndirectList<point>(tgtPoints, tgt)

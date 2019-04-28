@@ -104,7 +104,7 @@ void CML::surfaceToPoint::checkSettings() const
 {
     if (nearDist_ < 0 && !includeInside_ && !includeOutside_)
     {
-        FatalErrorIn("surfaceToPoint:checkSettings()")
+        FatalErrorInFunction
             << "Illegal point selection specification."
             << " Result would be either all or no points." << endl
             << "Please set one of includeInside or includeOutside"

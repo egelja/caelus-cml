@@ -33,6 +33,7 @@ SourceFiles
 
 #include "dictionary.hpp"
 #include "scalar.hpp"
+#include "Switch.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,6 +59,12 @@ class snapParameters
         const label nSnap_;
 
         const label nFeatureSnap_;
+
+        const Switch explicitFeatureSnap_;
+
+        const Switch implicitFeatureSnap_;
+
+        const Switch multiRegionFeatureSnap_;
 
 
     // Private Member Functions
@@ -113,6 +120,21 @@ public:
             label nFeatureSnap() const
             {
                 return nFeatureSnap_;
+            }
+
+            Switch explicitFeatureSnap() const
+            {
+                return explicitFeatureSnap_;
+            }
+
+            Switch implicitFeatureSnap() const
+            {
+                return implicitFeatureSnap_;
+            }
+
+            Switch multiRegionFeatureSnap() const
+            {
+                return multiRegionFeatureSnap_;
             }
 
 };

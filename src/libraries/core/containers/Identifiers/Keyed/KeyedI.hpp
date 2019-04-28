@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -90,10 +90,7 @@ CML::Keyed<T>::createList(const List<T>& lst, const labelUList& keys)
 {
     if (lst.size() != keys.size())
     {
-        FatalErrorIn
-        (
-            "CML::Keyed<T>::createList(const List<T>&, const labelUList&)"
-        )
+        FatalErrorInFunction
             << "size mismatch adding keys to a list:" << nl
             << "List has size " << lst.size()
             << " and keys has size " << keys.size() << nl

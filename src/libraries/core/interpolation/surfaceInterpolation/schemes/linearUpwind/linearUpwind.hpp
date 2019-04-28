@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -110,7 +110,7 @@ public:
         {
             if (!schemeData.eof())
             {
-                IOWarningIn("linearUpwind(const fvMesh&, Istream&)", schemeData)
+                IOWarningInFunction(schemeData)
                     << "unexpected additional entries in stream." << nl
                     << "    Only the name of the gradient scheme in the"
                        " 'gradSchemes' dictionary should be specified."
@@ -140,12 +140,8 @@ public:
 
             if (!schemeData.eof())
             {
-                IOWarningIn
-                (
-                    "linearUpwind(const fvMesh&, "
-                    "const surfaceScalarField& faceFlux, Istream&)",
-                    schemeData
-                )   << "unexpected additional entries in stream." << nl
+                IOWarningInFunction(schemeData)
+                    << "unexpected additional entries in stream." << nl
                     << "    Only the name of the gradient scheme in the"
                        " 'gradSchemes' dictionary should be specified."
                     << endl;

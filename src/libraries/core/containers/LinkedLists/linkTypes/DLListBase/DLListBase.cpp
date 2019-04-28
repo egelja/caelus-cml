@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -169,7 +169,7 @@ CML::DLListBase::link* CML::DLListBase::removeHead()
 
     if (!first_)
     {
-        FatalErrorIn("void DLListBase::removeHead()")
+        FatalErrorInFunction
             << "remove from empty list"
             << abort(FatalError);
     }

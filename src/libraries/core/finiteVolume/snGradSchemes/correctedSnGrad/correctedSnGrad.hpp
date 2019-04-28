@@ -164,9 +164,9 @@ CML::fv::correctedSnGrad<Type>::fullGradCorrection
 		
     // construct GeometricField<Type, fvsPatchField, surfaceMesh>
     tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tssf =
-        mesh.nonOrthCorrectionVectors()
-      & linear<typename outerProduct<vector, Type>::type>(mesh).interpolate
+        linear<typename outerProduct<vector, Type>::type>(mesh).dotInterpolate
         (
+            mesh.nonOrthCorrectionVectors(),
             gradScheme<Type>::New
             (
                 mesh,
@@ -212,13 +212,13 @@ CML::fv::correctedSnGrad<Type>::correction
         ssf.replace
         (
             cmpt,
-            mesh.nonOrthCorrectionVectors()
-          & linear
+            linear
             <
                 typename
                 outerProduct<vector, typename pTraits<Type>::cmptType>::type
-            >(mesh).interpolate
+            >(mesh).dotInterpolate
             (
+                mesh.nonOrthCorrectionVectors(),
                 gradScheme<typename pTraits<Type>::cmptType>::New
                 (
                     mesh,

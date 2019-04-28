@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -163,16 +163,8 @@ emptyPointPatchField<Type>::emptyPointPatchField
 {
     if (!isType<emptyPointPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "emptyPointPatchField<Type>::emptyPointPatchField\n"
-            "(\n"
-            "    const pointPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not empty type. "
+        FatalIOErrorInFunction(dict)
+            << "patch " << this->patch().index() << " not empty type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -192,16 +184,8 @@ emptyPointPatchField<Type>::emptyPointPatchField
 {
     if (!isType<emptyPointPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "emptyPointPatchField<Type>::emptyPointPatchField\n"
-            "(\n"
-            "    const emptyPointPatchField<Type>& ptf,\n"
-            "    const pointPatch& p,\n"
-            "    const DimensionedField<Type, pointMesh>& iF,\n"
-            "    const pointPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
+        FatalErrorInFunction
+            << "Field type does not correspond to patch type for patch "
             << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
             << "Patch type: " << this->patch().type()

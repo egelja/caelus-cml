@@ -226,10 +226,7 @@ public:
 
             void updateMesh(const mapPolyMesh&)
             {
-                notImplemented
-                (
-                    "mapAddedPolyMesh::updateMesh(const mapPolyMesh&)"
-                );
+                NotImplemented;
             }
 };
 

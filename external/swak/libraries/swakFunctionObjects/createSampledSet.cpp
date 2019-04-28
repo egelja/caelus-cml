@@ -47,9 +47,9 @@ CML::createSampledSet::createSampledSet
     if (!isA<polyMesh>(obr))
     {
         active_=false;
-        WarningIn("createSampledSet::createSampledSet")
+        WarningInFunction
             << "Not a polyMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
     read(dict);
     execute();

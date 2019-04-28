@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -72,7 +72,7 @@ class fvSchemes
         dictionary laplacianSchemes_;
         ITstream defaultLaplacianScheme_;
 
-        dictionary fluxRequired_;
+        mutable dictionary fluxRequired_;
         bool defaultFluxRequired_;
 
         //- Steady-state run indicator
@@ -126,6 +126,8 @@ public:
             ITstream& snGradScheme(const word& name) const;
 
             ITstream& laplacianScheme(const word& name) const;
+
+            void setFluxRequired(const word& name) const;
 
             bool fluxRequired(const word& name) const;
 

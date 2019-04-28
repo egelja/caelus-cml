@@ -46,9 +46,9 @@ Description
 #include "incompressible/RAS/RASModel/RASModel.hpp"
 #include "incompressible/LES/LESModel/LESModel.hpp"
 
-#include "basicThermo.hpp"
-#include "compressible/RAS/RASModel/RASModel.hpp"
-#include "compressible/LES/LESModel/LESModel.hpp"
+#include "fluidThermo.hpp"
+#include "compressible/RAS/RASModel/compressibleRASModel.hpp"
+#include "compressible/LES/LESModel/compressibleLESModel.hpp"
 
 using namespace CML;
 
@@ -85,12 +85,8 @@ wordList ReadUniformFields
 
             if (iter == localNamesSet.end())
             {
-                FatalErrorIn
-                (
-                    "ReadFields<class GeoField>"
-                    "(const IOobjectList&, PtrList<GeoField>&"
-                    ", const bool)"
-                )   << "Fields not synchronised across processors." << endl
+                FatalErrorInFunction
+                    << "Fields not synchronised across processors." << endl
                     << "Master has fields " << masterNames
                     << "  processor " << Pstream::myProcNo()
                     << " has fields " << localNames << exit(FatalError);
@@ -103,12 +99,8 @@ wordList ReadUniformFields
 
         forAllConstIter(HashSet<word>, localNamesSet, iter)
         {
-            FatalErrorIn
-            (
-                "ReadFields<class GeoField>"
-                "(const IOobjectList&, PtrList<GeoField>&"
-                ", const bool)"
-            )   << "Fields not synchronised across processors." << endl
+            FatalErrorInFunction
+                << "Fields not synchronised across processors." << endl
                 << "Master has fields " << masterNames
                 << "  processor " << Pstream::myProcNo()
                 << " has fields " << localNames << exit(FatalError);
@@ -369,7 +361,7 @@ void calc
         }
         else if (phi.dimensions() == dimMass/dimTime)
         {
-            autoPtr<basicThermo> thermo(basicThermo::New(mesh));
+            autoPtr<fluidThermo> thermo(fluidThermo::New(mesh));
 
             volScalarField rho
             (
@@ -449,7 +441,7 @@ void calc
         }
         else
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Incorrect dimensions of phi: " << phi.dimensions()
                 << nl << exit(FatalError);
         }

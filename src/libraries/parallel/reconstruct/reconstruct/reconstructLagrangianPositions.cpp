@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
+Copyright (C) 2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,9 +45,7 @@ void CML::reconstructLagrangianPositions
     forAll(meshes, i)
     {
         const labelList& cellMap = cellProcAddressing[i];
-
-        // faceProcAddressing not required currently.
-        // const labelList& faceMap = faceProcAddressing[i];
+        const labelList& faceMap = faceProcAddressing[i];
 
         Cloud<passiveParticle> lpi(meshes[i], cloudName, false);
 
@@ -54,18 +53,21 @@ void CML::reconstructLagrangianPositions
         {
             const passiveParticle& ppi = iter();
 
-            // // Inverting sign if necessary and subtracting 1 from
-            // // faceProcAddressing
-            // label mappedTetFace = mag(faceMap[ppi.tetFace()]) - 1;
+            const label mappedCell = cellMap[ppi.cell()];
+
+            // Inverting sign if necessary and subtracting 1 from
+            // faceProcAddressing
+            label mappedTetFace = mag(faceMap[ppi.tetFace()]) - 1;
 
             lagrangianPositions.append
             (
                 new passiveParticle
                 (
                     mesh,
-                    ppi.position(),
-                    cellMap[ppi.cell()],
-                    false
+                    ppi.coordinates(),
+                    mappedCell,
+                    mappedTetFace,
+                    ppi.procTetPt(mesh, mappedCell, mappedTetFace)
                 )
             );
         }

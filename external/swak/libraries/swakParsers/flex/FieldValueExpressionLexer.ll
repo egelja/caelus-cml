@@ -584,11 +584,11 @@ void FieldValueExpressionDriver::scan_begin ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_!=NULL) {
-        FatalErrorIn("FieldValueExpressionDriver::scan_begin")
+    if(scanner_!=nullptr) {
+        FatalErrorInFunction
             << "Already existing scanner " << getHex(scanner_)
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -614,20 +614,20 @@ void FieldValueExpressionDriver::scan_end ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_==NULL) {
-        FatalErrorIn("FieldValueExpressionDriver::scan_end")
+    if(scanner_==nullptr) {
+        FatalErrorInFunction
             << "Uninitialized Scanner. Can't delete it"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
     yylex_destroy(scanner_);
-    // WarningIn("FieldValueExpressionDriver::scan_end")
+    // WarningInFunction
     //     << "Scanner " <<  getHex(scanner_) << " is not deleted"
     //         << endl;
 
-    scanner_=NULL;
+    scanner_=nullptr;
 //	    fclose (yyin);
 }
 

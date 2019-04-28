@@ -1,6 +1,7 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: yes
       remove_mesh: yes
       preserve: [ "0.org", "README" ]

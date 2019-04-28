@@ -239,7 +239,7 @@ void CML::reconstructLagrangianFields
 
     IOobjectList fields = objects.lookupClass(fieldClassName);
 
-    if(fields.size())
+    if (fields.size())
     {
         Info<< "    Reconstructing lagrangian "
             << fieldClassName << "s\n" << endl;

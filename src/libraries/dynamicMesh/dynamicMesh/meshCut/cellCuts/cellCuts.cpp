@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,13 +29,25 @@ License
 #include "geomCellLooper.hpp"
 #include "OFstream.hpp"
 #include "plane.hpp"
+#include "syncTools.hpp"
+#include "dummyTransform.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 
 namespace CML
 {
     defineTypeNameAndDebug(cellCuts, 0);
+
+    //- Template specialization for pTraits<edge> so we can use syncTools
+    //  functionality
+    template<>
+    class pTraits<edge>
+    {
+    public:
+
+        //- Component type
+        typedef edge cmptType;
+    };
 }
 
 
@@ -113,15 +125,156 @@ CML::label CML::cellCuts::firstUnique
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// Write cell and raw cuts on any of the elements
+void CML::cellCuts::syncProc()
+{
+    if (!Pstream::parRun())
+    {
+        return;
+    }
+
+    syncTools::syncPointList(mesh(), pointIsCut_, orEqOp<bool>(), false);
+    syncTools::syncEdgeList(mesh(), edgeIsCut_, orEqOp<bool>(), false);
+    syncTools::syncEdgeList(mesh(), edgeWeight_, maxEqOp<scalar>(), -GREAT);
+
+    {
+        const label nBnd = mesh().nFaces()-mesh().nInternalFaces();
+
+        // Convert faceSplitCut into face-local data: vertex and edge w.r.t.
+        // vertex 0: (since this is same on both sides)
+        //
+        //      Sending-side vertex  Receiving-side vertex
+        //      0                   0
+        //      1                   3
+        //      2                   2
+        //      3                   1
+        //
+        //      Sending-side edge    Receiving side edge
+        //      0-1                  3-0
+        //      1-2                  2-3
+        //      2-3                  1-2
+        //      3-0                  0-1
+        //
+        // Encoding is as index:
+        //      0  : not set
+        //      >0 : vertex, vertex is index-1
+        //      <0 : edge, edge is -index-1
+
+        edgeList relCuts(nBnd, edge(0, 0));
+
+        const polyBoundaryMesh& pbm = mesh().boundaryMesh();
+
+        forAll(pbm, patchi)
+        {
+            const polyPatch& pp = pbm[patchi];
+
+            if (pp.coupled())
+            {
+                forAll(pp, i)
+                {
+                    label facei = pp.start()+i;
+                    label bFacei = facei-mesh().nInternalFaces();
+
+                    const Map<edge>::const_iterator iter =
+                        faceSplitCut_.find(facei);
+                    if (iter != faceSplitCut_.end())
+                    {
+                        const face& f = mesh().faces()[facei];
+                        const labelList& fEdges = mesh().faceEdges()[facei];
+                        const edge& cuts = iter();
+
+                        forAll(cuts, i)
+                        {
+                            if (isEdge(cuts[i]))
+                            {
+                                label edgei = getEdge(cuts[i]);
+                                label index = findIndex(fEdges, edgei);
+                                relCuts[bFacei][i] = -index-1;
+                            }
+                            else
+                            {
+                                label index = findIndex(f, getVertex(cuts[i]));
+                                relCuts[bFacei][i] = index+1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Exchange
+        syncTools::syncBoundaryFaceList
+        (
+            mesh(),
+            relCuts,
+            eqOp<edge>(),
+            dummyTransform()
+        );
+
+        // Convert relCuts back into mesh based data
+        forAll(pbm, patchi)
+        {
+            const polyPatch& pp = pbm[patchi];
+
+            if (pp.coupled())
+            {
+                forAll(pp, i)
+                {
+                    label facei = pp.start()+i;
+                    label bFacei = facei-mesh().nInternalFaces();
+
+                    const edge& relCut = relCuts[bFacei];
+                    if (relCut != edge(0, 0))
+                    {
+                        const face& f = mesh().faces()[facei];
+                        const labelList& fEdges = mesh().faceEdges()[facei];
+
+                        edge absoluteCut(0, 0);
+                        forAll(relCut, i)
+                        {
+                            if (relCut[i] < 0)
+                            {
+                                label oppFp = -relCut[i]-1;
+                                label fp = f.size()-1-oppFp;
+                                absoluteCut[i] = edgeToEVert(fEdges[fp]);
+                            }
+                            else
+                            {
+                                label oppFp = relCut[i]-1;
+                                label fp = f.size()-1-oppFp;
+                                absoluteCut[i] = vertToEVert(f[fp]);
+                            }
+                        }
+
+                        if
+                        (
+                           !faceSplitCut_.insert(facei, absoluteCut)
+                         && faceSplitCut_[facei] != absoluteCut
+                        )
+                        {
+                            FatalErrorInFunction
+                                << "Cut " << faceSplitCut_[facei]
+                                << " on face " << mesh().faceCentres()[facei]
+                                << " of coupled patch " << pp.name()
+                                << " is not consistent with coupled cut "
+                                << absoluteCut
+                                << exit(FatalError);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 void CML::cellCuts::writeUncutOBJ
 (
     const fileName& dir,
-    const label cellI
+    const label celli
 ) const
 {
-    //- Cell edges
-    OFstream cutsStream(dir / "cell_" + name(cellI) + ".obj");
+    // Cell edges
+    OFstream cutsStream(dir / "cell_" + name(celli) + ".obj");
 
     Pout<< "Writing cell for time " <<  mesh().time().timeName()
         << " to " << cutsStream.name() << nl;
@@ -132,29 +285,29 @@ void CML::cellCuts::writeUncutOBJ
         mesh().cells(),
         mesh().faces(),
         mesh().points(),
-        labelList(1, cellI)
+        labelList(1, celli)
     );
 
-    //- Loop cutting cell in two
-    OFstream cutStream(dir / "cellCuts_" + name(cellI) + ".obj");
+    // Loop cutting cell in two
+    OFstream cutStream(dir / "cellCuts_" + name(celli) + ".obj");
 
     Pout<< "Writing raw cuts on cell for time " <<  mesh().time().timeName()
         << " to " << cutStream.name() << nl;
 
-    const labelList& cPoints = mesh().cellPoints()[cellI];
+    const labelList& cPoints = mesh().cellPoints()[celli];
 
     forAll(cPoints, i)
     {
-        label pointI = cPoints[i];
-        if (pointIsCut_[pointI])
+        label pointi = cPoints[i];
+        if (pointIsCut_[pointi])
         {
-            meshTools::writeOBJ(cutStream, mesh().points()[pointI]);
+            meshTools::writeOBJ(cutStream, mesh().points()[pointi]);
         }
     }
 
     const pointField& pts = mesh().points();
 
-    const labelList& cEdges = mesh().cellEdges()[cellI];
+    const labelList& cEdges = mesh().cellEdges()[celli];
 
     forAll(cEdges, i)
     {
@@ -175,13 +328,13 @@ void CML::cellCuts::writeUncutOBJ
 void CML::cellCuts::writeOBJ
 (
     const fileName& dir,
-    const label cellI,
+    const label celli,
     const pointField& loopPoints,
     const labelList& anchors
 ) const
 {
-    //- Cell edges
-    OFstream cutsStream(dir / "cell_" + name(cellI) + ".obj");
+    // Cell edges
+    OFstream cutsStream(dir / "cell_" + name(celli) + ".obj");
 
     Pout<< "Writing cell for time " <<  mesh().time().timeName()
         << " to " << cutsStream.name() << nl;
@@ -192,12 +345,12 @@ void CML::cellCuts::writeOBJ
         mesh().cells(),
         mesh().faces(),
         mesh().points(),
-        labelList(1, cellI)
+        labelList(1, celli)
     );
 
 
-    //- Loop cutting cell in two
-    OFstream loopStream(dir / "cellLoop_" + name(cellI) + ".obj");
+    // Loop cutting cell in two
+    OFstream loopStream(dir / "cellLoop_" + name(celli) + ".obj");
 
     Pout<< "Writing loop for time " <<  mesh().time().timeName()
         << " to " << loopStream.name() << nl;
@@ -207,8 +360,8 @@ void CML::cellCuts::writeOBJ
     writeOBJ(loopStream, loopPoints, vertI);
 
 
-    //- Anchors for cell
-    OFstream anchorStream(dir / "anchors_" + name(cellI) + ".obj");
+    // Anchors for cell
+    OFstream anchorStream(dir / "anchors_" + name(celli) + ".obj");
 
     Pout<< "Writing anchors for time " <<  mesh().time().timeName()
         << " to " << anchorStream.name() << endl;
@@ -223,18 +376,18 @@ void CML::cellCuts::writeOBJ
 // Find face on cell using the two edges.
 CML::label CML::cellCuts::edgeEdgeToFace
 (
-    const label cellI,
+    const label celli,
     const label edgeA,
     const label edgeB
 ) const
 {
-    const labelList& cFaces = mesh().cells()[cellI];
+    const labelList& cFaces = mesh().cells()[celli];
 
-    forAll(cFaces, cFaceI)
+    forAll(cFaces, cFacei)
     {
-        label faceI = cFaces[cFaceI];
+        label facei = cFaces[cFacei];
 
-        const labelList& fEdges = mesh().faceEdges()[faceI];
+        const labelList& fEdges = mesh().faceEdges()[facei];
 
         if
         (
@@ -242,20 +395,16 @@ CML::label CML::cellCuts::edgeEdgeToFace
          && findIndex(fEdges, edgeB) != -1
         )
         {
-           return faceI;
+           return facei;
         }
     }
 
     // Coming here means the loop is illegal since the two edges
     // are not shared by a face. We just mark loop as invalid and continue.
 
-    WarningIn
-    (
-        "CML::cellCuts::edgeEdgeToFace"
-        "(const label cellI, const label edgeA,"
-        "const label edgeB) const"
-    )   << "cellCuts : Cannot find face on cell "
-        << cellI << " that has both edges " << edgeA << ' ' << edgeB << endl
+    WarningInFunction
+        << "cellCuts : Cannot find face on cell "
+        << celli << " that has both edges " << edgeA << ' ' << edgeB << endl
         << "faces : " << cFaces << endl
         << "edgeA : " << mesh().edges()[edgeA] << endl
         << "edgeB : " << mesh().edges()[edgeB] << endl
@@ -268,20 +417,20 @@ CML::label CML::cellCuts::edgeEdgeToFace
 // Find face on cell using an edge and a vertex.
 CML::label CML::cellCuts::edgeVertexToFace
 (
-    const label cellI,
+    const label celli,
     const label edgeI,
     const label vertI
 ) const
 {
-    const labelList& cFaces = mesh().cells()[cellI];
+    const labelList& cFaces = mesh().cells()[celli];
 
-    forAll(cFaces, cFaceI)
+    forAll(cFaces, cFacei)
     {
-        label faceI = cFaces[cFaceI];
+        label facei = cFaces[cFacei];
 
-        const face& f = mesh().faces()[faceI];
+        const face& f = mesh().faces()[facei];
 
-        const labelList& fEdges = mesh().faceEdges()[faceI];
+        const labelList& fEdges = mesh().faceEdges()[facei];
 
         if
         (
@@ -289,17 +438,13 @@ CML::label CML::cellCuts::edgeVertexToFace
          && findIndex(f, vertI) != -1
         )
         {
-           return faceI;
+           return facei;
         }
     }
 
-    WarningIn
-    (
-        "CML::cellCuts::edgeVertexToFace"
-        "(const label cellI, const label edgeI, "
-        "const label vertI) const"
-    )   << "cellCuts : Cannot find face on cell "
-        << cellI << " that has both edge " << edgeI << " and vertex "
+    WarningInFunction
+        << "cellCuts : Cannot find face on cell "
+        << celli << " that has both edge " << edgeI << " and vertex "
         << vertI << endl
         << "faces : " << cFaces << endl
         << "edge : " << mesh().edges()[edgeI] << endl
@@ -312,18 +457,18 @@ CML::label CML::cellCuts::edgeVertexToFace
 // Find face using two vertices (guaranteed not to be along edge)
 CML::label CML::cellCuts::vertexVertexToFace
 (
-    const label cellI,
+    const label celli,
     const label vertA,
     const label vertB
 ) const
 {
-    const labelList& cFaces = mesh().cells()[cellI];
+    const labelList& cFaces = mesh().cells()[celli];
 
-    forAll(cFaces, cFaceI)
+    forAll(cFaces, cFacei)
     {
-        label faceI = cFaces[cFaceI];
+        label facei = cFaces[cFacei];
 
-        const face& f = mesh().faces()[faceI];
+        const face& f = mesh().faces()[facei];
 
         if
         (
@@ -331,13 +476,13 @@ CML::label CML::cellCuts::vertexVertexToFace
          && findIndex(f, vertB) != -1
         )
         {
-           return faceI;
+           return facei;
         }
     }
 
-    WarningIn("CML::cellCuts::vertexVertexToFace")
+    WarningInFunction
         << "cellCuts : Cannot find face on cell "
-        << cellI << " that has vertex " << vertA << " and vertex "
+        << celli << " that has vertex " << vertA << " and vertex "
         << vertB << endl
         << "faces : " << cFaces << endl
         << "Marking the loop across this cell as invalid" << endl;
@@ -348,25 +493,24 @@ CML::label CML::cellCuts::vertexVertexToFace
 
 void CML::cellCuts::calcFaceCuts() const
 {
-    if (faceCutsPtr_)
+    if (faceCutsPtr_.valid())
     {
-        FatalErrorIn("cellCuts::calcFaceCuts()")
+        FatalErrorInFunction
             << "faceCuts already calculated" << abort(FatalError);
     }
 
     const faceList& faces = mesh().faces();
 
+    faceCutsPtr_.reset(new labelListList(mesh().nFaces()));
+    labelListList& faceCuts = faceCutsPtr_();
 
-    faceCutsPtr_ = new labelListList(mesh().nFaces());
-    labelListList& faceCuts = *faceCutsPtr_;
-
-    for (label faceI = 0; faceI < mesh().nFaces(); faceI++)
+    for (label facei = 0; facei < mesh().nFaces(); facei++)
     {
-        const face& f = faces[faceI];
+        const face& f = faces[facei];
 
         // Big enough storage (possibly all points and all edges cut). Shrink
         // later on.
-        labelList& cuts = faceCuts[faceI];
+        labelList& cuts = faceCuts[facei];
 
         cuts.setSize(2*f.size());
 
@@ -377,7 +521,7 @@ void CML::cellCuts::calcFaceCuts() const
         // string of connected cuts; we don't want to start somewhere in the
         // middle.
 
-        // Pass1: find first point cut not preceded by a cut.
+        // Pass1: find first point cut not preceeded by a cut.
         label startFp = -1;
 
         forAll(f, fp)
@@ -391,7 +535,7 @@ void CML::cellCuts::calcFaceCuts() const
                 if
                 (
                     !pointIsCut_[vMin1]
-                 && !edgeIsCut_[findEdge(faceI, v0, vMin1)]
+                 && !edgeIsCut_[findEdge(facei, v0, vMin1)]
                 )
                 {
                     cuts[cutI++] = vertToEVert(v0);
@@ -401,7 +545,7 @@ void CML::cellCuts::calcFaceCuts() const
             }
         }
 
-        // Pass2: first edge cut not preceded by point cut
+        // Pass2: first edge cut not preceeded by point cut
         if (startFp == -1)
         {
             forAll(f, fp)
@@ -411,7 +555,7 @@ void CML::cellCuts::calcFaceCuts() const
                 label v0 = f[fp];
                 label v1 = f[fp1];
 
-                label edgeI = findEdge(faceI, v0, v1);
+                label edgeI = findEdge(facei, v0, v1);
 
                 if (edgeIsCut_[edgeI] && !pointIsCut_[v0])
                 {
@@ -442,7 +586,7 @@ void CML::cellCuts::calcFaceCuts() const
             // inbetween
             label v0 = f[fp];
             label v1 = f[fp1];
-            label edgeI = findEdge(faceI, v0, v1);
+            label edgeI = findEdge(facei, v0, v1);
 
             if (pointIsCut_[v0])
             {
@@ -465,8 +609,8 @@ void CML::cellCuts::calcFaceCuts() const
 
         if (allVerticesCut)
         {
-            WarningIn("CML::cellCuts::calcFaceCuts() const")
-                << "Face " << faceI << " vertices " << f
+            WarningInFunction
+                << "Face " << facei << " vertices " << f
                 << " has all its vertices cut. Not cutting face." << endl;
 
             cutI = 0;
@@ -485,14 +629,14 @@ void CML::cellCuts::calcFaceCuts() const
 // Find edge on face using two vertices
 CML::label CML::cellCuts::findEdge
 (
-    const label faceI,
+    const label facei,
     const label v0,
     const label v1
 ) const
 {
     const edgeList& edges = mesh().edges();
 
-    const labelList& fEdges = mesh().faceEdges()[faceI];
+    const labelList& fEdges = mesh().faceEdges()[facei];
 
     forAll(fEdges, i)
     {
@@ -515,18 +659,18 @@ CML::label CML::cellCuts::findEdge
 // Check if there is a face on the cell on which all cuts are.
 CML::label CML::cellCuts::loopFace
 (
-    const label cellI,
+    const label celli,
     const labelList& loop
 ) const
 {
-    const cell& cFaces = mesh().cells()[cellI];
+    const cell& cFaces = mesh().cells()[celli];
 
-    forAll(cFaces, cFaceI)
+    forAll(cFaces, cFacei)
     {
-        label faceI = cFaces[cFaceI];
+        label facei = cFaces[cFacei];
 
-        const labelList& fEdges = mesh().faceEdges()[faceI];
-        const face& f = mesh().faces()[faceI];
+        const labelList& fEdges = mesh().faceEdges()[facei];
+        const face& f = mesh().faces()[facei];
 
         bool allOnFace = true;
 
@@ -557,7 +701,7 @@ CML::label CML::cellCuts::loopFace
         if (allOnFace)
         {
             // Found face where all elements of loop are on the face.
-            return faceI;
+            return facei;
         }
     }
     return -1;
@@ -567,7 +711,7 @@ CML::label CML::cellCuts::loopFace
 // From point go into connected face
 bool CML::cellCuts::walkPoint
 (
-    const label cellI,
+    const label celli,
     const label startCut,
 
     const label exclude0,
@@ -583,15 +727,15 @@ bool CML::cellCuts::walkPoint
 
     const labelList& pFaces = mesh().pointFaces()[vertI];
 
-    forAll(pFaces, pFaceI)
+    forAll(pFaces, pFacei)
     {
-        label otherFaceI = pFaces[pFaceI];
+        label otherFacei = pFaces[pFacei];
 
         if
         (
-            otherFaceI != exclude0
-         && otherFaceI != exclude1
-         && meshTools::faceOnCell(mesh(), cellI, otherFaceI)
+            otherFacei != exclude0
+         && otherFacei != exclude1
+         && meshTools::faceOnCell(mesh(), celli, otherFacei)
         )
         {
             label oldNVisited = nVisited;
@@ -599,9 +743,9 @@ bool CML::cellCuts::walkPoint
             bool foundLoop =
                 walkCell
                 (
-                    cellI,
+                    celli,
                     startCut,
-                    otherFaceI,
+                    otherFacei,
                     otherCut,
                     nVisited,
                     visited
@@ -623,9 +767,9 @@ bool CML::cellCuts::walkPoint
 // Cross cut (which is edge on faceI) onto next face
 bool CML::cellCuts::crossEdge
 (
-    const label cellI,
+    const label celli,
     const label startCut,
-    const label faceI,
+    const label facei,
     const label otherCut,
 
     label& nVisited,
@@ -635,7 +779,7 @@ bool CML::cellCuts::crossEdge
     // Cross edge to other face
     label edgeI = getEdge(otherCut);
 
-    label otherFaceI = meshTools::otherFace(mesh(), cellI, faceI, edgeI);
+    label otherFacei = meshTools::otherFace(mesh(), celli, facei, edgeI);
 
     // Store old state
     label oldNVisited = nVisited;
@@ -644,9 +788,9 @@ bool CML::cellCuts::crossEdge
     bool foundLoop =
         walkCell
         (
-            cellI,
+            celli,
             startCut,
-            otherFaceI,
+            otherFacei,
             otherCut,
             nVisited,
             visited
@@ -668,7 +812,7 @@ bool CML::cellCuts::crossEdge
 
 bool CML::cellCuts::addCut
 (
-    const label cellI,
+    const label celli,
     const label cut,
     label& nVisited,
     labelList& visited
@@ -681,7 +825,7 @@ bool CML::cellCuts::addCut
         labelList truncVisited(visited);
         truncVisited.setSize(nVisited);
 
-        Pout<< "For cell " << cellI << " : trying to add duplicate cut " << cut;
+        Pout<< "For cell " << celli << " : trying to add duplicate cut " << cut;
         labelList cuts(1, cut);
         writeCuts(Pout, cuts, loopWeights(cuts));
 
@@ -704,9 +848,9 @@ bool CML::cellCuts::addCut
 // Returns true if valid walk.
 bool CML::cellCuts::walkFace
 (
-    const label cellI,
+    const label celli,
     const label startCut,
-    const label faceI,
+    const label facei,
     const label cut,
 
     label& lastCut,
@@ -715,7 +859,7 @@ bool CML::cellCuts::walkFace
     labelList& visited
 ) const
 {
-    const labelList& fCuts = faceCuts()[faceI];
+    const labelList& fCuts = faceCuts()[facei];
 
     if (fCuts.size() < 2)
     {
@@ -727,7 +871,7 @@ bool CML::cellCuts::walkFace
     {
         if (fCuts[0] == cut)
         {
-            if (!addCut(cellI, cut, nVisited, visited))
+            if (!addCut(celli, cut, nVisited, visited))
             {
                 return false;
             }
@@ -739,7 +883,7 @@ bool CML::cellCuts::walkFace
         }
         else
         {
-            if (!addCut(cellI, cut, nVisited, visited))
+            if (!addCut(celli, cut, nVisited, visited))
             {
                 return false;
             }
@@ -758,7 +902,7 @@ bool CML::cellCuts::walkFace
         // Walk forward
         for (label i = 0; i < fCuts.size()-1; i++)
         {
-            if (!addCut(cellI, fCuts[i], nVisited, visited))
+            if (!addCut(celli, fCuts[i], nVisited, visited))
             {
                 return false;
             }
@@ -770,7 +914,7 @@ bool CML::cellCuts::walkFace
     {
         for (label i = fCuts.size()-1; i >= 1; --i)
         {
-            if (!addCut(cellI, fCuts[i], nVisited, visited))
+            if (!addCut(celli, fCuts[i], nVisited, visited))
             {
                 return false;
             }
@@ -780,8 +924,8 @@ bool CML::cellCuts::walkFace
     }
     else
     {
-        WarningIn("CML::cellCuts::walkFace")
-            << "In middle of cut. cell:" << cellI << " face:" << faceI
+        WarningInFunction
+            << "In middle of cut. cell:" << celli << " face:" << facei
             << " cuts:" << fCuts << " current cut:" << cut << endl;
 
         return false;
@@ -796,9 +940,9 @@ bool CML::cellCuts::walkFace
 // already visited. Returns true when loop of 3 or more vertices found.
 bool CML::cellCuts::walkCell
 (
-    const label cellI,
+    const label celli,
     const label startCut,
-    const label faceI,
+    const label facei,
     const label cut,
 
     label& nVisited,
@@ -812,7 +956,7 @@ bool CML::cellCuts::walkCell
 
     if (debug & 2)
     {
-        Pout<< "For cell:" << cellI << " walked across face " << faceI
+        Pout<< "For cell:" << celli << " walked across face " << facei
             << " from cut ";
         labelList cuts(1, cut);
         writeCuts(Pout, cuts, loopWeights(cuts));
@@ -821,9 +965,9 @@ bool CML::cellCuts::walkCell
 
     bool validWalk = walkFace
     (
-        cellI,
+        celli,
         startCut,
-        faceI,
+        facei,
         cut,
 
         lastCut,
@@ -856,7 +1000,7 @@ bool CML::cellCuts::walkCell
                 labelList truncVisited(visited);
                 truncVisited.setSize(nVisited);
 
-                Pout<< "For cell " << cellI << " : found closed path:";
+                Pout<< "For cell " << celli << " : found closed path:";
                 writeCuts(Pout, truncVisited, loopWeights(truncVisited));
                 Pout<< " closed by " << lastCut << endl;
             }
@@ -892,12 +1036,12 @@ bool CML::cellCuts::walkCell
         {
             // beforeLastCut=edge, lastCut=edge.
 
-            // Cross lastCut (=edge) into face not faceI
+            // Cross lastCut (=edge) into face not facei
             return crossEdge
             (
-                cellI,
+                celli,
                 startCut,
-                faceI,
+                facei,
                 lastCut,
                 nVisited,
                 visited
@@ -907,12 +1051,12 @@ bool CML::cellCuts::walkCell
         {
             // beforeLastCut=edge, lastCut=vertex.
 
-            // Go from lastCut to all connected faces (except faceI)
+            // Go from lastCut to all connected faces (except facei)
             return walkPoint
             (
-                cellI,
+                celli,
                 startCut,
-                faceI,          // exclude0: don't cross back on current face
+                facei,          // exclude0: don't cross back on current face
                 -1,             // exclude1
                 lastCut,
                 nVisited,
@@ -927,9 +1071,9 @@ bool CML::cellCuts::walkCell
             // beforeLastCut=vertex, lastCut=edge.
             return crossEdge
             (
-                cellI,
+                celli,
                 startCut,
-                faceI,
+                facei,
                 lastCut,
                 nVisited,
                 visited
@@ -942,7 +1086,7 @@ bool CML::cellCuts::walkCell
             label edgeI =
                 findEdge
                 (
-                    faceI,
+                    facei,
                     getVertex(beforeLastCut),
                     getVertex(lastCut)
                 );
@@ -951,14 +1095,14 @@ bool CML::cellCuts::walkCell
             {
                 // Cut along existing edge. So is in fact on two faces.
                 // Get faces on both sides of the edge to make
-                // sure we don't fold back on to those.
+                // sure we dont fold back on to those.
 
                 label f0, f1;
-                meshTools::getEdgeFaces(mesh(), cellI, edgeI, f0, f1);
+                meshTools::getEdgeFaces(mesh(), celli, edgeI, f0, f1);
 
                 return walkPoint
                 (
-                    cellI,
+                    celli,
                     startCut,
                     f0,
                     f1,
@@ -973,9 +1117,9 @@ bool CML::cellCuts::walkCell
                 // Cross cut across face.
                 return walkPoint
                 (
-                    cellI,
+                    celli,
                     startCut,
-                    faceI,      // face to exclude
+                    facei,      // face to exclude
                     -1,         // face to exclude
                     lastCut,
                     nVisited,
@@ -987,13 +1131,14 @@ bool CML::cellCuts::walkCell
 }
 
 
-// Determine for every cut cell the loop (= face) it is cut by. Done by starting
-// from a cut edge or cut vertex and walking across faces, from cut to cut,
-// until starting cut hit.
-// If multiple loops are possible across a cell circumference takes the first
-// one found.
 void CML::cellCuts::calcCellLoops(const labelList& cutCells)
 {
+    // Determine for every cut cell the loop (= face) it is cut by. Done by
+    // starting from a cut edge or cut vertex and walking across faces, from
+    // cut to cut, until starting cut hit.
+    // If multiple loops are possible across a cell circumference takes the
+    // first one found.
+
     // Calculate cuts per face.
     const labelListList& allFaceCuts = faceCuts();
 
@@ -1001,28 +1146,28 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
     // rejection to see if cell can be cut.
     labelList nCutFaces(mesh().nCells(), 0);
 
-    forAll(allFaceCuts, faceI)
+    forAll(allFaceCuts, facei)
     {
-        const labelList& fCuts = allFaceCuts[faceI];
+        const labelList& fCuts = allFaceCuts[facei];
 
-        if (fCuts.size() == mesh().faces()[faceI].size())
+        if (fCuts.size() == mesh().faces()[facei].size())
         {
             // Too many cuts on face. WalkCell would get very upset so disable.
-            nCutFaces[mesh().faceOwner()[faceI]] = labelMin;
+            nCutFaces[mesh().faceOwner()[facei]] = labelMin;
 
-            if (mesh().isInternalFace(faceI))
+            if (mesh().isInternalFace(facei))
             {
-                nCutFaces[mesh().faceNeighbour()[faceI]] = labelMin;
+                nCutFaces[mesh().faceNeighbour()[facei]] = labelMin;
             }
         }
         else if (fCuts.size() >= 2)
         {
             // Could be valid cut. Update count for owner and neighbour.
-            nCutFaces[mesh().faceOwner()[faceI]]++;
+            nCutFaces[mesh().faceOwner()[facei]]++;
 
-            if (mesh().isInternalFace(faceI))
+            if (mesh().isInternalFace(facei))
             {
-                nCutFaces[mesh().faceNeighbour()[faceI]]++;
+                nCutFaces[mesh().faceNeighbour()[facei]]++;
             }
         }
     }
@@ -1034,24 +1179,24 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
 
     forAll(cutCells, i)
     {
-        label cellI = cutCells[i];
+        label celli = cutCells[i];
 
         bool validLoop = false;
 
         // Quick rejection: has enough faces that are cut?
-        if (nCutFaces[cellI] >= 3)
+        if (nCutFaces[celli] >= 3)
         {
-            const labelList& cFaces = mesh().cells()[cellI];
+            const labelList& cFaces = mesh().cells()[celli];
 
             if (debug & 2)
             {
-                Pout<< "cell:" << cellI << " cut faces:" << endl;
+                Pout<< "cell:" << celli << " cut faces:" << endl;
                 forAll(cFaces, i)
                 {
-                    label faceI = cFaces[i];
-                    const labelList& fCuts = allFaceCuts[faceI];
+                    label facei = cFaces[i];
+                    const labelList& fCuts = allFaceCuts[facei];
 
-                    Pout<< "    face:" << faceI << " cuts:";
+                    Pout<< "    face:" << facei << " cuts:";
                     writeCuts(Pout, fCuts, loopWeights(fCuts));
                     Pout<< endl;
                 }
@@ -1060,11 +1205,11 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
             label nVisited = 0;
 
             // Determine the first cut face to start walking from.
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                label faceI = cFaces[cFaceI];
+                label facei = cFaces[cFacei];
 
-                const labelList& fCuts = allFaceCuts[faceI];
+                const labelList& fCuts = allFaceCuts[facei];
 
                 // Take first or last cut of multiple on face.
                 // Note that in calcFaceCuts
@@ -1077,8 +1222,8 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
 
                     if (debug & 2)
                     {
-                        Pout<< "cell:" << cellI
-                            << " start walk at face:" << faceI
+                        Pout<< "cell:" << celli
+                            << " start walk at face:" << facei
                             << " cut:";
                         labelList cuts(1, fCuts[0]);
                         writeCuts(Pout, cuts, loopWeights(cuts));
@@ -1088,9 +1233,9 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
                     validLoop =
                         walkCell
                         (
-                            cellI,
+                            celli,
                             fCuts[0],
-                            faceI,
+                            facei,
                             fCuts[0],
 
                             nVisited,
@@ -1112,7 +1257,7 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
                 // Copy nVisited elements out of visited (since visited is
                 // never truncated for efficiency reasons)
 
-                labelList& loop = cellLoops_[cellI];
+                labelList& loop = cellLoops_[celli];
 
                 loop.setSize(nVisited);
 
@@ -1123,22 +1268,22 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
             }
             else
             {
-                // Invalid loop. Leave cellLoops_[cellI] zero size which
+                // Invalid loop. Leave cellLoops_[celli] zero size which
                 // flags this.
                 Pout<< "calcCellLoops(const labelList&) : did not find valid"
-                    << " loop for cell " << cellI << endl;
+                    << " loop for cell " << celli << endl;
                 // Dump cell and cuts on cell.
-                writeUncutOBJ(".", cellI);
+                writeUncutOBJ(".", celli);
 
-                cellLoops_[cellI].setSize(0);
+                cellLoops_[celli].setSize(0);
             }
         }
         else
         {
             //Pout<< "calcCellLoops(const labelList&) : did not find valid"
-            //    << " loop for cell " << cellI << " since not enough cut faces"
+            //    << " loop for cell " << celli << " since not enough cut faces"
             //    << endl;
-            cellLoops_[cellI].setSize(0);
+            cellLoops_[celli].setSize(0);
         }
     }
 }
@@ -1148,19 +1293,19 @@ void CML::cellCuts::calcCellLoops(const labelList& cutCells)
 // edges and vertices with status.
 void CML::cellCuts::walkEdges
 (
-    const label cellI,
-    const label pointI,
+    const label celli,
+    const label pointi,
     const label status,
 
     Map<label>& edgeStatus,
     Map<label>& pointStatus
 ) const
 {
-    if (pointStatus.insert(pointI, status))
+    if (pointStatus.insert(pointi, status))
     {
-        // First visit to pointI
+        // First visit to pointi
 
-        const labelList& pEdges = mesh().pointEdges()[pointI];
+        const labelList& pEdges = mesh().pointEdges()[pointi];
 
         forAll(pEdges, pEdgeI)
         {
@@ -1168,15 +1313,15 @@ void CML::cellCuts::walkEdges
 
             if
             (
-                meshTools::edgeOnCell(mesh(), cellI, edgeI)
+                meshTools::edgeOnCell(mesh(), celli, edgeI)
              && edgeStatus.insert(edgeI, status)
             )
             {
                 // First visit to edgeI so recurse.
 
-                label v2 = mesh().edges()[edgeI].otherVertex(pointI);
+                label v2 = mesh().edges()[edgeI].otherVertex(pointi);
 
-                walkEdges(cellI, v2, status, edgeStatus, pointStatus);
+                walkEdges(celli, v2, status, edgeStatus, pointStatus);
             }
         }
     }
@@ -1196,15 +1341,15 @@ CML::labelList CML::cellCuts::nonAnchorPoints
 
     forAll(cellPoints, i)
     {
-        label pointI = cellPoints[i];
+        label pointi = cellPoints[i];
 
         if
         (
-            findIndex(anchorPoints, pointI) == -1
-         && findIndex(loop, vertToEVert(pointI)) == -1
+            findIndex(anchorPoints, pointi) == -1
+         && findIndex(loop, vertToEVert(pointi)) == -1
         )
         {
-            newElems[newElemI++] = pointI;
+            newElems[newElemI++] = pointi;
         }
     }
 
@@ -1217,20 +1362,19 @@ CML::labelList CML::cellCuts::nonAnchorPoints
 //- Check anchor points on 'outside' of loop
 bool CML::cellCuts::loopAnchorConsistent
 (
-    const label cellI,
+    const label celli,
     const pointField& loopPts,
     const labelList& anchorPoints
 ) const
 {
-    // Create identity face for ease of calculation of normal etc.
-    face f(identity(loopPts.size()));
+    // Create identity face for ease of calculation of area etc.
+    const face f(identity(loopPts.size()));
 
-    vector normal = f.normal(loopPts);
-    point ctr = f.centre(loopPts);
-
+    const vector a = f.area(loopPts);
+    const point ctr = f.centre(loopPts);
 
     // Get average position of anchor points.
-    vector avg(vector::zero);
+    vector avg(Zero);
 
     forAll(anchorPoints, ptI)
     {
@@ -1238,8 +1382,7 @@ bool CML::cellCuts::loopAnchorConsistent
     }
     avg /= anchorPoints.size();
 
-
-    if (((avg - ctr) & normal) > 0)
+    if (((avg - ctr) & a) > 0)
     {
         return true;
     }
@@ -1256,7 +1399,7 @@ bool CML::cellCuts::loopAnchorConsistent
 // Returns true if valid set, false otherwise.
 bool CML::cellCuts::calcAnchors
 (
-    const label cellI,
+    const label celli,
     const labelList& loop,
     const pointField& loopPts,
 
@@ -1265,9 +1408,9 @@ bool CML::cellCuts::calcAnchors
 {
     const edgeList& edges = mesh().edges();
 
-    const labelList& cPoints = mesh().cellPoints()[cellI];
-    const labelList& cEdges = mesh().cellEdges()[cellI];
-    const cell& cFaces = mesh().cells()[cellI];
+    const labelList& cPoints = mesh().cellPoints()[celli];
+    const labelList& cEdges = mesh().cellEdges()[celli];
+    const cell& cFaces = mesh().cells()[celli];
 
     // Points on loop
 
@@ -1311,18 +1454,18 @@ bool CML::cellCuts::calcAnchors
 
     if (uncutIndex == -1)
     {
-        WarningIn("CML::cellCuts::calcAnchors")
-            << "Invalid loop " << loop << " for cell " << cellI << endl
+        WarningInFunction
+            << "Invalid loop " << loop << " for cell " << celli << endl
             << "Can not find point on cell which is not cut by loop."
             << endl;
 
-        writeOBJ(".", cellI, loopPts, labelList(0));
+        writeOBJ(".", celli, loopPts, labelList(0));
 
         return false;
     }
 
     // Walk unset vertices and edges and mark with 1 in pointStatus, edgeStatus
-    walkEdges(cellI, cPoints[uncutIndex], 1, edgeStatus, pointStatus);
+    walkEdges(celli, cPoints[uncutIndex], 1, edgeStatus, pointStatus);
 
     // Find new uncut starting vertex
     uncutIndex = firstUnique(cPoints, pointStatus);
@@ -1331,19 +1474,19 @@ bool CML::cellCuts::calcAnchors
     {
         // All vertices either in loop or in anchor. So split is along single
         // face.
-        WarningIn("CML::cellCuts::calcAnchors")
-            << "Invalid loop " << loop << " for cell " << cellI << endl
+        WarningInFunction
+            << "Invalid loop " << loop << " for cell " << celli << endl
             << "All vertices of cell are either in loop or in anchor set"
             << endl;
 
-        writeOBJ(".", cellI, loopPts, labelList(0));
+        writeOBJ(".", celli, loopPts, labelList(0));
 
         return false;
     }
 
     // Walk unset vertices and edges and mark with 2. These are the
     // pointset 2.
-    walkEdges(cellI, cPoints[uncutIndex], 2, edgeStatus, pointStatus);
+    walkEdges(celli, cPoints[uncutIndex], 2, edgeStatus, pointStatus);
 
     // Collect both sets in lists.
     DynamicList<label> connectedPoints(cPoints.size());
@@ -1368,11 +1511,11 @@ bool CML::cellCuts::calcAnchors
 
     if (uncutIndex != -1)
     {
-        WarningIn("CML::cellCuts::calcAnchors")
-            << "Invalid loop " << loop << " for cell " << cellI
+        WarningInFunction
+            << "Invalid loop " << loop << " for cell " << celli
             << " since it splits the cell into more than two cells" << endl;
 
-        writeOBJ(".", cellI, loopPts, connectedPoints);
+        writeOBJ(".", celli, loopPts, connectedPoints);
 
         return false;
     }
@@ -1384,27 +1527,27 @@ bool CML::cellCuts::calcAnchors
 
     forAllConstIter(Map<label>, pointStatus, iter)
     {
-        label pointI = iter.key();
+        label pointi = iter.key();
 
-        const labelList& pFaces = mesh().pointFaces()[pointI];
+        const labelList& pFaces = mesh().pointFaces()[pointi];
 
         if (iter() == 1)
         {
-            forAll(pFaces, pFaceI)
+            forAll(pFaces, pFacei)
             {
-                if (meshTools::faceOnCell(mesh(), cellI, pFaces[pFaceI]))
+                if (meshTools::faceOnCell(mesh(), celli, pFaces[pFacei]))
                 {
-                    connectedFaces.insert(pFaces[pFaceI]);
+                    connectedFaces.insert(pFaces[pFacei]);
                 }
             }
         }
         else if (iter() == 2)
         {
-            forAll(pFaces, pFaceI)
+            forAll(pFaces, pFacei)
             {
-                if (meshTools::faceOnCell(mesh(), cellI, pFaces[pFaceI]))
+                if (meshTools::faceOnCell(mesh(), celli, pFaces[pFacei]))
                 {
-                    otherFaces.insert(pFaces[pFaceI]);
+                    otherFaces.insert(pFaces[pFacei]);
                 }
             }
         }
@@ -1412,24 +1555,24 @@ bool CML::cellCuts::calcAnchors
 
     if (connectedFaces.size() < 3)
     {
-        WarningIn("CML::cellCuts::calcAnchors")
-            << "Invalid loop " << loop << " for cell " << cellI
+        WarningInFunction
+            << "Invalid loop " << loop << " for cell " << celli
             << " since would have too few faces on one side." << nl
             << "All faces:" << cFaces << endl;
 
-        writeOBJ(".", cellI, loopPts, connectedPoints);
+        writeOBJ(".", celli, loopPts, connectedPoints);
 
         return false;
     }
 
     if (otherFaces.size() < 3)
     {
-        WarningIn("CML::cellCuts::calcAnchors")
-            << "Invalid loop " << loop << " for cell " << cellI
+        WarningInFunction
+            << "Invalid loop " << loop << " for cell " << celli
             << " since would have too few faces on one side." << nl
             << "All faces:" << cFaces << endl;
 
-        writeOBJ(".", cellI, loopPts, otherPoints);
+        writeOBJ(".", celli, loopPts, otherPoints);
 
         return false;
     }
@@ -1442,9 +1585,9 @@ bool CML::cellCuts::calcAnchors
     {
         forAll(cFaces, i)
         {
-            label faceI = cFaces[i];
+            label facei = cFaces[i];
 
-            const face& f = mesh().faces()[faceI];
+            const face& f = mesh().faces()[facei];
 
             bool hasSet1 = false;
             bool hasSet2 = false;
@@ -1467,13 +1610,13 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet1)
                     {
-                        // Second occurrence of set1.
-                        WarningIn("CML::cellCuts::calcAnchors")
-                            << "Invalid loop " << loop << " for cell " << cellI
+                        // Second occurence of set1.
+                        WarningInFunction
+                            << "Invalid loop " << loop << " for cell " << celli
                             << " since face " << f << " would be split into"
                             << " more than two faces" << endl;
 
-                        writeOBJ(".", cellI, loopPts, otherPoints);
+                        writeOBJ(".", celli, loopPts, otherPoints);
 
                         return false;
                     }
@@ -1484,13 +1627,13 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet2)
                     {
-                        // Second occurrence of set1.
-                        WarningIn("CML::cellCuts::calcAnchors")
-                            << "Invalid loop " << loop << " for cell " << cellI
+                        // Second occurence of set1.
+                        WarningInFunction
+                            << "Invalid loop " << loop << " for cell " << celli
                             << " since face " << f << " would be split into"
                             << " more than two faces" << endl;
 
-                        writeOBJ(".", cellI, loopPts, otherPoints);
+                        writeOBJ(".", celli, loopPts, otherPoints);
 
                         return false;
                     }
@@ -1499,7 +1642,7 @@ bool CML::cellCuts::calcAnchors
                 }
                 else
                 {
-                    FatalErrorIn("CML::cellCuts::calcAnchors")
+                    FatalErrorInFunction
                         << abort(FatalError);
                 }
 
@@ -1507,7 +1650,7 @@ bool CML::cellCuts::calcAnchors
 
 
                 label v1 = f.nextLabel(fp);
-                label edgeI = findEdge(faceI, v0, v1);
+                label edgeI = findEdge(facei, v0, v1);
 
                 label eStat = edgeStatus[edgeI];
 
@@ -1522,13 +1665,13 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet1)
                     {
-                        // Second occurrence of set1.
-                        WarningIn("CML::cellCuts::calcAnchors")
-                            << "Invalid loop " << loop << " for cell " << cellI
+                        // Second occurence of set1.
+                        WarningInFunction
+                            << "Invalid loop " << loop << " for cell " << celli
                             << " since face " << f << " would be split into"
                             << " more than two faces" << endl;
 
-                        writeOBJ(".", cellI, loopPts, otherPoints);
+                        writeOBJ(".", celli, loopPts, otherPoints);
 
                         return false;
                     }
@@ -1539,13 +1682,13 @@ bool CML::cellCuts::calcAnchors
                 {
                     if (hasSet2)
                     {
-                        // Second occurrence of set1.
-                        WarningIn("CML::cellCuts::calcAnchors")
-                            << "Invalid loop " << loop << " for cell " << cellI
+                        // Second occurence of set1.
+                        WarningInFunction
+                            << "Invalid loop " << loop << " for cell " << celli
                             << " since face " << f << " would be split into"
                             << " more than two faces" << endl;
 
-                        writeOBJ(".", cellI, loopPts, otherPoints);
+                        writeOBJ(".", celli, loopPts, otherPoints);
 
                         return false;
                     }
@@ -1561,20 +1704,20 @@ bool CML::cellCuts::calcAnchors
 
 
     // Check which one of point sets to use.
-    bool loopOk = loopAnchorConsistent(cellI, loopPts, connectedPoints);
+    bool loopOk = loopAnchorConsistent(celli, loopPts, connectedPoints);
 
     //if (debug)
     {
         // Additional check: are non-anchor points on other side?
-        bool otherLoopOk = loopAnchorConsistent(cellI, loopPts, otherPoints);
+        bool otherLoopOk = loopAnchorConsistent(celli, loopPts, otherPoints);
 
         if (loopOk == otherLoopOk)
         {
             // Both sets of points are supposedly on the same side as the
             // loop normal. Oops.
 
-            WarningIn("CML::cellCuts::calcAnchors")
-                << " For cell:" << cellI
+            WarningInFunction
+                << " For cell:" << celli
                 << " achorpoints and nonanchorpoints are geometrically"
                 << " on same side!" << endl
                 << "cellPoints:" << cPoints << endl
@@ -1582,7 +1725,7 @@ bool CML::cellCuts::calcAnchors
                 << "anchors:" << connectedPoints << endl
                 << "otherPoints:" << otherPoints << endl;
 
-            writeOBJ(".", cellI, loopPts, connectedPoints);
+            writeOBJ(".", celli, loopPts, connectedPoints);
         }
     }
 
@@ -1682,14 +1825,18 @@ bool CML::cellCuts::validEdgeLoop
 // of the cut is the same.
 CML::label CML::cellCuts::countFaceCuts
 (
-    const label faceI,
+    const label facei,
     const labelList& loop
 ) const
 {
+    // Includes cuts through vertices and through edges.
+    // Assumes that if edge is cut both in edgeIsCut and in loop that the
+    // position of the cut is the same.
+
     label nCuts = 0;
 
     // Count cut vertices
-    const face& f = mesh().faces()[faceI];
+    const face& f = mesh().faces()[facei];
 
     forAll(f, fp)
     {
@@ -1707,7 +1854,7 @@ CML::label CML::cellCuts::countFaceCuts
     }
 
     // Count cut edges.
-    const labelList& fEdges = mesh().faceEdges()[faceI];
+    const labelList& fEdges = mesh().faceEdges()[facei];
 
     forAll(fEdges, fEdgeI)
     {
@@ -1732,7 +1879,7 @@ CML::label CML::cellCuts::countFaceCuts
 // cut-addressing (faceCuts_, cutCuts_)
 bool CML::cellCuts::conservativeValidLoop
 (
-    const label cellI,
+    const label celli,
     const labelList& loop
 ) const
 {
@@ -1766,9 +1913,9 @@ bool CML::cellCuts::conservativeValidLoop
                 // Check faces using this edge
                 const labelList& eFaces = mesh().edgeFaces()[edgeI];
 
-                forAll(eFaces, eFaceI)
+                forAll(eFaces, eFacei)
                 {
-                    label nCuts = countFaceCuts(eFaces[eFaceI], loop);
+                    label nCuts = countFaceCuts(eFaces[eFacei], loop);
 
                     if (nCuts > 2)
                     {
@@ -1803,9 +1950,9 @@ bool CML::cellCuts::conservativeValidLoop
                 // Check faces using vertex.
                 const labelList& pFaces = mesh().pointFaces()[vertI];
 
-                forAll(pFaces, pFaceI)
+                forAll(pFaces, pFacei)
                 {
-                    label nCuts = countFaceCuts(pFaces[pFaceI], loop);
+                    label nCuts = countFaceCuts(pFaces[pFacei], loop);
 
                     if (nCuts > 2)
                     {
@@ -1821,13 +1968,9 @@ bool CML::cellCuts::conservativeValidLoop
 }
 
 
-// Determine compatibility of loop with existing cut pattern. Does not use
-// derived cut-addressing (faceCuts), only pointIsCut, edgeIsCut.
-// Adds any cross-cuts found to newFaceSplitCut and sets cell points on
-// one side of the loop in anchorPoints.
 bool CML::cellCuts::validLoop
 (
-    const label cellI,
+    const label celli,
     const labelList& loop,
     const scalarField& loopWeights,
 
@@ -1835,6 +1978,11 @@ bool CML::cellCuts::validLoop
     labelList& anchorPoints
 ) const
 {
+    // Determine compatibility of loop with existing cut pattern. Does not use
+    // derived cut-addressing (faceCuts), only pointIsCut, edgeIsCut.
+    // Adds any cross-cuts found to newFaceSplitCut and sets cell points on
+    // one side of the loop in anchorPoints.
+
     if (loop.size() < 2)
     {
         return false;
@@ -1844,8 +1992,9 @@ bool CML::cellCuts::validLoop
     {
         // Allow as fallback the 'old' loop checking where only a single
         // cut per face is allowed.
-        if (!conservativeValidLoop(cellI, loop))
+        if (!conservativeValidLoop(celli, loop))
         {
+            Info << "Invalid conservative loop: " << loop << endl;
             return  false;
         }
     }
@@ -1856,7 +2005,7 @@ bool CML::cellCuts::validLoop
         label nextCut = loop[(fp+1) % loop.size()];
 
         // Label (if any) of face cut (so cut not along existing edge)
-        label meshFaceI = -1;
+        label meshFacei = -1;
 
         if (isEdge(cut))
         {
@@ -1870,9 +2019,9 @@ bool CML::cellCuts::validLoop
                 label nextEdgeI = getEdge(nextCut);
 
                 // Find face and mark as to be split.
-                meshFaceI = edgeEdgeToFace(cellI, edgeI, nextEdgeI);
+                meshFacei = edgeEdgeToFace(celli, edgeI, nextEdgeI);
 
-                if (meshFaceI == -1)
+                if (meshFacei == -1)
                 {
                     // Can't find face using both cut edges.
                     return false;
@@ -1888,9 +2037,9 @@ bool CML::cellCuts::validLoop
                 if (e.start() != nextVertI && e.end() != nextVertI)
                 {
                     // New edge. Find face and mark as to be split.
-                    meshFaceI = edgeVertexToFace(cellI, edgeI, nextVertI);
+                    meshFacei = edgeVertexToFace(celli, edgeI, nextVertI);
 
-                    if (meshFaceI == -1)
+                    if (meshFacei == -1)
                     {
                         // Can't find face. Ilegal.
                         return false;
@@ -1913,9 +2062,9 @@ bool CML::cellCuts::validLoop
                 if (nextE.start() != vertI && nextE.end() != vertI)
                 {
                     // Should be cross cut. Find face.
-                    meshFaceI = edgeVertexToFace(cellI, nextEdgeI, vertI);
+                    meshFacei = edgeVertexToFace(celli, nextEdgeI, vertI);
 
-                    if (meshFaceI == -1)
+                    if (meshFacei == -1)
                     {
                         return false;
                     }
@@ -1929,9 +2078,9 @@ bool CML::cellCuts::validLoop
                 if (meshTools::findEdge(mesh(), vertI, nextVertI) == -1)
                 {
                     // New edge. Find face.
-                    meshFaceI = vertexVertexToFace(cellI, vertI, nextVertI);
+                    meshFacei = vertexVertexToFace(celli, vertI, nextVertI);
 
-                    if (meshFaceI == -1)
+                    if (meshFacei == -1)
                     {
                         return false;
                     }
@@ -1939,18 +2088,18 @@ bool CML::cellCuts::validLoop
             }
         }
 
-        if (meshFaceI != -1)
+        if (meshFacei != -1)
         {
-            // meshFaceI is cut across along cut-nextCut (so not along existing
+            // meshFacei is cut across along cut-nextCut (so not along existing
             // edge). Check if this is compatible with existing pattern.
             edge cutEdge(cut, nextCut);
 
-            Map<edge>::const_iterator iter = faceSplitCut_.find(meshFaceI);
+            Map<edge>::const_iterator iter = faceSplitCut_.find(meshFacei);
 
             if (iter == faceSplitCut_.end())
             {
                 // Face not yet cut so insert.
-                newFaceSplitCut.insert(meshFaceI, cutEdge);
+                newFaceSplitCut.insert(meshFacei, cutEdge);
             }
             else
             {
@@ -1964,15 +2113,15 @@ bool CML::cellCuts::validLoop
     }
 
     // Is there a face on which all cuts are?
-    label faceContainingLoop = loopFace(cellI, loop);
+    label faceContainingLoop = loopFace(celli, loop);
 
     if (faceContainingLoop != -1)
     {
-        WarningIn("CML::cellCuts::validLoop")
-            << "Found loop on cell " << cellI << " with all points"
+        WarningInFunction
+            << "Found loop on cell " << celli << " with all points"
             << " on face " << faceContainingLoop << endl;
 
-        //writeOBJ(".", cellI, loopPoints(loop, loopWeights), labelList(0));
+        //writeOBJ(".", celli, loopPoints(loop, loopWeights), labelList(0));
 
         return false;
     }
@@ -1981,7 +2130,7 @@ bool CML::cellCuts::validLoop
     // Final success is determined by whether anchor points can be determined.
     return calcAnchors
     (
-        cellI,
+        celli,
         loop,
         loopPoints(loop, loopWeights),
         anchorPoints
@@ -2001,9 +2150,9 @@ void CML::cellCuts::setFromCellLoops()
 
     faceSplitCut_.clear();
 
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        const labelList& loop = cellLoops_[cellI];
+        const labelList& loop = cellLoops_[celli];
 
         if (loop.size())
         {
@@ -2016,7 +2165,7 @@ void CML::cellCuts::setFromCellLoops()
             (
                !validLoop
                 (
-                    cellI,
+                    celli,
                     loop,
                     loopWeights(loop),
                     faceSplitCuts,
@@ -2024,23 +2173,21 @@ void CML::cellCuts::setFromCellLoops()
                 )
             )
             {
-                //writeOBJ(".", cellI, loopPoints(cellI), anchorPoints);
+                //writeOBJ(".", celli, loopPoints(celli), anchorPoints);
 
-                //FatalErrorIn("cellCuts::setFromCellLoops()")
-                WarningIn("cellCuts::setFromCellLoops")
+                WarningInFunction
                     << "Illegal loop " << loop
                     << " when recreating cut-addressing"
-                    << " from existing cellLoops for cell " << cellI
+                    << " from existing cellLoops for cell " << celli
                     << endl;
-                    //<< abort(FatalError);
 
-                cellLoops_[cellI].setSize(0);
-                cellAnchorPoints_[cellI].setSize(0);
+                cellLoops_[celli].setSize(0);
+                cellAnchorPoints_[celli].setSize(0);
             }
             else
             {
                 // Copy anchor points.
-                cellAnchorPoints_[cellI].transfer(anchorPoints);
+                cellAnchorPoints_[celli].transfer(anchorPoints);
 
                 // Copy faceSplitCuts into overall faceSplit info.
                 forAllConstIter(Map<edge>, faceSplitCuts, iter)
@@ -2082,17 +2229,20 @@ void CML::cellCuts::setFromCellLoops()
 // was valid.
 bool CML::cellCuts::setFromCellLoop
 (
-    const label cellI,
+    const label celli,
     const labelList& loop,
     const scalarField& loopWeights
 )
 {
+    // Update basic cut information from single cellLoop. Returns true if loop
+    // was valid.
+
     // Dump loop for debugging.
     if (debug)
     {
         OFstream str("last_cell.obj");
 
-        str<< "# edges of cell " << cellI << nl;
+        str<< "# edges of cell " << celli << nl;
 
         meshTools::writeOBJ
         (
@@ -2100,13 +2250,13 @@ bool CML::cellCuts::setFromCellLoop
             mesh().cells(),
             mesh().faces(),
             mesh().points(),
-            labelList(1, cellI)
+            labelList(1, celli)
         );
 
 
         OFstream loopStr("last_loop.obj");
 
-        loopStr<< "# looppoints for cell " << cellI << nl;
+        loopStr<< "# looppoints for cell " << celli << nl;
 
         pointField pointsOfLoop = loopPoints(loop, loopWeights);
 
@@ -2134,13 +2284,13 @@ bool CML::cellCuts::setFromCellLoop
         labelList anchorPoints;
 
         okLoop =
-            validLoop(cellI, loop, loopWeights, faceSplitCuts, anchorPoints);
+            validLoop(celli, loop, loopWeights, faceSplitCuts, anchorPoints);
 
         if (okLoop)
         {
             // Valid loop. Copy cellLoops and anchorPoints
-            cellLoops_[cellI] = loop;
-            cellAnchorPoints_[cellI].transfer(anchorPoints);
+            cellLoops_[celli] = loop;
+            cellAnchorPoints_[celli].transfer(anchorPoints);
 
             // Copy split cuts
             forAllConstIter(Map<edge>, faceSplitCuts, iter)
@@ -2192,7 +2342,7 @@ void CML::cellCuts::setFromCellLoops
 
     forAll(cellLabels, cellLabelI)
     {
-        label cellI = cellLabels[cellLabelI];
+        label celli = cellLabels[cellLabelI];
 
         const labelList& loop = cellLoops[cellLabelI];
 
@@ -2200,14 +2350,14 @@ void CML::cellCuts::setFromCellLoops
         {
             const scalarField& loopWeights = cellLoopWeights[cellLabelI];
 
-            if (setFromCellLoop(cellI, loop, loopWeights))
+            if (setFromCellLoop(celli, loop, loopWeights))
             {
                 // Valid loop. Call above will have upated all already.
             }
             else
             {
                 // Clear cellLoops
-                cellLoops_[cellI].setSize(0);
+                cellLoops_[celli].setSize(0);
             }
         }
     }
@@ -2237,11 +2387,11 @@ void CML::cellCuts::setFromCellCutter
     DynamicList<scalarField> invalidCutLoopWeights(2);
 
 
-    forAll(refCells, refCellI)
+    forAll(refCells, refCelli)
     {
-        const refineCell& refCell = refCells[refCellI];
+        const refineCell& refCell = refCells[refCelli];
 
-        label cellI = refCell.cellNo();
+        label celli = refCell.cellNo();
 
         const vector& refDir = refCell.direction();
 
@@ -2251,7 +2401,7 @@ void CML::cellCuts::setFromCellCutter
             cellCutter.cut
             (
                 refDir,
-                cellI,
+                celli,
 
                 pointIsCut_,
                 edgeIsCut_,
@@ -2265,18 +2415,29 @@ void CML::cellCuts::setFromCellCutter
         // current pattern.
         if (goodCut)
         {
-            if (setFromCellLoop(cellI, cellLoop, cellLoopWeights))
+            if (setFromCellLoop(celli, cellLoop, cellLoopWeights))
             {
                 // Valid loop. Will have updated all info already.
             }
             else
             {
-                cellLoops_[cellI].setSize(0);
+                cellLoops_[celli].setSize(0);
+
+                WarningInFunction
+                    << "Found loop on cell " << celli
+                    << " that resulted in an unexpected bad cut." << nl
+                    << "    Suggestions:" << nl
+                    << "      - Turn on the debug switch for 'cellCuts' to get"
+                    << " geometry files that identify this cell." << nl
+                    << "      - Also keep in mind to check the defined"
+                    << " reference directions, as these are most likely the"
+                    << " origin of the problem."
+                    << nl << endl;
 
                 // Discarded by validLoop
                 if (debug)
                 {
-                    invalidCutCells.append(cellI);
+                    invalidCutCells.append(celli);
                     invalidCutLoops.append(cellLoop);
                     invalidCutLoopWeights.append(cellLoopWeights);
                 }
@@ -2285,7 +2446,7 @@ void CML::cellCuts::setFromCellCutter
         else
         {
             // Clear cellLoops
-            cellLoops_[cellI].setSize(0);
+            cellLoops_[celli].setSize(0);
         }
     }
 
@@ -2356,14 +2517,14 @@ void CML::cellCuts::setFromCellCutter
 
     forAll(cellLabels, i)
     {
-        label cellI = cellLabels[i];
+        label celli = cellLabels[i];
 
         // Cut cell. Determines cellLoop and cellLoopWeights
         bool goodCut =
             cellCutter.cut
             (
                 cellCutPlanes[i],
-                cellI,
+                celli,
 
                 pointIsCut_,
                 edgeIsCut_,
@@ -2377,18 +2538,18 @@ void CML::cellCuts::setFromCellCutter
         // current pattern.
         if (goodCut)
         {
-            if (setFromCellLoop(cellI, cellLoop, cellLoopWeights))
+            if (setFromCellLoop(celli, cellLoop, cellLoopWeights))
             {
                 // Valid loop. Will have updated all info already.
             }
             else
             {
-                cellLoops_[cellI].setSize(0);
+                cellLoops_[celli].setSize(0);
 
                 // Discarded by validLoop
                 if (debug)
                 {
-                    invalidCutCells.append(cellI);
+                    invalidCutCells.append(celli);
                     invalidCutLoops.append(cellLoop);
                     invalidCutLoopWeights.append(cellLoopWeights);
                 }
@@ -2397,7 +2558,7 @@ void CML::cellCuts::setFromCellCutter
         else
         {
             // Clear cellLoops
-            cellLoops_[cellI].setSize(0);
+            cellLoops_[celli].setSize(0);
         }
     }
 
@@ -2447,19 +2608,19 @@ void CML::cellCuts::setFromCellCutter
 void CML::cellCuts::orientPlanesAndLoops()
 {
     // Determine anchorPoints if not yet done by validLoop.
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        const labelList& loop = cellLoops_[cellI];
+        const labelList& loop = cellLoops_[celli];
 
-        if (loop.size() && cellAnchorPoints_[cellI].empty())
+        if (loop.size() && cellAnchorPoints_[celli].empty())
         {
             // Leave anchor points empty if illegal loop.
             calcAnchors
             (
-                cellI,
+                celli,
                 loop,
-                loopPoints(cellI),
-                cellAnchorPoints_[cellI]
+                loopPoints(celli),
+                cellAnchorPoints_[celli]
             );
         }
     }
@@ -2468,21 +2629,21 @@ void CML::cellCuts::orientPlanesAndLoops()
     {
         Pout<< "cellAnchorPoints:" << endl;
     }
-    forAll(cellAnchorPoints_, cellI)
+    forAll(cellAnchorPoints_, celli)
     {
-        if (cellLoops_[cellI].size())
+        if (cellLoops_[celli].size())
         {
-            if (cellAnchorPoints_[cellI].empty())
+            if (cellAnchorPoints_[celli].empty())
             {
-                FatalErrorIn("orientPlanesAndLoops()")
-                    << "No anchor points for cut cell " << cellI << endl
-                    << "cellLoop:" << cellLoops_[cellI] << abort(FatalError);
+                FatalErrorInFunction
+                    << "No anchor points for cut cell " << celli << endl
+                    << "cellLoop:" << cellLoops_[celli] << abort(FatalError);
             }
 
             if (debug & 2)
             {
-                Pout<< "    cell:" << cellI << " anchored at "
-                    << cellAnchorPoints_[cellI] << endl;
+                Pout<< "    cell:" << celli << " anchored at "
+                    << cellAnchorPoints_[celli] << endl;
             }
         }
     }
@@ -2490,9 +2651,9 @@ void CML::cellCuts::orientPlanesAndLoops()
     // Calculate number of valid cellLoops
     nLoops_ = 0;
 
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        if (cellLoops_[cellI].size())
+        if (cellLoops_[celli].size())
         {
             nLoops_++;
         }
@@ -2512,10 +2673,8 @@ void CML::cellCuts::calcLoopsAndAddressing(const labelList& cutCells)
 
             if (weight < 0 || weight > 1)
             {
-                FatalErrorIn
-                (
-                    "cellCuts::calcLoopsAndAddressing(const labelList&)"
-                )   << "Weight out of range [0,1]. Edge " << edgeI
+                FatalErrorInFunction
+                    << "Weight out of range [0,1]. Edge " << edgeI
                     << " verts:" << mesh().edges()[edgeI]
                     << " weight:" << weight << abort(FatalError);
             }
@@ -2534,13 +2693,13 @@ void CML::cellCuts::calcLoopsAndAddressing(const labelList& cutCells)
     if (debug & 2)
     {
         Pout<< "-- cellLoops --" << endl;
-        forAll(cellLoops_, cellI)
+        forAll(cellLoops_, celli)
         {
-            const labelList& loop = cellLoops_[cellI];
+            const labelList& loop = cellLoops_[celli];
 
             if (loop.size())
             {
-                Pout<< "cell:" << cellI << "  ";
+                Pout<< "cell:" << celli << "  ";
                 writeCuts(Pout, loop, loopWeights(loop));
                 Pout<< endl;
             }
@@ -2567,13 +2726,11 @@ void CML::cellCuts::check() const
             )
             {
                 // Should have been snapped.
-                //FatalErrorIn("cellCuts::check()")
-                WarningIn("cellCuts::check()")
+                WarningInFunction
                     << "edge:" << edgeI << " vertices:"
                     << mesh().edges()[edgeI]
                     << " weight:" << edgeWeight_[edgeI] << " should have been"
                     << " snapped to one of its endpoints"
-                    //<< abort(FatalError);
                     << endl;
             }
         }
@@ -2581,7 +2738,7 @@ void CML::cellCuts::check() const
         {
             if (edgeWeight_[edgeI] > - 1)
             {
-                FatalErrorIn("cellCuts::check()")
+                FatalErrorInFunction
                     << "edge:" << edgeI << " vertices:"
                     << mesh().edges()[edgeI]
                     << " weight:" << edgeWeight_[edgeI] << " is not cut but"
@@ -2592,9 +2749,9 @@ void CML::cellCuts::check() const
     }
 
     // Check that all elements of cellloop are registered
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        const labelList& loop = cellLoops_[cellI];
+        const labelList& loop = cellLoops_[celli];
 
         forAll(loop, i)
         {
@@ -2609,8 +2766,8 @@ void CML::cellCuts::check() const
                 labelList cuts(1, cut);
                 writeCuts(Pout, cuts, loopWeights(cuts));
 
-                FatalErrorIn("cellCuts::check()")
-                    << "cell:" << cellI << " loop:"
+                FatalErrorInFunction
+                    << "cell:" << celli << " loop:"
                     << loop
                     << " cut:" << cut << " is not marked as cut"
                     << abort(FatalError);
@@ -2619,16 +2776,16 @@ void CML::cellCuts::check() const
     }
 
     // Check that no elements of cell loop are anchor point.
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        const labelList& anchors = cellAnchorPoints_[cellI];
+        const labelList& anchors = cellAnchorPoints_[celli];
 
-        const labelList& loop = cellLoops_[cellI];
+        const labelList& loop = cellLoops_[celli];
 
         if (loop.size() && anchors.empty())
         {
-            FatalErrorIn("cellCuts::check()")
-                << "cell:" << cellI << " loop:" << loop
+            FatalErrorInFunction
+                << "cell:" << celli << " loop:" << loop
                 << " has no anchor points"
                 << abort(FatalError);
         }
@@ -2644,8 +2801,8 @@ void CML::cellCuts::check() const
              && findIndex(anchors, getVertex(cut)) != -1
             )
             {
-                FatalErrorIn("cellCuts::check()")
-                    << "cell:" << cellI << " loop:" << loop
+                FatalErrorInFunction
+                    << "cell:" << celli << " loop:" << loop
                     << " anchor points:" << anchors
                     << " anchor:" << getVertex(cut) << " is part of loop"
                     << abort(FatalError);
@@ -2655,19 +2812,29 @@ void CML::cellCuts::check() const
 
 
     // Check that cut faces have a neighbour that is cut.
+    boolList nbrCellIsCut;
+    {
+        boolList cellIsCut(mesh().nCells(), false);
+        forAll(cellLoops_, celli)
+        {
+            cellIsCut[celli] = cellLoops_[celli].size();
+        }
+        syncTools::swapBoundaryCellList(mesh(), cellIsCut, nbrCellIsCut);
+    }
+
     forAllConstIter(Map<edge>, faceSplitCut_, iter)
     {
-        label faceI = iter.key();
+        label facei = iter.key();
 
-        if (mesh().isInternalFace(faceI))
+        if (mesh().isInternalFace(facei))
         {
-            label own = mesh().faceOwner()[faceI];
-            label nei = mesh().faceNeighbour()[faceI];
+            label own = mesh().faceOwner()[facei];
+            label nei = mesh().faceNeighbour()[facei];
 
             if (cellLoops_[own].empty() && cellLoops_[nei].empty())
             {
-                FatalErrorIn("cellCuts::check()")
-                    << "Internal face:" << faceI << " cut by " << iter()
+                FatalErrorInFunction
+                    << "Internal face:" << facei << " cut by " << iter()
                     << " has owner:" << own
                     << " and neighbour:" << nei
                     << " that are both uncut"
@@ -2676,12 +2843,14 @@ void CML::cellCuts::check() const
         }
         else
         {
-            label own = mesh().faceOwner()[faceI];
+            label bFacei = facei - mesh().nInternalFaces();
 
-            if (cellLoops_[own].empty())
+            label own = mesh().faceOwner()[facei];
+
+            if (cellLoops_[own].empty() && !nbrCellIsCut[bFacei])
             {
-                FatalErrorIn("cellCuts::check()")
-                    << "Boundary face:" << faceI << " cut by " << iter()
+                FatalErrorInFunction
+                    << "Boundary face:" << facei << " cut by " << iter()
                     << " has owner:" << own
                     << " that is uncut"
                     << abort(FatalError);
@@ -2707,7 +2876,6 @@ CML::cellCuts::cellCuts
     pointIsCut_(expand(mesh.nPoints(), meshVerts)),
     edgeIsCut_(expand(mesh.nEdges(), meshEdges)),
     edgeWeight_(expand(mesh.nEdges(), meshEdges, meshEdgeWeights)),
-    faceCutsPtr_(NULL),
     faceSplitCut_(cutCells.size()),
     cellLoops_(mesh.nCells()),
     nLoops_(-1),
@@ -2752,18 +2920,23 @@ CML::cellCuts::cellCuts
     pointIsCut_(expand(mesh.nPoints(), meshVerts)),
     edgeIsCut_(expand(mesh.nEdges(), meshEdges)),
     edgeWeight_(expand(mesh.nEdges(), meshEdges, meshEdgeWeights)),
-    faceCutsPtr_(NULL),
     faceSplitCut_(mesh.nFaces()/10 + 1),
     cellLoops_(mesh.nCells()),
     nLoops_(-1),
     cellAnchorPoints_(mesh.nCells())
 {
+    // Construct from pattern of cuts. Finds out itself which cells are cut.
+    // (can go wrong if e.g. all neighbours of cell are refined)
+
     if (debug)
     {
         Pout<< "cellCuts : constructor from cellLoops" << endl;
     }
 
     calcLoopsAndAddressing(identity(mesh.nCells()));
+
+    // Adds cuts on other side of coupled boundaries
+    syncProc();
 
     // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
@@ -2796,7 +2969,6 @@ CML::cellCuts::cellCuts
     pointIsCut_(mesh.nPoints(), false),
     edgeIsCut_(mesh.nEdges(), false),
     edgeWeight_(mesh.nEdges(), -GREAT),
-    faceCutsPtr_(NULL),
     faceSplitCut_(cellLabels.size()),
     cellLoops_(mesh.nCells()),
     nLoops_(-1),
@@ -2810,6 +2982,9 @@ CML::cellCuts::cellCuts
     // Update pointIsCut, edgeIsCut, faceSplitCut from cell loops.
     // Makes sure cuts are consistent
     setFromCellLoops(cellLabels, cellLoops, cellEdgeWeights);
+
+    // Adds cuts on other side of coupled boundaries
+    syncProc();
 
     // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
@@ -2840,7 +3015,6 @@ CML::cellCuts::cellCuts
     pointIsCut_(mesh.nPoints(), false),
     edgeIsCut_(mesh.nEdges(), false),
     edgeWeight_(mesh.nEdges(), -GREAT),
-    faceCutsPtr_(NULL),
     faceSplitCut_(refCells.size()),
     cellLoops_(mesh.nCells()),
     nLoops_(-1),
@@ -2854,6 +3028,9 @@ CML::cellCuts::cellCuts
     // Update pointIsCut, edgeIsCut, faceSplitCut from cell loops.
     // Makes sure cuts are consistent
     setFromCellCutter(cellCutter, refCells);
+
+    // Adds cuts on other side of coupled boundaries
+    syncProc();
 
     // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
@@ -2885,7 +3062,6 @@ CML::cellCuts::cellCuts
     pointIsCut_(mesh.nPoints(), false),
     edgeIsCut_(mesh.nEdges(), false),
     edgeWeight_(mesh.nEdges(), -GREAT),
-    faceCutsPtr_(NULL),
     faceSplitCut_(cellLabels.size()),
     cellLoops_(mesh.nCells()),
     nLoops_(-1),
@@ -2900,6 +3076,9 @@ CML::cellCuts::cellCuts
     // Update pointIsCut, edgeIsCut, faceSplitCut from cell loops.
     // Makes sure cuts are consistent
     setFromCellCutter(cellCutter, cellLabels, cutPlanes);
+
+    // Adds cuts on other side of coupled boundaries
+    syncProc();
 
     // Calculate planes and flip cellLoops if necessary
     orientPlanesAndLoops();
@@ -2936,7 +3115,6 @@ CML::cellCuts::cellCuts
     pointIsCut_(pointIsCut),
     edgeIsCut_(edgeIsCut),
     edgeWeight_(edgeWeight),
-    faceCutsPtr_(NULL),
     faceSplitCut_(faceSplitCut),
     cellLoops_(cellLoops),
     nLoops_(nLoops),
@@ -2960,15 +3138,15 @@ CML::cellCuts::~cellCuts()
 
 void CML::cellCuts::clearOut()
 {
-    deleteDemandDrivenData(faceCutsPtr_);
+    faceCutsPtr_.clear();
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-CML::pointField CML::cellCuts::loopPoints(const label cellI) const
+CML::pointField CML::cellCuts::loopPoints(const label celli) const
 {
-    const labelList& loop = cellLoops_[cellI];
+    const labelList& loop = cellLoops_[celli];
 
     pointField loopPts(loop.size());
 
@@ -2992,27 +3170,27 @@ CML::pointField CML::cellCuts::loopPoints(const label cellI) const
 
 
 // Flip loop for cell
-void CML::cellCuts::flip(const label cellI)
+void CML::cellCuts::flip(const label celli)
 {
-    labelList& loop = cellLoops_[cellI];
+    labelList& loop = cellLoops_[celli];
 
     reverse(loop);
 
     // Reverse anchor point set.
-    cellAnchorPoints_[cellI] =
+    cellAnchorPoints_[celli] =
         nonAnchorPoints
         (
-            mesh().cellPoints()[cellI],
-            cellAnchorPoints_[cellI],
+            mesh().cellPoints()[celli],
+            cellAnchorPoints_[celli],
             loop
         );
 }
 
 
 // Flip loop only
-void CML::cellCuts::flipLoopOnly(const label cellI)
+void CML::cellCuts::flipLoopOnly(const label celli)
 {
-    labelList& loop = cellLoops_[cellI];
+    labelList& loop = cellLoops_[celli];
 
     reverse(loop);
 }
@@ -3049,18 +3227,18 @@ void CML::cellCuts::writeOBJ(Ostream& os) const
 {
     label vertI = 0;
 
-    forAll(cellLoops_, cellI)
+    forAll(cellLoops_, celli)
     {
-        writeOBJ(os, loopPoints(cellI), vertI);
+        writeOBJ(os, loopPoints(celli), vertI);
     }
 }
 
 
-void CML::cellCuts::writeCellOBJ(const fileName& dir, const label cellI) const
+void CML::cellCuts::writeCellOBJ(const fileName& dir, const label celli) const
 {
-    const labelList& anchors = cellAnchorPoints_[cellI];
+    const labelList& anchors = cellAnchorPoints_[celli];
 
-    writeOBJ(dir, cellI, loopPoints(cellI), anchors);
+    writeOBJ(dir, celli, loopPoints(celli), anchors);
 }
 
 

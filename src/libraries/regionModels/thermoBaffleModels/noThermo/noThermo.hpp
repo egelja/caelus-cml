@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::noThermo
+    CML::regionModels::thermalBaffleModels::noThermo
 
 Description
     Dummy surface pyrolysis model for 'none'
@@ -31,7 +31,7 @@ SourceFiles
 #ifndef noThermo_H
 #define noThermo_H
 
-#include "thermoBaffleModel.hpp"
+#include "thermalBaffleModel.hpp"
 #include "volFieldsFwd.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -40,7 +40,7 @@ namespace CML
 {
 namespace regionModels
 {
-namespace thermoBaffleModels
+namespace thermalBaffleModels
 {
 
 /*---------------------------------------------------------------------------*\
@@ -49,7 +49,7 @@ namespace thermoBaffleModels
 
 class noThermo
 :
-    public thermoBaffleModel
+    public thermalBaffleModel
 {
 private:
 
@@ -81,6 +81,15 @@ public:
         //- Construct from type name and mesh
         noThermo(const word& modelType, const fvMesh& mesh);
 
+        //- Construct from components and dict
+        noThermo
+        (
+            const word& modelType,
+            const fvMesh& mesh,
+            const dictionary& dict
+
+        );
+
 
     //- Destructor
     virtual ~noThermo();
@@ -91,8 +100,8 @@ public:
 
          // Thermo properties
 
-            //- Return const reference to the basicSolidThermo
-            virtual const basicSolidThermo& thermo() const;
+            //- Return const reference to the solidThermo
+            virtual const solidThermo& thermo() const;
 
 
         // Fields
@@ -101,7 +110,7 @@ public:
             virtual const tmp<volScalarField> Cp() const;
 
             //- Return solid absortivity [1/m]
-            virtual const volScalarField& kappa() const;
+            virtual const volScalarField& kappaRad() const;
 
             //- Return the film mean temperature [K]
             virtual const volScalarField& T() const;
@@ -110,7 +119,7 @@ public:
             virtual const volScalarField& rho() const;
 
             //- Return thermal conductivity [W/m/K]
-            virtual const volScalarField& K() const;
+            virtual const volScalarField& kappa() const;
 
 
         // Evolution
@@ -126,7 +135,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace thermoBaffleModels
+} // End namespace thermalBaffleModels
 } // End namespace regionModels
 } // End namespace CML
 

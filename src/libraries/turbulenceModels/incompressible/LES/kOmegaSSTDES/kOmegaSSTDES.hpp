@@ -78,6 +78,8 @@ protected:
     dimensionedScalar a1_;
     dimensionedScalar c1_;
 
+    dimensionedScalar kappa_;
+
     dimensionedScalar CDES_;
 
     dimensionedScalar Cr1_;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,10 +53,8 @@ CML::autoPtr<CML::SRF::SRFModel> CML::SRF::SRFModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "SRFModel::New(const fvMesh&)"
-        )   << "Unknown SRFModel type "
+        FatalErrorInFunction
+            << "Unknown SRFModel type "
             << modelType << nl << nl
             << "Valid SRFModel types are :" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

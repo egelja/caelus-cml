@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -127,10 +127,16 @@ public:
         //- Construct as copy
         regIOobject(const regIOobject&);
 
-        //- Construct as copy, and transferring registry registration to copy
+        //- Construct as copy, transferring registry registration to copy
         //  if registerCopy is true
         regIOobject(const regIOobject&, bool registerCopy);
 
+        //- Construct as copy with new name, transfering registry registration
+        //  to copy as specified
+        regIOobject(const word& newName, const regIOobject&, bool registerCopy);
+
+        //- Construct as copy with new IO parameters
+        regIOobject(const IOobject&, const regIOobject&);
 
     //- Destructor
     virtual ~regIOobject();

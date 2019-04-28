@@ -39,10 +39,10 @@ defineRunTimeSelectionTable(phaseChangeModel, dictionary);
 
 phaseChangeModel::phaseChangeModel
 (
-    const surfaceFilmModel& owner
+    surfaceFilmRegionModel& film
 )
 :
-    filmSubModelBase(owner),
+    filmSubModelBase(film),
     latestMassPC_(0.0),
     totalMassPC_(0.0)
 {}
@@ -50,12 +50,12 @@ phaseChangeModel::phaseChangeModel
 
 phaseChangeModel::phaseChangeModel
 (
-    const word& type,
-    const surfaceFilmModel& owner,
+    const word& modelType,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    filmSubModelBase(type, owner, dict),
+    filmSubModelBase(film, dict, typeName, modelType),
     latestMassPC_(0.0),
     totalMassPC_(0.0)
 {}
@@ -77,6 +77,11 @@ void phaseChangeModel::correct
     volScalarField& dEnergy
 )
 {
+    if (!active())
+    {
+        return;
+    }
+
     correctModel
     (
         dt,
@@ -90,6 +95,14 @@ void phaseChangeModel::correct
 
     availableMass -= dMass;
     dMass.correctBoundaryConditions();
+
+    if (writeTime())
+    {
+        scalar phaseChangeMass = getModelProperty<scalar>("phaseChangeMass");
+        phaseChangeMass += returnReduce(totalMassPC_, sumOp<scalar>());
+        setModelProperty<scalar>("phaseChangeMass", phaseChangeMass);
+        totalMassPC_ = 0.0;
+    }
 }
 
 
@@ -97,10 +110,12 @@ void phaseChangeModel::info(Ostream& os) const
 {
     const scalar massPCRate =
         returnReduce(latestMassPC_, sumOp<scalar>())
-       /owner_.time().deltaTValue();
+       /filmModel_.time().deltaTValue();
 
-    os  << indent << "mass phase change  = "
-        << returnReduce(totalMassPC_, sumOp<scalar>()) << nl
+    scalar phaseChangeMass = getModelProperty<scalar>("phaseChangeMass");
+    phaseChangeMass += returnReduce(totalMassPC_, sumOp<scalar>());
+
+    os  << indent << "mass phase change  = " << phaseChangeMass << nl
         << indent << "vapourisation rate = " << massPCRate << nl;
 }
 

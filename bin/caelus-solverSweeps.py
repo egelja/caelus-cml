@@ -54,8 +54,6 @@ import os.path
 import sys
 import re
 
-from Caelus.compat import *
-
 logFile = None
 logName = None
 args = sys.argv[1:]

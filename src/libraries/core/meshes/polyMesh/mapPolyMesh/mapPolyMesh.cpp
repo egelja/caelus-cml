@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -103,7 +103,7 @@ CML::mapPolyMesh::mapPolyMesh
     {
         if (min(oldPatchSizes_) < 0)
         {
-            FatalErrorIn("mapPolyMesh::mapPolyMesh(...)")
+            FatalErrorInFunction
                 << "Calculated negative old patch size.  Error in mapping data"
                 << abort(FatalError);
         }
@@ -189,7 +189,7 @@ CML::mapPolyMesh::mapPolyMesh
     {
         if (min(oldPatchSizes_) < 0)
         {
-            FatalErrorIn("mapPolyMesh::mapPolyMesh(...)")
+            FatalErrorInFunction
                 << "Calculated negative old patch size.  Error in mapping data"
                 << abort(FatalError);
         }

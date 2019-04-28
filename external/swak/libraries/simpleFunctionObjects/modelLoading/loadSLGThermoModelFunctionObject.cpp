@@ -45,12 +45,12 @@ namespace CML
     {
         if(correctModel_) {
             if(model_.valid()) {
-                FatalErrorIn("modelLoadingFunctionObject::start()")
+                FatalErrorInFunction
                     << "SLGThermo has no correct method"
                         << endl
                         << exit(FatalError);
             } else {
-                FatalErrorIn("modelLoadingFunctionObject::start()")
+                FatalErrorInFunction
                     << "Model has never been intialized"
                         << endl
                         << exit(FatalError);

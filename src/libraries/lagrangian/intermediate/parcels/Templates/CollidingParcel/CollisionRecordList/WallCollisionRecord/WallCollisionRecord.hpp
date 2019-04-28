@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -212,14 +212,7 @@ inline bool CML::WallCollisionRecord<Type>::match
             << nl << "cosAcceptanceAngle " << cosAcceptanceAngle
             << endl;
 
-        FatalErrorIn
-        (
-            "inline bool CML::WallCollisionRecord<Type>::match"
-            "("
-                "const vector& pRel,"
-                "scalar radius"
-            ") const"
-        )
+        FatalErrorInFunction
             << "Problem with matching WallCollisionRecord." << nl
             << "The given radius, " << radius << ", is smaller than distance "
             << "to the relative position of the WallInteractionSite, "
@@ -326,7 +319,7 @@ CML::WallCollisionRecord<Type>::WallCollisionRecord()
 :
     accessed_(false),
     pRel_(),
-    data_(pTraits<Type>::zero)
+    data_(Zero)
 {}
 
 
@@ -374,11 +367,7 @@ void CML::WallCollisionRecord<Type>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::WallCollisionRecord<Type>::operator="
-            "(const CML::WallCollisionRecord<Type>&)"
-        )
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }

@@ -18,7 +18,8 @@ caelus_inc = [
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'turbulenceModels/compressible/LES/lnInclude',
 'turbulenceModels/compressible/RAS/lnInclude',
-'thermophysicalModels/basic/lnInclude'
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude'
 ]
 
 caelus_libs = [
@@ -27,7 +28,8 @@ caelus_libs = [
 'compressibleTurbulenceModel',
 'compressibleLESModels',
 'compressibleRASModels',
-'basicThermophysicalModels'
+'fluidThermophysicalModels',
+'solidThermo'
 ]
 
 append_args = {}

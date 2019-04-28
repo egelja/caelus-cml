@@ -108,7 +108,7 @@ public:
 
      bool writeData(Ostream&) const
         {
-            notImplemented("searchableSphereWithFix::writeData(Ostream&) const");
+            NotImplemented;
             return false;
         }
 };

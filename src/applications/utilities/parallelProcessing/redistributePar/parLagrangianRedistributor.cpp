@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2017 OpenFOAM Foundation
+Copyright (C) 2015-2017 OpenCFD Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -21,6 +22,7 @@ License
 
 #include "ListOps.hpp"
 #include "parLagrangianRedistributor.hpp"
+#include "passivePositionParticleCloud.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -84,38 +86,43 @@ void CML::parLagrangianRedistributor::findClouds
     forAll(localCloudDirs, i)
     {
         // Do local scan for valid cloud objects
-        IOobjectList sprayObjs
+        IOobjectList localObjs
         (
             mesh,
             mesh.time().timeName(),
             cloud::prefix/localCloudDirs[i]
         );
 
-        if (sprayObjs.lookup(word("positions")))
+        if
+        (
+            localObjs.lookup(word("coordinates"))
+         || localObjs.lookup(word("positions"))
+        )
         {
-            // One of the objects is positions so must be valid cloud
+            // One of the objects is coordinates/positions so must be valid
+            // cloud
 
-            label cloudI = findIndex(cloudNames, localCloudDirs[i]);
+            label cloudi = findIndex(cloudNames, localCloudDirs[i]);
 
-            objectNames[cloudI].setSize(sprayObjs.size());
-            label objectI = 0;
-            forAllConstIter(IOobjectList, sprayObjs, iter)
+            objectNames[cloudi].setSize(localObjs.size());
+            label objecti = 0;
+            forAllConstIter(IOobjectList, localObjs, iter)
             {
                 const word& name = iter.key();
-                if (name != "positions")
+                if (name != "coordinates" && name != "positions")
                 {
-                    objectNames[cloudI][objectI++] = name;
+                    objectNames[cloudi][objecti++] = name;
                 }
             }
-            objectNames[cloudI].setSize(objectI);
+            objectNames[cloudi].setSize(objecti);
         }
     }
 
     // Synchronise objectNames
-    forAll(objectNames, cloudI)
+    forAll(objectNames, i)
     {
-        Pstream::combineGather(objectNames[cloudI], ListUniqueEqOp<word>());
-        Pstream::combineScatter(objectNames[cloudI]);
+        Pstream::combineGather(objectNames[i], ListUniqueEqOp<word>());
+        Pstream::combineScatter(objectNames[i]);
     }
 }
 
@@ -123,7 +130,7 @@ void CML::parLagrangianRedistributor::findClouds
 CML::autoPtr<CML::mapDistributeBase>
 CML::parLagrangianRedistributor::redistributeLagrangianPositions
 (
-    passiveParticleCloud& lpi
+    passivePositionParticleCloud& lpi
 ) const
 {
     labelListList subMap;
@@ -135,7 +142,7 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
     {
         // List of lists of particles to be transferred for all of the
         // neighbour processors
-        List<IDLList<passiveParticle> > particleTransferLists
+        List<IDLList<passivePositionParticle> > particleTransferLists
         (
             Pstream::nProcs()
         );
@@ -144,17 +151,15 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
         labelList destProc(lpi.size());
 
         label particleI = 0;
-        forAllIter(passiveParticleCloud, lpi, iter)
+        forAllIter(passivePositionParticleCloud, lpi, iter)
         {
-            passiveParticle& ppi = iter();
+            passivePositionParticle& ppi = iter();
 
-            label destProcI = destinationProcID_[ppi.cell()];
-            label destCellI = destinationCell_[ppi.cell()];
+            const label destProcI = destinationProcID_[ppi.cell()];
+            const label destCellI = destinationCell_[ppi.cell()];
 
             ppi.cell() = destCellI;
             destProc[particleI++] = destProcI;
-            //Pout<< "Sending particle:" << ppi << " to processor " << destProcI
-            //    << " to cell " << destCellI << endl;
             particleTransferLists[destProcI].append(lpi.remove(&ppi));
         }
 
@@ -178,8 +183,9 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
 
 
     // Start sending. Sets number of bytes transferred
-    labelListList allNTrans(Pstream::nProcs());
+    labelList allNTrans(Pstream::nProcs());
     pBufs.finishedSends(allNTrans);
+
 
     {
         // Temporarily rename original cloud so we can construct a new one
@@ -189,45 +195,45 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
         lpi.rename(cloudName + "_old");
 
         // New cloud on tgtMesh
-        passiveParticleCloud lagrangianPositions
+        passivePositionParticleCloud lagrangianPositions
         (
             tgtMesh_,
             cloudName,
-            IDLList<passiveParticle>()
+            IDLList<passivePositionParticle>()
         );
 
 
         // Retrieve from receive buffers
         forAll(allNTrans, procI)
         {
-            label nRec = allNTrans[procI][Pstream::myProcNo()];
+            label nRec = allNTrans[procI];
 
             if (nRec)
             {
                 UIPstream particleStream(procI, pBufs);
 
-                IDLList<passiveParticle> newParticles
+                // Receive particles and locate them
+                IDLList<passivePositionParticle> newParticles
                 (
                     particleStream,
-                    passiveParticle::iNew(tgtMesh_)
+                    passivePositionParticle::iNew(tgtMesh_)
                 );
 
                 forAllIter
                 (
-                    IDLList<passiveParticle>,
+                    IDLList<passivePositionParticle>,
                     newParticles,
                     newpIter
                 )
                 {
-                    passiveParticle& newp = newpIter();
-
+                    passivePositionParticle& newp = newpIter();
                     lagrangianPositions.addParticle(newParticles.remove(&newp));
                 }
             }
         }
 
 
-    IOPosition<passiveParticleCloud>(lagrangianPositions).write();
+        IOPosition<passivePositionParticleCloud>(lagrangianPositions).write();
 
         // Restore cloud name
         lpi.rename(cloudName);
@@ -248,7 +254,7 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
     label constructSize = 0;
     forAll(constructMap, procI)
     {
-        label nRecv = sizes[procI][UPstream::myProcNo()];
+        const label nRecv = sizes[procI][UPstream::myProcNo()];
 
         labelList& map = constructMap[procI];
 
@@ -280,7 +286,7 @@ CML::parLagrangianRedistributor::redistributeLagrangianPositions
 ) const
 {
     // Load cloud and send particle
-    passiveParticleCloud lpi(srcMesh_, cloudName, false);
+    passivePositionParticleCloud lpi(srcMesh_, cloudName, false);
 
     return redistributeLagrangianPositions(lpi);
 }

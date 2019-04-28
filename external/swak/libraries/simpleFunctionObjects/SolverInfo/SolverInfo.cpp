@@ -49,14 +49,14 @@ namespace CML {
         if(phi.dimensions()==dimensionSet(1,0,-1,0,0,0,0)) {
             compressible_=true;
         } else if(phi.dimensions()!=dimensionSet(0,3,-1,0,0,0,0)) {
-        WarningIn("SolverInfo::SolverInfo(const dictionary& dict,const objectRegistry &obr)")
+        WarningInFunction
             << " Dimensions " << phi.dimensions() 
                 << " of the phi-field with name " << phi_ 
                 << "don't fit compressible or incompressible " << nl
                 << "Assumin incompressible solver" << endl;            
         }
     } else {
-        WarningIn("SolverInfo::SolverInfo(const dictionary& dict,const objectRegistry &obr)")
+        WarningInFunction
             << "Can't find phi-field with name " << phi_ << nl
                 << "Assumin incompressible solver" << endl;
     }
@@ -68,12 +68,12 @@ namespace CML {
         bool lesFound=obr.foundObject<IOdictionary>("LESProperties");
 
         if(rasFound && lesFound) {
-            WarningIn("SolverInfo::SolverInfo(const dictionary& dict,const objectRegistry &obr)")
+            WarningInFunction
                 << "LES and RAS found. Assuming RAS" << endl;
         } else if(lesFound) {
             les_=true;
         } else if(!rasFound && !lesFound) {
-            WarningIn("SolverInfo::SolverInfo(const dictionary& dict,const objectRegistry &obr)")
+            WarningInFunction
                 << "Neither LES nor RAS found. Assuming no turbulence" << endl;
             turbulent_=false;
         }

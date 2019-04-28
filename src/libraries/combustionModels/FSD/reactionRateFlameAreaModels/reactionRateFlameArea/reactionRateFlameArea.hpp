@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,8 +30,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reactionRateFlameArea_H
-#define reactionRateFlameArea_H
+#ifndef reactionRateFlameArea_HPP
+#define reactionRateFlameArea_HPP
 
 #include "runTimeSelectionTables.hpp"
 #include "dictionary.hpp"
@@ -54,33 +54,31 @@ class reactionRateFlameArea
 
 protected:
 
-    // Protected data
+    //- Dictionary
+    dictionary coeffDict_;
 
-        //- Dictionary
-        dictionary coeffDict_;
+    //- Mesh reference
+    const fvMesh& mesh_;
 
-        //- Mesh reference
-        const fvMesh& mesh_;
+    //- Combstion model owner
+    const combustionModel& combModel_;
 
-        //- Combstion model owner
-        const combustionModel& combModel_;
+    //- Fuel name
+    word fuel_;
 
-        //- Fuel name
-        word fuel_;
-
-        //- Fuel consumption rate per unit of flame area
-        volScalarField omega_;
+    //- Fuel consumption rate per unit of flame area
+    volScalarField omega_;
 
 
 private:
 
     // Private member functions
 
-         //- Disallow copy construct
-        reactionRateFlameArea(const reactionRateFlameArea&);
+    //- Disallow copy construct
+    reactionRateFlameArea(const reactionRateFlameArea&);
 
-         //- Disallow default bitwise assignment
-        void operator=(const reactionRateFlameArea&);
+    //- Disallow default bitwise assignment
+    void operator=(const reactionRateFlameArea&);
 
 
 public:
@@ -90,83 +88,64 @@ public:
 
 
     // Declare run-time constructor selection table
-
-        declareRunTimeSelectionTable
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        reactionRateFlameArea,
+        dictionary,
         (
-            autoPtr,
-            reactionRateFlameArea,
-            dictionary,
-            (
-                const word modelType,
-                const dictionary& dict,
-                const fvMesh& mesh,
-                const combustionModel& combModel
-            ),
-            (modelType, dict, mesh, combModel)
-        );
-
-
-    // Constructors
-
-        //- Construct from dictionary and hsCombustionThermo
-        reactionRateFlameArea
-        (
+            const word modelType,
             const dictionary& dict,
             const fvMesh& mesh,
             const combustionModel& combModel
-        );
+        ),
+        (modelType, dict, mesh, combModel)
+    );
 
-        //- Construct from components
-        reactionRateFlameArea
-        (
-            const word& modelType,
-            const dictionary& dict,
-            const fvMesh& mesh,
-            const combustionModel& combModel
-        );
+
+    //- Construct from components
+    reactionRateFlameArea
+    (
+        const word& modelType,
+        const dictionary& dict,
+        const fvMesh& mesh,
+        const combustionModel& combModel
+    );
 
 
     // Selector
-
-        static autoPtr<reactionRateFlameArea> New
-        (
-            const dictionary& dict,
-            const fvMesh& mesh,
-            const combustionModel& combModel
-        );
+    static autoPtr<reactionRateFlameArea> New
+    (
+        const dictionary& dict,
+        const fvMesh& mesh,
+        const combustionModel& combModel
+    );
 
 
     // Destructor
-
-        virtual ~reactionRateFlameArea();
+    virtual ~reactionRateFlameArea()
+    {}
 
 
     // Member functions
+    //- Access functions
 
-        //- Access functions
+    //- Return omega
+    const volScalarField& omega() const
+    {
+        return omega_;
+    }
 
-            //- Return omega
-            const volScalarField& omega() const
-            {
-                return omega_;
-            }
+    //- Correct omega
+    virtual void correct(const volScalarField& sigma) = 0;
 
-
-        //- Correct omega
-        virtual void correct(const volScalarField& sigma) = 0;
-
-        //- Update from dictionary
-        virtual bool read(const dictionary& dictProperties);
+    //- Update from dictionary
+    virtual bool read(const dictionary& dictProperties);
 
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

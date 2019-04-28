@@ -52,7 +52,7 @@ polyMeshGenGeometryModification::polyMeshGenGeometryModification
 :
     mesh_(mesh),
     meshDict_(meshDict),
-    coordinateModifierPtr_(NULL),
+    coordinateModifierPtr_(nullptr),
     modificationActive_(false)
 {
     checkModification();

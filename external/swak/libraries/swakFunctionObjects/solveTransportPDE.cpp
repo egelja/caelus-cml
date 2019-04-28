@@ -61,9 +61,9 @@ CML::solveTransportPDE::solveTransportPDE
     if (!isA<polyMesh>(obr))
     {
         active_=false;
-        WarningIn("solveTransportPDE::solveTransportPDE")
+        WarningInFunction
             << "Not a polyMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
 
     read(dict);
@@ -110,11 +110,10 @@ void CML::solveTransportPDE::read(const dictionary& dict)
             );
         } else {
             if(sourceExpression_!="0") {
-                WarningIn("CML::solveTransportPDE::read(const dictionary& dict)")
+                WarningInFunction
                     << "Source expression " << sourceExpression_ << " set. "
-                        << "Consider factoring out parts to 'sourceImplicit'\n"
-                        << endl;
-
+                    << "Consider factoring out parts to 'sourceImplicit'\n"
+                    << endl;
             }
         }
         readExpressionAndDimension(
@@ -140,11 +139,10 @@ void CML::solveTransportPDE::solve()
             &&
             steady_
         ) {
-            WarningIn("CML::solveTransportPDE::solve()")
+            WarningInFunction
                 << name_ << " is steady. It is recommended to have in "
-                    << sol.name() << " a nCorrectors>0"
-                    << endl;
-
+                << sol.name() << " a nCorrectors>0"
+                << endl;
         }
 
         for (int corr=0; corr<=nCorr; corr++) {
@@ -153,30 +151,30 @@ void CML::solveTransportPDE::solve()
 
             driver.parse(diffusionExpression_);
             if(!driver.resultIsTyp<volScalarField>()) {
-                FatalErrorIn("CML::solveTransportPDE::solve()")
+                FatalErrorInFunction
                     << diffusionExpression_ << " does not evaluate to a scalar"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             volScalarField diffusionField(driver.getResult<volScalarField>());
             diffusionField.dimensions().reset(diffusionDimension_);
 
             driver.parse(sourceExpression_);
             if(!driver.resultIsTyp<volScalarField>()) {
-                FatalErrorIn("CML::solveTransportPDE::solve()")
+                FatalErrorInFunction
                     << sourceExpression_ << " does not evaluate to a scalar"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             volScalarField sourceField(driver.getResult<volScalarField>());
             sourceField.dimensions().reset(sourceDimension_);
 
             driver.parse(phiExpression_);
             if(!driver.resultIsTyp<surfaceScalarField>()) {
-                FatalErrorIn("CML::solveTransportPDE::solve()")
+                FatalErrorInFunction
                     << phiExpression_ << " does not evaluate to a surface scalar"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             surfaceScalarField phiField(driver.getResult<surfaceScalarField>());
             phiField.dimensions().reset(phiDimension_);
@@ -194,10 +192,10 @@ void CML::solveTransportPDE::solve()
             if(!steady_) {
                 driver.parse(rhoExpression_);
                 if(!driver.resultIsTyp<volScalarField>()) {
-                    FatalErrorIn("CML::solveTransportPDE::solve()")
+                    FatalErrorInFunction
                         << rhoExpression_ << " does not evaluate to a scalar"
-                            << endl
-                            << exit(FatalError);
+                        << endl
+                        << exit(FatalError);
                 }
                 volScalarField rhoField(driver.getResult<volScalarField>());
                 rhoField.dimensions().reset(rhoDimension_);
@@ -219,10 +217,10 @@ void CML::solveTransportPDE::solve()
             if(sourceImplicitExpression_!="") {
                 driver.parse(sourceImplicitExpression_);
                 if(!driver.resultIsTyp<volScalarField>()) {
-                    FatalErrorIn("CML::solveTransportPDE::solve()")
+                    FatalErrorInFunction
                         << sourceImplicitExpression_ << " does not evaluate to a scalar"
-                            << endl
-                            << exit(FatalError);
+                        << endl
+                        << exit(FatalError);
                 }
                 volScalarField sourceImplicitField(driver.getResult<volScalarField>());
                 sourceImplicitField.dimensions().reset(sourceImplicitDimension_);

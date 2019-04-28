@@ -377,24 +377,17 @@ CloudProxyForParticle<CloudType>::CloudProxyForParticle
         )
     );
     addBoolFunction(
-        "softImpact",
-        "used impact model",
-        new ParticleMethodWrapperValue<bool>(
-            &particleType::softImpact
-        )
-    );
-    addBoolFunction(
         "onBoundary",
         "is this currently on the boundary",
         new ParticleMethodWrapperValue<bool>(
-            &particleType::onBoundary
+            &particleType::onBoundaryFace
         )
     );
-    addScalarFunction(
-        "currentTime",
-        "current time of the particle",
-        new ParticleMethodWrapperValue<scalar>(
-            &particleType::currentTime
+    addBoolFunction(
+        "onBoundaryFace",
+        "is this currently on the boundary",
+        new ParticleMethodWrapperValue<bool>(
+            &particleType::onBoundaryFace
         )
     );
     addScalarFunction(
@@ -402,6 +395,13 @@ CloudProxyForParticle<CloudType>::CloudProxyForParticle
         "fraction of the time-step completed",
         new ParticleMethodWrapperValue<scalar>(
             &particleType::stepFraction
+        )
+    );
+    addScalarFunction(
+        "currentTimeFraction",
+        "Current fraction within the time-step",
+        new ParticleMethodWrapperValue<scalar>(
+            &particleType::currentTimeFraction
         )
     );
 }
@@ -511,11 +511,11 @@ tmp<Field<scalar> > CloudProxyForParticle<CloudType>::getScalarField(
         );
     }
 
-    FatalErrorIn("tmp<Field<scalar> > CloudProxyForParticle<CloudType>::getScalarField")
+    FatalErrorInFunction
         << "No scalar field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<scalar> >(
         new Field<scalar>(0)
     );
@@ -533,11 +533,11 @@ tmp<Field<bool> > CloudProxyForParticle<CloudType>::getBoolField(
         );
     }
 
-    FatalErrorIn("tmp<Field<bool> > CloudProxyForParticle<CloudType>::getBoolField")
+    FatalErrorInFunction
         << "No bool field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<bool> >(
         new Field<bool>(0)
     );
@@ -555,11 +555,11 @@ tmp<Field<vector> > CloudProxyForParticle<CloudType>::getVectorField(
         );
     }
 
-    FatalErrorIn("tmp<Field<vector> > CloudProxyForParticle<CloudType>::getVectorField")
+    FatalErrorInFunction
         << "No vector field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<vector> >(
         new Field<vector>(0)
     );
@@ -577,11 +577,11 @@ tmp<Field<tensor> > CloudProxyForParticle<CloudType>::getTensorField(
         );
     }
 
-    FatalErrorIn("tmp<Field<tensor> > CloudProxyForParticle<CloudType>::getTensorField")
+    FatalErrorInFunction
         << "No tensor field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<tensor> >(
         new Field<tensor>(0)
     );
@@ -599,11 +599,11 @@ tmp<Field<symmTensor> > CloudProxyForParticle<CloudType>::getSymmTensorField(
         );
     }
 
-    FatalErrorIn("tmp<Field<symmTensor> > CloudProxyForParticle<CloudType>::getSymmTensorField")
+    FatalErrorInFunction
         << "No symmTensor field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<symmTensor> >(
         new Field<symmTensor>(0)
     );
@@ -621,11 +621,11 @@ tmp<Field<sphericalTensor> > CloudProxyForParticle<CloudType>::getSphericalTenso
         );
     }
 
-    FatalErrorIn("tmp<Field<sphericalTensor> > CloudProxyForParticle<CloudType>::getSphericalTensorField")
+    FatalErrorInFunction
         << "No sphericalTensor field with name " << name << " defined for cloud "
-            << cloud_.name() << " of type " // << cloud_.CloudTyptype()
-            << endl
-            << exit(FatalError);
+        << cloud_.name() << " of type " // << cloud_.CloudTyptype()
+        << endl
+        << exit(FatalError);
     return tmp<Field<sphericalTensor> >(
         new Field<sphericalTensor>(0)
     );

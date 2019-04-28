@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -39,13 +39,8 @@ void CML::porosityModel::adjustNegativeResistance(dimensionedVector& resist)
 
     if (maxCmpt < 0)
     {
-        FatalErrorIn
-        (
-            "void CML::porosityModel::adjustNegativeResistance"
-            "("
-                "dimensionedVector&"
-            ")"
-        )   << "Negative resistances are invalid, resistance = " << resist
+        FatalErrorInFunction
+            << "Negative resistances are invalid, resistance = " << resist
             << exit(FatalError);
     }
     else
@@ -119,17 +114,8 @@ CML::porosityModel::porosityModel
 
     if (!foundZone && Pstream::master())
     {
-        FatalErrorIn
-        (
-            "CML::porosityModel::porosityModel"
-            "("
-                "const word&, "
-                "const word&, "
-                "const fvMesh&, "
-                "const dictionary&"
-                "const word&, "
-            ")"
-        )   << "cannot find porous cellZone " << zoneName_
+        FatalErrorInFunction
+            << "cannot find porous cellZone " << zoneName_
             << exit(FatalError);
     }
 }

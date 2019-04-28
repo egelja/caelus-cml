@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -300,7 +300,7 @@ CML::Istream& CML::UIPstream::read(char* data, std::streamsize count)
 {
     if (format() != BINARY)
     {
-        FatalErrorIn("UIPstream::read(char*, std::streamsize)")
+        FatalErrorInFunction
             << "stream format not binary"
             << CML::abort(FatalError);
     }

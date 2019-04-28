@@ -48,9 +48,9 @@ CML::manipulatePatchField::manipulatePatchField
     if (!isA<fvMesh>(obr_))
     {
         active_=false;
-        WarningIn("manipulatePatchField::manipulatePatchField")
+        WarningInFunction
             << "Not a fvMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
     read(dict);
     execute();
@@ -76,13 +76,13 @@ void CML::manipulatePatchField::manipulate(
         !=
         pTraits<typename TField::value_type>::typeName
     ) {
-        FatalErrorIn("void CML::manipulatePatchField::manipulate")
+        FatalErrorInFunction
             << "Expression " << expression_ << " evaluates to "
-                << driver_->getResultType() << " but a "
-                << pTraits<typename TField::value_type>::typeName
-                << " is needed"
-                << endl
-                << exit(FatalError);
+            << driver_->getResultType() << " but a "
+            << pTraits<typename TField::value_type>::typeName
+            << " is needed"
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -94,12 +94,12 @@ void CML::manipulatePatchField::manipulate(
         ||
         value.size()!=newValue.size()
     ) {
-        FatalErrorIn("void CML::manipulatePatchField::manipulate")
+        FatalErrorInFunction
             << "Sizes of patch field " << patchName_ << " " << value.size()
-                << " the new value " << newValue.size() << " and the mask "
-                << mask.size()  << " don't match"
-                << endl
-                << exit(FatalError);
+            << " the new value " << newValue.size() << " and the mask "
+            << mask.size()  << " don't match"
+            << endl
+            << exit(FatalError);
 
     }
     label cnt=0;
@@ -152,13 +152,13 @@ void CML::manipulatePatchField::manipulatePoint(
         !=
         pTraits<typename TField::value_type>::typeName
     ) {
-        FatalErrorIn("void CML::manipulatePatchField::manipulate")
+        FatalErrorInFunction
             << "Expression " << expression_ << " evaluates to "
-                << driver_->getResultType() << " but a "
-                << pTraits<typename TField::value_type>::typeName
-                << " is needed"
-                << endl
-                << exit(FatalError);
+            << driver_->getResultType() << " but a "
+            << pTraits<typename TField::value_type>::typeName
+            << " is needed"
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -171,12 +171,12 @@ void CML::manipulatePatchField::manipulatePoint(
         ||
         value.size()!=newValue.size()
     ) {
-        FatalErrorIn("void CML::manipulatePatchField::manipulate")
+        FatalErrorInFunction
             << "Sizes of patch field " << patchName_ << " " << value.size()
-                << " the new value " << newValue.size() << " and the mask "
-                << mask.size()  << " don't match"
-                << endl
-                << exit(FatalError);
+            << " the new value " << newValue.size() << " and the mask "
+            << mask.size()  << " don't match"
+            << endl
+            << exit(FatalError);
 
     }
     label cnt=0;
@@ -232,11 +232,11 @@ void CML::manipulatePatchField::read(const dictionary& dict)
         const fvMesh& mesh = refCast<const fvMesh>(obr_);
         const label patchID=mesh.boundaryMesh().findPatchID(patchName_);
         if(patchID<0) {
-            FatalErrorIn("CML::manipulatePatchField::read(const dictionary& dict)")
+            FatalErrorInFunction
                 << "Patch " << patchName_ << " not exisiting in "
-                    << mesh.boundaryMesh().names()
-                    << endl
-                    << exit(FatalError);
+                << mesh.boundaryMesh().names()
+                << endl
+                << exit(FatalError);
         }
 
         const fvPatch &thePatch=mesh.boundary()[patchID];
@@ -269,11 +269,11 @@ void CML::manipulatePatchField::execute()
             !=
             pTraits<bool>::typeName
         ) {
-            FatalErrorIn("manipulatePatchField::execute()")
+            FatalErrorInFunction
                 << maskExpression_ << " does not evaluate to a logical expression"
-                    << " but a " << driver.getResultType()
-                    << endl
-                    << exit(FatalError);
+                << " but a " << driver.getResultType()
+                << endl
+                << exit(FatalError);
         }
 
         Field<bool> conditionField(driver.getResult<bool>());
@@ -354,10 +354,10 @@ void CML::manipulatePatchField::execute()
                 conditionField
             );
         } else {
-            FatalErrorIn("CML::manipulatePatchField::execute()")
+            FatalErrorInFunction
                 << "No supported field with the name " << name_ << " found"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
     }
 

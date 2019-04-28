@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -202,7 +202,7 @@ void faceZoneSet::subset(const topoSet& set)
 
     if (nConflict > 0)
     {
-        WarningIn(" faceZoneSet::subset(const topoSet&)")
+        WarningInFunction
             << "subset : there are " << nConflict
             << " faces with different orientation in faceZonesSets "
             << name() << " and " << set.name() << endl;
@@ -253,7 +253,7 @@ void faceZoneSet::addSet(const topoSet& set)
 
     if (nConflict > 0)
     {
-        WarningIn("faceZoneSet::addSet(const topoSet&)")
+        WarningInFunction
             << "addSet : there are " << nConflict
             << " faces with different orientation in faceZonesSets "
             << name() << " and " << set.name() << endl;
@@ -305,7 +305,7 @@ void faceZoneSet::deleteSet(const topoSet& set)
 
     if (nConflict > 0)
     {
-        WarningIn("faceZoneSet::deleteSet(const topoSet&)")
+        WarningInFunction
             << "deleteSet : there are " << nConflict
             << " faces with different orientation in faceZonesSets "
             << name() << " and " << set.name() << endl;

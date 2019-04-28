@@ -26,9 +26,9 @@ License
 #include "wordReList.hpp"
 #include "fvcGrad.hpp"
 #include "porosityModel.hpp"
-#include "basicThermo.hpp"
+#include "fluidThermo.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "incompressible/transportModel/transportModel.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -142,7 +142,7 @@ void CML::forces::writeFileHeader(const label i)
     }
     else
     {
-        FatalErrorIn("void CML::forces::writeFileHeader(const label)")
+        FatalErrorInFunction
             << "Unhandled file index: " << i
             << abort(FatalError);
     }
@@ -163,7 +163,7 @@ void CML::forces::initialise()
         if (!obr_.foundObject<volVectorField>(fDName_))
         {
             active_ = false;
-            WarningIn("void CML::forces::initialise()")
+            WarningInFunction
                 << "Could not find " << fDName_ << " in database." << nl
                 << "    De-activating forces."
                 << endl;
@@ -183,7 +183,7 @@ void CML::forces::initialise()
         {
             active_ = false;
 
-            WarningIn("void CML::forces::initialise()")
+            WarningInFunction
                 << "Could not find " << UName_ << ", " << pName_;
 
             if (rhoName_ != "rhoInf")
@@ -219,10 +219,10 @@ CML::tmp<CML::volSymmTensorField> CML::forces::devRhoReff() const
 
         return rho()*turb.devReff();
     }
-    else if (obr_.foundObject<basicThermo>(basicThermo::typeName))
+    else if (obr_.foundObject<fluidThermo>(fluidThermo::typeName))
     {
-        const basicThermo& thermo =
-            obr_.lookupObject<basicThermo>(basicThermo::typeName);
+        const fluidThermo& thermo =
+            obr_.lookupObject<fluidThermo>(fluidThermo::typeName);
 
         const volVectorField& U = obr_.lookupObject<volVectorField>(UName_);
 
@@ -253,7 +253,7 @@ CML::tmp<CML::volSymmTensorField> CML::forces::devRhoReff() const
     }
     else
     {
-        FatalErrorIn("forces::devRhoReff()")
+        FatalErrorInFunction
             << "No valid model for viscous stress calculation"
             << exit(FatalError);
 
@@ -264,10 +264,10 @@ CML::tmp<CML::volSymmTensorField> CML::forces::devRhoReff() const
 
 CML::tmp<CML::volScalarField> CML::forces::mu() const
 {
-    if (obr_.foundObject<basicThermo>("thermophysicalProperties"))
+    if (obr_.foundObject<fluidThermo>("thermophysicalProperties"))
     {
-        const basicThermo& thermo =
-             obr_.lookupObject<basicThermo>("thermophysicalProperties");
+        const fluidThermo& thermo =
+             obr_.lookupObject<fluidThermo>("thermophysicalProperties");
 
         return thermo.mu();
     }
@@ -292,7 +292,7 @@ CML::tmp<CML::volScalarField> CML::forces::mu() const
     }
     else
     {
-        FatalErrorIn("forces::mu()")
+        FatalErrorInFunction
             << "No valid model for dynamic viscosity calculation"
             << exit(FatalError);
 
@@ -339,7 +339,7 @@ CML::scalar CML::forces::rho(const volScalarField& p) const
     {
         if (rhoName_ != "rhoInf")
         {
-            FatalErrorIn("forces::rho(const volScalarField& p)")
+            FatalErrorInFunction
                 << "Dynamic pressure is expected but kinematic is provided."
                 << exit(FatalError);
         }
@@ -557,16 +557,8 @@ CML::forces::forces
     else
     {
         active_ = false;
-        WarningIn
-        (
-            "CML::forces::forces"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_
             << endl;
     }
 
@@ -691,10 +683,8 @@ void CML::forces::read(const dictionary& dict)
 
             if (nBin_ < 0)
             {
-                FatalIOErrorIn
-                (
-                    "void CML::forces::read(const dictionary&)", dict
-                )   << "Number of bins (nBin) must be zero or greater"
+                FatalIOErrorInFunction(dict)
+                    << "Number of bins (nBin) must be zero or greater"
                     << exit(FatalIOError);
             }
             else if ((nBin_ == 0) || (nBin_ == 1))
@@ -923,7 +913,7 @@ void CML::forces::calcForcesMoment()
 
         if (models.empty())
         {
-            WarningIn("void CML::forces::calcForcesMoment()")
+            WarningInFunction
                 << "Porosity effects requested, but no porosity models found "
                 << "in the database"
                 << endl;

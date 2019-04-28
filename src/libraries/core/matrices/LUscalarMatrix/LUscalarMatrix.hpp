@@ -80,8 +80,11 @@ public:
 
     // Constructors
 
-        //- Construct from scalarSquareMatrix and perform LU decomposition
-        LUscalarMatrix(const scalarSquareMatrix&);
+        //- Construct null
+        LUscalarMatrix();
+
+        //- Construct from and perform LU decomposition of the matrix M
+        LUscalarMatrix(const scalarSquareMatrix& M);
 
         //- Construct from lduMatrix and perform LU decomposition
         LUscalarMatrix
@@ -94,35 +97,55 @@ public:
 
     // Member Functions
 
-        //- Solve the matrix using the LU decomposition with pivoting
-        //  returning the solution in the source
-        template<class T>
-        void solve(Field<T>& source) const;
+        //- Perform the LU decomposition of the matrix M
+        void decompose(const scalarSquareMatrix& M);
+
+        //- Solve the linear system with the given source
+        //  and returning the solution in the Field argument x.
+        //  This function may be called with the same field for x and source.
+        template<class Type>
+        void solve(Field<Type>& x, const Field<Type>& source) const;
+
+        //- Solve the linear system with the given source
+        //  returning the solution
+        template<class Type>
+        tmp<Field<Type>> solve(const Field<Type>& source) const;
+
+        //- Set M to the inverse of this square matrix
+        void inv(scalarSquareMatrix& M) const;
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#include "SubField.hpp"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-void CML::LUscalarMatrix::solve(Field<Type>& sourceSol) const
+void CML::LUscalarMatrix::solve
+(
+    Field<Type>& x,
+    const Field<Type>& source
+) const
 {
+    // If x and source are different initialize x = source
+    if (&x != &source)
+    {
+        x = source;
+    }
+
     if (Pstream::parRun())
     {
-        Field<Type> completeSourceSol(n());
+        Field<Type> X(m());
 
         if (Pstream::master())
         {
             typename Field<Type>::subField
             (
-                completeSourceSol,
-                sourceSol.size()
-            ).assign(sourceSol);
+                X,
+                x.size()
+            ).assign(x);
 
             for
             (
@@ -137,9 +160,9 @@ void CML::LUscalarMatrix::solve(Field<Type>& sourceSol) const
                     slave,
                     reinterpret_cast<char*>
                     (
-                        &(completeSourceSol[procOffsets_[slave]])
+                        &(X[procOffsets_[slave]])
                     ),
-                    (procOffsets_[slave + 1] - procOffsets_[slave])*sizeof(Type)
+                    (procOffsets_[slave+1]-procOffsets_[slave])*sizeof(Type)
                 );
             }
         }
@@ -149,19 +172,19 @@ void CML::LUscalarMatrix::solve(Field<Type>& sourceSol) const
             (
                 Pstream::scheduled,
                 Pstream::masterNo(),
-                reinterpret_cast<const char*>(sourceSol.begin()),
-                sourceSol.byteSize()
+                reinterpret_cast<const char*>(x.begin()),
+                x.byteSize()
             );
         }
 
         if (Pstream::master())
         {
-            LUBacksubstitute(*this, pivotIndices_, completeSourceSol);
+            LUBacksubstitute(*this, pivotIndices_, X);
 
-            sourceSol = typename Field<Type>::subField
+            x = typename Field<Type>::subField
             (
-                completeSourceSol,
-                sourceSol.size()
+                X,
+                x.size()
             );
 
             for
@@ -177,9 +200,9 @@ void CML::LUscalarMatrix::solve(Field<Type>& sourceSol) const
                     slave,
                     reinterpret_cast<const char*>
                     (
-                        &(completeSourceSol[procOffsets_[slave]])
+                        &(X[procOffsets_[slave]])
                     ),
-                    (procOffsets_[slave + 1] - procOffsets_[slave])*sizeof(Type)
+                    (procOffsets_[slave + 1]-procOffsets_[slave])*sizeof(Type)
                 );
             }
         }
@@ -189,21 +212,31 @@ void CML::LUscalarMatrix::solve(Field<Type>& sourceSol) const
             (
                 Pstream::scheduled,
                 Pstream::masterNo(),
-                reinterpret_cast<char*>(sourceSol.begin()),
-                sourceSol.byteSize()
+                reinterpret_cast<char*>(x.begin()),
+                x.byteSize()
             );
         }
     }
     else
     {
-        LUBacksubstitute(*this, pivotIndices_, sourceSol);
+        LUBacksubstitute(*this, pivotIndices_, x);
     }
 }
 
 
+template<class Type>
+CML::tmp<CML::Field<Type> > CML::LUscalarMatrix::solve
+(
+    const Field<Type>& source
+) const
+{
+    tmp<Field<Type> > tx(new Field<Type>(m()));
+    Field<Type>& x = tx();
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    solve(x, source);
+
+    return tx;
+}
+
 
 #endif
-
-// ************************************************************************* //

@@ -21,7 +21,7 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'specie',
 'compressibleTurbulenceModel',
 'incompressibleTurbulenceModel'

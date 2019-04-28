@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 Applied CCM
+Copyright (C) 2014-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -84,7 +84,7 @@ public:
             r_ = readScalar(is);
             if (r_ < 0 || r_ > 1)
             {
-                FatalIOErrorIn("deferredCorrection(fvMesh& mesh, surfaceScalarField& faceFlux, Istream& is)", is)
+                FatalIOErrorInFunction(is)
                     << "coefficient = " << r_
                     << " should be >= 0 and <= 1"
                     << exit(FatalIOError);

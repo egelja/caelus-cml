@@ -116,6 +116,17 @@ public:
         }
 
 
+    // Member functions
+
+        // Access
+
+            //- Return true if this patch field fixes a value
+            virtual bool fixesValue() const
+            {
+                return true;
+            }
+
+
     // Member operators
 
         // Disable assignment operators

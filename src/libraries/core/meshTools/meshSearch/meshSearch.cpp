@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,14 +50,14 @@ bool CML::meshSearch::findNearer
 {
     bool nearer = false;
 
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        scalar distSqr = magSqr(points[pointI] - sample);
+        scalar distSqr = magSqr(points[pointi] - sample);
 
         if (distSqr < nearestDistSqr)
         {
             nearestDistSqr = distSqr;
-            nearestI = pointI;
+            nearestI = pointi;
             nearer = true;
         }
     }
@@ -79,14 +79,14 @@ bool CML::meshSearch::findNearer
 
     forAll(indices, i)
     {
-        label pointI = indices[i];
+        label pointi = indices[i];
 
-        scalar distSqr = magSqr(points[pointI] - sample);
+        scalar distSqr = magSqr(points[pointi] - sample);
 
         if (distSqr < nearestDistSqr)
         {
             nearestDistSqr = distSqr;
-            nearestI = pointI;
+            nearestI = pointi;
             nearer = true;
         }
     }
@@ -138,38 +138,36 @@ CML::label CML::meshSearch::findNearestCellLinear(const point& location) const
 CML::label CML::meshSearch::findNearestCellWalk
 (
     const point& location,
-    const label seedCellI
+    const label seedCelli
 ) const
 {
-    if (seedCellI < 0)
+    if (seedCelli < 0)
     {
-        FatalErrorIn
-        (
-            "meshSearch::findNearestCellWalk(const point&, const label)"
-        )   << "illegal seedCell:" << seedCellI << exit(FatalError);
+        FatalErrorInFunction
+            << "illegal seedCell:" << seedCelli << exit(FatalError);
     }
 
     // Walk in direction of face that decreases distance
 
-    label curCellI = seedCellI;
-    scalar distanceSqr = magSqr(mesh_.cellCentres()[curCellI] - location);
+    label curCelli = seedCelli;
+    scalar distanceSqr = magSqr(mesh_.cellCentres()[curCelli] - location);
 
     bool closer;
 
     do
     {
-        // Try neighbours of curCellI
+        // Try neighbours of curCelli
         closer = findNearer
         (
             location,
             mesh_.cellCentres(),
-            mesh_.cellCells()[curCellI],
-            curCellI,
+            mesh_.cellCells()[curCelli],
+            curCelli,
             distanceSqr
         );
     } while (closer);
 
-    return curCellI;
+    return curCelli;
 }
 
 
@@ -197,19 +195,19 @@ CML::label CML::meshSearch::findNearestFaceTree(const point& location) const
     const vectorField& centres = mesh_.faceCentres();
     const cell& ownFaces = mesh_.cells()[info.index()];
 
-    label nearestFaceI = ownFaces[0];
-    scalar minProximity = magSqr(centres[nearestFaceI] - location);
+    label nearestFacei = ownFaces[0];
+    scalar minProximity = magSqr(centres[nearestFacei] - location);
 
     findNearer
     (
         location,
         centres,
         ownFaces,
-        nearestFaceI,
+        nearestFacei,
         minProximity
     );
 
-    return nearestFaceI;
+    return nearestFacei;
 }
 
 
@@ -218,18 +216,18 @@ CML::label CML::meshSearch::findNearestFaceLinear(const point& location) const
 {
     const vectorField& centres = mesh_.faceCentres();
 
-    label nearestFaceI = 0;
-    scalar minProximity = magSqr(centres[nearestFaceI] - location);
+    label nearestFacei = 0;
+    scalar minProximity = magSqr(centres[nearestFacei] - location);
 
     findNearer
     (
         location,
         centres,
-        nearestFaceI,
+        nearestFacei,
         minProximity
     );
 
-    return nearestFaceI;
+    return nearestFacei;
 }
 
 
@@ -237,15 +235,13 @@ CML::label CML::meshSearch::findNearestFaceLinear(const point& location) const
 CML::label CML::meshSearch::findNearestFaceWalk
 (
     const point& location,
-    const label seedFaceI
+    const label seedFacei
 ) const
 {
-    if (seedFaceI < 0)
+    if (seedFacei < 0)
     {
-        FatalErrorIn
-        (
-            "meshSearch::findNearestFaceWalk(const point&, const label)"
-        )   << "illegal seedFace:" << seedFaceI << exit(FatalError);
+        FatalErrorInFunction
+            << "illegal seedFace:" << seedFacei << exit(FatalError);
     }
 
     const vectorField& centres = mesh_.faceCentres();
@@ -253,43 +249,43 @@ CML::label CML::meshSearch::findNearestFaceWalk
 
     // Walk in direction of face that decreases distance
 
-    label curFaceI = seedFaceI;
-    scalar distanceSqr = magSqr(centres[curFaceI] - location);
+    label curFacei = seedFacei;
+    scalar distanceSqr = magSqr(centres[curFacei] - location);
 
     while (true)
     {
-        label betterFaceI = curFaceI;
+        label betterFacei = curFacei;
 
         findNearer
         (
             location,
             centres,
-            mesh_.cells()[mesh_.faceOwner()[curFaceI]],
-            betterFaceI,
+            mesh_.cells()[mesh_.faceOwner()[curFacei]],
+            betterFacei,
             distanceSqr
         );
 
-        if (mesh_.isInternalFace(curFaceI))
+        if (mesh_.isInternalFace(curFacei))
         {
             findNearer
             (
                 location,
                 centres,
-                mesh_.cells()[mesh_.faceNeighbour()[curFaceI]],
-                betterFaceI,
+                mesh_.cells()[mesh_.faceNeighbour()[curFacei]],
+                betterFacei,
                 distanceSqr
             );
         }
 
-        if (betterFaceI == curFaceI)
+        if (betterFacei == curFacei)
         {
             break;
         }
 
-        curFaceI = betterFaceI;
+        curFacei = betterFacei;
     }
 
-    return curFaceI;
+    return curFacei;
 }
 
 
@@ -298,14 +294,14 @@ CML::label CML::meshSearch::findCellLinear(const point& location) const
     bool cellFound = false;
     label n = 0;
 
-    label cellI = -1;
+    label celli = -1;
 
     while ((!cellFound) && (n < mesh_.nCells()))
     {
         if (mesh_.pointInCell(location, n, cellDecompMode_))
         {
             cellFound = true;
-            cellI = n;
+            celli = n;
         }
         else
         {
@@ -314,7 +310,7 @@ CML::label CML::meshSearch::findCellLinear(const point& location) const
     }
     if (cellFound)
     {
-        return cellI;
+        return celli;
     }
     else
     {
@@ -327,70 +323,68 @@ CML::label CML::meshSearch::findCellLinear(const point& location) const
 CML::label CML::meshSearch::findCellWalk
 (
     const point& location,
-    const label seedCellI
+    const label seedCelli
 ) const
 {
-    if (seedCellI < 0)
+    if (seedCelli < 0)
     {
-        FatalErrorIn
-        (
-            "meshSearch::findCellWalk(const point&, const label)"
-        )   << "illegal seedCell:" << seedCellI << exit(FatalError);
+        FatalErrorInFunction
+            << "illegal seedCell:" << seedCelli << exit(FatalError);
     }
 
-    if (mesh_.pointInCell(location, seedCellI, cellDecompMode_))
+    if (mesh_.pointInCell(location, seedCelli, cellDecompMode_))
     {
-        return seedCellI;
+        return seedCelli;
     }
 
     // Walk in direction of face that decreases distance
-    label curCellI = seedCellI;
-    scalar nearestDistSqr = magSqr(mesh_.cellCentres()[curCellI] - location);
+    label curCelli = seedCelli;
+    scalar nearestDistSqr = magSqr(mesh_.cellCentres()[curCelli] - location);
 
     while(true)
     {
-        // Try neighbours of curCellI
+        // Try neighbours of curCelli
 
-        const cell& cFaces = mesh_.cells()[curCellI];
+        const cell& cFaces = mesh_.cells()[curCelli];
 
-        label nearestCellI = -1;
+        label nearestCelli = -1;
 
         forAll(cFaces, i)
         {
-            label faceI = cFaces[i];
+            label facei = cFaces[i];
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                label cellI = mesh_.faceOwner()[faceI];
-                if (cellI == curCellI)
+                label celli = mesh_.faceOwner()[facei];
+                if (celli == curCelli)
                 {
-                    cellI = mesh_.faceNeighbour()[faceI];
+                    celli = mesh_.faceNeighbour()[facei];
                 }
 
                 // Check if this is the correct cell
-                if (mesh_.pointInCell(location, cellI, cellDecompMode_))
+                if (mesh_.pointInCell(location, celli, cellDecompMode_))
                 {
-                    return cellI;
+                    return celli;
                 }
 
                 // Also calculate the nearest cell
-                scalar distSqr = magSqr(mesh_.cellCentres()[cellI] - location);
+                scalar distSqr = magSqr(mesh_.cellCentres()[celli] - location);
 
                 if (distSqr < nearestDistSqr)
                 {
                     nearestDistSqr = distSqr;
-                    nearestCellI = cellI;
+                    nearestCelli = celli;
                 }
             }
         }
 
-        if (nearestCellI == -1)
+        if (nearestCelli == -1)
         {
             return -1;
         }
 
         // Continue with the nearest cell
-        curCellI = nearestCellI;
+        curCelli = nearestCelli;
     }
 
     return -1;
@@ -400,23 +394,20 @@ CML::label CML::meshSearch::findCellWalk
 CML::label CML::meshSearch::findNearestBoundaryFaceWalk
 (
     const point& location,
-    const label seedFaceI
+    const label seedFacei
 ) const
 {
-    if (seedFaceI < 0)
+    if (seedFacei < 0)
     {
-        FatalErrorIn
-        (
-            "meshSearch::findNearestBoundaryFaceWalk"
-            "(const point&, const label)"
-        )   << "illegal seedFace:" << seedFaceI << exit(FatalError);
+        FatalErrorInFunction
+            << "illegal seedFace:" << seedFacei << exit(FatalError);
     }
 
-    // Start off from seedFaceI
+    // Start off from seedFacei
 
-    label curFaceI = seedFaceI;
+    label curFacei = seedFacei;
 
-    const face& f =  mesh_.faces()[curFaceI];
+    const face& f =  mesh_.faces()[curFacei];
 
     scalar minDist = f.nearestPoint
     (
@@ -433,28 +424,28 @@ CML::label CML::meshSearch::findNearestBoundaryFaceWalk
         // Search through all neighbouring boundary faces by going
         // across edges
 
-        label lastFaceI = curFaceI;
+        label lastFacei = curFacei;
 
-        const labelList& myEdges = mesh_.faceEdges()[curFaceI];
+        const labelList& myEdges = mesh_.faceEdges()[curFacei];
 
         forAll(myEdges, myEdgeI)
         {
             const labelList& neighbours = mesh_.edgeFaces()[myEdges[myEdgeI]];
 
             // Check any face which uses edge, is boundary face and
-            // is not curFaceI itself.
+            // is not curFacei itself.
 
             forAll(neighbours, nI)
             {
-                label faceI = neighbours[nI];
+                label facei = neighbours[nI];
 
                 if
                 (
-                    (faceI >= mesh_.nInternalFaces())
-                 && (faceI != lastFaceI)
+                    (facei >= mesh_.nInternalFaces())
+                 && (facei != lastFacei)
                 )
                 {
-                    const face& f =  mesh_.faces()[faceI];
+                    const face& f =  mesh_.faces()[facei];
 
                     pointHit curHit = f.nearestPoint
                     (
@@ -466,7 +457,7 @@ CML::label CML::meshSearch::findNearestBoundaryFaceWalk
                     if (curHit.distance() < minDist)
                     {
                         minDist = curHit.distance();
-                        curFaceI = faceI;
+                        curFacei = facei;
                         closer = true;  // a closer neighbour has been found
                     }
                 }
@@ -474,21 +465,21 @@ CML::label CML::meshSearch::findNearestBoundaryFaceWalk
         }
     } while (closer);
 
-    return curFaceI;
+    return curFacei;
 }
 
 
 CML::vector CML::meshSearch::offset
 (
     const point& bPoint,
-    const label bFaceI,
+    const label bFacei,
     const vector& dir
 ) const
 {
     // Get the neighbouring cell
-    label ownerCellI = mesh_.faceOwner()[bFaceI];
+    label ownerCelli = mesh_.faceOwner()[bFacei];
 
-    const point& c = mesh_.cellCentres()[ownerCellI];
+    const point& c = mesh_.cellCentres()[ownerCelli];
 
     // Typical dimension: distance from point on face to cell centre
     scalar typDim = mag(c - bPoint);
@@ -559,17 +550,15 @@ const CML::indexedOctree<CML::treeDataFace>& CML::meshSearch::boundaryTree()
 
         if (!overallBbPtr_.valid())
         {
-            Random rndGen(261782);
             overallBbPtr_.reset
             (
                 new treeBoundBox(mesh_.points())
             );
 
             treeBoundBox& overallBb = overallBbPtr_();
+
             // Extend slightly and make 3D
-            overallBb = overallBb.extend(rndGen, 1e-4);
-            overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-            overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            overallBb = overallBb.extend(1e-4);
         }
 
         // all boundary faces (not just walls)
@@ -612,17 +601,15 @@ const
 
         if (!overallBbPtr_.valid())
         {
-            Random rndGen(261782);
             overallBbPtr_.reset
             (
                 new treeBoundBox(mesh_.points())
             );
 
             treeBoundBox& overallBb = overallBbPtr_();
+
             // Extend slightly and make 3D
-            overallBb = overallBb.extend(rndGen, 1e-4);
-            overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-            overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            overallBb = overallBb.extend(1e-4);
         }
 
         cellTreePtr_.reset
@@ -736,11 +723,11 @@ const
 CML::label CML::meshSearch::findNearestCell
 (
     const point& location,
-    const label seedCellI,
+    const label seedCelli,
     const bool useTreeSearch
 ) const
 {
-    if (seedCellI == -1)
+    if (seedCelli == -1)
     {
         if (useTreeSearch)
         {
@@ -753,7 +740,7 @@ CML::label CML::meshSearch::findNearestCell
     }
     else
     {
-        return findNearestCellWalk(location, seedCellI);
+        return findNearestCellWalk(location, seedCelli);
     }
 }
 
@@ -761,11 +748,11 @@ CML::label CML::meshSearch::findNearestCell
 CML::label CML::meshSearch::findNearestFace
 (
     const point& location,
-    const label seedFaceI,
+    const label seedFacei,
     const bool useTreeSearch
 ) const
 {
-    if (seedFaceI == -1)
+    if (seedFacei == -1)
     {
         if (useTreeSearch)
         {
@@ -778,7 +765,7 @@ CML::label CML::meshSearch::findNearestFace
     }
     else
     {
-        return findNearestFaceWalk(location, seedFaceI);
+        return findNearestFaceWalk(location, seedFacei);
     }
 }
 
@@ -786,12 +773,12 @@ CML::label CML::meshSearch::findNearestFace
 CML::label CML::meshSearch::findCell
 (
     const point& location,
-    const label seedCellI,
+    const label seedCelli,
     const bool useTreeSearch
 ) const
 {
     // Find the nearest cell centre to this location
-    if (seedCellI == -1)
+    if (seedCelli == -1)
     {
         if (useTreeSearch)
         {
@@ -804,7 +791,7 @@ CML::label CML::meshSearch::findCell
     }
     else
     {
-        return findCellWalk(location, seedCellI);
+        return findCellWalk(location, seedCelli);
     }
 }
 
@@ -812,11 +799,11 @@ CML::label CML::meshSearch::findCell
 CML::label CML::meshSearch::findNearestBoundaryFace
 (
     const point& location,
-    const label seedFaceI,
+    const label seedFacei,
     const bool useTreeSearch
 ) const
 {
-    if (seedFaceI == -1)
+    if (seedFacei == -1)
     {
         if (useTreeSearch)
         {
@@ -843,16 +830,16 @@ CML::label CML::meshSearch::findNearestBoundaryFace
         {
             scalar minDist = GREAT;
 
-            label minFaceI = -1;
+            label minFacei = -1;
 
             for
             (
-                label faceI = mesh_.nInternalFaces();
-                faceI < mesh_.nFaces();
-                faceI++
+                label facei = mesh_.nInternalFaces();
+                facei < mesh_.nFaces();
+                facei++
             )
             {
-                const face& f =  mesh_.faces()[faceI];
+                const face& f =  mesh_.faces()[facei];
 
                 pointHit curHit =
                     f.nearestPoint
@@ -864,15 +851,15 @@ CML::label CML::meshSearch::findNearestBoundaryFace
                 if (curHit.distance() < minDist)
                 {
                     minDist = curHit.distance();
-                    minFaceI = faceI;
+                    minFacei = facei;
                 }
             }
-            return minFaceI;
+            return minFacei;
         }
     }
     else
     {
-        return findNearestBoundaryFaceWalk(location, seedFaceI);
+        return findNearestBoundaryFaceWalk(location, seedFacei);
     }
 }
 

@@ -71,7 +71,7 @@ tmp<typename expressionSource<T>::resultField> expressionSource<T>::operator()()
     clearVariables();
     parse(expression_);
     if(!resultIsTyp<resultField>()) {
-        FatalErrorIn("expressionSource<"+word(pTraits<T>::typeName)+">::operator()()")
+        FatalErrorInFunction
             << "Result of " << expression_ << " is not a " << pTraits<T>::typeName
                 << endl
                 << exit(FatalError);

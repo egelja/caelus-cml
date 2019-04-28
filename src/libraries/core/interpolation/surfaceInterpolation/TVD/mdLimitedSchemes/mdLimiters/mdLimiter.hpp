@@ -37,6 +37,7 @@ Author
 #define MDLIMITER_HPP_
 
 #include "fvm.hpp"
+#include "zeroGradientFvPatchFields.hpp"
 #include "bjLimiter.hpp"
 #include "vLimiter.hpp"
 

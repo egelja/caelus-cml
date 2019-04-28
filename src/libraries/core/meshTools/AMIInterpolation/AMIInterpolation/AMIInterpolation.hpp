@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -700,15 +700,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolationMethodToWord
         }
         default:
         {
-            FatalErrorIn
-            (
-                "const CML::word"
-                "CML::AMIInterpolation<SourcePatch, TargetPatch>::"
-                "interpolationMethodToWord"
-                "("
-                    "const interpolationMethod&"
-                ")"
-            )
+            FatalErrorInFunction
                 << "Unhandled interpolationMethod enumeration " << method
                 << abort(FatalError);
         }
@@ -758,16 +750,7 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::wordTointerpolationMethod
     }
     else
     {
-        FatalErrorIn
-        (
-            "CML::AMIInterpolation<SourcePatch, TargetPatch>::"
-            "interpolationMethod"
-            "CML::AMIInterpolation<SourcePatch, TargetPatch>::"
-            "wordTointerpolationMethod"
-            "("
-                "const word&"
-            ")"
-        )
+        FatalErrorInFunction
             << "Invalid interpolationMethod " << im
             << ".  Valid methods are:" << methods
             << exit(FatalError);
@@ -813,15 +796,7 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::projectPointsToSurface
 
     if (nMiss > 0)
     {
-        FatalErrorIn
-        (
-            "void CML::AMIInterpolation<SourcePatch, TargetPatch>::"
-            "projectPointsToSurface"
-            "("
-                "const searchableSurface&, "
-                "pointField&"
-            ") const"
-        )
+        FatalErrorInFunction
             << "Error projecting points to surface: "
             << nMiss << " faces could not be determined"
             << abort(FatalError);
@@ -1268,8 +1243,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     tgtWeights_(),
     tgtWeightsSum_(),
     triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     update(srcPatch, tgtPatch);
 }
@@ -1299,8 +1274,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     tgtWeights_(),
     tgtWeightsSum_(),
     triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     update(srcPatch, tgtPatch);
 }
@@ -1331,8 +1306,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     tgtWeights_(),
     tgtWeightsSum_(),
     triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructFromSurface(srcPatch, tgtPatch, surfPtr);
 }
@@ -1363,8 +1338,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     tgtWeights_(),
     tgtWeightsSum_(),
     triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructFromSurface(srcPatch, tgtPatch, surfPtr);
 }
@@ -1390,8 +1365,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     tgtWeights_(),
     tgtWeightsSum_(),
     triMode_(fineAMI.triMode_),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     label sourceCoarseSize =
     (
@@ -1423,15 +1398,8 @@ CML::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
      || fineAMI.tgtAddress().size() != targetRestrictAddressing.size()
     )
     {
-        FatalErrorIn
-        (
-            "AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation"
-            "("
-                "const AMIInterpolation<SourcePatch, TargetPatch>&, "
-                "const labelList&, "
-                "const labelList&"
-            ")"
-        )   << "Size mismatch." << nl
+        FatalErrorInFunction
+            << "Size mismatch." << nl
             << "Source patch size:" << fineAMI.srcAddress().size() << nl
             << "Source agglomeration size:"
             << sourceRestrictAddressing.size() << nl
@@ -1769,16 +1737,8 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToTarget
 {
     if (fld.size() != srcAddress_.size())
     {
-        FatalErrorIn
-        (
-            "AMIInterpolation::interpolateToTarget"
-            "("
-                "const UList<Type>&, "
-                "const CombineOp&, "
-                "List<Type>&, "
-                "const UList<Type>&"
-            ") const"
-        )   << "Supplied field size is not equal to source patch size" << nl
+        FatalErrorInFunction
+            << "Supplied field size is not equal to source patch size" << nl
             << "    source patch   = " << srcAddress_.size() << nl
             << "    target patch   = " << tgtAddress_.size() << nl
             << "    supplied field = " << fld.size()
@@ -1789,16 +1749,8 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToTarget
     {
         if (defaultValues.size() != tgtAddress_.size())
         {
-            FatalErrorIn
-            (
-                "AMIInterpolation::interpolateToTarget"
-                "("
-                    "const UList<Type>&, "
-                    "const CombineOp&, "
-                    "List<Type>&, "
-                    "const UList<Type>&"
-                ") const"
-            )   << "Employing default values when sum of weights falls below "
+            FatalErrorInFunction
+                << "Employing default values when sum of weights falls below "
                 << lowWeightCorrection_
                 << " but supplied default field size is not equal to target "
                 << "patch size" << nl
@@ -1870,16 +1822,8 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToSource
 {
     if (fld.size() != tgtAddress_.size())
     {
-        FatalErrorIn
-        (
-            "AMIInterpolation::interpolateToSource"
-            "("
-                "const UList<Type>&, "
-                "const CombineOp&, "
-                "List<Type>&, "
-                "const UList<Type>&"
-            ") const"
-        )   << "Supplied field size is not equal to target patch size" << nl
+        FatalErrorInFunction
+            << "Supplied field size is not equal to target patch size" << nl
             << "    source patch   = " << srcAddress_.size() << nl
             << "    target patch   = " << tgtAddress_.size() << nl
             << "    supplied field = " << fld.size()
@@ -1890,16 +1834,8 @@ void CML::AMIInterpolation<SourcePatch, TargetPatch>::interpolateToSource
     {
         if (defaultValues.size() != srcAddress_.size())
         {
-            FatalErrorIn
-            (
-                "AMIInterpolation::interpolateToSource"
-                "("
-                    "const UList<Type>&, "
-                    "const CombineOp&, "
-                    "List<Type>&, "
-                    "const UList<Type>&"
-                ") const"
-            )   << "Employing default values when sum of weights falls below "
+            FatalErrorInFunction
+                << "Employing default values when sum of weights falls below "
                 << lowWeightCorrection_
                 << " but supplied default field size is not equal to target "
                 << "patch size" << nl
@@ -2117,6 +2053,10 @@ const
     // Source face addresses that intersect target face tgtFacei
     const labelList& addr = tgtAddress_[tgtFacei];
 
+    pointHit nearest;
+    nearest.setDistance(GREAT);
+    label nearestFacei = -1;
+
     forAll(addr, i)
     {
         const label srcFacei = addr[i];
@@ -2126,29 +2066,20 @@ const
 
         if (ray.hit())
         {
-            tgtPoint = ray.rawPoint();
-
+            // tgtPoint = ray.rawPoint();
             return srcFacei;
+        }
+        else if (ray.distance() < nearest.distance())
+        {
+            nearest = ray;
+            nearestFacei = srcFacei;
         }
     }
 
-    // No hit registered - try with face normal instead of input normal
-    forAll(addr, i)
+    if (nearest.hit() || nearest.eligibleMiss())
     {
-        label srcFacei = addr[i];
-        const face& f = srcPatch[srcFacei];
-
-        vector nFace(-srcPatch.faceNormals()[srcFacei]);
-        nFace += tgtPatch.faceNormals()[tgtFacei];
-
-        pointHit ray = f.ray(tgtPoint, nFace, srcPoints);
-
-        if (ray.hit())
-        {
-            tgtPoint = ray.rawPoint();
-
-            return srcFacei;
-        }
+        // tgtPoint = nearest.rawPoint();
+        return nearestFacei;
     }
 
     return -1;
@@ -2168,6 +2099,10 @@ const
 {
     const pointField& tgtPoints = tgtPatch.points();
 
+    pointHit nearest;
+    nearest.setDistance(GREAT);
+    label nearestFacei = -1;
+
     // Target face addresses that intersect source face srcFacei
     const labelList& addr = srcAddress_[srcFacei];
 
@@ -2180,29 +2115,20 @@ const
 
         if (ray.hit())
         {
-            srcPoint = ray.rawPoint();
-
+            // srcPoint = ray.rawPoint();
             return tgtFacei;
+        }
+        else if (ray.distance() < nearest.distance())
+        {
+            nearest = ray;
+            nearestFacei = tgtFacei;
         }
     }
 
-    // No hit registered - try with face normal instead of input normal
-    forAll(addr, i)
+    if (nearest.hit() || nearest.eligibleMiss())
     {
-        label tgtFacei = addr[i];
-        const face& f = tgtPatch[tgtFacei];
-
-        vector nFace(-srcPatch.faceNormals()[srcFacei]);
-        nFace += tgtPatch.faceNormals()[tgtFacei];
-
-        pointHit ray = f.ray(srcPoint, n, tgtPoints);
-
-        if (ray.hit())
-        {
-            srcPoint = ray.rawPoint();
-
-            return tgtFacei;
-        }
+        // srcPoint = nearest.rawPoint();
+        return nearestFacei;
     }
 
     return -1;

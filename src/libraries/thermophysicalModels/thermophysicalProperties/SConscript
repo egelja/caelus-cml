@@ -1,0 +1,74 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'thermophysicalProperties'
+
+sources = Split("""
+thermophysicalFunctions/thermophysicalFunction/thermophysicalFunction.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc0/NSRDSfunc0.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc1/NSRDSfunc1.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc2/NSRDSfunc2.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc3/NSRDSfunc3.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc4/NSRDSfunc4.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc5/NSRDSfunc5.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc6/NSRDSfunc6.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc7/NSRDSfunc7.cpp
+thermophysicalFunctions/NSRDSfunctions/NSRDSfunc14/NSRDSfunc14.cpp
+thermophysicalFunctions/APIfunctions/APIdiffCoefFunc/APIdiffCoefFunc.cpp
+thermophysicalProperties/thermophysicalProperties.cpp
+liquidProperties/liquidProperties/liquidProperties.cpp
+liquidProperties/liquidMixtureProperties/liquidMixtureProperties.cpp
+liquidProperties/H2O/H2O.cpp
+liquidProperties/C7H16/C7H16.cpp
+liquidProperties/C12H26/C12H26.cpp
+liquidProperties/C10H22/C10H22.cpp
+liquidProperties/C8H18/C8H18.cpp
+liquidProperties/IC8H18/IC8H18.cpp
+liquidProperties/C4H10O/C4H10O.cpp
+liquidProperties/C2H6O/C2H6O.cpp
+liquidProperties/IDEA/IDEA.cpp
+liquidProperties/aC10H7CH3/aC10H7CH3.cpp
+liquidProperties/bC10H7CH3/bC10H7CH3.cpp
+liquidProperties/C8H10/C8H10.cpp
+liquidProperties/C16H34/C16H34.cpp
+liquidProperties/C9H20/C9H20.cpp
+liquidProperties/C6H6/C6H6.cpp
+liquidProperties/C7H8/C7H8.cpp
+liquidProperties/C6H14/C6H14.cpp
+liquidProperties/C13H28/C13H28.cpp
+liquidProperties/C14H30/C14H30.cpp
+liquidProperties/C3H8/C3H8.cpp
+liquidProperties/C3H6O/C3H6O.cpp
+liquidProperties/C2H6/C2H6.cpp
+liquidProperties/CH3OH/CH3OH.cpp
+liquidProperties/C2H5OH/C2H5OH.cpp
+liquidProperties/Ar/Ar.cpp
+liquidProperties/N2/N2.cpp
+liquidProperties/MB/MB.cpp
+liquidProperties/CH4N2O/CH4N2O.cpp
+liquidProperties/nC3H8O/nC3H8O.cpp
+liquidProperties/iC3H8O/iC3H8O.cpp
+solidProperties/solidProperties/solidProperties.cpp
+solidProperties/solidProperties/solidPropertiesNew.cpp
+solidProperties/solidMixtureProperties/solidMixtureProperties.cpp
+solidProperties/ash/ash.cpp
+solidProperties/C/C.cpp
+solidProperties/CaCO3/CaCO3.cpp
+""")
+
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'specie'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

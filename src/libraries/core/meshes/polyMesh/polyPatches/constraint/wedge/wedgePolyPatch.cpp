@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,10 +61,8 @@ void CML::wedgePolyPatch::initTransforms()
 
         if (mag(cnCmptSum) < (1 - SMALL))
         {
-            FatalErrorIn
-            (
-                "wedgePolyPatch::initTransforms()"
-            )   << "wedge " << name()
+            FatalErrorInFunction
+                << "wedge " << name()
                 << " centre plane does not align with a coordinate plane by "
                 << 1 - mag(cnCmptSum)
                 << exit(FatalError);
@@ -75,10 +73,8 @@ void CML::wedgePolyPatch::initTransforms()
 
         if (magAxis < SMALL)
         {
-            FatalErrorIn
-            (
-                "wedgePolyPatch::initTransforms()"
-            )   << "wedge " << name()
+            FatalErrorInFunction
+                << "wedge " << name()
                 << " plane aligns with a coordinate plane." << nl
                 << "    The wedge plane should make a small angle (~2.5deg)"
                    " with the coordinate plane" << nl

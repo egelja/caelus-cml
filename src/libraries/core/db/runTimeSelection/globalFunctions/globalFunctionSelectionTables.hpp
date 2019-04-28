@@ -105,7 +105,7 @@ Description
         if (memberFunction##argNames##MemberFunctionTablePtr_)                \
         {                                                                     \
             delete memberFunction##argNames##MemberFunctionTablePtr_;         \
-            memberFunction##argNames##MemberFunctionTablePtr_ = NULL;         \
+            memberFunction##argNames##MemberFunctionTablePtr_ = nullptr;         \
         }                                                                     \
     }
 
@@ -117,7 +117,7 @@ Description
                                                                               \
     /* Define the memberFunction table */                                     \
     memberFunction##argNames##MemberFunctionTable*                            \
-        memberFunction##argNames##MemberFunctionTablePtr_ = NULL
+        memberFunction##argNames##MemberFunctionTablePtr_ = nullptr
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

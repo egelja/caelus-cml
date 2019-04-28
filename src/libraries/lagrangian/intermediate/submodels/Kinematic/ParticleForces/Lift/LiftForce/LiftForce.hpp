@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,6 +64,7 @@ protected:
         virtual scalar Cl
         (
             const typename CloudType::parcelType& p,
+            const typename CloudType::parcelType::trackingData& td,
             const vector& curlUc,
             const scalar Re,
             const scalar muc
@@ -117,6 +118,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -137,11 +139,8 @@ CML::LiftForce<CloudType>::curlUcInterp() const
 {
     if (!curlUcInterpPtr_.valid())
     {
-        FatalErrorIn
-        (
-            "inline const CML::interpolation<CML::vector>&"
-            "CML::LiftForce<CloudType>::curlUcInterp() const"
-        )   << "Carrier phase curlUc interpolation object not set"
+        FatalErrorInFunction
+            << "Carrier phase curlUc interpolation object not set"
             << abort(FatalError);
     }
 
@@ -157,6 +156,7 @@ template<class CloudType>
 CML::scalar CML::LiftForce<CloudType>::LiftForce::Cl
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const vector& curlUc,
     const scalar Re,
     const scalar muc
@@ -180,7 +180,7 @@ CML::LiftForce<CloudType>::LiftForce
 :
     ParticleForce<CloudType>(owner, mesh, dict, forceType, true),
     UName_(this->coeffs().template lookupOrDefault<word>("U", "U")),
-    curlUcInterpPtr_(NULL)
+    curlUcInterpPtr_(nullptr)
 {}
 
 
@@ -189,7 +189,7 @@ CML::LiftForce<CloudType>::LiftForce(const LiftForce& lf)
 :
     ParticleForce<CloudType>(lf),
     UName_(lf.UName_),
-    curlUcInterpPtr_(NULL)
+    curlUcInterpPtr_(nullptr)
 {}
 
 
@@ -253,20 +253,21 @@ template<class CloudType>
 CML::forceSuSp CML::LiftForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     vector curlUc =
-        curlUcInterp().interpolate(p.position(), p.currentTetIndices());
+        curlUcInterp().interpolate(p.coordinates(), p.currentTetIndices());
 
-    scalar Cl = this->Cl(p, curlUc, Re, muc);
+    scalar Cl = this->Cl(p, td, curlUc, Re, muc);
 
-    value.Su() = mass/p.rho()*p.rhoc()*Cl*((p.Uc() - p.U())^curlUc);
+    value.Su() = mass/p.rho()*td.rhoc()*Cl*((td.Uc() - p.U())^curlUc);
 
     return value;
 }

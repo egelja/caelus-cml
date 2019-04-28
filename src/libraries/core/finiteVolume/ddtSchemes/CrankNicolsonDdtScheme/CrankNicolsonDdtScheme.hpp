@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -644,9 +644,9 @@ CrankNicolsonDdtScheme<Type>::CrankNicolsonDdtScheme
         const scalar ocCoeff = firstToken.number();
         if (ocCoeff < 0 || ocCoeff > 1)
         {
-            FatalErrorIn
+            FatalIOErrorInFunction
             (
-                "CrankNicolsonDdtScheme<Type>(const fvMesh&, Istream&)"
+                is
             )   << "Off-centreing coefficient = " << ocCoeff
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
@@ -1624,7 +1624,11 @@ CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr
             this->fvcDdtPhiCoeff(U.oldTime(), phi.oldTime())
            *(
                 (rDtCoef*phi.oldTime() + offCentre_(dphidt0()))
-              - (fvc::interpolate(rDtCoef*U.oldTime() + offCentre_(ddt0())) & mesh().Sf())
+              - fvc::dotInterpolate
+                (
+                    mesh().Sf(),
+                    rDtCoef*U.oldTime() + offCentre_(ddt0())
+                )
             )
         )
     );
@@ -1717,7 +1721,7 @@ CrankNicolsonDdtScheme<Type>::fvcDdtUfCorr
     }
     else
     {
-        FatalErrorIn("CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of Uf are not correct"
             << abort(FatalError);
 
@@ -1792,7 +1796,11 @@ CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr
                 this->fvcDdtPhiCoeff(rhoU0, phi.oldTime())
                *(
                     (rDtCoef*phi.oldTime() + offCentre_(dphidt0()))
-                  - (fvc::interpolate(rDtCoef*rhoU0 + offCentre_(ddt0())) & mesh().Sf())
+                  - fvc::dotInterpolate
+                    (
+                        mesh().Sf(),
+                        rDtCoef*rhoU0 + offCentre_(ddt0())
+                    )
                 )
             )
         );
@@ -1809,7 +1817,7 @@ CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr
     }
     else
     {
-        FatalErrorIn("CrankNicolsonDdtScheme<Type>::fvcDdtPhiCorr")
+        FatalErrorInFunction
             << "dimensions of phi are not correct"
             << abort(FatalError);
 

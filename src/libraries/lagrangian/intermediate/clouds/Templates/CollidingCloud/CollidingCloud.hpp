@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,6 +36,7 @@ Description
 #include "fvMesh.hpp"
 #include "volFields.hpp"
 #include "CollisionModel.hpp"
+#include "NoCollision.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -91,6 +92,10 @@ protected:
 
     // Protected data
 
+        //- Thermo parcel constant properties
+        typename parcelType::constantProperties constProps_;
+
+
         // References to the cloud sub-models
 
             //- Collision model
@@ -107,8 +112,13 @@ protected:
         // Cloud evolution functions
 
             //- Move-collide particles
-            template<class TrackData>
-            void moveCollide(TrackData& td, const scalar deltaT);
+            template<class TrackCloudType>
+            void moveCollide
+            (
+                TrackCloudType& cloud,
+                typename parcelType::trackingData& td,
+                const scalar deltaT
+            );
 
             //- Reset state of cloud
             void cloudReset(CollidingCloud<CloudType>& c);
@@ -174,11 +184,9 @@ public:
             //- Return a reference to the cloud copy
             inline const CollidingCloud& cloudCopy() const;
 
-            //- If the collision model controls the wall interaction,
-            //  then the wall impact distance should be zero.
-            //  Otherwise, it should be allowed to be the value from
-            //  the Parcel.
-            virtual bool hasWallImpactDistance() const;
+            //- Return the constant properties
+            inline const typename parcelType::constantProperties&
+                constProps() const;
 
 
             // Sub-models
@@ -191,8 +199,13 @@ public:
                 inline CollisionModel<CollidingCloud<CloudType> >&
                     collision();
 
+        // Check
 
-        // Evolution
+            //- Total rotational kinetic energy in the system
+            inline scalar rotationalKineticEnergyOfSystem() const;
+
+
+        // Cloud evolution functions
 
             //- Store the current cloud state
             void storeState();
@@ -204,9 +217,18 @@ public:
             void evolve();
 
             //- Particle motion
-            template<class TrackData>
-            void motion(TrackData& td);
+            template<class TrackCloudType>
+            void motion
+            (
+                TrackCloudType& cloud,
+                typename parcelType::trackingData& td
+            );
 
+
+        // I-O
+
+            //- Print cloud information
+            void info();
 };
 
 
@@ -226,6 +248,14 @@ CML::CollidingCloud<CloudType>::cloudCopy() const
 
 
 template<class CloudType>
+inline const typename CloudType::particleType::constantProperties&
+CML::CollidingCloud<CloudType>::constProps() const
+{
+    return constProps_;
+}
+
+
+template<class CloudType>
 inline const CML::CollisionModel<CML::CollidingCloud<CloudType> >&
 CML::CollidingCloud<CloudType>::collision() const
 {
@@ -238,6 +268,24 @@ inline CML::CollisionModel<CML::CollidingCloud<CloudType> >&
 CML::CollidingCloud<CloudType>::collision()
 {
     return collisionModel_();
+}
+
+
+template<class CloudType>
+inline CML::scalar
+CML::CollidingCloud<CloudType>::rotationalKineticEnergyOfSystem() const
+{
+    scalar rotationalKineticEnergy = 0.0;
+
+    forAllConstIter(typename CollidingCloud<CloudType>, *this, iter)
+    {
+        const parcelType& p = iter();
+
+        rotationalKineticEnergy +=
+            p.nParticle()*0.5*p.momentOfInertia()*(p.omega() & p.omega());
+    }
+
+    return rotationalKineticEnergy;
 }
 
 
@@ -258,28 +306,29 @@ void CML::CollidingCloud<CloudType>::setModels()
 
 
 template<class CloudType>
-template<class TrackData>
+template<class TrackCloudType>
 void  CML::CollidingCloud<CloudType>::moveCollide
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    typename parcelType::trackingData& td,
     const scalar deltaT
 )
 {
-    td.part() = TrackData::tpVelocityHalfStep;
-    CloudType::move(td,  deltaT);
+    td.part() = parcelType::trackingData::tpVelocityHalfStep;
+    CloudType::move(cloud, td, deltaT);
 
-    td.part() = TrackData::tpLinearTrack;
-    CloudType::move(td,  deltaT);
+    td.part() = parcelType::trackingData::tpLinearTrack;
+    CloudType::move(cloud, td, deltaT);
 
-    // td.part() = TrackData::tpRotationalTrack;
-    // CloudType::move(td);
+    // td.part() = parcelType::trackingData::tpRotationalTrack;
+    // CloudType::move(cloud, td, deltaT);
 
     this->updateCellOccupancy();
 
     this->collision().collide();
 
-    td.part() = TrackData::tpVelocityHalfStep;
-    CloudType::move(td,  deltaT);
+    td.part() = parcelType::trackingData::tpVelocityHalfStep;
+    CloudType::move(cloud, td, deltaT);
 }
 
 
@@ -307,25 +356,9 @@ CML::CollidingCloud<CloudType>::CollidingCloud
 )
 :
     CloudType(cloudName, rho, U, mu, g, false),
-    collisionModel_(NULL)
+    constProps_(this->particleProperties()),
+    collisionModel_(nullptr)
 {
-    if (this->solution().steadyState())
-    {
-        FatalErrorIn
-        (
-            "CML::CollidingCloud<CloudType>::CollidingCloud"
-            "("
-                "const word&, "
-                "const volScalarField&, "
-                "const volVectorField&, "
-                "const volScalarField&, "
-                "const dimensionedVector&, "
-                "bool"
-            ")"
-        )   << "Collision modelling not currently available for steady state "
-            << "calculations" << exit(FatalError);
-    }
-
     if (this->solution().active())
     {
         setModels();
@@ -333,6 +366,18 @@ CML::CollidingCloud<CloudType>::CollidingCloud
         if (readFields)
         {
             parcelType::readFields(*this);
+            this->deleteLostParticles();
+        }
+
+        if
+        (
+            this->solution().steadyState()
+         && !isType<NoCollision<CollidingCloud<CloudType>>>(collisionModel_())
+        )
+        {
+            FatalErrorInFunction
+                << "Collision modelling not currently available "
+                << "for steady state calculations" << exit(FatalError);
         }
     }
 }
@@ -359,7 +404,7 @@ CML::CollidingCloud<CloudType>::CollidingCloud
 )
 :
     CloudType(mesh, name, c),
-    collisionModel_(NULL)
+    collisionModel_(nullptr)
 {}
 
 
@@ -371,13 +416,6 @@ CML::CollidingCloud<CloudType>::~CollidingCloud()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-bool CML::CollidingCloud<CloudType>::hasWallImpactDistance() const
-{
-    return !collision().controlsWallInteraction();
-}
-
 
 template<class CloudType>
 void CML::CollidingCloud<CloudType>::storeState()
@@ -405,17 +443,20 @@ void CML::CollidingCloud<CloudType>::evolve()
 {
     if (this->solution().canEvolve())
     {
-        typename parcelType::template
-            TrackingData<CollidingCloud<CloudType> > td(*this);
+        typename parcelType::trackingData td(*this);
 
-        this->solve(td);
+        this->solve(*this, td);
     }
 }
 
 
 template<class CloudType>
-template<class TrackData>
-void  CML::CollidingCloud<CloudType>::motion(TrackData& td)
+template<class TrackCloudType>
+void  CML::CollidingCloud<CloudType>::motion
+(
+    TrackCloudType& cloud,
+    typename parcelType::trackingData& td
+)
 {
     // Sympletic leapfrog integration of particle forces:
     // + apply half deltaV with stored force
@@ -437,17 +478,29 @@ void  CML::CollidingCloud<CloudType>::motion(TrackData& td)
 
         while(!(++moveCollideSubCycle).end())
         {
-            moveCollide(td, this->db().time().deltaTValue());
+            moveCollide(cloud, td, this->db().time().deltaTValue());
         }
 
         moveCollideSubCycle.endSubCycle();
     }
     else
     {
-        moveCollide(td, this->db().time().deltaTValue());
+        moveCollide(cloud, td, this->db().time().deltaTValue());
     }
 }
 
+
+template<class CloudType>
+void CML::CollidingCloud<CloudType>::info()
+{
+    CloudType::info();
+
+    scalar rotationalKineticEnergy = rotationalKineticEnergyOfSystem();
+    reduce(rotationalKineticEnergy, sumOp<scalar>());
+
+    Info<< "    Rotational kinetic energy       = "
+        << rotationalKineticEnergy << nl;
+}
 
 #endif
 

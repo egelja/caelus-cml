@@ -128,7 +128,7 @@ void CML::localPointRegion::countPointRegions
 
             if (minRegion[faceI].empty())
             {
-                FatalErrorIn("localPointRegion::countPointRegions(..)")
+                FatalErrorInFunction
                     << "Face from candidateFace without minRegion set." << endl
                     << "Face:" << faceI << " fc:" << mesh.faceCentres()[faceI]
                     << " verts:" << f << abort(FatalError);
@@ -568,11 +568,8 @@ CML::labelList CML::localPointRegion::findDuplicateFaces
 
                 if (isDuplicate(f, otherF, true))
                 {
-                    FatalErrorIn
-                    (
-                        "findDuplicateFaces(const primitiveMesh&"
-                        ", const labelList&)"
-                    )   << "Face:" << bFaceI + mesh.nInternalFaces()
+                    FatalErrorInFunction
+                        << "Face:" << bFaceI + mesh.nInternalFaces()
                         << " has local points:" << f
                         << " which are in same order as face:"
                         << otherFaceI + mesh.nInternalFaces()
@@ -590,11 +587,8 @@ CML::labelList CML::localPointRegion::findDuplicateFaces
                      || duplicateFace[otherFaceI] != -1
                     )
                     {
-                        FatalErrorIn
-                        (
-                            "findDuplicateFaces(const primitiveMesh&"
-                            ", const labelList&)"
-                        )   << "One of two duplicate faces already marked"
+                        FatalErrorInFunction
+                            << "One of two duplicate faces already marked"
                             << " as duplicate." << nl
                             << "This means that three or more faces share"
                             << " the same points and this is illegal." << nl
@@ -656,10 +650,7 @@ CML::List<CML::labelPair> CML::localPointRegion::findDuplicateFacePairs
              || (patch1 != -1 && isA<processorPolyPatch>(patches[patch1]))
             )
             {
-                FatalErrorIn
-                (
-                    "localPointRegion::findDuplicateFacePairs(const polyMesh&)"
-                )
+                FatalErrorInFunction
                     << "One of two duplicate faces is on"
                     << " processorPolyPatch."
                     << "This is not allowed." << nl

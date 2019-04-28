@@ -1,5 +1,5 @@
 /*-------------------------------*- C++ -*-----------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,6 +32,7 @@ Description
 
 const char* const CML::CAELUSversion = "VERSION_STRING";
 const char* const CML::CAELUSbuild = "BUILD_STRING";
+const char* const CML::CAELUStag = "TAG_STRING";
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Setup an error handler for the global new operator
@@ -301,7 +302,7 @@ CML::messageStream::operator CML::OSstream&()
 
                 if (errorCount_ >= maxErrors_)
                 {
-                    FatalErrorIn("messageStream::operator OSstream&()")
+                    FatalErrorInFunction
                         << "Too many errors"
                         << abort(FatalError);
                 }
@@ -701,11 +702,8 @@ void CML::IOerror::SafeFatalIOError
 {
     if (JobInfo::constructed)
     {
-        FatalIOErrorIn
-        (
-            "primitiveEntry::readEntry(const dictionary&, Istream&)",
-            ioStream
-        )   << msg << CML::exit(FatalIOError);
+        FatalIOErrorInFunction(ioStream)
+            << msg << CML::exit(FatalIOError);
     }
     else
     {
@@ -916,7 +914,7 @@ CML::autoPtr<CML::token::compound> CML::token::compound::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn("token::compound::New(const word&, Istream&)", is)
+        FatalIOErrorInFunction(is)
             << "Unknown compound type " << compoundType << nl << nl
             << "Valid compound types:" << endl
             << IstreamConstructorTablePtr_->sortedToc()
@@ -945,11 +943,8 @@ CML::token::compound& CML::token::transferCompoundToken(const Istream& is)
     {
         if (compoundTokenPtr_->empty())
         {
-            FatalIOErrorIn
-            (
-                "token::transferCompoundToken(const Istream& is)",
-                is
-            )   << "compound has already been transferred from token\n    "
+            FatalIOErrorInFunction(is)
+                << "compound has already been transferred from token\n    "
                 << info() << abort(FatalIOError);
         }
         else
@@ -989,13 +984,13 @@ namespace debug
 //! \cond ignoreDocumentation - local scope
 //- Skip documentation : local scope only
 
-dictionary* controlDictPtr_(NULL);
-dictionary* debugSwitchesPtr_(NULL);
-dictionary* infoSwitchesPtr_(NULL);
-dictionary* optimisationSwitchesPtr_(NULL);
+dictionary* controlDictPtr_(nullptr);
+dictionary* debugSwitchesPtr_(nullptr);
+dictionary* infoSwitchesPtr_(nullptr);
+dictionary* optimisationSwitchesPtr_(nullptr);
 
 // Debug switch read and write callback tables.
-simpleObjectRegistry* debugObjectsPtr_(NULL);
+simpleObjectRegistry* debugObjectsPtr_(nullptr);
 
 
 // To ensure controlDictPtr_ is deleted at the end of the run
@@ -1010,9 +1005,9 @@ public:
     {
         deleteDemandDrivenData(debugObjectsPtr_);
 
-        debugSwitchesPtr_ = NULL;
-        infoSwitchesPtr_ = NULL;
-        optimisationSwitchesPtr_ = NULL;
+        debugSwitchesPtr_ = nullptr;
+        infoSwitchesPtr_ = nullptr;
+        optimisationSwitchesPtr_ = nullptr;
         deleteDemandDrivenData(controlDictPtr_);
     }
 };
@@ -1038,12 +1033,7 @@ CML::dictionary& CML::debug::controlDict()
 
             if (!ifs.good())
             {
-                SafeFatalIOErrorIn
-                (
-                    "debug::controlDict()",
-                    ifs,
-                    "Cannot open controlDict"
-                );
+                SafeFatalIOErrorInFunction(ifs, "Cannot open controlDict");
             }
             controlDictPtr_->merge(dictionary(ifs));
         }
@@ -1229,7 +1219,7 @@ CML::regIOobject::regIOobject(const IOobject& io, const bool isTime)
       ? 0
       : db().getEvent()
     ),
-    isPtr_(NULL)
+    isPtr_(nullptr)
 {
     // Register with objectRegistry if requested
     if (registerObject())
@@ -1247,13 +1237,13 @@ CML::regIOobject::regIOobject(const regIOobject& rio)
     ownedByRegistry_(false),
     watchIndex_(rio.watchIndex_),
     eventNo_(db().getEvent()),
-    isPtr_(NULL)
+    isPtr_(nullptr)
 {
     // Do not register copy with objectRegistry
 }
 
 
-// Construct as copy, and transferring objectRegistry registration to copy
+// Construct as copy, transferring objectRegistry registration to copy
 // if registerCopy is true
 CML::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
 :
@@ -1262,11 +1252,52 @@ CML::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
     ownedByRegistry_(false),
     watchIndex_(-1),
     eventNo_(db().getEvent()),
-    isPtr_(NULL)
+    isPtr_(nullptr)
 {
     if (registerCopy && rio.registered_)
     {
         const_cast<regIOobject&>(rio).checkOut();
+        checkIn();
+    }
+}
+
+
+CML::regIOobject::regIOobject
+(
+    const word& newName,
+    const regIOobject& rio,
+    bool registerCopy
+)
+:
+    IOobject(newName, rio.instance(), rio.local(), rio.db()),
+    registered_(false),
+    ownedByRegistry_(false),
+    watchIndex_(-1),
+    eventNo_(db().getEvent()),
+    isPtr_(nullptr)
+{
+    if (registerCopy)
+    {
+        checkIn();
+    }
+}
+
+
+CML::regIOobject::regIOobject
+(
+    const IOobject& io,
+    const regIOobject& rio
+)
+:
+    IOobject(io),
+    registered_(false),
+    ownedByRegistry_(false),
+    watchIndex_(-1),
+    eventNo_(db().getEvent()),
+    isPtr_(nullptr)
+{
+    if (registerObject())
+    {
         checkIn();
     }
 }
@@ -1288,7 +1319,7 @@ CML::regIOobject::~regIOobject()
     if (isPtr_)
     {
         delete isPtr_;
-        isPtr_ = NULL;
+        isPtr_ = nullptr;
     }
 
     // Check out of objectRegistry if not owned by the registry
@@ -1319,7 +1350,7 @@ bool CML::regIOobject::checkIn()
         {
             if (watchIndex_ != -1)
             {
-                FatalErrorIn("regIOobject::checkIn()")
+                FatalErrorInFunction
                     << "Object " << objectPath()
                     << " already watched with index " << watchIndex_
                     << abort(FatalError);
@@ -1343,14 +1374,14 @@ bool CML::regIOobject::checkIn()
             {
                 // for ease of finding where attempted duplicate check-in
                 // originated
-                FatalErrorIn("regIOobject::checkIn()")
+                FatalErrorInFunction
                     << "failed to register object " << objectPath()
                     << " the name already exists in the objectRegistry"
                     << abort(FatalError);
             }
             else
             {
-                WarningIn("regIOobject::checkIn()")
+                WarningInFunction
                     << "failed to register object " << objectPath()
                     << " the name already exists in the objectRegistry"
                     << endl;
@@ -1491,7 +1522,7 @@ void CML::regIOobject::operator=(const IOobject& io)
     if (isPtr_)
     {
         delete isPtr_;
-        isPtr_ = NULL;
+        isPtr_ = nullptr;
     }
 
     // Check out of objectRegistry
@@ -1729,7 +1760,7 @@ int CML::UPstream::myProcNo_(0);
 bool CML::UPstream::parRun_(false);
 
 // List of process IDs
-CML::List<int> CML::UPstream::procIDs_(label(1), 0);
+CML::List<CML::label> CML::UPstream::procIDs_(CML::label(1), CML::label(0));
 
 // Standard transfer message type
 int CML::UPstream::msgType_(1);
@@ -2249,6 +2280,21 @@ const CML::dimensionedScalar CML::constant::physicoChemical::c2
     )
 );
 
+//#include "thermodynamicConstants.cpp"
+
+#include "thermodynamicConstants.hpp"
+#include "physicoChemicalConstants.hpp"
+
+
+// Note: the 1e3 converts from /mol to /kmol for consistency with the
+// SI choice of kg rather than g for mass.
+// This is not appropriate for USCS and will be changed to an entry in
+// the DimensionedConstants dictionary in etc/controlDict
+const CML::scalar CML::constant::thermodynamic::RR =
+    1e3*constant::physicoChemical::R.value();
+
+const CML::scalar CML::constant::thermodynamic::Pstd = standard::Pstd.value();
+const CML::scalar CML::constant::thermodynamic::Tstd = standard::Tstd.value();
 
 //#include "dimensionedConstants.cpp"
 #include "dimensionedConstants.hpp"
@@ -2260,7 +2306,7 @@ namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dictionary* dimensionedConstantsPtr_(NULL);
+dictionary* dimensionedConstantsPtr_(nullptr);
 
 dictionary& dimensionedConstants()
 {
@@ -2384,21 +2430,21 @@ CML::JobInfo::JobInfo()
 
         if (baseDir.empty())
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot get JobInfo directory $CAELUS_JOB_DIR"
                 << CML::exit(FatalError);
         }
 
         if (!isDir(runningDir) && !mkDir(runningDir))
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot make JobInfo directory " << runningDir
                 << CML::exit(FatalError);
         }
 
         if (!isDir(finishedDir) && !mkDir(finishedDir))
         {
-            FatalErrorIn("JobInfo::JobInfo()")
+            FatalErrorInFunction
                 << "Cannot make JobInfo directory " << finishedDir
                 << CML::exit(FatalError);
         }
@@ -2450,7 +2496,7 @@ void CML::JobInfo::write() const
     {
         if (!write(OFstream(runningJobPath_)()))
         {
-            FatalErrorIn("JobInfo::write() const")
+            FatalErrorInFunction
                 << "Failed to write to JobInfo file "
                 << runningJobPath_
                 << CML::exit(FatalError);

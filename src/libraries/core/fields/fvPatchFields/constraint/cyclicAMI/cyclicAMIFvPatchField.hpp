@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -257,16 +257,8 @@ CML::cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField
 {
     if (!isA<cyclicAMIFvPatch>(this->patch()))
     {
-        FatalErrorIn
-        (
-            "cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField"
-            "("
-                "const cyclicAMIFvPatchField<Type>& ,"
-                "const fvPatch&, "
-                "const DimensionedField<Type, volMesh>&, "
-                "const fvPatchFieldMapper&"
-            ")"
-        )   << "    patch type '" << p.type()
+        FatalErrorInFunction
+            << "    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()
@@ -290,16 +282,8 @@ CML::cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField
 {
     if (!isA<cyclicAMIFvPatch>(p))
     {
-        FatalIOErrorIn
-        (
-            "cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField"
-            "("
-                "const fvPatch&, "
-                "const DimensionedField<Type, volMesh>&, "
-                "const dictionary&"
-            ")",
-            dict
-        )   << "    patch type '" << p.type()
+        FatalIOErrorInFunction(dict)
+            << "    patch type '" << p.type()
             << "' not constraint type '" << typeName << "'"
             << "\n    for patch " << p.name()
             << " of field " << this->dimensionedInternalField().name()

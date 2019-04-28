@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,21 +26,46 @@ License
 CML::trackedParticle::trackedParticle
 (
     const polyMesh& mesh,
-    const vector& position,
-    const label cellI,
-    const label tetFaceI,
+    const barycentric& coordinates,
+    const label celli,
+    const label tetFacei,
     const label tetPtI,
     const point& end,
     const label level,
     const label i,
-    const label j
+    const label j,
+    const label k
 )
 :
-    particle(mesh, position, cellI, tetFaceI, tetPtI),
+    particle(mesh, coordinates, celli, tetFacei, tetPtI),
+    start_(position()),
     end_(end),
     level_(level),
     i_(i),
-    j_(j)
+    j_(j),
+    k_(k)
+{}
+
+
+CML::trackedParticle::trackedParticle
+(
+    const polyMesh& mesh,
+    const vector& position,
+    const label celli,
+    const point& end,
+    const label level,
+    const label i,
+    const label j,
+    const label k
+)
+:
+    particle(mesh, position, celli),
+    start_(this->position()),
+    end_(end),
+    level_(level),
+    i_(i),
+    j_(j),
+    k_(k)
 {}
 
 
@@ -57,27 +82,24 @@ CML::trackedParticle::trackedParticle
     {
         if (is.format() == IOstream::ASCII)
         {
-            is >> end_;
+            is >> start_ >> end_;
             level_ = readLabel(is);
             i_ = readLabel(is);
             j_ = readLabel(is);
+            k_ = readLabel(is);
         }
         else
         {
             is.read
             (
-                reinterpret_cast<char*>(&end_),
-                sizeof(end_) + sizeof(level_) + sizeof(i_) + sizeof(j_)
+                reinterpret_cast<char*>(&start_),
+                sizeof(start_) + sizeof(end_) + sizeof(level_)
+              + sizeof(i_) + sizeof(j_) + sizeof(k_)
             );
         }
     }
 
-    // Check state of Istream
-    is.check
-    (
-        "trackedParticle::trackedParticle"
-        "(const Cloud<trackedParticle>&, Istream&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -85,42 +107,44 @@ CML::trackedParticle::trackedParticle
 
 bool CML::trackedParticle::move
 (
+    Cloud<trackedParticle>& cloud,
     trackingData& td,
-    const scalar trackedParticle
+    const scalar trackTime
 )
 {
     td.switchProcessor = false;
-    td.keepParticle = true;
 
-    scalar tEnd = (1.0 - stepFraction())*trackedParticle;
-    scalar dtMax = tEnd;
+    scalar tEnd = (1.0 - stepFraction())*trackTime;
 
-    while (td.keepParticle && !td.switchProcessor && tEnd > SMALL)
+    if (tEnd <= SMALL && onBoundaryFace())
     {
-        // set the lagrangian time-step
-        scalar dt = min(dtMax, tEnd);
+        // This is a hack to handle particles reaching their endpoint
+        // on a processor boundary. If the endpoint is on a processor face
+        // it currently gets transferred backwards and forwards infinitely.
 
-        // mark visited cell with max level.
-        td.maxLevel()[cell()] = max(td.maxLevel()[cell()], level_);
+        // Remove the particle
+        td.keepParticle = false;
+    }
+    else
+    {
+        td.keepParticle = true;
 
-        dt *= trackToFace(end_, td);
+        while (td.keepParticle && !td.switchProcessor && stepFraction() < 1)
+        {
+            // mark visited cell with max level.
+            td.maxLevel_[cell()] = max(td.maxLevel_[cell()], level_);
 
-        tEnd -= dt;
-        stepFraction() = 1.0 - tEnd/trackedParticle;
+            const scalar f = 1 - stepFraction();
+            const vector s = end_ - start_;
+            trackToAndHitFace(f*s, f, cloud, td);
+        }
     }
 
     return td.keepParticle;
 }
 
 
-bool CML::trackedParticle::hitPatch
-(
-    const polyPatch&,
-    trackingData& td,
-    const label patchI,
-    const scalar trackFraction,
-    const tetIndices& tetIs
-)
+bool CML::trackedParticle::hitPatch(Cloud<trackedParticle>&, trackingData&)
 {
     return false;
 }
@@ -128,7 +152,7 @@ bool CML::trackedParticle::hitPatch
 
 void CML::trackedParticle::hitWedgePatch
 (
-    const wedgePolyPatch&,
+    Cloud<trackedParticle>&,
     trackingData& td
 )
 {
@@ -137,9 +161,20 @@ void CML::trackedParticle::hitWedgePatch
 }
 
 
+//void CML::trackedParticle::hitSymmetryPlanePatch
+//(
+//    Cloud<trackedParticle>&,
+//    trackingData&
+//)
+//{
+//    // Remove particle
+//    td.keepParticle = false;
+//}
+
+
 void CML::trackedParticle::hitSymmetryPatch
 (
-    const symmetryPolyPatch&,
+    Cloud<trackedParticle>&,
     trackingData& td
 )
 {
@@ -150,7 +185,7 @@ void CML::trackedParticle::hitSymmetryPatch
 
 void CML::trackedParticle::hitCyclicPatch
 (
-    const cyclicPolyPatch&,
+    Cloud<trackedParticle>&,
     trackingData& td
 )
 {
@@ -159,22 +194,57 @@ void CML::trackedParticle::hitCyclicPatch
 }
 
 
-void CML::trackedParticle::hitProcessorPatch
+void CML::trackedParticle::hitCyclicAMIPatch
 (
-    const processorPolyPatch&,
-    trackingData& td
+    Cloud<trackedParticle>&,
+    trackingData& td,
+    const vector& direction
 )
 {
     // Remove particle
+    td.keepParticle = false;
+}
+
+
+void CML::trackedParticle::hitCyclicACMIPatch
+(
+    Cloud<trackedParticle>&,
+    trackingData& td,
+    const vector& direction
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+//void CML::trackedParticle::hitCyclicRepeatAMIPatch
+//(
+//    Cloud<trackedParticle>&,
+//    trackingData& td,
+//    const vector&
+//)
+//{
+//    // Remove particle
+//    td.keepParticle = false;
+//}
+
+
+void CML::trackedParticle::hitProcessorPatch
+(
+    Cloud<trackedParticle>&,
+    trackingData& td
+)
+{
+    // Move to different processor
     td.switchProcessor = true;
 }
 
 
 void CML::trackedParticle::hitWallPatch
 (
-    const wallPolyPatch& wpp,
-    trackingData& td,
-    const tetIndices&
+    Cloud<trackedParticle>&,
+    trackingData& td
 )
 {
     // Remove particle
@@ -182,14 +252,23 @@ void CML::trackedParticle::hitWallPatch
 }
 
 
-void CML::trackedParticle::hitPatch
+void CML::trackedParticle::correctAfterParallelTransfer
 (
-    const polyPatch& wpp,
+    const label patchi,
     trackingData& td
 )
 {
-    // Remove particle
-    td.keepParticle = false;
+    particle::correctAfterParallelTransfer(patchi, td);
+
+    label edgeI = k();
+    if (edgeI != -1)
+    {
+        label featI = i();
+
+        // Mark edge we're currently on (was set on sending processor but not
+        // receiving sender)
+        td.featureEdgeVisited_[featI].set(edgeI, 1u);
+    }
 }
 
 
@@ -200,24 +279,25 @@ CML::Ostream& CML::operator<<(Ostream& os, const trackedParticle& p)
     if (os.format() == IOstream::ASCII)
     {
         os  << static_cast<const particle&>(p)
+            << token::SPACE << p.start_
             << token::SPACE << p.end_
             << token::SPACE << p.level_
             << token::SPACE << p.i_
-            << token::SPACE << p.j_;
+            << token::SPACE << p.j_
+            << token::SPACE << p.k_;
     }
     else
     {
         os  << static_cast<const particle&>(p);
         os.write
         (
-            reinterpret_cast<const char*>(&p.end_),
-            sizeof(p.end_) + sizeof(p.level_) + sizeof(p.i_) + sizeof(p.j_)
+            reinterpret_cast<const char*>(&p.start_),
+            sizeof(p.start_) + sizeof(p.end_) + sizeof(p.level_)
+          + sizeof(p.i_) + sizeof(p.j_) + sizeof(p.k_)
         );
     }
 
-    // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const trackedParticle&)");
-
+    os.check(FUNCTION_NAME);
     return os;
 }
 

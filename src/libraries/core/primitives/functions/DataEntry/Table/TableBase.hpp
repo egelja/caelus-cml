@@ -307,7 +307,7 @@ CML::DataEntryTypes::TableBase<Type>::wordToBoundsHandling
     }
     else
     {
-        WarningIn("CML::DataEntryTypes::TableBase<Type>::wordToBoundsHandling(const word&)")
+        WarningInFunction
             << "bad outOfBounds specifier " << bound << " using 'warn'"
             << endl;
 
@@ -335,10 +335,7 @@ void CML::DataEntryTypes::TableBase<Type>::check() const
 {
     if (!table_.size())
     {
-        FatalErrorIn
-        (
-            "bool CML::DataEntryTypes::TableBase<Type>::check()"
-        ) 
+        FatalErrorInFunction
             << "Table for entry " << this->name_ << " is invalid (empty)"
             << nl << exit(FatalError);
     }
@@ -353,7 +350,7 @@ void CML::DataEntryTypes::TableBase<Type>::check() const
         // avoid duplicate values (divide-by-zero error)
         if (currValue <= prevValue)
         {
-            FatalErrorIn("CML::TableBase<Type>::check() const")
+            FatalErrorInFunction
                 << "out-of-order value: " << currValue << " at index " << i
                 << exit(FatalError);
         }
@@ -375,32 +372,19 @@ bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds
         {
             case ERROR:
             {
-                FatalErrorIn
-                (
-                    "bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds"
-                    "("
-                        "const scalar, "
-                        "scalar&"
-                    ") const"
-                ) 
+                FatalErrorInFunction
                     << "value (" << x << ") underflow"
                     << exit(FatalError);
                 break;
             }
             case WARN:
             {
-                WarningIn
-                (
-                    "bool CML::DataEntryTypes::TableBase<Type>::checkMinBounds"
-                    "("
-                        "const scalar, "
-                        "scalar&"
-                    ") const"
-                )
+                WarningInFunction
                     << "value (" << x << ") underflow" << nl
                     << endl;
 
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case CLAMP:
             {
@@ -439,32 +423,19 @@ bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds
         {
             case ERROR:
             {
-                FatalErrorIn
-                (
-                    "bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds"
-                    "("
-                        "const scalar, "
-                        "scalar&"
-                    ") const"
-                )
+                FatalErrorInFunction
                     << "value (" << x << ") overflow"
                     << exit(FatalError);
                 break;
             }
             case WARN:
             {
-                WarningIn
-                (
-                    "bool CML::DataEntryTypes::TableBase<Type>::checkMaxBounds"
-                    "("
-                        "const scalar, "
-                        "scalar&"
-                    ") const"
-                ) 
+                WarningInFunction
                     << "value (" << x << ") overflow" << nl
                     << endl;
 
                 // fall-through to 'CLAMP'
+                [[fallthrough]];
             }
             case CLAMP:
             {

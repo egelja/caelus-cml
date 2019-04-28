@@ -21,15 +21,37 @@ Class
     temperatureCoupledBase
 
 Description
-    Common functions for use in temperature coupled boundaries. For now only
+    Common functions used in temperature coupled boundaries.
 
-    K() : heat conduction at patch. Gets supplied how to lookup/calculate K:
+    The thermal conductivity \c kappa may be obtained by the following methods:
+      - 'lookup' : lookup volScalarField (or volSymmTensorField) with name
+        defined by 'kappa'
+      - 'fluidThermo' : use fluidThermo and default
+        compressible::turbulenceModel to calculate kappa
+      - 'solidThermo' : use solidThermo kappa()
+      - 'directionalSolidThermo': uses look up for volSymmTensorField for
+        transformed kappa vector. Field name definable in 'alphaAni',
+        named 'Anialpha' in solid solver by default
 
-    - 'lookup' : lookup volScalarField (or volSymmTensorField) with name
-    - 'basicThermo' : use basicThermo and default compressible::turbulenceModel
-       to calculate K
-    - 'solidThermo' : use basicSolidThermo K()
-    - 'directionalSolidThermo' directionalK()
+    \par Keywords provided by this class:
+      \table
+        Property     | Description                | Required    | Default value
+        kappaMethod  | Thermal conductivity method        | yes |
+        kappa        | Name of thermal conductivity field | no  | none
+        alphaAni     | Name of the non-isotropic alpha    | no  | Anialpha
+      \endtable
+
+Usage
+    \verbatim
+    nonIsotropicWall
+    {
+        ...
+        kappaMethod     directionalSolidThermo;
+        kappa           none;
+        alphaAni        Anialpha;
+        ...
+    }
+    \endverbatim
 
 SourceFiles
     temperatureCoupledBase.cpp
@@ -49,19 +71,19 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-        Class temperatureCoupledBase Declaration
+                   Class temperatureCoupledBase Declaration
 \*---------------------------------------------------------------------------*/
 
 class temperatureCoupledBase
 {
 public:
-        //- Type of supplied K
+        //- Type of supplied Kappa
         enum KMethodType
         {
-            BASICTHERMO,
-            SOLIDTHERMO,
-            DIRECTIONALSOLIDTHERMO,
-            LOOKUP
+            mtFluidThermo,
+            mtSolidThermo,
+            mtDirectionalSolidThermo,
+            mtLookup
         };
 
 
@@ -78,7 +100,10 @@ protected:
         const KMethodType method_;
 
         //- Name of thermal conductivity field (if looked up from database)
-        const word KName_;
+        const word kappaName_;
+
+        //- Name of the non-Isotropic alpha (default: Anialpha)
+        const word alphaAniName_;
 
 
 public:
@@ -90,7 +115,8 @@ public:
         (
             const fvPatch& patch,
             const word& calculationMethod,
-            const word& KName
+            const word& kappaName,
+            const word& alphaAniName
         );
 
         //- Construct from patch and dictionary
@@ -98,6 +124,13 @@ public:
         (
             const fvPatch& patch,
             const dictionary& dict
+        );
+
+         //- Construct from patch and temperatureCoupledBase
+        temperatureCoupledBase
+        (
+            const fvPatch& patch,
+            const temperatureCoupledBase& base
         );
 
 
@@ -110,13 +143,13 @@ public:
         }
 
         //- Name of thermal conductivity field
-        const word& KName() const
+        const word& kappaName() const
         {
-            return KName_;
+            return kappaName_;
         }
 
         //- Given patch temperature calculate corresponding K field
-        tmp<scalarField> K(const scalarField& Tp) const;
+        tmp<scalarField> kappa(const scalarField& Tp) const;
 
         //- Write
         void write(Ostream&) const;

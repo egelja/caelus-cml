@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -112,11 +112,8 @@ const CML::GAMGAgglomeration& CML::GAMGAgglomeration::New
 
         if (cstrIter == lduMeshConstructorTablePtr_->end())
         {
-            FatalErrorIn
-            (
-                "GAMGAgglomeration::New"
-                "(const lduMesh& mesh, const dictionary& controlDict)"
-            )   << "Unknown GAMGAgglomeration type "
+            FatalErrorInFunction
+                << "Unknown GAMGAgglomeration type "
                 << agglomeratorType << ".\n"
                 << "Valid algebraic GAMGAgglomeration types are :"
                 << lduMatrixConstructorTablePtr_->sortedToc() << endl

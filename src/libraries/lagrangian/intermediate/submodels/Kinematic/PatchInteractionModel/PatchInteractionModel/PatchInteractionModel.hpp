@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -62,6 +62,7 @@ public:
         // Interaction types
         enum interactionType
         {
+            itNone,
             itRebound,
             itStick,
             itEscape,
@@ -150,9 +151,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         ) = 0;
 
 
@@ -169,28 +168,29 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makePatchInteractionModel(CloudType)                                  \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        PatchInteractionModel<kinematicCloudType>,                            \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        PatchInteractionModel<kinematicCloudType>,                            \
-        dictionary                                                            \
+#define makePatchInteractionModel(CloudType)                                   \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        PatchInteractionModel<kinematicCloudType>,                             \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        PatchInteractionModel<kinematicCloudType>,                             \
+        dictionary                                                             \
     );
 
 
-#define makePatchInteractionModelType(SS, CloudType)                          \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);           \
-                                                                              \
-    PatchInteractionModel<kinematicCloudType>::                               \
-        adddictionaryConstructorToTable<SS<kinematicCloudType> >              \
+#define makePatchInteractionModelType(SS, CloudType)                           \
+                                                                               \
+    typedef CloudType::kinematicCloudType kinematicCloudType;                  \
+    defineNamedTemplateTypeNameAndDebug(SS<kinematicCloudType>, 0);            \
+                                                                               \
+    PatchInteractionModel<kinematicCloudType>::                                \
+        adddictionaryConstructorToTable<SS<kinematicCloudType> >               \
             add##SS##CloudType##kinematicCloudType##ConstructorToTable_;
 
 
@@ -201,7 +201,7 @@ CML::wordList CML::PatchInteractionModel<CloudType>::interactionTypeNames_
 (
     IStringStream
     (
-        "(rebound stick escape)"
+        "(none rebound stick escape)"
     )()
 );
 
@@ -217,6 +217,11 @@ CML::word CML::PatchInteractionModel<CloudType>::interactionTypeToWord
 
     switch (itEnum)
     {
+        case itNone:
+        {
+            it = "none";
+            break;
+        }
         case itRebound:
         {
             it = "rebound";
@@ -248,6 +253,10 @@ CML::PatchInteractionModel<CloudType>::wordToInteractionType
     const word& itWord
 )
 {
+    if (itWord == "none")
+    {
+        return itNone;
+    }
     if (itWord == "rebound")
     {
         return itRebound;
@@ -276,7 +285,7 @@ CML::PatchInteractionModel<CloudType>::PatchInteractionModel
 )
 :
     CloudSubModelBase<CloudType>(owner),
-    UName_("unknown_UName")
+    UName_("unknown_U")
 {}
 
 
@@ -289,7 +298,7 @@ CML::PatchInteractionModel<CloudType>::PatchInteractionModel
 )
 :
     CloudSubModelBase<CloudType>(owner, dict, typeName, type),
-    UName_(this->coeffDict().lookupOrDefault("UName", word("U")))
+    UName_(this->coeffDict().lookupOrDefault("U", word("U")))
 {}
 
 
@@ -322,9 +331,7 @@ const CML::word& CML::PatchInteractionModel<CloudType>::UName() const
 
 template<class CloudType>
 void CML::PatchInteractionModel<CloudType>::info(Ostream& os)
-{
-    // do nothing
-}
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -346,14 +353,8 @@ CML::PatchInteractionModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PatchInteractionModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown patch interaction model type "
+        FatalErrorInFunction
+            << "Unknown patch interaction model type "
             << modelType << nl << nl
             << "Valid patch interaction model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,16 +20,13 @@ License
 Class
     CML::egrMixture
 
-Description
-    CML::egrMixture
-
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef egrMixture_H
-#define egrMixture_H
+#ifndef egrMixture_HPP
+#define egrMixture_HPP
 
-#include "basicMultiComponentMixture.hpp"
+#include "basicCombustionMixture.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,32 +40,31 @@ namespace CML
 template<class ThermoType>
 class egrMixture
 :
-    public basicMultiComponentMixture
+    public basicCombustionMixture
 {
-    // Private data
 
-        static const int nSpecies_ = 3;
-        static const char* specieNames_[3];
+    static const int nSpecies_ = 3;
+    static const char* specieNames_[3];
 
-        dimensionedScalar stoicRatio_;
+    dimensionedScalar stoicRatio_;
 
-        ThermoType fuel_;
-        ThermoType oxidant_;
-        ThermoType products_;
+    ThermoType fuel_;
+    ThermoType oxidant_;
+    ThermoType products_;
 
-        mutable ThermoType mixture_;
+    mutable ThermoType mixture_;
 
-        //- Mixture fraction
-        volScalarField& ft_;
+    //- Mixture fraction
+    volScalarField& ft_;
 
-        //- Regress variable
-        volScalarField& b_;
+    //- Regress variable
+    volScalarField& b_;
 
-        //- Residual gases
-        volScalarField& egr_;
+    //- Residual gases
+    volScalarField& egr_;
 
-        //- Construct as copy (not implemented)
-        egrMixture(const egrMixture<ThermoType>&);
+    //- Construct as copy (not implemented)
+    egrMixture(const egrMixture<ThermoType>&);
 
 
 public:
@@ -77,10 +73,8 @@ public:
     typedef ThermoType thermoType;
 
 
-    // Constructors
-
-        //- Construct from dictionary and mesh
-        egrMixture(const dictionary&, const fvMesh&);
+    //- Construct from dictionary, mesh and phaseName
+    egrMixture(const dictionary&, const fvMesh&, const word&);
 
 
     //- Destructor
@@ -90,135 +84,89 @@ public:
 
     // Member functions
 
-        const dimensionedScalar& stoicRatio() const
-        {
-            return stoicRatio_;
-        }
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "egrMixture<" + ThermoType::typeName() + '>';
+    }
 
-        const ThermoType& mixture
+    const dimensionedScalar& stoicRatio() const
+    {
+        return stoicRatio_;
+    }
+
+    const ThermoType& mixture
+    (
+        const scalar,
+        const scalar,
+        const scalar
+    ) const;
+
+    const ThermoType& cellMixture(const label celli) const
+    {
+        return mixture(ft_[celli], b_[celli], egr_[celli]);
+    }
+
+    const ThermoType& patchFaceMixture
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture
         (
-            const scalar,
-            const scalar,
-            const scalar
-        ) const;
+            ft_.boundaryField()[patchi][facei],
+            b_.boundaryField()[patchi][facei],
+            egr_.boundaryField()[patchi][facei]
+        );
+    }
 
-        const ThermoType& cellMixture(const label celli) const
-        {
-            return mixture(ft_[celli], b_[celli], egr_[celli]);
-        }
+    const ThermoType& cellReactants(const label celli) const
+    {
+        return mixture(ft_[celli], 1, egr_[celli]);
+    }
 
-        const ThermoType& patchFaceMixture
+    const ThermoType& patchFaceReactants
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture
         (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            return mixture
-            (
-                ft_.boundaryField()[patchi][facei],
-                b_.boundaryField()[patchi][facei],
-                egr_.boundaryField()[patchi][facei]
-            );
-        }
+            ft_.boundaryField()[patchi][facei],
+            1,
+            egr_.boundaryField()[patchi][facei]
+        );
+    }
 
-        const ThermoType& cellReactants(const label celli) const
-        {
-            return mixture(ft_[celli], 1, egr_[celli]);
-        }
+    const ThermoType& cellProducts(const label celli) const
+    {
+        return mixture(ft_[celli], 0, 0);
+    }
 
-        const ThermoType& patchFaceReactants
+    const ThermoType& patchFaceProducts
+    (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture
         (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            return mixture
-            (
-                ft_.boundaryField()[patchi][facei],
-                1,
-                egr_.boundaryField()[patchi][facei]
-            );
-        }
+            ft_.boundaryField()[patchi][facei],
+            0,
+            0
+        );
+    }
 
-        const ThermoType& cellProducts(const label celli) const
-        {
-            return mixture(ft_[celli], 0, 0);
-        }
+    //- Read dictionary
+    void read(const dictionary&);
 
-        const ThermoType& patchFaceProducts
-        (
-            const label patchi,
-            const label facei
-        ) const
-        {
-            return mixture
-            (
-                ft_.boundaryField()[patchi][facei],
-                0,
-                0
-            );
-        }
+    //- Return thermo based on index
+    const ThermoType& getLocalThermo(const label speciei) const;
 
-        //- Read dictionary
-        void read(const dictionary&);
-
-        //- Return thermo based on index
-        const ThermoType& getLocalThermo(const label specieI) const;
-
-
-        // Per specie properties
-
-            //- Number of moles []
-            virtual scalar nMoles(const label specieI) const;
-
-            //- Molecular weight [kg/kmol]
-            virtual scalar W(const label specieI) const;
-
-
-        // Per specie thermo properties
-
-            //- Heat capacity at constant pressure [J/(kg K)]
-            virtual scalar Cp(const label specieI, const scalar T) const;
-
-            //- Heat capacity at constant volume [J/(kg K)]
-            virtual scalar Cv(const label specieI, const scalar T) const;
-
-            //- Enthalpy [J/kg]
-            virtual scalar H(const label specieI, const scalar T) const;
-
-            //- Sensible enthalpy [J/kg]
-            virtual scalar Hs(const label specieI, const scalar T) const;
-
-            //- Chemical enthalpy [J/kg]
-            virtual scalar Hc(const label specieI) const;
-
-            //- Entropy [J/(kg K)]
-            virtual scalar S(const label specieI, const scalar T) const;
-
-            //- Internal energy [J/kg]
-            virtual scalar E(const label specieI, const scalar T) const;
-
-            //- Gibbs free energy [J/kg]
-            virtual scalar G(const label specieI, const scalar T) const;
-
-            //- Helmholtz free energy [J/kg]
-            virtual scalar A(const label specieI, const scalar T) const;
-
-
-        // Per specie transport properties
-
-            //- Dynamic viscosity [kg/m/s]
-            virtual scalar mu(const label specieI, const scalar T) const;
-
-            //- Thermal conductivity [W/m/K]
-            virtual scalar kappa(const label specieI, const scalar T) const;
-
-            //- Thermal diffusivity [kg/m/s]
-            virtual scalar alpha(const label specieI, const scalar T) const;
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
@@ -236,14 +184,16 @@ template<class ThermoType>
 CML::egrMixture<ThermoType>::egrMixture
 (
     const dictionary& thermoDict,
-    const fvMesh& mesh
+    const fvMesh& mesh,
+    const word& phaseName
 )
 :
-    basicMultiComponentMixture
+    basicCombustionMixture
     (
         thermoDict,
         speciesTable(nSpecies_, specieNames_),
-        mesh
+        mesh,
+        phaseName
     ),
 
     stoicRatio_(thermoDict.lookup("stoichiometricAirFuelMassRatio")),
@@ -285,9 +235,9 @@ const ThermoType& CML::egrMixture<ThermoType>::mixture
 
         scalar pr = 1 - fu - ox;
 
-        mixture_ = fu/fuel_.W()*fuel_;
-        mixture_ += ox/oxidant_.W()*oxidant_;
-        mixture_ += pr/products_.W()*products_;
+        mixture_ = fu*fuel_;
+        mixture_ += ox*oxidant_;
+        mixture_ += pr*products_;
 
         return mixture_;
     }
@@ -308,30 +258,25 @@ void CML::egrMixture<ThermoType>::read(const dictionary& thermoDict)
 template<class ThermoType>
 const ThermoType& CML::egrMixture<ThermoType>::getLocalThermo
 (
-    const label specieI
+    const label speciei
 ) const
 {
-    if (specieI == 0)
+    if (speciei == 0)
     {
         return fuel_;
     }
-    else if (specieI == 1)
+    else if (speciei == 1)
     {
         return oxidant_;
     }
-    else if (specieI == 2)
+    else if (speciei == 2)
     {
         return products_;
     }
     else
     {
-        FatalErrorIn
-        (
-            "const ThermoType& CML::egrMixture<ThermoType>::getLocalThermo"
-            "("
-                "const label "
-            ") const"
-        )   << "Unknown specie index " << specieI << ". Valid indices are 0..2"
+        FatalErrorInFunction
+            << "Unknown specie index " << speciei << ". Valid indices are 0..2"
             << abort(FatalError);
 
         return fuel_;
@@ -339,160 +284,4 @@ const ThermoType& CML::egrMixture<ThermoType>::getLocalThermo
 }
 
 
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::nMoles
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).nMoles();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::W
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).W();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::Cp
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Cp(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::Cv
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Cv(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::H
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).H(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::Hs
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).Hs(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::Hc
-(
-    const label specieI
-) const
-{
-    return getLocalThermo(specieI).Hc();
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::S
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).S(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::E
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).E(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::G
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).G(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::A
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).A(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::mu
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).mu(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::kappa
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).kappa(T);
-}
-
-
-template<class ThermoType>
-CML::scalar CML::egrMixture<ThermoType>::alpha
-(
-    const label specieI,
-    const scalar T
-) const
-{
-    return getLocalThermo(specieI).alpha(T);
-}
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

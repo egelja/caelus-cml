@@ -8,7 +8,7 @@ Import('env')
 target = 'Mach'
 
 sources = Split("""
-Mach.cpp
+Mach_app.cpp
 """)
 
 caelus_inc = [
@@ -18,7 +18,7 @@ caelus_inc = [
 
 caelus_libs = [
 'core',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'specie'
 ]
 

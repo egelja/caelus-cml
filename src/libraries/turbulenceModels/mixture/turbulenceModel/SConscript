@@ -1,0 +1,30 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'mixtureTurbulenceModel'
+
+sources = Split("""
+mxTurbulenceModel.cpp
+laminar/mxLaminar.cpp
+derivedFvPatchFields/wallFunctions/mutWFs/mutWF/mxmutWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/mutWFs/mutUSpaldingWF/mxmutUSpaldingWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/omegaWFs/omegaWF/mxOmegaWFFvPatchScalarField.cpp
+""")
+
+caelus_inc = [
+'turbulenceModels',
+'transportModels/incompressible/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'incompressibleTransportModels'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

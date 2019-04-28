@@ -81,7 +81,7 @@ public:
         virtual void calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar Re,
             const scalar Pr,
             const scalar d,
@@ -90,7 +90,7 @@ public:
             const scalar Ts,
             const scalar pc,
             const scalar Tc,
-            const scalarField& Yl,
+            const scalarField& X,
             scalarField& dMassPC
         ) const;
 };
@@ -142,18 +142,18 @@ bool CML::NoPhaseChange<CloudType>::active() const
 template<class CloudType>
 void CML::NoPhaseChange<CloudType>::calculate
 (
-    const scalar,
-    const label,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalar,
-    const scalarField&,
-    scalarField&
+    const scalar dt,
+    const label celli,
+    const scalar Re,
+    const scalar Pr,
+    const scalar d,
+    const scalar nu,
+    const scalar T,
+    const scalar Ts,
+    const scalar pc,
+    const scalar Tc,
+    const scalarField& X,
+    scalarField& dMassPC
 ) const
 {
     // Nothing to do...

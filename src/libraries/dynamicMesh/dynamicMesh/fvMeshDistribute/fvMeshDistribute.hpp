@@ -442,7 +442,7 @@ void CML::fvMeshDistribute::mapBoundaryFields
 
     if (flds.size() != oldBflds.size())
     {
-        FatalErrorIn("fvMeshDistribute::mapBoundaryFields(..)") << "problem"
+        FatalErrorInFunction << "problem"
             << abort(FatalError);
     }
 
@@ -530,7 +530,7 @@ void CML::fvMeshDistribute::mapExposedFaces
 
     if (flds.size() != oldFlds.size())
     {
-        FatalErrorIn("fvMeshDistribute::mapExposedFaces(..)") << "problem"
+        FatalErrorInFunction << "problem"
             << abort(FatalError);
     }
 

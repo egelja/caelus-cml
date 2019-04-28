@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -136,7 +136,7 @@ CML::UOPstream::~UOPstream()
             )
         )
         {
-            FatalErrorIn("UOPstream::~UOPstream()")
+            FatalErrorInFunction
                 << "Failed sending outgoing message of size " << sendBuf_.size()
                 << " to processor " << toProcNo_
                 << CML::abort(FatalError);
@@ -149,7 +149,7 @@ CML::UOPstream::~UOPstream()
 
 CML::Ostream& CML::UOPstream::write(const token&)
 {
-    notImplemented("Ostream& UOPstream::write(const token&)");
+    NotImplemented;
     setBad();
     return *this;
 }
@@ -260,7 +260,7 @@ CML::Ostream& CML::UOPstream::write(const char* data, std::streamsize count)
 {
     if (format() != BINARY)
     {
-        FatalErrorIn("Ostream::write(const char*, std::streamsize)")
+        FatalErrorInFunction
             << "stream format not binary"
             << CML::abort(FatalError);
     }

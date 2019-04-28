@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -113,28 +113,9 @@ public:
             //- Post-move hook
             virtual void postMove
             (
-                typename CloudType::parcelType& p,
-                const label cellI,
+                parcelType& p,
                 const scalar dt,
                 const point& position0,
-                bool& keepParticle
-            );
-
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
-
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 };
@@ -157,7 +138,7 @@ void CML::VoidFraction<CloudType>::write()
     }
     else
     {
-        FatalErrorIn("void CML::VoidFraction<CloudType>::write()")
+        FatalErrorInFunction
             << "thetaPtr not valid" << abort(FatalError);
     }
 }
@@ -174,7 +155,7 @@ CML::VoidFraction<CloudType>::VoidFraction
 )
 :
     CloudFunctionObject<CloudType>(dict, owner, modelName, typeName),
-    thetaPtr_(NULL)
+    thetaPtr_(nullptr)
 {}
 
 
@@ -185,7 +166,7 @@ CML::VoidFraction<CloudType>::VoidFraction
 )
 :
     CloudFunctionObject<CloudType>(vf),
-    thetaPtr_(NULL)
+    thetaPtr_(nullptr)
 {}
 
 
@@ -245,8 +226,7 @@ void CML::VoidFraction<CloudType>::postEvolve()
 template<class CloudType>
 void CML::VoidFraction<CloudType>::postMove
 (
-    typename CloudType::parcelType& p,
-    const label cellI,
+    parcelType& p,
     const scalar dt,
     const point&,
     bool&
@@ -254,33 +234,7 @@ void CML::VoidFraction<CloudType>::postMove
 {
     volScalarField& theta = thetaPtr_();
 
-    theta[cellI] += dt*p.nParticle()*p.volume();
-}
-
-
-template<class CloudType>
-void CML::VoidFraction<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::VoidFraction<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
+    theta[p.cell()] += dt*p.nParticle()*p.volume();
 }
 
 

@@ -21,7 +21,16 @@ Class
     CML::SIBS
 
 Description
-    CML::SIBS
+    A semi-implicit mid-point solver for stiff systems of ordinary differential
+    equations.
+
+    Reference:
+    \verbatim
+        Bader, G., & Deuflhard, P. (1983).
+        A semi-implicit mid-point rule for stiff systems
+        of ordinary differential equations.
+        Numerische Mathematik, 41(3), 373-398.
+    \endverbatim
 
 SourceFiles
     SIMPR.cpp
@@ -63,6 +72,7 @@ class SIBS
         mutable scalarField yTemp_;
         mutable scalarField ySeq_;
         mutable scalarField yErr_;
+        mutable scalarField dydx0_;
         mutable scalarField dfdx_;
         mutable scalarSquareMatrix dfdy_;
 
@@ -74,7 +84,6 @@ class SIBS
 
         void SIMPR
         (
-            const ODE& ode,
             const scalar xStart,
             const scalarField& y,
             const scalarField& dydx,
@@ -105,23 +114,25 @@ public:
 
     // Constructors
 
-        //- Construct from ODE
-        SIBS(const ODE& ode);
+        //- Construct from ODE system
+        SIBS(const ODESystem& ode, const dictionary& dict);
+
+
+    //- Destructor
+    virtual ~SIBS()
+    {}
 
 
     // Member Functions
 
-        void solve
+        //- Resize the ODE solver
+        virtual bool resize();
+
+        virtual void solve
         (
-            const ODE& ode,
             scalar& x,
             scalarField& y,
-            scalarField& dydx,
-            const scalar eps,
-            const scalarField& yScale,
-            const scalar hTry,
-            scalar& hDid,
-            scalar& hNext
+            scalar& dxTry
         ) const;
 };
 

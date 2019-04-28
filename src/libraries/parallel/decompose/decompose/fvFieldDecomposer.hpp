@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -401,7 +401,7 @@ CML::fvFieldDecomposer::decomposeField
         }
         else
         {
-            FatalErrorIn("fvFieldDecomposer::decomposeField()")
+            FatalErrorInFunction
                 << "Unknown type." << abort(FatalError);
         }
     }
@@ -559,7 +559,7 @@ CML::fvFieldDecomposer::decomposeField
         }
         else
         {
-            FatalErrorIn("fvFieldDecomposer::decomposeField()")
+            FatalErrorInFunction
                 << "Unknown type." << abort(FatalError);
         }
     }

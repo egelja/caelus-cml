@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -41,7 +41,7 @@ solvers
     p_rgh
     {
         solver GAMG;
-        smoother         SSGS;;
+        smoother         SSGS;
         nPreSweeps       0;
         nPostSweeps      2;
         nFinestSweeps    2;
@@ -57,7 +57,7 @@ solvers
     p_rghFinal
     {
         solver GAMG;
-        smoother         SSGS
+        smoother         SSGS;
         nPreSweeps       0;
         nPostSweeps      2;
         nFinestSweeps    2;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,7 +48,7 @@ CML::cellMatcher::cellMatcher
     vertLabels_(vertPerCell),
     faceLabels_(facePerCell),
     cellModelName_(cellModelName),
-    cellModelPtr_(NULL)
+    cellModelPtr_(nullptr)
 {
     forAll(localFaces_, faceI)
     {
@@ -170,11 +170,8 @@ void CML::cellMatcher::calcEdgeAddressing(const label numVert)
             }
             else
             {
-                FatalErrorIn
-                (
-                    "calcEdgeAddressing"
-                    "(const faceList&, const label)"
-                )   << "edgeFaces_ full at entry:" << key1
+                FatalErrorInFunction
+                    << "edgeFaces_ full at entry:" << key1
                     << " for edge " << start << " " << end
                     << abort(FatalError);
             }
@@ -235,12 +232,8 @@ CML::label CML::cellMatcher::otherFace
     }
     else
     {
-        FatalErrorIn
-        (
-            "otherFace"
-            "(const label, const labelList&, const label, const label, "
-            "const label)"
-        )   << "edgeFaces_ does not contain:" << localFaceI
+        FatalErrorInFunction
+            << "edgeFaces_ does not contain:" << localFaceI
             << " for edge " << v0 << " " << v1 << " at key " << key
             << " edgeFaces_[key, key+1]:" <<  edgeFaces_[key]
             << " , " << edgeFaces_[key+1]

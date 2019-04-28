@@ -238,7 +238,7 @@ void CML::DataEntry<Type>::convertTimeBase(const Time&)
 template<class Type>
 Type CML::DataEntry<Type>::value(const scalar x) const
 {
-    notImplemented("Type CML::DataEntry<Type>::value(const scalar) const");
+    NotImplemented;
 
     return Zero;
 }
@@ -247,14 +247,7 @@ Type CML::DataEntry<Type>::value(const scalar x) const
 template<class Type>
 Type CML::DataEntry<Type>::integrate(const scalar x1, const scalar x2) const
 {
-    notImplemented
-    (
-        "Type CML::DataEntry<Type>::integrate"
-        "("
-            "const scalar, "
-            "const scalar"
-        ") const"
-    );
+    NotImplemented;
 
     return Zero;
 }

@@ -102,7 +102,7 @@ void recalcPhiFunctionObject::recalc()
         const volScalarField &rho=mesh.lookupObject<volScalarField>(rhoName_);
         phi = fvc::interpolate(rho)*(fvc::interpolate(U) & mesh.Sf());
      } else {
-        FatalErrorIn("recalcPhiFunctionObject::calcPhi()")
+        FatalErrorInFunction
             << "Can't deal with a flux field " << phiName_
                 << " with dimensions " << phi.dimensions()
                 << endl

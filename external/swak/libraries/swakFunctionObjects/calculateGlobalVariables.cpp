@@ -56,10 +56,9 @@ CML::calculateGlobalVariables::calculateGlobalVariables
     }
 
     if(!dict.found("noReset")) {
-        WarningIn("calculateGlobalVariables::calculateGlobalVariables")
+        WarningInFunction
             << "No entry 'noReset' in " << dict.name()
-                << ". Assumig 'false'"<< endl;
-
+            << ". Assumig 'false'"<< endl;
     }
 
     driver_->createWriterAndRead(name+"_"+type());
@@ -111,9 +110,9 @@ void CML::calculateGlobalVariables::timeSet()
 
 void CML::calculateGlobalVariables::read(const dictionary& dict)
 {
-    WarningIn("CML::calculateGlobalVariables::read(const dictionary& dict)")
+    WarningInFunction
         << "This function object does not honor changes during runtime"
-            << endl;
+        << endl;
 }
 
 void CML::calculateGlobalVariables::write()

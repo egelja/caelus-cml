@@ -5154,7 +5154,7 @@ using namespace CML;
 //! \cond dummy
 int yyFlexLexer::yylex()
 {
-    FatalErrorIn("yyFlexLexer::yylex()")
+    FatalErrorInFunction
         << "Should not have called this function"
         << abort(FatalError);
     return 0;
@@ -5681,10 +5681,8 @@ YY_RULE_SETUP
 #line 355 "triSurface\\triSurface\\interfaces\\STL\\readSTLASCII.ll"
 {
         yy_pop_state();
-        FatalErrorIn
-        (
-            "triSurface::readSTLASCII(const fileName& STLfileName)"
-        )   << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
+        FatalErrorInFunction
+            << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
             << "    expected " << stateExpects[YY_START]
             << " but found '" << startError_.c_str() << YYText() << "'"
             << exit(FatalError);
@@ -6520,10 +6518,8 @@ bool triSurface::readSTLASCII(const fileName& STLfileName)
 
     if (!STLstream)
     {
-        FatalErrorIn
-        (
-            "triSurface::readSTLASCII(const fileName&)"
-        )   << "file " << STLfileName << " not found"
+        FatalErrorInFunction
+            << "file " << STLfileName << " not found"
             << exit(FatalError);
     }
 
@@ -6540,10 +6536,8 @@ bool triSurface::readSTLASCII(const fileName& STLfileName)
 
     if (STLpoints.size() != 3*STLnormals.size())
     {
-        FatalErrorIn
-        (
-            "triSurface::readSTLASCII(const fileName& STLfileName)"
-        )   << "in file " << STLfileName << endl
+        FatalErrorInFunction
+            << "in file " << STLfileName << endl
             << "Problem: read " << STLnormals.size() << " normals"
             << " but " << STLpoints.size() << " points"
             << exit(FatalError);

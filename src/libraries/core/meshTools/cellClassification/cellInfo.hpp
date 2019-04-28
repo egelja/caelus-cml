@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,6 +43,14 @@ namespace CML
 {
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class cellInfo;
+
+Istream& operator>>(Istream&, cellInfo&);
+Ostream& operator<<(Ostream&, const cellInfo&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class cellInfo Declaration

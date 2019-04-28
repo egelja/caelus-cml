@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -52,10 +52,8 @@ void CML::faceZone::calcFaceZonePatch() const
 
     if (patchPtr_)
     {
-        FatalErrorIn
-        (
-            "void faceZone::calcFaceZonePatch() const"
-        )   << "primitive face zone patch already calculated"
+        FatalErrorInFunction
+            << "primitive face zone patch already calculated"
             << abort(FatalError);
     }
 
@@ -107,7 +105,7 @@ void CML::faceZone::calcCellLayers() const
     // if the pointer is already set
     if (masterCellsPtr_ || slaveCellsPtr_)
     {
-        FatalErrorIn("void faceZone::calcCellLayers() const")
+        FatalErrorInFunction
             << "cell layers already calculated"
             << abort(FatalError);
     }
@@ -161,7 +159,7 @@ void CML::faceZone::checkAddressing() const
 {
     if (size() != flipMap_.size())
     {
-        FatalErrorIn("void CML::faceZone::checkAddressing() const")
+        FatalErrorInFunction
             << "Different sizes of the addressing and flipMap arrays.  "
             << "Size of addressing: " << size()
             << " size of flip map: " << flipMap_.size()
@@ -185,10 +183,10 @@ CML::faceZone::faceZone
     zone(name, addr, index),
     flipMap_(fm),
     zoneMesh_(zm),
-    patchPtr_(NULL),
-    masterCellsPtr_(NULL),
-    slaveCellsPtr_(NULL),
-    mePtr_(NULL)
+    patchPtr_(nullptr),
+    masterCellsPtr_(nullptr),
+    slaveCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {
     checkAddressing();
 }
@@ -206,10 +204,10 @@ CML::faceZone::faceZone
     zone(name, addr, index),
     flipMap_(fm),
     zoneMesh_(zm),
-    patchPtr_(NULL),
-    masterCellsPtr_(NULL),
-    slaveCellsPtr_(NULL),
-    mePtr_(NULL)
+    patchPtr_(nullptr),
+    masterCellsPtr_(nullptr),
+    slaveCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {
     checkAddressing();
 }
@@ -226,10 +224,10 @@ CML::faceZone::faceZone
     zone(name, dict, this->labelsName, index),
     flipMap_(dict.lookup("flipMap")),
     zoneMesh_(zm),
-    patchPtr_(NULL),
-    masterCellsPtr_(NULL),
-    slaveCellsPtr_(NULL),
-    mePtr_(NULL)
+    patchPtr_(nullptr),
+    masterCellsPtr_(nullptr),
+    slaveCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {
     checkAddressing();
 }
@@ -247,10 +245,10 @@ CML::faceZone::faceZone
     zone(fz, addr, index),
     flipMap_(fm),
     zoneMesh_(zm),
-    patchPtr_(NULL),
-    masterCellsPtr_(NULL),
-    slaveCellsPtr_(NULL),
-    mePtr_(NULL)
+    patchPtr_(nullptr),
+    masterCellsPtr_(nullptr),
+    slaveCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {
     checkAddressing();
 }
@@ -268,10 +266,10 @@ CML::faceZone::faceZone
     zone(fz, addr, index),
     flipMap_(fm),
     zoneMesh_(zm),
-    patchPtr_(NULL),
-    masterCellsPtr_(NULL),
-    slaveCellsPtr_(NULL),
-    mePtr_(NULL)
+    patchPtr_(nullptr),
+    masterCellsPtr_(nullptr),
+    slaveCellsPtr_(nullptr),
+    mePtr_(nullptr)
 {
     checkAddressing();
 }

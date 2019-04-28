@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,7 +50,6 @@ License
 #include "Random.hpp"
 #include "searchableSurfaces.hpp"
 #include "treeBoundBox.hpp"
-#include "zeroGradientFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -74,7 +73,7 @@ void CML::meshRefinement::calcNeighbourData
 
     if (neiLevel.size() != nBoundaryFaces || neiCc.size() != nBoundaryFaces)
     {
-        FatalErrorIn("meshRefinement::calcNeighbour(..)") << "nBoundaries:"
+        FatalErrorInFunction
             << nBoundaryFaces << " neiLevel:" << neiLevel.size()
             << abort(FatalError);
     }
@@ -83,26 +82,26 @@ void CML::meshRefinement::calcNeighbourData
 
     labelHashSet addedPatchIDSet(meshedPatches());
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         const labelUList& faceCells = pp.faceCells();
         const vectorField::subField faceCentres = pp.faceCentres();
         const vectorField::subField faceAreas = pp.faceAreas();
 
-        label bFaceI = pp.start()-mesh_.nInternalFaces();
+        label bFacei = pp.start()-mesh_.nInternalFaces();
 
         if (pp.coupled())
         {
             forAll(faceCells, i)
             {
-                neiLevel[bFaceI] = cellLevel[faceCells[i]];
-                neiCc[bFaceI] = cellCentres[faceCells[i]];
-                bFaceI++;
+                neiLevel[bFacei] = cellLevel[faceCells[i]];
+                neiCc[bFacei] = cellCentres[faceCells[i]];
+                bFacei++;
             }
         }
-        else if (addedPatchIDSet.found(patchI))
+        else if (addedPatchIDSet.found(patchi))
         {
             // Face was introduced from cell-cell intersection. Try to
             // reconstruct other side cell(centre). Three possibilities:
@@ -132,19 +131,19 @@ void CML::meshRefinement::calcNeighbourData
                     // Other cell more refined. Adjust normal distance
                     d *= 0.5;
                 }
-                neiLevel[bFaceI] = faceLevel;
+                neiLevel[bFacei] = faceLevel;
                 // Calculate other cell centre by extrapolation
-                neiCc[bFaceI] = faceCentres[i] + d*fn;
-                bFaceI++;
+                neiCc[bFacei] = faceCentres[i] + d*fn;
+                bFacei++;
             }
         }
         else
         {
             forAll(faceCells, i)
             {
-                neiLevel[bFaceI] = cellLevel[faceCells[i]];
-                neiCc[bFaceI] = faceCentres[i];
-                bFaceI++;
+                neiLevel[bFacei] = cellLevel[faceCells[i]];
+                neiCc[bFacei] = faceCentres[i];
+                bFacei++;
             }
         }
     }
@@ -166,9 +165,9 @@ void CML::meshRefinement::updateIntersections(const labelList& changedFaces)
 
     {
         label nMasterFaces = 0;
-        forAll(isMasterFace, faceI)
+        forAll(isMasterFace, facei)
         {
-            if (isMasterFace.get(faceI) == 1)
+            if (isMasterFace.get(facei) == 1)
             {
                 nMasterFaces++;
             }
@@ -203,23 +202,23 @@ void CML::meshRefinement::updateIntersections(const labelList& changedFaces)
 
     forAll(changedFaces, i)
     {
-        label faceI = changedFaces[i];
-        label own = mesh_.faceOwner()[faceI];
+        label facei = changedFaces[i];
+        label own = mesh_.faceOwner()[facei];
 
         start[i] = cellCentres[own];
-        if (mesh_.isInternalFace(faceI))
+        if (mesh_.isInternalFace(facei))
         {
-            end[i] = cellCentres[mesh_.faceNeighbour()[faceI]];
+            end[i] = cellCentres[mesh_.faceNeighbour()[facei]];
         }
         else
         {
-            end[i] = neiCc[faceI-mesh_.nInternalFaces()];
+            end[i] = neiCc[facei-mesh_.nInternalFaces()];
         }
     }
 
     // Extend segments a bit
     {
-        const vectorField smallVec(CML::sqrt(SMALL)*(end-start));
+        const vectorField smallVec(ROOTSMALL*(end-start));
         start -= smallVec;
         end += smallVec;
     }
@@ -268,11 +267,8 @@ void CML::meshRefinement::testSyncPointList
 {
     if (fld.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "meshRefinement::testSyncPointList(const polyMesh&"
-            ", const List<scalar>&)"
-        )   << msg << endl
+        FatalErrorInFunction
+            << msg << endl
             << "fld size:" << fld.size() << " mesh points:" << mesh.nPoints()
             << abort(FatalError);
     }
@@ -294,13 +290,13 @@ void CML::meshRefinement::testSyncPointList
         maxEqOp<scalar>(),
         -GREAT
     );
-    forAll(minFld, pointI)
+    forAll(minFld, pointi)
     {
-        const scalar& minVal = minFld[pointI];
-        const scalar& maxVal = maxFld[pointI];
+        const scalar& minVal = minFld[pointi];
+        const scalar& maxVal = maxFld[pointi];
         if (mag(minVal-maxVal) > SMALL)
         {
-            Pout<< msg << " at:" << mesh.points()[pointI] << nl
+            Pout<< msg << " at:" << mesh.points()[pointi] << nl
                 << "    minFld:" << minVal << nl
                 << "    maxFld:" << maxVal << nl
                 << endl;
@@ -318,11 +314,8 @@ void CML::meshRefinement::testSyncPointList
 {
     if (fld.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "meshRefinement::testSyncPointList(const polyMesh&"
-            ", const List<point>&)"
-        )   << msg << endl
+        FatalErrorInFunction
+            << msg << endl
             << "fld size:" << fld.size() << " mesh points:" << mesh.nPoints()
             << abort(FatalError);
     }
@@ -344,13 +337,13 @@ void CML::meshRefinement::testSyncPointList
         maxMagSqrEqOp<point>(),
         vector::zero
     );
-    forAll(minFld, pointI)
+    forAll(minFld, pointi)
     {
-        const point& minVal = minFld[pointI];
-        const point& maxVal = maxFld[pointI];
+        const point& minVal = minFld[pointi];
+        const point& maxVal = maxFld[pointi];
         if (mag(minVal-maxVal) > SMALL)
         {
-            Pout<< msg << " at:" << mesh.points()[pointI] << nl
+            Pout<< msg << " at:" << mesh.points()[pointi] << nl
                 << "    minFld:" << minVal << nl
                 << "    maxFld:" << maxVal << nl
                 << endl;
@@ -414,23 +407,23 @@ void CML::meshRefinement::checkData()
         pointField start(mesh_.nFaces());
         pointField end(mesh_.nFaces());
 
-        forAll(start, faceI)
+        forAll(start, facei)
         {
-            start[faceI] = mesh_.cellCentres()[mesh_.faceOwner()[faceI]];
+            start[facei] = mesh_.cellCentres()[mesh_.faceOwner()[facei]];
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                end[faceI] = mesh_.cellCentres()[mesh_.faceNeighbour()[faceI]];
+                end[facei] = mesh_.cellCentres()[mesh_.faceNeighbour()[facei]];
             }
             else
             {
-                end[faceI] = neiCc[faceI-mesh_.nInternalFaces()];
+                end[facei] = neiCc[facei-mesh_.nInternalFaces()];
             }
         }
 
         // Extend segments a bit
         {
-            const vectorField smallVec(CML::sqrt(SMALL)*(end-start));
+            const vectorField smallVec(ROOTSMALL*(end-start));
             start -= smallVec;
             end += smallVec;
         }
@@ -462,37 +455,37 @@ void CML::meshRefinement::checkData()
         syncTools::swapBoundaryFaceList(mesh_, neiHit);
 
         // Check
-        forAll(surfaceHit, faceI)
+        forAll(surfaceHit, facei)
         {
-            if (surfaceIndex_[faceI] != surfaceHit[faceI])
+            if (surfaceIndex_[facei] != surfaceHit[facei])
             {
-                if (mesh_.isInternalFace(faceI))
+                if (mesh_.isInternalFace(facei))
                 {
-                    WarningIn("meshRefinement::checkData()")
-                        << "Internal face:" << faceI
-                        << " fc:" << mesh_.faceCentres()[faceI]
-                        << " cached surfaceIndex_:" << surfaceIndex_[faceI]
-                        << " current:" << surfaceHit[faceI]
+                    WarningInFunction
+                        << "Internal face:" << facei
+                        << " fc:" << mesh_.faceCentres()[facei]
+                        << " cached surfaceIndex_:" << surfaceIndex_[facei]
+                        << " current:" << surfaceHit[facei]
                         << " ownCc:"
-                        << mesh_.cellCentres()[mesh_.faceOwner()[faceI]]
+                        << mesh_.cellCentres()[mesh_.faceOwner()[facei]]
                         << " neiCc:"
-                        << mesh_.cellCentres()[mesh_.faceNeighbour()[faceI]]
+                        << mesh_.cellCentres()[mesh_.faceNeighbour()[facei]]
                         << endl;
                 }
                 else if
                 (
-                    surfaceIndex_[faceI]
-                 != neiHit[faceI-mesh_.nInternalFaces()]
+                    surfaceIndex_[facei]
+                 != neiHit[facei-mesh_.nInternalFaces()]
                 )
                 {
-                    WarningIn("meshRefinement::checkData()")
-                        << "Boundary face:" << faceI
-                        << " fc:" << mesh_.faceCentres()[faceI]
-                        << " cached surfaceIndex_:" << surfaceIndex_[faceI]
-                        << " current:" << surfaceHit[faceI]
+                    WarningInFunction
+                        << "Boundary face:" << facei
+                        << " fc:" << mesh_.faceCentres()[facei]
+                        << " cached surfaceIndex_:" << surfaceIndex_[facei]
+                        << " current:" << surfaceHit[facei]
                         << " ownCc:"
-                        << mesh_.cellCentres()[mesh_.faceOwner()[faceI]]
-                        << " end:" << end[faceI]
+                        << mesh_.cellCentres()[mesh_.faceOwner()[facei]]
+                        << " end:" << end[facei]
                         << endl;
                 }
             }
@@ -636,39 +629,39 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //{
 //    const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 //
-//    forAll(patches, patchI)
+//    forAll(patches, patchi)
 //    {
-//        const polyPatch& pp = patches[patchI];
+//        const polyPatch& pp = patches[patchi];
 //
 //        if (isA<processorPolyPatch>(pp))
 //        {
 //            forAll(pp, i)
 //            {
-//                label faceI = pp.start()+i;
-
-//                if (!blockedFace[faceI])
+//                label facei = pp.start()+i;
+//
+//                if (!blockedFace[facei])
 //                {
 //                    // Only if there is a connection to the neighbour
 //                    // will there be a multi-domain region; if not through
 //                    // this face then through another.
 //
-//                    label cellI = mesh_.faceOwner()[faceI];
-//                    label globalCellI = globalCells.toGlobal(cellI);
+//                    label celli = mesh_.faceOwner()[facei];
+//                    label globalCelli = globalCells.toGlobal(celli);
 //
 //                    Map<label>::iterator iter =
-//                        regionToMaster.find(globalRegion[cellI]);
+//                        regionToMaster.find(globalRegion[celli]);
 //
 //                    if (iter != regionToMaster.end())
 //                    {
 //                        label master = iter();
-//                        iter() = min(master, globalCellI);
+//                        iter() = min(master, globalCelli);
 //                    }
 //                    else
 //                    {
 //                        regionToMaster.insert
 //                        (
-//                            globalRegion[cellI],
-//                            globalCellI
+//                            globalRegion[celli],
+//                            globalCelli
 //                        );
 //                    }
 //                }
@@ -698,24 +691,24 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //    DynamicList<point> localCc(globalRegion.size()/2);
 //    DynamicList<scalar> localWts(globalRegion.size()/2);
 //
-//    forAll(globalRegion, cellI)
+//    forAll(globalRegion, celli)
 //    {
 //        Map<label>::const_iterator fndMaster =
-//            coupledRegionToMaster.find(globalRegion[cellI]);
+//            coupledRegionToMaster.find(globalRegion[celli]);
 //
 //        if (fndMaster != coupledRegionToMaster.end())
 //        {
 //            // Multi-processor region.
-//            if (globalCells.toGlobal(cellI) == fndMaster())
+//            if (globalCells.toGlobal(celli) == fndMaster())
 //            {
 //                // I am master. Allocate region for me.
 //                globalToLocalRegion.insert
 //                (
-//                    globalRegion[cellI],
+//                    globalRegion[celli],
 //                    localCc.size()
 //                );
-//                localCc.append(mesh_.cellCentres()[cellI]);
-//                localWts.append(cellWeights[cellI]);
+//                localCc.append(mesh_.cellCentres()[celli]);
+//                localWts.append(cellWeights[celli]);
 //            }
 //        }
 //        else
@@ -725,13 +718,13 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //            (
 //                globalToLocalRegion.insert
 //                (
-//                    globalRegion[cellI],
+//                    globalRegion[celli],
 //                    localCc.size()
 //                )
 //            )
 //            {
-//                localCc.append(mesh_.cellCentres()[cellI]);
-//                localWts.append(cellWeights[cellI]);
+//                localCc.append(mesh_.cellCentres()[celli]);
+//                localWts.append(cellWeights[celli]);
 //            }
 //        }
 //    }
@@ -741,7 +734,7 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //
 //    if (localPoints.size() != globalToLocalRegion.size())
 //    {
-//        FatalErrorIn("calcLocalRegions(..)")
+//        FatalErrorInFunction
 //            << "localPoints:" << localPoints.size()
 //            << " globalToLocalRegion:" << globalToLocalRegion.size()
 //            << exit(FatalError);
@@ -827,13 +820,13 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //    // Transfer lists.
 //    PtrList<HashSet<edge, Hash<edge> > > regionConnectivity
 //    (Pstream::nProcs());
-//    forAll(regionConnectivity, procI)
+//    forAll(regionConnectivity, proci)
 //    {
-//        if (procI != Pstream::myProcNo())
+//        if (proci != Pstream::myProcNo())
 //        {
 //            regionConnectivity.set
 //            (
-//                procI,
+//                proci,
 //                new HashSet<edge, Hash<edge> >
 //                (
 //                    coupledRegionToShifted.size()
@@ -849,10 +842,10 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //
 //    // Add all local connectivity to regionRegions; add all non-local
 //    // to the transferlists.
-//    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+//    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
 //    {
-//        label ownRegion = globalRegion[mesh_.faceOwner()[faceI]];
-//        label neiRegion = globalRegion[mesh_.faceNeighbour()[faceI]];
+//        label ownRegion = globalRegion[mesh_.faceOwner()[facei]];
+//        label neiRegion = globalRegion[mesh_.faceNeighbour()[facei]];
 //
 //        if (ownRegion != neiRegion)
 //        {
@@ -908,34 +901,34 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //
 //
 //    // Send
-//    forAll(regionConnectivity, procI)
+//    forAll(regionConnectivity, proci)
 //    {
-//        if (procI != Pstream::myProcNo())
+//        if (proci != Pstream::myProcNo())
 //        {
-//            OPstream str(Pstream::blocking, procI);
-//            str << regionConnectivity[procI];
+//            OPstream str(Pstream::blocking, proci);
+//            str << regionConnectivity[proci];
 //        }
 //    }
 //    // Receive
-//    forAll(regionConnectivity, procI)
+//    forAll(regionConnectivity, proci)
 //    {
-//        if (procI != Pstream::myProcNo())
+//        if (proci != Pstream::myProcNo())
 //        {
-//            IPstream str(Pstream::blocking, procI);
-//            str >> regionConnectivity[procI];
+//            IPstream str(Pstream::blocking, proci);
+//            str >> regionConnectivity[proci];
 //        }
 //    }
 //
 //    // Add to addressing.
-//    forAll(regionConnectivity, procI)
+//    forAll(regionConnectivity, proci)
 //    {
-//        if (procI != Pstream::myProcNo())
+//        if (proci != Pstream::myProcNo())
 //        {
 //            for
 //            (
 //                HashSet<edge, Hash<edge> >::const_iterator iter =
-//                    regionConnectivity[procI].begin();
-//                iter != regionConnectivity[procI].end();
+//                    regionConnectivity[proci].begin();
+//                iter != regionConnectivity[proci].end();
 //                ++iter
 //            )
 //            {
@@ -957,8 +950,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::doRemoveCells
 //
 //                if (!someLocal)
 //                {
-//                    FatalErrorIn("calcRegionRegions(..)")
-//                        << "Received from processor " << procI
+//                    FatalErrorInFunction
+//                        << "Received from processor " << proci
 //                        << " connection " << e
 //                        << " where none of the elements is local to me."
 //                        << abort(FatalError);
@@ -1067,9 +1060,9 @@ CML::label CML::meshRefinement::countHits() const
 
     label nHits = 0;
 
-    forAll(surfaceIndex_, faceI)
+    forAll(surfaceIndex_, facei)
     {
-        if (surfaceIndex_[faceI] >= 0 && isMasterFace.get(faceI) == 1)
+        if (surfaceIndex_[facei] >= 0 && isMasterFace.get(facei) == 1)
         {
             nHits++;
         }
@@ -1200,21 +1193,21 @@ CML::label CML::meshRefinement::countHits() const
 //    // Determine destination for all cells
 //    labelList distribution(mesh_.nCells());
 //
-//    forAll(globalRegion, cellI)
+//    forAll(globalRegion, celli)
 //    {
 //        Map<label>::const_iterator fndRegion =
-//            regionToDist.find(globalRegion[cellI]);
+//            regionToDist.find(globalRegion[celli]);
 //
 //        if (fndRegion != regionToDist.end())
 //        {
-//            distribution[cellI] = fndRegion();
+//            distribution[celli] = fndRegion();
 //        }
 //        else
 //        {
 //            // region is local to the processor.
-//            label localRegionI = globalToLocalRegion[globalRegion[cellI]];
+//            label localRegionI = globalToLocalRegion[globalRegion[celli]];
 //
-//            distribution[cellI] = regionDistribution[localRegionI];
+//            distribution[celli] = regionDistribution[localRegionI];
 //        }
 //    }
 //
@@ -1235,11 +1228,6 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
 
     if (Pstream::parRun())
     {
-        //if (debug_)
-        //{
-        //    const_cast<Time&>(mesh_.time())++;
-        //}
-
         // Wanted distribution
         labelList distribution;
 
@@ -1295,16 +1283,16 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
 
                         forAll(fZone, i)
                         {
-                            label faceI = fZone[i];
-                            if (blockedFace[faceI])
+                            label facei = fZone[i];
+                            if (blockedFace[facei])
                             {
                                 if
                                 (
-                                    mesh_.isInternalFace(faceI)
-                                 || pbm[pbm.whichPatch(faceI)].coupled()
+                                    mesh_.isInternalFace(facei)
+                                 || pbm[pbm.whichPatch(facei)].coupled()
                                 )
                                 {
-                                    blockedFace[faceI] = false;
+                                    blockedFace[facei] = false;
                                     nUnblocked++;
                                 }
                             }
@@ -1338,13 +1326,13 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
                 selectSeparatedCoupledFaces(separatedCoupledFace);
 
                 label nSeparated = 0;
-                forAll(separatedCoupledFace, faceI)
+                forAll(separatedCoupledFace, facei)
                 {
-                    if (separatedCoupledFace[faceI])
+                    if (separatedCoupledFace[facei])
                     {
-                        if (blockedFace[faceI])
+                        if (blockedFace[facei])
                         {
-                            blockedFace[faceI] = false;
+                            blockedFace[facei] = false;
                             nSeparated++;
                         }
                     }
@@ -1388,11 +1376,11 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
 
                 couples.setSize(nBnd);
                 label nCpl = 0;
-                forAll(coupledFace, faceI)
+                forAll(coupledFace, facei)
                 {
-                    if (coupledFace[faceI] != -1 && faceI < coupledFace[faceI])
+                    if (coupledFace[facei] != -1 && facei < coupledFace[facei])
                     {
-                        couples[nCpl++] = labelPair(faceI, coupledFace[faceI]);
+                        couples[nCpl++] = labelPair(facei, coupledFace[facei]);
                     }
                 }
                 couples.setSize(nCpl);
@@ -1423,9 +1411,10 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
             //    Pstream::listCombineScatter(nProcCells);
             //
             //    Info<< "Calculated decomposition:" << endl;
-            //   forAll(nProcCells, procI)
+            //    forAll(nProcCells, proci)
             //    {
-            //        Info<< "    " << procI << '\t' << nProcCells[procI] << endl;
+            //        Info<< "    " << proci << '\t' << nProcCells[proci]
+            //            << endl;
             //    }
             //    Info<< endl;
             //}
@@ -1479,9 +1468,9 @@ CML::autoPtr<CML::mapDistributePolyMesh> CML::meshRefinement::balance
             Pstream::listCombineScatter(nProcCells);
 
             Pout<< "Wanted resulting decomposition:" << endl;
-            forAll(nProcCells, procI)
+            forAll(nProcCells, proci)
             {
-                Pout<< "    " << procI << '\t' << nProcCells[procI] << endl;
+                Pout<< "    " << proci << '\t' << nProcCells[proci] << endl;
             }
             Pout<< endl;
         }
@@ -1505,9 +1494,9 @@ CML::labelList CML::meshRefinement::intersectedFaces() const
 {
     label nBoundaryFaces = 0;
 
-    forAll(surfaceIndex_, faceI)
+    forAll(surfaceIndex_, facei)
     {
-        if (surfaceIndex_[faceI] != -1)
+        if (surfaceIndex_[facei] != -1)
         {
             nBoundaryFaces++;
         }
@@ -1516,11 +1505,11 @@ CML::labelList CML::meshRefinement::intersectedFaces() const
     labelList surfaceFaces(nBoundaryFaces);
     nBoundaryFaces = 0;
 
-    forAll(surfaceIndex_, faceI)
+    forAll(surfaceIndex_, facei)
     {
-        if (surfaceIndex_[faceI] != -1)
+        if (surfaceIndex_[facei] != -1)
         {
-            surfaceFaces[nBoundaryFaces++] = faceI;
+            surfaceFaces[nBoundaryFaces++] = facei;
         }
     }
     return surfaceFaces;
@@ -1536,11 +1525,11 @@ CML::labelList CML::meshRefinement::intersectedPoints() const
     PackedBoolList isBoundaryPoint(mesh_.nPoints());
     label nBoundaryPoints = 0;
 
-    forAll(surfaceIndex_, faceI)
+    forAll(surfaceIndex_, facei)
     {
-        if (surfaceIndex_[faceI] != -1)
+        if (surfaceIndex_[facei] != -1)
         {
-            const face& f = faces[faceI];
+            const face& f = faces[facei];
 
             forAll(f, fp)
             {
@@ -1556,17 +1545,17 @@ CML::labelList CML::meshRefinement::intersectedPoints() const
     //labelList adaptPatchIDs(meshedPatches());
     //forAll(adaptPatchIDs, i)
     //{
-    //    label patchI = adaptPatchIDs[i];
+    //    label patchi = adaptPatchIDs[i];
     //
-    //    if (patchI != -1)
+    //    if (patchi != -1)
     //    {
-    //        const polyPatch& pp = mesh_.boundaryMesh()[patchI];
+    //        const polyPatch& pp = mesh_.boundaryMesh()[patchi];
     //
-    //        label faceI = pp.start();
+    //        label facei = pp.start();
     //
     //        forAll(pp, i)
     //        {
-    //            const face& f = faces[faceI];
+    //            const face& f = faces[facei];
     //
     //            forAll(f, fp)
     //            {
@@ -1574,7 +1563,7 @@ CML::labelList CML::meshRefinement::intersectedPoints() const
     //                    nBoundaryPoints++;
     //                }
     //            }
-    //            faceI++;
+    //            facei++;
     //        }
     //    }
     //}
@@ -1583,11 +1572,11 @@ CML::labelList CML::meshRefinement::intersectedPoints() const
     // Pack
     labelList boundaryPoints(nBoundaryPoints);
     nBoundaryPoints = 0;
-    forAll(isBoundaryPoint, pointI)
+    forAll(isBoundaryPoint, pointi)
     {
-        if (isBoundaryPoint.get(pointI) == 1u)
+        if (isBoundaryPoint.get(pointi) == 1u)
         {
-            boundaryPoints[nBoundaryPoints++] = pointI;
+            boundaryPoints[nBoundaryPoints++] = pointi;
         }
     }
 
@@ -1622,11 +1611,11 @@ CML::autoPtr<CML::indirectPrimitivePatch> CML::meshRefinement::makePatch
     {
         const polyPatch& pp = patches[patchIDs[i]];
 
-        label meshFaceI = pp.start();
+        label meshFacei = pp.start();
 
         forAll(pp, i)
         {
-            addressing[nFaces++] = meshFaceI++;
+            addressing[nFaces++] = meshFacei++;
         }
     }
 
@@ -1665,15 +1654,15 @@ CML::tmp<CML::pointVectorField> CML::meshRefinement::makeDisplacementField
             fixedValuePointPatchVectorField::typeName;
     }
 
-    forAll(pointPatches, patchI)
+    forAll(pointPatches, patchi)
     {
-        if (isA<processorPointPatch>(pointPatches[patchI]))
+        if (isA<processorPointPatch>(pointPatches[patchi]))
         {
-            patchFieldTypes[patchI] = calculatedPointPatchVectorField::typeName;
+            patchFieldTypes[patchi] = calculatedPointPatchVectorField::typeName;
         }
-        else if (isA<cyclicPointPatch>(pointPatches[patchI]))
+        else if (isA<cyclicPointPatch>(pointPatches[patchi]))
         {
-            patchFieldTypes[patchI] = cyclicSlipPointPatchVectorField::typeName;
+            patchFieldTypes[patchi] = cyclicSlipPointPatchVectorField::typeName;
         }
     }
 
@@ -1692,7 +1681,7 @@ CML::tmp<CML::pointVectorField> CML::meshRefinement::makeDisplacementField
                 IOobject::AUTO_WRITE
             ),
             pMesh,
-            dimensionedVector("displacement", dimLength, vector::zero),
+            dimensionedVector("displacement", dimLength, Zero),
             patchFieldTypes
         )
     );
@@ -1712,18 +1701,16 @@ void CML::meshRefinement::checkCoupledFaceZones(const polyMesh& mesh)
         Pstream::gatherList(zoneNames);
         Pstream::scatterList(zoneNames);
         // All have same data now. Check.
-        forAll(zoneNames, procI)
+        forAll(zoneNames, proci)
         {
-            if (procI != Pstream::myProcNo())
+            if (proci != Pstream::myProcNo())
             {
-                if (zoneNames[procI] != zoneNames[Pstream::myProcNo()])
+                if (zoneNames[proci] != zoneNames[Pstream::myProcNo()])
                 {
-                    FatalErrorIn
-                    (
-                        "meshRefinement::checkCoupledFaceZones(const polyMesh&)"
-                    )   << "faceZones are not synchronised on processors." << nl
-                        << "Processor " << procI << " has faceZones "
-                        << zoneNames[procI] << nl
+                    FatalErrorInFunction
+                        << "faceZones are not synchronised on processors." << nl
+                        << "Processor " << proci << " has faceZones "
+                        << zoneNames[proci] << nl
                         << "Processor " << Pstream::myProcNo()
                         << " has faceZones "
                         << zoneNames[Pstream::myProcNo()] << nl
@@ -1743,33 +1730,29 @@ void CML::meshRefinement::checkCoupledFaceZones(const polyMesh& mesh)
 
         forAll(fZone, i)
         {
-            label bFaceI = fZone[i]-mesh.nInternalFaces();
+            label bFacei = fZone[i]-mesh.nInternalFaces();
 
-            if (bFaceI >= 0)
+            if (bFacei >= 0)
             {
-                if (faceToZone[bFaceI] == -1)
+                if (faceToZone[bFacei] == -1)
                 {
-                    faceToZone[bFaceI] = zoneI;
+                    faceToZone[bFacei] = zoneI;
                 }
-                else if (faceToZone[bFaceI] == zoneI)
+                else if (faceToZone[bFacei] == zoneI)
                 {
-                    FatalErrorIn
-                    (
-                        "meshRefinement::checkCoupledFaceZones(const polyMesh&)"
-                    )   << "Face " << fZone[i] << " in zone "
+                    FatalErrorInFunction
+                        << "Face " << fZone[i] << " in zone "
                         << fZone.name()
                         << " is twice in zone!"
                         << abort(FatalError);
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "meshRefinement::checkCoupledFaceZones(const polyMesh&)"
-                    )   << "Face " << fZone[i] << " in zone "
+                    FatalErrorInFunction
+                        << "Face " << fZone[i] << " in zone "
                         << fZone.name()
                         << " is also in zone "
-                        << fZones[faceToZone[bFaceI]].name()
+                        << fZones[faceToZone[bFacei]].name()
                         << abort(FatalError);
                 }
             }
@@ -1783,10 +1766,8 @@ void CML::meshRefinement::checkCoupledFaceZones(const polyMesh& mesh)
     {
         if (faceToZone[i] != neiFaceToZone[i])
         {
-            FatalErrorIn
-            (
-                "meshRefinement::checkCoupledFaceZones(const polyMesh&)"
-            )   << "Face " << mesh.nInternalFaces()+i
+            FatalErrorInFunction
+                << "Face " << mesh.nInternalFaces()+i
                 << " is in zone " << faceToZone[i]
                 << ", its coupled face is in zone " << neiFaceToZone[i]
                 << abort(FatalError);
@@ -1798,7 +1779,7 @@ void CML::meshRefinement::checkCoupledFaceZones(const polyMesh& mesh)
 CML::label CML::meshRefinement::appendPatch
 (
     fvMesh& mesh,
-    const label insertPatchI,
+    const label insertPatchi,
     const word& patchName,
     const dictionary& patchDict
 )
@@ -1810,28 +1791,28 @@ CML::label CML::meshRefinement::appendPatch
         const_cast<polyBoundaryMesh&>(mesh.boundaryMesh());
     fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
 
-    label patchI = polyPatches.size();
+    label patchi = polyPatches.size();
 
     // Add polyPatch at the end
-    polyPatches.setSize(patchI+1);
+    polyPatches.setSize(patchi+1);
     polyPatches.set
     (
-        patchI,
+        patchi,
         polyPatch::New
         (
             patchName,
             patchDict,
-            insertPatchI,
+            insertPatchi,
             polyPatches
         )
     );
-    fvPatches.setSize(patchI+1);
+    fvPatches.setSize(patchi+1);
     fvPatches.set
     (
-        patchI,
+        patchi,
         fvPatch::New
         (
-            polyPatches[patchI],  // point to newly added polyPatch
+            polyPatches[patchi],  // point to newly added polyPatch
             mesh.boundary()
         )
     );
@@ -1889,7 +1870,7 @@ CML::label CML::meshRefinement::appendPatch
         mesh,
         calculatedFvPatchField<tensor>::typeName
     );
-    return patchI;
+    return patchi;
 }
 
 
@@ -1905,53 +1886,53 @@ CML::label CML::meshRefinement::addPatch
         const_cast<polyBoundaryMesh&>(mesh.boundaryMesh());
     fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
 
-    const label patchI = polyPatches.findPatchID(patchName);
-    if (patchI != -1)
+    const label patchi = polyPatches.findPatchID(patchName);
+    if (patchi != -1)
     {
         // Already there
-        return patchI;
+        return patchi;
     }
 
 
-    label insertPatchI = polyPatches.size();
-    label startFaceI = mesh.nFaces();
+    label insertPatchi = polyPatches.size();
+    label startFacei = mesh.nFaces();
 
-    forAll(polyPatches, patchI)
+    forAll(polyPatches, patchi)
     {
-        const polyPatch& pp = polyPatches[patchI];
+        const polyPatch& pp = polyPatches[patchi];
 
         if (isA<processorPolyPatch>(pp))
         {
-            insertPatchI = patchI;
-            startFaceI = pp.start();
+            insertPatchi = patchi;
+            startFacei = pp.start();
             break;
         }
     }
 
     dictionary patchDict(patchInfo);
     patchDict.set("nFaces", 0);
-    patchDict.set("startFace", startFaceI);
+    patchDict.set("startFace", startFacei);
 
     // Below is all quite a hack. Feel free to change once there is a better
     // mechanism to insert and reorder patches.
 
-    label addedPatchI = appendPatch(mesh, insertPatchI, patchName, patchDict);
+    label addedPatchi = appendPatch(mesh, insertPatchi, patchName, patchDict);
 
 
     // Create reordering list
     // patches before insert position stay as is
-    labelList oldToNew(addedPatchI+1);
-    for (label i = 0; i < insertPatchI; i++)
+    labelList oldToNew(addedPatchi+1);
+    for (label i = 0; i < insertPatchi; i++)
     {
         oldToNew[i] = i;
     }
     // patches after insert position move one up
-    for (label i = insertPatchI; i < addedPatchI; i++)
+    for (label i = insertPatchi; i < addedPatchi; i++)
     {
         oldToNew[i] = i+1;
     }
     // appended patch gets moved to insert position
-    oldToNew[addedPatchI] = insertPatchI;
+    oldToNew[addedPatchi] = insertPatchi;
 
     // Shuffle into place
     polyPatches.reorder(oldToNew, true);
@@ -1968,7 +1949,7 @@ CML::label CML::meshRefinement::addPatch
     reorderPatchFields<surfaceSymmTensorField>(mesh, oldToNew);
     reorderPatchFields<surfaceTensorField>(mesh, oldToNew);
 
-    return insertPatchI;
+    return insertPatchi;
 }
 
 
@@ -1988,14 +1969,14 @@ CML::label CML::meshRefinement::addMeshedPatch
     else
     {
         // Add patch
-        label patchI = addPatch(mesh_, name, patchInfo);
+        label patchi = addPatch(mesh_, name, patchInfo);
 
         // Store
         label sz = meshedPatches_.size();
         meshedPatches_.setSize(sz+1);
         meshedPatches_[sz] = name;
 
-        return patchI;
+        return patchi;
     }
 }
 
@@ -2007,18 +1988,18 @@ CML::labelList CML::meshRefinement::meshedPatches() const
     DynamicList<label> patchIDs(meshedPatches_.size());
     forAll(meshedPatches_, i)
     {
-        label patchI = patches.findPatchID(meshedPatches_[i]);
+        label patchi = patches.findPatchID(meshedPatches_[i]);
 
-        if (patchI == -1)
+        if (patchi == -1)
         {
-            FatalErrorIn("meshRefinement::meshedPatches() const")
+            FatalErrorInFunction
                 << "Problem : did not find patch " << meshedPatches_[i]
                 << endl << "Valid patches are " << patches.names()
                 << abort(FatalError);
         }
-        if (!polyPatch::constraintType(patches[patchI].type()))
+        if (!polyPatch::constraintType(patches[patchi].type()))
         {
-            patchIDs.append(patchI);
+            patchIDs.append(patchi);
         }
     }
 
@@ -2030,14 +2011,14 @@ void CML::meshRefinement::selectSeparatedCoupledFaces(boolList& selected) const
 {
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
         // Check all coupled. Avoid using .coupled() so we also pick up AMI.
-        if (isA<coupledPolyPatch>(patches[patchI]))
+        if (isA<coupledPolyPatch>(patches[patchi]))
         {
             const coupledPolyPatch& cpp = refCast<const coupledPolyPatch>
             (
-                patches[patchI]
+                patches[patchi]
             );
 
             if (cpp.separated() || !cpp.parallel())
@@ -2074,10 +2055,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMeshRegions
 
     if (regionI == -1)
     {
-        FatalErrorIn
-        (
-            "meshRefinement::splitMeshRegions(const point&)"
-        )   << "Point " << keepPoint
+        FatalErrorInFunction
+            << "Point " << keepPoint
             << " is not inside the mesh." << nl
             << "Bounding box of the mesh:" << mesh_.bounds()
             << exit(FatalError);
@@ -2088,11 +2067,11 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMeshRegions
 
     // Get cells to remove
     DynamicList<label> cellsToRemove(mesh_.nCells());
-    forAll(cellRegion, cellI)
+    forAll(cellRegion, celli)
     {
-        if (cellRegion[cellI] != regionI)
+        if (cellRegion[celli] != regionI)
         {
-            cellsToRemove.append(cellI);
+            cellsToRemove.append(celli);
         }
     }
     cellsToRemove.shrink();
@@ -2114,10 +2093,8 @@ CML::autoPtr<CML::mapPolyMesh> CML::meshRefinement::splitMeshRegions
 
     if (exposedFaces.size())
     {
-        FatalErrorIn
-        (
-            "meshRefinement::splitMeshRegions(const point&)"
-        )   << "Removing non-reachable cells should only expose boundary faces"
+        FatalErrorInFunction
+            << "Removing non-reachable cells should only expose boundary faces"
             << nl
             << "ExposedFaces:" << exposedFaces << abort(FatalError);
     }
@@ -2152,13 +2129,10 @@ void CML::meshRefinement::distribute(const mapDistributePolyMesh& map)
 
     // Redistribute surface and any fields on it.
     {
-        Random rndGen(653213);
-
         // Get local mesh bounding box. Single box for now.
         List<treeBoundBox> meshBb(1);
         treeBoundBox& bb = meshBb[0];
-        bb = treeBoundBox(mesh_.points());
-        bb = bb.extend(rndGen, 1E-4);
+        bb = treeBoundBox(mesh_.points()).extend(1e-4);
 
         // Distribute all geometry (so refinementSurfaces and shellSurfaces)
         searchableSurfaces& geometry =
@@ -2260,13 +2234,13 @@ void CML::meshRefinement::updateMesh
             // keep master only
             labelList newFaceData(map.faceMap().size(), -1);
 
-            forAll(newFaceData, faceI)
+            forAll(newFaceData, facei)
             {
-                label oldFaceI = map.faceMap()[faceI];
+                label oldFacei = map.faceMap()[facei];
 
-                if (oldFaceI >= 0 && map.reverseFaceMap()[oldFaceI] == faceI)
+                if (oldFacei >= 0 && map.reverseFaceMap()[oldFacei] == facei)
                 {
-                    newFaceData[faceI] = data[oldFaceI];
+                    newFaceData[facei] = data[oldFacei];
                 }
             }
             data.transfer(newFaceData);
@@ -2280,31 +2254,31 @@ void CML::meshRefinement::updateMesh
             // These get marked with -1 in reverseFaceMap
             labelList reverseFaceMap(map.reverseFaceMap());
 
-            forAll(map.faceMap(), faceI)
+            forAll(map.faceMap(), facei)
             {
-                label oldFaceI = map.faceMap()[faceI];
+                label oldFacei = map.faceMap()[facei];
 
-                if (oldFaceI >= 0)
+                if (oldFacei >= 0)
                 {
-                    if (reverseFaceMap[oldFaceI] != faceI)
+                    if (reverseFaceMap[oldFacei] != facei)
                     {
-                        // faceI is slave face. Mark old face.
-                        reverseFaceMap[oldFaceI] = -1;
+                        // facei is slave face. Mark old face.
+                        reverseFaceMap[oldFacei] = -1;
                     }
                 }
             }
 
             // 2. Map only faces with intact reverseFaceMap
             labelList newFaceData(map.faceMap().size(), -1);
-            forAll(newFaceData, faceI)
+            forAll(newFaceData, facei)
             {
-                label oldFaceI = map.faceMap()[faceI];
+                label oldFacei = map.faceMap()[facei];
 
-                if (oldFaceI >= 0)
+                if (oldFacei >= 0)
                 {
-                    if (reverseFaceMap[oldFaceI] == faceI)
+                    if (reverseFaceMap[oldFacei] == facei)
                     {
-                        newFaceData[faceI] = data[oldFaceI];
+                        newFaceData[facei] = data[oldFacei];
                     }
                 }
             }
@@ -2402,9 +2376,9 @@ void CML::meshRefinement::printMeshInfo(const bool debug, const string& msg)
 
         labelList nCells(gMax(cellLevel)+1, 0);
 
-        forAll(cellLevel, cellI)
+        forAll(cellLevel, celli)
         {
-            nCells[cellLevel[cellI]]++;
+            nCells[cellLevel[celli]]++;
         }
 
         Pstream::listCombineGather(nCells, plusEqOp<label>());
@@ -2451,15 +2425,14 @@ void CML::meshRefinement::dumpRefinementLevel() const
                 false
             ),
             mesh_,
-            dimensionedScalar("zero", dimless, 0),
-            zeroGradientFvPatchScalarField::typeName
+            dimensionedScalar("zero", dimless, 0)
         );
 
         const labelList& cellLevel = meshCutter_.cellLevel();
 
-        forAll(volRefLevel, cellI)
+        forAll(volRefLevel, celli)
         {
-            volRefLevel[cellI] = cellLevel[cellI];
+            volRefLevel[celli] = cellLevel[celli];
         }
 
         volRefLevel.write();
@@ -2486,9 +2459,9 @@ void CML::meshRefinement::dumpRefinementLevel() const
 
         const labelList& pointLevel = meshCutter_.pointLevel();
 
-        forAll(pointRefLevel, pointI)
+        forAll(pointRefLevel, pointi)
         {
-            pointRefLevel[pointI] = pointLevel[pointI];
+            pointRefLevel[pointi] = pointLevel[pointi];
         }
 
         pointRefLevel.write();
@@ -2524,22 +2497,22 @@ void CML::meshRefinement::dumpIntersections(const fileName& prefix) const
 
         forAll(intersectionFaces, i)
         {
-            label faceI = intersectionFaces[i];
-            start[i] = cellCentres[mesh_.faceOwner()[faceI]];
+            label facei = intersectionFaces[i];
+            start[i] = cellCentres[mesh_.faceOwner()[facei]];
 
-            if (mesh_.isInternalFace(faceI))
+            if (mesh_.isInternalFace(facei))
             {
-                end[i] = cellCentres[mesh_.faceNeighbour()[faceI]];
+                end[i] = cellCentres[mesh_.faceNeighbour()[facei]];
             }
             else
             {
-                end[i] = neiCc[faceI-mesh_.nInternalFaces()];
+                end[i] = neiCc[facei-mesh_.nInternalFaces()];
             }
         }
 
         // Extend segments a bit
         {
-            const vectorField smallVec(CML::sqrt(SMALL)*(end-start));
+            const vectorField smallVec(ROOTSMALL*(end-start));
             start -= smallVec;
             end += smallVec;
         }

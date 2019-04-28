@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
  Copyright 2009 TU Delft
  Copyright 2009 FSB Zagreb
- Copyright 2013 Applied CCM Pty Ltd
+ Copyright 2013-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -176,13 +176,8 @@ CML::tmp<CML::Field<Type> > CML::RBFInterpolation::interpolate
 
     if (ctrlField.size() != controlPoints_.size())
     {
-        FatalErrorIn
-        (
-            "tmp<Field<Type> > RBFInterpolation::interpolate\n"
-            "(\n"
-            "    const Field<Type>& ctrlField\n"
-            ") const"
-        )   << "Incorrect size of source field.  Size = " << ctrlField.size()
+        FatalErrorInFunction
+            << "Incorrect size of source field.  Size = " << ctrlField.size()
             << " nControlPoints = " << controlPoints_.size()
             << abort(FatalError);
     }

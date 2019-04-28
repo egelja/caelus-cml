@@ -63,16 +63,8 @@ autoPtr<relaxationScheme> relaxationScheme::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "relaxationScheme::New"
-            "("
-            "    const word&, "
-            "    const fvMesh&,"
-            "    vectorField& U,"
-            "    scalarField& alpha"
-            ")"
-        )   << "Unknown relaxationScheme '" << relaxationSchemeTypeName << "'"
+        FatalErrorInFunction
+            << "Unknown relaxationScheme '" << relaxationSchemeTypeName << "'"
             << endl << endl
             << "Valid relaxation schemes are:" << endl
             << dictionaryConstructorTablePtr_->toc()

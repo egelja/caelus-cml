@@ -85,7 +85,7 @@ pointField circularDistribution::evaluate()
     }
     else
     {
-        FatalErrorIn("pointField circularDistribution::evaluate()")
+        FatalErrorInFunction
             << "\n    The specified axis is neither x, y nor z"
             << exit(FatalError);
     }

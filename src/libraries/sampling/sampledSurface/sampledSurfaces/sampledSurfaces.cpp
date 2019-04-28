@@ -98,7 +98,7 @@ CML::sampledSurfaces::sampledSurfaces
     fieldSelection_(),
     interpolationScheme_(word::null),
     mergeList_(),
-    formatter_(NULL)
+    formatter_(nullptr)
 {
     if (Pstream::parRun())
     {

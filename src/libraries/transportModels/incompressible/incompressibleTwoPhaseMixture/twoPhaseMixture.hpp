@@ -31,8 +31,8 @@ SourceFiles
 #ifndef twoPhaseMixture_H
 #define twoPhaseMixture_H
 
-#include "incompressible/transportModel/transportModel.hpp"
-#include "incompressible/viscosityModels/viscosityModel/viscosityModel.hpp"
+#include "transportModel.hpp"
+#include "viscosityModel.hpp"
 #include "dimensionedScalar.hpp"
 #include "volFields.hpp"
 
@@ -143,10 +143,10 @@ public:
         };
 
         //- Return the dynamic laminar viscosity
-        tmp<volScalarField> mu() const;
+        virtual tmp<volScalarField> mu() const;
 
         //- Return the face-interpolated dynamic laminar viscosity
-        tmp<surfaceScalarField> muf() const;
+        virtual tmp<surfaceScalarField> muf() const;
 
         //- Return the kinematic laminar viscosity
         virtual tmp<volScalarField> nu() const
@@ -155,7 +155,7 @@ public:
         }
 
         //- Return the face-interpolated kinematic laminar viscosity
-        tmp<surfaceScalarField> nuf() const;
+        virtual tmp<surfaceScalarField> nuf() const;
 
         //- Correct the laminar viscosity
         virtual void correct()

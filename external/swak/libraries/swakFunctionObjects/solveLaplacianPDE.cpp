@@ -60,9 +60,9 @@ CML::solveLaplacianPDE::solveLaplacianPDE
     if (!isA<polyMesh>(obr))
     {
         active_=false;
-        WarningIn("solveLaplacianPDE::solveLaplacianPDE")
+        WarningInFunction
             << "Not a polyMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
 
     read(dict);
@@ -109,11 +109,10 @@ void CML::solveLaplacianPDE::read(const dictionary& dict)
             );
         } else {
             if(sourceExpression_!="0") {
-                WarningIn("CML::solveLaplacianPDE::read(const dictionary& dict)")
+                WarningInFunction
                     << "Source expression " << sourceExpression_ << " set. "
-                        << "Consider factoring out parts to 'sourceImplicit'\n"
-                        << endl;
-
+                    << "Consider factoring out parts to 'sourceImplicit'\n"
+                    << endl;
             }
         }
     }
@@ -133,11 +132,10 @@ void CML::solveLaplacianPDE::solve()
             &&
             steady_
         ) {
-            WarningIn("CML::solveTransportPDE::solve()")
+            WarningInFunction
                 << name_ << " is steady. It is recommended to have in "
-                    << sol.name() << " a nCorrectors>0"
-                    << endl;
-
+                << sol.name() << " a nCorrectors>0"
+                << endl;
         }
 
         for (int corr=0; corr<=nCorr; corr++) {
@@ -146,20 +144,20 @@ void CML::solveLaplacianPDE::solve()
 
             driver.parse(lambdaExpression_);
             if(!driver.resultIsTyp<volScalarField>()) {
-                FatalErrorIn("CML::solveLaplacianPDE::solve()")
+                FatalErrorInFunction
                     << lambdaExpression_ << " does not evaluate to a scalar"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             volScalarField lambdaField(driver.getResult<volScalarField>());
             lambdaField.dimensions().reset(lambdaDimension_);
 
             driver.parse(sourceExpression_);
             if(!driver.resultIsTyp<volScalarField>()) {
-                FatalErrorIn("CML::solveLaplacianPDE::solve()")
+                FatalErrorInFunction
                     << sourceExpression_ << " does not evaluate to a scalar"
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             volScalarField sourceField(driver.getResult<volScalarField>());
             sourceField.dimensions().reset(sourceDimension_);
@@ -176,10 +174,10 @@ void CML::solveLaplacianPDE::solve()
             if(!steady_) {
                 driver.parse(rhoExpression_);
                 if(!driver.resultIsTyp<volScalarField>()) {
-                    FatalErrorIn("CML::solveLaplacianPDE::solve()")
+                    FatalErrorInFunction
                         << rhoExpression_ << " does not evaluate to a scalar"
-                            << endl
-                            << exit(FatalError);
+                        << endl
+                        << exit(FatalError);
                 }
                 volScalarField rhoField(driver.getResult<volScalarField>());
                 rhoField.dimensions().reset(rhoDimension_);
@@ -201,10 +199,10 @@ void CML::solveLaplacianPDE::solve()
             if(sourceImplicitExpression_!="") {
                 driver.parse(sourceImplicitExpression_);
                 if(!driver.resultIsTyp<volScalarField>()) {
-                    FatalErrorIn("CML::solveLaplacianPDE::solve()")
+                    FatalErrorInFunction
                         << sourceImplicitExpression_ << " does not evaluate to a scalar"
-                            << endl
-                            << exit(FatalError);
+                        << endl
+                        << exit(FatalError);
                 }
                 volScalarField sourceImplicitField(driver.getResult<volScalarField>());
                 sourceImplicitField.dimensions().reset(sourceImplicitDimension_);

@@ -206,20 +206,20 @@ void ReaderParticleCloud::addDataInternal(
     bool overwrite
 ) {
     if(data.found(name) && !overwrite) {
-        FatalErrorIn("ReaderParticleCloud::addDataInternal")
+        FatalErrorInFunction
             << "Already got a field named " << name << " in the table for Field<"
-                << pTraits<T>::typeName << ">"
-                << endl
-                << exit(FatalError);
+            << pTraits<T>::typeName << ">"
+            << endl
+            << exit(FatalError);
     }
 
     if(inData.size()!=this->size()) {
-        FatalErrorIn("ReaderParticleCloud::addDataInternal")
+        FatalErrorInFunction
             << "Length " << inData.size() << " of field " << name << " of type "
-                << pTraits<T>::typeName << " does not fit the size "
-                << this->size() << " of the cloud " << this->name()
-                << endl
-                << exit(FatalError);
+            << pTraits<T>::typeName << " does not fit the size "
+            << this->size() << " of the cloud " << this->name()
+            << endl
+            << exit(FatalError);
     }
     if(data.found(name)) {
         data.set(name,inData);
@@ -283,10 +283,10 @@ void ReaderParticleCloud::setValues(
 ) {
     const word typeName=pTraits<T>::typeName;
 
-    FatalErrorIn("ReaderParticleCloud::setValues")
+    FatalErrorInFunction
         << "Unsupported type " << typeName
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
 }
 
 template<>
@@ -337,10 +337,10 @@ const Field<T> &ReaderParticleCloud::getValues(
 ) {
     const word typeName=pTraits<T>::typeName;
 
-    FatalErrorIn("ReaderParticleCloud::getValues")
+    FatalErrorInFunction
         << "Unsupported type " << typeName
-            << endl
-            << exit(FatalError);
+        << endl
+        << exit(FatalError);
 
     Field<T> dummy;
     return dummy;

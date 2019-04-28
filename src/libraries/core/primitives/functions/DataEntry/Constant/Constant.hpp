@@ -222,7 +222,7 @@ CML::autoPtr<CML::DataEntry<Type> > CML::DataEntry<Type>::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalErrorIn("DataEntry<Type>::New(const word&,const dictionary&)")
+            FatalErrorInFunction
                 << "Unknown DataEntry type "
                 << DataEntryType << " for DataEntry "
                 << entryName << nl << nl
@@ -258,7 +258,7 @@ CML::autoPtr<CML::DataEntry<Type> > CML::DataEntry<Type>::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalErrorIn("DataEntry<Type>::New(const word&,const dictionary&)")
+            FatalErrorInFunction
                 << "Unknown DataEntry type "
                 << DataEntryType << " for DataEntry "
                 << entryName << nl << nl

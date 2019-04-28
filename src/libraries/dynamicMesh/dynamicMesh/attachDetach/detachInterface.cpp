@@ -80,11 +80,8 @@ void CML::attachDetach::detachInterface
             {
                 if (faceLabels[i] <= faceLabels[i-1])
                 {
-                    FatalErrorIn
-                    (
-                        "attachDetach::detachInterface"
-                        "(polyTopoChange&) const"
-                    )   << "faceZone " << zoneMesh[faceZoneID_.index()].name()
+                    FatalErrorInFunction
+                        << "faceZone " << zoneMesh[faceZoneID_.index()].name()
                         << " does not have mesh face labels in"
                         << " increasing order." << endl
                         << "Face label " << faceLabels[i]

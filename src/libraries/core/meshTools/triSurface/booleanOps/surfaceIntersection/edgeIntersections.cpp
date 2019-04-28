@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -65,10 +65,8 @@ void CML::edgeIntersections::checkEdges(const triSurface& surf)
 
         if (eMag < minSize)
         {
-            WarningIn
-            (
-                "CML::edgeIntersections::checkEdges(const triSurface& surf)"
-            )   << "Edge " << edgeI << " vertices " << e
+            WarningInFunction
+                << "Edge " << edgeI << " vertices " << e
                 << " coords:" << localPoints[e[0]] << ' '
                 << localPoints[e[1]] << " is very small compared to bounding"
                 << " box dimensions " << bb << endl
@@ -78,10 +76,8 @@ void CML::edgeIntersections::checkEdges(const triSurface& surf)
 
         if (edgeFaces[edgeI].size() == 1)
         {
-            WarningIn
-            (
-                "CML::edgeIntersections::checkEdges(const triSurface& surf)"
-            )   << "Edge " << edgeI << " vertices " << e
+            WarningInFunction
+                << "Edge " << edgeI << " vertices " << e
                 << " coords:" << localPoints[e[0]] << ' '
                 << localPoints[e[1]] << " has only one face connected to it:"
                 << edgeFaces[edgeI] << endl
@@ -223,7 +219,6 @@ void CML::edgeIntersections::intersectEdges
         Pout<< "Found " << nHits << " intersections of edges with surface ..."
             << endl;
     }
-
 }
 
 
@@ -337,11 +332,11 @@ bool CML::edgeIntersections::rotatePerturb
             const edge& e = surf1.edges()[edgeI];
 
             // Endpoint to modify. Choose either start or end.
-            label pointI = e[rndGen.bit()];
-            //label pointI = e[0];
+            label pointi = e[rndGen.sampleAB<label>(0, 2)];
+            // label pointi = e[0];
 
             // Generate random vector slightly larger than tolerance.
-            vector rndVec = rndGen.vector01() - vector(0.5, 0.5, 0.5);
+            vector rndVec = rndGen.sample01<vector>() - vector(0.5, 0.5, 0.5);
 
             // Make sure rndVec only perp to edge
             vector n(points1[meshPoints[e[1]]] - points1[meshPoints[e[0]]]);
@@ -356,17 +351,17 @@ bool CML::edgeIntersections::rotatePerturb
             // Scale to be moved by tolerance.
             rndVec *= 0.01*magN;
 
-            Pout<< "rotating: shifting endpoint " << meshPoints[pointI]
+            Pout<< "rotating: shifting endpoint " << meshPoints[pointi]
                 << " of edge:" << edgeI << " verts:"
                 << points1[meshPoints[e[0]]] << ' '
                 << points1[meshPoints[e[1]]]
                 << " by " << rndVec
-                << " tol:" << surf1PointTol[pointI] << endl;
+                << " tol:" << surf1PointTol[pointi] << endl;
 
-            points1[meshPoints[pointI]] += rndVec;
+            points1[meshPoints[pointi]] += rndVec;
 
             // Mark edges affected by change to point
-            const labelList& pEdges = surf1.pointEdges()[pointI];
+            const labelList& pEdges = surf1.pointEdges()[pointi];
 
             forAll(pEdges, i)
             {
@@ -412,9 +407,9 @@ bool CML::edgeIntersections::offsetPerturb
         const pointIndexHit& pHit = hits[i];
 
         // Classify point on face of surface2
-        label surf2FaceI = pHit.index();
+        label surf2Facei = pHit.index();
 
-        const triSurface::FaceType& f2 = surf2.localFaces()[surf2FaceI];
+        const triSurface::FaceType& f2 = surf2.localFaces()[surf2Facei];
         const pointField& surf2Pts = surf2.localPoints();
 
         const point ctr = f2.centre(surf2Pts);
@@ -528,9 +523,9 @@ CML::scalarField CML::edgeIntersections::minEdgeLength(const triSurface& surf)
 
     scalarField minLen(localPoints.size());
 
-    forAll(minLen, pointI)
+    forAll(minLen, pointi)
     {
-        const labelList& pEdges = pointEdges[pointI];
+        const labelList& pEdges = pointEdges[pointi];
 
         scalar minDist = GREAT;
 
@@ -539,7 +534,7 @@ CML::scalarField CML::edgeIntersections::minEdgeLength(const triSurface& surf)
             minDist = min(minDist, edges[pEdges[i]].mag(localPoints));
         }
 
-        minLen[pointI] = minDist;
+        minLen[pointi] = minDist;
     }
     return minLen;
 }
@@ -687,7 +682,7 @@ CML::label CML::edgeIntersections::removeDegenerates
 
         if (edgesToTest.empty())
         {
-            FatalErrorIn("perturb") << "oops" << abort(FatalError);
+            FatalErrorInFunction << "oops" << abort(FatalError);
         }
 
         // Re intersect moved edges.

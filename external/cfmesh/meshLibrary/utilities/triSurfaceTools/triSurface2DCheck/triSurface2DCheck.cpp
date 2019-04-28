@@ -73,7 +73,7 @@ bool triSurface2DCheck::is2DSurface() const
     //- lie in a plane
     if( mag(eigenVal[0]) > SMALL )
     {
-        WarningIn("bool triSurface2DCheck::is2DSurface() const")
+        WarningInFunction
             << "Surface mesh is in 3D space!"
             << " This may result in an invalid mesh!" << endl;
 
@@ -84,15 +84,15 @@ bool triSurface2DCheck::is2DSurface() const
     //- eigenVectors spanning the plane
     const vector n
     (
-        eigenVector(covarianceMatrix_, eigenVal[1]) ^
-        eigenVector(covarianceMatrix_, eigenVal[2])
+        eigenVectors(covarianceMatrix_, eigenVal).y() ^
+        eigenVectors(covarianceMatrix_, eigenVal).z()
     );
 
     //- check if the plane is in the x-y plane of the coordinate system
     if( mag(n.x()) > SMALL || mag(n.y()) > SMALL )
     {
         //- this could be a 2D surface, but it is not in the x-y plane
-        WarningIn("bool triSurface2DCheck::is2DSurface() const")
+        WarningInFunction
             << "The surface mesh IS NOT IN THE X-Y PLANE!!!!"
             << " This will result in a mesh without any cells" << endl;
 
@@ -111,7 +111,7 @@ bool triSurface2DCheck::is2DSurface() const
             mag(p.z() - bb.min().z()) > SMALL
         )
         {
-            WarningIn("bool triSurface2DCheck::is2DSurface() const")
+            WarningInFunction
                 << "z coordinates of the 2D surface are not uniform" << endl;
 
             return false;

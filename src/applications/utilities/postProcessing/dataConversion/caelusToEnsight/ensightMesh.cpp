@@ -1037,7 +1037,7 @@ void CML::ensightMesh::write
     // set the filename of the ensight file
     fileName ensightGeometryFileName = timeFile + "mesh";
 
-    ensightStream* ensightGeometryFilePtr = NULL;
+    ensightStream* ensightGeometryFilePtr = nullptr;
     if (Pstream::master())
     {
         if (binary_)

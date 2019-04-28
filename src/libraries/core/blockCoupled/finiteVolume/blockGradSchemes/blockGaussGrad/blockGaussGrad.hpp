@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2013-2015 H. Jasak
-Copyright (C) 2017 Applied CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -80,7 +80,7 @@ public:
     blockGaussGrad(const fvMesh& mesh, Istream& is)
     :
         blockGradScheme<Type>(mesh),
-        tinterpScheme_(NULL)
+        tinterpScheme_(nullptr)
     {
         if (is.eof())
         {
@@ -131,13 +131,8 @@ blockGaussGrad<Type>::fvmGrad
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> fvmGrad\n"
-        "(\n"
-        "    GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block gradient operator defined only for scalar."
+    FatalErrorInFunction
+        << "Implicit block gradient operator defined only for scalar."
         << abort(FatalError);
 
     typedef typename outerProduct<vector, Type>::type GradType;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,7 +28,7 @@ void CML::lduAddressing::calcLosort() const
 {
     if (losortPtr_)
     {
-        FatalErrorIn("lduAddressing::calcLosort() const")
+        FatalErrorInFunction
             << "losort already calculated"
             << abort(FatalError);
     }
@@ -89,7 +89,7 @@ void CML::lduAddressing::calcOwnerStart() const
 {
     if (ownerStartPtr_)
     {
-        FatalErrorIn("lduAddressing::calcOwnerStart() const")
+        FatalErrorInFunction
             << "owner start already calculated"
             << abort(FatalError);
     }
@@ -126,7 +126,7 @@ void CML::lduAddressing::calcLosortStart() const
 {
     if (losortStartPtr_)
     {
-        FatalErrorIn("lduAddressing::calcLosortStart() const")
+        FatalErrorInFunction
             << "losort start already calculated"
             << abort(FatalError);
     }
@@ -233,10 +233,8 @@ CML::label CML::lduAddressing::triIndex(const label a, const label b) const
 
     // If neighbour has not been found, something has gone seriously
     // wrong with the addressing mechanism
-    FatalErrorIn
-    (
-        "lduAddressing::triIndex(const label owner, const label nbr) const"
-    )   << "neighbour " << nbr << " not found for owner " << own << ". "
+    FatalErrorInFunction
+        << "neighbour " << nbr << " not found for owner " << own << ". "
         << "Problem with addressing"
         << abort(FatalError);
 

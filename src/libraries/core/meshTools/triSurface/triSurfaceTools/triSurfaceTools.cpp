@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -611,7 +611,7 @@ CML::scalar CML::triSurfaceTools::edgeCosAngle
         }
         else
         {
-            FatalErrorIn("edgeCosAngle")
+            FatalErrorInFunction
                 << "face " << faceI << " does not use vertex "
                 << v1 << " of collapsed edge" << abort(FatalError);
         }
@@ -883,7 +883,7 @@ CML::surfaceLocation CML::triSurfaceTools::cutEdge
 
         if (fp0 == -1)
         {
-            FatalErrorIn("cutEdge(..)") << "excludePointI:" << excludePointI
+            FatalErrorInFunction << "excludePointI:" << excludePointI
                 << " localF:" << s.localFaces()[triI] << abort(FatalError);
         }
 
@@ -940,7 +940,7 @@ CML::surfaceLocation CML::triSurfaceTools::cutEdge
             {
                 if (interI >= 2)
                 {
-                    FatalErrorIn("cutEdge(..)")
+                    FatalErrorInFunction
                         << "problem : triangle has three intersections." << nl
                         << "triangle:" << f.tri(points)
                         << " d:" << d << abort(FatalError);
@@ -959,7 +959,7 @@ CML::surfaceLocation CML::triSurfaceTools::cutEdge
             {
                 if (interI >= 2)
                 {
-                    FatalErrorIn("cutEdge(..)")
+                    FatalErrorInFunction
                         << "problem : triangle has three intersections." << nl
                         << "triangle:" << f.tri(points)
                         << " d:" << d << abort(FatalError);
@@ -1206,7 +1206,7 @@ CML::surfaceLocation CML::triSurfaceTools::visitFaces
                 // If crossing an edge we expect next edge to be cut.
                 if (excludeEdgeI != -1 && !cutInfo.hit())
                 {
-                    FatalErrorIn("triSurfaceTools::visitFaces(..)")
+                    FatalErrorInFunction
                         << "Triangle:" << triI
                         << " excludeEdge:" << excludeEdgeI
                         << " point:" << start.rawPoint()
@@ -1465,12 +1465,8 @@ void CML::triSurfaceTools::otherEdges
 
     if (i0 == -1)
     {
-        FatalErrorIn
-        (
-            "otherEdges"
-            "(const triSurface&, const label, const label,"
-            " label&, label&)"
-        )   << "Edge " << surf.edges()[edgeI] << " not in face "
+        FatalErrorInFunction
+            << "Edge " << surf.edges()[edgeI] << " not in face "
             << surf.localFaces()[faceI] << abort(FatalError);
     }
 
@@ -1511,12 +1507,8 @@ void CML::triSurfaceTools::otherVertices
     }
     else
     {
-        FatalErrorIn
-        (
-            "otherVertices"
-            "(const triSurface&, const label, const label,"
-            " label&, label&)"
-        )   << "Vertex " << vertI << " not in face " << f << abort(FatalError);
+        FatalErrorInFunction
+            << "Vertex " << vertI << " not in face " << f << abort(FatalError);
     }
 }
 
@@ -1543,11 +1535,8 @@ CML::label CML::triSurfaceTools::oppositeEdge
         }
     }
 
-    FatalErrorIn
-    (
-        "oppositeEdge"
-        "(const triSurface&, const label, const label)"
-    )   << "Cannot find vertex " << vertI << " in edges of face " << faceI
+    FatalErrorInFunction
+        << "Cannot find vertex " << vertI << " in edges of face " << faceI
         << abort(FatalError);
 
     return -1;
@@ -1575,7 +1564,7 @@ CML::label CML::triSurfaceTools::oppositeVertex
         }
     }
 
-    FatalErrorIn("triSurfaceTools::oppositeVertex")
+    FatalErrorInFunction
         << "Cannot find vertex opposite edge " << edgeI << " vertices " << e
         << " in face " << faceI << " vertices " << f << abort(FatalError);
 
@@ -1618,12 +1607,8 @@ CML::label CML::triSurfaceTools::getTriangle
 {
     if ((e0I == e1I) || (e0I == e2I) || (e1I == e2I))
     {
-        FatalErrorIn
-        (
-            "getTriangle"
-            "(const triSurface&, const label, const label,"
-            " const label)"
-        )   << "Duplicate edge labels : e0:" << e0I << " e1:" << e1I
+        FatalErrorInFunction
+            << "Duplicate edge labels : e0:" << e0I << " e1:" << e1I
             << " e2:" << e2I
             << abort(FatalError);
     }
@@ -1689,7 +1674,7 @@ CML::triSurface CML::triSurfaceTools::collapseEdges
     //
     //    if ((neighbours.size() != 2) && (neighbours.size() != 1))
     //    {
-    //        FatalErrorIn("collapseEdges")
+    //        FatalErrorInFunction
     //            << abort(FatalError);
     //    }
     //
@@ -1743,7 +1728,7 @@ CML::triSurface CML::triSurfaceTools::collapseEdges
 
         if ((edgeI < 0) || (edgeI >= surf.nEdges()))
         {
-            FatalErrorIn("collapseEdges")
+            FatalErrorInFunction
                 << "Edge label outside valid range." << endl
                 << "edge label:" << edgeI << endl
                 << "total number of edges:" << surf.nEdges() << endl
@@ -1773,7 +1758,7 @@ CML::triSurface CML::triSurfaceTools::collapseEdges
                  || (pointMap[e.end()] != e.end())
                 )
                 {
-                    FatalErrorIn("collapseEdges")
+                    FatalErrorInFunction
                         << "points already mapped. Double collapse." << endl
                         << "edgeI:" << edgeI
                         << "  start:" << e.start()
@@ -2219,7 +2204,7 @@ CML::triSurfaceTools::sideType CML::triSurfaceTools::surfaceSide
 
         //     if (mag(c) < 0.99)
         //     {
-        //         FatalErrorIn("triSurfaceTools::surfaceSide")
+        //         FatalErrorInFunction
         //             << "nearestPoint identified as being on triangle face "
         //             << "but vector from nearestPoint to sample is not "
         //             << "perpendicular to the normal." << nl
@@ -2269,7 +2254,7 @@ CML::triSurfaceTools::sideType CML::triSurfaceTools::surfaceSide
         //     != edge(f[nearLabel], f[f.fcIndex(nearLabel)])
         //    )
         //    {
-        //        FatalErrorIn("triSurfaceTools::surfaceSide")
+        //        FatalErrorInFunction
         //            << "Edge:" << edgeI << " local vertices:" << e
         //            << " mesh vertices:" << meshEdge
         //            << " not at position " << nearLabel
@@ -2330,7 +2315,7 @@ CML::triSurfaceTools::sideType CML::triSurfaceTools::surfaceSide
 
         if (minEdgeI == -1)
         {
-            FatalErrorIn("treeDataTriSurface::getSide")
+            FatalErrorInFunction
                 << "Problem: did not find edge closer than " << minDistSqr
                 << abort(FatalError);
         }
@@ -2560,7 +2545,7 @@ CML::triSurface CML::triSurfaceTools::delaunay2D(const List<vector2D>& pts)
 
     if (err != 0)
     {
-        FatalErrorIn("triSurfaceTools::delaunay2D(const List<vector2D>&)")
+        FatalErrorInFunction
             << "Failed dtris2 with vertices:" << pts.size()
             << abort(FatalError);
     }

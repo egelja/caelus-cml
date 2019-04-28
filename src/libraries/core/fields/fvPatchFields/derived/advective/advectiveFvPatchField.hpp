@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,15 +23,16 @@ Class
 
 Description
     This boundary condition provides an advective outflow condition, based on
-    solving DDt(psi, U) = 0 at the boundary.
+    solving DDt(W, field) = 0 at the boundary where \c W is the wave velocity
+    and \c field is the field to which this boundary condition is applied.
 
-    The standard (Euler, backward, CrankNicolson) time schemes are
+    The standard (Euler, backward, CrankNicolson, localEuler) time schemes are
     supported.  Additionally an optional mechanism to relax the value at
     the boundary to a specified far-field value is provided which is
     switched on by specifying the relaxation length-scale \c lInf and the
     far-field value \c fieldInf.
 
-    The flow/wave speed at the outlet is provided by the virtual function
+    The flow/wave speed \c (w) at the outlet is provided by the virtual function
     advectionSpeed() the default implementation of which requires the name of
     the flux field \c (phi) and optionally the density \c (rho) if the
     mass-flux rather than the volumetric-flux is given.
@@ -42,8 +43,7 @@ Description
     the flow-speed plus the acoustic wave speed creating an acoustic wave
     transmissive boundary condition.
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         phi          | flux field name         | no          | phi
@@ -54,7 +54,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            advective;
         phi             phi;
@@ -81,7 +81,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                 Class advectiveFvPatch Declaration
+                  Class advectiveFvPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class Type>
@@ -231,6 +231,7 @@ public:
 #include "EulerDdtScheme.hpp"
 #include "CrankNicolsonDdtScheme.hpp"
 #include "backwardDdtScheme.hpp"
+#include "localEulerDdtScheme.hpp"
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -307,13 +308,8 @@ CML::advectiveFvPatchField<Type>::advectiveFvPatchField
 
         if (lInf_ < 0.0)
         {
-            FatalIOErrorIn
-            (
-                "advectiveFvPatchField<Type>::"
-                "advectiveFvPatchField"
-                "(const fvPatch&, const Field<Type>&, const dictionary&)",
-                dict
-            )   << "unphysical lInf specified (lInf < 0)\n"
+            FatalIOErrorInFunction(dict)
+                << "unphysical lInf specified (lInf < 0)\n"
                 << "    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()
                 << " in file " << this->dimensionedInternalField().objectPath()
@@ -393,10 +389,11 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
         return;
     }
 
+    const fvMesh& mesh = this->dimensionedInternalField().mesh();
+
     word ddtScheme
     (
-        this->dimensionedInternalField().mesh()
-       .ddtScheme(this->dimensionedInternalField().name())
+        mesh.ddtScheme(this->dimensionedInternalField().name())
     );
     scalar deltaT = this->db().time().deltaTValue();
 
@@ -447,12 +444,34 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
 
             this->valueFraction() = (1.5 + k)/(1.5 + alpha + k);
         }
+        else if
+        (
+            ddtScheme == fv::localEulerDdtScheme<scalar>::typeName
+        )
+        {
+            const volScalarField& rDeltaT =
+                fv::localEulerDdt::localRDeltaT(mesh);
+
+            // Calculate the field wave coefficient alpha (See notes)
+            const scalarField alpha
+            (
+                w*this->patch().deltaCoeffs()/rDeltaT.boundaryField()[patchi]
+            );
+
+            // Calculate the field relaxation coefficient k (See notes)
+            const scalarField k(w/(rDeltaT.boundaryField()[patchi]*lInf_));
+
+            this->refValue() =
+            (
+                field.oldTime().boundaryField()[patchi] + k*fieldInf_
+            )/(1.0 + k);
+
+            this->valueFraction() = (1.0 + k)/(1.0 + alpha + k);
+        }
         else
         {
-            FatalErrorIn
-            (
-                "advectiveFvPatchField<Type>::updateCoeffs()"
-            )   << "    Unsupported temporal differencing scheme : "
+            FatalErrorInFunction
+                << "    Unsupported temporal differencing scheme : "
                 << ddtScheme
                 << "\n    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()
@@ -482,12 +501,28 @@ void CML::advectiveFvPatchField<Type>::updateCoeffs()
 
             this->valueFraction() = 1.5/(1.5 + alpha);
         }
+        else if
+        (
+            ddtScheme == fv::localEulerDdtScheme<scalar>::typeName
+        )
+        {
+            const volScalarField& rDeltaT =
+                fv::localEulerDdt::localRDeltaT(mesh);
+
+            // Calculate the field wave coefficient alpha (See notes)
+            const scalarField alpha
+            (
+                w*this->patch().deltaCoeffs()/rDeltaT.boundaryField()[patchi]
+            );
+
+            this->refValue() = field.oldTime().boundaryField()[patchi];
+
+            this->valueFraction() = 1.0/(1.0 + alpha);
+        }
         else
         {
-            FatalErrorIn
-            (
-                "advectiveFvPatchField<Type>::updateCoeffs()"
-            )   << "    Unsupported temporal differencing scheme : "
+            FatalErrorInFunction
+                << "    Unsupported temporal differencing scheme : "
                 << ddtScheme
                 << "\n    on patch " << this->patch().name()
                 << " of field " << this->dimensionedInternalField().name()
@@ -516,10 +551,8 @@ void CML::advectiveFvPatchField<Type>::write(Ostream& os) const
 
     if (lInf_ > SMALL)
     {
-        os.writeKeyword("fieldInf") << fieldInf_
-            << token::END_STATEMENT << nl;
-        os.writeKeyword("lInf") << lInf_
-            << token::END_STATEMENT << nl;
+        os.writeKeyword("fieldInf") << fieldInf_ << token::END_STATEMENT << nl;
+        os.writeKeyword("lInf") << lInf_ << token::END_STATEMENT << nl;
     }
 
     this->writeEntry("value", os);

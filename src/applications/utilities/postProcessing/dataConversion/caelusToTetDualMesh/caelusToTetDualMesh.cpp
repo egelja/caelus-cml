@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -116,7 +116,7 @@ void ReadAndMapFields
                 }
                 //else
                 //{
-                //    FatalErrorIn("ReadAndMapFields(..)")
+                //    FatalErrorInFunction
                 //        << "Face " << faceI << " from index " << index
                 //        << " is not a boundary face." << abort(FatalError);
                 //}
@@ -124,7 +124,7 @@ void ReadAndMapFields
             }
             //else
             //{
-            //    WarningIn("ReadAndMapFields(..)")
+            //    WarningInFunction
             //        << "Point " << pointI << " at "
             //        << tetDualMesh.points()[pointI]
             //        << " has no dual correspondence." << endl;
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
     if (pointDualAddressing.size() != tetDualMesh.nPoints())
     {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Size " << pointDualAddressing.size()
                 << " of addressing map " << pointDualAddressing.objectPath()
                 << " differs from number of points in mesh "
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
             label faceI = -index-1;
             if (faceI < mesh.nInternalFaces())
             {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Face " << faceI << " from index " << index
                     << " is not a boundary face."
                     << " nInternalFaces:" << mesh.nInternalFaces()

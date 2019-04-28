@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,7 +64,7 @@ void CML::midPointSet::genSamples()
 
             if (cell1 != cell2)
             {
-                FatalErrorIn("midPointSet::genSamples()")
+                FatalErrorInFunction
                     << "  sampleI:" << sampleI
                     << "  midI:" << midI
                     << "  sampleI:" << sampleI

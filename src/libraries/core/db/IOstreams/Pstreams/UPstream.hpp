@@ -176,7 +176,7 @@ private:
         static int myProcNo_;
         static bool parRun_;
 
-        static List<int> procIDs_;
+        static List<label> procIDs_;
         static int msgType_;
 
         static List<commsStruct> linearCommunication_;
@@ -305,7 +305,7 @@ public:
         }
 
         //- Process IDs
-        static const List<int>& procIDs()
+        static const List<label>& procIDs()
         {
             return procIDs_;
         }
@@ -368,6 +368,14 @@ public:
         //- Abort program
         static void abort();
 
+        //- Exchange label with all processors (in the communicator).
+        //  sendData[proci] is the label to send to proci.
+        //  After return recvData contains the data from the other processors.
+        static void allToAll
+        (
+            const labelUList& sendData,
+            labelUList& recvData
+        );
 
 };
 

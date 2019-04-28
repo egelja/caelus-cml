@@ -338,14 +338,14 @@ struct yy_buffer_state
  * future we want to put the buffer states in a more general
  * "scanner state".
  *
- * Returns the top of the stack, or NULL.
+ * Returns the top of the stack, or nullptr.
  */
 #define YY_CURRENT_BUFFER ( yyg->yy_buffer_stack \
                           ? yyg->yy_buffer_stack[yyg->yy_buffer_stack_top] \
-                          : NULL)
+                          : nullptr)
 
 /* Same as previous macro, but useful when we know that the buffer stack is not
- * NULL or when we need an lvalue. For internal use only.
+ * nullptr or when we need an lvalue. For internal use only.
  */
 #define YY_CURRENT_BUFFER_LVALUE yyg->yy_buffer_stack[yyg->yy_buffer_stack_top]
 
@@ -66387,7 +66387,7 @@ void fvexprpush_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
 /* %endif */
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
-	if (new_buffer == NULL)
+	if (new_buffer == nullptr)
 		return;
 
 	fvexprensure_buffer_stack(yyscanner);
@@ -66428,7 +66428,7 @@ void fvexprpop_buffer_state (yyscan_t yyscanner)
 		return;
 
 	fvexpr_delete_buffer(YY_CURRENT_BUFFER ,yyscanner);
-	YY_CURRENT_BUFFER_LVALUE = NULL;
+	YY_CURRENT_BUFFER_LVALUE = nullptr;
 	if (yyg->yy_buffer_stack_top > 0)
 		--yyg->yy_buffer_stack_top;
 
@@ -66851,14 +66851,14 @@ void fvexprset_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
 int fvexprlex_init(yyscan_t* ptr_yy_globals)
 
 {
-    if (ptr_yy_globals == NULL){
+    if (ptr_yy_globals == nullptr){
         errno = EINVAL;
         return 1;
     }
 
-    *ptr_yy_globals = (yyscan_t) fvexpralloc ( sizeof( struct yyguts_t ), NULL );
+    *ptr_yy_globals = (yyscan_t) fvexpralloc ( sizeof( struct yyguts_t ), nullptr );
 
-    if (*ptr_yy_globals == NULL){
+    if (*ptr_yy_globals == nullptr){
         errno = ENOMEM;
         return 1;
     }
@@ -66884,14 +66884,14 @@ int fvexprlex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_globals 
 
     fvexprset_extra (yy_user_defined, &dummy_yyguts);
 
-    if (ptr_yy_globals == NULL){
+    if (ptr_yy_globals == nullptr){
         errno = EINVAL;
         return 1;
     }
 	
     *ptr_yy_globals = (yyscan_t) fvexpralloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
 	
-    if (*ptr_yy_globals == NULL){
+    if (*ptr_yy_globals == nullptr){
         errno = ENOMEM;
         return 1;
     }
@@ -66924,7 +66924,7 @@ static int yy_init_globals (yyscan_t yyscanner)
 
     yyg->yy_start_stack_ptr = 0;
     yyg->yy_start_stack_depth = 0;
-    yyg->yy_start_stack =  NULL;
+    yyg->yy_start_stack =  nullptr;
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
@@ -66951,17 +66951,17 @@ int fvexprlex_destroy  (yyscan_t yyscanner)
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
 		fvexpr_delete_buffer(YY_CURRENT_BUFFER ,yyscanner );
-		YY_CURRENT_BUFFER_LVALUE = NULL;
+		YY_CURRENT_BUFFER_LVALUE = nullptr;
 		fvexprpop_buffer_state(yyscanner);
 	}
 
 	/* Destroy the stack itself. */
 	fvexprfree(yyg->yy_buffer_stack ,yyscanner);
-	yyg->yy_buffer_stack = NULL;
+	yyg->yy_buffer_stack = nullptr;
 
     /* Destroy the start condition stack. */
         fvexprfree(yyg->yy_start_stack ,yyscanner );
-        yyg->yy_start_stack = NULL;
+        yyg->yy_start_stack = nullptr;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
      * fvexprlex() is called, initialization will occur. */
@@ -66970,7 +66970,7 @@ int fvexprlex_destroy  (yyscan_t yyscanner)
 /* %if-reentrant */
     /* Destroy the main struct (reentrant only). */
     fvexprfree ( yyscanner , yyscanner );
-    yyscanner = NULL;
+    yyscanner = nullptr;
 /* %endif */
     return 0;
 }
@@ -67041,11 +67041,11 @@ void FieldValueExpressionDriver::scan_begin ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_!=NULL) {
-        FatalErrorIn("FieldValueExpressionDriver::scan_begin")
+    if(scanner_!=nullptr) {
+        FatalErrorInFunction
             << "Already existing scanner " << getHex(scanner_)
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -67071,20 +67071,20 @@ void FieldValueExpressionDriver::scan_end ()
         Info << "Scanner: " << getHex(scanner_) << endl;
     }
 
-    if(scanner_==NULL) {
-        FatalErrorIn("FieldValueExpressionDriver::scan_end")
+    if(scanner_==nullptr) {
+        FatalErrorInFunction
             << "Uninitialized Scanner. Can't delete it"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
     fvexprlex_destroy(scanner_);
-    // WarningIn("FieldValueExpressionDriver::scan_end")
+    // WarningInFunction
     //     << "Scanner " <<  getHex(scanner_) << " is not deleted"
     //         << endl;
 
-    scanner_=NULL;
+    scanner_=nullptr;
 //	    fclose (yyin);
 }
 

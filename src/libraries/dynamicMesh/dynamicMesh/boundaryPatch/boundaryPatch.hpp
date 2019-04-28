@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,6 +39,13 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class boundaryPatch;
+
+Ostream& operator<<(Ostream&, const boundaryPatch&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class boundaryPatch Declaration

@@ -75,10 +75,8 @@ autoPtr<externalWaveForcing> externalWaveForcing::New
 
     if (cstrIter == externalWaveForcingConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "externalWaveForcing::New(IOobject, const Time&)"
-        )   << "Unknown type of external wave forcing: " << externalType
+        FatalErrorInFunction
+            << "Unknown type of external wave forcing: " << externalType
             << endl << endl
             << "Valid external forcings are :" << endl
             << externalWaveForcingConstructorTablePtr_->toc()

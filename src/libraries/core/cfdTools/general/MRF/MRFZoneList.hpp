@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -171,6 +171,14 @@ public:
             surfaceScalarField& phi
         ) const;
 
+        //- Filter-out the MRF region contribution from the given field
+        // setting the corresponding values to zero
+        template<class Type>
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > zeroFilter
+        (
+            const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tphi
+        ) const;
+
         //- Update MRFZone faces if the mesh topology changes
         void update();
 
@@ -193,5 +201,42 @@ public:
 
 } // End namespace CML
 
-#endif
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+CML::tmp<CML::GeometricField<Type, CML::fvsPatchField, CML::surfaceMesh> >
+CML::MRFZoneList::zeroFilter
+(
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tphi
+) const
+{
+    if (size())
+    {
+        tmp<surfaceScalarField> zphi
+        (
+             reuseTmpGeometricField<scalar, scalar, fvsPatchField, surfaceMesh>
+            ::New
+            (
+                tphi,
+                "zeroFilter(" + tphi().name() + ')',
+                tphi().dimensions(),
+                true
+            )
+        );
+
+        forAll(*this, i)
+        {
+            operator[](i).zero(zphi());
+        }
+
+        return zphi;
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+#endif

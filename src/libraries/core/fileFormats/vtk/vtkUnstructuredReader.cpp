@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2013 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -87,7 +87,7 @@ void CML::vtkUnstructuredReader::warnUnhandledType
 {
     if (warningGiven.insert(type))
     {
-        IOWarningIn("vtkUnstructuredReader::warnUnhandledType(..)", inFile)
+        IOWarningInFunction(inFile)
             << "Skipping unknown cell type " << type << endl;
     }
 }
@@ -139,11 +139,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 1)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 1 for VTK_VERTEX but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 1 for VTK_VERTEX but found "
                         << nRead << exit(FatalIOError);
                 }
                 dataIndex += nRead;
@@ -164,11 +161,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 2)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 2 for VTK_LINE but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 2 for VTK_LINE but found "
                         << nRead << exit(FatalIOError);
                 }
                 lineMap_[lineI] = i;
@@ -201,11 +195,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 3)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 3 for VTK_TRIANGLE but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 3 for VTK_TRIANGLE but found "
                         << nRead << exit(FatalIOError);
                 }
                 f[0] = cellVertData[dataIndex++];
@@ -222,11 +213,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 4)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 4 for VTK_QUAD but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 4 for VTK_QUAD but found "
                         << nRead << exit(FatalIOError);
                 }
                 f[0] = cellVertData[dataIndex++];
@@ -254,11 +242,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 4)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 4 for VTK_TETRA but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 4 for VTK_TETRA but found "
                         << nRead << exit(FatalIOError);
                 }
                 tetPoints[0] = cellVertData[dataIndex++];
@@ -275,11 +260,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 5)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 5 for VTK_PYRAMID but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 5 for VTK_PYRAMID but found "
                         << nRead << exit(FatalIOError);
                 }
                 pyrPoints[0] = cellVertData[dataIndex++];
@@ -297,11 +279,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 6)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 6 for VTK_WEDGE but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 6 for VTK_WEDGE but found "
                         << nRead << exit(FatalIOError);
                 }
                 prismPoints[0] = cellVertData[dataIndex++];
@@ -320,11 +299,8 @@ void CML::vtkUnstructuredReader::extractCells
                 label nRead = cellVertData[dataIndex++];
                 if (nRead != 8)
                 {
-                    FatalIOErrorIn
-                    (
-                        "vtkUnstructuredReader::extractCells(..)",
-                        inFile
-                    )   << "Expected size 8 for VTK_HEXAHEDRON but found "
+                    FatalIOErrorInFunction(inFile)
+                        << "Expected size 8 for VTK_HEXAHEDRON but found "
                         << nRead << exit(FatalIOError);
                 }
                 hexPoints[0] = cellVertData[dataIndex++];
@@ -449,7 +425,7 @@ void CML::vtkUnstructuredReader::readField
 
         default:
         {
-            IOWarningIn("vtkUnstructuredReader::extractCells(..)", inFile)
+            IOWarningInFunction(inFile)
                 << "Unhandled type " << vtkDataTypeNames[dataType] << endl
                 << "Skipping " << size
                 << " words." << endl;
@@ -497,7 +473,7 @@ CML::wordList CML::vtkUnstructuredReader::readFieldArray
 
         if (wantedSize != -1 && numTuples != wantedSize)
         {
-            FatalIOErrorIn("vtkUnstructuredReader::readFieldArray(..)", inFile)
+            FatalIOErrorInFunction(inFile)
                 << "Expected " << wantedSize << " tuples but only have "
                 << numTuples << exit(FatalIOError);
         }
@@ -572,7 +548,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
 
     if (dataType_ == "BINARY")
     {
-        FatalIOErrorIn("vtkUnstructuredReader::read(ISstream&)", inFile)
+        FatalIOErrorInFunction(inFile)
             << "Binary reading not supported " << exit(FatalIOError);
     }
 
@@ -621,7 +597,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
             word primitiveTag(inFile);
             if (primitiveTag != "float" && primitiveTag != "double")
             {
-                FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+                FatalIOErrorInFunction(inFile)
                     << "Expected 'float' entry but found "
                     << primitiveTag
                     << exit(FatalIOError);
@@ -650,7 +626,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
 
             if (cellTypes.size() > 0 && cellVerts.size() == 0)
             {
-                FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+                FatalIOErrorInFunction(inFile)
                     << "Found " << cellTypes.size()
                     << " cellTypes but no cells."
                     << exit(FatalIOError);
@@ -726,7 +702,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
             label nPoints(readLabel(inFile));
             if (nPoints != wantedSize)
             {
-                FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+                FatalIOErrorInFunction(inFile)
                     << "Reading POINT_DATA : expected " << wantedSize
                     << " but read " << nPoints << exit(FatalIOError);
             }
@@ -739,7 +715,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
             label nCells(readLabel(inFile));
             if (nCells != wantedSize)
             {
-                FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+                FatalIOErrorInFunction(inFile)
                     << "Reading CELL_DATA : expected "
                     << wantedSize
                     << " but read " << nCells << exit(FatalIOError);
@@ -769,7 +745,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
             word lookupTableTag(inFile);
             if (lookupTableTag != "LOOKUP_TABLE")
             {
-                FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+                FatalIOErrorInFunction(inFile)
                     << "Expected tag LOOKUP_TABLE but read "
                     << lookupTableTag
                     << exit(FatalIOError);
@@ -916,7 +892,7 @@ void CML::vtkUnstructuredReader::read(ISstream& inFile)
         }
         else
         {
-            FatalIOErrorIn("vtkUnstructuredReader::read(..)", inFile)
+            FatalIOErrorInFunction(inFile)
                 << "Unsupported tag "
                 << tag << exit(FatalIOError);
         }

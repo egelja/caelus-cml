@@ -143,10 +143,8 @@ public:
         const LongList<point>& tetPoints() const
         {
             if( !created_ )
-                FatalErrorIn
-                (
-                    "const LongList<point>& tetPoints() const"
-                ) << "Tets are not created!" << exit(FatalError);
+                FatalErrorInFunction
+                  << "Tets are not created!" << exit(FatalError);
             
             return tetPoints_;
         }
@@ -154,10 +152,8 @@ public:
         const LongList<partTet>& tets() const
         {
             if( !created_ )
-                FatalErrorIn
-                (
-                    "const LongList<point>& tets() const"
-                ) << "Tets are not created!" << exit(FatalError);
+                FatalErrorInFunction
+                  << "Tets are not created!" << exit(FatalError);
             
             return tets_;
         }

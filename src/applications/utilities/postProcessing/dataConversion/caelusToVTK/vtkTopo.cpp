@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,6 +48,7 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
     const cellModel& tet = *(cellModeller::lookup("tet"));
     const cellModel& pyr = *(cellModeller::lookup("pyr"));
     const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& wedge = *(cellModeller::lookup("wedge"));
     const cellModel& tetWedge = *(cellModeller::lookup("tetWedge"));
     const cellModel& hex = *(cellModeller::lookup("hex"));
 
@@ -66,25 +67,25 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
     // and cells
     if (decomposePoly)
     {
-        forAll(cellShapes, cellI)
+        forAll(cellShapes, celli)
         {
-            const cellModel& model = cellShapes[cellI].model();
+            const cellModel& model = cellShapes[celli].model();
 
             if
             (
                 model != hex
-                // && model != wedge    // See above.
+             && model != wedge    // See above.
              && model != prism
              && model != pyr
              && model != tet
              && model != tetWedge
             )
             {
-                const cell& cFaces = mesh_.cells()[cellI];
+                const cell& cFaces = mesh_.cells()[celli];
 
-                forAll(cFaces, cFaceI)
+                forAll(cFaces, cFacei)
                 {
-                    const face& f = mesh_.faces()[cFaces[cFaceI]];
+                    const face& f = mesh_.faces()[cFaces[cFacei]];
 
                     label nQuads = 0;
                     label nTris = 0;
@@ -115,26 +116,26 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
     cellTypes_.setSize(cellShapes.size() + nAddCells);
 
     // Set counters for additional points and additional cells
-    label addPointI = 0, addCellI = 0;
+    label addPointi = 0, addCelli = 0;
 
-    forAll(cellShapes, cellI)
+    forAll(cellShapes, celli)
     {
-        const cellShape& cellShape = cellShapes[cellI];
+        const cellShape& cellShape = cellShapes[celli];
         const cellModel& cellModel = cellShape.model();
 
-        labelList& vtkVerts = vertLabels_[cellI];
+        labelList& vtkVerts = vertLabels_[celli];
 
         if (cellModel == tet)
         {
             vtkVerts = cellShape;
 
-            cellTypes_[cellI] = VTK_TETRA;
+            cellTypes_[celli] = VTK_TETRA;
         }
         else if (cellModel == pyr)
         {
             vtkVerts = cellShape;
 
-            cellTypes_[cellI] = VTK_PYRAMID;
+            cellTypes_[celli] = VTK_PYRAMID;
         }
         else if (cellModel == prism)
         {
@@ -145,60 +146,60 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
             CML::Swap(vtkVerts[1], vtkVerts[2]);
             CML::Swap(vtkVerts[4], vtkVerts[5]);
 
-            cellTypes_[cellI] = VTK_WEDGE;
+            cellTypes_[celli] = VTK_WEDGE;
         }
-        else if (cellModel == tetWedge)
+        else if (cellModel == tetWedge && decomposePoly)
         {
-            // Treat as squeezed prism
+            // Treat as squeezed prism (VTK_WEDGE)
             vtkVerts.setSize(6);
             vtkVerts[0] = cellShape[0];
             vtkVerts[1] = cellShape[2];
             vtkVerts[2] = cellShape[1];
             vtkVerts[3] = cellShape[3];
             vtkVerts[4] = cellShape[4];
-            vtkVerts[5] = cellShape[4];
+            vtkVerts[5] = cellShape[3];
 
-            cellTypes_[cellI] = VTK_WEDGE;
+            cellTypes_[celli] = VTK_WEDGE;
         }
-//        else if (cellModel == wedge)
-//        {
-//            // Treat as squeezed hex
-//            vtkVerts.setSize(8);
-//            vtkVerts[0] = cellShape[0];
-//            vtkVerts[1] = cellShape[1];
-//            vtkVerts[2] = cellShape[2];
-//            vtkVerts[3] = cellShape[0];
-//            vtkVerts[4] = cellShape[3];
-//            vtkVerts[5] = cellShape[4];
-//            vtkVerts[6] = cellShape[5];
-//            vtkVerts[7] = cellShape[6];
-//
-//            cellTypes_[cellI] = VTK_HEXAHEDRON;
-//        }
+        else if (cellModel == wedge)
+        {
+            // Treat as squeezed hex
+            vtkVerts.setSize(8);
+            vtkVerts[0] = cellShape[0];
+            vtkVerts[1] = cellShape[1];
+            vtkVerts[2] = cellShape[2];
+            vtkVerts[3] = cellShape[2];
+            vtkVerts[4] = cellShape[3];
+            vtkVerts[5] = cellShape[4];
+            vtkVerts[6] = cellShape[5];
+            vtkVerts[7] = cellShape[6];
+
+            cellTypes_[celli] = VTK_HEXAHEDRON;
+        }
         else if (cellModel == hex)
         {
             vtkVerts = cellShape;
 
-            cellTypes_[cellI] = VTK_HEXAHEDRON;
+            cellTypes_[celli] = VTK_HEXAHEDRON;
         }
         else if (decomposePoly)
         {
             // Polyhedral cell. Decompose into tets + pyramids.
 
             // Mapping from additional point to cell
-            addPointCellLabels_[addPointI] = cellI;
+            addPointCellLabels_[addPointi] = celli;
 
             // The new vertex from the cell-centre
-            const label newVertexLabel = mesh_.nPoints() + addPointI;
+            const label newVertexLabel = mesh_.nPoints() + addPointi;
 
             // Whether to insert cell in place of original or not.
             bool substituteCell = true;
 
-            const labelList& cFaces = mesh_.cells()[cellI];
-            forAll(cFaces, cFaceI)
+            const labelList& cFaces = mesh_.cells()[celli];
+            forAll(cFaces, cFacei)
             {
-                const face& f = mesh_.faces()[cFaces[cFaceI]];
-                const bool isOwner = (owner[cFaces[cFaceI]] == cellI);
+                const face& f = mesh_.faces()[cFaces[cFacei]];
+                const bool isOwner = (owner[cFaces[cFacei]] == celli);
 
                 // Number of triangles and quads in decomposition
                 label nTris = 0;
@@ -214,20 +215,20 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
 
                 forAll(quadFcs, quadI)
                 {
-                    label thisCellI;
+                    label thisCelli;
 
                     if (substituteCell)
                     {
-                        thisCellI = cellI;
+                        thisCelli = celli;
                         substituteCell = false;
                     }
                     else
                     {
-                        thisCellI = mesh_.nCells() + addCellI;
-                        superCells_[addCellI++] = cellI;
+                        thisCelli = mesh_.nCells() + addCelli;
+                        superCells_[addCelli++] = celli;
                     }
 
-                    labelList& addVtkVerts = vertLabels_[thisCellI];
+                    labelList& addVtkVerts = vertLabels_[thisCelli];
 
                     addVtkVerts.setSize(5);
 
@@ -256,26 +257,26 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
                     }
                     addVtkVerts[4] = newVertexLabel;
 
-                    cellTypes_[thisCellI] = VTK_PYRAMID;
+                    cellTypes_[thisCelli] = VTK_PYRAMID;
                 }
 
                 forAll(triFcs, triI)
                 {
-                    label thisCellI;
+                    label thisCelli;
 
                     if (substituteCell)
                     {
-                        thisCellI = cellI;
+                        thisCelli = celli;
                         substituteCell = false;
                     }
                     else
                     {
-                        thisCellI = mesh_.nCells() + addCellI;
-                        superCells_[addCellI++] = cellI;
+                        thisCelli = mesh_.nCells() + addCelli;
+                        superCells_[addCelli++] = celli;
                     }
 
 
-                    labelList& addVtkVerts = vertLabels_[thisCellI];
+                    labelList& addVtkVerts = vertLabels_[thisCelli];
 
                     const face& tri = triFcs[triI];
 
@@ -296,26 +297,26 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
                     }
                     addVtkVerts[3] = newVertexLabel;
 
-                    cellTypes_[thisCellI] = VTK_TETRA;
+                    cellTypes_[thisCelli] = VTK_TETRA;
                 }
             }
 
-            addPointI++;
+            addPointi++;
         }
         else
         {
             // Polyhedral cell - not decomposed
-            cellTypes_[cellI] = VTK_POLYHEDRON;
+            cellTypes_[celli] = VTK_POLYHEDRON;
 
-            const labelList& cFaces = mesh_.cells()[cellI];
+            const labelList& cFaces = mesh_.cells()[celli];
 
             // space for the number of faces and size of each face
             label nData = 1 + cFaces.size();
 
             // count total number of face points
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                const face& f = mesh.faces()[cFaces[cFaceI]];
+                const face& f = mesh.faces()[cFaces[cFacei]];
                 nData += f.size();   // space for the face labels
             }
 
@@ -325,10 +326,10 @@ CML::vtkTopo::vtkTopo(const polyMesh& mesh)
             vtkVerts[nData++] = cFaces.size();
 
             // build face stream
-            forAll(cFaces, cFaceI)
+            forAll(cFaces, cFacei)
             {
-                const face& f = mesh.faces()[cFaces[cFaceI]];
-                const bool isOwner = (owner[cFaces[cFaceI]] == cellI);
+                const face& f = mesh.faces()[cFaces[cFacei]];
+                const bool isOwner = (owner[cFaces[cFacei]] == celli);
 
                 // number of labels for this face
                 vtkVerts[nData++] = f.size();

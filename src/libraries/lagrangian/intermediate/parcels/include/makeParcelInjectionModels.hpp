@@ -27,7 +27,6 @@ License
 
 #include "CellZoneInjection.hpp"
 #include "ConeInjection.hpp"
-#include "ConeNozzleInjection.hpp"
 #include "FieldActivatedInjection.hpp"
 #include "InflationInjection.hpp"
 #include "KinematicLookupTableInjection.hpp"
@@ -40,20 +39,19 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParcelInjectionModels(CloudType)                                  \
-                                                                              \
-    makeInjectionModel(CloudType);                                            \
-                                                                              \
-    makeInjectionModelType(CellZoneInjection, CloudType);                     \
-    makeInjectionModelType(ConeInjection, CloudType);                         \
-    makeInjectionModelType(ConeNozzleInjection, CloudType);                   \
-    makeInjectionModelType(FieldActivatedInjection, CloudType);               \
-    makeInjectionModelType(InflationInjection, CloudType);                    \
-    makeInjectionModelType(KinematicLookupTableInjection, CloudType);         \
-    makeInjectionModelType(ManualInjection, CloudType);                       \
-    makeInjectionModelType(NoInjection, CloudType);                           \
-    makeInjectionModelType(PatchInjection, CloudType);                        \
-    makeInjectionModelType(PatchFlowRateInjection, CloudType);                \
+#define makeParcelInjectionModels(CloudType)                                   \
+                                                                               \
+    makeInjectionModel(CloudType);                                             \
+                                                                               \
+    makeInjectionModelType(CellZoneInjection, CloudType);                      \
+    makeInjectionModelType(ConeInjection, CloudType);                          \
+    makeInjectionModelType(FieldActivatedInjection, CloudType);                \
+    makeInjectionModelType(InflationInjection, CloudType);                     \
+    makeInjectionModelType(KinematicLookupTableInjection, CloudType);          \
+    makeInjectionModelType(ManualInjection, CloudType);                        \
+    makeInjectionModelType(NoInjection, CloudType);                            \
+    makeInjectionModelType(PatchInjection, CloudType);                         \
+    makeInjectionModelType(PatchFlowRateInjection, CloudType);                 \
     makeInjectionModelType(TranCellZoneInjection, CloudType);
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -214,11 +214,8 @@ CML::searchableSurfaceCollection::searchableSurfaceCollection
             // if all indices offset by globalSize() of the local region...
             if (s.size() != s.globalSize())
             {
-                FatalErrorIn
-                (
-                    "searchableSurfaceCollection::searchableSurfaceCollection"
-                    "(const IOobject&, const dictionary&)"
-                )   << "Cannot use a distributed surface in a collection."
+                FatalErrorInFunction
+                    << "Cannot use a distributed surface in a collection."
                     << exit(FatalError);
             }
 
@@ -528,10 +525,8 @@ void CML::searchableSurfaceCollection::findLine
 
                     if (s < 0 || s > 1)
                     {
-                        FatalErrorIn
-                        (
-                            "searchableSurfaceCollection::findLine(..)"
-                        )   << "point:" << info[pointI]
+                        FatalErrorInFunction
+                            << "point:" << info[pointI]
                             << " s:" << s
                             << " outside vector "
                             << " start:" << start[pointI]
@@ -698,11 +693,8 @@ void CML::searchableSurfaceCollection::getVolumeType
     List<volumeType>& volType
 ) const
 {
-    FatalErrorIn
-    (
-        "searchableSurfaceCollection::getVolumeType(const pointField&"
-        ", List<volumeType>&) const"
-    )   << "Volume type not supported for collection."
+    FatalErrorInFunction
+        << "Volume type not supported for collection."
         << exit(FatalError);
 }
 

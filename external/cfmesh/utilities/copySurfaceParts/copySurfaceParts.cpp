@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     if( outFileName == inFileName )
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Output file " << outFileName
             << " would overwrite the input file."
             << exit(FatalError);

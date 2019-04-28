@@ -180,10 +180,8 @@ void triSurf::topologyCheck()
             # pragma omp critical
             # endif
             {
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Point " << pointI << " has invalid coordinates "
+                FatalErrorInFunction
+                  << "Point " << pointI << " has invalid coordinates "
                   << p << exit(FatalError);
             }
         }
@@ -205,10 +203,8 @@ void triSurf::topologyCheck()
                 # ifdef USE_OMP
                 # pragma omp critical
                 # endif
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Point " << ltri[pI] << " in triangle " << ltri
+                FatalErrorInFunction
+                  << "Point " << ltri[pI] << " in triangle " << ltri
                   << " is out of scope 0 " << pts.size() << exit(FatalError);
             }
 
@@ -243,10 +239,8 @@ void triSurf::topologyCheck()
                 # ifdef USE_OMP
                 # pragma omp critical
                 # endif
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Feature edge " << fe << " point " << fe[pI]
+                FatalErrorInFunction
+                  << "Feature edge " << fe << " point " << fe[pI]
                   << " is out of scope 0 " << pts.size() << exit(FatalError);
             }
         }
@@ -281,10 +275,8 @@ void triSurf::topologyCheck()
                 # ifdef USE_OMP
                 # pragma omp critical
                 # endif
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Point " << elI << " in point subset "
+                FatalErrorInFunction
+                  << "Point " << elI << " in point subset "
                   << this->pointSubsetName(subsetIds[i])
                   << " is out of scope 0 " << pts.size() << exit(FatalError);
             }
@@ -308,10 +300,8 @@ void triSurf::topologyCheck()
                 # ifdef USE_OMP
                 # pragma omp critical
                 # endif
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Triangle " << elI << " in facet subset "
+                FatalErrorInFunction
+                  << "Triangle " << elI << " in facet subset "
                   << this->facetSubsetName(subsetIds[i])
                   << " is out of scope 0 " << trias.size() << exit(FatalError);
             }
@@ -335,10 +325,8 @@ void triSurf::topologyCheck()
                 # ifdef USE_OMP
                 # pragma omp critical
                 # endif
-                FatalErrorIn
-                (
-                    "void triSurf::topologyCheck()"
-                ) << "Feature edge " << elI << " in edge subset "
+                FatalErrorInFunction
+                  << "Feature edge " << elI << " in edge subset "
                   << this->edgeSubsetName(subsetIds[i])
                   << " is out of scope 0 " << featureEdges.size()
                   << exit(FatalError);

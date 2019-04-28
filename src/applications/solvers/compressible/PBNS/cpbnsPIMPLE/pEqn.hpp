@@ -1,6 +1,6 @@
 volScalarField rAU(1.0/UEqn.A());
 
-rho = thermo->rho();
+rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 
@@ -32,7 +32,7 @@ while (pimple.correctNonOrthogonal())
 
 p.relax();
 
-rho = thermo->rho();
+rho = thermo.rho();
 rho = max(rho, rhoMin);
 rho = min(rho, rhoMax);
 rho.relax();

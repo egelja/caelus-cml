@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,7 +79,7 @@ void CML::zoneToPoint::combine(topoSet& set, const bool add) const
 
     if (!hasMatched)
     {
-        WarningIn("zoneToPoint::combine(topoSet&, const bool)")
+        WarningInFunction
             << "Cannot find any pointZone named " << zoneName_ << endl
             << "Valid names are " << mesh_.pointZones().names() << endl;
     }

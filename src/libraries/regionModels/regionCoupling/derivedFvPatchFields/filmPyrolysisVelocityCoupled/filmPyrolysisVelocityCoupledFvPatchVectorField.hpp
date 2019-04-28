@@ -21,12 +21,26 @@ Class
     CML::filmPyrolysisVelocityCoupledFvPatchVectorField
 
 Description
-    Velocity boundary condition for patches on the primary region:
+    This boundary condition is designed to be used in conjunction with surface
+    film and pyrolysis modelling.
 
-    - where the film height > height threshold value:
-        apply film surface velocity values
-    - else
-        apply pyrolysis out-gassing velocity values
+    It provides a velocity boundary condition for patches on the primary region
+    based on whether the patch is seen to be 'wet', retrieved from the film
+    alpha field.
+      - if the patch is wet, the velocity is set using the film velocity
+      - otherwise, it is set using pyrolysis out-gassing velocity
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            filmPyrolysisVelocityCoupled;
+        phi             phi;      // name of flux field (default = phi)
+        rho             rho;      // name of density field (default = rho)
+        deltaWet        1e-4;     // threshold height for 'wet' film
+        value           uniform   (0 0 0); // initial velocity / [m/s]
+    }
+    \endverbatim
 
 SourceFiles
     filmPyrolysisVelocityCoupledFvPatchVectorField.C
@@ -53,14 +67,17 @@ class filmPyrolysisVelocityCoupledFvPatchVectorField
 {
     // Private data
 
+        //- Name of film region
+        word filmRegionName_;
+
+        //- Name of pyrolysis region
+        word pyrolysisRegionName_;
+
         //- Name of flux field
         word phiName_;
 
         //- Name of density field
         word rhoName_;
-
-        //- Film height threshold beyond which it is considered 'wet'
-        scalar deltaWet_;
 
 
 public:

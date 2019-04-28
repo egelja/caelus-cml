@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,14 +42,12 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
 
     const polyBoundaryMesh& bm = mesh.boundaryMesh();
 
-    label patchI = bm.findPatchID(patchName_);
+    label patchi = bm.findPatchID(patchName_);
 
-    if (patchI == -1)
+    if (patchi == -1)
     {
-        FatalErrorIn
-        (
-            " CML::patchProbes::findElements(const fvMesh&)"
-        )   << " Unknown patch name "
+        FatalErrorInFunction
+            << " Unknown patch name "
             << patchName_ << endl
             << exit(FatalError);
     }
@@ -57,7 +55,7 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
      // All the info for nearest. Construct to miss
     List<mappedPatchBase::nearInfo> nearest(this->size());
 
-    const polyPatch& pp = bm[patchI];
+    const polyPatch& pp = bm[patchi];
 
     if (pp.size() > 0)
     {
@@ -68,10 +66,7 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
         }
 
         treeBoundBox overallBb(pp.points());
-        Random rndGen(123456);
-        overallBb = overallBb.extend(rndGen, 1e-4);
-        overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        overallBb = overallBb.extend(1e-4);
 
         const indexedOctree<treeDataFace> boundaryTree
         (
@@ -88,9 +83,9 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
         );
 
 
-        forAll(probeLocations(), probeI)
+        forAll(probeLocations(), probei)
         {
-            const point sample = probeLocations()[probeI];
+            const point sample = probeLocations()[probei];
 
             scalar span = boundaryTree.bb().mag();
 
@@ -109,16 +104,13 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
                 );
             }
 
-            label faceI = boundaryTree.shapes().faceLabels()[info.index()];
+            label facei = boundaryTree.shapes().faceLabels()[info.index()];
 
-            const label patchi = bm.whichPatch(faceI);
+            const label patchi = bm.whichPatch(facei);
 
             if (isA<emptyPolyPatch>(bm[patchi]))
             {
-                WarningIn
-                (
-                    " CML::patchProbes::findElements(const fvMesh&)"
-                )
+                WarningInFunction
                 << " The sample point: " << sample
                 << " belongs to " << patchi
                 << " which is an empty patch. This is not permitted. "
@@ -127,7 +119,7 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
             }
             else
             {
-                const point& fc = mesh.faceCentres()[faceI];
+                const point& fc = mesh.faceCentres()[facei];
 
                 mappedPatchBase::nearInfo sampleInfo;
 
@@ -135,13 +127,13 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
                 (
                     true,
                     fc,
-                    faceI
+                    facei
                 );
 
                 sampleInfo.second().first() = magSqr(fc-sample);
                 sampleInfo.second().second() = Pstream::myProcNo();
 
-                nearest[probeI]= sampleInfo;
+                nearest[probei]= sampleInfo;
             }
         }
     }
@@ -156,11 +148,11 @@ void CML::patchProbes::findElements(const fvMesh& mesh)
         Info<< "patchProbes::findElements" << " : " << endl;
         forAll(nearest, sampleI)
         {
-            label procI = nearest[sampleI].second().second();
+            label proci = nearest[sampleI].second().second();
             label localI = nearest[sampleI].first().index();
 
             Info<< "    " << sampleI << " coord:"<< operator[](sampleI)
-                << " found on processor:" << procI
+                << " found on processor:" << proci
                 << " in local cell/face:" << localI
                 << " with fc:" << nearest[sampleI].first().rawPoint() << endl;
         }

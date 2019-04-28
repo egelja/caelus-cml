@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -191,7 +191,7 @@ CML::HashTable<T, Key, Hash>::HashTable(const label size)
     HashTableCore(),
     nElmts_(0),
     tableSize_(HashTableCore::canonicalSize(size)),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -211,7 +211,7 @@ CML::HashTable<T, Key, Hash>::HashTable(const HashTable<T, Key, Hash>& ht)
     HashTableCore(),
     nElmts_(0),
     tableSize_(ht.tableSize_),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -238,7 +238,7 @@ CML::HashTable<T, Key, Hash>::HashTable
     HashTableCore(),
     nElmts_(0),
     tableSize_(0),
-    table_(NULL)
+    table_(nullptr)
 {
     transfer(ht());
 }
@@ -464,7 +464,7 @@ bool CML::HashTable<T, Key, Hash>::set
 template<class T, class Key, class Hash>
 bool CML::HashTable<T, Key, Hash>::iteratorBase::erase()
 {
-    // note: entryPtr_ is NULL for end(), so this catches that too
+    // note: entryPtr_ is nullptr for end(), so this catches that too
     if (entryPtr_)
     {
         // Search element before entryPtr_
@@ -497,7 +497,7 @@ bool CML::HashTable<T, Key, Hash>::iteratorBase::erase()
             hashTable_->table_[hashIndex_] = entryPtr_->next_;
             delete entryPtr_;
 
-            // assign any non-NULL pointer value so it doesn't look
+            // assign any non-nullptr pointer value so it doesn't look
             // like end()/cend()
             entryPtr_ = reinterpret_cast<hashedEntry*>(this);
 
@@ -682,7 +682,7 @@ void CML::HashTable<T, Key, Hash>::transfer(HashTable<T, Key, Hash>& ht)
     ht.tableSize_ = 0;
 
     table_ = ht.table_;
-    ht.table_ = NULL;
+    ht.table_ = nullptr;
 
     nElmts_ = ht.nElmts_;
     ht.nElmts_ = 0;
@@ -700,11 +700,8 @@ void CML::HashTable<T, Key, Hash>::operator=
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "HashTable<T, Key, Hash>::operator="
-            "(const HashTable<T, Key, Hash>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -773,7 +770,7 @@ CML::HashTable<T, Key, Hash>::HashTable(Istream& is, const label size)
     HashTableCore(),
     nElmts_(0),
     tableSize_(HashTableCore::canonicalSize(size)),
-    table_(NULL)
+    table_(nullptr)
 {
     if (tableSize_)
     {
@@ -883,11 +880,8 @@ CML::Istream& CML::operator>>
             }
             else
             {
-                FatalIOErrorIn
-                (
-                    "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-                    is
-                )   << "incorrect first token, '(', found " << firstToken.info()
+                FatalIOErrorInFunction(is)
+                    << "incorrect first token, '(', found " << firstToken.info()
                     << exit(FatalIOError);
             }
         }
@@ -899,11 +893,8 @@ CML::Istream& CML::operator>>
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
-            (
-                "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-                is
-            )   << "incorrect first token, '(', found " << firstToken.info()
+            FatalIOErrorInFunction(is)
+                << "incorrect first token, '(', found " << firstToken.info()
                 << exit(FatalIOError);
         }
 
@@ -937,11 +928,8 @@ CML::Istream& CML::operator>>
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "operator>>(Istream&, HashTable<T, Key, Hash>&)",
-            is
-        )   << "incorrect first token, expected <int> or '(', found "
+        FatalIOErrorInFunction(is)
+            << "incorrect first token, expected <int> or '(', found "
             << firstToken.info()
             << exit(FatalIOError);
     }

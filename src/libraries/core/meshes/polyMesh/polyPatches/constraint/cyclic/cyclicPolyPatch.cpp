@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,7 +56,7 @@ CML::label CML::cyclicPolyPatch::findMaxArea
 
     forAll(faces, facei)
     {
-        scalar areaSqr = magSqr(faces[facei].normal(points));
+        scalar areaSqr = magSqr(faces[facei].area(points));
 
         if (areaSqr > maxAreaSqr)
         {
@@ -77,7 +77,7 @@ void CML::cyclicPolyPatch::calcTransforms()
         vectorField half0Areas(half0.size());
         forAll(half0, facei)
         {
-            half0Areas[facei] = half0[facei].normal(half0.points());
+            half0Areas[facei] = half0[facei].area(half0.points());
         }
 
         // Half1
@@ -85,7 +85,7 @@ void CML::cyclicPolyPatch::calcTransforms()
         vectorField half1Areas(half1.size());
         forAll(half1, facei)
         {
-            half1Areas[facei] = half1[facei].normal(half1.points());
+            half1Areas[facei] = half1[facei].area(half1.points());
         }
 
         calcTransforms
@@ -149,10 +149,8 @@ void CML::cyclicPolyPatch::calcTransforms
 
     if (half0Ctrs.size() != half1Ctrs.size())
     {
-        FatalErrorIn
-        (
-            "cyclicPolyPatch::calcTransforms()"
-        )   << "For patch " << name()
+        FatalErrorInFunction
+            << "For patch " << name()
             << " there are " << half0Ctrs.size()
             << " face centres, for the neighbour patch " << neighbPatch().name()
             << " there are " << half1Ctrs.size()
@@ -161,10 +159,8 @@ void CML::cyclicPolyPatch::calcTransforms
 
     if (transform() != neighbPatch().transform())
     {
-        FatalErrorIn
-        (
-            "cyclicPolyPatch::calcTransforms()"
-        )   << "Patch " << name()
+        FatalErrorInFunction
+            << "Patch " << name()
             << " has transform type " << transformTypeNames[transform()]
             << ", neighbour patch " << neighbPatchName_
             << " has transform type "
@@ -209,10 +205,8 @@ void CML::cyclicPolyPatch::calcTransforms
 
                 if (areaDiff > matchTolerance())
                 {
-                    FatalErrorIn
-                    (
-                        "cyclicPolyPatch::calcTransforms()"
-                    )   << "face " << facei
+                    FatalErrorInFunction
+                        << "face " << facei
                         << " area does not match neighbour by "
                         << 100*areaDiff
                         << "% -- possible face ordering problem." << endl
@@ -341,10 +335,8 @@ void CML::cyclicPolyPatch::calcTransforms
                   > avgTol
                 )
                 {
-                    WarningIn
-                    (
-                        "cyclicPolyPatch::calcTransforms()"
-                    )   << "Specified separation vector " << separationVector_
+                    WarningInFunction
+                        << "Specified separation vector " << separationVector_
                         << " differs by that of neighbouring patch "
                         << neighbPatch().separationVector_
                         << " by more than tolerance " << avgTol << endl
@@ -361,10 +353,8 @@ void CML::cyclicPolyPatch::calcTransforms
                  || mag(separation()[0] - separationVector_) > avgTol
                 )
                 {
-                    WarningIn
-                    (
-                        "cyclicPolyPatch::calcTransforms()"
-                    )   << "Specified separationVector " << separationVector_
+                    WarningInFunction
+                        << "Specified separationVector " << separationVector_
                         << " differs from computed separation vector "
                         << separation() << endl
                         << "This probably means your geometry is not consistent"
@@ -504,13 +494,11 @@ void CML::cyclicPolyPatch::getCentresAndAnchors
 
                 // Determine the face with max area on both halves. These
                 // two faces are used to determine the transformation tensors
-                label max0I = findMaxArea(pp0.points(), pp0);
-                vector n0 = pp0[max0I].normal(pp0.points());
-                n0 /= mag(n0) + VSMALL;
+                const label max0I = findMaxArea(pp0.points(), pp0);
+                const vector n0 = pp0[max0I].normal(pp0.points());
 
-                label max1I = findMaxArea(pp1.points(), pp1);
-                vector n1 = pp1[max1I].normal(pp1.points());
-                n1 /= mag(n1) + VSMALL;
+                const label max1I = findMaxArea(pp1.points(), pp1);
+                const vector n1 = pp1[max1I].normal(pp1.points());
 
                 if (mag(n0 & n1) < 1-matchTolerance())
                 {
@@ -614,8 +602,8 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(Zero),
     rotationCentre_(Zero),
     separationVector_(Zero),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {
     // Neighbour patch might not be valid yet so no transformation
     // calculation possible.
@@ -642,8 +630,8 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(rotationAxis),
     rotationCentre_(rotationCentre),
     separationVector_(separationVector),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {
     // Neighbour patch might not be valid yet so no transformation
     // calculation possible.
@@ -665,22 +653,13 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(Zero),
     rotationCentre_(Zero),
     separationVector_(Zero),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {
     if (neighbPatchName_ == word::null)
     {
-        FatalIOErrorIn
-        (
-            "cyclicPolyPatch::cyclicPolyPatch\n"
-            "(\n"
-            "    const word& name,\n"
-            "    const dictionary& dict,\n"
-            "    const label index,\n"
-            "    const polyBoundaryMesh& bm\n"
-            ")",
-            dict
-        )   << "No \"neighbourPatch\" provided." << endl
+        FatalIOErrorInFunction(dict)
+            << "No \"neighbourPatch\" provided." << endl
             << "Is your mesh uptodate with split cyclics?" << endl
             << "Run caelusUpgradeCyclics to convert mesh and fields"
             << " to split cyclics." << exit(FatalIOError);
@@ -688,7 +667,7 @@ CML::cyclicPolyPatch::cyclicPolyPatch
 
     if (neighbPatchName_ == name)
     {
-        FatalIOErrorIn("cyclicPolyPatch::cyclicPolyPatch(..)", dict)
+        FatalIOErrorInFunction(dict)
             << "Neighbour patch name " << neighbPatchName_
             << " cannot be the same as this patch " << name
             << exit(FatalIOError);
@@ -704,7 +683,7 @@ CML::cyclicPolyPatch::cyclicPolyPatch
             scalar magRot = mag(rotationAxis_);
             if (magRot < SMALL)
             {
-                FatalIOErrorIn("cyclicPolyPatch::cyclicPolyPatch(..)", dict)
+                FatalIOErrorInFunction(dict)
                     << "Illegal rotationAxis " << rotationAxis_ << endl
                     << "Please supply a non-zero vector."
                     << exit(FatalIOError);
@@ -741,8 +720,8 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {
     // Neighbour patch might not be valid yet so no transformation
     // calculation possible.
@@ -765,12 +744,12 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {
     if (neighbPatchName_ == name())
     {
-        FatalErrorIn("cyclicPolyPatch::cyclicPolyPatch(..)")
+        FatalErrorInFunction
             << "Neighbour patch name " << neighbPatchName_
             << " cannot be the same as this patch " << name()
             << exit(FatalError);
@@ -796,8 +775,8 @@ CML::cyclicPolyPatch::cyclicPolyPatch
     rotationAxis_(pp.rotationAxis_),
     rotationCentre_(pp.rotationCentre_),
     separationVector_(pp.separationVector_),
-    coupledPointsPtr_(NULL),
-    coupledEdgesPtr_(NULL)
+    coupledPointsPtr_(nullptr),
+    coupledEdgesPtr_(nullptr)
 {}
 
 
@@ -820,7 +799,7 @@ CML::label CML::cyclicPolyPatch::neighbPatchID() const
 
         if (neighbPatchID_ == -1)
         {
-            FatalErrorIn("cyclicPolyPatch::neighbPatchID() const")
+            FatalErrorInFunction
                 << "Illegal neighbourPatch name " << neighbPatchName_
                 << endl << "Valid patch names are "
                 << this->boundaryMesh().names()
@@ -835,7 +814,7 @@ CML::label CML::cyclicPolyPatch::neighbPatchID() const
 
         if (nbrPatch.neighbPatchName() != name())
         {
-            WarningIn("cyclicPolyPatch::neighbPatchID() const")
+            WarningInFunction
                 << "Patch " << name()
                 << " specifies neighbour patch " << neighbPatchName()
                 << endl << " but that in return specifies "
@@ -1184,7 +1163,7 @@ const CML::edgeList& CML::cyclicPolyPatch::coupledEdges() const
 
             if (e[0] < 0 || e[1] < 0)
             {
-                FatalErrorIn("cyclicPolyPatch::coupledEdges() const")
+                FatalErrorInFunction
                     << "Problem : at position " << i
                     << " illegal couple:" << e
                     << abort(FatalError);
@@ -1372,11 +1351,8 @@ bool CML::cyclicPolyPatch::order
 
         if (!matchedAll)
         {
-            SeriousErrorIn
-            (
-                "cyclicPolyPatch::order"
-                "(const primitivePatch&, labelList&, labelList&) const"
-            )   << "Patch:" << name() << " : "
+            SeriousErrorInFunction
+                << "Patch:" << name() << " : "
                 << "Cannot match vectors to faces on both sides of patch"
                 << endl
                 << "    Perhaps your faces do not match?"
@@ -1409,11 +1385,8 @@ bool CML::cyclicPolyPatch::order
 
             if (rotation[newFacei] == -1)
             {
-                SeriousErrorIn
-                (
-                    "cyclicPolyPatch::order(const primitivePatch&"
-                    ", labelList&, labelList&) const"
-                )   << "in patch " << name()
+                SeriousErrorInFunction
+                    << "in patch " << name()
                     << " : "
                     << "Cannot find point on face " << pp[oldFacei]
                     << " with vertices "

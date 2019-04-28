@@ -7,7 +7,8 @@ target = 'regionCoupling'
 
 sources = Split("""
 derivedFvPatchFields/filmPyrolysisVelocityCoupled/filmPyrolysisVelocityCoupledFvPatchVectorField.cpp
-  derivedFvPatchFields/filmPyrolysisTemperatureCoupled/filmPyrolysisTemperatureCoupledFvPatchScalarField.cpp
+derivedFvPatchFields/filmPyrolysisTemperatureCoupled/filmPyrolysisTemperatureCoupledFvPatchScalarField.cpp
+derivedFvPatchFields/filmPyrolysisRadiativeCoupledMixed/filmPyrolysisRadiativeCoupledMixedFvPatchScalarField.cpp
 """)
 
 caelus_inc = [
@@ -16,11 +17,14 @@ caelus_inc = [
 'turbulenceModels',
 'thermophysicalModels/basic/lnInclude',
 'thermophysicalModels/specie/lnInclude',
-'hermophysicalModels/solid/lnInclude',
 'thermophysicalModels/chemistryModel/lnInclude',
-'thermophysicalModels/basicSolidThermo/lnInclude',
+'thermophysicalModels/solidThermo/lnInclude',
 'thermophysicalModels/solidChemistryModel/lnInclude',
-'thermophysicalModels/radiationModels/lnInclude',
+'thermophysicalModels/solidSpecie/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
+'thermophysicalModels/SLGThermo/lnInclude',
+'thermophysicalModels/thermophysicalProperties/lnInclude',
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'turbulenceModels/compressible/LES/lnInclude',
 'turbulenceModels/compressible/RAS/lnInclude',
@@ -36,8 +40,11 @@ caelus_libs = [
 'pyrolysisModels',
 'surfaceFilmModels',
 'solidChemistryModel',
+'compressibleTurbulenceModel',
 'compressibleRASModels',
-'compressibleLESModels'
+'compressibleLESModels',
+'reactionThermophysicalModels',
+'SLGThermo'
 ]
 
 build_lib(env,

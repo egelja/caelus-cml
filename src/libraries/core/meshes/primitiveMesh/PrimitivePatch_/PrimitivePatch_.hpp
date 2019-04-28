@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -420,7 +420,7 @@ public:
         bool checkTopology
         (
             const bool report = false,
-            labelHashSet* setPtr = NULL
+            labelHashSet* setPtr = nullptr
         ) const;
 
         //- Checks primitivePatch for faces sharing point but not edge.
@@ -432,7 +432,7 @@ public:
         bool checkPointManifold
         (
             const bool report = false,
-            labelHashSet* setPtr = NULL
+            labelHashSet* setPtr = nullptr
         ) const;
 
 
@@ -475,23 +475,23 @@ PrimitivePatch
 :
     FaceList<Face>(faces),
     points_(points),
-    edgesPtr_(NULL),
+    edgesPtr_(nullptr),
     nInternalEdges_(-1),
-    boundaryPointsPtr_(NULL),
-    faceFacesPtr_(NULL),
-    edgeFacesPtr_(NULL),
-    faceEdgesPtr_(NULL),
-    pointEdgesPtr_(NULL),
-    pointFacesPtr_(NULL),
-    localFacesPtr_(NULL),
-    meshPointsPtr_(NULL),
-    meshPointMapPtr_(NULL),
-    edgeLoopsPtr_(NULL),
-    localPointsPtr_(NULL),
-    localPointOrderPtr_(NULL),
-    faceCentresPtr_(NULL),
-    faceNormalsPtr_(NULL),
-    pointNormalsPtr_(NULL)
+    boundaryPointsPtr_(nullptr),
+    faceFacesPtr_(nullptr),
+    edgeFacesPtr_(nullptr),
+    faceEdgesPtr_(nullptr),
+    pointEdgesPtr_(nullptr),
+    pointFacesPtr_(nullptr),
+    localFacesPtr_(nullptr),
+    meshPointsPtr_(nullptr),
+    meshPointMapPtr_(nullptr),
+    edgeLoopsPtr_(nullptr),
+    localPointsPtr_(nullptr),
+    localPointOrderPtr_(nullptr),
+    faceCentresPtr_(nullptr),
+    faceNormalsPtr_(nullptr),
+    pointNormalsPtr_(nullptr)
 {}
 
 
@@ -512,23 +512,23 @@ PrimitivePatch
 :
     FaceList<Face>(faces, reUse),
     points_(points, reUse),
-    edgesPtr_(NULL),
+    edgesPtr_(nullptr),
     nInternalEdges_(-1),
-    boundaryPointsPtr_(NULL),
-    faceFacesPtr_(NULL),
-    edgeFacesPtr_(NULL),
-    faceEdgesPtr_(NULL),
-    pointEdgesPtr_(NULL),
-    pointFacesPtr_(NULL),
-    localFacesPtr_(NULL),
-    meshPointsPtr_(NULL),
-    meshPointMapPtr_(NULL),
-    edgeLoopsPtr_(NULL),
-    localPointsPtr_(NULL),
-    localPointOrderPtr_(NULL),
-    faceCentresPtr_(NULL),
-    faceNormalsPtr_(NULL),
-    pointNormalsPtr_(NULL)
+    boundaryPointsPtr_(nullptr),
+    faceFacesPtr_(nullptr),
+    edgeFacesPtr_(nullptr),
+    faceEdgesPtr_(nullptr),
+    pointEdgesPtr_(nullptr),
+    pointFacesPtr_(nullptr),
+    localFacesPtr_(nullptr),
+    meshPointsPtr_(nullptr),
+    meshPointMapPtr_(nullptr),
+    edgeLoopsPtr_(nullptr),
+    localPointsPtr_(nullptr),
+    localPointOrderPtr_(nullptr),
+    faceCentresPtr_(nullptr),
+    faceNormalsPtr_(nullptr),
+    pointNormalsPtr_(nullptr)
 {}
 
 
@@ -548,23 +548,23 @@ PrimitivePatch
     PrimitivePatchName(),
     FaceList<Face>(pp),
     points_(pp.points_),
-    edgesPtr_(NULL),
+    edgesPtr_(nullptr),
     nInternalEdges_(-1),
-    boundaryPointsPtr_(NULL),
-    faceFacesPtr_(NULL),
-    edgeFacesPtr_(NULL),
-    faceEdgesPtr_(NULL),
-    pointEdgesPtr_(NULL),
-    pointFacesPtr_(NULL),
-    localFacesPtr_(NULL),
-    meshPointsPtr_(NULL),
-    meshPointMapPtr_(NULL),
-    edgeLoopsPtr_(NULL),
-    localPointsPtr_(NULL),
-    localPointOrderPtr_(NULL),
-    faceCentresPtr_(NULL),
-    faceNormalsPtr_(NULL),
-    pointNormalsPtr_(NULL)
+    boundaryPointsPtr_(nullptr),
+    faceFacesPtr_(nullptr),
+    edgeFacesPtr_(nullptr),
+    faceEdgesPtr_(nullptr),
+    pointEdgesPtr_(nullptr),
+    pointFacesPtr_(nullptr),
+    localFacesPtr_(nullptr),
+    meshPointsPtr_(nullptr),
+    meshPointMapPtr_(nullptr),
+    edgeLoopsPtr_(nullptr),
+    localPointsPtr_(nullptr),
+    localPointOrderPtr_(nullptr),
+    faceCentresPtr_(nullptr),
+    faceNormalsPtr_(nullptr),
+    pointNormalsPtr_(nullptr)
 {}
 
 
@@ -1006,11 +1006,8 @@ calcAddressing() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcAddressing()"
-        )   << "addressing already calculated"
+        FatalErrorInFunction
+            << "addressing already calculated"
             << abort(FatalError);
     }
 
@@ -1189,11 +1186,8 @@ calcAddressing() const
             }
             else
             {
-                FatalErrorIn
-                (
-                    "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-                    "calcAddressing()"
-                )   << "Error in internal edge insertion"
+                FatalErrorInFunction
+                    << "Error in internal edge insertion"
                     << abort(FatalError);
             }
         }
@@ -1275,11 +1269,8 @@ calcEdgeLoops() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcIntBdryEdges()"
-        )   << "edge loops already calculated"
+        FatalErrorInFunction
+            << "edge loops already calculated"
             << abort(FatalError);
     }
 
@@ -1453,16 +1444,16 @@ clearTopology()
     if (edgesPtr_ && faceFacesPtr_ && edgeFacesPtr_ && faceEdgesPtr_)
     {
         delete edgesPtr_;
-        edgesPtr_ = NULL;
+        edgesPtr_ = nullptr;
 
         delete faceFacesPtr_;
-        faceFacesPtr_ = NULL;
+        faceFacesPtr_ = nullptr;
 
         delete edgeFacesPtr_;
-        edgeFacesPtr_ = NULL;
+        edgeFacesPtr_ = nullptr;
 
         delete faceEdgesPtr_;
-        faceEdgesPtr_ = NULL;
+        faceEdgesPtr_ = nullptr;
     }
 
     deleteDemandDrivenData(boundaryPointsPtr_);
@@ -1540,11 +1531,8 @@ calcBdryPoints() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcBdryPoints()"
-        )   << "edge types already calculated"
+        FatalErrorInFunction
+            << "edge types already calculated"
             << abort(FatalError);
     }
 
@@ -1602,11 +1590,8 @@ calcLocalPointOrder() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcLocalPointOrder()"
-        )   << "local point order already calculated"
+        FatalErrorInFunction
+            << "local point order already calculated"
             << abort(FatalError);
     }
 
@@ -1705,11 +1690,8 @@ calcMeshData() const
     // if they have already been calculated.
     if (meshPointsPtr_ || localFacesPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcMeshData()"
-        )   << "meshPointsPtr_ or localFacesPtr_already allocated"
+        FatalErrorInFunction
+            << "meshPointsPtr_ or localFacesPtr_already allocated"
             << abort(FatalError);
     }
 
@@ -1818,11 +1800,8 @@ calcMeshPointMap() const
     // if they have already been calculated.
     if (meshPointMapPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcMeshPointMap()"
-        )   << "meshPointMapPtr_ already allocated"
+        FatalErrorInFunction
+            << "meshPointMapPtr_ already allocated"
             << abort(FatalError);
     }
 
@@ -1869,11 +1848,8 @@ calcLocalPoints() const
     // if they have already been calculated.
     if (localPointsPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcLocalPoints()"
-        )   << "localPointsPtr_already allocated"
+        FatalErrorInFunction
+            << "localPointsPtr_already allocated"
             << abort(FatalError);
     }
 
@@ -1921,11 +1897,8 @@ calcPointNormals() const
     // if they have already been calculated.
     if (pointNormalsPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcPointNormals()"
-        )   << "pointNormalsPtr_already allocated"
+        FatalErrorInFunction
+            << "pointNormalsPtr_already allocated"
             << abort(FatalError);
     }
 
@@ -1988,11 +1961,8 @@ calcFaceCentres() const
     // if they have already been calculated.
     if (faceCentresPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcFaceCentres()"
-        )   << "faceCentresPtr_already allocated"
+        FatalErrorInFunction
+            << "faceCentresPtr_already allocated"
             << abort(FatalError);
     }
 
@@ -2038,11 +2008,8 @@ calcFaceNormals() const
     // if they have already been calculated.
     if (faceNormalsPtr_)
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcFaceNormals()"
-        )   << "faceNormalsPtr_already allocated"
+        FatalErrorInFunction
+            << "faceNormalsPtr_already allocated"
             << abort(FatalError);
     }
 
@@ -2053,7 +2020,6 @@ calcFaceNormals() const
     forAll(n, facei)
     {
         n[facei] = this->operator[](facei).normal(points_);
-        n[facei] /= mag(n[facei]) + VSMALL;
     }
 
     if (debug)
@@ -2261,11 +2227,8 @@ calcPointEdges() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcPointEdges()"
-        )   << "pointEdges already calculated"
+        FatalErrorInFunction
+            << "pointEdges already calculated"
             << abort(FatalError);
     }
 
@@ -2329,11 +2292,8 @@ calcPointFaces() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "calcPointFaces()"
-        )   << "pointFaces already calculated"
+        FatalErrorInFunction
+            << "pointFaces already calculated"
             << abort(FatalError);
     }
 
@@ -2401,12 +2361,8 @@ projectPoints
 
     if (projectionDirection.size() != nPoints())
     {
-        FatalErrorIn
-        (
-            "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "projectPoints(const PrimitivePatch& "
-            ", const Field<PointType>&) const"
-        )   << "Projection direction field does not correspond to "
+        FatalErrorInFunction
+           << "Projection direction field does not correspond to "
             << "patch points." << endl
             << "Size: " << projectionDirection.size()
             << " Number of points: " << nPoints()
@@ -2648,12 +2604,8 @@ projectFaceCentres
 
     if (projectionDirection.size() != this->size())
     {
-        FatalErrorIn
-        (
-            "labelList PrimitivePatch<Face, FaceList, PointField, PointType>::"
-            "projectFaceCentres(const PrimitivePatch& "
-            ", const Field<PointType>&) const"
-        )   << "Projection direction field does not correspond to patch faces."
+        FatalErrorInFunction
+            << "Projection direction field does not correspond to patch faces."
             << endl << "Size: " << projectionDirection.size()
             << " Number of points: " << this->size()
             << abort(FatalError);
@@ -2919,11 +2871,8 @@ visitPointRegion
 
         if (nextEdgeI == -1)
         {
-            FatalErrorIn
-            (
-                "PrimitivePatch<Face, FaceList, PointField, PointType>::"
-                "visitPointRegion"
-            )   << "Problem: cannot find edge out of " << fEdges
+            FatalErrorInFunction
+                << "Problem: cannot find edge out of " << fEdges
                 << "on face " << startFaceI << " that uses point " << pointI
                 << " and is not edge " << startEdgeI << abort(FatalError);
         }

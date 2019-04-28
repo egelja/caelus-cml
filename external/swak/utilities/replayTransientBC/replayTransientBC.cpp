@@ -130,10 +130,10 @@ int main(int argc, char *argv[])
 
     wordList preloadFieldNames;
     if(!replayDict.found("preloadFields")) {
-        WarningIn(args.executable())
+        WarningInFunction
             << "No list 'preloadFields' defined. Boundary conditions that depend "
-                << "on other fields will fail"
-                << endl;
+            << "on other fields will fail"
+            << endl;
 
     } else {
         preloadFieldNames=wordList(replayDict.lookup("preloadFields"));

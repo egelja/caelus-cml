@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,63 +26,73 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeCombustionTypesThermo(CombModel, Comb, Thermo)                    \
-                                                                              \
-    typedef CML::combustionModels::CombModel                                  \
-        <CML::combustionModels::Comb, CML::Thermo>                            \
-        CombModel##Comb##Thermo;                                              \
-                                                                              \
-                                                                              \
-    defineTemplateTypeNameAndDebugWithName                                    \
-    (                                                                         \
-        CombModel##Comb##Thermo,                                              \
-        #CombModel"<"#Comb","#Thermo">",                                      \
-        0                                                                     \
-    );                                                                        \
-                                                                              \
-    namespace CML                                                             \
-    {                                                                         \
-        namespace combustionModels                                            \
-        {                                                                     \
-            typedef CombModel<Comb, Thermo> CombModel##Comb##Thermo;          \
-            addToRunTimeSelectionTable                                        \
-            (                                                                 \
-                Comb,                                                         \
-                CombModel##Comb##Thermo,                                      \
-                dictionary                                                    \
-            );                                                                \
-        }                                                                     \
-    }                                                                         \
-
-#define makeCombustionTypes(CombModel, CombThermoType)                        \
-                                                                              \
-    typedef CML::combustionModels::CombModel                                  \
-        <CML::combustionModels::CombThermoType>                               \
-        CombModel##CombThermoType;                                            \
-                                                                              \
-    defineTemplateTypeNameAndDebugWithName                                    \
-    (                                                                         \
-        CombModel##CombThermoType,                                            \
-        #CombModel"<"#CombThermoType">",                                      \
-        0                                                                     \
-    );                                                                        \
-                                                                              \
-    namespace CML                                                             \
-    {                                                                         \
-        namespace combustionModels                                            \
-        {                                                                     \
-            typedef CombModel<CombThermoType> CombModel##CombThermoType;      \
-            addToRunTimeSelectionTable                                        \
-            (                                                                 \
-                CombThermoType,                                               \
-                CombModel##CombThermoType,                                    \
-                dictionary                                                    \
-            );                                                                \
-        }                                                                     \
-    }                                                                         \
+namespace CML
+{
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#endif
+#define makeCombustion(Comp)                                                   \
+                                                                               \
+    typedef CombustionModel<Comp> CombustionModel##Comp;                       \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        CombustionModel##Comp,                                                 \
+        (                                                                      \
+            word(CombustionModel##Comp::typeName_()) + "<" + Comp::typeName    \
+          + ">"                                                                \
+        ).c_str(),                                                             \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        CombustionModel##Comp,                                                 \
+        dictionary                                                             \
+    );
 
-// ************************************************************************* //
+
+#define makeCombustionTypesThermo(CombModel, Comp, Thermo)                     \
+                                                                               \
+    typedef combustionModels::CombModel<Comp, Thermo>                          \
+        CombModel##Comp##Thermo;                                               \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        CombModel##Comp##Thermo,                                               \
+        (                                                                      \
+            word(CombModel##Comp##Thermo::typeName_()) + "<" + Comp::typeName  \
+          + "," + Thermo::typeName() + ">"                                     \
+        ).c_str(),                                                             \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    CombustionModel<Comp>::                                                    \
+        add##dictionary##ConstructorToTable<CombModel##Comp##Thermo>           \
+        add##CombModel##Comp##Thermo##dictionary##ConstructorTo##\
+CombustionModel##Comp##Table_;
+
+
+#define makeCombustionTypes(CombModel, Comp)                                   \
+                                                                               \
+    typedef combustionModels::CombModel<Comp> CombModel##Comp;                 \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        CombModel##Comp,                                                       \
+        (                                                                      \
+            word(CombModel##Comp::typeName_()) + "<" + Comp::typeName + ">"    \
+        ).c_str(),                                                             \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    CombustionModel<Comp>::                                                    \
+        add##dictionary##ConstructorToTable<CombModel##Comp>                   \
+        add##CombModel##Comp##dictionary##ConstructorTo##CombustionModel##Comp\
+##Table_;
+
+
+} // End namespace CML
+
+
+#endif

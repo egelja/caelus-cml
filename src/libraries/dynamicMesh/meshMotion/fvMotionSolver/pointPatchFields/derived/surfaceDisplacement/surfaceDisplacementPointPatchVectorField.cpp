@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,7 +77,7 @@ void surfaceDisplacementPointPatchVectorField::calcProjection
 
 
     // Get fixed points (bit of a hack)
-    const pointZone* zonePtr = NULL;
+    const pointZone* zonePtr = nullptr;
 
     if (frozenPointsZone_.size() > 0)
     {
@@ -329,16 +329,8 @@ surfaceDisplacementPointPatchVectorField
 {
     if (velocity_.x() < 0 || velocity_.y() < 0 || velocity_.z() < 0)
     {
-        FatalErrorIn
-        (
-            "surfaceDisplacementPointPatchVectorField::\n"
-            "surfaceDisplacementPointPatchVectorField\n"
-            "(\n"
-            "    const pointPatch& p,\n"
-            "    const DimensionedField<vector, pointMesh>& iF,\n"
-            "    const dictionary& dict\n"
-            ")\n"
-        )   << "All components of velocity have to be positive : "
+        FatalErrorInFunction
+            << "All components of velocity have to be positive : "
             << velocity_ << nl
             << "Set velocity components to a great value if no clipping"
             << " necessary." << exit(FatalError);

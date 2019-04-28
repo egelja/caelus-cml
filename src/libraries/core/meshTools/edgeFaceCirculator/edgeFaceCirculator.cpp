@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,9 +24,12 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+const CML::primitiveMesh* const CML::edgeFaceCirculator::endConstIterMeshPtr
+    = nullptr;
+
 const CML::edgeFaceCirculator CML::edgeFaceCirculator::endConstIter
 (
-    *reinterpret_cast<primitiveMesh*>(0),       // primitiveMesh
+    *CML::edgeFaceCirculator::endConstIterMeshPtr, // primitiveMesh
     -1,                                         // faceLabel
     false,                                      // ownerSide
     -1,                                         // index

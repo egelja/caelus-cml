@@ -82,23 +82,23 @@ void lcsSpeciesSourcePluginFunction::doEvaluation()
 
     if(speciesList.size()==0) {
         listAvailableClouds(Info);
-        FatalErrorIn("lcsSpeciesSourcePluginFunction::doEvaluation()")
+        FatalErrorInFunction
             << "No species list found (probably wrong cloud type)"
-                << endl
-                << "Supported cloud types (typeid): "                   \
-                << supportedTypes() << endl                             \
-                << exit(FatalError);
+            << endl
+            << "Supported cloud types (typeid): "                   \
+            << supportedTypes() << endl                             \
+            << exit(FatalError);
     }
 
     if(speciesIndex<0) {
         listAvailableClouds(Info);
-        FatalErrorIn("lcsSpeciesSourcePluginFunction::doEvaluation()")
+        FatalErrorInFunction
             << "Species " << speciesName_ << " not found in gas composition "
-                << speciesList
-                << endl
-                << "Supported cloud types (typeid): "                   \
-                << supportedTypes() << endl                             \
-                << exit(FatalError);
+            << speciesList
+            << endl
+            << "Supported cloud types (typeid): "                   \
+            << supportedTypes() << endl                             \
+            << exit(FatalError);
 
     }
 

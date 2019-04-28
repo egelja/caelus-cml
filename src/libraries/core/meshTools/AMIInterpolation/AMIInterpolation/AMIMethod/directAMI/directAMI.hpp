@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2016 OpenFOAM Foundation
+Copyright (C) 2013-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -203,7 +203,7 @@ void CML::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
             // second attempt: match by shooting a ray into the tgt face
             if (!found)
             {
-                const vector srcN = srcF.normal(srcPoints);
+                const vector srcN = srcF.area(srcPoints);
 
                 forAll(tgtNbr, j)
                 {
@@ -234,7 +234,7 @@ void CML::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
                 {
                     Pout<< "source face not found: id=" << srcI
                         << " centre=" << srcCf[srcI]
-                        << " normal=" << srcF.normal(srcPoints)
+                        << " area=" << srcF.area(srcPoints)
                         << " points=" << srcF.points(srcPoints)
                         << endl;
 
@@ -246,7 +246,7 @@ void CML::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
 
                         Pout<< "face id: " << tgtI
                             << " centre=" << tgtF.centre(tgtPoints)
-                            << " normal=" << tgtF.normal(tgtPoints)
+                            << " area=" << tgtF.area(tgtPoints)
                             << " points=" << tgtF.points(tgtPoints)
                             << endl;
                     }

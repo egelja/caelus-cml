@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -203,11 +203,8 @@ CML::PhiScheme<Type, PhiLimiter>::limiter
     }
     else if (this->faceFlux_.dimensions() != dimVelocity*dimArea)
     {
-        FatalErrorIn
-        (
-            "PhiScheme<PhiLimiter>::limiter"
-            "(const GeometricField<Type, fvPatchField, volMesh>& phi)"
-        )   << "dimensions of faceFlux are not correct"
+        FatalErrorInFunction
+            << "dimensions of faceFlux are not correct"
             << exit(FatalError);
     }
 

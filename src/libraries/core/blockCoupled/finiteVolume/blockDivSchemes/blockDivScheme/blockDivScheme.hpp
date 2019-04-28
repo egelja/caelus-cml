@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 OpenFOAM Foundation
 Copyright (C) 2014 H. Jasak
-Copyright (C) 2017 Appleid CCM Pty Ltd
+Copyright (C) 2017-2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -193,11 +193,8 @@ tmp<blockDivScheme<Type> > blockDivScheme<Type>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "blockDivScheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "block div scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "block div scheme not specified" << endl << endl
             << "Valid block div schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -210,11 +207,8 @@ tmp<blockDivScheme<Type> > blockDivScheme<Type>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "blockDivScheme<Type>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "unknown block div scheme " << schemeName << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "unknown block div scheme " << schemeName << endl << endl
             << "Valid block div schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -238,13 +232,8 @@ blockDivScheme<Type>::fvmUDiv
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> blockDivScheme<Type>::fvmDiv\n"
-        "(\n"
-        "    GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block div operator defined only for vector. "
+    FatalErrorInFunction
+        << "Implicit block div operator defined only for vector. "
         << abort(FatalError);
 
     typedef typename innerProduct<vector, Type>::type DivType;
@@ -266,14 +255,8 @@ blockDivScheme<Type>::fvmUDiv
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    FatalErrorIn
-    (
-        "tmp<BlockLduSystem> blockDivScheme<Type>::fvmDiv\n"
-        "(\n"
-        "    surfaceScalarField&"
-        "    GeometricField<Type, fvPatchField, volMesh>&"
-        ")\n"
-    )   << "Implicit block div operator defined only for vector. "
+    FatalErrorInFunction
+        << "Implicit block div operator defined only for vector. "
         << abort(FatalError);
 
     typedef typename innerProduct<vector, Type>::type DivType;

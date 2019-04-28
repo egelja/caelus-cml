@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -437,8 +437,6 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
     Info<< "Building InteractionLists with interaction distance "
         << maxDistance_ << endl;
 
-    Random rndGen(419715);
-
     const vector interactionVec = maxDistance_*vector::one;
 
     treeBoundBox procBb(treeBoundBox(mesh_.points()));
@@ -473,11 +471,11 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
     treeBoundBoxList cellBbs(mesh_.nCells());
 
-    forAll(cellBbs, cellI)
+    forAll(cellBbs, celli)
     {
-        cellBbs[cellI] = treeBoundBox
+        cellBbs[celli] = treeBoundBox
         (
-            mesh_.cells()[cellI].points
+            mesh_.cells()[celli].points
             (
                 mesh_.faces(),
                 mesh_.points()
@@ -510,20 +508,20 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
         label origProc = extendedProcBbsOrigProc[ePBIRI];
 
-        forAll(cellBbs, cellI)
+        forAll(cellBbs, celli)
         {
-            const treeBoundBox& cellBb = cellBbs[cellI];
+            const treeBoundBox& cellBb = cellBbs[celli];
 
             if (cellBb.overlaps(otherExtendedProcBb))
             {
                 // This cell is in range of the Bb of the other
                 // processor Bb, and so needs to be referred to it
 
-                cellInRangeOfCoupledPatch[cellI] = true;
+                cellInRangeOfCoupledPatch[celli] = true;
 
                 cellIAndTToExchange.append
                 (
-                    globalTransforms.encode(cellI, transformIndex)
+                    globalTransforms.encode(celli, transformIndex)
                 );
 
                 cellBbsToExchange.append(cellBb);
@@ -546,27 +544,27 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
     // a coupled boundary to build an octree limited to these cells.
     DynamicList<label> coupledPatchRangeCells;
 
-    forAll(cellInRangeOfCoupledPatch, cellI)
+    forAll(cellInRangeOfCoupledPatch, celli)
     {
-        if (cellInRangeOfCoupledPatch[cellI])
+        if (cellInRangeOfCoupledPatch[celli])
         {
-            coupledPatchRangeCells.append(cellI);
+            coupledPatchRangeCells.append(celli);
         }
     }
 
     treeBoundBox procBbRndExt
     (
-        treeBoundBox(mesh_.points()).extend(rndGen, 1e-4)
+        treeBoundBox(mesh_.points()).extend(1e-4)
     );
 
     indexedOctree<treeDataCell> coupledPatchRangeTree
     (
         treeDataCell
         (
-            true,                   // cache cell bb
+            true,                   // Cache cell bb
             mesh_,
-            coupledPatchRangeCells, // subset of mesh
-            polyMesh::FACEDIAGTETS  // consistent with tracking
+            coupledPatchRangeCells, // Subset of mesh
+            polyMesh::CELL_TETS     // Consistent with tracking
         ),
         procBbRndExt,
         8,              // maxLevel,
@@ -688,23 +686,23 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
     List<DynamicList<label> > rilInverseTemp(rilInverse_.size());
 
     // Loop over all referred cells
-    forAll(ril_, refCellI)
+    forAll(ril_, refCelli)
     {
-        const labelList& realCells = ril_[refCellI];
+        const labelList& realCells = ril_[refCelli];
 
         // Loop over all real cells in that the referred cell is to
         // supply interactions to and record the index of this
         // referred cell in the real cells entry in rilInverse
 
-        forAll(realCells, realCellI)
+        forAll(realCells, realCelli)
         {
-            rilInverseTemp[realCells[realCellI]].append(refCellI);
+            rilInverseTemp[realCells[realCelli]].append(refCelli);
         }
     }
 
-    forAll(rilInverse_, cellI)
+    forAll(rilInverse_, celli)
     {
-        rilInverse_[cellI].transfer(rilInverseTemp[cellI]);
+        rilInverse_[celli].transfer(rilInverseTemp[celli]);
     }
 
     // Determine which wall faces to refer
@@ -716,9 +714,9 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
     // Determine the index of all of the wall faces on this processor
     DynamicList<label> localWallFaces;
 
-    forAll(mesh_.boundaryMesh(), patchI)
+    forAll(mesh_.boundaryMesh(), patchi)
     {
-        const polyPatch& patch = mesh_.boundaryMesh()[patchI];
+        const polyPatch& patch = mesh_.boundaryMesh()[patchi];
 
         if (isA<wallPolyPatch>(patch))
         {
@@ -761,11 +759,11 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
                 // This wall face is in range of the Bb of the other
                 // processor Bb, and so needs to be referred to it
 
-                label wallFaceI = localWallFaces[i];
+                label wallFacei = localWallFaces[i];
 
                 wallFaceIAndTToExchange.append
                 (
-                    globalTransforms.encode(wallFaceI, transformIndex)
+                    globalTransforms.encode(wallFacei, transformIndex)
                 );
 
                 wallFaceBbsToExchange.append(wallFaceBb);
@@ -786,7 +784,7 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
     indexedOctree<treeDataCell> allCellsTree
     (
-        treeDataCell(true, mesh_, polyMesh::FACEDIAGTETS),
+        treeDataCell(true, mesh_, polyMesh::CELL_TETS),
         procBbRndExt,
         8,              // maxLevel,
         10,             // leafSize,
@@ -905,23 +903,23 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
     List<DynamicList<label> > rwfilInverseTemp(rwfilInverse_.size());
 
     // Loop over all referred wall faces
-    forAll(rwfil_, refWallFaceI)
+    forAll(rwfil_, refWallFacei)
     {
-        const labelList& realCells = rwfil_[refWallFaceI];
+        const labelList& realCells = rwfil_[refWallFacei];
 
         // Loop over all real cells in that the referred wall face is
         // to supply interactions to and record the index of this
         // referred wall face in the real cells entry in rwfilInverse
 
-        forAll(realCells, realCellI)
+        forAll(realCells, realCelli)
         {
-            rwfilInverseTemp[realCells[realCellI]].append(refWallFaceI);
+            rwfilInverseTemp[realCells[realCelli]].append(refWallFacei);
         }
     }
 
-    forAll(rwfilInverse_, cellI)
+    forAll(rwfilInverse_, celli)
     {
-        rwfilInverse_[cellI].transfer(rwfilInverseTemp[cellI]);
+        rwfilInverse_[celli].transfer(rwfilInverseTemp[celli]);
     }
 
     // Refer wall faces to the appropriate processor
@@ -940,7 +938,7 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
         const face& f = mesh_.faces()[wallFaceIndex];
 
-        label patchI = mesh_.boundaryMesh().patchID()
+        label patchi = mesh_.boundaryMesh().patchID()
         [
             wallFaceIndex - mesh_.nInternalFaces()
         ];
@@ -949,7 +947,7 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
         (
             face(identity(f.size())),
             transform.invTransformPosition(f.points(mesh_.points())),
-            patchI
+            patchi
         );
     }
 
@@ -977,9 +975,9 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
     dwfil_.setSize(mesh_.nCells());
 
-    forAll(cellBbs, cellI)
+    forAll(cellBbs, celli)
     {
-        const treeBoundBox& cellBb = cellBbs[cellI];
+        const treeBoundBox& cellBb = cellBbs[celli];
 
         treeBoundBox extendedBb
         (
@@ -1005,18 +1003,18 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
             // The higher index cell is added to the lower index
             // cell's DIL.  A cell is not added to its own DIL.
-            if (c > cellI)
+            if (c > celli)
             {
                 cellDIL.append(c);
             }
         }
 
-        dil_[cellI].transfer(cellDIL);
+        dil_[celli].transfer(cellDIL);
 
         // Find all wall faces intersecting extendedBb
         interactingElems = wallFacesTree.findBox(extendedBb);
 
-        dwfil_[cellI].setSize(interactingElems.size(), -1);
+        dwfil_[celli].setSize(interactingElems.size(), -1);
 
         forAll(interactingElems, i)
         {
@@ -1024,7 +1022,7 @@ void CML::InteractionLists<ParticleType>::buildInteractionLists()
 
             label f = wallFacesTree.shapes().faceLabels()[elemI];
 
-            dwfil_[cellI][i] = f;
+            dwfil_[celli][i] = f;
         }
     }
 }
@@ -1051,13 +1049,13 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
 
     label nTrans = globalTransforms.nIndependentTransforms();
 
-    forAll(allExtendedProcBbs, procI)
+    forAll(allExtendedProcBbs, proci)
     {
         List<label> permutationIndices(nTrans, 0);
 
-        if (nTrans == 0 && procI != Pstream::myProcNo())
+        if (nTrans == 0 && proci != Pstream::myProcNo())
         {
-            treeBoundBox extendedReferredProcBb = allExtendedProcBbs[procI];
+            treeBoundBox extendedReferredProcBb = allExtendedProcBbs[proci];
 
             if (procBb.overlaps(extendedReferredProcBb))
             {
@@ -1067,7 +1065,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
                 // be no resultant transform when this is decoded.
                 tmpExtendedProcBbsTransformIndex.append(0);
 
-                tmpExtendedProcBbsOrigProc.append(procI);
+                tmpExtendedProcBbsOrigProc.append(proci);
             }
         }
         else if (nTrans == 3)
@@ -1087,7 +1085,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
                             i == 0
                          && j == 0
                          && k == 0
-                         && procI == Pstream::myProcNo()
+                         && proci == Pstream::myProcNo()
                         )
                         {
                             // Skip this processor's extended boundBox
@@ -1107,7 +1105,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
                         (
                             transform.transformPosition
                             (
-                                allExtendedProcBbs[procI].points()
+                                allExtendedProcBbs[proci].points()
                             )
                         );
 
@@ -1120,7 +1118,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
 
                             tmpExtendedProcBbsTransformIndex.append(transI);
 
-                            tmpExtendedProcBbsOrigProc.append(procI);
+                            tmpExtendedProcBbsOrigProc.append(proci);
                         }
                     }
                 }
@@ -1135,7 +1133,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
             {
                 for (j = -1; j <= 1; j++)
                 {
-                    if (i == 0 && j == 0 && procI == Pstream::myProcNo())
+                    if (i == 0 && j == 0 && proci == Pstream::myProcNo())
                     {
                         // Skip this processor's extended boundBox
                         // when it has no transformation
@@ -1154,7 +1152,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
                     (
                         transform.transformPosition
                         (
-                            allExtendedProcBbs[procI].points()
+                            allExtendedProcBbs[proci].points()
                         )
                     );
 
@@ -1167,7 +1165,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
 
                         tmpExtendedProcBbsTransformIndex.append(transI);
 
-                        tmpExtendedProcBbsOrigProc.append(procI);
+                        tmpExtendedProcBbsOrigProc.append(proci);
                     }
                 }
             }
@@ -1178,7 +1176,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
 
             for (i = -1; i <= 1; i++)
             {
-                if (i == 0 && procI == Pstream::myProcNo())
+                if (i == 0 && proci == Pstream::myProcNo())
                 {
                     // Skip this processor's extended boundBox when it
                     // has no transformation
@@ -1197,7 +1195,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
                 (
                     transform.transformPosition
                     (
-                        allExtendedProcBbs[procI].points()
+                        allExtendedProcBbs[proci].points()
                     )
                 );
 
@@ -1210,7 +1208,7 @@ void CML::InteractionLists<ParticleType>::findExtendedProcBbsInRange
 
                     tmpExtendedProcBbsTransformIndex.append(transI);
 
-                    tmpExtendedProcBbsOrigProc.append(procI);
+                    tmpExtendedProcBbsOrigProc.append(proci);
                 }
             }
         }
@@ -1237,37 +1235,33 @@ void CML::InteractionLists<ParticleType>::buildMap
 
     forAll(toProc, i)
     {
-        label procI = toProc[i];
+        label proci = toProc[i];
 
-        nSend[procI]++;
+        nSend[proci]++;
     }
-
-    // Send over how many I need to receive
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    labelListList sendSizes(Pstream::nProcs());
-
-    sendSizes[Pstream::myProcNo()] = nSend;
-
-    combineReduce(sendSizes, UPstream::listEq());
 
     // 2. Size sendMap
     labelListList sendMap(Pstream::nProcs());
 
-    forAll(nSend, procI)
+    forAll(nSend, proci)
     {
-        sendMap[procI].setSize(nSend[procI]);
+        sendMap[proci].setSize(nSend[proci]);
 
-        nSend[procI] = 0;
+        nSend[proci] = 0;
     }
 
     // 3. Fill sendMap
     forAll(toProc, i)
     {
-        label procI = toProc[i];
+        label proci = toProc[i];
 
-        sendMap[procI][nSend[procI]++] = i;
+        sendMap[proci][nSend[proci]++] = i;
     }
+
+    // 4. Send over how many I need to receive
+    labelList recvSizes;
+    Pstream::exchangeSizes(sendMap, recvSizes);
+
 
     // Determine receive map
     // ~~~~~~~~~~~~~~~~~~~~~
@@ -1282,17 +1276,17 @@ void CML::InteractionLists<ParticleType>::buildMap
 
     label constructSize = constructMap[Pstream::myProcNo()].size();
 
-    forAll(constructMap, procI)
+    forAll(constructMap, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            label nRecv = sendSizes[procI][Pstream::myProcNo()];
+            label nRecv = recvSizes[proci];
 
-            constructMap[procI].setSize(nRecv);
+            constructMap[proci].setSize(nRecv);
 
             for (label i = 0; i < nRecv; i++)
             {
-                constructMap[procI][i] = constructSize++;
+                constructMap[proci][i] = constructSize++;
             }
         }
     }
@@ -1367,14 +1361,7 @@ void CML::InteractionLists<ParticleType>::prepareParticleToBeReferred
         globalTransforms.transformIndex(ciat)
     );
 
-    particle->position() = transform.invTransformPosition(particle->position());
-
-    particle->transformProperties(-transform.t());
-
-    if (transform.hasR())
-    {
-        particle->transformProperties(transform.R().T());
-    }
+    particle->prepareForInteractionListReferral(transform);
 }
 
 
@@ -1383,10 +1370,10 @@ void CML::InteractionLists<ParticleType>::fillReferredParticleCloud()
 {
     if (writeCloud_)
     {
-        forAll(referredParticles_, refCellI)
+        forAll(referredParticles_, refCelli)
         {
             const IDLList<ParticleType>& refCell =
-                referredParticles_[refCellI];
+                referredParticles_[refCelli];
 
             forAllConstIter(typename IDLList<ParticleType>, refCell, iter)
             {
@@ -1424,18 +1411,18 @@ void CML::InteractionLists<ParticleType>::prepareWallDataToRefer()
             globalTransforms.transformIndex(wfiat)
         );
 
-        label patchI = mesh_.boundaryMesh().patchID()
+        label patchi = mesh_.boundaryMesh().patchID()
         [
             wallFaceIndex - mesh_.nInternalFaces()
         ];
 
-        label patchFaceI =
+        label patchFacei =
             wallFaceIndex
-          - mesh_.boundaryMesh()[patchI].start();
+          - mesh_.boundaryMesh()[patchi].start();
 
         // Need to transform velocity when tensor transforms are
         // supported
-        referredWallData_[rWVI] = U.boundaryField()[patchI][patchFaceI];
+        referredWallData_[rWVI] = U.boundaryField()[patchi][patchFacei];
 
         if (transform.hasR())
         {
@@ -1497,7 +1484,7 @@ template<class ParticleType>
 CML::InteractionLists<ParticleType>::InteractionLists(const polyMesh& mesh)
 :
     mesh_(mesh),
-    cloud_(mesh_, "NULL_Cloud", IDLList<ParticleType>()),
+    cloud_(mesh_, "nullptr_Cloud", IDLList<ParticleType>()),
     writeCloud_(false),
     cellMapPtr_(),
     wallFaceMapPtr_(),
@@ -1509,7 +1496,7 @@ CML::InteractionLists<ParticleType>::InteractionLists(const polyMesh& mesh)
     cellIndexAndTransformToDistribute_(),
     wallFaceIndexAndTransformToDistribute_(),
     referredWallFaces_(),
-    UName_("unknown_UName"),
+    UName_("unknown_U"),
     referredWallData_(),
     referredParticles_()
 {}
@@ -1563,14 +1550,7 @@ void CML::InteractionLists<ParticleType>::sendReferredData
 {
     if (mesh_.changing())
     {
-        WarningIn
-        (
-            "void CML::InteractionLists<ParticleType>::sendReferredData"
-            "("
-                "const List<DynamicList<ParticleType*> >& cellOccupancy,"
-                "PstreamBuffers& pBufs"
-            ")"
-        )
+        WarningInFunction
             << "Mesh changing, rebuilding InteractionLists form scratch."
             << endl;
 
@@ -1636,6 +1616,15 @@ void CML::InteractionLists<ParticleType>::receiveReferredData
                     typename ParticleType::iNew(mesh_)
                 );
             }
+        }
+    }
+
+    forAll(referredParticles_, refCelli)
+    {
+        IDLList<ParticleType>& refCell = referredParticles_[refCelli];
+        forAllIter(typename IDLList<ParticleType>, refCell, iter)
+        {
+            iter().correctAfterInteractionListReferral(ril_[refCelli][0]);
         }
     }
 

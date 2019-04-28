@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -92,14 +92,14 @@ void CML::directions::writeOBJ
 
     label vertI = 0;
 
-    forAll(dirs, cellI)
+    forAll(dirs, celli)
     {
-        const point& ctr = mesh.cellCentres()[cellI];
+        const point& ctr = mesh.cellCentres()[celli];
 
         // Calculate local length scale
         scalar minDist = GREAT;
 
-        const labelList& nbrs = mesh.cellCells()[cellI];
+        const labelList& nbrs = mesh.cellCells()[celli];
 
         forAll(nbrs, nbrI)
         {
@@ -108,7 +108,7 @@ void CML::directions::writeOBJ
 
         scalar scale = 0.5*minDist;
 
-        writeOBJ(xDirStream, ctr, ctr + scale*dirs[cellI], vertI);
+        writeOBJ(xDirStream, ctr, ctr + scale*dirs[celli], vertI);
     }
 }
 
@@ -123,7 +123,7 @@ void CML::directions::check2D
     {
         if (mag(correct2DPtr->planeNormal() & vec) > 1E-6)
         {
-            FatalErrorIn("check2D") << "Specified vector " << vec
+            FatalErrorInFunction << "Specified vector " << vec
                 << "is not normal to plane defined in dynamicMeshDict."
                 << endl
                 << "Either make case 3D or adjust vector."
@@ -149,38 +149,38 @@ CML::vectorField CML::directions::propagateDirection
 
     if (useTopo)
     {
-        forAll(pp, patchFaceI)
+        forAll(pp, patchFacei)
         {
-            label meshFaceI = pp.start() + patchFaceI;
+            label meshFacei = pp.start() + patchFacei;
 
-            label cellI = mesh.faceOwner()[meshFaceI];
+            label celli = mesh.faceOwner()[meshFacei];
 
-            if (!hexMatcher().isA(mesh, cellI))
+            if (!hexMatcher().isA(mesh, celli))
             {
-                FatalErrorIn("propagateDirection")
-                    << "useHexTopology specified but cell " << cellI
-                    << " on face " << patchFaceI << " of patch " << pp.name()
+                FatalErrorInFunction
+                    << "useHexTopology specified but cell " << celli
+                    << " on face " << patchFacei << " of patch " << pp.name()
                     << " is not a hex" << exit(FatalError);
             }
 
-            const vector& cutDir = ppField[patchFaceI];
+            const vector& cutDir = ppField[patchFacei];
 
             // Get edge(bundle) on cell most in direction of cutdir
-            label edgeI = meshTools::cutDirToEdge(mesh, cellI, cutDir);
+            label edgeI = meshTools::cutDirToEdge(mesh, celli, cutDir);
 
             // Convert edge into index on face
             label faceIndex =
                 directionInfo::edgeToFaceIndex
                 (
                     mesh,
-                    cellI,
-                    meshFaceI,
+                    celli,
+                    meshFacei,
                     edgeI
                 );
 
             // Set initial face and direction
-            changedFaces[patchFaceI] = meshFaceI;
-            changedFacesInfo[patchFaceI] =
+            changedFaces[patchFacei] = meshFacei;
+            changedFacesInfo[patchFacei] =
                 directionInfo
                 (
                     faceIndex,
@@ -190,14 +190,14 @@ CML::vectorField CML::directions::propagateDirection
     }
     else
     {
-        forAll(pp, patchFaceI)
+        forAll(pp, patchFacei)
         {
-            changedFaces[patchFaceI] = pp.start() + patchFaceI;
-            changedFacesInfo[patchFaceI] =
+            changedFaces[patchFacei] = pp.start() + patchFacei;
+            changedFacesInfo[patchFacei] =
                 directionInfo
                 (
                     -2,         // Geometric information only
-                    ppField[patchFaceI]
+                    ppField[patchFacei]
                 );
         }
     }
@@ -218,45 +218,49 @@ CML::vectorField CML::directions::propagateDirection
     label nGeom = 0;
     label nTopo = 0;
 
-    forAll(cellInfo, cellI)
+    forAll(cellInfo, celli)
     {
-        label index = cellInfo[cellI].index();
+        label index = cellInfo[celli].index();
 
         if (index == -3)
         {
             // Never visited
-            WarningIn("propagateDirection")
-                << "Cell " << cellI << " never visited to determine "
+            WarningInFunction
+                << "Cell " << celli << " never visited to determine "
                 << "local coordinate system" << endl
                 << "Using direction " << defaultDir << " instead" << endl;
 
-            dirField[cellI] = defaultDir;
+            dirField[celli] = defaultDir;
 
             nUnset++;
         }
         else if (index == -2)
         {
             // Geometric direction
-            dirField[cellI] = cellInfo[cellI].n();
+            dirField[celli] = cellInfo[celli].n();
 
             nGeom++;
         }
         else if (index == -1)
         {
-            FatalErrorIn("propagateDirection")
+            FatalErrorInFunction
                 << "Illegal index " << index << endl
                 << "Value is only allowed on faces" << abort(FatalError);
         }
         else
         {
             // Topological edge cut. Convert into average cut direction.
-            dirField[cellI] = meshTools::edgeToCutDir(mesh, cellI, index);
+            dirField[celli] = meshTools::edgeToCutDir(mesh, celli, index);
 
             nTopo++;
         }
     }
 
-    Pout<< "Calculated local coords for " << defaultDir
+    reduce(nGeom, sumOp<label>());
+    reduce(nTopo, sumOp<label>());
+    reduce(nUnset, sumOp<label>());
+
+    Info<< "Calculated local coords for " << defaultDir
         << endl
         << "    Geometric cut cells   : " << nGeom << endl
         << "    Topological cut cells : " << nTopo << endl
@@ -320,7 +324,7 @@ CML::directions::directions
         vector normal = tan1 ^ tan2;
         normal /= mag(normal);
 
-        Pout<< "Global Coordinate system:" << endl
+        Info<< "Global Coordinate system:" << endl
             << "     normal : " << normal << endl
             << "     tan1   : " << tan1 << endl
             << "     tan2   : " << tan2
@@ -349,11 +353,8 @@ CML::directions::directions
 
         if (patchI == -1)
         {
-            FatalErrorIn
-            (
-                "directions::directions(const polyMesh&, const dictionary&,"
-                "const twoDPointCorrector*)"
-            )   << "Cannot find patch "
+            FatalErrorInFunction
+                << "Cannot find patch "
                 << patchName
                 << exit(FatalError);
         }
@@ -369,11 +370,8 @@ CML::directions::directions
         {
             tan1 = correct2DPtr->planeNormal() ^ n0;
 
-            WarningIn
-            (
-                "directions::directions(const polyMesh&, const dictionary&,"
-                "const twoDPointCorrector*)"
-            )   << "Discarding user specified tan1 since 2D case." << endl
+            WarningInFunction
+                << "Discarding user specified tan1 since 2D case." << endl
                 << "Recalculated tan1 from face normal and planeNormal as "
                 << tan1 << endl << endl;
         }
@@ -428,11 +426,8 @@ CML::directions::directions
     }
     else
     {
-        FatalErrorIn
-        (
-            "directions::directions(const polyMesh&, const dictionary&,"
-            "const twoDPointCorrector*)"
-        )   << "Unknown coordinate system "
+        FatalErrorInFunction
+            << "Unknown coordinate system "
             << coordSystem << endl
             << "Known types are global and patchLocal"
             << exit(FatalError);

@@ -95,15 +95,7 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
 {
     if (mag(n_) < SMALL || mag(z_) < SMALL)
     {
-        FatalErrorIn
-        (
-            "atmBoundaryLayerInletVelocityFvPatchVectorField"
-            "("
-                "const fvPatch&, "
-                "const DimensionedField<vector, volMesh>&, "
-                "onst dictionary&"
-            ")"
-        )
+        FatalErrorInFunction
             << "magnitude of n or z must be greater than zero"
             << abort(FatalError);
     }

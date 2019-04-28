@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -51,22 +51,22 @@ bool CML::triSurfaceSearch::checkUniqueHit
     {
         // near point
 
-        const label nearPointI = f[nearLabel];
+        const label nearPointi = f[nearLabel];
 
         const labelList& pointFaces =
-            surface().pointFaces()[surface().meshPointMap()[nearPointI]];
+            surface().pointFaces()[surface().meshPointMap()[nearPointi]];
 
         forAll(pointFaces, pI)
         {
-            const label pointFaceI = pointFaces[pI];
+            const label pointFacei = pointFaces[pI];
 
-            if (pointFaceI != currHit.index())
+            if (pointFacei != currHit.index())
             {
-                forAll(hits, hI)
+                forAll(hits, hi)
                 {
-                    const pointIndexHit& hit = hits[hI];
+                    const pointIndexHit& hit = hits[hi];
 
-                    if (hit.index() == pointFaceI)
+                    if (hit.index() == pointFacei)
                     {
                         return false;
                     }
@@ -85,24 +85,24 @@ bool CML::triSurfaceSearch::checkUniqueHit
 
         const labelList& edgeFaces = surface().edgeFaces()[edgeI];
 
-        forAll(edgeFaces, fI)
+        forAll(edgeFaces, fi)
         {
-            const label edgeFaceI = edgeFaces[fI];
+            const label edgeFacei = edgeFaces[fi];
 
-            if (edgeFaceI != currHit.index())
+            if (edgeFacei != currHit.index())
             {
-                forAll(hits, hI)
+                forAll(hits, hi)
                 {
-                    const pointIndexHit& hit = hits[hI];
+                    const pointIndexHit& hit = hits[hi];
 
-                    if (hit.index() == edgeFaceI)
+                    if (hit.index() == edgeFacei)
                     {
                         // Check normals
                         const vector currHitNormal =
                             surface().faceNormals()[currHit.index()];
 
                         const vector existingHitNormal =
-                            surface().faceNormals()[edgeFaceI];
+                            surface().faceNormals()[edgeFacei];
 
                         const label signCurrHit =
                             pos(currHitNormal & lineVec);
@@ -131,7 +131,7 @@ CML::triSurfaceSearch::triSurfaceSearch(const triSurface& surface)
     surface_(surface),
     tolerance_(indexedOctree<treeDataTriSurface>::perturbTol()),
     maxTreeDepth_(10),
-    treePtr_(NULL)
+    treePtr_(nullptr)
 {}
 
 
@@ -144,7 +144,7 @@ CML::triSurfaceSearch::triSurfaceSearch
     surface_(surface),
     tolerance_(indexedOctree<treeDataTriSurface>::perturbTol()),
     maxTreeDepth_(10),
-    treePtr_(NULL)
+    treePtr_(nullptr)
 {
     // Have optional non-standard search tolerance for gappy surfaces.
     if (dict.readIfPresent("tolerance", tolerance_) && tolerance_ > 0)
@@ -170,7 +170,7 @@ CML::triSurfaceSearch::triSurfaceSearch
     surface_(surface),
     tolerance_(tolerance),
     maxTreeDepth_(maxTreeDepth),
-    treePtr_(NULL)
+    treePtr_(nullptr)
 {}
 
 
@@ -205,7 +205,7 @@ CML::triSurfaceSearch::tree() const
 
             if (nPoints != surface().points().size())
             {
-                WarningIn("triSurfaceSearch::tree() const")
+                WarningInFunction
                     << "Surface does not have compact point numbering."
                     << " Of " << surface().points().size()
                     << " only " << nPoints
@@ -213,14 +213,9 @@ CML::triSurfaceSearch::tree() const
                     << endl;
             }
 
-            // Random number generator. Bit dodgy since not exactly random ;-)
-            Random rndGen(65431);
-
             // Slightly extended bb. Slightly off-centred just so on symmetric
             // geometry there are less face/edge aligned items.
-            bb = bb.extend(rndGen, 1e-4);
-            bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-            bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+            bb = bb.extend(1e-4);
         }
 
         scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
@@ -390,7 +385,7 @@ void CML::triSurfaceSearch::findLineAll
 
     treeDataTriSurface::findAllIntersectOp allIntersectOp(octree, shapeMask);
 
-    forAll(start, pointI)
+    forAll(start, i)
     {
         hits.clear();
         shapeMask.clear();
@@ -400,25 +395,17 @@ void CML::triSurfaceSearch::findLineAll
             // See if any intersection between pt and end
             pointIndexHit inter = octree.findLine
             (
-                start[pointI],
-                end[pointI],
+                start[i],
+                end[i],
                 allIntersectOp
             );
 
             if (inter.hit())
             {
-                vector lineVec = end[pointI] - start[pointI];
+                vector lineVec = end[i] - start[i];
                 lineVec /= mag(lineVec) + VSMALL;
 
-                if
-                (
-                    checkUniqueHit
-                    (
-                        inter,
-                        hits,
-                        lineVec
-                    )
-                )
+                if(checkUniqueHit(inter, hits, lineVec))
                 {
                     hits.append(inter);
                 }
@@ -431,7 +418,7 @@ void CML::triSurfaceSearch::findLineAll
             }
         }
 
-        info[pointI].transfer(hits);
+        info[i].transfer(hits);
     }
 
     indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;

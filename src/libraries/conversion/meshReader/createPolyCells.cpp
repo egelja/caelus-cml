@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -306,7 +306,7 @@ void CML::meshReader::createPolyCells()
             }
             else
             {
-              FatalErrorIn("meshReader::createPolyCells()")
+              FatalErrorInFunction
                   << "Error in internal face insertion"
                   << abort(FatalError);
             }

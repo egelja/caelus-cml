@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -41,13 +41,8 @@ CML::autoPtr<CML::GAMGInterface> CML::GAMGInterface::New
 
     if (cstrIter == lduInterfaceConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "GAMGInterface::New"
-            "(const lduInterface& fineInterface, "
-            "const labelField& localRestrictAddressing, "
-            "const labelField& neighbourRestrictAddressing)"
-        )   << "Unknown GAMGInterface type " << coupleType << ".\n"
+        FatalErrorInFunction
+            << "Unknown GAMGInterface type " << coupleType << ".\n"
             << "Valid GAMGInterface types are :"
             << lduInterfaceConstructorTablePtr_->sortedToc()
             << exit(FatalError);

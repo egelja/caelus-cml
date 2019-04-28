@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -115,8 +115,8 @@ public:
         laplacianScheme(const fvMesh& mesh, Istream& is)
         :
             mesh_(mesh),
-            tinterpGammaScheme_(NULL),
-            tsnGradScheme_(NULL)
+            tinterpGammaScheme_(nullptr),
+            tsnGradScheme_(nullptr)
         {
             tinterpGammaScheme_ = tmp<surfaceInterpolationScheme<GType> >
             (
@@ -278,11 +278,8 @@ tmp<laplacianScheme<Type, GType> > laplacianScheme<Type, GType>::New
 
     if (schemeData.eof())
     {
-        FatalIOErrorIn
-        (
-            "laplacianScheme<Type, GType>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "Laplacian scheme not specified" << endl << endl
+        FatalIOErrorInFunction(schemeData)
+            << "Laplacian scheme not specified" << endl << endl
             << "Valid laplacian schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);
@@ -295,11 +292,8 @@ tmp<laplacianScheme<Type, GType> > laplacianScheme<Type, GType>::New
 
     if (cstrIter == IstreamConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "laplacianScheme<Type, GType>::New(const fvMesh&, Istream&)",
-            schemeData
-        )   << "Unknown laplacian scheme " << schemeName << nl << nl
+        FatalIOErrorInFunction(schemeData)
+            << "Unknown laplacian scheme " << schemeName << nl << nl
             << "Valid laplacian schemes are :" << endl
             << IstreamConstructorTablePtr_->sortedToc()
             << exit(FatalIOError);

@@ -79,10 +79,8 @@ void meshSurfaceEngine::calculateBoundaryFaces() const
         }
         else
         {
-            FatalErrorIn
-            (
-                "void meshSurfaceEngine::calculateBoundaryFaces() const"
-            ) << "Cannot select boundary faces. Invalid patch index "
+            FatalErrorInFunction
+              << "Cannot select boundary faces. Invalid patch index "
               << activePatch_ << exit(FatalError);
         }
 
@@ -91,10 +89,8 @@ void meshSurfaceEngine::calculateBoundaryFaces() const
     }
     else
     {
-        FatalErrorIn
-        (
-            "void meshSurfaceEngine::calculateBoundaryFaces() const"
-        ) << "Boundary faces are not at the end of the face list!"
+        FatalErrorInFunction
+            << "Boundary faces are not at the end of the face list!"
             << exit(FatalError);
     }
 }
@@ -1324,10 +1320,8 @@ void meshSurfaceEngine::calculateFaceFacesAddressing() const
         }
         else if( Pstream::parRun() && (edgeFaces.sizeOfRow(efI) != 0 ) )
         {
-            FatalErrorIn
-            (
-                "void meshSurfaceEngine::calculateFaceFacesAddressing() const"
-            ) << "The surface of the mesh is invalid!"
+            FatalErrorInFunction
+                << "The surface of the mesh is invalid!"
                 << " The number of faces containing edge " << efI
                 << " is " << edgeFaces.sizeOfRow(efI)
                 << " Cannot continue" << exit(FatalError);

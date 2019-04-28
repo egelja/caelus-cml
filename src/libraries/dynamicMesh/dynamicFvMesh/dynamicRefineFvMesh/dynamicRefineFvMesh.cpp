@@ -261,7 +261,7 @@ CML::dynamicRefineFvMesh::refine
 
             if (oldFacei >= nInternalFaces())
             {
-                FatalErrorIn("dynamicRefineFvMesh::refine(const labelList&)")
+                FatalErrorInFunction
                     << "New internal face:" << facei
                     << " fc:" << faceCentres()[facei]
                     << " originates from boundary oldFace:" << oldFacei
@@ -309,10 +309,8 @@ CML::dynamicRefineFvMesh::refine
 
                 if (masterFacei < 0)
                 {
-                    FatalErrorIn
-                    (
-                        "dynamicRefineFvMesh::refine(const labelList&)"
-                    )   << "Problem: should not have removed faces"
+                    FatalErrorInFunction
+                        << "Problem: should not have removed faces"
                         << " when refining."
                         << nl << "face:" << facei << abort(FatalError);
                 }
@@ -335,7 +333,7 @@ CML::dynamicRefineFvMesh::refine
         {
             if (!correctFluxes_.found(iter.key()))
             {
-                WarningIn("dynamicRefineFvMesh::refine(const labelList&)")
+                WarningInFunction
                     << "Cannot find surfaceScalarField " << iter.key()
                     << " in user-provided flux mapping table "
                     << correctFluxes_ << endl
@@ -551,7 +549,7 @@ CML::dynamicRefineFvMesh::unrefine
         {
             if (!correctFluxes_.found(iter.key()))
             {
-                WarningIn("dynamicRefineFvMesh::refine(const labelList&)")
+                WarningInFunction
                     << "Cannot find surfaceScalarField " << iter.key()
                     << " in user-provided flux mapping table "
                     << correctFluxes_ << endl
@@ -1246,7 +1244,7 @@ bool CML::dynamicRefineFvMesh::update()
             }
             else if (refineInterval_ < 0)
             {
-                FatalErrorIn("dynamicRefineFvMesh::update()")
+                FatalErrorInFunction
                     << "Illegal refineInterval " << refineInterval_ << nl
                     << "The refineInterval setting in the dynamicMeshDict should"
                     << " be >= 1." << nl
@@ -1263,7 +1261,7 @@ bool CML::dynamicRefineFvMesh::update()
 
             if (refineTimeInterval_ <= 0.0)
             {
-                FatalErrorIn("dynamicRefineFvMesh::update()")
+                FatalErrorInFunction
                     << "Illegal refineTimeInterval " << refineTimeInterval_ << nl
                     << "The refineTimeInterval setting in the dynamicMeshDict should"
                     << " be > 0." << nl
@@ -1290,7 +1288,7 @@ bool CML::dynamicRefineFvMesh::update()
         default:
         {
             // This error should not actually be possible
-            FatalErrorIn("CML::dynamicRefineFvMesh::update()")
+            FatalErrorInFunction
                 << "Undefined refine mode: "
                 << refineModeNames_[refineMode_] << nl
                 << abort(FatalError);
@@ -1308,7 +1306,7 @@ bool CML::dynamicRefineFvMesh::update()
 
         if (maxCells <= 0)
         {
-            FatalErrorIn("dynamicRefineFvMesh::update()")
+            FatalErrorInFunction
                 << "Illegal maximum number of cells " << maxCells << nl
                 << "The maxCells setting in the dynamicMeshDict should"
                 << " be > 0." << nl
@@ -1319,7 +1317,7 @@ bool CML::dynamicRefineFvMesh::update()
 
         if (maxRefinement <= 0)
         {
-            FatalErrorIn("dynamicRefineFvMesh::update()")
+            FatalErrorInFunction
                 << "Illegal maximum refinement level " << maxRefinement << nl
                 << "The maxCells setting in the dynamicMeshDict should"
                 << " be > 0." << nl

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,11 +61,8 @@ void CML::shellSurfaces::setAndCheckLevels
 {
     if (modes_[shellI] != DISTANCE && distLevels.size() != 1)
     {
-        FatalErrorIn
-        (
-            "shellSurfaces::shellSurfaces"
-            "(const searchableSurfaces&, const dictionary&)"
-        )   << "For refinement mode "
+        FatalErrorInFunction
+            << "For refinement mode "
             << refineModeNames_[modes_[shellI]]
             << " specify only one distance+level."
             << " (its distance gets discarded)"
@@ -89,11 +86,8 @@ void CML::shellSurfaces::setAndCheckLevels
              || (levels_[shellI][j] > levels_[shellI][j-1])
             )
             {
-                FatalErrorIn
-                (
-                    "shellSurfaces::shellSurfaces"
-                    "(const searchableSurfaces&, const dictionary&)"
-                )   << "For refinement mode "
+                FatalErrorInFunction
+                    << "For refinement mode "
                     << refineModeNames_[modes_[shellI]]
                     << " : Refinement should be specified in order"
                     << " of increasing distance"
@@ -122,12 +116,8 @@ void CML::shellSurfaces::setAndCheckLevels
     {
         if (!allGeometry_[shells_[shellI]].hasVolumeType())
         {
-            FatalErrorIn
-            (
-                "shellSurfaces::shellSurfaces"
-                "(const searchableSurfaces&"
-                ", const PtrList<dictionary>&)"
-            )   << "Shell " << shell.name()
+            FatalErrorInFunction
+                << "Shell " << shell.name()
                 << " does not support testing for "
                 << refineModeNames_[modes_[shellI]] << endl
                 << "Probably it is not closed."
@@ -377,11 +367,8 @@ CML::shellSurfaces::shellSurfaces
 
         if (shells_[shellI] == -1)
         {
-            FatalErrorIn
-            (
-                "shellSurfaces::shellSurfaces"
-                "(const searchableSurfaces&, const PtrList<dictionary>&)"
-            )   << "No surface called " << name << endl
+            FatalErrorInFunction
+                << "No surface called " << name << endl
                 << "Valid surfaces are " << allGeometry_.names()
                 << exit(FatalError);
         }
@@ -419,11 +406,8 @@ CML::shellSurfaces::shellSurfaces
 
         if (shells_[shellI] == -1)
         {
-            FatalErrorIn
-            (
-                "shellSurfaces::shellSurfaces"
-                "(const searchableSurfaces&, const dictionary>&"
-            )   << "No surface called " << iter().keyword() << endl
+            FatalErrorInFunction
+                << "No surface called " << iter().keyword() << endl
                 << "Valid surfaces are " << allGeometry_.names()
                 << exit(FatalError);
         }

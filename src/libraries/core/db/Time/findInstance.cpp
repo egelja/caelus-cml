@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -131,24 +131,16 @@ CML::word CML::Time::findInstance
             {
                 if (name.empty())
                 {
-                    FatalErrorIn
-                    (
-                        "Time::findInstance"
-                        "(const fileName&, const word&"
-                        ", const IOobject::readOption, const word&)"
-                    )   << "Cannot find directory "
+                    FatalErrorInFunction
+                        << "Cannot find directory "
                         << dir << " in times " << timeName()
                         << " down to " << stopInstance
                         << exit(FatalError);
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "Time::findInstance"
-                        "(const fileName&, const word&"
-                        ", const IOobject::readOption, const word&)"
-                    )   << "Cannot find file \"" << name << "\" in directory "
+                    FatalErrorInFunction
+                        << "Cannot find file \"" << name << "\" in directory "
                         << dir << " in times " << timeName()
                         << " down to " << stopInstance
                         << exit(FatalError);
@@ -192,12 +184,8 @@ CML::word CML::Time::findInstance
 
     if (rOpt == IOobject::MUST_READ || rOpt == IOobject::MUST_READ_IF_MODIFIED)
     {
-        FatalErrorIn
-        (
-            "Time::findInstance"
-            "(const fileName&, const word&"
-            ", const IOobject::readOption, const word&)"
-        )   << "Cannot find file \"" << name << "\" in directory "
+        FatalErrorInFunction
+            << "Cannot find file \"" << name << "\" in directory "
             << dir << " in times " << timeName()
             << " down to " << constant()
             << exit(FatalError);

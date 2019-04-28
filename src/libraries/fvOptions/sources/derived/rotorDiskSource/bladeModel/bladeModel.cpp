@@ -117,7 +117,7 @@ CML::bladeModel::bladeModel(const dictionary& dict)
     }
     else
     {
-        FatalErrorIn("CML::bladeModel::bladeModel(const dictionary&)")
+        FatalErrorInFunction
             << "No blade data specified" << exit(FatalError);
     }
 }

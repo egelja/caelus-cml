@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -272,7 +272,7 @@ void CML::uniformInterpolationTable<Type>::checkTable() const
 {
     if (size() < 2)
     {
-        FatalErrorIn("uniformInterpolationTable<Type>::checkTable()")
+        FatalErrorInFunction
             << "Table " << name() << ": must have at least 2 values." << nl
             << "Table size = " << size() << nl
             << "    min, interval width = " << x0_ << ", " << dx_ << nl
@@ -388,20 +388,16 @@ Type CML::uniformInterpolationTable<Type>::interpolate(scalar x) const
     {
         if (x < x0_)
         {
-            FatalErrorIn
-            (
-                "uniformInterpolationTable<Type>::interpolate(scalar x)"
-            )   << "Supplied value is less than minimum table value:" << nl
+            FatalErrorInFunction
+                << "Supplied value is less than minimum table value:" << nl
                 << "xMin=" << x0_ << ", xMax=" << xMax() << ", x=" << x << nl
                 << exit(FatalError);
         }
 
         if (x > xMax())
         {
-            FatalErrorIn
-            (
-                "uniformInterpolationTable<Type>::interpolate(scalar x)"
-            )   << "Supplied value is greater than maximum table value:" << nl
+            FatalErrorInFunction
+                << "Supplied value is greater than maximum table value:" << nl
                 << "xMin=" << x0_ << ", xMax=" << xMax() << ", x=" << x << nl
                 << exit(FatalError);
         }
@@ -443,10 +439,8 @@ Type CML::uniformInterpolationTable<Type>::interpolateLog10
         }
         else
         {
-            FatalErrorIn
-            (
-                "uniformInterpolationTable<Type>::interpolateLog10(scalar x)"
-            )   << "Table " << name() << nl
+            FatalErrorInFunction
+                << "Table " << name() << nl
                 << "Supplied value must be greater than 0 when in log10 mode"
                 << nl << "x=" << x << nl << exit(FatalError);
         }

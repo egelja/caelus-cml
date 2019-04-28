@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
+Copyright (C) 2015 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -87,10 +88,10 @@ class polyPatch
 protected:
 
     // Protected Member Functions
-    
+
         //- Inherit movePoints from primitivePatch
         using primitivePatch::movePoints;
-    
+
         // The polyPatch geometry initialisation is called by polyBoundaryMesh
         friend class polyBoundaryMesh;
 
@@ -355,6 +356,10 @@ public:
 
             //- Return face cell centres
             tmp<vectorField> faceCellCentres() const;
+
+            //- Return the area fraction as the ratio of the stored face area
+            //- and the area given by the face points
+            tmp<scalarField> areaFraction() const;
 
 
         // Addressing into mesh

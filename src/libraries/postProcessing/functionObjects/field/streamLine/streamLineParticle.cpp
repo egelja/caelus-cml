@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -20,75 +20,49 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "streamLineParticle.hpp"
+#include "streamLineParticleCloud.hpp"
 #include "vectorFieldIOField.hpp"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-namespace CML
-{
-//    defineParticleTypeNameAndDebug(streamLineParticle, 0);
-}
-
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-CML::scalar CML::streamLineParticle::calcSubCycleDeltaT
-(
-    trackingData& td,
-    const scalar dt,
-    const vector& U
-) const
-{
-    particle testParticle(*this);
-
-    bool oldKeepParticle = td.keepParticle;
-    bool oldSwitchProcessor = td.switchProcessor;
-    scalar fraction = testParticle.trackToFace(position()+dt*U, td);
-    td.keepParticle = oldKeepParticle;
-    td.switchProcessor = oldSwitchProcessor;
-    // Adapt the dt to subdivide the trajectory into substeps.
-    return dt*fraction/td.nSubCycle_;
-}
-
 
 CML::vector CML::streamLineParticle::interpolateFields
 (
     const trackingData& td,
     const point& position,
-    const label cellI,
-    const label faceI
+    const label celli,
+    const label facei
 )
 {
-    if (cellI == -1)
+    if (celli == -1)
     {
-        FatalErrorIn("streamLineParticle::interpolateFields(..)")
-            << "Cell:" << cellI << abort(FatalError);
+        FatalErrorInFunction
+            << "Cell:" << celli << abort(FatalError);
     }
 
     sampledScalars_.setSize(td.vsInterp_.size());
-    forAll(td.vsInterp_, scalarI)
+    forAll(td.vsInterp_, scalari)
     {
-        sampledScalars_[scalarI].append
+        sampledScalars_[scalari].append
         (
-            td.vsInterp_[scalarI].interpolate
+            td.vsInterp_[scalari].interpolate
             (
                 position,
-                cellI,
-                faceI
+                celli,
+                facei
             )
         );
     }
 
     sampledVectors_.setSize(td.vvInterp_.size());
-    forAll(td.vvInterp_, vectorI)
+    forAll(td.vvInterp_, vectori)
     {
-        sampledVectors_[vectorI].append
+        sampledVectors_[vectori].append
         (
-            td.vvInterp_[vectorI].interpolate
+            td.vvInterp_[vectori].interpolate
             (
                 position,
-                cellI,
-                faceI
+                celli,
+                facei
             )
         );
     }
@@ -105,11 +79,11 @@ CML::streamLineParticle::streamLineParticle
 (
     const polyMesh& mesh,
     const vector& position,
-    const label cellI,
+    const label celli,
     const label lifeTime
 )
 :
-    particle(mesh, position, cellI),
+    particle(mesh, position, celli),
     lifeTime_(lifeTime)
 {}
 
@@ -125,7 +99,6 @@ CML::streamLineParticle::streamLineParticle
 {
     if (readFields)
     {
-        //if (is.format() == IOstream::ASCII)
         List<scalarList> sampledScalars;
         List<vectorList> sampledVectors;
 
@@ -144,12 +117,7 @@ CML::streamLineParticle::streamLineParticle
         }
     }
 
-    // Check state of Istream
-    is.check
-    (
-        "streamLineParticle::streamLineParticle"
-        "(const Cloud<streamLineParticle>&, Istream&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 
@@ -169,32 +137,24 @@ CML::streamLineParticle::streamLineParticle
 
 bool CML::streamLineParticle::move
 (
+    streamLineParticleCloud& cloud,
     trackingData& td,
-    const scalar trackTime
+    const scalar
 )
 {
-    streamLineParticle& p = static_cast<streamLineParticle&>(*this);
-
     td.switchProcessor = false;
     td.keepParticle = true;
 
-    scalar tEnd = (1.0 - stepFraction())*trackTime;
-    scalar maxDt = mesh_.bounds().mag();
+    const scalar maxDt = mesh().bounds().mag();
 
-    while
-    (
-        td.keepParticle
-    && !td.switchProcessor
-    && lifeTime_ > 0
-    )
+    while (td.keepParticle && !td.switchProcessor && lifeTime_ > 0)
     {
-        // set the lagrangian time-step
         scalar dt = maxDt;
 
         // Cross cell in steps:
         // - at subiter 0 calculate dt to cross cell in nSubCycle steps
         // - at the last subiter do all of the remaining track
-        for (label subIter = 0; subIter < td.nSubCycle_; subIter++)
+        for (label subIter = 0; subIter < max(1, td.nSubCycle_); subIter++)
         {
             --lifeTime_;
 
@@ -220,37 +180,27 @@ bool CML::streamLineParticle::move
 
             if (td.trackLength_ < GREAT)
             {
+                // No sub-cycling. Track a set length on each step.
                 dt = td.trackLength_;
-                //Pout<< "    subiteration " << subIter
-                //    << " : fixed length: updated dt:" << dt << endl;
             }
-            else if (subIter == 0 && td.nSubCycle_ > 1)
+            else if (subIter == 0)
             {
-                // Adapt dt to cross cell in a few steps
-                dt = calcSubCycleDeltaT(td, dt, U);
+                // Sub-cycling. Cross the cell in nSubCycle steps.
+                particle copy(*this);
+                copy.trackToFace(maxDt*U, 1);
+                dt *= (copy.stepFraction() - stepFraction())/td.nSubCycle_;
             }
             else if (subIter == td.nSubCycle_ - 1)
             {
-                // Do full step on last subcycle
+                // Sub-cycling. Track the whole cell on the last step.
                 dt = maxDt;
             }
 
-
-            scalar fraction = trackToFace(position() + dt*U, td);
-            dt *= fraction;
-
-            tEnd -= dt;
-            stepFraction() = 1.0 - tEnd/trackTime;
-
-            if (tEnd <= ROOTVSMALL)
-            {
-                // Force removal
-                lifeTime_ = 0;
-            }
+            trackToAndHitFace(dt*U, 0, cloud, td);
 
             if
             (
-                face() != -1
+                onFace()
             || !td.keepParticle
             ||  td.switchProcessor
             ||  lifeTime_ == 0
@@ -261,17 +211,16 @@ bool CML::streamLineParticle::move
         }
     }
 
-
     if (!td.keepParticle || lifeTime_ == 0)
     {
         if (lifeTime_ == 0)
         {
+            // Failure exit. Particle stagnated or it's life ran out.
             if (debug)
             {
-                Pout<< "streamLineParticle : Removing stagnant particle:"
-                    << p.position()
-                    << " sampled positions:" << sampledPositions_.size()
-                    << endl;
+                Pout<< "streamLineParticle: Removing stagnant particle:"
+                    << position() << " sampled positions:"
+                    << sampledPositions_.size() << endl;
             }
             td.keepParticle = false;
         }
@@ -283,29 +232,25 @@ bool CML::streamLineParticle::move
 
             if (debug)
             {
-                Pout<< "streamLineParticle : Removing particle:"
-                    << p.position()
+                Pout<< "streamLineParticle: Removing particle:" << position()
                     << " sampled positions:" << sampledPositions_.size()
                     << endl;
             }
         }
 
         // Transfer particle data into trackingData.
-        //td.allPositions_.append(sampledPositions_);
         td.allPositions_.append(vectorList());
         vectorList& top = td.allPositions_.last();
         top.transfer(sampledPositions_);
 
         forAll(sampledScalars_, i)
         {
-            //td.allScalars_[i].append(sampledScalars_[i]);
             td.allScalars_[i].append(scalarList());
             scalarList& top = td.allScalars_[i].last();
             top.transfer(sampledScalars_[i]);
         }
         forAll(sampledVectors_, i)
         {
-            //td.allVectors_[i].append(sampledVectors_[i]);
             td.allVectors_[i].append(vectorList());
             vectorList& top = td.allVectors_[i].last();
             top.transfer(sampledVectors_[i]);
@@ -316,14 +261,7 @@ bool CML::streamLineParticle::move
 }
 
 
-bool CML::streamLineParticle::hitPatch
-(
-    const polyPatch&,
-    trackingData& td,
-    const label patchI,
-    const scalar trackFraction,
-    const tetIndices& tetIs
-)
+bool CML::streamLineParticle::hitPatch(streamLineParticleCloud&, trackingData&)
 {
     // Disable generic patch interaction
     return false;
@@ -332,7 +270,7 @@ bool CML::streamLineParticle::hitPatch
 
 void CML::streamLineParticle::hitWedgePatch
 (
-    const wedgePolyPatch& pp,
+    streamLineParticleCloud&,
     trackingData& td
 )
 {
@@ -343,7 +281,7 @@ void CML::streamLineParticle::hitWedgePatch
 
 //void CML::streamLineParticle::hitSymmetryPlanePatch
 //(
-//    const symmetryPlanePolyPatch& pp,
+//    streamLineParticleCloud&,
 //    trackingData& td
 //)
 //{
@@ -354,7 +292,7 @@ void CML::streamLineParticle::hitWedgePatch
 
 void CML::streamLineParticle::hitSymmetryPatch
 (
-    const symmetryPolyPatch& pp,
+    streamLineParticleCloud&,
     trackingData& td
 )
 {
@@ -365,8 +303,32 @@ void CML::streamLineParticle::hitSymmetryPatch
 
 void CML::streamLineParticle::hitCyclicPatch
 (
-    const cyclicPolyPatch& pp,
+    streamLineParticleCloud&,
     trackingData& td
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+void CML::streamLineParticle::hitCyclicAMIPatch
+(
+    streamLineParticleCloud&,
+    trackingData& td,
+    const vector&
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+void CML::streamLineParticle::hitCyclicACMIPatch
+(
+    streamLineParticleCloud&,
+    trackingData& td,
+    const vector&
 )
 {
     // Remove particle
@@ -376,7 +338,7 @@ void CML::streamLineParticle::hitCyclicPatch
 
 void CML::streamLineParticle::hitProcessorPatch
 (
-    const processorPolyPatch&,
+    streamLineParticleCloud&,
     trackingData& td
 )
 {
@@ -387,19 +349,7 @@ void CML::streamLineParticle::hitProcessorPatch
 
 void CML::streamLineParticle::hitWallPatch
 (
-    const wallPolyPatch& wpp,
-    trackingData& td,
-    const tetIndices&
-)
-{
-    // Remove particle
-    td.keepParticle = false;
-}
-
-
-void CML::streamLineParticle::hitPatch
-(
-    const polyPatch& wpp,
+    streamLineParticleCloud&,
     trackingData& td
 )
 {
@@ -429,18 +379,11 @@ void CML::streamLineParticle::readFields(Cloud<streamLineParticle>& c)
     );
     c.checkFieldIOobject(c, sampledPositions);
 
-//    vectorFieldIOField sampleVelocity
-//    (
-//        c.fieldIOobject("sampleVelocity", IOobject::MUST_READ)
-//    );
-//    c.checkFieldIOobject(c, sampleVelocity);
-
     label i = 0;
     forAllIter(Cloud<streamLineParticle>, c, iter)
     {
         iter().lifeTime_ = lifeTime[i];
         iter().sampledPositions_.transfer(sampledPositions[i]);
-//        iter().sampleVelocity_.transfer(sampleVelocity[i]);
         i++;
     }
 }
@@ -450,7 +393,7 @@ void CML::streamLineParticle::writeFields(const Cloud<streamLineParticle>& c)
 {
     particle::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> lifeTime
     (
@@ -462,24 +405,17 @@ void CML::streamLineParticle::writeFields(const Cloud<streamLineParticle>& c)
         c.fieldIOobject("sampledPositions", IOobject::NO_READ),
         np
     );
-//    vectorFieldIOField sampleVelocity
-//    (
-//        c.fieldIOobject("sampleVelocity", IOobject::NO_READ),
-//        np
-//    );
 
     label i = 0;
     forAllConstIter(Cloud<streamLineParticle>, c, iter)
     {
         lifeTime[i] = iter().lifeTime_;
         sampledPositions[i] = iter().sampledPositions_;
-//        sampleVelocity[i] = iter().sampleVelocity_;
         i++;
     }
 
     lifeTime.write();
     sampledPositions.write();
-//    sampleVelocity.write();
 }
 
 
@@ -493,9 +429,7 @@ CML::Ostream& CML::operator<<(Ostream& os, const streamLineParticle& p)
         << token::SPACE << p.sampledScalars_
         << token::SPACE << p.sampledVectors_;
 
-    // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const streamLineParticle&)");
-
+    os.check(FUNCTION_NAME);
     return os;
 }
 

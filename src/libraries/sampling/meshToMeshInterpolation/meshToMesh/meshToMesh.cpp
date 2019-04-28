@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2014 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -366,14 +366,7 @@ CML::meshToMesh::interpolationMethodAMI(const interpolationMethod method)
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::AMIPatchToPatchInterpolation::interpolationMethod"
-                "CML::meshToMesh::interpolationMethodAMI"
-                "("
-                    "const interpolationMethod method"
-                ") const"
-            )
+            FatalErrorInFunction
                 << "Unhandled enumeration " << method
                 << abort(FatalError);
         }
@@ -387,7 +380,7 @@ void CML::meshToMesh::calculatePatchAMIs(const word& AMIMethodName)
 {
     if (!patchAMIs_.empty())
     {
-        FatalErrorIn("meshToMesh::calculatePatchAMIs()")
+        FatalErrorInFunction
             << "patch AMI already calculated"
             << exit(FatalError);
     }
@@ -458,16 +451,8 @@ void CML::meshToMesh::constructNoCuttingPatches
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "CML::meshToMesh::meshToMesh"
-                        "("
-                            "const polyMesh&, "
-                            "const polyMesh&, "
-                            "const interpolationMethod&, "
-                            "bool"
-                        ")"
-                    )   << "Source patch " << pp.name()
+                    FatalErrorInFunction
+                        << "Source patch " << pp.name()
                         << " not found in target mesh. "
                         << "Available target patches are " << tgtBM.names()
                         << exit(FatalError);
@@ -550,8 +535,8 @@ CML::meshToMesh::meshToMesh
     tgtToSrcCellWght_(),
     V_(0.0),
     singleMeshProc_(-1),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructNoCuttingPatches
     (
@@ -586,8 +571,8 @@ CML::meshToMesh::meshToMesh
     tgtToSrcCellWght_(),
     V_(0.0),
     singleMeshProc_(-1),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructNoCuttingPatches(methodName, AMIMethodName, interpAllPatches);
 }
@@ -614,8 +599,8 @@ CML::meshToMesh::meshToMesh
     tgtToSrcCellWght_(),
     V_(0.0),
     singleMeshProc_(-1),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructFromCuttingPatches
     (
@@ -652,8 +637,8 @@ CML::meshToMesh::meshToMesh
     tgtToSrcCellWght_(),
     V_(0.0),
     singleMeshProc_(-1),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
+    srcMapPtr_(nullptr),
+    tgtMapPtr_(nullptr)
 {
     constructFromCuttingPatches
     (

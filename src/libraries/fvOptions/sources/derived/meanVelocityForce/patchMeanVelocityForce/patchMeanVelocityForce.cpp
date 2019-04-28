@@ -55,16 +55,8 @@ CML::fv::patchMeanVelocityForce::patchMeanVelocityForce
 {
     if (patchi_ < 0)
     {
-        FatalErrorIn
-        (
-            "CML::fv::patchMeanVelocityForce::patchMeanVelocityForce"
-            "("
-                "const word&, "
-                "const word&, "
-                "const dictionary&, "
-                "const fvMesh&"
-            ")"
-        )   << "Cannot find patch " << patch_
+        FatalErrorInFunction
+            << "Cannot find patch " << patch_
             << exit(FatalError);
     }
 }

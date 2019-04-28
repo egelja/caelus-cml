@@ -27,6 +27,10 @@ License
 
 #include "SphereDragForce.hpp"
 #include "NonSphereDragForce.hpp"
+#include "SchillerNaumannDragForce.hpp"
+#include "WenYuDragForce.hpp"
+#include "ErgunWenYuDragForce.hpp"
+#include "PlessisMasliyahDragForce.hpp"
 #include "ConstantDragCoefficient.hpp"
 
 #include "ConstantLiftCoefficient.hpp"
@@ -40,23 +44,30 @@ License
 #include "SRFForce.hpp"
 #include "VirtualMassForce.hpp"
 
+#include "ScaledForce.hpp"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParcelForces(CloudType)                                           \
-                                                                              \
-    makeParticleForceModel(CloudType);                                        \
-    makeParticleForceModelType(SphereDragForce, CloudType);                   \
-    makeParticleForceModelType(NonSphereDragForce, CloudType);                \
-    makeParticleForceModelType(ConstantDragCoefficient, CloudType);           \
-    makeParticleForceModelType(ConstantLiftCoefficient, CloudType);           \
-    makeParticleForceModelType(SaffmanMeiLiftForce, CloudType);               \
-    makeParticleForceModelType(TomiyamaLiftForce, CloudType);                 \
-    makeParticleForceModelType(GravityForce, CloudType);                      \
-    makeParticleForceModelType(NonInertialFrameForce, CloudType);             \
-    makeParticleForceModelType(ParamagneticForce, CloudType);                 \
-    makeParticleForceModelType(PressureGradientForce, CloudType);             \
-    makeParticleForceModelType(SRFForce, CloudType);                          \
-    makeParticleForceModelType(VirtualMassForce, CloudType);
+#define makeParcelForces(CloudType)                                            \
+                                                                               \
+    makeParticleForceModel(CloudType);                                         \
+    makeParticleForceModelType(SphereDragForce, CloudType);                    \
+    makeParticleForceModelType(NonSphereDragForce, CloudType);                 \
+    makeParticleForceModelType(SchillerNaumannDragForce, CloudType);           \
+    makeParticleForceModelType(WenYuDragForce, CloudType);                     \
+    makeParticleForceModelType(ErgunWenYuDragForce, CloudType);                \
+    makeParticleForceModelType(PlessisMasliyahDragForce, CloudType);           \
+    makeParticleForceModelType(ConstantDragCoefficient, CloudType);            \
+    makeParticleForceModelType(ConstantLiftCoefficient, CloudType);            \
+    makeParticleForceModelType(SaffmanMeiLiftForce, CloudType);                \
+    makeParticleForceModelType(TomiyamaLiftForce, CloudType);                  \
+    makeParticleForceModelType(GravityForce, CloudType);                       \
+    makeParticleForceModelType(NonInertialFrameForce, CloudType);              \
+    makeParticleForceModelType(ParamagneticForce, CloudType);                  \
+    makeParticleForceModelType(PressureGradientForce, CloudType);              \
+    makeParticleForceModelType(SRFForce, CloudType);                           \
+    makeParticleForceModelType(VirtualMassForce, CloudType);                   \
+    makeParticleForceModelType(ScaledForce, CloudType);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

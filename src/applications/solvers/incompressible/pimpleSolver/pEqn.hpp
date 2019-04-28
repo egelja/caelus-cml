@@ -10,8 +10,8 @@ if (pimple.nCorrPISO() <= 1)
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
-    (fvc::interpolate(HbyA) & mesh.Sf())
-  + rAUf*fvc::ddtCorr(U, phi, UfPtr)
+    fvc::flux(HbyA)
+  + MRF.zeroFilter(rAUf*fvc::ddtCorr(U, phi, UfPtr))
 );
 
 MRF.makeRelative(phiHbyA);

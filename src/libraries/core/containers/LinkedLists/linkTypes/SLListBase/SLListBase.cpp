@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -77,7 +77,7 @@ CML::SLListBase::link* CML::SLListBase::removeHead()
 
     if (last_ == 0)
     {
-        FatalErrorIn("SLListBase::remove()")
+        FatalErrorInFunction
             << "remove from empty list"
             << abort(FatalError);
     }

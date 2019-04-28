@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,11 +26,13 @@ License
 
 namespace CML
 {
-    defineTemplateTypeNameAndDebug
-    (
-        IOPtrList<regionModels::pyrolysisModels::pyrolysisModel>,
-        0
-    );
+    namespace regionModels
+    {
+        namespace pyrolysisModels
+        {
+            defineTypeNameAndDebug(pyrolysisModelCollection, 0);
+        }
+    }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -44,12 +46,12 @@ namespace pyrolysisModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-pyrolysisModelCollection::pyrolysisModelCollection
-(
-    const fvMesh& mesh
-)
+pyrolysisModelCollection::pyrolysisModelCollection(const fvMesh& mesh)
 :
-    IOPtrList<pyrolysisModel>
+    PtrList<pyrolysisModel>()
+
+{
+    IOdictionary pyrolysisZonesDict
     (
         IOobject
         (
@@ -58,10 +60,32 @@ pyrolysisModelCollection::pyrolysisModelCollection
             mesh,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
-        ),
-        pyrolysisModel::iNew(mesh)
-    ),
-    mesh_(mesh)
+        )
+    );
+
+    const wordList regions(pyrolysisZonesDict.toc());
+
+    setSize(regions.size());
+
+    for (label i = 0; i < regions.size(); i++)
+    {
+        set
+        (
+            i,
+            pyrolysisModel::New
+            (
+                mesh,
+                pyrolysisZonesDict.subDict(regions[i]),
+                regions[i]
+            )
+        );
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+pyrolysisModelCollection::~pyrolysisModelCollection()
 {}
 
 
@@ -96,7 +120,7 @@ void pyrolysisModelCollection::evolve()
         {
             if (pyrolysis.primaryMesh().changing())
             {
-                FatalErrorIn("pyrolysisModelCollection::evolve()")
+                FatalErrorInFunction
                     << "Currently not possible to apply "
                     << pyrolysis.modelName()
                     << " model to moving mesh cases" << nl<< abort(FatalError);
@@ -120,7 +144,7 @@ void pyrolysisModelCollection::evolve()
 }
 
 
-void pyrolysisModelCollection::info() const
+void pyrolysisModelCollection::info()
 {
     forAll(*this, i)
     {

@@ -17,6 +17,15 @@ License
     You should have received a copy of the GNU General Public License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
+Class
+    CML::tetOverlapVolume
+
+Description
+    Calculates the overlap volume of two cells using tetrahedral decomposition
+
+SourceFiles
+    tetOverlapVolume.C
+
 \*---------------------------------------------------------------------------*/
 
 
@@ -26,13 +35,17 @@ License
 #include "FixedList.hpp"
 #include "labelList.hpp"
 #include "treeBoundBox.hpp"
+#include "tetPointRef.hpp"
 
 namespace CML
 {
 
 class primitiveMesh;
 class polyMesh;
-class tetPoints;
+
+/*---------------------------------------------------------------------------*\
+                      Class tetOverlapVolume Declaration
+\*---------------------------------------------------------------------------*/
 
 class tetOverlapVolume
 {
@@ -41,8 +54,8 @@ class tetOverlapVolume
         //- Tet overlap volume
         scalar tetTetOverlapVol
         (
-            const tetPoints& tetA,
-            const tetPoints& tetB
+            const tetPointRef& tetA,
+            const tetPointRef& tetB
         ) const;
 
         //- Return a const treeBoundBox
@@ -52,6 +65,51 @@ class tetOverlapVolume
             const face& f,
             const point& fc
         ) const;
+
+
+    // Private classes
+
+        //- A fixed list of tets which simulates a dynamic list by incrementing
+        //  a counter whenever its append method is called. This is used as an
+        //  optimisation for the tetTetOverlapVol method.
+        template<unsigned Size>
+        class cutTetList
+        :
+            public FixedList<FixedList<point, 4>, Size>
+        {
+        private:
+
+            //- The number of stored elements
+            label n_;
+
+
+        public:
+
+            //- Construct null
+            cutTetList()
+            :
+                n_(0)
+            {}
+
+            //- Clear the array
+            void clear()
+            {
+                n_ = 0;
+            }
+
+            //- Get the current size
+            label size() const
+            {
+                return n_;
+            }
+
+            //- Add a new tet to the end of the array
+            void append(const FixedList<point, 4>& t)
+            {
+                this->operator[](n_) = t;
+                ++ n_;
+            }
+        };
 
 
 public:
@@ -101,7 +159,11 @@ public:
 };
 
 
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace CML
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

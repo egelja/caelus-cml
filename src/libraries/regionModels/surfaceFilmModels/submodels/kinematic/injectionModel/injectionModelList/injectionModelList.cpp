@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -32,25 +32,29 @@ namespace surfaceFilmModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-injectionModelList::injectionModelList(const surfaceFilmModel& owner)
+injectionModelList::injectionModelList(surfaceFilmRegionModel& film)
 :
     PtrList<injectionModel>(),
-    owner_(owner),
-    dict_(dictionary::null),
-    injectedMassTotal_(0.0)
+    filmSubModelBase(film)
 {}
 
 
 injectionModelList::injectionModelList
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
     PtrList<injectionModel>(),
-    owner_(owner),
-    dict_(dict),
-    injectedMassTotal_(0.0)
+    filmSubModelBase
+    (
+        "injectionModelList",
+        film,
+        dict,
+        "injectionModelList",
+        "injectionModelList"
+    ),
+    massInjected_(film.intCoupledPatchIDs().size(), 0.0)
 {
     const wordList activeModels(dict.lookup("injectionModels"));
 
@@ -69,11 +73,7 @@ injectionModelList::injectionModelList
         forAllConstIter(wordHashSet, models, iter)
         {
             const word& model = iter.key();
-            set
-            (
-                i,
-                injectionModel::New(owner, dict, model)
-            );
+            set(i, injectionModel::New(film, dict, model));
             i++;
         }
     }
@@ -88,6 +88,7 @@ injectionModelList::injectionModelList
 
 injectionModelList::~injectionModelList()
 {}
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -105,19 +106,71 @@ void injectionModelList::correct
         im.correct(availableMass, massToInject, diameterToInject);
     }
 
-    injectedMassTotal_ += sum(massToInject.internalField());
-
-
     // Push values to boundaries ready for transfer to the primary region
     massToInject.correctBoundaryConditions();
     diameterToInject.correctBoundaryConditions();
+
+    const labelList& patchIDs = film().intCoupledPatchIDs();
+
+    forAll(patchIDs, i)
+    {
+        label patchi = patchIDs[i];
+        massInjected_[i] =
+            massInjected_[i] + sum(massToInject.boundaryField()[patchi]);
+    }
 }
 
 
-void injectionModelList::info(Ostream& os) const
+void injectionModelList::info(Ostream& os)
 {
-    os  << indent << "injected mass      = "
-        << returnReduce<scalar>(injectedMassTotal_, sumOp<scalar>()) << nl;
+    const polyBoundaryMesh& pbm = film().regionMesh().boundaryMesh();
+
+    scalar injectedMass = 0;
+    scalarField patchInjectedMasses
+    (
+        pbm.size() - film().regionMesh().globalData().processorPatches().size(),
+        0
+    );
+
+    forAll(*this, i)
+    {
+        const injectionModel& im = operator[](i);
+        injectedMass += im.injectedMassTotal();
+        im.patchInjectedMassTotals(patchInjectedMasses);
+    }
+
+    os  << indent << "injected mass      = " << injectedMass << nl;
+
+    forAll(patchInjectedMasses, patchi)
+    {
+        if (mag(patchInjectedMasses[patchi]) > VSMALL)
+        {
+            os  << indent << indent << "from patch " << pbm[patchi].name()
+                << " = " << patchInjectedMasses[patchi] << nl;
+        }
+    }
+
+    scalarField mass0(massInjected_.size(), 0);
+    this->getBaseProperty("massInjected", mass0);
+
+    scalarField mass(massInjected_);
+    Pstream::listCombineGather(mass, plusEqOp<scalar>());
+    mass += mass0;
+
+    const labelList& patchIDs = film().intCoupledPatchIDs();
+
+    forAll(patchIDs, i)
+    {
+        label patchi = patchIDs[i];
+        Info<< indent << "  - patch: " << pbm[patchi].name() << ": "
+            << mass[i] << endl;
+    }
+
+    if (film().time().outputTime())
+    {
+        setBaseProperty("massInjected", mass);
+        massInjected_ = 0.0;
+    }
 }
 
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -25,10 +25,10 @@ Description
     an injection site.
 
     (
-       (x y z) (u v w) d rho mDot T cp  // injector 1
-       (x y z) (u v w) d rho mDot T cp  // injector 2
-       ...
-       (x y z) (u v w) d rho mDot T cp  // injector N
+        (x y z) (u v w) d rho mDot T cp  // injector 1
+        (x y z) (u v w) d rho mDot T cp  // injector 2
+        ...
+        (x y z) (u v w) d rho mDot T cp  // injector N
     );
 
     where:
@@ -36,7 +36,7 @@ Description
         u, v, w = global cartesian velocity components [m/s]
         d       = diameter [m]
         rho     = density [kg/m3]
-        mDot    = mass flow rate [kg/m3]
+        mDot    = mass flow rate [kg/s]
         T       = temperature [K]
         cp      = specific heat capacity [J/kg/K]
 
@@ -47,7 +47,7 @@ Description
 #define ThermoLookupTableInjection_H
 
 #include "InjectionModel.hpp"
-#include "thermoParcelInjectionDataIOList.hpp"
+#include "kinematicParcelInjectionDataIOList.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -78,7 +78,7 @@ class ThermoLookupTableInjection
         bool randomise_;
 
         //- List of injectors
-        thermoParcelInjectionDataIOList injectors_;
+        kinematicParcelInjectionDataIOList injectors_;
 
         //- List of cell labels corresoponding to injector positions
         labelList injectorCells_;
@@ -106,13 +106,14 @@ public:
             const word& modelName
         );
 
-        //- Construct copy
+        //- Construct copy from owner cloud and injection model
         ThermoLookupTableInjection
         (
+            CloudType& owner,
             const ThermoLookupTableInjection<CloudType>& im
         );
 
-        //- Construct and return a clone
+        //- Construct and return a clone using supplied owner cloud
         virtual autoPtr<InjectionModel<CloudType> > clone() const
         {
             return autoPtr<InjectionModel<CloudType> >
@@ -141,6 +142,7 @@ public:
         virtual scalar volumeToInject(const scalar time0, const scalar time1);
 
 
+
         // Injection geometry
 
             //- Set the injection position and owner cell, tetFace and tetPt
@@ -151,8 +153,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -165,7 +167,10 @@ public:
             );
 
             //- Flag to identify whether model fully describes the parcel
-            virtual bool fullyDescribed() const;
+            virtual bool fullyDescribed() const
+            {
+                return true;
+            }
 
             //- Return flag to identify whether or not injection of parcelI is
             //  permitted
@@ -231,8 +236,7 @@ ThermoLookupTableInjection
 
 
 template<class CloudType>
-CML::ThermoLookupTableInjection<CloudType>::
-ThermoLookupTableInjection
+CML::ThermoLookupTableInjection<CloudType>::ThermoLookupTableInjection
 (
     const ThermoLookupTableInjection<CloudType>& im
 )
@@ -252,8 +256,7 @@ ThermoLookupTableInjection
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-CML::ThermoLookupTableInjection<CloudType>::
-~ThermoLookupTableInjection()
+CML::ThermoLookupTableInjection<CloudType>::~ThermoLookupTableInjection()
 {}
 
 
@@ -277,16 +280,14 @@ void CML::ThermoLookupTableInjection<CloudType>::updateMesh()
 
 
 template<class CloudType>
-CML::scalar
-CML::ThermoLookupTableInjection<CloudType>::timeEnd() const
+CML::scalar CML::ThermoLookupTableInjection<CloudType>::timeEnd() const
 {
     return this->SOI_ + duration_;
 }
 
 
 template<class CloudType>
-CML::label
-CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
+CML::label CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
 (
     const scalar time0,
     const scalar time1
@@ -304,8 +305,7 @@ CML::ThermoLookupTableInjection<CloudType>::parcelsToInject
 
 
 template<class CloudType>
-CML::scalar
-CML::ThermoLookupTableInjection<CloudType>::volumeToInject
+CML::scalar CML::ThermoLookupTableInjection<CloudType>::volumeToInject
 (
     const scalar time0,
     const scalar time1
@@ -332,15 +332,15 @@ void CML::ThermoLookupTableInjection<CloudType>::setPositionAndCell
     const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     label injectorI = 0;
     if (randomise_)
     {
-        cachedRandom& rnd = this->owner().rndGen();
-        injectorI = rnd.position<label>(0, injectorCells_.size() - 1);
+        Random& rnd = this->owner().rndGen();
+        injectorI = rnd.sampleAB<label>(0, injectorCells_.size());
     }
     else
     {
@@ -349,8 +349,8 @@ void CML::ThermoLookupTableInjection<CloudType>::setPositionAndCell
 
     position = injectors_[injectorI].x();
     cellOwner = injectorCells_[injectorI];
-    tetFaceI = injectorTetFaces_[injectorI];
-    tetPtI = injectorTetPts_[injectorI];
+    tetFacei = injectorTetFaces_[injectorI];
+    tetPti = injectorTetPts_[injectorI];
 }
 
 
@@ -360,7 +360,7 @@ void CML::ThermoLookupTableInjection<CloudType>::setProperties
     const label parcelI,
     const label nParcels,
     const scalar,
-    typename CloudType::parcelType& parcel
+    typename CloudType::parcelType* pPtr
 )
 {
     label injectorI = parcelI*injectorCells_.size()/nParcels;
@@ -378,23 +378,19 @@ void CML::ThermoLookupTableInjection<CloudType>::setProperties
     parcel.T() = injectors_[injectorI].T();
 
     // set particle specific heat capacity
-    parcel.Cp() = injectors_[injectorI].Cp();
+    parcel.cp() = injectors_[injectorI].cp();
 }
 
 
 template<class CloudType>
-bool
-CML::ThermoLookupTableInjection<CloudType>::fullyDescribed() const
+bool CML::ThermoLookupTableInjection<CloudType>::fullyDescribed() const
 {
     return true;
 }
 
 
 template<class CloudType>
-bool CML::ThermoLookupTableInjection<CloudType>::validInjection
-(
-    const label
-)
+bool CML::ThermoLookupTableInjection<CloudType>::validInjection(const label)
 {
     return true;
 }

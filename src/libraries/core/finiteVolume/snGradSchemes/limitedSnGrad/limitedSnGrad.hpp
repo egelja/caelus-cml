@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -139,11 +139,8 @@ public:
         {
             if (limitCoeff_ < 0 || limitCoeff_ > 1)
             {
-                FatalIOErrorIn
-                (
-                    "limitedSnGrad(const fvMesh& mesh, Istream& is) : ",
-                    is
-                )   << "limitCoeff is specified as " << limitCoeff_
+                FatalIOErrorInFunction(is)
+                    << "limitCoeff is specified as " << limitCoeff_
                     << " but should be >= 0 && <= 1"
                     << exit(FatalIOError);
             }

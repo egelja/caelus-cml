@@ -101,11 +101,8 @@ void CML::setToCellZone::applyToSet
 {
     if (!isA<cellZoneSet>(set))
     {
-        WarningIn
-        (
-            "setToCellZone::applyToSet(const topoSetSource::setAction"
-            ", topoSet"
-        )   << "Operation only allowed on a cellZoneSet." << endl;
+        WarningInFunction
+            << "Operation only allowed on a cellZoneSet." << endl;
     }
     else
     {

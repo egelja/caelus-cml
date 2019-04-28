@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -597,11 +597,8 @@ void CML::MeshedSurface<Face>::write
         }
         else
         {
-            FatalErrorIn
-            (
-                "MeshedSurface::write"
-                "(const fileName&, const MeshedSurface&)"
-            )   << "Unknown file extension " << ext << nl << nl
+            FatalErrorInFunction
+                << "Unknown file extension " << ext << nl << nl
                 << "Valid types are :" << endl
                 << (supported | writeTypes())
                 << exit(FatalError);
@@ -1149,7 +1146,7 @@ bool CML::MeshedSurface<Face>::checkFaces
             {
                 if (f[fp] < 0 || f[fp] > maxPointI)
                 {
-                    FatalErrorIn("MeshedSurface::checkFaces(bool)")
+                    FatalErrorInFunction
                         << "face " << f
                         << " uses point indices outside point range 0.."
                     << maxPointI
@@ -1168,10 +1165,8 @@ bool CML::MeshedSurface<Face>::checkFaces
             changed = true;
             if (verbose)
             {
-                WarningIn
-                (
-                    "MeshedSurface::checkFaces(bool verbose)"
-                )   << "face[" << faceI << "] = " << f
+                WarningInFunction
+                    << "face[" << faceI << "] = " << f
                     << " does not have three unique vertices" << endl;
             }
         }
@@ -1216,10 +1211,8 @@ bool CML::MeshedSurface<Face>::checkFaces
 
                 if (verbose)
                 {
-                    WarningIn
-                    (
-                        "MeshedSurface::checkFaces(bool verbose)"
-                    )   << "faces share the same vertices:" << nl
+                    WarningInFunction
+                        << "faces share the same vertices:" << nl
                         << "    face[" << faceI << "] : " << f << nl
                         << "    face[" << neiFaceI << "] : " << nei << endl;
                     // printFace(Warning, "    ", f, points());
@@ -1250,10 +1243,8 @@ bool CML::MeshedSurface<Face>::checkFaces
 
         if (verbose)
         {
-            WarningIn
-            (
-                "MeshedSurface::checkFaces(bool verbose)"
-            )   << "Removed " << faceLst.size() - newFaceI
+            WarningInFunction
+                << "Removed " << faceLst.size() - newFaceI
                 << " illegal faces." << endl;
         }
 
@@ -1651,10 +1642,7 @@ void CML::MeshedSurface<Face>::checkZones()
 
         if (count < this->size())
         {
-            WarningIn
-            (
-                "MeshedSurface::checkZones()\n"
-            )
+            WarningInFunction
                 << "more faces " << this->size() << " than zones " << count
                 << " ... extending final zone"
                 << endl;
@@ -1663,10 +1651,7 @@ void CML::MeshedSurface<Face>::checkZones()
         }
         else if (count > this->size())
         {
-            FatalErrorIn
-            (
-                "MeshedSurface::checkZones()\n"
-            )
+            FatalErrorInFunction
                 << "more zones " << count << " than faces " << this->size()
                 << exit(FatalError);
         }
@@ -1876,11 +1861,8 @@ CML::MeshedSurface<Face>::New(const fileName& name, const word& ext)
         // nothing left to try, issue error
         supported += readTypes();
 
-        FatalErrorIn
-        (
-            "MeshedSurface<Face>::New(const fileName&, const word&) : "
-            "constructing MeshedSurface"
-        )   << "Unknown file extension " << ext << nl << nl
+        FatalErrorInFunction
+            << "Unknown file extension " << ext << nl << nl
             << "Valid types are :" << nl
             << supported
             << exit(FatalError);

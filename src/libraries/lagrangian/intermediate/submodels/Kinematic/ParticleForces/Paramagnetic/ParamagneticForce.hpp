@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -116,6 +116,7 @@ public:
             virtual forceSuSp calcNonCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -161,7 +162,7 @@ CML::ParamagneticForce<CloudType>::ParamagneticForce
     (
         this->coeffs().template lookupOrDefault<word>("HdotGradH", "HdotGradH")
     ),
-    HdotGradHInterpPtr_(NULL),
+    HdotGradHInterpPtr_(nullptr),
     magneticSusceptibility_
     (
         readScalar(this->coeffs().lookup("magneticSusceptibility"))
@@ -216,20 +217,21 @@ template<class CloudType>
 CML::forceSuSp CML::ParamagneticForce<CloudType>::calcNonCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     const interpolation<vector>& HdotGradHInterp = *HdotGradHInterpPtr_;
 
     value.Su()=
         mass*3.0*constant::electromagnetic::mu0.value()/p.rho()
        *magneticSusceptibility_/(magneticSusceptibility_ + 3)
-       *HdotGradHInterp.interpolate(p.position(), p.currentTetIndices());
+       *HdotGradHInterp.interpolate(p.coordinates(), p.currentTetIndices());
 
     return value;
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,15 +23,35 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-inline CML::scalar CML::oneField::operator[](const label) const
+inline CML::one CML::oneField::operator[](const label) const
 {
-    return scalar(1);
+    return one();
 }
 
 
 inline CML::oneField CML::oneField::field() const
 {
     return oneField();
+}
+
+
+inline const CML::oneField& CML::operator*
+(
+    const oneField& of,
+    const oneField&
+)
+{
+    return of;
+}
+
+
+inline const CML::oneField& CML::operator/
+(
+    const oneField& of,
+    const oneField&
+)
+{
+    return of;
 }
 
 

@@ -75,7 +75,7 @@ public:
 
    // Public static data
 
-        //- equivalent to enumeration in "vtkCellType.h"
+        //- Equivalent to enumeration in "vtkCellType.h"
         enum vtkTypes
         {
             VTK_TRIANGLE   = 5,

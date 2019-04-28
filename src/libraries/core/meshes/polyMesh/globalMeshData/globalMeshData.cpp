@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -141,7 +141,7 @@ void CML::globalMeshData::calcSharedPoints() const
      || sharedPointAddrPtr_.valid()
     )
     {
-        FatalErrorIn("globalMeshData::calcSharedPoints()")
+        FatalErrorInFunction
             << "Shared point addressing already done" << abort(FatalError);
     }
 
@@ -308,7 +308,7 @@ void CML::globalMeshData::calcSharedEdges() const
      || sharedEdgeAddrPtr_.valid()
     )
     {
-        FatalErrorIn("globalMeshData::calcSharedEdges()")
+        FatalErrorInFunction
             << "Shared edge addressing already done" << abort(FatalError);
     }
 
@@ -846,7 +846,7 @@ CML::label CML::globalMeshData::findTransform
 
     if (remoteTransformI == -1 || localTransformI == -1)
     {
-        FatalErrorIn("globalMeshData::findTransform(..)")
+        FatalErrorInFunction
             << "Problem. Cannot find " << remotePoint
             << " or " << localPoint << " in " << info
             << endl
@@ -1176,10 +1176,8 @@ void CML::globalMeshData::calcGlobalEdgeOrientation() const
             );
             if (stat == 0)
             {
-                FatalErrorIn
-                (
-                    "globalMeshData::calcGlobalEdgeOrientation() const"
-                )   << "problem : my edge:" << e
+                FatalErrorInFunction
+                    << "problem : my edge:" << e
                     << " in master points:" << masterE
                     << " v.s. masterEdgeVerts:" << masterEdgeVerts[edgeI]
                     << exit(FatalError);
@@ -1750,12 +1748,12 @@ CML::globalMeshData::globalMeshData(const polyMesh& mesh)
     processorPatchIndices_(0),
     processorPatchNeighbours_(0),
     nGlobalPoints_(-1),
-    sharedPointLabelsPtr_(NULL),
-    sharedPointAddrPtr_(NULL),
-    sharedPointGlobalLabelsPtr_(NULL),
+    sharedPointLabelsPtr_(nullptr),
+    sharedPointAddrPtr_(nullptr),
+    sharedPointGlobalLabelsPtr_(nullptr),
     nGlobalEdges_(-1),
-    sharedEdgeLabelsPtr_(NULL),
-    sharedEdgeAddrPtr_(NULL)
+    sharedEdgeLabelsPtr_(nullptr),
+    sharedEdgeAddrPtr_(nullptr)
 {
     updateMesh();
 }

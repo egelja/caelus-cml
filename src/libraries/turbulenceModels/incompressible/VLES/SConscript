@@ -7,11 +7,11 @@ target = 'incompressibleVLESModels'
 
 sources = Split("""
 VLESModel/VLESModel.cpp
-laminar/laminar.cpp
-realizableKE/realizableKE.cpp
-kOmegaSST/kOmegaSST.cpp
-kOmegaSSTCSModel/kOmegaSSTCSModel.cpp
-SpalartAllmaras/SpalartAllmaras.cpp
+laminar/VLESLaminar.cpp
+realizableKE/VLESRealizableKE.cpp
+kOmegaSST/VLESkOmegaSST.cpp
+kOmegaSSTCSModel/VLESkOmegaSSTCSModel.cpp
+SpalartAllmaras/VLESSpalartAllmaras.cpp
 """)
 
 caelus_inc = [

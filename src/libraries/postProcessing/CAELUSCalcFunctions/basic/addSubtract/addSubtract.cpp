@@ -104,7 +104,7 @@ void CML::calcTypes::addSubtract::writeAddSubtractFields
     }
     else
     {
-        FatalErrorIn("calcTypes::addSubtract::writeAddSubtractFields()")
+        FatalErrorInFunction
             << "Unable to read addSubtract field: " << addSubtractFieldName_
             << nl << exit(FatalError);
     }
@@ -158,7 +158,7 @@ void CML::calcTypes::addSubtract::writeAddSubtractValues
 
     if (!processed)
     {
-        FatalErrorIn("calcTypes::addSubtract::writeAddSubtractValue()")
+        FatalErrorInFunction
             << "Unable to process " << baseFieldName_
             << " + " << addSubtractValueStr_ << nl
             << "No call to addSubtract for fields of type "
@@ -221,7 +221,7 @@ void CML::calcTypes::addSubtract::preCalc
     }
     else
     {
-        FatalErrorIn("calcTypes::addSubtract::preCalc")
+        FatalErrorInFunction
             << "Invalid calcMode: " << calcModeName << nl
             << "    Valid calcModes are add and subtract" << nl
             << exit(FatalError);
@@ -237,7 +237,7 @@ void CML::calcTypes::addSubtract::preCalc
     }
     else
     {
-        FatalErrorIn("calcTypes::addSubtract::preCalc")
+        FatalErrorInFunction
             << "addSubtract requires either -field or -value option"
             << nl << exit(FatalError);
     }
@@ -277,7 +277,7 @@ void CML::calcTypes::addSubtract::calc
             }
             default:
             {
-                FatalErrorIn("calcTypes::addSubtract::calc")
+                FatalErrorInFunction
                     << "unknown calcType " << calcType_ << nl
                     << abort(FatalError);
             }
@@ -285,7 +285,7 @@ void CML::calcTypes::addSubtract::calc
     }
     else
     {
-        FatalErrorIn("calcTypes::addSubtract::calc")
+        FatalErrorInFunction
             << "Unable to read base field: " << baseFieldName_
             << nl << exit(FatalError);
     }

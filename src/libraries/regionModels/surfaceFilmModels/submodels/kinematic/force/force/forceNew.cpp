@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ namespace surfaceFilmModels
 
 autoPtr<force> force::New
 (
-    const surfaceFilmModel& model,
+    surfaceFilmRegionModel& model,
     const dictionary& dict,
     const word& modelType
 )
@@ -46,15 +46,8 @@ autoPtr<force> force::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "force::New"
-            "("
-                "const surfaceFilmModel&, "
-                "const dictionary&, "
-                "const word&"
-            ")"
-        )   << "Unknown force type " << modelType
+        FatalErrorInFunction
+            << "Unknown force type " << modelType
             << nl << nl << "Valid force types are:" << nl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);

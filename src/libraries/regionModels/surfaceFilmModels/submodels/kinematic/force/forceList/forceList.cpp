@@ -32,7 +32,7 @@ namespace surfaceFilmModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-forceList::forceList(const surfaceFilmModel& owner)
+forceList::forceList(surfaceFilmRegionModel& film)
 :
     PtrList<force>()
 {}
@@ -40,7 +40,7 @@ forceList::forceList(const surfaceFilmModel& owner)
 
 forceList::forceList
 (
-    const surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
@@ -55,7 +55,7 @@ forceList::forceList
 
         forAll(models, i)
         {
-            set(i, force::New(owner, dict, models[i]));
+            set(i, force::New(film, dict, models[i]));
         }
     }
     else

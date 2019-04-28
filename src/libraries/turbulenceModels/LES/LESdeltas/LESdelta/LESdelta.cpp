@@ -70,10 +70,8 @@ CML::autoPtr<CML::LESdelta> CML::LESdelta::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "LESdelta::New(const fvMesh&, const dictionary&)"
-        )   << "Unknown LESdelta type "
+        FatalErrorInFunction
+            << "Unknown LESdelta type "
             << deltaType << nl << nl
             << "Valid LESdelta types are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -111,10 +109,8 @@ CML::autoPtr<CML::LESdelta> CML::LESdelta::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalErrorIn
-            (
-                "LESdelta::New(const fvMesh&, const dictionary&)"
-            )   << "Unknown LESdelta type "
+            FatalErrorInFunction
+                << "Unknown LESdelta type "
                 << deltaType << nl << nl
                 << "Valid LESdelta types are :" << endl
                 << additionalConstructors.sortedToc()

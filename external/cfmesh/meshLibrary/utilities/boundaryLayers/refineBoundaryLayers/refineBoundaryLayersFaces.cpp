@@ -148,11 +148,8 @@ void refineBoundaryLayers::refineFace
             }
             else
             {
-                FatalErrorIn
-                (
-                    "void refineBoundaryLayers::refineFace(const face&,"
-                    " const FixedList<label, 2>&, DynList<DynList<label, 4> >&)"
-                ) << "More than two split directions for a face"
+                FatalErrorInFunction
+                  << "More than two split directions for a face"
                   << abort(FatalError);
             }
         }
@@ -184,11 +181,8 @@ void refineBoundaryLayers::refineFace
         Pout << "Dir1 " << dir1 << endl;
         Pout << "dir1Edges " << dir1Edges << endl;
 
-        FatalErrorIn
-        (
-            "void refineBoundaryLayers::refineFace(const face&,"
-            " const FixedList<label, 2>&, DynList<DynList<label, 4> >&)"
-        ) << "Cannot find split edges for a face" << abort(FatalError);
+        FatalErrorInFunction
+            << "Cannot find split edges for a face" << abort(FatalError);
     }
 
     //- in case of only one refinement direction, it must direction 0

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -95,6 +95,7 @@ public:
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -105,6 +106,7 @@ public:
             virtual scalar massAdd
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
             ) const;
 };
@@ -163,6 +165,7 @@ template<class CloudType>
 CML::forceSuSp CML::VirtualMassForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
@@ -170,7 +173,7 @@ CML::forceSuSp CML::VirtualMassForce<CloudType>::calcCoupled
 ) const
 {
     forceSuSp value =
-        PressureGradientForce<CloudType>::calcCoupled(p, dt, mass, Re, muc);
+        PressureGradientForce<CloudType>::calcCoupled(p, td, dt, mass, Re, muc);
 
     value.Su() *= Cvm_;
 
@@ -182,10 +185,11 @@ template<class CloudType>
 CML::scalar CML::VirtualMassForce<CloudType>::massAdd
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar mass
 ) const
 {
-    return mass*p.rhoc()/p.rho()*Cvm_;
+    return mass*td.rhoc()/p.rho()*Cvm_;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

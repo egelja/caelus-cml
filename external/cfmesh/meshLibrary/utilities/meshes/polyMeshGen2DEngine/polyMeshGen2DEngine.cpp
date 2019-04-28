@@ -116,10 +116,8 @@ void polyMeshGen2DEngine::findZMinPointLabels() const
 
     if( 2 * counter != zMinPoints.size() )
     {
-        FatalErrorIn
-        (
-            "void polyMeshGen2DEngine::findZMinPointLabels()"
-        ) << "The number of points at smallest z coordinate is"
+        FatalErrorInFunction
+          << "The number of points at smallest z coordinate is"
           << " not half of the total number of points."
           << " This is not a 2D mesh or is not aligned with the z axis"
           << exit(FatalError);
@@ -164,10 +162,8 @@ void polyMeshGen2DEngine::findZMinOffsetPoints() const
         }
         else
         {
-            FatalErrorIn
-            (
-                "void polyMeshGen2DEngine::findZMinOffsetPoints()"
-            ) << "This cannot be a 2D mesh" << exit(FatalError);
+            FatalErrorInFunction
+              << "This cannot be a 2D mesh" << exit(FatalError);
         }
     }
 }
@@ -208,10 +204,8 @@ void polyMeshGen2DEngine::findZMaxPointLabels() const
 
     if( 2 * counter != zMaxPoints.size() )
     {
-        FatalErrorIn
-        (
-            "void polyMeshGen2DEngine::findZMaxPointLabels()"
-        ) << "The number of points at largest z coordinate is"
+        FatalErrorInFunction
+          << "The number of points at largest z coordinate is"
           << " not half of the total number of points."
           << " This is not a 2D mesh or is not aligned with the z axis"
           << exit(FatalError);
@@ -256,10 +250,8 @@ void polyMeshGen2DEngine::findZMaxOffsetPoints() const
         }
         else
         {
-            FatalErrorIn
-            (
-                "void polyMeshGen2DEngine::findZMaxOffsetPoints()"
-            ) << "This cannot be a 2D mesh" << exit(FatalError);
+            FatalErrorInFunction
+              << "This cannot be a 2D mesh" << exit(FatalError);
         }
     }
 }
@@ -270,14 +262,14 @@ polyMeshGen2DEngine::polyMeshGen2DEngine(const polyMeshGen& mesh)
 :
     mesh_(mesh),
     bb_(),
-    activeFacePtr_(NULL),
-    activeFaceLabelsPtr_(NULL),
-    zMinPointPtr_(NULL),
-    zMinPointLabelsPtr_(NULL),
-    zMinToZMaxPtr_(NULL),
-    zMaxPointPtr_(NULL),
-    zMaxPointLabelsPtr_(NULL),
-    zMaxToZMinPtr_(NULL)
+    activeFacePtr_(nullptr),
+    activeFaceLabelsPtr_(nullptr),
+    zMinPointPtr_(nullptr),
+    zMinPointLabelsPtr_(nullptr),
+    zMinToZMaxPtr_(nullptr),
+    zMaxPointPtr_(nullptr),
+    zMaxPointLabelsPtr_(nullptr),
+    zMaxToZMinPtr_(nullptr)
 {
     const pointFieldPMG& points = mesh_.points();
 

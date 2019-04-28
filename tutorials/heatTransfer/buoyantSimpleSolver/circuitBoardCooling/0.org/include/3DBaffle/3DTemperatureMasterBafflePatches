@@ -1,0 +1,66 @@
+/*---------------------------------------------------------------------------*
+Caelus 9.04
+Web:   www.caelus-cml.com
+\*---------------------------------------------------------------------------*/
+
+T
+{
+    type                compressible::thermalBaffle;
+    kappaMethod         fluidThermo;
+    value               uniform 300;
+
+    regionName          baffle3DRegion;
+    active              yes;
+
+    // Solid thermo
+    thermoType
+    {
+        type            heSolidThermo;
+        mixture         pureMixture;
+        transport       constIso;
+        thermo          hConst;
+        equationOfState rhoConst;
+        specie          specie;
+        energy          sensibleEnthalpy;
+    }
+
+    mixture
+    {
+        specie
+        {
+            molWeight       20;
+        }
+        transport
+        {
+            kappa           0.01;
+        }
+        thermodynamics
+        {
+            Hf              0;
+            Cp              15;
+        }
+        equationOfState
+        {
+            rho             80;
+        }
+    }
+
+    radiation
+    {
+        radiationModel  opaqueSolid;
+        absorptionEmissionModel none;
+        scatterModel    none;
+    }
+
+    // New fvMesh (region) information
+    extrudeModel        linearNormal;
+    nLayers             50;
+    expansionRatio      1;
+    columnCells         false; //3D
+    linearNormalCoeffs
+    {
+        thickness           0.02;
+    }
+}
+
+// ************************************************************************* //

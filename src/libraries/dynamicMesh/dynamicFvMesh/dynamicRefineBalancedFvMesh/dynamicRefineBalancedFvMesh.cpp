@@ -260,7 +260,7 @@ CML::dynamicRefineBalancedFvMesh::dynamicRefineBalancedFvMesh
 )
 :
     dynamicRefineFvMesh(io),
-    internalRefinementFieldPtr_(NULL),
+    internalRefinementFieldPtr_(nullptr),
     gradFields_(),
     refinedRegions_(),
     enableRefinementControl_(false),

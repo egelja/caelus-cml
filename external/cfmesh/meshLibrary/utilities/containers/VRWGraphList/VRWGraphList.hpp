@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -41,6 +42,12 @@ SourceFiles
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class VRWGraphList;
+
+Ostream& operator<<(Ostream&, const VRWGraphList&);
 
 /*---------------------------------------------------------------------------*\
                            Class VRWGraphList Declaration
@@ -143,30 +150,21 @@ inline void CML::VRWGraphList::checkIndex
 {
     if( (i < 0) || (i >= rows_.size()) )
     {
-        FatalErrorIn
-        (
-            "void CML::VRWGraphList<T,width>::"
-            "checkIndex(const label i, const label j, const label k) const"
-        ) << "Position index " << CML::label(i)
+        FatalErrorInFunction
+            << "Position index " << CML::label(i)
             << " is not in range " << CML::label(0)
             << " and " << rows_.size() << abort(FatalError);
     }
     
     if( (j < 0) || (j >= rows_[i].size()) )
-        FatalErrorIn
-        (
-            "void CML::VRWGraphList<T,width>::"
-            "checkIndex(label const i, const label j, const label k) const"
-        ) << "Row index " << CML::label(j)
+        FatalErrorInFunction
+            << "Row index " << CML::label(j)
             << " is not in range " << CML::label(0)
             << " and " << rows_[i].size() << abort(FatalError);
     
     if( (k < 0) || (k >= data_.sizeOfRow(rows_[i].start()+j)) )
-        FatalErrorIn
-        (
-            "void CML::VRWGraphList<T,width>::"
-            "checkIndex(label const i, const label j, const label k) const"
-        ) << "Data index " << CML::label(k)
+        FatalErrorInFunction
+            << "Data index " << CML::label(k)
             << " is not in range " << CML::label(0)
             << " and " << data_.sizeOfRow(rows_[i].start()+j)
             << abort(FatalError);

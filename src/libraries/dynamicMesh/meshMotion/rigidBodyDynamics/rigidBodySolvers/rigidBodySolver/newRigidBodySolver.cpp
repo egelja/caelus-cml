@@ -38,11 +38,7 @@ CML::autoPtr<CML::RBD::rigidBodySolver> CML::RBD::rigidBodySolver::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "RBD::rigidBodySolver::New"
-            "(rigidBodyMotion&, const dictionary&)"
-        )
+        FatalErrorInFunction
             << "Unknown rigidBodySolverType type "
             << rigidBodySolverType << endl << endl
             << "Valid rigidBodySolver types are : " << endl

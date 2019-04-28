@@ -65,9 +65,9 @@ CML::solvePDECommon::solvePDECommon
     if (!isA<polyMesh>(obr))
     {
         active_=false;
-        WarningIn("solvePDECommon::solvePDECommon")
+        WarningInFunction
             << "Not a polyMesh. Nothing I can do"
-                << endl;
+            << endl;
     }
 }
 
@@ -83,7 +83,7 @@ CML::fv::optionList &CML::solvePDECommon::fvOptions() const
     } else {
         if(!warnedAboutMissingOptionList_) {
             const_cast<solvePDECommon&>(*this).warnedAboutMissingOptionList_=true;
-            WarningIn("CML::solvePDECommon::fvOptions()")
+            WarningInFunction
                  << "No 'fvOptions' found. Returning dummy (no further warnings"
                  << endl;
         }
@@ -140,10 +140,10 @@ void CML::solvePDECommon::read(const dictionary& dict)
             if(dict.found("relaxUnsteady")) {
                 relaxUnsteady_=readBool(dict.lookup("relaxUnsteady"));
             } else {
-                WarningIn("solvePDECommon::read(const dictionary& dict)")
+                WarningInFunction
                     << "If you want the unsteady run to use relaxation set "
-                        << "'relaxUnsteady true;' in " << dict.name()
-                        << endl;
+                    << "'relaxUnsteady true;' in " << dict.name()
+                    << endl;
                 relaxUnsteady_=false;
             }
         }
@@ -151,11 +151,11 @@ void CML::solvePDECommon::read(const dictionary& dict)
             if(dict.found("relaxLastIteration")) {
                 relaxLastIteration_=readBool(dict.lookup("relaxLastIteration"));
             } else {
-                WarningIn("solvePDECommon::read(const dictionary& dict)")
+                WarningInFunction
                     << "If in case of relaxation you want to relax the last "
-                        << "iteration as well set "
-                        << "'relaxLastIteration true;' in " << dict.name()
-                        << endl;
+                    << "iteration as well set "
+                    << "'relaxLastIteration true;' in " << dict.name()
+                    << endl;
                 relaxLastIteration_=false;
             }
         }

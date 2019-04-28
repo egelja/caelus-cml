@@ -285,7 +285,7 @@ bool CML::readAndUpdateFields::loadField
          && fieldHeader.headerClassName() == sfType::typeName
         )
         {
-            WarningIn("CML::readAndUpdateFields::loadField")
+            WarningInFunction
                 << "Field " << fieldName << " is a "
                     << sfType::typeName
                     << " and surface-fields don't support correctBoundaryConditions"

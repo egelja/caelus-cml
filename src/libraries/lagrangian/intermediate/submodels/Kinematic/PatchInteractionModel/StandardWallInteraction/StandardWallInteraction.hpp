@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,19 +22,22 @@ Class
     CML::StandardWallInteraction
 
 Description
-    Wall interaction model. Three choices:
-    - rebound - optionally specify elasticity and resitution coefficients
-    - stick   - particles assigined zero velocity
-    - escape  - remove particle from the domain
+    Wall interaction model.
+
+    Three choices:
+      - rebound - optionally specify elasticity and restitution coefficients
+      - stick   - particles assigned zero velocity
+      - escape  - remove particle from the domain
 
     Example usage:
-
-        StandardWallInteractionCoeffs
-        {
-            type        rebound; // stick, escape
-            e           1;       // optional - elasticity coeff
-            mu          0;       // optional - restitution coeff
-        }
+    \verbatim
+    StandardWallInteractionCoeffs
+    {
+        type        rebound; // stick, escape
+        e           1;       // optional - elasticity coeff
+        mu          0;       // optional - restitution coeff
+    }
+    \endverbatim
 
 \*---------------------------------------------------------------------------*/
 
@@ -122,9 +125,7 @@ public:
         (
             typename CloudType::parcelType& p,
             const polyPatch& pp,
-            bool& keepParticle,
-            const scalar trackFraction,
-            const tetIndices& tetIs
+            bool& keepParticle
         );
 
 
@@ -168,14 +169,8 @@ CML::StandardWallInteraction<CloudType>::StandardWallInteraction
         {
             const word interactionTypeName(this->coeffDict().lookup("type"));
 
-            FatalErrorIn
-            (
-                "StandardWallInteraction<CloudType>::StandardWallInteraction"
-                "("
-                    "const dictionary&, "
-                    "CloudType&"
-                ")"
-            )   << "Unknown interaction result type "
+            FatalErrorInFunction
+                << "Unknown interaction result type "
                 << interactionTypeName
                 << ". Valid selections are:" << this->interactionTypeNames_
                 << endl << exit(FatalError);
@@ -189,9 +184,7 @@ CML::StandardWallInteraction<CloudType>::StandardWallInteraction
             break;
         }
         default:
-        {
-            // do nothing
-        }
+        {}
     }
 }
 
@@ -227,9 +220,7 @@ bool CML::StandardWallInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
-    bool& keepParticle,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    bool& keepParticle
 )
 {
     vector& U = p.U();
@@ -240,19 +231,24 @@ bool CML::StandardWallInteraction<CloudType>::correct
     {
         switch (interactionType_)
         {
+            case PatchInteractionModel<CloudType>::itNone:
+            {
+                return false;
+            }
             case PatchInteractionModel<CloudType>::itEscape:
             {
                 keepParticle = false;
                 active = false;
-                U = vector::zero;
+                U = Zero;
                 nEscape_++;
+                massEscape_ += p.mass()*p.nParticle();
                 break;
             }
             case PatchInteractionModel<CloudType>::itStick:
             {
                 keepParticle = true;
                 active = false;
-                U = vector::zero;
+                U = Zero;
                 nStick_++;
                 break;
             }
@@ -264,7 +260,7 @@ bool CML::StandardWallInteraction<CloudType>::correct
                 vector nw;
                 vector Up;
 
-                this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
+                this->owner().patchData(p, pp, nw, Up);
 
                 // Calculate motion relative to patch velocity
                 U -= Up;
@@ -286,17 +282,8 @@ bool CML::StandardWallInteraction<CloudType>::correct
             }
             default:
             {
-                FatalErrorIn
-                (
-                    "bool StandardWallInteraction<CloudType>::correct"
-                    "("
-                        "typename CloudType::parcelType&, "
-                        "const polyPatch&, "
-                        "bool& keepParticle, "
-                        "const scalar, "
-                        "const tetIndices&"
-                    ") const"
-                )   << "Unknown interaction type "
+                FatalErrorInFunction
+                    << "Unknown interaction type "
                     << this->interactionTypeToWord(interactionType_)
                     << "(" << interactionType_ << ")" << endl
                     << abort(FatalError);
@@ -329,19 +316,12 @@ void CML::StandardWallInteraction<CloudType>::info(Ostream& os)
         << "      - escape                      = " << npe << ", " << mpe << nl
         << "      - stick                       = " << nps << ", " << mps << nl;
 
-    if (this->outputTime())
+    if (this->writeTime())
     {
         this->setModelProperty("nEscape", npe);
-        nEscape_ = 0;
-
         this->setModelProperty("massEscape", mpe);
-        massEscape_ = 0.0;
-
         this->setModelProperty("nStick", nps);
-        nStick_ = 0;
-
         this->setModelProperty("massStick", mps);
-        massStick_ = 0.0;
     }
 }
 

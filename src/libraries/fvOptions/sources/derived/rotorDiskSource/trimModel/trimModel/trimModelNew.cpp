@@ -38,10 +38,8 @@ CML::autoPtr<CML::trimModel> CML::trimModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "trimModel::New(const rotorDiskSource&, const dictionary&)"
-        )   << "Unknown " << typeName << " type "
+        FatalErrorInFunction
+            << "Unknown " << typeName << " type "
             << modelType << nl << nl
             << "Valid " << typeName << " types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

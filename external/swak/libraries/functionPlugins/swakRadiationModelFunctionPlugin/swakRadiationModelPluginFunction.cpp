@@ -32,6 +32,9 @@ Contributors/Copyright:
 
 #include "addToRunTimeSelectionTable.hpp"
 
+#include "sootModel.hpp"
+#include "absorptionEmissionModel.hpp"
+
 namespace CML {
 
 defineTypeNameAndDebug(swakRadiationModelPluginFunction,0);
@@ -119,7 +122,8 @@ public:                                                            \
         result().setObjectResult(                                  \
             autoPtr<resultType>(                                   \
                 new resultType(                                    \
-                    radiation().funcName()                            \
+                    #funcName "_rad",                               \
+                    radiation().funcName()                          \
                 )                                                  \
             )                                                      \
         );                                                         \
@@ -217,6 +221,34 @@ public:
 };
 defineTypeNameAndDebug(swakRadiationModelPluginFunction_radSource,0);
 addNamedToRunTimeSelectionTable(FieldValuePluginFunction,swakRadiationModelPluginFunction_radSource,name,radiation_radSource);
+
+    // Values of the sootModel
+class swakRadiationModelPluginFunction_soot
+: public swakRadiationModelPluginFunction
+{
+public:
+    TypeName("swakRadiationModelPluginFunction_soot");
+    swakRadiationModelPluginFunction_soot (
+        const FieldValueExpressionDriver &parentDriver,
+        const word &name
+    ): swakRadiationModelPluginFunction(
+        parentDriver,
+        name,
+        "volScalarField"
+    ) {}
+    void doEvaluation() {
+        result().setObjectResult(
+            autoPtr<volScalarField>(
+                new volScalarField(
+                    "soot_rad",
+                    radiation().soot().soot()
+                )
+            )
+        );
+    }
+};
+defineTypeNameAndDebug(swakRadiationModelPluginFunction_soot,0);
+addNamedToRunTimeSelectionTable(FieldValuePluginFunction,swakRadiationModelPluginFunction_soot,name,radiation_soot);
 
 } // namespace
 

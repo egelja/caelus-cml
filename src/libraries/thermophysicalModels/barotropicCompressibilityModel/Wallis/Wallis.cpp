@@ -48,10 +48,30 @@ CML::compressibilityModels::Wallis::Wallis
 )
 :
     barotropicCompressibilityModel(compressibilityProperties, gamma, psiName),
-    psiv_(compressibilityProperties_.lookup("psiv")),
-    psil_(compressibilityProperties_.lookup("psil")),
-    rhovSat_(compressibilityProperties_.lookup("rhovSat")),
-    rholSat_(compressibilityProperties_.lookup("rholSat"))
+    psiv_
+    (
+        "psiv",
+        dimCompressibility,
+        compressibilityProperties_.lookup("psiv")
+    ),
+    psil_
+    (
+        "psil",
+        dimCompressibility,
+        compressibilityProperties_.lookup("psil")
+    ),
+    rhovSat_
+    (
+        "rhovSat",
+        dimDensity,
+        compressibilityProperties_.lookup("rhovSat")
+    ),
+    rholSat_
+    (
+        "rholSat",
+        dimDensity,
+        compressibilityProperties_.lookup("rholSat")
+    )
 {
     correct();
 }
@@ -81,6 +101,3 @@ bool CML::compressibilityModels::Wallis::read
 
     return true;
 }
-
-
-// ************************************************************************* //

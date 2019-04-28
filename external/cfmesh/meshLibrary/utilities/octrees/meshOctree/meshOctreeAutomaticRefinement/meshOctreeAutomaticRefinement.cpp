@@ -49,11 +49,8 @@ const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const meshOctreeAddressing& meshOctreeAutomaticRefinement"
-                "::octreeAddressing() const"
-            ) << "Cannot calculate addressing!" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate addressing!" << abort(FatalError);
         # endif
 
         createOctreeAddressing();
@@ -73,11 +70,8 @@ const triSurfacePartitioner& meshOctreeAutomaticRefinement::partitioner() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const triSurfacePartitioner& meshOctreeAutomaticRefinement"
-                "::partitioner() const"
-            ) << "Cannot calculate addressing!" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate addressing!" << abort(FatalError);
         # endif
 
         createSurfacePartitioner();
@@ -98,11 +92,8 @@ const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const triSurfaceCurvatureEstimator& "
-                "meshOctreeAutomaticRefinement::curvature() const"
-            ) << "Cannot calculate addressing!" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate addressing!" << abort(FatalError);
         # endif
 
         createCurvatureEstimator();
@@ -164,9 +155,9 @@ meshOctreeAutomaticRefinement::meshOctreeAutomaticRefinement
     meshDict_(dict),
     useDATABoxes_(useDATABoxes),
     hexRefinement_(false),
-    octreeAddressingPtr_(NULL),
-    partitionerPtr_(NULL),
-    curvaturePtr_(NULL),
+    octreeAddressingPtr_(nullptr),
+    partitionerPtr_(nullptr),
+    curvaturePtr_(nullptr),
     maxRefLevel_(0)
 {
     if( !useDATABoxes_ && dict.found("keepCellsIntersectingBoundary") )

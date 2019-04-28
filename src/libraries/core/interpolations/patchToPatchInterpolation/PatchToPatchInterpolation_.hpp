@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -170,11 +170,8 @@ public:
         {
             if (t < -VSMALL)
             {
-                FatalErrorIn
-                (
-                    "scalar PatchToPatchInterpolation::"
-                    "setProjectionTol(const scalar t)"
-                )   << "Negative projection tolerance.  This is not allowed."
+                FatalErrorInFunction
+                    << "Negative projection tolerance.  This is not allowed."
                     << abort(FatalError);
             }
 
@@ -322,12 +319,12 @@ PatchToPatchInterpolation<FromPatch, ToPatch>::PatchToPatchInterpolation
     toPatch_(toPatch),
     alg_(alg),
     dir_(dir),
-    pointAddressingPtr_(NULL),
-    pointWeightsPtr_(NULL),
-    pointDistancePtr_(NULL),
-    faceAddressingPtr_(NULL),
-    faceWeightsPtr_(NULL),
-    faceDistancePtr_(NULL)
+    pointAddressingPtr_(nullptr),
+    pointWeightsPtr_(nullptr),
+    pointDistancePtr_(nullptr),
+    faceAddressingPtr_(nullptr),
+    faceWeightsPtr_(nullptr),
+    faceDistancePtr_(nullptr)
 {}
 
 
@@ -733,11 +730,8 @@ PatchToPatchInterpolation<FromPatch, ToPatch>::pointInterpolate
 {
     if (pf.size() != fromPatch_.nPoints())
     {
-        FatalErrorIn
-        (
-            "PatchToPatchInterpolation::pointInterpolate"
-            "(const Field<Type> pf)"
-        )   << "given field does not correspond to patch. Patch size: "
+        FatalErrorInFunction
+            << "given field does not correspond to patch. Patch size: "
             << fromPatch_.nPoints() << " field size: " << pf.size()
             << abort(FatalError);
     }
@@ -805,11 +799,8 @@ PatchToPatchInterpolation<FromPatch, ToPatch>::faceInterpolate
 {
     if (ff.size() != fromPatch_.size())
     {
-        FatalErrorIn
-        (
-            "PatchToPatchInterpolation::faceInterpolate"
-            "(const Field<Type> ff)"
-        )   << "given field does not correspond to patch. Patch size: "
+        FatalErrorInFunction
+            << "given field does not correspond to patch. Patch size: "
             << fromPatch_.size() << " field size: " << ff.size()
             << abort(FatalError);
     }

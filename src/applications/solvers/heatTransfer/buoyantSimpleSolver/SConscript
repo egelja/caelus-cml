@@ -16,6 +16,7 @@ caelus_inc = [
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'turbulenceModels/compressible/RAS/lnInclude',
 'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/radiation/lnInclude',
 'fvOptions/lnInclude',
 'sampling/lnInclude'
 ]
@@ -24,8 +25,9 @@ caelus_libs = [
 'core',
 'compressibleTurbulenceModel',
 'compressibleRASModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'turbulenceDerivedFvPatchFields',
+'radiationModels',
 'specie',
 'fvOptions',
 'sampling'

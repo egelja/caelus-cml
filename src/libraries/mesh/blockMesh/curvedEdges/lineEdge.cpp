@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,7 +61,7 @@ CML::point CML::lineEdge::position(const scalar lambda) const
 {
     if (lambda < 0 || lambda > 1)
     {
-        FatalErrorIn("lineEdge::position(const scalar)")
+        FatalErrorInFunction
             << "Parameter out of range, lambda = " << lambda
             << abort(FatalError);
     }

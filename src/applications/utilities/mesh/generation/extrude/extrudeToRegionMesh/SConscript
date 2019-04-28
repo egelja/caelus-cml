@@ -7,12 +7,12 @@ Import('env')
 target = 'extrudeToRegionMesh'
 
 sources = Split("""
-createShellMesh.cpp
 extrudeToRegionMesh.cpp
 """)
 
 caelus_inc = [
-'dynamicMesh/dynamicMesh/lnInclude'
+'dynamicMesh/dynamicMesh/lnInclude',
+'mesh/extrudeModel/lnInclude'
 ]
 
 caelus_libs = [

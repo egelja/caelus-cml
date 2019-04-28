@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2016 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
@@ -168,12 +168,8 @@ inline CML::quaternion::quaternion
             break;
 
         default:
-            FatalErrorIn(
-            "CML::quaternion::quaternion"
-            "("
-            "    const rotationSequence rs,"
-            "    const vector& angles"
-            ")") << "Unknown rotation sequence " << rs << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown rotation sequence " << rs << abort(FatalError);
             break;
     }
 }
@@ -546,12 +542,8 @@ inline CML::vector CML::quaternion::eulerAngles
             );
             break;
         default:
-            FatalErrorIn(
-            "CML::quaternion::eulerAngles"
-            "("
-            "    const rotationSequence rs"
-            ")"
-            ) << "Unknown rotation sequence " << rs << abort(FatalError);
+            FatalErrorInFunction
+                << "Unknown rotation sequence " << rs << abort(FatalError);
             return vector::zero;
             break;
     }

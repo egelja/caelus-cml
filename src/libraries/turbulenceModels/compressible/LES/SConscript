@@ -7,22 +7,25 @@ target = 'compressibleLESModels'
 
 sources = Split("""
 compressibleLESdelta/compressibleLESdelta.cpp
-vanDriestDelta/vanDriestDelta.cpp
-LESModel/LESModel.cpp
-GenEddyVisc/GenEddyVisc.cpp
-GenSGSStress/GenSGSStress.cpp
-laminar/laminar.cpp
-coherentStructureModel/coherentStructureModel.cpp
-Smagorinsky/Smagorinsky.cpp
-oneEqEddy/oneEqEddy.cpp
-dynOneEqEddy/dynOneEqEddy.cpp
-WALE/WALE.cpp
-SpalartAllmarasDES/SpalartAllmarasDES.cpp
-SpalartAllmarasDDES/SpalartAllmarasDDES.cpp
-SpalartAllmarasIDDES/SpalartAllmarasIDDES.cpp
+vanDriestDelta/compressiblevanDriestDelta.cpp
+LESModel/compressibleLESModel.cpp
+GenEddyVisc/compressibleGenEddyVisc.cpp
+GenSGSStress/compressibleGenSGSStress.cpp
+laminar/compressibleLESLaminar.cpp
+coherentStructureModel/compressibleCoherentStructureModel.cpp
+Smagorinsky/compressibleSmagorinsky.cpp
+oneEqEddy/compressibleOneEqEddy.cpp
+dynOneEqEddy/compressibleDynOneEqEddy.cpp
+WALE/compressibleWALE.cpp
+SpalartAllmarasDES/compressibleSpalartAllmarasDES.cpp
+SpalartAllmarasDDES/compressibleSpalartAllmarasDDES.cpp
+SpalartAllmarasIDDES/compressibleSpalartAllmarasIDDES.cpp
+kOmegaSSTDES/compressiblekOmegaSSTDES.cpp
+kOmegaSSTDDES/compressiblekOmegaSSTDDES.cpp
+kOmegaSSTIDDES/compressiblekOmegaSSTIDDES.cpp
 derivedFvPatchFields/wallFunctions/muSgsWFs/muSgsUSpaldingWF/muSgsUSpaldingWFFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsWF/alphaSgsWFFvPatchScalarField.cpp
-derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsJayaWF/alphaSgsJayaWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsWF/compAlphaSgsWFFvPatchScalarField.cpp
+derivedFvPatchFields/wallFunctions/alphaSgsWFs/alphaSgsJayaWF/compAlphaSgsJayaWFFvPatchScalarField.cpp
 """)
 
 caelus_inc = [

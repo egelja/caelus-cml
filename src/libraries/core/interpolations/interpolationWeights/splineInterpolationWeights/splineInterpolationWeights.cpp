@@ -60,11 +60,8 @@ splineInterpolationWeights::splineInterpolationWeights
 
             if (mag(d-interval) > SMALL)
             {
-                WarningIn
-                (
-                    "splineInterpolationWeights::splineInterpolationWeights"
-                    "(const scalarField&)"
-                )   << "Spline interpolation only valid for constant intervals."
+                WarningInFunction
+                    << "Spline interpolation only valid for constant intervals."
                     << nl
                     << "Interval 0-1 : " << interval << nl
                     << "Interval " << i-1 << '-' << i << " : "

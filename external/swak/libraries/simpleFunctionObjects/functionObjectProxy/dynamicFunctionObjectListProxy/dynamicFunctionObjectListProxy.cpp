@@ -122,7 +122,7 @@ void dynamicFunctionObjectListProxy::initFunctions()
     }
 
     if(!dynamicDict_->found("functions")) {
-        FatalErrorIn("dynamicFunctionObjectListProxy::initFunctions()")
+        FatalErrorInFunction
             << "Dictionary for" << this->name()
                 << " does not have an entry 'functions'"
                 << endl
@@ -162,10 +162,8 @@ dynamicFunctionObjectListProxy::dynamicDictionaryProvider::New(
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "autoPtr<dynamicFunctionObjectListProxy::dynamicDictionaryProvider> dynamicFunctionObjectListProxy::dynamicDictionaryProvider::New"
-        )   << "Unknown dynamicFunctionObjectListProxy::dynamicDictionaryProvider type " << type
+        FatalErrorInFunction
+            << "Unknown dynamicFunctionObjectListProxy::dynamicDictionaryProvider type " << type
             << endl << endl
             << "Valid types are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()

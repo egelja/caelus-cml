@@ -47,23 +47,23 @@ defineRunTimeSelectionTable(CommonValueExpressionDriver, idName);
     // Currently not working
 bool CommonValueExpressionDriver::cacheSets_=true;
 
-const fvMesh *CommonValueExpressionDriver::defaultMeshPtr_=NULL;
+const fvMesh *CommonValueExpressionDriver::defaultMeshPtr_=nullptr;
 
 const fvMesh &CommonValueExpressionDriver::getDefaultMesh()
 {
-    if(defaultMeshPtr_==NULL) {
-        FatalErrorIn("CommonValueExpressionDriver::getDefaultMesh()")
+    if(defaultMeshPtr_==nullptr) {
+        FatalErrorInFunction
             << "No default mesh set (value is NULL)" << endl
-                << "Try using the 'initSwakFunctionObject' to work   around this"
-                << endl
-                << abort(FatalError);
+            << "Try using the 'initSwakFunctionObject' to work   around this"
+            << endl
+            << abort(FatalError);
     }
     return *defaultMeshPtr_;
 }
 
 bool CommonValueExpressionDriver::resetDefaultMesh(const fvMesh &mesh)
 {
-    bool wasSet=defaultMeshPtr_!=NULL;
+    bool wasSet=defaultMeshPtr_!=nullptr;
 
     defaultMeshPtr_=&mesh;
 
@@ -72,7 +72,7 @@ bool CommonValueExpressionDriver::resetDefaultMesh(const fvMesh &mesh)
 
 bool CommonValueExpressionDriver::setUnsetDefaultMesh(const fvMesh &mesh)
 {
-    if(defaultMeshPtr_==NULL) {
+    if(defaultMeshPtr_==nullptr) {
         Info << "swak: Setting default mesh" << endl;
         defaultMeshPtr_=&mesh;
 
@@ -113,7 +113,7 @@ CommonValueExpressionDriver::CommonValueExpressionDriver(
     trace_scanning_ (orig.trace_scanning_),
     trace_parsing_ (orig.trace_parsing_),
     variableNameIdenticalToField_(orig.variableNameIdenticalToField_),
-    scanner_(NULL),
+    scanner_(nullptr),
     prevIterIsOldTime_(orig.prevIterIsOldTime_)
 {
     if(debug) {
@@ -141,7 +141,7 @@ CommonValueExpressionDriver::CommonValueExpressionDriver(
     variableNameIdenticalToField_(
         dict.lookupOrDefault("variableNameIdenticalToField",false)
     ),
-    scanner_(NULL),
+    scanner_(nullptr),
     prevIterIsOldTime_(dict.lookupOrDefault("prevIterIsOldTime",false))
 {
     debug=dict.lookupOrDefault<label>("debugCommonDriver",debug);
@@ -196,7 +196,7 @@ CommonValueExpressionDriver::CommonValueExpressionDriver(
     trace_scanning_ (false),
     trace_parsing_ (false),
     variableNameIdenticalToField_(false),
-    scanner_(NULL),
+    scanner_(nullptr),
     prevIterIsOldTime_(false)
 {
     setSearchBehaviour(
@@ -220,12 +220,12 @@ void CommonValueExpressionDriver::readVariablesAndTables(const dictionary &dict)
             &&
             storedVariables_.size()>0
         ) {
-            WarningIn("CommonValueExpressionDriver::readVariablesAndTables")
+            WarningInFunction
                 << "Context: " << contextString() << endl
                 << "Seems like 'storedVariables' was already read."
-                    << " No update from "
-                    << dict.lookup("storedVariables")
-                    << endl;
+                << " No update from "
+                << dict.lookup("storedVariables")
+                << endl;
         } else {
             storedVariables_=List<StoredExpressionResult>(
                 dict.lookup(
@@ -241,12 +241,12 @@ void CommonValueExpressionDriver::readVariablesAndTables(const dictionary &dict)
             &&
             delayedVariables_.size()>0
         ) {
-            WarningIn("CommonValueExpressionDriver::readVariablesAndTables")
+            WarningInFunction
                 << "Context: " << contextString() << endl
                 << "Seems like 'delayedVariables' was already read."
-                    << " No update from "
-                    << dict.lookup("delayedVariables")
-                    << endl;
+                << " No update from "
+                << dict.lookup("delayedVariables")
+                << endl;
         } else {
             List<DelayedExpressionResult> readDelays(
                 dict.lookup("delayedVariables")
@@ -389,10 +389,8 @@ autoPtr<CommonValueExpressionDriver> CommonValueExpressionDriver::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "autoPtr<CommonValueExpressionDriver> CommonValueExpressionDriver::New"
-        )   << "Unknown  CommonValueExpressionDriver type " << driverType
+        FatalErrorInFunction
+            << "Unknown  CommonValueExpressionDriver type " << driverType
             << endl << endl
             << "Valid valueTypes are :" << endl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -423,10 +421,8 @@ autoPtr<CommonValueExpressionDriver> CommonValueExpressionDriver::New
 
     if (cstrIter == idNameConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "autoPtr<CommonValueExpressionDriver> CommonValueExpressionDriver::New"
-        )   << "Unknown  CommonValueExpressionDriver type " << driverType
+        FatalErrorInFunction
+            << "Unknown  CommonValueExpressionDriver type " << driverType
             << endl << endl
             << "Valid valueTypes are :" << endl
             << idNameConstructorTablePtr_->sortedToc()
@@ -465,14 +461,14 @@ List<exprString> CommonValueExpressionDriver::readVariableStrings(
     }
 
     if(recursionDepth>maxVariableRecursionDepth_) {
-        FatalErrorIn("CommonValueExpressionDriver::readVariableStrings")
+        FatalErrorInFunction
             << "While reading variable list " << name << " in "
-                << dict.name() << "the maximum recursion depth "
-                << maxVariableRecursionDepth_ << " was exceeded." << nl
-                << "Probable cause is that variable lists are referencing "
-                << "each other in a circular fashion"
-                << endl
-                << exit(FatalError);
+            << dict.name() << "the maximum recursion depth "
+            << maxVariableRecursionDepth_ << " was exceeded." << nl
+            << "Probable cause is that variable lists are referencing "
+            << "each other in a circular fashion"
+            << endl
+            << exit(FatalError);
     }
 
     const entry &e=dict.lookupEntry(
@@ -524,11 +520,11 @@ List<exprString> CommonValueExpressionDriver::readVariableStrings(
             );
         }
     } else {
-        FatalErrorIn("CommonValueExpressionDriver::readVariableStrings(const dictionary &dict)")
+        FatalErrorInFunction
             << " Entry '"<< name << "' must in dictionary "
-                << dict.name() << " either be a string or a list of strings"
-                << endl
-                << exit(FatalError);
+            << dict.name() << " either be a string or a list of strings"
+            << endl
+            << exit(FatalError);
 
         return List<exprString>();
     }
@@ -565,12 +561,12 @@ List<string> CommonValueExpressionDriver::expandIncludeStringList(
         while(start<o.length()) {
             end=o.find(';',start);
             if(end==std::string::npos) {
-            FatalErrorIn("CommonValueExpressionDriver::expandIncludeStringList")
+            FatalErrorInFunction
                 << "No terminating ';' found in expression '"
-                    << o.substr(start) << "' of dictionary "
-                    << dict.name() << "\n"
-                    << endl
-                    << exit(FatalError);
+                << o.substr(start) << "' of dictionary "
+                << dict.name() << "\n"
+                << endl
+                << exit(FatalError);
             }
             string sub=o.substr(start,end-start+1);
 
@@ -630,11 +626,11 @@ string getEntryString(
         true //  pattern matching
     );
     if(e.isDict()) {
-        FatalErrorIn("getEntryString")
+        FatalErrorInFunction
             << "Entry " << replace << " found in dictionary "
-                << dict.name() << " but is a dictionary"
-                << endl
-                << exit(FatalError);
+            << dict.name() << " but is a dictionary"
+            << endl
+            << exit(FatalError);
     }
     return entryToExpression::fromEntry(e);
 }
@@ -650,11 +646,11 @@ exprString CommonValueExpressionDriver::expandDictVariables(
     while(result.find('$')!=std::string::npos) {
         std::string::size_type dollarPos=result.find('$');
         if(dollarPos+1>=result.size()) {
-            FatalErrorIn("CommonValueExpressionDriver::expandDictVariables")
+            FatalErrorInFunction
                 << "'$' found at end in " << result << "(originally "
-                    << orig << ")"
-                    << endl
-                    << exit(FatalError);
+                << orig << ")"
+                << endl
+                << exit(FatalError);
         }
         std::string::size_type endPos=std::string::npos;
 
@@ -662,11 +658,11 @@ exprString CommonValueExpressionDriver::expandDictVariables(
             // "protected pattern"
             endPos=result.find(']',dollarPos+1);
             if(endPos==std::string::npos) {
-                FatalErrorIn("CommonValueExpressionDriver::expandDictVariables")
+                FatalErrorInFunction
                     << "No correct terminating ']' found in " << result
-                        << " (originally " << orig << ")"
-                        << endl
-                        << exit(FatalError);
+                    << " (originally " << orig << ")"
+                    << endl
+                    << exit(FatalError);
             }
         } else {
             // 'pure' name ... word
@@ -679,11 +675,11 @@ exprString CommonValueExpressionDriver::expandDictVariables(
                 endPos++;
             }
             if(endPos==dollarPos) {
-                FatalErrorIn("CommonValueExpressionDriver::expandDictVariables")
+                FatalErrorInFunction
                     << "Not a valid character after the $ in " <<result
-                        << "(originally " << orig << ")"
-                        << endl
-                        << exit(FatalError);
+                    << "(originally " << orig << ")"
+                    << endl
+                    << exit(FatalError);
             }
         }
 
@@ -698,11 +694,11 @@ exprString CommonValueExpressionDriver::expandDictVariables(
             if(replace[1]=='(') {
                 std::string::size_type closePos=replace.find(')');
                 if(closePos==std::string::npos) {
-                    FatalErrorIn("CommonValueExpressionDriver::expandDictVariables")
+                    FatalErrorInFunction
                         << "No closing ')' found in " << replace
-                            << " (" << orig << ")"
-                            << endl
-                            << exit(FatalError);
+                        << " (" << orig << ")"
+                        << endl
+                        << exit(FatalError);
                 }
                 castTo=replace.substr(2,closePos-2);
                 entryName=replace.substr(closePos+1,replace.length()-closePos-2);
@@ -883,12 +879,12 @@ tmp<vectorField> CommonValueExpressionDriver::composeVectorField(
         ||
         x.size() != z.size()
     ) {
-        FatalErrorIn("tmp<vectorField> CommonValueExpressionDriver::composeVectorField")
+        FatalErrorInFunction
             << "Context: " << contextString() << endl
             << "Sizes " << x.size() << " " << y.size() << " "
-                << z-size() << " of the components do not agree"
-                << endl
-                << abort(FatalError);
+            << z-size() << " of the components do not agree"
+            << endl
+            << abort(FatalError);
     }
 
     tmp<vectorField> result(
@@ -925,11 +921,11 @@ tmp<tensorField> CommonValueExpressionDriver::composeTensorField(
         ||
         xx.size() != zz.size()
     ) {
-        FatalErrorIn("tmp<vectorField> CommonValueExpressionDriver::composeVectorField")
+        FatalErrorInFunction
             << "Context: " << contextString() << endl
             << "Sizes of the components do not agree"
-                << endl
-                << abort(FatalError);
+            << endl
+            << abort(FatalError);
     }
 
     tmp<tensorField> result(
@@ -965,11 +961,11 @@ tmp<symmTensorField> CommonValueExpressionDriver::composeSymmTensorField(
         ||
         xx.size() != zz.size()
     ) {
-        FatalErrorIn("tmp<vectorField> CommonValueExpressionDriver::composeVectorField")
+        FatalErrorInFunction
             << "Context: " << contextString() << endl
             << "Sizes of the components do not agree"
-                << endl
-                << abort(FatalError);
+            << endl
+            << abort(FatalError);
     }
 
     tmp<symmTensorField> result(
@@ -1027,10 +1023,9 @@ ExpressionResult CommonValueExpressionDriver::getUniform(
 
 void CommonValueExpressionDriver::error (const std::string& m)
 {
-    FatalErrorIn("parsingValue")
-        //        << CML::args.executable()
-            << " Parser Error: " << m
-            << CML::exit(CML::FatalError);
+    FatalErrorInFunction
+        << " Parser Error: " << m
+        << CML::exit(CML::FatalError);
 }
 
 const Time &CommonValueExpressionDriver::runTime() const
@@ -1074,9 +1069,9 @@ tmp<scalarField> CommonValueExpressionDriver::makeRandomField(label seed) const
         seed=runTime().timeIndex()-seed;
     }
 
-    CML::Random rand(seed);
+    CML::Random rnd(seed);
     forAll(result(),i) {
-        result()[i]=rand.scalar01();
+        const_cast<scalar&>(result()[i]) = rnd.sample01<scalar>();
     }
 
     return result;
@@ -1126,9 +1121,9 @@ tmp<scalarField> CommonValueExpressionDriver::makeGaussRandomField(
         seed=runTime().timeIndex()-seed;
     }
 
-    CML::Random rand(seed);
+    CML::Random rnd(seed);
     forAll(result(),i) {
-        result()[i]=rand.GaussNormal();
+        const_cast<scalar&>(result()[i]) = rnd.sampleNormal<scalar>();
     }
 
     return result;
@@ -1259,15 +1254,15 @@ void CommonValueExpressionDriver::evaluateVariable(
     ) {
         const regIOobject &ob=mesh().lookupObject<regIOobject>(name);
 
-        WarningIn("CommonValueExpressionDriver::evaluateVariable")
+        WarningInFunction
             << "Context: " << contextString() << endl
             << "There is a field named " << name << " of type "
-                << ob.headerClassName() << " found which may be shadowed "
-                << "by the variable of the same name." << nl
-                << "This may lead to trouble" << nl
-                << "If this is OK set 'variableNameIdenticalToField'"
-                << " in the relevant parser" << nl
-                << endl;
+            << ob.headerClassName() << " found which may be shadowed "
+            << "by the variable of the same name." << nl
+            << "This may lead to trouble" << nl
+            << "If this is OK set 'variableNameIdenticalToField'"
+            << " in the relevant parser" << nl
+            << endl;
 
     }
 
@@ -1429,21 +1424,21 @@ void CommonValueExpressionDriver::addVariables(
     while(start<exprList.length()) {
         end=exprList.find(';',start);
         if(end==std::string::npos) {
-            FatalErrorIn("CommonValueExpressionDriver::addVariables(const string &exprList,bool clear)")
+            FatalErrorInFunction
                 << "Context: " << contextString() << endl
                 << "No terminating ';' found in expression '"
-                    << exprList.substr(start) << "'\n"
-                    << endl
-                    << exit(FatalError);
+                << exprList.substr(start) << "'\n"
+                << endl
+                << exit(FatalError);
         }
         std::string::size_type  eqPos=exprList.find('=',start);
         if(eqPos==std::string::npos || eqPos > end) {
-            FatalErrorIn("CommonValueExpressionDriver::addVariables(const string &exprList,bool clear)")
+            FatalErrorInFunction
                 << "Context: " << contextString() << endl
                 << "No '=' found in expression '"
-                    << exprList.substr(start,end-start) << "'\n"
-                    << endl
-                    << exit(FatalError);
+                << exprList.substr(start,end-start) << "'\n"
+                << endl
+                << exit(FatalError);
         }
         exprString expr(
             exprString::toExpr(
@@ -1455,12 +1450,12 @@ void CommonValueExpressionDriver::addVariables(
         if(startPos!=std::string::npos && startPos<eqPos) {
             std::string::size_type  endPos=exprList.find('}',start);
             if(endPos>=eqPos) {
-                FatalErrorIn("CommonValueExpressionDriver::addVariables")
+                FatalErrorInFunction
                     << "Context: " << contextString() << endl
                     << "No closing '}' found in "
-                        << exprList.substr(start,eqPos-start)
-                        << endl
-                        << exit(FatalError);
+                    << exprList.substr(start,eqPos-start)
+                    << endl
+                    << exit(FatalError);
             }
             word name(
                 string::validate<word>(
@@ -1539,10 +1534,10 @@ const fvMesh &CommonValueExpressionDriver::regionMesh
         &&
         readIfNecessary
     ) {
-        WarningIn("CommonValueExpressionDriver::regionMesh")
+        WarningInFunction
             << "Region " << dict.lookup("region")
-                << " not in memory. Trying to register it"
-                << endl;
+            << " not in memory. Trying to register it"
+            << endl;
 
         autoPtr<polyMesh> temporary(
             new fvMesh
@@ -2025,12 +2020,12 @@ tmp<scalarField> CommonValueExpressionDriver::weights(
         reduce(isCorrect,andOp<bool>());
         if(!isCorrect) {
             Pout << "Expected Size: " << size << " PointSize:" << pSize << endl;
-            FatalErrorIn("CommonValueExpressionDriver::weights()")
+            FatalErrorInFunction
                 << "Context: " << contextString() << endl
                 << "At least one processor wants the wrong field size. "
-                    << "Check above"
-                    << endl
-                    << exit(FatalError);
+                << "Check above"
+                << endl
+                << exit(FatalError);
         }
         // points have weight 1 per default
         tmp<scalarField> result(
@@ -2058,12 +2053,12 @@ bool CommonValueExpressionDriver::hasAlias(const word &name) const
 const word &CommonValueExpressionDriver::getAlias(const word &name) const
 {
     if(!aliases_.found(name)){
-        FatalErrorIn("CommonValueExpressionDriver::getAlias(const word &name) const")
+        FatalErrorInFunction
             << "Context: " << contextString() << endl
             << "No alias of name " << name << " found." << endl
-                << "Available aliases are " << aliases_.toc()
-                << endl
-                << exit(FatalError);
+            << "Available aliases are " << aliases_.toc()
+            << endl
+            << exit(FatalError);
         return word::null;
 
     } else {

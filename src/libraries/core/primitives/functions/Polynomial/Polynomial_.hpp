@@ -214,10 +214,8 @@ CML::Polynomial<PolySize>::Polynomial(const UList<scalar>& coeffs)
 {
     if (coeffs.size() != PolySize)
     {
-        FatalErrorIn
-        (
-            "Polynomial<PolySize>::Polynomial(const UList<scalar>&)"
-        )   << "Size mismatch: Needed " << PolySize
+        FatalErrorInFunction
+            << "Size mismatch: Needed " << PolySize
             << " but given " << coeffs.size()
             << nl << exit(FatalError);
     }
@@ -249,10 +247,8 @@ CML::Polynomial<PolySize>::Polynomial(const word& name, Istream& is)
 
     if (isName != name)
     {
-        FatalErrorIn
-        (
-            "Polynomial<PolySize>::Polynomial(const word&, Istream&)"
-        )   << "Expected polynomial name " << name << " but read " << isName
+        FatalErrorInFunction
+            << "Expected polynomial name " << name << " but read " << isName
             << nl << exit(FatalError);
     }
 
@@ -261,10 +257,8 @@ CML::Polynomial<PolySize>::Polynomial(const word& name, Istream& is)
 
     if (this->size() == 0)
     {
-        FatalErrorIn
-        (
-            "Polynomial<PolySize>::Polynomial(const word&, Istream&)"
-        )   << "Polynomial coefficients for entry " << isName
+        FatalErrorInFunction
+            << "Polynomial coefficients for entry " << isName
             << " are invalid (empty)" << nl << exit(FatalError);
     }
 }
@@ -291,7 +285,6 @@ CML::scalar CML::Polynomial<PolySize>::value(const scalar x) const
 {
     scalar val = this->v_[0];
 
-    // avoid costly pow() in calculation
     scalar powX = 1;
     for (label i=1; i<PolySize; ++i)
     {
@@ -315,7 +308,6 @@ CML::scalar CML::Polynomial<PolySize>::derivative(const scalar x) const
 
     if (PolySize > 1)
     {
-        // avoid costly pow() in calculation
         deriv += this->v_[1];
 
         scalar powX = 1;
@@ -342,7 +334,6 @@ CML::scalar CML::Polynomial<PolySize>::integral
     const scalar x2
 ) const
 {
-    // avoid costly pow() in calculation
     scalar powX1 = x1;
     scalar powX2 = x2;
 

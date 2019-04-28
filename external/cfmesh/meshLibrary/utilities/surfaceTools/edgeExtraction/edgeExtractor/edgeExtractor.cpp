@@ -654,10 +654,10 @@ edgeExtractor::edgeExtractor
 )
 :
     mesh_(mesh),
-    surfaceEnginePtr_(NULL),
+    surfaceEnginePtr_(nullptr),
     meshOctree_(octree),
-    surfPartitionerPtr_(NULL),
-    surfEdgeClassificationPtr_(NULL),
+    surfPartitionerPtr_(nullptr),
+    surfEdgeClassificationPtr_(nullptr),
     pointValence_(),
     pointPatch_(),
     facePatch_(),
@@ -877,11 +877,8 @@ void edgeExtractor::distributeBoundaryFaces()
         else
         {
             pointPatch_[bpI] = nPatches;
-            FatalErrorIn
-            (
-                "void meshSurfaceEdgeExtractorNonTopo::"
-                "distributeBoundaryFaces()"
-            ) << "Cannot distribute a boundary points " << bPoints[bpI]
+            FatalErrorInFunction
+                 << "Cannot distribute a boundary points " << bPoints[bpI]
                  << " into any surface patch!. Exiting.." << exit(FatalError);
         }
     }
@@ -912,11 +909,8 @@ void edgeExtractor::distributeBoundaryFaces()
         {
             facePatch_[bfI] = nPatches;
 
-            FatalErrorIn
-            (
-                "void meshSurfaceEdgeExtractorNonTopo::"
-                "distributeBoundaryFaces()"
-            ) << "Cannot distribute a face " << bFaces[bfI] << " into any "
+            FatalErrorInFunction
+                << "Cannot distribute a face " << bFaces[bfI] << " into any "
                 << "surface patch!. Exiting.." << exit(FatalError);
         }
     }
@@ -1393,11 +1387,8 @@ scalar edgeExtractor::calculateDeformationMetricForFace
 
     if( neiPatches.size() != faceEdges.sizeOfRow(bfI) )
     {
-        FatalErrorIn
-        (
-            "scalar edgeExtractor::calculateDeformationMetricForFace"
-            "(const label, const DynList<label>&, const label) const"
-        ) << "Number of neiPatches and faceEdge does not match for face "
+        FatalErrorInFunction
+          << "Number of neiPatches and faceEdge does not match for face "
           << bfI << abort(FatalError);
     }
 

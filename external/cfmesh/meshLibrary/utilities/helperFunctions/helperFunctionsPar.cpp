@@ -271,13 +271,8 @@ void exchangeMap
     }
     else
     {
-        FatalErrorIn
-        (
-            "template<class T, class ListType>"
-            "void exchangeMap"
-            "(const std::map<label, ListType>& m, LongList<T>& data,"
-            " const Pstream::commsTypes commsType)"
-        ) << "Unknown communication type" << exit(FatalError);
+        FatalErrorInFunction
+          << "Unknown communication type" << exit(FatalError);
     }
 
     # ifdef DEBUGExchangeMap

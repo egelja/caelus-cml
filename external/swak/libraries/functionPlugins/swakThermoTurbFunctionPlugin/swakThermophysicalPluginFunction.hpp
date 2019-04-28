@@ -48,6 +48,8 @@ namespace CML
 /*---------------------------------------------------------------------------*\
                            Class swakThermophysicalPluginFunction Declaration
 \*---------------------------------------------------------------------------*/
+
+template<class ThermoType>
 class swakThermophysicalPluginFunction
 :
     public FieldValuePluginFunction
@@ -58,9 +60,9 @@ class swakThermophysicalPluginFunction
     swakThermophysicalPluginFunction(const swakThermophysicalPluginFunction &);
 
 protected:
-    static const swakFluidThermoType &thermoInternal(const fvMesh &reg);
+    static const ThermoType &thermoInternal(const fvMesh &reg);
 
-    const swakFluidThermoType &thermo();
+    const ThermoType &thermo();
 
 public:
     swakThermophysicalPluginFunction(

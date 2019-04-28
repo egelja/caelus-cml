@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2105 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -44,7 +44,7 @@ void CML::primitiveMesh::calcFaceCentresAndAreas() const
     // if the pointer is already set
     if (faceCentresPtr_ || faceAreasPtr_)
     {
-        FatalErrorIn("primitiveMesh::calcFaceCentresAndAreas() const")
+        FatalErrorInFunction
             << "Face centres or face areas already calculated"
             << abort(FatalError);
     }

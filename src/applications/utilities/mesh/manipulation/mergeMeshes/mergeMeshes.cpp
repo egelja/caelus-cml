@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     Info<< "Master:      " << masterCase << "  region " << masterRegion << nl
         << "mesh to add: " << addCase    << "  region " << addRegion << endl;
 
-    #include "createTimes.hpp"
+    #include "createTimes_mergeMeshes.hpp"
 
     Info<< "Reading master mesh for time = " << runTimeMaster.timeName() << nl;
 

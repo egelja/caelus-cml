@@ -126,14 +126,8 @@ CML::displacementMotionSolver::displacementMotionSolver
 {
     if (points0_.size() != mesh.nPoints())
     {
-        FatalErrorIn
-        (
-            "displacementFvMotionSolver::displacementFvMotionSolver\n"
-            "(\n"
-            "    const polyMesh&,\n"
-            "    Istream&\n"
-            ")"
-        )   << "Number of points in mesh " << mesh.nPoints()
+        FatalErrorInFunction
+            << "Number of points in mesh " << mesh.nPoints()
             << " differs from number of points " << points0_.size()
             << " read from file "
             <<
@@ -216,11 +210,8 @@ void CML::displacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
         }
         else
         {
-            FatalErrorIn
-            (
-                "displacementLaplacianFvMotionSolver::updateMesh"
-                "(const mapPolyMesh& mpm)"
-            )   << "Cannot work out coordinates of introduced vertices."
+            FatalErrorInFunction
+                << "Cannot work out coordinates of introduced vertices."
                 << " New vertex " << pointI << " at coordinate "
                 << points[pointI] << exit(FatalError);
         }

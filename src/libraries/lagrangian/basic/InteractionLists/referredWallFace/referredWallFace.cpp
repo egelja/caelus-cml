@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,7 +27,7 @@ CML::referredWallFace::referredWallFace()
 :
     face(),
     pts_(),
-    patchI_()
+    patchi_()
 {}
 
 
@@ -35,24 +35,17 @@ CML::referredWallFace::referredWallFace
 (
     const face& f,
     const pointField& pts,
-    label patchI
+    label patchi
 )
 :
     face(f),
     pts_(pts),
-    patchI_(patchI)
+    patchi_(patchi)
 {
     if (this->size() != pts_.size())
     {
-        FatalErrorIn
-        (
-            "CML::referredWallFace::referredWallFace"
-            "("
-                "const face& f, "
-                "const pointField& pts, "
-                "label patchI"
-            ")"
-        )   << "Face and pointField are not the same size. " << nl << (*this)
+        FatalErrorInFunction
+            << "Face and pointField are not the same size. " << nl << (*this)
             << abort(FatalError);
     }
 }
@@ -62,17 +55,12 @@ CML::referredWallFace::referredWallFace(const referredWallFace& rWF)
 :
     face(rWF),
     pts_(rWF.pts_),
-    patchI_(rWF.patchI_)
+    patchi_(rWF.patchi_)
 {
     if (this->size() != pts_.size())
     {
-        FatalErrorIn
-        (
-            "CML::referredWallFace::referredWallFace"
-            "("
-                "const referredWallFace& rWF"
-            ")"
-        )   << "Face and pointField are not the same size. " << nl << (*this)
+        FatalErrorInFunction
+            << "Face and pointField are not the same size. " << nl << (*this)
             << abort(FatalError);
     }
 }
@@ -92,7 +80,7 @@ bool CML::referredWallFace::operator==(const referredWallFace& rhs) const
     (
         static_cast<const face&>(rhs) == static_cast<face>(*this)
      && rhs.pts_ == pts_
-     && rhs.patchI_ == patchI_
+     && rhs.patchi_ == patchi_
     );
 }
 
@@ -107,13 +95,13 @@ bool CML::referredWallFace::operator!=(const referredWallFace& rhs) const
 
 CML::Istream& CML::operator>>(Istream& is, referredWallFace& rWF)
 {
-    is  >> static_cast<face&>(rWF) >> rWF.pts_ >> rWF.patchI_;
+    is  >> static_cast<face&>(rWF) >> rWF.pts_ >> rWF.patchi_;
 
     // Check state of Istream
     is.check
     (
-        "CML::Istream& "
-        "CML::operator>>(CML::Istream&, CML::referredWallFace&)"
+        "Foam::Istream& "
+        "Foam::operator>>(Foam::Istream&, Foam::referredWallFace&)"
     );
 
     return is;
@@ -124,13 +112,13 @@ CML::Ostream& CML::operator<<(Ostream& os, const referredWallFace& rWF)
 {
     os  << static_cast<const face&>(rWF) << token::SPACE
         << rWF.pts_ << token::SPACE
-        << rWF.patchI_;
+        << rWF.patchi_;
 
     // Check state of Ostream
     os.check
     (
-        "CML::Ostream& CML::operator<<(CML::Ostream&, "
-        "const CML::referredWallFace&)"
+        "Foam::Ostream& Foam::operator<<(Foam::Ostream&, "
+        "const Foam::referredWallFace&)"
     );
 
     return os;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2014 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -43,8 +43,8 @@ void CML::nearWallFields::calcAddressing()
     label nPatchFaces = 0;
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
-        label patchI = iter.key();
-        nPatchFaces += mesh.boundary()[patchI].size();
+        label patchi = iter.key();
+        nPatchFaces += mesh.boundary()[patchi].size();
     }
 
     // Global indexing
@@ -57,22 +57,27 @@ void CML::nearWallFields::calcAddressing()
     }
 
     // Construct cloud
-    Cloud<findCellParticle> cloud(mesh, IDLList<findCellParticle>());
+    Cloud<findCellParticle> cloud
+    (
+        mesh,
+        cloud::defaultName,
+        IDLList<findCellParticle>()
+    );
 
     // Add particles to track to sample locations
     nPatchFaces = 0;
 
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
-        label patchI = iter.key();
-        const fvPatch& patch = mesh.boundary()[patchI];
+        label patchi = iter.key();
+        const fvPatch& patch = mesh.boundary()[patchi];
 
         vectorField nf(patch.nf());
         vectorField faceCellCentres(patch.patch().faceCellCentres());
 
-        forAll(patch, patchFaceI)
+        forAll(patch, patchFacei)
         {
-            label meshFaceI = patch.start()+patchFaceI;
+            label meshFacei = patch.start()+patchFacei;
 
             // Find starting point on face (since faceCentre might not
             // be on face-diagonal decomposition)
@@ -81,7 +86,7 @@ void CML::nearWallFields::calcAddressing()
                 mappedPatchBase::facePoint
                 (
                     mesh,
-                    meshFaceI,
+                    meshFacei,
                     polyMesh::FACEDIAGTETS
                 )
             );
@@ -95,29 +100,21 @@ void CML::nearWallFields::calcAddressing()
             else
             {
                 // Fallback: start tracking from neighbouring cell centre
-                start = faceCellCentres[patchFaceI];
+                start = faceCellCentres[patchFacei];
             }
 
-            const point end = start-distance_*nf[patchFaceI];
+            const point end = start-distance_*nf[patchFacei];
 
-            // Find tet for starting location
-            label cellI = -1;
-            label tetFaceI = -1;
-            label tetPtI = -1;
-            mesh.findCellFacePt(start, cellI, tetFaceI, tetPtI);
-
-            // Add to cloud. Add originating face as passive data
+            // Add a particle to the cloud with originating face as passive data
             cloud.addParticle
             (
                 new findCellParticle
                 (
                     mesh,
                     start,
-                    cellI,
-                    tetFaceI,
-                    tetPtI,
+                    -1,
                     end,
-                    globalWalls.toGlobal(nPatchFaces)    // passive data
+                    globalWalls.toGlobal(nPatchFaces) // passive data
                 )
             );
 
@@ -135,8 +132,7 @@ void CML::nearWallFields::calcAddressing()
             mesh.time().path()
            /"wantedTracks_" + mesh.time().timeName() + ".obj"
         );
-        Info<< "nearWallFields::calcAddressing() :"
-            << "Dumping tracks to " << str.name() << endl;
+        InfoInFunction << "Dumping tracks to " << str.name() << endl;
 
         forAllConstIter(Cloud<findCellParticle>, cloud, iter)
         {
@@ -172,7 +168,7 @@ void CML::nearWallFields::calcAddressing()
     }
 
 
-    cloud.move(td, maxTrackLen);
+    cloud.move(cloud, td, maxTrackLen);
 
 
     // Rework cell-to-globalpatchface into a map
@@ -201,10 +197,10 @@ void CML::nearWallFields::calcAddressing()
             Info<< "nearWallFields::calcAddressing() :"
                 << "Dumping obtained to " << str.name() << endl;
 
-            forAll(cellToWalls_, cellI)
+            forAll(cellToWalls_, celli)
             {
-                const List<point>& ends = cellToSamples_[cellI];
-                const labelList& cData = cellToWalls_[cellI];
+                const List<point>& ends = cellToSamples_[celli];
+                const labelList& cData = cellToWalls_[celli];
                 forAll(cData, i)
                 {
                     str.write(linePointRef(ends[i], start[cData[i]]));
@@ -238,16 +234,8 @@ CML::nearWallFields::nearWallFields
     else
     {
         active_ = false;
-        WarningIn
-        (
-            "nearWallFields::nearWallFields"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_
             << endl;
     }
 

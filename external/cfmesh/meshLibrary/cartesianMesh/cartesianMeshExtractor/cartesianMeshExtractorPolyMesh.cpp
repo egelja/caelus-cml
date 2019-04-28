@@ -217,10 +217,8 @@ void cartesianMeshExtractor::createPolyMesh()
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void cartesianMeshExtractor::createPolyMesh()"
-                    ) << "Face " << octreeFaces[fLabel] << " causes problems!"
+                    FatalErrorInFunction
+                        << "Face " << octreeFaces[fLabel] << " causes problems!"
                         << abort(FatalError);
                 }
             }
@@ -228,10 +226,8 @@ void cartesianMeshExtractor::createPolyMesh()
             if( procBoundaries[patchI].patchSize() !=
                 (nProcBoundaries - procBoundaries[patchI].patchStart())
             )
-                FatalErrorIn
-                (
-                    "cartesianMeshExtractor::createPolyMesh()"
-                ) << "Invalid patch size!" << Pstream::myProcNo()
+                FatalErrorInFunction
+                    << "Invalid patch size!" << Pstream::myProcNo()
                     << abort(FatalError);
 
             ++patchI;
@@ -307,10 +303,8 @@ void cartesianMeshExtractor::createPolyMesh()
         Serr << "Number of faces " << faces.size() << endl;
         Serr << "Number of processor boundaries " << nProcBoundaries << endl;
         Serr << "Number of domain faces " << nFaces << endl;
-        FatalErrorIn
-        (
-            "void cartesianMeshExtractor::createPolyMesh()"
-        ) << Pstream::myProcNo() << "This mesh is invalid!"
+        FatalErrorInFunction
+            << Pstream::myProcNo() << "This mesh is invalid!"
             << abort(FatalError);
     }
 
@@ -321,15 +315,8 @@ void cartesianMeshExtractor::createPolyMesh()
         if( owner[faceI] == -1 )
         {
             Info << "faces " << faces << endl;
-            FatalErrorIn
-            (
-                "void cartesianMeshExtractor::createPolyMesh"
-                "("
-                "pointFieldPMG& points,"
-                "faceListPMG& faces,"
-                "cellListPMG& cells"
-                ")"
-            ) << "Face " << faceI
+            FatalErrorInFunction
+                << "Face " << faceI
                 << " has no owner and neighbour!!" << abort(FatalError);
         }
 
@@ -393,10 +380,8 @@ void cartesianMeshExtractor::createPolyMesh()
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void cartesianMeshExtractor::createPolyMesh()"
-                    ) << "Cannot distribute the face!!" << exit(FatalError);
+                    FatalErrorInFunction
+                      << "Cannot distribute the face!!" << exit(FatalError);
                 }
             }
             else

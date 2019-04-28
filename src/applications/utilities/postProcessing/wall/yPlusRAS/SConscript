@@ -7,7 +7,7 @@ Import('env')
 target = 'yPlusRAS'
 
 sources = Split("""
-yPlusRAS.cpp
+yPlusRAS_app.cpp
 """)
 
 caelus_inc = [
@@ -27,7 +27,7 @@ caelus_libs = [
 'core',
 'compressibleRASModels',
 'specie',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'sampling',
 'compressibleTurbulenceModel',
 'incompressibleRASModels',

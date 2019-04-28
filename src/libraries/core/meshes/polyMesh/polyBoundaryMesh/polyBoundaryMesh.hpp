@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -67,14 +67,13 @@ class polyBoundaryMesh
 
         mutable autoPtr<labelList> patchIDPtr_;
 
+        mutable autoPtr<HashTable<labelList, word>> groupPatchIDsPtr_;
+
         //- Edges of neighbouring patches
         mutable autoPtr<List<labelPairList> > neighbourEdgesPtr_;
 
 
     // Private Member Functions
-
-        //- Create identity map
-        static labelList ident(const label len);
 
         //- Calculate the geometry for the patches (transformation tensors etc.)
         void calcGeometry();
@@ -149,6 +148,9 @@ public:
         //  Only valid for singly connected polyBoundaryMesh and not parallel
         const List<labelPairList>& neighbourEdges() const;
 
+        //- Return the number of non-processor patches
+        label nNonProcessor() const;
+
         //- Return a list of patch names
         wordList names() const;
 
@@ -158,8 +160,12 @@ public:
         //- Return a list of physical types
         wordList physicalTypes() const;
 
-        //- Return patch indices for all matches
-        labelList findIndices(const keyType&) const;
+        //- Return patch indices for all matches. Optionally matches patchGroups
+        labelList findIndices
+        (
+            const keyType&,
+            const bool usePatchGroups = true
+        ) const;
 
         //- Return patch index for the first match, return -1 if not found
         label findIndex(const keyType&) const;
@@ -167,18 +173,39 @@ public:
         //- Find patch index given a name
         label findPatchID(const word& patchName) const;
 
+        //- Find patch indices for a given polyPatch type
+        template<class Type>
+        labelHashSet findPatchIDs() const;
+
         //- Return patch index for a given face label
         label whichPatch(const label faceIndex) const;
 
         //- Per boundary face label the patch index
         const labelList& patchID() const;
 
+        //- Per patch group the patch indices
+        const HashTable<labelList, word>& groupPatchIDs() const;
+
+        //- Set/add group with patches
+        void setGroup(const word& groupName, const labelList& patchIDs);
+
         //- Return the set of patch IDs corresponding to the given names
-        //  By default warns if given names are not found.
+        //  By default warns if given names are not found. Optionally
+        //  matches to patchGroups as well as patchNames
         labelHashSet patchSet
         (
             const UList<wordRe>& patchNames,
-            const bool warnNotFound = true
+            const bool warnNotFound = true,
+            const bool usePatchGroups = true
+        ) const;
+
+        //- Match the patches to groups. Returns all the (fully matched) groups
+        //  and any remaining unmatched patches.
+        void matchGroups
+        (
+            const labelUList& patchIDs,
+            wordList& groups,
+            labelHashSet& nonGroupPatches
         ) const;
 
         //- Check whether all procs have all patches and in same order. Return
@@ -212,6 +239,7 @@ public:
             IOstream::compressionType cmp
         ) const;
 
+
     // Member Operators
 
         //- Return const and non-const reference to polyPatch by index.
@@ -234,7 +262,26 @@ public:
 
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+CML::labelHashSet CML::polyBoundaryMesh::findPatchIDs() const
+{
+    const polyBoundaryMesh& bm = *this;
+
+    labelHashSet patchIDs(bm.size());
+
+    forAll(bm, patchi)
+    {
+        if (isA<Type>(bm[patchi]))
+        {
+            patchIDs.insert(patchi);
+        }
+    }
+    return patchIDs;
+}
+
 
 #endif
 

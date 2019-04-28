@@ -150,7 +150,7 @@ void quadricFitting::calculateNormalVector()
 
     //- estimate the normal as the eigenvector associated
     //- to the smallest eigenvalue
-    normal_ = eigenVector(mat, ev[0]);
+    normal_ = eigenVectors(mat, ev).x();
 }
 
 void quadricFitting::calculateCoordinateSystem()
@@ -187,10 +187,8 @@ void quadricFitting::calculateCoordinateSystem()
 
     if( !valid )
     {
-        FatalErrorIn
-        (
-            "void quadricFitting::calculateCoordinateSystem()"
-        ) << "Cannot find a valid coordinate system!" << endl;
+        FatalErrorInFunction
+          << "Cannot find a valid coordinate system!" << endl;
 
         normal_ = vecX_ = vecY_ = vector::zero;
     }
@@ -316,13 +314,8 @@ inline quadricFitting::quadricFitting
 
     if( magSqr(normal_) < VSMALL )
     {
-        FatalErrorIn
-        (
-            "template<class ListType>\n"
-            "inline quadricFitting::quadricFitting"
-            "(const point& origin, const vector normal,"
-            " const ListType& otherPoints)"
-        ) << "Cannot construct the quadric surface for point "
+        FatalErrorInFunction
+          << "Cannot construct the quadric surface for point "
             << origin_ << " because the normal does not exist!"
             << "\nThis indicates that the input"
             << " surface mesh is of poor quality" << exit(FatalError);

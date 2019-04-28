@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -56,10 +56,8 @@ class labelBits
 #           ifdef FULLDEBUG
             if (bits > 7 || (((val<<3)>>3) != val))
             {
-                FatalErrorIn
-                (
-                    "labelBits::pack(const label, const direction)"
-                )   << "Direction " << bits << " outside range 0..7"
+                FatalErrorInFunction
+                    << "Direction " << bits << " outside range 0..7"
                     << abort(FatalError);
             }
 #           endif

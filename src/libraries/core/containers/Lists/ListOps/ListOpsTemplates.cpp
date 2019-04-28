@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -292,7 +292,7 @@ ListType CML::subset
     // select must at least cover the list range
     if (select.size() < lst.size())
     {
-        FatalErrorIn("subset(const UList<T>&, const T&, const ListType&)")
+        FatalErrorInFunction
             << "select is of size " << select.size()
             << "; but it must index a list of size " << lst.size()
             << abort(FatalError);
@@ -328,7 +328,7 @@ void CML::inplaceSubset
     // select must at least cover the list range
     if (select.size() < lst.size())
     {
-        FatalErrorIn("inplaceSubset(const UList<T>&, const T&, ListType&)")
+        FatalErrorInFunction
             << "select is of size " << select.size()
             << "; but it must index a list of size " << lst.size()
             << abort(FatalError);

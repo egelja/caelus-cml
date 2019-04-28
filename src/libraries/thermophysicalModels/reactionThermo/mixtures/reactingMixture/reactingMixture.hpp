@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -20,14 +20,11 @@ License
 Class
     CML::reactingMixture
 
-Description
-    CML::reactingMixture
-
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reactingMixture_H
-#define reactingMixture_H
+#ifndef reactingMixture_HPP
+#define reactingMixture_HPP
 
 #include "speciesTable.hpp"
 #include "chemistryReader.hpp"
@@ -50,13 +47,16 @@ class reactingMixture
     public multiComponentMixture<ThermoType>,
     public PtrList<Reaction<ThermoType> >
 {
-    // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        reactingMixture(const reactingMixture&);
+    //- Table of species composition
+    speciesCompositionTable speciesComposition_;
 
-        //- Disallow default bitwise assignment
-        void operator=(const reactingMixture&);
+
+    //- Disallow default bitwise copy construct
+    reactingMixture(const reactingMixture&);
+
+    //- Disallow default bitwise assignment
+    void operator=(const reactingMixture&);
 
 
 public:
@@ -65,15 +65,8 @@ public:
     typedef ThermoType thermoType;
 
 
-    // Constructors
-
-        //- Construct from dictionary and mesh
-        reactingMixture
-        (
-            const dictionary&,
-            const fvMesh&,
-            const bool clearReader = true
-        );
+    //- Construct from dictionary, mesh and phase name
+    reactingMixture(const dictionary&, const fvMesh&, const word&);
 
 
     //- Destructor
@@ -83,22 +76,38 @@ public:
 
     // Member functions
 
-        //- Read dictionary
-        void read(const dictionary&);
+    //- Return the instantiated type name
+    static word typeName()
+    {
+        return "reactingMixture<" + ThermoType::typeName() + '>';
+    }
 
-        label size() const
-        {
-            return PtrList<Reaction<ThermoType> >::size();
-        }
+    //- Read dictionary
+    void read(const dictionary&);
 
-        Reaction<ThermoType>& operator [] (const label i)
-        {
-            return PtrList<Reaction<ThermoType> >::operator[](i);
-        }
+    label size() const
+    {
+        return PtrList<Reaction<ThermoType> >::size();
+    }
+
+    Reaction<ThermoType>& operator [] (const label i)
+    {
+        return PtrList<Reaction<ThermoType> >::operator[](i);
+    }
+
+    const Reaction<ThermoType>& operator[](const label i) const
+    {
+        return PtrList<Reaction<ThermoType> >::operator[](i);
+    }
+
+    //- Table of species composition
+    const speciesCompositionTable& specieComposition() const
+    {
+        return speciesComposition_;
+     }
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
 
@@ -111,7 +120,7 @@ CML::reactingMixture<ThermoType>::reactingMixture
 (
     const dictionary& thermoDict,
     const fvMesh& mesh,
-    const bool clearReader
+    const word& phaseName
 )
 :
     speciesTable(),
@@ -124,17 +133,19 @@ CML::reactingMixture<ThermoType>::reactingMixture
         thermoDict,
         *this,
         autoPtr<chemistryReader<ThermoType> >::operator()().speciesThermo(),
-        mesh
+        mesh,
+        phaseName
     ),
     PtrList<Reaction<ThermoType> >
     (
         autoPtr<chemistryReader<ThermoType> >::operator()().reactions()
+    ),
+    speciesComposition_
+    (
+        autoPtr<chemistryReader<ThermoType> >::operator()().specieComposition()
     )
 {
-    if (clearReader)
-    {
-        autoPtr<chemistryReader<ThermoType> >::clear();
-    }
+    autoPtr<chemistryReader<ThermoType> >::clear();
 }
 
 
@@ -145,9 +156,4 @@ void CML::reactingMixture<ThermoType>::read(const dictionary& thermoDict)
 {}
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 #endif
-
-// ************************************************************************* //

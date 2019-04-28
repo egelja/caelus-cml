@@ -219,10 +219,8 @@ void meshSurfaceMapper::mapCorners(const labelLongList& nodesToMap)
     {
         const label bpI = nodesToMap[cornerI];
         if( !corners.found(bpI) )
-            FatalErrorIn
-            (
-                "meshSurfaceMapper::mapCorners(const labelLongList&)"
-            ) << "Trying to map a point that is not a corner"
+            FatalErrorInFunction
+                << "Trying to map a point that is not a corner"
                 << abort(FatalError);
 
         const point& p = points[bPoints[bpI]];
@@ -319,7 +317,7 @@ void meshSurfaceMapper::mapEdgeNodes(const labelLongList& nodesToMap)
     scalarList mappingDistance;
     findMappingDistance(nodesToMap, mappingDistance);
 
-    const VRWGraph* bpAtProcsPtr(NULL);
+    const VRWGraph* bpAtProcsPtr(nullptr);
     if( Pstream::parRun() )
         bpAtProcsPtr = &surfaceEngine_.bpAtProcs();
 

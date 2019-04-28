@@ -27,7 +27,6 @@ License
 
 #include "CellZoneInjection.hpp"
 #include "ConeInjection.hpp"
-#include "ConeNozzleInjection.hpp"
 #include "FieldActivatedInjection.hpp"
 #include "ManualInjection.hpp"
 #include "NoInjection.hpp"
@@ -38,18 +37,17 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeReactingParcelInjectionModels(CloudType)                          \
-                                                                              \
-    makeInjectionModel(CloudType);                                            \
-    makeInjectionModelType(CellZoneInjection, CloudType);                     \
-    makeInjectionModelType(ConeInjection, CloudType);                         \
-    makeInjectionModelType(ConeNozzleInjection, CloudType);                   \
-    makeInjectionModelType(FieldActivatedInjection, CloudType);               \
-    makeInjectionModelType(ManualInjection, CloudType);                       \
-    makeInjectionModelType(NoInjection, CloudType);                           \
-    makeInjectionModelType(PatchInjection, CloudType);                        \
-    makeInjectionModelType(PatchFlowRateInjection, CloudType);                \
-    makeInjectionModelType(TranCellZoneInjection, CloudType);                 \
+#define makeReactingParcelInjectionModels(CloudType)                           \
+                                                                               \
+    makeInjectionModel(CloudType);                                             \
+    makeInjectionModelType(CellZoneInjection, CloudType);                      \
+    makeInjectionModelType(ConeInjection, CloudType);                          \
+    makeInjectionModelType(FieldActivatedInjection, CloudType);                \
+    makeInjectionModelType(ManualInjection, CloudType);                        \
+    makeInjectionModelType(NoInjection, CloudType);                            \
+    makeInjectionModelType(PatchInjection, CloudType);                         \
+    makeInjectionModelType(PatchFlowRateInjection, CloudType);                 \
+    makeInjectionModelType(TranCellZoneInjection, CloudType);                  \
     makeInjectionModelType(ReactingLookupTableInjection, CloudType);
 
 

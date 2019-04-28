@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -88,7 +88,7 @@ bool fieldOk(const IOobjectList& cloudObjs, const word& name)
 {
     IOobjectList objects(cloudObjs.lookupClass(IOField<Type>::typeName));
 
-    return (objects.lookup(name) != NULL);
+    return (objects.lookup(name) != nullptr);
 }
 
 
@@ -102,21 +102,13 @@ tmp<Field<Type> > readParticleField
     IOobjectList objects(cloudObjs.lookupClass(IOField<Type>::typeName));
 
     const IOobject* obj = objects.lookup(name);
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         IOField<Type> newField(*obj);
         return tmp<Field<Type> >(new Field<Type>(newField.xfer()));
     }
 
-    FatalErrorIn
-    (
-        "template<class Type>"
-        "void readParticleField"
-        "("
-            "const word&, "
-            "const IOobjectList"
-        ")"
-    )
+    FatalErrorInFunction
         << "error: cloud field name " << name << " not found"
         << abort(FatalError);
 
@@ -137,7 +129,7 @@ void readFields
     forAll(fieldNames, j)
     {
         const IOobject* obj = objects.lookup(fieldNames[j]);
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             Info<< "        reading field " << fieldNames[j] << endl;
             IOField<Type> newField(*obj);
@@ -145,16 +137,7 @@ void readFields
         }
         else
         {
-            FatalErrorIn
-            (
-                "template<class Type>"
-                "void readFields"
-                "("
-                    "PtrList<List<Type> >&, "
-                    "const List<word>&, "
-                    "const IOobjectList&"
-                ")"
-            )
+            FatalErrorInFunction
                 << "Unable to read field " << fieldNames[j]
                 << abort(FatalError);
         }
@@ -231,7 +214,7 @@ void processFields
         forAll(userFieldNames, i)
         {
             IOobject* obj = objects.lookup(userFieldNames[i]);
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 fieldNames.append(obj->name());
             }

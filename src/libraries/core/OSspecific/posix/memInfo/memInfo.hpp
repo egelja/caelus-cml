@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,10 +38,24 @@ SourceFiles
 #include "posix.hpp"
 #include "IFstream.hpp"
 
+#ifdef darwin
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include<mach/mach.h>
+#endif
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
+
+// Forward declaration of friend functions and operators
+
+class memInfo;
+
+Istream& operator>>(Istream&, memInfo&);
+Ostream& operator<<(Ostream&, const memInfo&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class memInfo Declaration
@@ -51,14 +65,17 @@ class memInfo
 {
     // Private data
 
-        //- Peak memory used by the process (VmPeak in /proc/\<pid\>/status)
+        //- Peak memory (KB) by the process (VmPeak in /proc/\<pid\>/status)
         int peak_;
 
-        //- Memory used by the process (VmSize in /proc/\<pid\>/status)
+        //- Memory used (KB) the process (VmSize in /proc/\<pid\>/status)
         int size_;
 
-        //- Resident set size of the process (VmRSS in /proc/\<pid\>/status)
+        //- Resident set size (KB) the process (VmRSS in /proc/\<pid\>/status)
         int rss_;
+
+        //- Amount of swap memory used (KB) VmSwap in /proc/\<pid\>/status)
+        int swap_;
 
 
 public:
@@ -101,8 +118,19 @@ public:
                 return rss_;
             }
 
+            //- Access the stored swap value (VmRSS in /proc/\<pid\>/status)
+            //  The value is stored from the previous update()
+            int swap() const
+            {
+                return swap_;
+            }
+
             //- True if the memory information appears valid
             bool valid() const;
+
+            //- True if the processing is using swap memory
+            bool swapping() const;
+
 
 
     // IOstream Operators

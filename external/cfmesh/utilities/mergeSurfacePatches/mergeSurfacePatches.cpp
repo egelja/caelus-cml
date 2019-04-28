@@ -63,7 +63,7 @@ void getPatchIds
     
     if (nFound != patchNames.size())
     {
-        WarningIn("getPatchIds")
+        WarningInFunction
             << "Not all supplied patch names were found on the surface mesh" << endl;
     }
 }

@@ -388,11 +388,8 @@ void partTetMesh::createPointsAndTets
             (nodeLabelInOrigMesh_[pI] != -1) &&
             (mag(points_[pI] - points[nodeLabelInOrigMesh_[pI]]) > SMALL)
         )
-            FatalErrorIn
-            (
-                "void partTetMesh::createPointsAndTets"
-                "(const boolList& useCell)"
-            ) << "Node " << pI << " is dislocated" << abort(FatalError);
+            FatalErrorInFunction
+              << "Node " << pI << " is dislocated" << abort(FatalError);
     # endif
 }
 

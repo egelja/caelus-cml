@@ -20,7 +20,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "convectiveHeatTransferFvPatchScalarField.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "fvPatchFieldMapper.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 
@@ -33,7 +33,8 @@ namespace compressible
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarField
+convectiveHeatTransferFvPatchScalarField::
+convectiveHeatTransferFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF
@@ -44,7 +45,8 @@ convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarFie
 {}
 
 
-convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarField
+convectiveHeatTransferFvPatchScalarField::
+convectiveHeatTransferFvPatchScalarField
 (
     const convectiveHeatTransferFvPatchScalarField& ptf,
     const fvPatch& p,
@@ -57,7 +59,8 @@ convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarFie
 {}
 
 
-convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarField
+convectiveHeatTransferFvPatchScalarField::
+convectiveHeatTransferFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -69,7 +72,8 @@ convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarFie
 {}
 
 
-convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarField
+convectiveHeatTransferFvPatchScalarField::
+convectiveHeatTransferFvPatchScalarField
 (
     const convectiveHeatTransferFvPatchScalarField& htcpsf
 )
@@ -79,7 +83,8 @@ convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarFie
 {}
 
 
-convectiveHeatTransferFvPatchScalarField::convectiveHeatTransferFvPatchScalarField
+convectiveHeatTransferFvPatchScalarField::
+convectiveHeatTransferFvPatchScalarField
 (
     const convectiveHeatTransferFvPatchScalarField& htcpsf,
     const DimensionedField<scalar, volMesh>& iF
@@ -99,37 +104,39 @@ void convectiveHeatTransferFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     const turbulenceModel& turbModel =
         db().lookupObject<turbulenceModel>("turbulenceModel");
-    const scalarField alphaEffw(turbModel.alphaEff(patchI));
-    const scalarField& muw = turbModel.mu().boundaryField()[patchI];
-    const scalarField& rhow = turbModel.rho().boundaryField()[patchI];
+    const scalarField alphaEffw(turbModel.alphaEff(patchi));
+    const scalarField& muw = turbModel.mu().boundaryField()[patchi];
+    const scalarField& rhow = turbModel.rho().boundaryField()[patchi];
     const vectorField& Uc = turbModel.U();
-    const vectorField& Uw = turbModel.U().boundaryField()[patchI];
-    const scalarField& Tw = turbModel.thermo().T().boundaryField()[patchI];
-    const scalarField Cpw(turbModel.thermo().Cp(Tw, patchI));
+    const vectorField& Uw = turbModel.U().boundaryField()[patchi];
+    const scalarField& Tw = turbModel.thermo().T().boundaryField()[patchi];
+    const scalarField& pw = turbModel.thermo().p().boundaryField()[patchi];
+    const scalarField Cpw(turbModel.thermo().Cp(pw, Tw, patchi));
 
     const scalarField kappaw(Cpw*alphaEffw);
     const scalarField Pr(muw*Cpw/kappaw);
 
     scalarField& htc = *this;
-    forAll(htc, faceI)
+    forAll(htc, facei)
     {
-        label faceCellI = patch().faceCells()[faceI];
+        label celli = patch().faceCells()[facei];
 
-        scalar Re = rhow[faceI]*mag(Uc[faceCellI] - Uw[faceI])*L_/muw[faceI];
+        scalar Re = rhow[facei]*mag(Uc[celli] - Uw[facei])*L_/muw[facei];
 
         if (Re < 5.0E+05)
         {
-            htc[faceI] = 0.664*sqrt(Re)*cbrt(Pr[faceI])*kappaw[faceI]/L_;
+            htc[facei] = 0.664*sqrt(Re)*cbrt(Pr[facei])*kappaw[facei]/L_;
         }
         else
         {
-            htc[faceI] = 0.037*pow(Re, 0.8)*cbrt(Pr[faceI])*kappaw[faceI]/L_;
+            htc[facei] = 0.037*pow(Re, 0.8)*cbrt(Pr[facei])*kappaw[facei]/L_;
         }
     }
+
     fixedValueFvPatchScalarField::updateCoeffs();
 }
 

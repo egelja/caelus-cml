@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -51,9 +51,9 @@ CML::pointField CML::oldCyclicPolyPatch::calcFaceCentres
 {
     pointField ctrs(faces.size());
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        ctrs[faceI] = faces[faceI].centre(points);
+        ctrs[facei] = faces[facei].centre(points);
     }
 
     return ctrs;
@@ -68,9 +68,9 @@ CML::pointField CML::oldCyclicPolyPatch::getAnchorPoints
 {
     pointField anchors(faces.size());
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        anchors[faceI] = points[faces[faceI][0]];
+        anchors[facei] = points[faces[facei][0]];
     }
 
     return anchors;
@@ -86,25 +86,20 @@ CML::label CML::oldCyclicPolyPatch::findMaxArea
     label maxI = -1;
     scalar maxAreaSqr = -GREAT;
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        scalar areaSqr = magSqr(faces[faceI].normal(points));
+        scalar areaSqr = magSqr(faces[facei].area(points));
 
         if (areaSqr > maxAreaSqr)
         {
             maxAreaSqr = areaSqr;
-            maxI = faceI;
+            maxI = facei;
         }
     }
     return maxI;
 }
 
 
-// Get geometric zones of patch by looking at normals.
-// Method 1: any edge with sharpish angle is edge between two halves.
-//           (this will handle e.g. wedge geometries).
-//           Also two fully disconnected regions will be handled this way.
-// Method 2: sort faces into two halves based on face normal.
 bool CML::oldCyclicPolyPatch::getGeometricHalves
 (
     const primitivePatch& pp,
@@ -112,6 +107,12 @@ bool CML::oldCyclicPolyPatch::getGeometricHalves
     labelList& half1ToPatch
 ) const
 {
+    // Get geometric zones of patch by looking at normals.
+    // Method 1: any edge with sharpish angle is edge between two halves.
+    //           (this will handle e.g. wedge geometries).
+    //           Also two fully disconnected regions will be handled this way.
+    // Method 2: sort faces into two halves based on face normal.
+
     // Calculate normals
     const vectorField& faceNormals = pp.faceNormals();
 
@@ -200,15 +201,15 @@ bool CML::oldCyclicPolyPatch::getGeometricHalves
         half1ToPatch.setSize(pp.size());
 
         // Compare to face 0 normal.
-        forAll(faceNormals, faceI)
+        forAll(faceNormals, facei)
         {
-            if ((faceNormals[faceI] & faceNormals[0]) > 0)
+            if ((faceNormals[facei] & faceNormals[0]) > 0)
             {
-                half0ToPatch[n0Faces++] = faceI;
+                half0ToPatch[n0Faces++] = facei;
             }
             else
             {
-                half1ToPatch[n1Faces++] = faceI;
+                half1ToPatch[n1Faces++] = facei;
             }
         }
         half0ToPatch.setSize(n0Faces);
@@ -259,11 +260,8 @@ bool CML::oldCyclicPolyPatch::getGeometricHalves
             }
         }
 
-        SeriousErrorIn
-        (
-            "oldCyclicPolyPatch::getGeometricHalves"
-            "(const primitivePatch&, labelList&, labelList&) const"
-        )   << "Patch " << name() << " gets decomposed in two zones of"
+        SeriousErrorInFunction
+            << "Patch " << name() << " gets decomposed in two zones of"
             << "inequal size: " << half0ToPatch.size()
             << " and " << half1ToPatch.size() << endl
             << "This means that the patch is either not two separate regions"
@@ -325,10 +323,10 @@ void CML::oldCyclicPolyPatch::getCentresAndAnchors
             const tensor reverseT(rotationTensor(n0, -n1));
 
             // Rotation
-            forAll(half0Ctrs, faceI)
+            forAll(half0Ctrs, facei)
             {
-                half0Ctrs[faceI] = CML::transform(reverseT, half0Ctrs[faceI]);
-                anchors0[faceI] = CML::transform(reverseT, anchors0[faceI]);
+                half0Ctrs[facei] = CML::transform(reverseT, half0Ctrs[facei]);
+                anchors0[facei] = CML::transform(reverseT, anchors0[facei]);
             }
 
             ppPoints = CML::transform(reverseT, pp.points());
@@ -336,7 +334,7 @@ void CML::oldCyclicPolyPatch::getCentresAndAnchors
             break;
         }
         //- Problem: usually specified translation is not accurate enough
-        //- to get proper match so keep automatic determination over here.
+        //- To get proper match so keep automatic determination over here.
         //case TRANSLATIONAL:
         //{
         //    // Transform 0 points.
@@ -359,13 +357,11 @@ void CML::oldCyclicPolyPatch::getCentresAndAnchors
 
             // Determine the face with max area on both halves. These
             // two faces are used to determine the transformation tensors
-            label max0I = findMaxArea(pp.points(), half0Faces);
-            vector n0 = half0Faces[max0I].normal(pp.points());
-            n0 /= mag(n0) + VSMALL;
+            const label max0I = findMaxArea(pp.points(), half0Faces);
+            const vector n0 = half0Faces[max0I].normal(pp.points());
 
-            label max1I = findMaxArea(pp.points(), half1Faces);
-            vector n1 = half1Faces[max1I].normal(pp.points());
-            n1 /= mag(n1) + VSMALL;
+            const label max1I = findMaxArea(pp.points(), half1Faces);
+            const vector n1 = half1Faces[max1I].normal(pp.points());
 
             if (mag(n0 & n1) < 1-matchTolerance())
             {
@@ -380,17 +376,17 @@ void CML::oldCyclicPolyPatch::getCentresAndAnchors
                 const tensor reverseT(rotationTensor(n0, -n1));
 
                 // Rotation
-                forAll(half0Ctrs, faceI)
+                forAll(half0Ctrs, facei)
                 {
-                    half0Ctrs[faceI] = CML::transform
+                    half0Ctrs[facei] = CML::transform
                     (
                         reverseT,
-                        half0Ctrs[faceI]
+                        half0Ctrs[facei]
                     );
-                    anchors0[faceI] = CML::transform
+                    anchors0[facei] = CML::transform
                     (
                         reverseT,
-                        anchors0[faceI]
+                        anchors0[facei]
                     );
                 }
                 ppPoints = CML::transform(reverseT, pp.points());
@@ -450,55 +446,53 @@ bool CML::oldCyclicPolyPatch::matchAnchors
     // Set faceMap such that half0 faces get first and corresponding half1
     // faces last.
 
-    forAll(half0ToPatch, half0FaceI)
+    forAll(half0ToPatch, half0Facei)
     {
         // Label in original patch
-        label patchFaceI = half0ToPatch[half0FaceI];
+        label patchFacei = half0ToPatch[half0Facei];
 
-        faceMap[patchFaceI] = half0FaceI;
+        faceMap[patchFacei] = half0Facei;
 
         // No rotation
-        rotation[patchFaceI] = 0;
+        rotation[patchFacei] = 0;
     }
 
     bool fullMatch = true;
 
-    forAll(from1To0, half1FaceI)
+    forAll(from1To0, half1Facei)
     {
-        label patchFaceI = half1ToPatch[half1FaceI];
+        label patchFacei = half1ToPatch[half1Facei];
 
         // This face has to match the corresponding one on half0.
-        label half0FaceI = from1To0[half1FaceI];
+        label half0Facei = from1To0[half1Facei];
 
-        label newFaceI = half0FaceI + pp.size()/2;
+        label newFacei = half0Facei + pp.size()/2;
 
-        faceMap[patchFaceI] = newFaceI;
+        faceMap[patchFacei] = newFacei;
 
-        // Rotate patchFaceI such that its f[0] aligns with that of
+        // Rotate patchFacei such that its f[0] aligns with that of
         // the corresponding face
-        // (which after shuffling will be at position half0FaceI)
+        // (which after shuffling will be at position half0Facei)
 
-        const point& wantedAnchor = anchors0[half0FaceI];
+        const point& wantedAnchor = anchors0[half0Facei];
 
-        rotation[newFaceI] = getRotation
+        rotation[newFacei] = getRotation
         (
             pp.points(),
-            half1Faces[half1FaceI],
+            half1Faces[half1Facei],
             wantedAnchor,
-            tols[half1FaceI]
+            tols[half1Facei]
         );
 
-        if (rotation[newFaceI] == -1)
+        if (rotation[newFacei] == -1)
         {
             fullMatch = false;
 
             if (report)
             {
-                const face& f = half1Faces[half1FaceI];
-                SeriousErrorIn
-                (
-                    "oldCyclicPolyPatch::matchAnchors(..)"
-                )   << "Patch:" << name() << " : "
+                const face& f = half1Faces[half1Facei];
+                SeriousErrorInFunction
+                    << "Patch:" << name() << " : "
                     << "Cannot find point on face " << f
                     << " with vertices:"
                     << UIndirectList<point>(pp.points(), f)()
@@ -598,17 +592,8 @@ CML::oldCyclicPolyPatch::oldCyclicPolyPatch
 {
     if (dict.found("neighbourPatch"))
     {
-        FatalIOErrorIn
-        (
-            "oldCyclicPolyPatch::oldCyclicPolyPatch\n"
-            "(\n"
-            "    const word& name,\n"
-            "    const dictionary& dict,\n"
-            "    const label index,\n"
-            "    const polyBoundaryMesh& bm\n"
-            ")",
-            dict
-        )   << "Found \"neighbourPatch\" entry when reading cyclic patch "
+        FatalIOErrorInFunction(dict)
+            << "Found \"neighbourPatch\" entry when reading cyclic patch "
             << name << endl
             << "Is this mesh already with split cyclics?" << endl
             << "If so run a newer version that supports it"
@@ -767,7 +752,7 @@ bool CML::oldCyclicPolyPatch::order
 
     if (pp.size()&1)
     {
-        FatalErrorIn("oldCyclicPolyPatch::order(..)")
+        FatalErrorInFunction
             << "Size of cyclic " << name() << " should be a multiple of 2"
             << ". It is " << pp.size() << abort(FatalError);
     }
@@ -873,11 +858,11 @@ bool CML::oldCyclicPolyPatch::order
 
     if (!matchedAll)
     {
-        label faceI = 0;
+        label facei = 0;
         for (label i = 0; i < halfSize; i++)
         {
-            half0ToPatch[i] = faceI++;
-            half1ToPatch[i] = faceI++;
+            half0ToPatch[i] = facei++;
+            half1ToPatch[i] = facei++;
         }
 
         // And redo all matching
@@ -956,35 +941,35 @@ bool CML::oldCyclicPolyPatch::order
     {
         label baffleI = 0;
 
-        forAll(pp, faceI)
+        forAll(pp, facei)
         {
-            const face& f = pp.localFaces()[faceI];
+            const face& f = pp.localFaces()[facei];
             const labelList& pFaces = pp.pointFaces()[f[0]];
 
-            label matchedFaceI = -1;
+            label matchedFacei = -1;
 
             forAll(pFaces, i)
             {
-                label otherFaceI = pFaces[i];
+                label otherFacei = pFaces[i];
 
-                if (otherFaceI > faceI)
+                if (otherFacei > facei)
                 {
-                    const face& otherF = pp.localFaces()[otherFaceI];
+                    const face& otherF = pp.localFaces()[otherFacei];
 
                     // Note: might pick up two similar oriented faces
                     //       (but that is illegal anyway)
                     if (f == otherF)
                     {
-                        matchedFaceI = otherFaceI;
+                        matchedFacei = otherFacei;
                         break;
                     }
                 }
             }
 
-            if (matchedFaceI != -1)
+            if (matchedFacei != -1)
             {
-                half0ToPatch[baffleI] = faceI;
-                half1ToPatch[baffleI] = matchedFaceI;
+                half0ToPatch[baffleI] = facei;
+                half1ToPatch[baffleI] = matchedFacei;
                 baffleI++;
             }
         }
@@ -1187,11 +1172,8 @@ bool CML::oldCyclicPolyPatch::order
 
     if (!matchedAll)
     {
-        SeriousErrorIn
-        (
-            "oldCyclicPolyPatch::order"
-            "(const primitivePatch&, labelList&, labelList&) const"
-        )   << "Patch:" << name() << " : "
+        SeriousErrorInFunction
+            << "Patch:" << name() << " : "
             << "Cannot match vectors to faces on both sides of patch" << endl
             << "    Perhaps your faces do not match?"
             << " The obj files written contain the current match." << endl
@@ -1220,9 +1202,9 @@ bool CML::oldCyclicPolyPatch::order
 
     // Return false if no change necessary, true otherwise.
 
-    forAll(faceMap, faceI)
+    forAll(faceMap, facei)
     {
-        if (faceMap[faceI] != faceI || rotation[faceI] != 0)
+        if (faceMap[facei] != facei || rotation[facei] != 0)
         {
             return true;
         }
@@ -1265,7 +1247,7 @@ void CML::oldCyclicPolyPatch::write(Ostream& os) const
         }
     }
 
-    WarningIn("oldCyclicPolyPatch::write(Ostream& os) const")
+    WarningInFunction
         << "Please run caelusUpgradeCyclics to convert these old-style"
         << " cyclics into two separate cyclics patches."
         << endl;

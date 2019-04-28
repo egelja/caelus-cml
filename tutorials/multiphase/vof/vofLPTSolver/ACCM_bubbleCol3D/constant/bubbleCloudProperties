@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-Caelus 8.04
+Caelus 9.04
 Web:   www.caelus-cml.com
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -8,7 +8,7 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      reactingCloud1Properties;
+    object      bubbleCloudProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -127,6 +127,9 @@ subModels
     // Collision model
     collisionModel none;
 
+    // StochasticCollision model
+    stochasticCollisionModel none;
+
     radiation off;
 
     // Dictionaries for chosen models
@@ -146,7 +149,7 @@ cloudFunctions
         patches         ( top );
     }
 
-   parcelRemoval1
+    parcelRemoval1
     {
         type parcelRemoval;
         alphaName   alpha1;      // name volume fraction field

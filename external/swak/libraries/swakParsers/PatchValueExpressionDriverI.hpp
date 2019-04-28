@@ -105,12 +105,12 @@ namespace CML {
                     );
                 } else {
                     if(!isSingleValue) {
-                        WarningIn("PatchValueExpressionDriver::getField(const word &inName)")
+                        WarningInFunction
                             << "Variable " << name
-                                << " is not a single value but does not "
-                                << "fit the size. Using average and "
-                                << "hoping for the best"
-                                << endl;
+                            << " is not a single value but does not "
+                            << "fit the size. Using average and "
+                            << "hoping for the best"
+                            << endl;
                     }
                     return tmp<Field<Type> >(
                         new Field<Type>(
@@ -185,23 +185,20 @@ namespace CML {
 
             return pField.patchInternalField();
         } else{
-            FatalErrorIn("tmp<Field<Type> > PatchValueExpressionDriver::getField(const word &name)")
+            FatalErrorInFunction
                 << "No field of type " << pTraits<Type>::typeName
-                    << " with the name " << name << " found\n"
-                    << endl
-                    << "Fields of type: " << localVolField::typeName
-                    << patch_.boundaryMesh().mesh().objectRegistry::names<localVolField>()
-                    << endl
-                    << "Fields of type: " << localSurfaceField::typeName
-                    << patch_.boundaryMesh().mesh().objectRegistry::names<localSurfaceField>()
-                    << endl
-                    << "Fields of type: " << localPointField::typeName
-                    << patch_.boundaryMesh().mesh().objectRegistry::names<localPointField>()
-                    << endl
-                    // << "All registered objects:"
-                    // << patch_.boundaryMesh().mesh().objectRegistry::names()
-                    // << endl
-                    << exit(FatalError);
+                << " with the name " << name << " found\n"
+                << endl
+                << "Fields of type: " << localVolField::typeName
+                << patch_.boundaryMesh().mesh().objectRegistry::names<localVolField>()
+                << endl
+                << "Fields of type: " << localSurfaceField::typeName
+                << patch_.boundaryMesh().mesh().objectRegistry::names<localSurfaceField>()
+                << endl
+                << "Fields of type: " << localPointField::typeName
+                << patch_.boundaryMesh().mesh().objectRegistry::names<localPointField>()
+                << endl
+                << exit(FatalError);
 
             return tmp<Field<Type> >(
                 new Field<Type>(0)
@@ -288,11 +285,11 @@ namespace CML {
                 new Field<Type>(pField.patchInternalField())
             );
         } else{
-            FatalErrorIn("tmp<Field<Type> > PatchValueExpressionDriver::getOldTimeField(const word &name)")
+            FatalErrorInFunction
                 << "No field of type " << pTraits<Type>::typeName
-                    << " with the name " << name << " found\n"
-                    << endl
-                    << exit(FatalError);
+                << " with the name " << name << " found\n"
+                << endl
+                << exit(FatalError);
 
             return tmp<Field<Type> >(new Field<Type>(0));;
         }
@@ -348,11 +345,11 @@ namespace CML {
                 patch_.lookupPatchField<localPointField,Type>(name);
             return pField.patchInternalField();
         } else{
-            FatalErrorIn("tmp<Field<Type> > PatchValueExpressionDriver::getPatchInternalField(const word &name)")
+            FatalErrorInFunction
                 << "No field of type " << pTraits<Type>::typeName
-                    << " with the name " << name << " found or unsupported type for patchInternalField\n"
-                    << endl
-                    << exit(FatalError);
+                << " with the name " << name << " found or unsupported type for patchInternalField\n"
+                << endl
+                << exit(FatalError);
 
             return tmp<Field<Type> >(
                 new Field<Type>(0)
@@ -402,12 +399,12 @@ namespace CML {
                 patch_.lookupPatchField<localVolField,Type>(name);
             return pField.patchNeighbourField();
         } else{
-            FatalErrorIn("tmp<Field<Type> > PatchValueExpressionDriver::getPatchNeighbourField(const word &name)")
+            FatalErrorInFunction
                 << "No field of type " << pTraits<Type>::typeName
-                    << " with the name " << name
-                    << " found or unsupported type for patchNeighbourField\n"
-                    << endl
-                    << exit(FatalError);
+                << " with the name " << name
+                << " found or unsupported type for patchNeighbourField\n"
+                << endl
+                << exit(FatalError);
 
             return tmp<Field<Type> >(
                 new Field<Type>(0)
@@ -449,18 +446,18 @@ namespace CML {
                 patch_.lookupPatchField<localVolField,Type>(name);
             return pField.snGrad();
         } else{
-            FatalErrorIn("tmp<Field<Type> > PatchValueExpressionDriver::getSurfaceNormalField(const word &name)")
+            FatalErrorInFunction
                 << "No field of type " << pTraits<Type>::typeName
-                    << "( " << pTraits<localVolField>::typeName << ")"
-                    << " with the name " << name
-                    << " found or unsupported type for snGrad\n"
-                    << "Fields of type: "
-                    << patch_.boundaryMesh().mesh().objectRegistry::names<localVolField>()
-                    << "\nAll registered objects:"
-                    << patch_.boundaryMesh().mesh().objectRegistry::names()
+                << "( " << pTraits<localVolField>::typeName << ")"
+                << " with the name " << name
+                << " found or unsupported type for snGrad\n"
+                << "Fields of type: "
+                << patch_.boundaryMesh().mesh().objectRegistry::names<localVolField>()
+                << "\nAll registered objects:"
+                << patch_.boundaryMesh().mesh().objectRegistry::names()
 
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
 
             return tmp<Field<Type> >(
                 new Field<Type>(0)
@@ -540,11 +537,11 @@ namespace CML {
         typedef GeometricField<T,fvsPatchField,surfaceMesh> localSurfaceField;
 
         if(!isA<mappedPatchBase>(patch_.patch())) {
-            FatalErrorIn("tmp<Field<T> > PatchValueExpressionDriver::mapField")
+            FatalErrorInFunction
                 << "Current patch " << patch_.name()
-                    << "is not a mapped patch"
-                    << endl
-                    << exit(FatalError);
+                << "is not a mapped patch"
+                << endl
+                << exit(FatalError);
 
         }
 
@@ -564,13 +561,13 @@ namespace CML {
             }
             isSurfaceField=true;
         } else if(!lookupMesh.foundObject<localVolField>(name)) {
-            FatalErrorIn("tmp<Field<T> > PatchValueExpressionDriver::mapField")
+            FatalErrorInFunction
                 << "No field " << name << " of type "
-                    << localSurfaceField::typeName << " or "
-                    << localVolField::typeName << " on mesh "
-                    << lookupMesh.name()
-                    << endl
-                    << exit(FatalError);
+                << localSurfaceField::typeName << " or "
+                << localVolField::typeName << " on mesh "
+                << lookupMesh.name()
+                << endl
+                << exit(FatalError);
         } else {
             if(debug) {
                 Info << name << " is a " << localVolField::typeName << endl;
@@ -585,15 +582,13 @@ namespace CML {
             &&
             internalField
         ) {
-            FatalErrorIn(
-                "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-            )
+            FatalErrorInFunction
                 << "Field " << name << " is a surfaceField. "
-                    << "Function 'mappedInternal'"
-                    << " on patch " << patch_.name()
-                    << " does not work for that."
-                    << endl
-                    << exit(FatalError);
+                << "Function 'mappedInternal'"
+                << " on patch " << patch_.name()
+                << " does not work for that."
+                << endl
+                << exit(FatalError);
         }
 
         switch (mpp.mode())
@@ -601,26 +596,22 @@ namespace CML {
             case mappedPatchBase::NEARESTCELL:
             {
                 if(isSurfaceField) {
-                    FatalErrorIn(
-                        "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                    )
+                    FatalErrorInFunction
                         << "Field " << name << " is a surfaceField. "
-                            << "Map mode 'nearestCell'"
-                            << " on patch " << patch_.name()
-                            << " does not work for that."
-                            << endl
-                            << exit(FatalError);
+                        << "Map mode 'nearestCell'"
+                        << " on patch " << patch_.name()
+                        << " does not work for that."
+                        << endl
+                        << exit(FatalError);
                 }
 
                 if(internalField) {
-                    FatalErrorIn(
-                        "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                    )
+                    FatalErrorInFunction
                         << "Function 'mappedInternal' does not work with "
-                            << "Map mode 'nearestCell'"
-                            << " on patch " << patch_.name()
-                            << endl
-                            << exit(FatalError);
+                        << "Map mode 'nearestCell'"
+                        << " on patch " << patch_.name()
+                        << endl
+                        << exit(FatalError);
                 }
 
                 const mapDistribute& distMap = mpp.map();
@@ -679,13 +670,11 @@ namespace CML {
 
                 if (nbrPatchID < 0)
                 {
-                    FatalErrorIn
-                        (
-                            "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                        )<< "Unable to find sample patch " << mpp.samplePatch()
-                            << " in region " << mpp.sampleRegion()
-                            << " for patch " << this->patch().name() << nl
-                            << abort(FatalError);
+                    FatalErrorInFunction
+                        << "Unable to find sample patch " << mpp.samplePatch()
+                        << " in region " << mpp.sampleRegion()
+                        << " for patch " << this->patch().name() << nl
+                        << abort(FatalError);
                 }
 
 
@@ -713,15 +702,13 @@ namespace CML {
             case mappedPatchBase::NEARESTFACE:
             {
                 if(isSurfaceField) {
-                    FatalErrorIn(
-                        "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                    )
+                    FatalErrorInFunction
                         << "Field " << name << " is a surfaceField. "
-                            << "Map mode 'nearestFace'"
-                            << " on patch " << patch_.name()
-                            << " does not work for that."
-                            << endl
-                            << exit(FatalError);
+                        << "Map mode 'nearestFace'"
+                        << " on patch " << patch_.name()
+                        << " does not work for that."
+                        << endl
+                        << exit(FatalError);
                 }
 
                 const mapDistribute& distMap = mpp.map();
@@ -761,11 +748,9 @@ namespace CML {
             }
             default:
                 {
-                    FatalErrorIn
-                        (
-                            "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                        )<< "Unknown sampling mode: " << label(mpp.mode())
-                            << nl << abort(FatalError);
+                    FatalErrorInFunction
+                        << "Unknown sampling mode: " << label(mpp.mode())
+                        << nl << abort(FatalError);
                 }
         }
 
@@ -781,11 +766,11 @@ namespace CML {
         }
 
         if(!isA<mappedPatchBase>(patch_.patch())) {
-            FatalErrorIn("tmp<Field<T> > PatchValueExpressionDriver::mapField")
+            FatalErrorInFunction
                 << "Current patch " << patch_.name()
-                    << "is not a mapped patch"
-                    << endl
-                    << exit(FatalError);
+                << "is not a mapped patch"
+                << endl
+                << exit(FatalError);
 
         }
 
@@ -800,10 +785,10 @@ namespace CML {
             &&
             mpp.mode()!=mappedPatchBase::NEARESTPATCHFACEAMI
         ) {
-            FatalErrorIn("PatchValueExpressionDriver::mapField(tmp<Field<T> > orig)")
-            << "This method only works for patch-to-patch mapping"
-            << endl
-            << exit(FatalError);
+            FatalErrorInFunction
+                << "This method only works for patch-to-patch mapping"
+                << endl
+                << exit(FatalError);
 
         }
         //        const fvMesh& thisMesh = patch_.boundaryMesh().mesh();
@@ -820,13 +805,11 @@ namespace CML {
 
         if (nbrPatchID < 0)
         {
-            FatalErrorIn
-                (
-                    "tmp<Field<T> > PatchValueExpressionDriver::mapField"
-                )<< "Unable to find sample patch " << mpp.samplePatch()
-                    << " in region " << mpp.sampleRegion()
-                    << " for patch " << this->patch().name() << nl
-                    << abort(FatalError);
+            FatalErrorInFunction
+                << "Unable to find sample patch " << mpp.samplePatch()
+                << " in region " << mpp.sampleRegion()
+                << " for patch " << this->patch().name() << nl
+                << abort(FatalError);
         }
 
         mpp.distribute(result);
@@ -852,7 +835,7 @@ namespace CML {
         // dummy implemntation
         tmp<Field<T> > result(new Field<T>(this->pointSize(),pTraits<T>::zero));
 
-        notImplemented("tmp<Field<T> > PatchValueExpressionDriver::mapPointField");
+        NotImplemented;
 
         return result;
     }

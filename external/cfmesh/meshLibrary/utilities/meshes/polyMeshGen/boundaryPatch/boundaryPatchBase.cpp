@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -62,11 +63,8 @@ autoPtr<boundaryPatchBase> boundaryPatchBase::New
 
     if( cstrIter == dictionaryConstructorTablePtr_->end() )
     {
-        FatalIOErrorIn
-        (
-            "boundaryPatchBase::New(const word&, const dictionary&)",
-            dict
-        )   << "Unknown boundaryPatchBase type " << type << nl << nl
+        FatalIOErrorInFunction(dict)
+            << "Unknown boundaryPatchBase type " << type << nl << nl
             << "Valid boundaryPatchBase types are :" << nl
             << "[default: " << typeName_() << "]"
             << dictionaryConstructorTablePtr_->toc()

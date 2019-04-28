@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -38,7 +38,7 @@ inline CML::labelRanges::labelRanges(const label nElem)
 
 inline CML::labelRanges::const_iterator::const_iterator()
 :
-   list_(*reinterpret_cast< CML::labelRanges* >(0)),
+   list_(endLabelRanges_),
    index_(-1),
    subIndex_(-1)
 {}

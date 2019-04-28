@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -467,7 +467,7 @@ public:
             {
                 if (nodes_.empty())
                 {
-                    FatalErrorIn("indexedOctree<Type>::bb() const")
+                    FatalErrorInFunction
                         << "Tree is empty" << abort(FatalError);
                 }
                 return nodes_[0].bb_;
@@ -495,7 +495,7 @@ public:
             {
                 if (!isContent(i))
                 {
-                    FatalErrorIn("getContent(const label)")
+                    FatalErrorInFunction
                         << abort(FatalError);
                 }
                 return -i.val()-1;
@@ -505,7 +505,7 @@ public:
             {
                 if (!isNode(i))
                 {
-                    FatalErrorIn("getNode(const label)")
+                    FatalErrorInFunction
                         << abort(FatalError);
                 }
                 return i.val() - 1;
@@ -850,7 +850,7 @@ CML::indexedOctree<Type>::divide
      || bb.min()[2] >= bb.max()[2]
     )
     {
-        FatalErrorIn("indexedOctree<Type>::divide(..)")
+        FatalErrorInFunction
             << "Badly formed bounding box:" << bb
             << abort(FatalError);
     }
@@ -1125,11 +1125,8 @@ CML::volumeType CML::indexedOctree<Type>::getVolumeType
         {
             // Empty node. Cannot have 'mixed' as its type since not divided
             // up and has no items inside it.
-            FatalErrorIn
-            (
-                "indexedOctree<Type>::getVolumeType"
-                "(const label, const point&)"
-            )   << "Sample:" << sample << " node:" << nodeI
+            FatalErrorInFunction
+                << "Sample:" << sample << " node:" << nodeI
                 << " with bb:" << nodes_[nodeI].bb_ << nl
                 << "Empty subnode has invalid volume type MIXED."
                 << abort(FatalError);
@@ -1139,11 +1136,8 @@ CML::volumeType CML::indexedOctree<Type>::getVolumeType
     }
     else
     {
-        FatalErrorIn
-        (
-            "indexedOctree<Type>::getVolumeType"
-            "(const label, const point&)"
-        )   << "Sample:" << sample << " at node:" << nodeI
+        FatalErrorInFunction
+            << "Sample:" << sample << " at node:" << nodeI
             << " octant:" << octant
             << " with bb:" << nod.bb_.subBbox(octant) << nl
             << "Node has invalid volume type " << octantType
@@ -1408,7 +1402,7 @@ CML::point CML::indexedOctree<Type>::pushPoint
     {
         if (pushInside != bb.contains(perturbedPt))
         {
-            FatalErrorIn("indexedOctree<Type>::pushPoint(..)")
+            FatalErrorInFunction
                 << "pushed point:" << pt
                 << " to:" << perturbedPt
                 << " wanted side:" << pushInside
@@ -1443,7 +1437,7 @@ CML::point CML::indexedOctree<Type>::pushPoint
 
     if (faceID == 0)
     {
-        FatalErrorIn("indexedOctree<Type>::pushPoint(..)")
+        FatalErrorInFunction
             << abort(FatalError);
     }
 
@@ -1520,7 +1514,7 @@ CML::point CML::indexedOctree<Type>::pushPoint
     {
         if (pushInside != bb.contains(perturbedPt))
         {
-            FatalErrorIn("indexedOctree<Type>::pushPoint(..)")
+            FatalErrorInFunction
                 << "pushed point:" << pt << " on face:" << faceString(faceID)
                 << " to:" << perturbedPt
                 << " wanted side:" << pushInside
@@ -1549,7 +1543,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
     {
         if (bb.posBits(pt) != 0)
         {
-            FatalErrorIn("indexedOctree<Type>::pushPointIntoFace(..)")
+            FatalErrorInFunction
                 << " bb:" << bb << endl
                 << "does not contain point " << pt << abort(FatalError);
         }
@@ -1671,7 +1665,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
     {
         if (faceID != bb.faceBits(facePoint))
         {
-            FatalErrorIn("indexedOctree<Type>::pushPointIntoFace(..)")
+            FatalErrorInFunction
                 << "Pushed point from " << pt
                 << " on face:" << ptFaceID << " of bb:" << bb << endl
                 << "onto " << facePoint
@@ -1682,7 +1676,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
         }
         if (bb.posBits(facePoint) != 0)
         {
-            FatalErrorIn("indexedOctree<Type>::pushPointIntoFace(..)")
+            FatalErrorInFunction
                 << " bb:" << bb << endl
                 << "does not contain perturbed point "
                 << facePoint << abort(FatalError);
@@ -1786,7 +1780,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
 //
 //    if (nFaces == 0 || nFaces == 1 || nFaces > 3)
 //    {
-//        FatalErrorIn("indexedOctree<Type>::checkMultipleFaces(..)")
+//        FatalErrorInFunction
 //            << "Problem : nFaces:" << nFaces << abort(FatalError);
 //    }
 //
@@ -1819,7 +1813,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
 //
 //    if (maxIndex == -1)
 //    {
-//        FatalErrorIn("indexedOctree<Type>::checkMultipleFaces(..)")
+//        FatalErrorInFunction
 //            << "Problem maxIndex:" << maxIndex << " inproducts:" << inproducts
 //            << abort(FatalError);
 //    }
@@ -1879,7 +1873,7 @@ CML::point CML::indexedOctree<Type>::pushPointIntoFace
 //    {
 //        if (faceID != bb.faceBits(faceHitInfo.rawPoint()))
 //        {
-//            FatalErrorIn("indexedOctree<Type>::checkMultipleFaces(..)")
+//            FatalErrorInFunction
 //                << "Pushed point from " << oldPoint
 //                << " on face:" << oldFaceID << " of bb:" << bb << endl
 //                << "onto " << faceHitInfo.rawPoint()
@@ -1929,7 +1923,7 @@ bool CML::indexedOctree<Type>::walkToParent
 
     if (parentOctant == 255)
     {
-        FatalErrorIn("walkToParent(..)")
+        FatalErrorInFunction
             << "Problem: no parent found for octant:" << octant
             << " node:" << nodeI
             << abort(FatalError);
@@ -2126,7 +2120,7 @@ bool CML::indexedOctree<Type>::walkToNeighbour
 
         if (!subBb.contains(facePoint))
         {
-            FatalErrorIn("indexedOctree<Type>::walkToNeighbour(..)")
+            FatalErrorInFunction
                 << "When searching for " << facePoint
                 << " ended up in node:" << nodeI
                 << " octant:" << octant
@@ -2155,7 +2149,7 @@ bool CML::indexedOctree<Type>::walkToNeighbour
 
         if (nodeI == oldNodeI && octant == oldOctant)
         {
-            FatalErrorIn("indexedOctree<Type>::walkToNeighbour(..)")
+            FatalErrorInFunction
                 << "Did not go to neighbour when searching for " << facePoint
                 << endl
                 << "    starting from face:" << faceString(faceID)
@@ -2167,7 +2161,7 @@ bool CML::indexedOctree<Type>::walkToNeighbour
 
         if (!subBb.contains(facePoint))
         {
-            FatalErrorIn("indexedOctree<Type>::walkToNeighbour(..)")
+            FatalErrorInFunction
                 << "When searching for " << facePoint
                 << " ended up in node:" << nodeI
                 << " octant:" << octant
@@ -2258,7 +2252,7 @@ void CML::indexedOctree<Type>::traverseNode
 
         if (octantBb.posBits(start) != 0)
         {
-            FatalErrorIn("indexedOctree<Type>::traverseNode(..)")
+            FatalErrorInFunction
                 << "Node:" << nodeI << " octant:" << octant
                 << " bb:" << octantBb << endl
                 << "does not contain point " << start << abort(FatalError);
@@ -2566,7 +2560,7 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
         }
         if (debug)
         {
-            FatalErrorIn("indexedOctree<Type>::findLine(..)")
+            FatalErrorInFunction
                 << "Got stuck in loop raytracing from:" << treeStart
                 << " to:" << treeEnd << endl
                 << "inside top box:" << subBbox(startNodeI, startOctant)
@@ -2574,7 +2568,7 @@ CML::pointIndexHit CML::indexedOctree<Type>::findLine
         }
         else
         {
-            WarningIn("indexedOctree<Type>::findLine(..)")
+            WarningInFunction
                 << "Got stuck in loop raytracing from:" << treeStart
                 << " to:" << treeEnd << endl
                 << "inside top box:" << subBbox(startNodeI, startOctant)
@@ -3464,7 +3458,7 @@ CML::labelBits CML::indexedOctree<Type>::findNode
     {
         if (!nod.bb_.contains(sample))
         {
-            FatalErrorIn("findNode(..)")
+            FatalErrorInFunction
                 << "Cannot find " << sample << " in node " << nodeI
                 << abort(FatalError);
         }
@@ -3602,7 +3596,7 @@ CML::volumeType CML::indexedOctree<Type>::getVolumeType
                 }
                 else
                 {
-                    FatalErrorIn("getVolumeType") << abort(FatalError);
+                    FatalErrorInFunction << abort(FatalError);
                 }
             }
 

@@ -7,7 +7,7 @@ Import('env')
 target = 'wallGradU'
 
 sources = Split("""
-wallGradU.cpp
+wallGradU_app.cpp
 """)
 
 caelus_inc = [

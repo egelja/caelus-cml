@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -89,7 +89,7 @@ label pow(label a, label b)
 #   ifdef FULLDEBUG
     if (b < 0)
     {
-        FatalErrorIn("pow(label a, label b)")
+        FatalErrorInFunction
             << "negative value for b is not supported"
             << abort(FatalError);
     }
@@ -111,7 +111,7 @@ label factorial(label n)
 #   ifdef FULLDEBUG
     if (n > 12 && n < 0)
     {
-        FatalErrorIn("factorial(label n)")
+        FatalErrorInFunction
             << "n value out of range"
             << abort(FatalError);
     }

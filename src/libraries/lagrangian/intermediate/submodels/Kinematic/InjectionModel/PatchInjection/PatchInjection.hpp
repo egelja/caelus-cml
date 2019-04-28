@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,15 +22,19 @@ Class
     CML::PatchInjection
 
 Description
-    Patch injection
-    - User specifies
+    Patch injection.
+
+    User specifies:
       - Total mass to inject
       - Name of patch
       - Injection duration
       - Initial parcel velocity
       - Injection volume flow rate
-    - Parcel diameters obtained by distribution model
-    - Parcels injected at cell centres adjacent to patch
+
+    Properties:
+      - Parcel diameters obtained by distribution model
+      - Parcels injected randomly across the patch
+
 
 \*---------------------------------------------------------------------------*/
 
@@ -38,6 +42,7 @@ Description
 #define PatchInjection_H
 
 #include "InjectionModel.hpp"
+#include "patchInjectionBase.hpp"
 #include "TimeDataEntry.hpp"
 #include "distributionModel.hpp"
 
@@ -58,15 +63,10 @@ class distributionModel;
 template<class CloudType>
 class PatchInjection
 :
-    public InjectionModel<CloudType>
+    public InjectionModel<CloudType>,
+    public patchInjectionBase
 {
     // Private data
-
-        //- Name of patch
-        const word patchName_;
-
-        //- Id of patch
-        const label patchId_;
 
         //- Injection duration [s]
         scalar duration_;
@@ -81,13 +81,7 @@ class PatchInjection
         const TimeDataEntry<scalar> flowRateProfile_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
-
-        //- List of cell labels corresponding to injector positions
-        labelList cellOwners_;
-
-        //- Fraction of injection controlled by this processor
-        scalar fraction_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
 
 public:
@@ -125,11 +119,14 @@ public:
 
     // Member Functions
 
+        //- Inherit updateMesh from patchInjectionBase
+        using patchInjectionBase::updateMesh;
+
         //- Set injector locations when mesh is updated
         virtual void updateMesh();
 
         //- Return the end-of-injection time
-        scalar timeEnd() const;
+        virtual scalar timeEnd() const;
 
         //- Number of parcels to introduce relative to SOI
         virtual label parcelsToInject(const scalar time0, const scalar time1);
@@ -140,6 +137,9 @@ public:
 
         // Injection geometry
 
+            //- Inherit setPositionAndCell from patchInjectionBase
+            using patchInjectionBase::setPositionAndCell;
+
             //- Set the injection position and owner cell, tetFace and tetPt
             virtual void setPositionAndCell
             (
@@ -148,8 +148,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             virtual void setProperties
@@ -184,8 +184,7 @@ CML::PatchInjection<CloudType>::PatchInjection
 )
 :
     InjectionModel<CloudType>(dict, owner, modelName, typeName),
-    patchName_(this->coeffDict().lookup("patchName")),
-    patchId_(owner.mesh().boundaryMesh().findPatchID(patchName_)),
+    patchInjectionBase(owner.mesh(), this->coeffDict().lookup("patchName")),
     duration_(readScalar(this->coeffDict().lookup("duration"))),
     parcelsPerSecond_
     (
@@ -203,41 +202,19 @@ CML::PatchInjection<CloudType>::PatchInjection
     ),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
         )
-    ),
-    cellOwners_(),
-    fraction_(1.0)
+    )
 {
-    if (patchId_ < 0)
-    {
-        FatalErrorIn
-        (
-            "PatchInjection<CloudType>::PatchInjection"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Requested patch " << patchName_ << " not found" << nl
-            << "Available patches are: " << owner.mesh().boundaryMesh().names()
-            << nl << exit(FatalError);
-    }
-
     duration_ = owner.db().time().userTimeToTime(duration_);
 
-    updateMesh();
-
-    label patchSize = cellOwners_.size();
-    label totalPatchSize = patchSize;
-    reduce(totalPatchSize, sumOp<label>());
-    fraction_ = scalar(patchSize)/totalPatchSize;
+    patchInjectionBase::updateMesh(owner.mesh());
 
     // Set total volume/mass to inject
-    this->volumeTotal_ = fraction_*flowRateProfile_.integrate(0.0, duration_);
-    this->massTotal_ *= fraction_;
+    this->volumeTotal_ = flowRateProfile_.integrate(0.0, duration_);
 }
 
 
@@ -248,15 +225,12 @@ CML::PatchInjection<CloudType>::PatchInjection
 )
 :
     InjectionModel<CloudType>(im),
-    patchName_(im.patchName_),
-    patchId_(im.patchId_),
+    patchInjectionBase(im),
     duration_(im.duration_),
     parcelsPerSecond_(im.parcelsPerSecond_),
     U0_(im.U0_),
     flowRateProfile_(im.flowRateProfile_),
-    sizeDistribution_(im.sizeDistribution_().clone().ptr()),
-    cellOwners_(im.cellOwners_),
-    fraction_(im.fraction_)
+    sizeDistribution_(im.sizeDistribution_().clone().ptr())
 {}
 
 
@@ -272,9 +246,7 @@ CML::PatchInjection<CloudType>::~PatchInjection()
 template<class CloudType>
 void CML::PatchInjection<CloudType>::updateMesh()
 {
-    // Set/cache the injector cells
-    const polyPatch& patch = this->owner().mesh().boundaryMesh()[patchId_];
-    cellOwners_ = patch.faceCells();
+    patchInjectionBase::updateMesh(this->owner().mesh());
 }
 
 
@@ -294,9 +266,9 @@ CML::label CML::PatchInjection<CloudType>::parcelsToInject
 {
     if ((time0 >= 0.0) && (time0 < duration_))
     {
-        scalar nParcels = fraction_*(time1 - time0)*parcelsPerSecond_;
+        scalar nParcels = (time1 - time0)*parcelsPerSecond_;
 
-        cachedRandom& rnd = this->owner().rndGen();
+        Random& rnd = this->owner().rndGen();
 
         label nParcelsToInject = floor(nParcels);
 
@@ -305,10 +277,7 @@ CML::label CML::PatchInjection<CloudType>::parcelsToInject
         if
         (
             nParcelsToInject > 0
-         && (
-               nParcels - scalar(nParcelsToInject)
-             > rnd.position(scalar(0), scalar(1))
-            )
+         && (nParcels - scalar(nParcelsToInject) > rnd.globalScalar01())
         )
         {
             ++nParcelsToInject;
@@ -332,7 +301,7 @@ CML::scalar CML::PatchInjection<CloudType>::volumeToInject
 {
     if ((time0 >= 0.0) && (time0 < duration_))
     {
-        return fraction_*flowRateProfile_.integrate(time0, time1);
+        return flowRateProfile_.integrate(time0, time1);
     }
     else
     {
@@ -349,43 +318,19 @@ void CML::PatchInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
-    if (cellOwners_.size() > 0)
-    {
-        cachedRandom& rnd = this->owner().rndGen();
-
-        label cellI = rnd.position<label>(0, cellOwners_.size() - 1);
-
-        cellOwner = cellOwners_[cellI];
-
-        // The position is between the face and cell centre, which could be
-        // in any tet of the decomposed cell, so arbitrarily choose the first
-        // face of the cell as the tetFace and the first point after the base
-        // point on the face as the tetPt.  The tracking will pick the cell
-        // consistent with the motion in the firsttracking step.
-        tetFaceI = this->owner().mesh().cells()[cellOwner][0];
-        tetPtI = 1;
-
-        // position perturbed between cell and patch face centres
-        const vector& pc = this->owner().mesh().C()[cellOwner];
-        const vector& pf =
-            this->owner().mesh().Cf().boundaryField()[patchId_][cellI];
-
-        const scalar a = rnd.sample01<scalar>();
-        const vector d = pf - pc;
-        position = pc + 0.5*a*d;
-    }
-    else
-    {
-        cellOwner = -1;
-        tetFaceI = -1;
-        tetPtI = -1;
-        // dummy position
-        position = pTraits<vector>::max;
-    }
+    patchInjectionBase::setPositionAndCell
+    (
+        this->owner().mesh(),
+        this->owner().rndGen(),
+        position,
+        cellOwner,
+        tetFacei,
+        tetPti
+    );
 }
 
 

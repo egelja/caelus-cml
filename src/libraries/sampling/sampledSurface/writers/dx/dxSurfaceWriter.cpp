@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -69,10 +69,8 @@ void CML::dxSurfaceWriter::writeGeometry
 
         if (f.size() != 3)
         {
-            FatalErrorIn
-            (
-                "writeGeometry(Ostream&, const pointField&, const faceList&)"
-            )   << "Face " << faceI << " vertices " << f
+            FatalErrorInFunction
+                << "Face " << faceI << " vertices " << f
                 << " is not a triangle."
                 << exit(FatalError);
         }

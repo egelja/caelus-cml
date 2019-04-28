@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,7 +42,7 @@ CML::autoPtr<CML::fvPatch> CML::fvPatch::New
 
     if (cstrIter == polyPatchConstructorTablePtr_->end())
     {
-        FatalErrorIn("fvPatch::New(const polyPatch&, const fvBoundaryMesh&)")
+        FatalErrorInFunction
             << "Unknown fvPatch type " << patch.type() << nl
             << "Valid fvPatch types are :"
             << polyPatchConstructorTablePtr_->sortedToc()

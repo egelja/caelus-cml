@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011 - 2015 OpenFOAM Foundation
 Copyright (C) 2014 - 2016 Applied CCM
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,11 @@ Description
 
 void CML::lduMatrix::sumDiag()
 {
+    if (!lowerPtr_ && !upperPtr_)
+    {
+        return;
+    }
+
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
@@ -47,6 +52,11 @@ void CML::lduMatrix::sumDiag()
 
 void CML::lduMatrix::negSumDiag()
 {
+    if (!lowerPtr_ && !upperPtr_)
+    {
+        return;
+    }
+
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
@@ -67,6 +77,11 @@ void CML::lduMatrix::sumMagOffDiag
     scalarField& sumOff
 ) const
 {
+    if (!lowerPtr_ && !upperPtr_)
+    {
+        return;
+    }
+
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
 
@@ -138,7 +153,7 @@ void CML::lduMatrix::operator=(const lduMatrix& A)
     else if (lowerPtr_)
     {
         delete lowerPtr_;
-        lowerPtr_ = NULL;
+        lowerPtr_ = nullptr;
     }
 
     if (A.upperPtr_)
@@ -148,7 +163,7 @@ void CML::lduMatrix::operator=(const lduMatrix& A)
     else if (upperPtr_)
     {
         delete upperPtr_;
-        upperPtr_ = NULL;
+        upperPtr_ = nullptr;
     }
 
     if (A.diagPtr_)
@@ -240,7 +255,7 @@ void CML::lduMatrix::operator+=(const lduMatrix& A)
     {
         if (debug > 1)
         {
-            WarningIn("lduMatrix::operator+=(const lduMatrix& A)")
+            WarningInFunction
                 << "Unknown matrix type combination"
                 << endl;
         }
@@ -311,7 +326,7 @@ void CML::lduMatrix::operator-=(const lduMatrix& A)
     {
         if (debug > 1)
         {
-            WarningIn("lduMatrix::operator-=(const lduMatrix& A)")
+            WarningInFunction
                 << "Unknown matrix type combination"
                 << endl;
         }

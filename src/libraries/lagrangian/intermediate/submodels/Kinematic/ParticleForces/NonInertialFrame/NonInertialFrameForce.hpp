@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -136,6 +136,7 @@ public:
             virtual forceSuSp calcNonCoupled
             (
                 const typename CloudType::parcelType& p,
+                const typename CloudType::parcelType::trackingData& td,
                 const scalar dt,
                 const scalar mass,
                 const scalar Re,
@@ -199,7 +200,7 @@ CML::NonInertialFrameForce<CloudType>::NonInertialFrameForce
             "linearAcceleration"
         )
     ),
-    W_(vector::zero),
+    W_(Zero),
     omegaName_
     (
         this->coeffs().template lookupOrDefault<word>
@@ -208,7 +209,7 @@ CML::NonInertialFrameForce<CloudType>::NonInertialFrameForce
             "angularVelocity"
         )
     ),
-    omega_(vector::zero),
+    omega_(Zero),
     omegaDotName_
     (
         this->coeffs().template lookupOrDefault<word>
@@ -217,7 +218,7 @@ CML::NonInertialFrameForce<CloudType>::NonInertialFrameForce
             "angularAcceleration"
         )
     ),
-    omegaDot_(vector::zero),
+    omegaDot_(Zero),
     centreOfRotationName_
     (
         this->coeffs().template lookupOrDefault<word>
@@ -226,7 +227,7 @@ CML::NonInertialFrameForce<CloudType>::NonInertialFrameForce
             "centreOfRotation"
         )
     ),
-    centreOfRotation_(vector::zero)
+    centreOfRotation_(Zero)
 {}
 
 
@@ -260,10 +261,10 @@ CML::NonInertialFrameForce<CloudType>::~NonInertialFrameForce()
 template<class CloudType>
 void CML::NonInertialFrameForce<CloudType>::cacheFields(const bool store)
 {
-    W_ = vector::zero;
-    omega_ = vector::zero;
-    omegaDot_ = vector::zero;
-    centreOfRotation_ = vector::zero;
+    W_ = Zero;
+    omega_ = Zero;
+    omegaDot_ = Zero;
+    centreOfRotation_ = Zero;
 
     if (store)
     {
@@ -275,7 +276,7 @@ void CML::NonInertialFrameForce<CloudType>::cacheFields(const bool store)
             )
         )
         {
-            uniformDimensionedVectorField W = this->mesh().template
+            const uniformDimensionedVectorField& W = this->mesh().template
                 lookupObject<uniformDimensionedVectorField>(WName_);
 
             W_ = W.value();
@@ -289,7 +290,7 @@ void CML::NonInertialFrameForce<CloudType>::cacheFields(const bool store)
             )
         )
         {
-            uniformDimensionedVectorField omega = this->mesh().template
+            const uniformDimensionedVectorField& omega = this->mesh().template
                 lookupObject<uniformDimensionedVectorField>(omegaName_);
 
             omega_ = omega.value();
@@ -303,7 +304,8 @@ void CML::NonInertialFrameForce<CloudType>::cacheFields(const bool store)
             )
         )
         {
-            uniformDimensionedVectorField omegaDot = this->mesh().template
+            const uniformDimensionedVectorField& omegaDot =
+                this->mesh().template
                 lookupObject<uniformDimensionedVectorField>(omegaDotName_);
 
             omegaDot_ = omegaDot.value();
@@ -317,7 +319,7 @@ void CML::NonInertialFrameForce<CloudType>::cacheFields(const bool store)
             )
         )
         {
-            uniformDimensionedVectorField centreOfRotation =
+            const uniformDimensionedVectorField& centreOfRotation =
                 this->mesh().template
                 lookupObject<uniformDimensionedVectorField>
                 (
@@ -334,13 +336,14 @@ template<class CloudType>
 CML::forceSuSp CML::NonInertialFrameForce<CloudType>::calcNonCoupled
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const scalar dt,
     const scalar mass,
     const scalar Re,
     const scalar muc
 ) const
 {
-    forceSuSp value(vector::zero, 0.0);
+    forceSuSp value(Zero, 0.0);
 
     const vector r = p.position() - centreOfRotation_;
 

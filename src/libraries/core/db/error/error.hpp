@@ -309,6 +309,11 @@ extern IOerror FatalIOError;
 #define FatalErrorIn(fn) \
     ::CML::FatalError((fn), __FILE__, __LINE__)
 
+//- Report an error message using CML::FatalError
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+#define FatalErrorInFunction FatalErrorIn(FUNCTION_NAME)
+
+
 /**
  * \def FatalIOErrorIn(functionName, ios)
  * Report an error message using CML::FatalIOError for functionName in
@@ -317,6 +322,12 @@ extern IOerror FatalIOError;
 */
 #define FatalIOErrorIn(fn, ios) \
     ::CML::FatalIOError((fn), __FILE__, __LINE__, (ios))
+
+//- Report an error message using CML::FatalIOError
+//  for FUNCTION_NAME in file __FILE__ at line __LINE__
+//  for a particular IOstream
+#define FatalIOErrorInFunction(ios) FatalIOErrorIn(FUNCTION_NAME, ios)
+
 
 /**
  * \def SafeFatalIOErrorIn(functionName, ios, msg)
@@ -327,6 +338,14 @@ extern IOerror FatalIOError;
 */
 #define SafeFatalIOErrorIn(fn, ios, msg) \
     ::CML::IOerror::SafeFatalIOError((fn), __FILE__, __LINE__, (ios), (msg))
+
+//- Report an error message using CML::FatalIOError
+//  (or cerr if FatalIOError not yet constructed)
+//  for functionName in file __FILE__ at line __LINE__
+//  for a particular IOstream
+#define SafeFatalIOErrorInFunction(ios, msg)                                   \
+    SafeFatalIOErrorIn(FUNCTION_NAME, ios, msg)
+
 
 /**
  * \def notImplemented(functionName)
@@ -341,6 +360,15 @@ extern IOerror FatalIOError;
 */
 #define notImplemented(fn) \
     FatalErrorIn(fn) << "Not implemented" << ::CML::abort(FatalError);
+
+//- Issue a FatalErrorIn for a function not currently implemented.
+//  The FUNCTION_NAME is printed and then abort is called.
+//
+//  This macro can be particularly useful when methods must be defined to
+//  complete the interface of a derived class even if they should never be
+//  called for this derived class.
+#define NotImplemented notImplemented(FUNCTION_NAME)
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

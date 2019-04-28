@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -46,6 +46,14 @@ namespace CML
 // Forward declaration of classes
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class wallNormalInfo;
+
+Istream& operator>>(Istream&, wallNormalInfo&);
+Ostream& operator<<(Ostream&, const wallNormalInfo&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class wallNormalInfo Declaration

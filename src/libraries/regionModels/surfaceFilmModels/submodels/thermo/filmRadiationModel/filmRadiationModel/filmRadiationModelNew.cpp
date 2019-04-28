@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ namespace surfaceFilmModels
 
 autoPtr<filmRadiationModel> filmRadiationModel::New
 (
-    const surfaceFilmModel& model,
+    surfaceFilmRegionModel& model,
     const dictionary& dict
 )
 {
@@ -47,14 +47,8 @@ autoPtr<filmRadiationModel> filmRadiationModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "filmRadiationModel::New"
-            "("
-                "const surfaceFilmModel&, "
-                "const dictionary&"
-            ")"
-        )   << "Unknown radiationModel type " << modelType << nl << nl
+        FatalErrorInFunction
+            << "Unknown radiationModel type " << modelType << nl << nl
             << "Valid filmRadiationModel types are:" << nl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);

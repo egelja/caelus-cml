@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014-2015 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -356,6 +356,15 @@ public:
             const GeometricField<Type, PatchField, GeoMesh>&
         );
 
+        //- Construct as copy of tmp<GeometricField> resetting IO parameters
+        #ifdef ConstructFromTmp
+        GeometricField
+        (
+            const IOobject&,
+            const tmp<GeometricField<Type, PatchField, GeoMesh> >&
+        );
+        #endif
+
         //- Construct as copy resetting name
         GeometricField
         (
@@ -645,7 +654,7 @@ CML::GeometricField<Type, PatchField, GeoMesh>::timeIndex()
 #define checkField(gf1, gf2, op)                                    \
 if ((gf1).mesh() != (gf2).mesh())                                   \
 {                                                                   \
-    FatalErrorIn("checkField(gf1, gf2, op)")                        \
+    FatalErrorInFunction                                            \
         << "different mesh for fields "                             \
         << (gf1).name() << " and " << (gf2).name()                  \
         << " during operatrion " <<  op                             \
@@ -732,10 +741,8 @@ bool CML::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
      || this->readOpt() == IOobject::MUST_READ_IF_MODIFIED
     )
     {
-        WarningIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::readIfPresent()"
-        )   << "read option IOobject::MUST_READ or MUST_READ_IF_MODIFIED"
+        WarningInFunction
+            << "read option IOobject::MUST_READ or MUST_READ_IF_MODIFIED"
             << " suggests that a read constructor for field " << this->name()
             << " would be more appropriate." << endl;
     }
@@ -747,12 +754,8 @@ bool CML::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
         // Check compatibility between field and mesh
         if (this->size() != GeoMesh::size(this->mesh()))
         {
-            FatalIOErrorIn
-            (
-                "GeometricField<Type, PatchField, GeoMesh>::"
-                "readIfPresent()",
-                this->readStream(typeName)
-            )   << "   number of field elements = " << this->size()
+            FatalIOErrorInFunction(this->readStream(typeName))
+                << "   number of field elements = " << this->size()
                 << " number of mesh elements = "
                 << GeoMesh::size(this->mesh())
                 << exit(FatalIOError);
@@ -826,8 +829,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, ds, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(mesh.boundary(), *this, patchFieldType)
 {
     if (debug)
@@ -857,8 +860,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, ds, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(mesh.boundary(), *this, patchFieldTypes, actualPatchTypes)
 {
     if (debug)
@@ -884,8 +887,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, dt, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(mesh.boundary(), *this, patchFieldType)
 {
     if (debug)
@@ -914,8 +917,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, dt, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(mesh.boundary(), *this, patchFieldTypes, actualPatchTypes)
 {
     if (debug)
@@ -944,8 +947,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, ds, iField),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(mesh.boundary(), *this, ptfl)
 {
     if (debug)
@@ -969,8 +972,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, dimless, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, readField(this->readStream(typeName)))
 {
     this->close();
@@ -979,12 +982,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 
     if (this->size() != GeoMesh::size(this->mesh()))
     {
-        FatalIOErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::GeometricField"
-            "(const IOobject&, const Mesh&)",
-            this->readStream(typeName)
-        )   << "   number of field elements = " << this->size()
+        FatalIOErrorInFunction(this->readStream(typeName))
+            << "   number of field elements = " << this->size()
             << " number of mesh elements = " << GeoMesh::size(this->mesh())
             << exit(FatalIOError);
     }
@@ -1013,19 +1012,16 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, mesh, dimless, false),
     timeIndex_(this->time().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, readField(dict))
 {
     // Check compatibility between field and mesh
 
     if (this->size() != GeoMesh::size(this->mesh()))
     {
-        FatalErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::GeometricField"
-            "(const IOobject&, const Mesh&, const dictionary&)"
-        )   << "   number of field elements = " << this->size()
+        FatalErrorInFunction
+            << "   number of field elements = " << this->size()
             << " number of mesh elements = " << GeoMesh::size(this->mesh())
             << exit(FatalIOError);
     }
@@ -1050,8 +1046,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(gf),
     timeIndex_(gf.timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, gf.boundaryField_)
 {
     if (debug)
@@ -1086,8 +1082,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
         tgf.isTmp()
     ),
     timeIndex_(tgf().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, tgf().boundaryField_)
 {
     if (debug)
@@ -1114,8 +1110,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, gf),
     timeIndex_(gf.timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, gf.boundaryField_)
 {
     if (debug)
@@ -1136,6 +1132,39 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 }
 
 
+#ifdef ConstructFromTmp
+template<class Type, template<class> class PatchField, class GeoMesh>
+CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
+(
+    const IOobject& io,
+    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf
+)
+:
+    DimensionedField<Type, GeoMesh>
+    (
+        io,
+        const_cast<GeometricField<Type, PatchField, GeoMesh>&>(tgf()),
+        tgf.isTmp()
+    ),
+    timeIndex_(tgf().timeIndex()),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
+    boundaryField_(*this, tgf().boundaryField_)
+{
+    if (debug)
+    {
+        Info<< "GeometricField<Type, PatchField, GeoMesh>::GeometricField : "
+               "constructing from tmp resetting IO params"
+            << endl << this->info() << endl;
+    }
+
+    tgf.clear();
+
+    readIfPresent();
+}
+#endif
+
+
 // construct as copy resetting name
 template<class Type, template<class> class PatchField, class GeoMesh>
 CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
@@ -1146,8 +1175,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(newName, gf),
     timeIndex_(gf.timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, gf.boundaryField_)
 {
     if (debug)
@@ -1184,8 +1213,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
         tgf.isTmp()
     ),
     timeIndex_(tgf().timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(*this, tgf().boundaryField_)
 {
     if (debug)
@@ -1210,8 +1239,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, gf),
     timeIndex_(gf.timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_(this->mesh().boundary(), *this, patchFieldType)
 {
     if (debug)
@@ -1247,8 +1276,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 :
     DimensionedField<Type, GeoMesh>(io, gf),
     timeIndex_(gf.timeIndex()),
-    field0Ptr_(NULL),
-    fieldPrevIterPtr_(NULL),
+    field0Ptr_(nullptr),
+    fieldPrevIterPtr_(nullptr),
     boundaryField_
     (
         this->mesh().boundary(),
@@ -1455,10 +1484,8 @@ CML::GeometricField<Type, PatchField, GeoMesh>::prevIter() const
 {
     if (!fieldPrevIterPtr_)
     {
-        FatalErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::prevIter() const"
-        )   << "previous iteration field" << endl << this->info() << endl
+        FatalErrorInFunction
+            << "previous iteration field" << endl << this->info() << endl
             << "  not stored."
             << "  Use field.storePrevIter() at start of iteration."
             << abort(FatalError);
@@ -1508,11 +1535,8 @@ void CML::GeometricField<Type, PatchField, GeoMesh>::relax(const scalar alpha)
 {
     if (debug)
     {
-        InfoIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::relax"
-            "(const scalar alpha)"
-        )  << "Relaxing" << endl << this->info() << " by " << alpha << endl;
+        InfoInFunction
+           << "Relaxing" << endl << this->info() << " by " << alpha << endl;
     }
 
     operator==(prevIter() + alpha*(*this - prevIter()));
@@ -1704,11 +1728,8 @@ void CML::GeometricField<Type, PatchField, GeoMesh>::operator=
 {
     if (this == &gf)
     {
-        FatalErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::operator="
-            "(const GeometricField<Type, PatchField, GeoMesh>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1729,11 +1750,8 @@ void CML::GeometricField<Type, PatchField, GeoMesh>::operator=
 {
     if (this == &(tgf()))
     {
-        FatalErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::operator="
-            "(const tmp<GeometricField<Type, PatchField, GeoMesh> >&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1955,13 +1973,8 @@ GeometricBoundaryField
      || (constraintTypes.size() && (constraintTypes.size() != this->size()))
     )
     {
-        FatalErrorIn
-        (
-            "GeometricField<Type, PatchField, GeoMesh>::"
-            "GeometricBoundaryField::"
-            "GeometricBoundaryField(const BoundaryMesh&, "
-            "const Field<Type>&, const wordList&, const wordList&)"
-        )   << "Incorrect number of patch type specifications given" << nl
+        FatalErrorInFunction
+            << "Incorrect number of patch type specifications given" << nl
             << "    Number of patches in mesh = " << bmesh.size()
             << " number of patch type specifications = "
             << patchFieldTypes.size()
@@ -2118,17 +2131,8 @@ GeometricBoundaryField
              && !dict.found(bmesh_[patchi].name())
             )
             {
-                FatalIOErrorIn
-                (
-                    "GeometricField<Type, PatchField, GeoMesh>::\n"
-                    "GeometricBoundaryField::GeometricBoundaryField\n"
-                    "(\n"
-                    "    const BoundaryMesh&,\n"
-                    "    const DimensionedField<Type, GeoMesh>&,\n"
-                    "    const dictionary&\n"
-                    ")",
-                    dict
-                )   << "Cannot find patchField entry for cyclic "
+                FatalIOErrorInFunction(dict)
+                    << "Cannot find patchField entry for cyclic "
                     << bmesh_[patchi].name() << endl
                     << "Is your field uptodate with split cyclics?" << endl
                     << "Run caelusUpgradeCyclics to convert mesh and fields"
@@ -2243,7 +2247,7 @@ evaluate()
     }
     else
     {
-        FatalErrorIn("GeometricBoundaryField::evaluate()")
+        FatalErrorInFunction
             << "Unsupported communications type "
             << Pstream::commsTypeNames[Pstream::defaultCommsType]
             << exit(FatalError);

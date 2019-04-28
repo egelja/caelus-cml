@@ -1,6 +1,7 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: yes
       remove_mesh: yes
       preserve: [ "0.org" ]
@@ -13,27 +14,8 @@ tasks:
       cmd_name: blockMesh
 
   - run_command:
-      cmd_name: topoSet
-
-  - run_command:
-      cmd_name: createBaffles_old
-      cmd_args: 'baffleFaces "(baffle1Wall_0 baffle1Wall_1)" -overwrite'
-
-  - run_command:
-      cmd_name: extrudeToRegionMesh
-      cmd_args: "-overwrite"
-
-  - run_command:
-      cmd_name: changeDictionary
-      cmd_args: "-dict system/changeDictionaryDict.baffle"
-
-  - run_command:
-      cmd_name: changeDictionary
-      cmd_args: "-dict system/changeDictionaryDict.baffleRegion -literalRE"
-
-  - run_command:
-      cmd_name: changeDictionary
-      cmd_args: "-region baffleRegion -literalRE"
+      cmd_name: createBaffles
+      cmd_args: '-overwrite'
 
   - run_command:
       cmd_name: buoyantSimpleSolver

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2017 Applied CCM
+Copyright (C) 2017-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -67,7 +67,7 @@ public:
             k_ = readScalar(is);
             if (k_ < 0 || k_ > 1)
             {
-                FatalIOErrorIn("linearPDL(fvMesh const&, Istream&)", is)
+                FatalIOErrorInFunction(is)
                         << "coefficient = " << k_
                         << " should be >= 0 and <= 1"
                         << exit(FatalIOError);

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014-2016 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -64,6 +64,9 @@ template<class Type>
 class fvPatchField;
 
 template<class Type>
+class calculatedFvPatchField;
+
+template<class Type>
 class fvMatrix;
 
 template<class Type>
@@ -104,6 +107,7 @@ class fvPatchField
 public:
 
     typedef fvPatch Patch;
+    typedef calculatedFvPatchField<Type> Calculated;
 
 
     //- Runtime type information
@@ -406,10 +410,7 @@ public:
                 const scalarField& deltaCoeffs
             ) const
             {
-                notImplemented
-                (
-                    type() + "::snGrad(const scalarField& deltaCoeffs)"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -431,7 +432,7 @@ public:
             //- Return patchField on the opposite patch of a coupled patch
             virtual tmp<Field<Type> > patchNeighbourField() const
             {
-                notImplemented(type() + "patchNeighbourField()");
+                NotImplemented;
                 return *this;
             }
 
@@ -456,11 +457,7 @@ public:
                 const tmp<Field<scalar> >&
             ) const
             {
-                notImplemented
-                (
-                    type()
-                  + "::valueInternalCoeffs(const tmp<Field<scalar> >&)"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -471,11 +468,7 @@ public:
                 const tmp<Field<scalar> >&
             ) const
             {
-                notImplemented
-                (
-                    type()
-                  + "::valueBoundaryCoeffs(const tmp<Field<scalar> >&)"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -483,7 +476,7 @@ public:
             //  evaluation of the gradient of this patchField
             virtual tmp<Field<Type> > gradientInternalCoeffs() const
             {
-                notImplemented(type() + "::gradientInternalCoeffs()");
+                NotImplemented;
                 return *this;
             }
 
@@ -495,11 +488,7 @@ public:
                 const scalarField& deltaCoeffs
             ) const
             {
-                notImplemented
-                (
-                    type()
-                  + "::gradientInternalCoeffs(const scalarField& deltaCoeffs)"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -507,7 +496,7 @@ public:
             //  evaluation of the gradient of this patchField
             virtual tmp<Field<Type> > gradientBoundaryCoeffs() const
             {
-                notImplemented(type() + "::gradientBoundaryCoeffs()");
+                NotImplemented;
                 return *this;
             }
 
@@ -519,11 +508,7 @@ public:
                 const scalarField& deltaCoeffs
             ) const
             {
-                notImplemented
-                (
-                    type()
-                  + "::gradientBoundaryCoeffs(const scalarField& deltaCoeffs)"
-                );
+                NotImplemented;
                 return *this;
             }
 
@@ -731,17 +716,8 @@ CML::fvPatchField<Type>::fvPatchField
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "fvPatchField<Type>::fvPatchField"
-            "("
-            "const fvPatch& p,"
-            "const DimensionedField<Type, volMesh>& iF,"
-            "const dictionary& dict,"
-            "const bool valueRequired"
-            ")",
-            dict
-        )   << "Essential entry 'value' missing"
+        FatalIOErrorInFunction(dict)
+            << "Essential entry 'value' missing"
             << exit(FatalIOError);
     }
 }
@@ -792,7 +768,7 @@ void CML::fvPatchField<Type>::check(const fvPatchField<Type>& ptf) const
 {
     if (&patch_ != &(ptf.patch_))
     {
-        FatalErrorIn("PatchField<Type>::check(const fvPatchField<Type>&)")
+        FatalErrorInFunction
             << "different patches for fvPatchField<Type>s"
             << abort(FatalError);
     }
@@ -1032,10 +1008,8 @@ void CML::fvPatchField<Type>::operator*=
 {
     if (&patch_ != &ptf.patch())
     {
-        FatalErrorIn
-        (
-            "PatchField<Type>::operator*=(const fvPatchField<scalar>& ptf)"
-        )   << "incompatible patches for patch fields"
+        FatalErrorInFunction
+            << "incompatible patches for patch fields"
             << abort(FatalError);
     }
 
@@ -1051,10 +1025,8 @@ void CML::fvPatchField<Type>::operator/=
 {
     if (&patch_ != &ptf.patch())
     {
-        FatalErrorIn
-        (
-            "PatchField<Type>::operator/=(const fvPatchField<scalar>& ptf)"
-        )   << "    incompatible patches for patch fields"
+        FatalErrorInFunction
+            << "    incompatible patches for patch fields"
             << abort(FatalError);
     }
 
@@ -1224,11 +1196,8 @@ CML::tmp<CML::fvPatchField<Type> > CML::fvPatchField<Type>::New
 
     if (cstrIter == patchConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "fvPatchField<Type>::New(const word&, const word&, const fvPatch&,"
-            "const DimensionedField<Type, volMesh>&)"
-        )   << "Unknown patchField type "
+        FatalErrorInFunction
+            << "Unknown patchField type "
             << patchFieldType << nl << nl
             << "Valid patchField types are :" << endl
             << patchConstructorTablePtr_->sortedToc()
@@ -1309,13 +1278,8 @@ CML::tmp<CML::fvPatchField<Type> > CML::fvPatchField<Type>::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "fvPatchField<Type>::New(const fvPatch&, "
-                "const DimensionedField<Type, volMesh>&, "
-                "const dictionary&)",
-                dict
-            )   << "Unknown patchField type " << patchFieldType
+            FatalIOErrorInFunction(dict)
+                << "Unknown patchField type " << patchFieldType
                 << " for patch type " << p.type() << nl << nl
                 << "Valid patchField types are :" << endl
                 << dictionaryConstructorTablePtr_->sortedToc()
@@ -1338,13 +1302,8 @@ CML::tmp<CML::fvPatchField<Type> > CML::fvPatchField<Type>::New
          && patchTypeCstrIter() != cstrIter()
         )
         {
-            FatalIOErrorIn
-            (
-                "fvPatchField<Type>::New(const fvPatch&, "
-                "const DimensionedField<Type, volMesh>&, "
-                "const dictionary&)",
-                dict
-            )   << "inconsistent patch and patchField types for \n"
+            FatalIOErrorInFunction(dict)
+                << "inconsistent patch and patchField types for \n"
                    "    patch type " << p.type()
                 << " and patchField type " << patchFieldType
                 << exit(FatalIOError);
@@ -1378,12 +1337,8 @@ CML::tmp<CML::fvPatchField<Type> > CML::fvPatchField<Type>::New
 
     if (cstrIter == patchMapperConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "fvPatchField<Type>::New(const fvPatchField<Type>&, "
-            "const fvPatch&, const DimensionedField<Type, volMesh>&, "
-            "const fvPatchFieldMapper&)"
-        )   << "Unknown patchField type " << ptf.type() << nl << nl
+        FatalErrorInFunction
+            << "Unknown patchField type " << ptf.type() << nl << nl
             << "Valid patchField types are :" << endl
             << patchMapperConstructorTablePtr_->sortedToc()
             << exit(FatalError);

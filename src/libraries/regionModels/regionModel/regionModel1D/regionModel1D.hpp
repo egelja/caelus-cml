@@ -50,9 +50,6 @@ class regionModel1D
 :
     public regionModel
 {
-
-private:
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -122,7 +119,11 @@ public:
     // Constructors
 
         //- Construct null
-        regionModel1D(const fvMesh& mesh);
+        regionModel1D
+        (
+            const fvMesh& mesh,
+            const word& regionType
+        );
 
         //- Construct from mesh, region type and name
         regionModel1D

@@ -58,11 +58,8 @@ void boundaryLayerOptimisation::writeVTK
 )
 {
     if( origin.size() != vecs.size() )
-        FatalErrorIn
-        (
-            "void boundaryLayerOptimisation::writeVTK(const fileName&,"
-            " const pointField&, const vectorField&)"
-        ) << "Sizes do not match" << abort(FatalError);
+        FatalErrorInFunction
+          << "Sizes do not match" << abort(FatalError);
 
     OFstream file(fName);
 
@@ -104,11 +101,8 @@ void boundaryLayerOptimisation::writeHairEdges
 ) const
 {
     if( vecs.size() != hairEdges_.size() )
-        FatalErrorIn
-        (
-            "void boundaryLayerOptimisation::writeHairEdges"
-            "(const fileName&, const direction, const vectorField&) const"
-        ) << "Sizes do not match" << abort(FatalError);
+        FatalErrorInFunction
+          << "Sizes do not match" << abort(FatalError);
 
     //- count the number of hair edges matching this criteria
     label counter(0);
@@ -186,11 +180,8 @@ const meshSurfaceEngine& boundaryLayerOptimisation::meshSurface() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const meshSurfaceEngine&"
-                " boundaryLayerOptimisation::meshSurface()"
-            ) << "Cannot generate meshSurfaceEngine" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot generate meshSurfaceEngine" << abort(FatalError);
         # endif
 
         meshSurfacePtr_ = new meshSurfaceEngine(mesh_);
@@ -206,11 +197,8 @@ boundaryLayerOptimisation::surfacePartitioner() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "const meshSurfacePartitioner& "
-                "boundaryLayerOptimisation::surfacePartitioner()"
-            ) << "Cannot generate meshSurfacePartitioner" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot generate meshSurfacePartitioner" << abort(FatalError);
         # endif
 
         partitionerPtr_ = new meshSurfacePartitioner(meshSurface());

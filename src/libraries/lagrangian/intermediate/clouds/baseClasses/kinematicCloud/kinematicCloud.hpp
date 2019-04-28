@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -80,12 +80,6 @@ public:
 
             //- Total linear kinetic energy in the system
             virtual scalar linearKineticEnergyOfSystem() const = 0;
-
-            //- Total rotational kinetic energy in the system
-            virtual scalar rotationalKineticEnergyOfSystem() const = 0;
-
-            //- Penetration for percentage of the current total mass
-//            virtual scalar penetration(const scalar& fraction) const = 0;
 
             //- Mean diameter Dij
             virtual scalar Dij(const label i, const label j) const = 0;

@@ -250,7 +250,7 @@ SimpleDistribution<Type>::SimpleDistribution(const scalar binSize)
     invalidValue_(-GREAT*pTraits<Type>::one)
 {
     if(binSize<SMALL) {
-        FatalErrorIn("SimpleDistribution<Type>::SimpleDistribution(const scalar binSize)")
+        FatalErrorInFunction
             << "Specified bin size " << binSize << " is smaller than " << SMALL
                 << endl
                 << exit(FatalError);
@@ -383,7 +383,7 @@ void SimpleDistribution<Type>::calcScalarWeight(
 )
 {
     if(values.size()!=weights.size()) {
-        FatalErrorIn("SimpleDistribution::calcScalarWeight")
+        FatalErrorInFunction
             << "Size " << values.size() << " of the values and size "
                 << weights.size() << " of the weights differ"
                 << endl
@@ -504,7 +504,7 @@ void SimpleDistribution<Type>::calcScalarWeight(
         ||
         values.size()!=mask.size()
     ) {
-        FatalErrorIn("SimpleDistribution::calcScalarWeight - with mask")
+        FatalErrorInFunction
             << "Size " << values.size() << " of the values and size "
                 << weights.size() << " of the weights or the size of the mask "
                 << mask.size() << " differ"
@@ -532,7 +532,7 @@ void SimpleDistribution<Type>::calc(
 )
 {
     if(values.size()!=weights.size()) {
-        FatalErrorIn("SimpleDistribution::calc")
+        FatalErrorInFunction
             << "Size " << values.size() << " of the values and size "
                 << weights.size() << " of the weights differ"
                 << endl
@@ -564,7 +564,7 @@ void SimpleDistribution<Type>::calc(
         ||
         values.size()!=mask.size()
     ) {
-        FatalErrorIn("SimpleDistribution::calc - with mask")
+        FatalErrorInFunction
             << "Size " << values.size() << " of the values and size "
                 << weights.size() << " of the weights or the size of the mask "
                 << mask.size() << " differ"
@@ -594,7 +594,7 @@ void SimpleDistribution<Type>::divideByDistribution(
 )
 {
     if(this->size()!=weightSum.size()) {
-        FatalErrorIn("SimpleDistribution<Type>::divideByDistribution")
+        FatalErrorInFunction
             << "Number of components " << this->size() << " differs from "
                 << "number of components in divisor " << weightSum.size()
                 << endl
@@ -616,7 +616,7 @@ void SimpleDistribution<Type>::divideByDistribution(
         Pair<label> &limits=validLimits_[cmpt];
 
         if(vals.size()!=weights.size()) {
-            FatalErrorIn("SimpleDistribution<Type>::divideByDistribution")
+            FatalErrorInFunction
                 << "For component " << cmpt << " the size " << vals.size()
                     << " of the data and " << weights.size() << " of the weights "
                     << "differ"
@@ -891,7 +891,7 @@ List< List < Tuple2<scalar,FType> > > SimpleDistribution<Type>::rawField(
 ) const
 {
     if(f.size()!=pTraits<Type>::nComponents) {
-        FatalErrorIn("SimpleDistribution::rawField")
+        FatalErrorInFunction
             << "Field size" << f.size() << " does not fit number of components "
                 << pTraits<Type>::nComponents
                 << endl
@@ -918,7 +918,7 @@ List< List < Tuple2<scalar,FType> > > SimpleDistribution<Type>::rawField(
 
         rawDist.setSize(limits.second() - limits.first() + 1);
         // if(rawDist.size()!=cmptF.size()) {
-        //     FatalErrorIn("SimpleDistribution::rawField")
+        //     FatalErrorInFunction
         //         << "For component " << cmpt << " the field size "
         //             << cmptF.size() << " does not fit the distribution size "
         //             << rawDist.size()
@@ -1094,7 +1094,7 @@ SimpleDistribution<Type> operator+
         ) {
             doMinMax=true;
         } else {
-            FatalErrorIn("SimpleDistribution<Type> operator+")
+            FatalErrorInFunction
                 << "Sizes of minimum and maximum in operand inconsitent"
                     << " " << d1.minimum_.size()
                     << " " << d1.maximum_.size()

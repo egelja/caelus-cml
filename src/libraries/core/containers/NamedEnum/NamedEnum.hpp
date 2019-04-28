@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,7 +31,6 @@ Description
 #define NamedEnum_H
 
 #include "HashTable.hpp"
-#include "StaticAssert.hpp"
 #include "stringList.hpp"
 #include "wordList.hpp"
 
@@ -44,14 +43,11 @@ namespace CML
                           Class NamedEnum Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 class NamedEnum
 :
-    public HashTable<int>
+    public HashTable<unsigned int>
 {
-    //- nEnum must be positive (non-zero)
-    StaticAssert(nEnum > 0);
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -96,20 +92,17 @@ public:
         //- Return the enumeration element corresponding to the given name
         const Enum operator[](const char* name) const
         {
-            return Enum(HashTable<int>::operator[](name));
+            return Enum(HashTable<unsigned int>::operator[](name));
         }
 
         //- Return the enumeration element corresponding to the given name
         const Enum operator[](const word& name) const
         {
-            return Enum(HashTable<int>::operator[](name));
+            return Enum(HashTable<unsigned int>::operator[](name));
         }
 
         //- Return the name of the given enumeration element
-        const char* operator[](const Enum e) const
-        {
-            return names[e];
-        }
+        const char* operator[](const Enum e) const;
 };
 
 
@@ -119,23 +112,23 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 CML::NamedEnum<Enum, nEnum>::NamedEnum()
 :
-    HashTable<int>(2*nEnum)
+    HashTable<unsigned int>(2*nEnum)
 {
-    for (int enumI = 0; enumI < nEnum; ++enumI)
+    for (unsigned int enumI = 0; enumI < nEnum; ++enumI)
     {
         if (!names[enumI] || names[enumI][0] == '\0')
         {
             stringList goodNames(enumI);
 
-            for (int i = 0; i < enumI; ++i)
+            for (unsigned int i = 0; i < enumI; ++i)
             {
                 goodNames[i] = names[i];
             }
 
-            FatalErrorIn("NamedEnum<Enum, nEnum>::NamedEnum()")
+            FatalErrorInFunction
                 << "Illegal enumeration name at position " << enumI << endl
                 << "after entries " << goodNames << ".\n"
                 << "Possibly your NamedEnum<Enum, nEnum>::names array"
@@ -149,19 +142,17 @@ CML::NamedEnum<Enum, nEnum>::NamedEnum()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 Enum CML::NamedEnum<Enum, nEnum>::read(Istream& is) const
 {
     const word name(is);
 
-    HashTable<int>::const_iterator iter = find(name);
+    HashTable<unsigned int>::const_iterator iter = find(name);
 
-    if (iter == HashTable<int>::end())
+    if (iter == HashTable<unsigned int>::end())
     {
-        FatalIOErrorIn
-        (
-            "NamedEnum<Enum, nEnum>::read(Istream&) const", is
-        )   << name << " is not in enumeration: "
+        FatalIOErrorInFunction(is)
+            << name << " is not in enumeration: "
             << sortedToc() << exit(FatalIOError);
     }
 
@@ -169,20 +160,20 @@ Enum CML::NamedEnum<Enum, nEnum>::read(Istream& is) const
 }
 
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 void CML::NamedEnum<Enum, nEnum>::write(const Enum e, Ostream& os) const
 {
     os  << operator[](e);
 }
 
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 CML::stringList CML::NamedEnum<Enum, nEnum>::strings()
 {
     stringList lst(nEnum);
 
     label nElem = 0;
-    for (int enumI = 0; enumI < nEnum; ++enumI)
+    for (unsigned int enumI = 0; enumI < nEnum; ++enumI)
     {
         if (names[enumI] && names[enumI][0])
         {
@@ -195,13 +186,13 @@ CML::stringList CML::NamedEnum<Enum, nEnum>::strings()
 }
 
 
-template<class Enum, int nEnum>
+template<class Enum, unsigned int nEnum>
 CML::wordList CML::NamedEnum<Enum, nEnum>::words()
 {
     wordList lst(nEnum);
 
     label nElem = 0;
-    for (int enumI = 0; enumI < nEnum; ++enumI)
+    for (unsigned int enumI = 0; enumI < nEnum; ++enumI)
     {
         if (names[enumI] && names[enumI][0])
         {
@@ -214,9 +205,25 @@ CML::wordList CML::NamedEnum<Enum, nEnum>::words()
 }
 
 
+template<class Enum, unsigned int nEnum>
+const char* CML::NamedEnum<Enum, nEnum>::operator[](const Enum e) const
+{
+    unsigned int ue = unsigned(e);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    if (ue < nEnum)
+    {
+        return names[ue];
+    }
+    else
+    {
+        FatalErrorInFunction
+            << "names array index " << ue << " out of range 0-"
+            << nEnum - 1
+            << exit(FatalError);
 
+        return names[0];
+    }
+}
 #endif
 
 // ************************************************************************* //

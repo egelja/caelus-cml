@@ -55,20 +55,14 @@ private:
 
     // Private data
 
-        //- Radiative flux mapped from  the primary region / [kg/s3]
-        volScalarField QrPrimary_;
+        //- Radiative incident flux mapped from  the primary region / [kg/s3]
+        volScalarField qinPrimary_;
 
         //- Remaining radiative flux after removing local contribution
-        volScalarField QrNet_;
-
-        //- Reference to the film thickness field / [m]
-        const volScalarField& delta_;
+        volScalarField qrNet_;
 
 
         // Model coefficients
-
-            //- Minimum thickness to apply radiation model
-            scalar deltaMin_;
 
             //- Beta coefficient
             scalar beta_;
@@ -97,7 +91,7 @@ public:
         //- Construct from surface film model and dictionary
         standardRadiation
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 
@@ -114,7 +108,7 @@ public:
             virtual void correct();
 
             //- Return the radiation sensible enthalpy source
-            //  Also updates QrNet
+            //  Also updates qrNet
             virtual tmp<volScalarField> Shs();
 };
 

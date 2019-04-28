@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak All rights reserved
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -81,10 +82,8 @@ void CML::BlockCoeff<CML::scalar>::operator=(const BlockCoeff<scalar>& f)
 {
     if (this == &f)
     {
-        FatalErrorIn
-        (
-            "BlockCoeff<scalar>::operator=(const BlockCoeff<scalar>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 

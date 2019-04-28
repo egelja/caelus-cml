@@ -268,7 +268,7 @@ gaussLaplacianScheme<Type, GType>::gammaSnGradCorr
         tgammaSnGradCorr().replace
         (
             cmpt,
-            SfGammaCorr & fvc::interpolate(fvc::grad(vf.component(cmpt)))
+            fvc::dotInterpolate(SfGammaCorr, fvc::grad(vf.component(cmpt)))
         );
     }
 

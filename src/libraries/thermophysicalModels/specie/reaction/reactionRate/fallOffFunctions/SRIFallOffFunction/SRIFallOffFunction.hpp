@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -23,13 +23,11 @@ Class
 Description
     The SRI fall-off function
 
-SourceFiles
-    SRIFallOffFunctionI.hpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef SRIFallOffFunction_H
-#define SRIFallOffFunction_H
+#ifndef SRIFallOffFunction_HPP
+#define SRIFallOffFunction_HPP
 
 #include "scalar.hpp"
 
@@ -50,66 +48,121 @@ Ostream& operator<<(Ostream&, const SRIFallOffFunction&);
 
 class SRIFallOffFunction
 {
-    // Private data
 
-        scalar a_, b_, c_, d_, e_;
+    scalar a_, b_, c_, d_, e_;
 
 
 public:
 
-    // Constructors
 
-        //- Construct from components
-        inline SRIFallOffFunction
-        (
-            const scalar a,
-            const scalar b,
-            const scalar c,
-            const scalar d,
-            const scalar e
-        );
+    //- Construct from components
+    inline SRIFallOffFunction
+    (
+        const scalar a,
+        const scalar b,
+        const scalar c,
+        const scalar d,
+        const scalar e
+    )
+    :
+        a_(a),
+        b_(b),
+        c_(c),
+        d_(d),
+        e_(e)
+    {}
 
-        //- Construct from Istream
-        inline SRIFallOffFunction(Istream&);
-
-        //- Construct from dictionary
-        inline SRIFallOffFunction(const dictionary& dict);
+    //- Construct from dictionary
+    inline SRIFallOffFunction(const dictionary& dict)
+    :
+        a_(readScalar(dict.lookup("a"))),
+        b_(readScalar(dict.lookup("b"))),
+        c_(readScalar(dict.lookup("c"))),
+        d_(readScalar(dict.lookup("d"))),
+        e_(readScalar(dict.lookup("e")))
+    {}
 
 
     // Member Functions
 
-        //- Return the type name
-        static word type()
-        {
-            return "SRI";
-        }
+    //- Return the type name
+    static word type()
+    {
+        return "SRI";
+    }
 
-        inline scalar operator()
-        (
-            const scalar T,
-            const scalar Pr
-        ) const;
+    inline scalar operator()
+    (
+        const scalar T,
+        const scalar Pr
+    ) const
+    {
+        scalar X = 1.0/(1 + sqr(log10(max(Pr, SMALL))));
+        return d_*pow(a_*exp(-b_/T) + exp(-T/c_), X)*pow(T, e_);
+    }
 
-        //- Write to stream
-        inline void write(Ostream& os) const;
+    inline scalar ddT
+    (
+        const scalar Pr,
+        const scalar F,
+        const scalar dPrdT,
+        const scalar T
+    ) const
+    {
+        scalar X = 1.0/(1 + sqr(log10(max(Pr, SMALL))));
+        scalar dXdPr = -X*X*2*log10(Pr)/Pr/log(10.0);
+        return
+            F
+           *(
+                e_/T
+              + X
+               *(a_*b_*exp(-b_/T)/sqr(T) - exp(-T/c_)/c_)
+               /(a_*exp(-b_/T) + exp(-T/c_))
+              + dXdPr*dPrdT*log(a_*exp(-b_/T) + exp(-T/c_))
+            );
+    }
+
+    inline scalar ddc
+    (
+        const scalar Pr,
+        const scalar F,
+        const scalar dPrdc,
+        const scalar T
+    ) const
+    {
+        scalar X = 1.0/(1 + sqr(log10(max(Pr, SMALL))));
+        scalar dXdPr = -X*X*2*log10(Pr)/Pr/log(10.0);
+        scalar dXdc = dXdPr*dPrdc;
+        return F*dXdc*log(a_*exp(-b_/T) + exp(-T/c_));
+    }
+
+    //- Write to stream
+    inline void write(Ostream& os) const
+    {
+        os.writeKeyword("a") << a_ << token::END_STATEMENT << nl;
+        os.writeKeyword("b") << b_ << token::END_STATEMENT << nl;
+        os.writeKeyword("c") << c_ << token::END_STATEMENT << nl;
+        os.writeKeyword("d") << d_ << token::END_STATEMENT << nl;
+        os.writeKeyword("e") << e_ << token::END_STATEMENT << nl;
+    }
 
 
     // Ostream Operator
 
-        friend Ostream& operator<<(Ostream&, const SRIFallOffFunction&);
+    friend Ostream& operator<<
+    (
+        Ostream& os,
+        const SRIFallOffFunction& srifof
+    )
+    {
+        srifof.write(os);
+        return os;
+    }
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "SRIFallOffFunctionI.hpp"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

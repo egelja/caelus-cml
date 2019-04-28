@@ -1,12 +1,14 @@
 
 tasks:
   - clean_case:
+      purge_generated: True
       remove_zero: no
       remove_mesh: no
 
   - run_command:
       cmd_name: explicitDBNSSolver
       parallel: False
+      num_ranks: 8
 
   - run_command:
       cmd_name: Mach

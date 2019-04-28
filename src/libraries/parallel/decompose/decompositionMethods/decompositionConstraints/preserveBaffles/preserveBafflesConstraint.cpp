@@ -129,7 +129,7 @@ void CML::decompositionConstraints::preserveBafflesConstraint::add
             {
                 label p0Slave = faceToFace[p[0]];
                 label p1Slave = faceToFace[p[1]];
-                IOWarningIn("preserveBafflesConstraint::add(const polyMesh&, boolList&, PtrList<labelList>&, labelList&, List<labelPair>&)", coeffDict_)
+                IOWarningInFunction(coeffDict_)
                     << "When adding baffle between faces "
                     << p[0] << " at " << mesh.faceCentres()[p[0]]
                     << " and "

@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
     instantList times = timeSelector::selectIfPresent(runTime, args);
     if (times.size() < 1)
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "No times selected." << exit(FatalError);
     }
     runTime.setTime(times[0], 0);

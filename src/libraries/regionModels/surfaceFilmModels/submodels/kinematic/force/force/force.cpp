@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -37,20 +37,20 @@ defineRunTimeSelectionTable(force, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-force::force(const surfaceFilmModel& owner)
+force::force(surfaceFilmRegionModel& film)
 :
-    filmSubModelBase(owner)
+    filmSubModelBase(film)
 {}
 
 
 force::force
 (
-    const word& type,
-    const surfaceFilmModel& owner,
+    const word& modelType,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    filmSubModelBase(type, owner, dict)
+    filmSubModelBase(film, dict, typeName, modelType)
 {}
 
 

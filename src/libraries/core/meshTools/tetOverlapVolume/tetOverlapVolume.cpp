@@ -20,88 +20,87 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "tetOverlapVolume.hpp"
-#include "tetrahedron.hpp"
-#include "tetPoints.hpp"
 #include "polyMesh.hpp"
 #include "OFstream.hpp"
 #include "treeBoundBox.hpp"
 #include "indexedOctree.hpp"
 #include "treeDataCell.hpp"
+#include "cut.hpp"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace CML
 {
-defineTypeNameAndDebug(tetOverlapVolume, 0);
+    defineTypeNameAndDebug(tetOverlapVolume, 0);
 }
 
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 CML::tetOverlapVolume::tetOverlapVolume()
 {}
 
 
+// * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * * //
+
 CML::scalar CML::tetOverlapVolume::tetTetOverlapVol
 (
-    const tetPoints& tetA,
-    const tetPoints& tetB
+    const tetPointRef& tetA,
+    const tetPointRef& tetB
 ) const
 {
-    static tetPointRef::tetIntersectionList insideTets;
-    label nInside = 0;
-    static tetPointRef::tetIntersectionList cutInsideTets;
-    label nCutInside = 0;
+    // A maximum of three cuts are made (the tets that result from the final cut
+    // are not stored), and each cut can create at most three tets. The
+    // temporary storage must therefore extend to 3^3 = 27 tets.
+    typedef cutTetList<27> tetListType;
+    static tetListType cutTetList1, cutTetList2;
 
-    tetPointRef::storeOp inside(insideTets, nInside);
-    tetPointRef::storeOp cutInside(cutInsideTets, nCutInside);
-    tetPointRef::sumVolOp volInside;
-    tetPointRef::dummyOp outside;
-
-    if ((tetA.tet().mag() < SMALL*SMALL) || (tetB.tet().mag() < SMALL*SMALL))
+    // face 0
+    const plane pl0(tetB.b(), tetB.d(), tetB.c());
+    const FixedList<point, 4> t({tetA.a(), tetA.b(), tetA.c(), tetA.d()});
+    cutTetList1.clear();
+    tetCut(t, pl0, cut::appendOp<tetListType>(cutTetList1), cut::noOp());
+    if (cutTetList1.size() == 0)
     {
-        return 0.0;
+        return 0;
     }
 
-    // face0
-    plane pl0(tetB[1], tetB[3], tetB[2]);
-    tetA.tet().sliceWithPlane(pl0, cutInside, outside);
-    if (nCutInside == 0)
+    // face 1
+    const plane pl1(tetB.a(), tetB.c(), tetB.d());
+    cutTetList2.clear();
+    for (label i = 0; i < cutTetList1.size(); i++)
     {
-        return 0.0;
+        const FixedList<point, 4>& t = cutTetList1[i];
+        tetCut(t, pl1, cut::appendOp<tetListType>(cutTetList2), cut::noOp());
+    }
+    if (cutTetList2.size() == 0)
+    {
+        return 0;
     }
 
-    // face1
-    plane pl1(tetB[0], tetB[2], tetB[3]);
-    nInside = 0;
-    for (label i = 0; i < nCutInside; i++)
+    // face 2
+    const plane pl2(tetB.a(), tetB.d(), tetB.b());
+    cutTetList1.clear();
+    for (label i = 0; i < cutTetList2.size(); i++)
     {
-        const tetPointRef t = cutInsideTets[i].tet();
-        t.sliceWithPlane(pl1, inside, outside);
+        const FixedList<point, 4>& t = cutTetList2[i];
+        tetCut(t, pl2, cut::appendOp<tetListType>(cutTetList1), cut::noOp());
     }
-    if (nInside == 0)
+    if (cutTetList1.size() == 0)
     {
-        return 0.0;
-    }
-
-    // face2
-    plane pl2(tetB[0], tetB[3], tetB[1]);
-    nCutInside = 0;
-    for (label i = 0; i < nInside; i++)
-    {
-        const tetPointRef t = insideTets[i].tet();
-        t.sliceWithPlane(pl2, cutInside, outside);
-    }
-    if (nCutInside == 0)
-    {
-        return 0.0;
+        return 0;
     }
 
-    // face3
-    plane pl3(tetB[0], tetB[1], tetB[2]);
-    for (label i = 0; i < nCutInside; i++)
+    // face 3
+    const plane pl3(tetB.a(), tetB.b(), tetB.c());
+    scalar v = 0;
+    for (label i = 0; i < cutTetList1.size(); i++)
     {
-        const tetPointRef t = cutInsideTets[i].tet();
-        t.sliceWithPlane(pl3, volInside, outside);
+        const FixedList<point, 4>& t = cutTetList1[i];
+        v += tetCut(t, pl3, cut::volumeOp(), cut::noOp());
     }
 
-    return volInside.vol_;
+    return v;
 }
 
 
@@ -122,6 +121,8 @@ CML::treeBoundBox CML::tetOverlapVolume::pyrBb
     return bb;
 }
 
+
+// * * * * * * * * * * * Public Member Functions  * * * * * * * * * * * * * //
 
 bool CML::tetOverlapVolume::cellCellOverlapMinDecomp
 (
@@ -177,7 +178,7 @@ bool CML::tetOverlapVolume::cellCellOverlapMinDecomp
                 pt1I = fA[facePtAI];
             }
 
-            const tetPoints tetA
+            const tetPointRef tetA
             (
                 ccA,
                 tetBasePtA,
@@ -224,7 +225,7 @@ bool CML::tetOverlapVolume::cellCellOverlapMinDecomp
                         pt1I = fB[facePtBI];
                     }
 
-                    const tetPoints tetB
+                    const tetPointRef tetB
                     (
                         ccB,
                         tetBasePtB,
@@ -305,7 +306,7 @@ CML::scalar CML::tetOverlapVolume::cellCellOverlapVolumeMinDecomp
                 pt1I = fA[facePtAI];
             }
 
-            const tetPoints tetA
+            const tetPointRef tetA
             (
                 ccA,
                 tetBasePtA,
@@ -352,7 +353,7 @@ CML::scalar CML::tetOverlapVolume::cellCellOverlapVolumeMinDecomp
                         pt1I = fB[facePtBI];
                     }
 
-                    const tetPoints tetB
+                    const tetPointRef tetB
                     (
                         ccB,
                         tetBasePtB,
@@ -383,10 +384,7 @@ CML::labelList CML::tetOverlapVolume::overlappingCells
 {
     const indexedOctree<treeDataCell>& treeA = fromMesh.cellTree();
 
-    treeBoundBox bbB
-    (
-        pointField(toMesh.points(), toMesh.cellPoints()[iTo])
-    );
+    treeBoundBox bbB(toMesh.points(), toMesh.cellPoints()[iTo]);
 
     return treeA.findBox(bbB);
 }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2015 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
@@ -95,7 +95,7 @@ class TranCellZoneInjection
         const TimeDataEntry<scalar> flowRateProfile_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
 
     // Private Member Functions
@@ -162,8 +162,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -207,7 +207,7 @@ void CML::TranCellZoneInjection<CloudType>::setPositions
     const fvMesh& mesh = this->owner().mesh();
     const scalarField& V = mesh.V();
     const label nCells = cellZoneCells.size();
-    cachedRandom& rnd = this->owner().rndGen();
+    Random& rnd = this->owner().rndGen();
 
     DynamicList<vector> positions(nCells);          // initial size only
     DynamicList<label> injectorCells(nCells);       // initial size only
@@ -359,7 +359,7 @@ CML::TranCellZoneInjection<CloudType>::TranCellZoneInjection
     ),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -409,7 +409,7 @@ void CML::TranCellZoneInjection<CloudType>::updateMesh()
 
     if (zoneI < 0)
     {
-        FatalErrorIn("CML::TranCellZoneInjection<CloudType>::updateMesh()")
+        FatalErrorInFunction
             << "Unknown cell zone name: " << cellZoneName_
             << ". Valid cell zones are: " << mesh.cellZones().names()
             << nl << exit(FatalError);
@@ -425,7 +425,7 @@ void CML::TranCellZoneInjection<CloudType>::updateMesh()
 
     if ((nCellsTotal == 0) || (VCellsTotal*numberDensity_ < 1))
     {
-        WarningIn("CML::TranCellZoneInjection<CloudType>::updateMesh()")
+        WarningInFunction
             << "Number of particles to be added to cellZone " << cellZoneName_
             << " is zero" << endl;
     }
@@ -463,7 +463,7 @@ CML::label CML::TranCellZoneInjection<CloudType>::parcelsToInject
         // Number of parcels per second set equal to number of available positions
         scalar nParcels = (time1 - time0)*parcelsPerSecond_;
 
-        cachedRandom& rnd = this->owner().rndGen();
+        Random& rnd = this->owner().rndGen();
 
         label nParcelsToInject = floor(nParcels);
 
@@ -472,10 +472,7 @@ CML::label CML::TranCellZoneInjection<CloudType>::parcelsToInject
         if
         (
             nParcelsToInject > 0
-         && (
-               nParcels - scalar(nParcelsToInject)
-             > rnd.position(scalar(0), scalar(1))
-            )
+         && (nParcels - scalar(nParcelsToInject) > rnd.globalScalar01())
         )
         {
             ++nParcelsToInject;
@@ -516,27 +513,27 @@ void CML::TranCellZoneInjection<CloudType>::setPositionAndCell
     const scalar time,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     if (positions_.size() > 0)
     {
         // Randomly select a position from the pre-calculated positions
-        cachedRandom& rnd = this->owner().rndGen();
+        Random& rnd = this->owner().rndGen();
 
-        label cellI = rnd.position<label>(0, positions_.size() - 1);
+        label celli = rnd.sampleAB<label>(0, positions_.size());
 
-        cellOwner = injectorCells_[cellI];
-        tetFaceI = injectorTetFaces_[cellI];
-        tetPtI = injectorTetPts_[cellI];
-        position = positions_[cellI];
+        cellOwner = injectorCells_[celli];
+        tetFacei = injectorTetFaces_[celli];
+        tetPti = injectorTetPts_[celli];
+        position = positions_[celli];
     }
     else
     {
         cellOwner = -1;
-        tetFaceI = -1;
-        tetPtI = -1;
+        tetFacei = -1;
+        tetPti = -1;
         // dummy position
         position = pTraits<vector>::max;
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -39,7 +39,7 @@ void CML::faceMapper::calcAddressing() const
      || insertedFaceLabelsPtr_
     )
     {
-        FatalErrorIn("void faceMapper::calcAddressing() const")
+        FatalErrorInFunction
             << "Addressing already calculated."
             << abort(FatalError);
     }
@@ -93,7 +93,7 @@ void CML::faceMapper::calcAddressing() const
 
             if (addr[faceI].size())
             {
-                FatalErrorIn("void faceMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master face " << faceI
                     << " mapped from point faces " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -115,7 +115,7 @@ void CML::faceMapper::calcAddressing() const
 
             if (addr[faceI].size())
             {
-                FatalErrorIn("void faceMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master face " << faceI
                     << " mapped from edge faces " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -137,7 +137,7 @@ void CML::faceMapper::calcAddressing() const
 
             if (addr[faceI].size())
             {
-                FatalErrorIn("void faceMapper::calcAddressing() const")
+                FatalErrorInFunction
                     << "Master face " << faceI
                     << " mapped from face faces " << mo
                     << " already destination of mapping." << abort(FatalError);
@@ -207,10 +207,10 @@ CML::faceMapper::faceMapper(const mapPolyMesh& mpm)
     mpm_(mpm),
     insertedFaces_(true),
     direct_(false),
-    directAddrPtr_(NULL),
-    interpolationAddrPtr_(NULL),
-    weightsPtr_(NULL),
-    insertedFaceLabelsPtr_(NULL)
+    directAddrPtr_(nullptr),
+    interpolationAddrPtr_(nullptr),
+    weightsPtr_(nullptr),
+    insertedFaceLabelsPtr_(nullptr)
 {
     // Check for possibility of direct mapping
     if
@@ -302,10 +302,8 @@ const CML::labelUList& CML::faceMapper::directAddressing() const
 {
     if (!direct())
     {
-        FatalErrorIn
-        (
-            "const labelUList& faceMapper::directAddressing() const"
-        )   << "Requested direct addressing for an interpolative mapper."
+        FatalErrorInFunction
+            << "Requested direct addressing for an interpolative mapper."
             << abort(FatalError);
     }
 
@@ -330,10 +328,8 @@ const CML::labelListList& CML::faceMapper::addressing() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const labelListList& faceMapper::addressing() const"
-        )   << "Requested interpolative addressing for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative addressing for a direct mapper."
             << abort(FatalError);
     }
 
@@ -350,10 +346,8 @@ const CML::scalarListList& CML::faceMapper::weights() const
 {
     if (direct())
     {
-        FatalErrorIn
-        (
-            "const scalarListList& faceMapper::weights() const"
-        )   << "Requested interpolative weights for a direct mapper."
+        FatalErrorInFunction
+            << "Requested interpolative weights for a direct mapper."
             << abort(FatalError);
     }
 

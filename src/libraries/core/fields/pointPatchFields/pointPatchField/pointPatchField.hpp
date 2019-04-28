@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,6 +61,9 @@ template<class Type>
 class pointPatchField;
 
 template<class Type>
+class calculatedPointPatchField;
+
+template<class Type>
 Ostream& operator<<
 (
     Ostream&,
@@ -96,6 +99,7 @@ class pointPatchField
 public:
 
     typedef pointPatch Patch;
+    typedef calculatedPointPatchField<Type> Calculated;
 
 
     //- Runtime type information
@@ -273,6 +277,12 @@ public:
             const Field<Type>& internalField() const
             {
                 return internalField_;
+            }
+
+            //- Return true if this patch field fixes a value
+            virtual bool fixesValue() const
+            {
+                return false;
             }
 
             //- Return true if this patch field is coupled
@@ -470,7 +480,7 @@ public:
 };
 
 
-// This function is added as a hack to enable simple backward compatibility
+// This function is added as a hack to enable simple backward compatability
 // with verions using referenceLevel in GeometicField
 template<class Type>
 const pointPatchField<Type>& operator+
@@ -597,12 +607,8 @@ tmp<Field<Type1> > pointPatchField<Type>::patchInternalField
     // Check size
     if (iF.size() != internalField().size())
     {
-        FatalErrorIn
-        (
-            "tmp<Field<Type1> > pointPatchField<"
-            "Type>::"
-            "patchInternalField(const Field<Type1>& iF) const"
-        )   << "given internal field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given internal field does not correspond to the mesh. "
             << "Field size: " << iF.size()
             << " mesh size: " << internalField().size()
             << abort(FatalError);
@@ -634,12 +640,8 @@ void pointPatchField<Type>::addToInternalField
     // Check size
     if (iF.size() != internalField().size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "addToInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF) const"
-        )   << "given internal field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given internal field does not correspond to the mesh. "
             << "Field size: " << iF.size()
             << " mesh size: " << internalField().size()
             << abort(FatalError);
@@ -647,12 +649,8 @@ void pointPatchField<Type>::addToInternalField
 
     if (pF.size() != size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "addToInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF) const"
-        )   << "given patch field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given patch field does not correspond to the mesh. "
             << "Field size: " << pF.size()
             << " mesh size: " << size()
             << abort(FatalError);
@@ -680,12 +678,8 @@ void pointPatchField<Type>::addToInternalField
     // Check size
     if (iF.size() != internalField().size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "addToInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF, const labelList&) const"
-        )   << "given internal field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given internal field does not correspond to the mesh. "
             << "Field size: " << iF.size()
             << " mesh size: " << internalField().size()
             << abort(FatalError);
@@ -693,12 +687,8 @@ void pointPatchField<Type>::addToInternalField
 
     if (pF.size() != size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "addToInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF, const labelList&) const"
-        )   << "given patch field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given patch field does not correspond to the mesh. "
             << "Field size: " << pF.size()
             << " mesh size: " << size()
             << abort(FatalError);
@@ -727,12 +717,8 @@ void pointPatchField<Type>::setInInternalField
     // Check size
     if (iF.size() != internalField().size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "setInInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF) const"
-        )   << "given internal field does not correspond to the mesh. "
+        FatalErrorInFunction
+            << "given internal field does not correspond to the mesh. "
             << "Field size: " << iF.size()
             << " mesh size: " << internalField().size()
             << abort(FatalError);
@@ -740,12 +726,8 @@ void pointPatchField<Type>::setInInternalField
 
     if (pF.size() != meshPoints.size())
     {
-        FatalErrorIn
-        (
-            "void pointPatchField<Type>::"
-            "setInInternalField("
-            "Field<Type1>& iF, const Field<Type1>& iF) const"
-        )   << "given patch field does not correspond to the meshPoints. "
+        FatalErrorInFunction
+            << "given patch field does not correspond to the meshPoints. "
             << "Field size: " << pF.size()
             << " meshPoints size: " << size()
             << abort(FatalError);
@@ -830,11 +812,8 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
 
     if (cstrIter == pointPatchConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PointPatchField<Type>::New"
-            "(const word&, const word&, const pointPatch&, const Field<Type>&)"
-        )   << "Unknown patchFieldType type "
+        FatalErrorInFunction
+            << "Unknown patchFieldType type "
             << patchFieldType << nl << nl
             << "Valid patchField types are :" << endl
             << pointPatchConstructorTablePtr_->sortedToc()
@@ -857,12 +836,8 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
 
             if (patchTypeCstrIter == pointPatchConstructorTablePtr_->end())
             {
-                FatalErrorIn
-                (
-                    "PointPatchField<Type>::New"
-                    "(const word&, const word&"
-                    ", const pointPatch&, const Field<Type>&)"
-                )   << "inconsistent patch and patchField types for \n"
+                FatalErrorInFunction
+                    << "inconsistent patch and patchField types for \n"
                     << "    patch type " << p.type()
                     << " and patchField type " << patchFieldType
                     << exit(FatalError);
@@ -918,12 +893,8 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "PointPatchField<Type>::"
-                "New(const pointPatch&, const Field<Type>&, const dictionary&)",
-                dict
-            )   << "Unknown patchField type " << patchFieldType
+            FatalIOErrorInFunction(dict)
+                << "Unknown patchField type " << patchFieldType
                 << " for patch type " << p.type() << nl << nl
                 << "Valid patchField types are :" << endl
                 << dictionaryConstructorTablePtr_->sortedToc()
@@ -953,12 +924,8 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
 
             if (patchTypeCstrIter == dictionaryConstructorTablePtr_->end())
             {
-                FatalIOErrorIn
-                (
-                    "PointPatchField<Type>const pointPatch&, "
-                    "const Field<Type>&, const dictionary&)",
-                    dict
-                )   << "inconsistent patch and patchField types for \n"
+                FatalIOErrorInFunction(dict)
+                    << "inconsistent patch and patchField types for \n"
                     << "    patch type " << p.type()
                     << " and patchField type " << patchFieldType
                     << exit(FatalIOError);
@@ -998,16 +965,8 @@ CML::autoPtr<CML::pointPatchField<Type> > CML::pointPatchField<Type>::New
 
     if (cstrIter == patchMapperConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "PointPatchField<Type>::New"
-            "("
-            "const pointPatchField<Type>&, "
-            "const pointPatch&, "
-            "const DimensionedField<Type, pointMesh>&, "
-            "const pointPatchFieldMapper&"
-            ")"
-        )   << "Unknown patchField type "
+        FatalErrorInFunction
+            << "Unknown patchField type "
             << ptf.type() << nl << nl
             << "Valid patchField types are :" << endl
             << patchMapperConstructorTablePtr_->sortedToc()

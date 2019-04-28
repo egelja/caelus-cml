@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2013-2014 OpenFOAM Foundation
+Copyright (C) 2013-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -21,7 +21,7 @@ License
 
 #include "turbulenceFields.hpp"
 #include "dictionary.hpp"
-#include "compressible/turbulenceModel/turbulenceModel.hpp"
+#include "compressible/turbulenceModel/compressibleTurbulenceModel.hpp"
 #include "incompressible/turbulenceModel/turbulenceModel.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -72,7 +72,7 @@ bool CML::turbulenceFields::compressible()
     }
     else
     {
-        WarningIn("CML::word& CML::turbulenceFields::compressible() const")
+        WarningInFunction
             << "Turbulence model not found in database, deactivating";
         active_ = false;
     }
@@ -104,16 +104,8 @@ CML::turbulenceFields::turbulenceFields
     else
     {
         active_ = false;
-        WarningIn
-        (
-            "turbulenceFields::turbulenceFields"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_
             << endl;
     }
 }
@@ -202,7 +194,7 @@ void CML::turbulenceFields::execute()
                 }
                 default:
                 {
-                    FatalErrorIn("void CML::turbulenceFields::execute()")
+                    FatalErrorInFunction
                         << "Invalid field selection" << abort(FatalError);
                 }
             }
@@ -240,7 +232,7 @@ void CML::turbulenceFields::execute()
                 }
                 default:
                 {
-                    FatalErrorIn("void CML::turbulenceFields::execute()")
+                    FatalErrorInFunction
                         << "Invalid field selection" << abort(FatalError);
                 }
             }

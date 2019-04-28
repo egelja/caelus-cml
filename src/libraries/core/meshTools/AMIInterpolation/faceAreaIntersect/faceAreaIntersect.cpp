@@ -351,16 +351,8 @@ CML::scalar CML::faceAreaIntersect::calc
         }
         default:
         {
-            FatalErrorIn
-            (
-                "CML::scalar CML::faceAreaIntersect::calc"
-                "("
-                    "const face&, "
-                    "const face&, "
-                    "const vector&, "
-                    "const triangulationMode&"
-                ")"
-            )   << "Unknown triangulation mode enumeration"
+            FatalErrorInFunction
+                << "Unknown triangulation mode enumeration"
                 << abort(FatalError);
         }
     }

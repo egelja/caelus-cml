@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,7 +31,7 @@ bool CML::triSurface::readOBJ(const fileName& OBJfileName)
 
     if (!OBJfile.good())
     {
-        FatalErrorIn("triSurface::readOBJ(const fileName&)")
+        FatalErrorInFunction
             << "Cannot read file " << OBJfileName
             << exit(FatalError);
     }

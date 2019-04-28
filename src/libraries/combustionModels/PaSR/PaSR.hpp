@@ -1,35 +1,39 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::combustionModels::PaSR
 
 Description
-    Simple infinitely fast chemistry combustion model based on the principle
-    mixed is burnt. Additional parameter C is used to distribute the heat
-    release rate.in time
+    Partially stirred reactor turbulent combustion model.
+
+    This model calculates a finite rate, based on both turbulence and chemistry
+    time scales.  Depending on mesh resolution, the Cmix parameter can be used
+    to scale the turbulence mixing time scale.
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef PaSR_H
-#define PaSR_H
-#include "fvmSup.hpp"
+#ifndef PaSR_HPP
+#define PaSR_HPP
+
+#include "../laminar/laminar.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,36 +46,26 @@ namespace combustionModels
                             Class PaSR Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class CombThermoType>
+template<class ReactionThermo>
 class PaSR
 :
-    public CombThermoType
+    public laminar<ReactionThermo>
 {
-    // Private data
 
-        //- Mixing constant
-        dimensionedScalar Cmix_;
+    //- Mixing constant
+    scalar Cmix_;
 
-        //- Turbulent reaction switch
-        Switch turbulentReaction_;
-
-        //- Mixing parameter
-        volScalarField kappa_;
-
-        //- Use reaction rate
-        bool useReactionRate_;
+    //- Mixing parameter
+    volScalarField kappa_;
 
 
     // Private Member Functions
 
-        //- Return the chemical time scale
-        tmp<volScalarField> tc() const;
+    //- Disallow copy construct
+    PaSR(const PaSR&);
 
-        //- Disallow copy construct
-        PaSR(const PaSR&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const PaSR&);
+    //- Disallow default bitwise assignment
+    void operator=(const PaSR&);
 
 
 public:
@@ -80,44 +74,37 @@ public:
     TypeName("PaSR");
 
 
-    // Constructors
-
-        //- Construct from components
-        PaSR
-        (
-            const word& modelType,
-            const fvMesh& mesh
-        );
+    //- Construct from components
+    PaSR
+    (
+        const word& modelType,
+        ReactionThermo& thermo,
+        const compressible::turbulenceModel& turb,
+        const word& combustionProperties
+    );
 
 
     //- Destructor
-    virtual ~PaSR();
+    virtual ~PaSR()
+    {}
 
 
     // Member Functions
 
-        // Evolution
+    //- Correct combustion rate
+    virtual void correct();
 
-            //- Correct combustion rate
-            virtual void correct();
+    //- Fuel consumption rate matrix.
+    virtual tmp<fvScalarMatrix> R(volScalarField& Y) const;
 
-            //- Fuel consumption rate matrix.
-            virtual tmp<fvScalarMatrix> R(const volScalarField& Y) const;
+    //- Heat release rate [kg/m/s3]
+    virtual tmp<volScalarField> Qdot() const;
 
-            //- Heat release rate calculated from fuel consumption rate matrix
-            virtual tmp<volScalarField> dQ() const;
+    //- Update properties from given dictionary
+    virtual bool read();
 
-            //-  Return source for enthalpy equation [kg/m/s3]
-            virtual tmp<volScalarField> Sh() const;
-
-    // I-O
-
-            //- Update properties from given dictionary
-            virtual bool read();
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace combustionModels
 } // End namespace CML
@@ -125,201 +112,96 @@ public:
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class CombThermoType>
-CML::combustionModels::PaSR<CombThermoType>::PaSR
+template<class ReactionThermo>
+CML::combustionModels::PaSR<ReactionThermo>::PaSR
 (
     const word& modelType,
-    const fvMesh& mesh
+    ReactionThermo& thermo,
+    const compressible::turbulenceModel& turb,
+    const word& combustionProperties
 )
 :
-    CombThermoType(modelType, mesh),
-    Cmix_(this->coeffs().lookup("Cmix")),
-    turbulentReaction_(this->coeffs().lookup("turbulentReaction")),
+    laminar<ReactionThermo>(modelType, thermo, turb, combustionProperties),
+    Cmix_(readScalar(this->coeffs().lookup("Cmix"))),
     kappa_
     (
         IOobject
         (
-            "PaSR-kappa",
-            mesh.time().timeName(),
-            mesh,
+            thermo.phasePropertyName(typeName + ":kappa"),
+            this->mesh().time().timeName(),
+            this->mesh(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh,
-        dimensionedScalar("kappa", dimless, 0.0)
-    ),
-    useReactionRate_(this->coeffs().lookupOrDefault("useReactionRate", false))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-template<class CombThermoType>
-CML::combustionModels::PaSR<CombThermoType>::~PaSR()
+        this->mesh(),
+        dimensionedScalar("kappa", dimless, 0)
+    )
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-
-template<class CombThermoType>
-CML::tmp<CML::volScalarField>
-CML::combustionModels::PaSR<CombThermoType>::tc() const
+template<class ReactionThermo>
+void CML::combustionModels::PaSR<ReactionThermo>::correct()
 {
-    return this->pChemistry_->tc();
-}
+    laminar<ReactionThermo>::correct();
 
+    tmp<volScalarField> tepsilon(this->turbulence().epsilon());
+    const volScalarField& epsilon = tepsilon();
+    tmp<volScalarField> tmuEff(this->turbulence().muEff());
+    const volScalarField& muEff = tmuEff();
+    tmp<volScalarField> ttc(this->tc());
+    const volScalarField& tc = ttc();
 
-template<class CombThermoType>
-void CML::combustionModels::PaSR<CombThermoType>::correct()
-{
-    if (this->active())
+    tmp<volScalarField> trho(this->rho());
+    const volScalarField& rho = trho();
+
+    forAll(epsilon, i)
     {
-        if (!useReactionRate_)
+        const scalar tk =
+            Cmix_*sqrt(max(muEff[i]/rho[i]/(epsilon[i] + SMALL), 0));
+
+        if (tk > SMALL)
         {
-            this->pChemistry_->solve
-            (
-                this->mesh().time().value()-this->mesh().time().deltaTValue(),
-                this->mesh().time().deltaTValue()
-            );
+            kappa_[i] = tc[i]/(tc[i] + tk);
         }
         else
         {
-            this->pChemistry_->calculate();
-        }
-
-        if (turbulentReaction_)
-        {
-            tmp<volScalarField> trho(this->rho());
-            const volScalarField& rho = trho();
-            tmp<volScalarField> tepsilon(this->turbulence().epsilon());
-            const volScalarField& epsilon = tepsilon();
-            tmp<volScalarField> tmuEff(this->turbulence().muEff());
-            const volScalarField& muEff = tmuEff();
-            tmp<volScalarField> ttc(tc());
-            const volScalarField& tc = ttc();
-
-            forAll(epsilon, i)
-            {
-                scalar tk =
-                    Cmix_.value()*CML::sqrt(muEff[i]/rho[i]/(epsilon[i] + SMALL));
-
-                if (tk > SMALL)
-                {
-                    kappa_[i] = tc[i]/(tc[i] + tk);
-                }
-                else
-                {
-                    // Return to laminar combustion
-                    kappa_[i] = 1.0;
-                }
-            }
-        }
-        else
-        {
-            kappa_ = 1.0;
+            kappa_[i] = 1.0;
         }
     }
 }
 
 
-template<class CombThermoType>
+template<class ReactionThermo>
 CML::tmp<CML::fvScalarMatrix>
-CML::combustionModels::PaSR<CombThermoType>::R(const volScalarField& Y) const
+CML::combustionModels::PaSR<ReactionThermo>::R(volScalarField& Y) const
 {
-
-    tmp<fvScalarMatrix> tSu
-    (
-        new fvScalarMatrix(Y, dimMass/dimTime)
-    );
-
-    fvScalarMatrix& Su = tSu();
-
-    if (this->active())
-    {
-        const label specieI = this->thermo().composition().species()[Y.name()];
-
-        Su += kappa_*this->pChemistry_->RR(specieI);
-    }
-
-    return tSu;
+    return kappa_*laminar<ReactionThermo>::R(Y);
 }
 
 
-template<class CombThermoType>
+template<class ReactionThermo>
 CML::tmp<CML::volScalarField>
-CML::combustionModels::PaSR<CombThermoType>::dQ() const
+CML::combustionModels::PaSR<ReactionThermo>::Qdot() const
 {
-    tmp<volScalarField> tdQ
+    return tmp<volScalarField>
     (
         new volScalarField
         (
-            IOobject
-            (
-                "dQ",
-                this->mesh().time().timeName(),
-                this->mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            this->mesh(),
-            dimensionedScalar("dQ", dimEnergy/dimTime, 0.0),
-            zeroGradientFvPatchScalarField::typeName
+            this->thermo().phasePropertyName(typeName + ":Qdot"),
+            kappa_*laminar<ReactionThermo>::Qdot()
         )
     );
-
-    if (this->active())
-    {
-        volScalarField& dQ = tdQ();
-        dQ = kappa_*this->pChemistry_->dQ();
-    }
-
-    return tdQ;
 }
 
 
-template<class CombThermoType>
-CML::tmp<CML::volScalarField>
-CML::combustionModels::PaSR<CombThermoType>::Sh() const
+template<class ReactionThermo>
+bool CML::combustionModels::PaSR<ReactionThermo>::read()
 {
-    tmp<volScalarField> tSh
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "Sh",
-                this->mesh().time().timeName(),
-                this->mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            this->mesh(),
-            dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0),
-            zeroGradientFvPatchScalarField::typeName
-        )
-    );
-
-    if (this->active())
-    {
-        scalarField& Sh = tSh();
-        Sh = kappa_*this->pChemistry_->Sh();
-    }
-
-    return tSh;
-}
-
-
-template<class CombThermoType>
-bool CML::combustionModels::PaSR<CombThermoType>::read()
-{
-    if (CombThermoType::read())
+    if (laminar<ReactionThermo>::read())
     {
         this->coeffs().lookup("Cmix") >> Cmix_;
-        this->coeffs().lookup("turbulentReaction") >> turbulentReaction_;
-        this->coeffs().lookup("useReactionRate") >> useReactionRate_;
         return true;
     }
     else
@@ -330,5 +212,3 @@ bool CML::combustionModels::PaSR<CombThermoType>::read()
 
 
 #endif
-
-// ************************************************************************* //

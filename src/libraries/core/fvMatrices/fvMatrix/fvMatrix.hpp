@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 Copyright (C) 2014 Applied CCM
 Copyright (C) 2016 OpenCFD Ltd
 -------------------------------------------------------------------------------
@@ -223,11 +223,11 @@ public:
 
             //- Solve returning the solution statistics.
             //  Use the given solver controls
-            lduMatrix::solverPerformance solve(const dictionary&);
+            solverPerformance solve(const dictionary&);
 
             //- Solve returning the solution statistics.
             //  Solver controls read from fvSolution
-            lduMatrix::solverPerformance solve();
+            solverPerformance solve();
     };
 
 
@@ -404,11 +404,11 @@ public:
 
             //- Solve returning the solution statistics.
             //  Use the given solver controls
-            lduMatrix::solverPerformance solve(const dictionary&);
+            solverPerformance solve(const dictionary&);
 
             //- Solve returning the solution statistics.
             //  Solver controls read from fvSolution
-            lduMatrix::solverPerformance solve();
+            solverPerformance solve();
 
             //- Return the matrix residual
             tmp<Field<Type> > residual() const;
@@ -565,14 +565,14 @@ void checkMethod
 //- Solve returning the solution statistics given convergence tolerance
 //  Use the given solver controls
 template<class Type>
-lduMatrix::solverPerformance solve(fvMatrix<Type>&, const dictionary&);
+solverPerformance solve(fvMatrix<Type>&, const dictionary&);
 
 
 //- Solve returning the solution statistics given convergence tolerance,
 //  deleting temporary matrix after solution.
 //  Use the given solver controls
 template<class Type>
-lduMatrix::solverPerformance solve
+solverPerformance solve
 (
     const tmp<fvMatrix<Type> >&,
     const dictionary&
@@ -582,14 +582,14 @@ lduMatrix::solverPerformance solve
 //- Solve returning the solution statistics given convergence tolerance
 //  Solver controls read fvSolution
 template<class Type>
-lduMatrix::solverPerformance solve(fvMatrix<Type>&);
+solverPerformance solve(fvMatrix<Type>&);
 
 
 //- Solve returning the solution statistics given convergence tolerance,
 //  deleting temporary matrix after solution.
 //  Solver controls read fvSolution
 template<class Type>
-lduMatrix::solverPerformance solve(const tmp<fvMatrix<Type> >&);
+solverPerformance solve(const tmp<fvMatrix<Type> >&);
 
 
 //- Return the correction form of the given matrix
@@ -1073,7 +1073,7 @@ tmp<fvMatrix<Type> > operator*
 #include "volFields.hpp"
 #include "surfaceFields.hpp"
 #include "calculatedFvPatchFields.hpp"
-#include "zeroGradientFvPatchFields.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 #include "coupledFvPatchFields.hpp"
 #include "UIndirectList.hpp"
 
@@ -1090,11 +1090,8 @@ void CML::fvMatrix<Type>::addToInternalField
 {
     if (addr.size() != pf.size())
     {
-        FatalErrorIn
-        (
-            "fvMatrix<Type>::addToInternalField(const labelUList&, "
-            "const Field&, Field&)"
-        )   << "sizes of addressing and field are different"
+        FatalErrorInFunction
+            << "sizes of addressing and field are different"
             << abort(FatalError);
     }
 
@@ -1130,11 +1127,8 @@ void CML::fvMatrix<Type>::subtractFromInternalField
 {
     if (addr.size() != pf.size())
     {
-        FatalErrorIn
-        (
-            "fvMatrix<Type>::addToInternalField(const labelUList&, "
-            "const Field&, Field&)"
-        )   << "sizes of addressing and field are different"
+        FatalErrorInFunction
+            << "sizes of addressing and field are different"
             << abort(FatalError);
     }
 
@@ -1329,7 +1323,7 @@ CML::fvMatrix<Type>::fvMatrix
     source_(psi.size(), pTraits<Type>::zero),
     internalCoeffs_(psi.mesh().boundary().size()),
     boundaryCoeffs_(psi.mesh().boundary().size()),
-    faceFluxCorrectionPtr_(NULL)
+    faceFluxCorrectionPtr_(nullptr)
 {
     if (debug)
     {
@@ -1383,7 +1377,7 @@ CML::fvMatrix<Type>::fvMatrix(const fvMatrix<Type>& fvm)
     source_(fvm.source_),
     internalCoeffs_(fvm.internalCoeffs_),
     boundaryCoeffs_(fvm.boundaryCoeffs_),
-    faceFluxCorrectionPtr_(NULL)
+    faceFluxCorrectionPtr_(nullptr)
 {
     if (debug)
     {
@@ -1430,7 +1424,7 @@ CML::fvMatrix<Type>::fvMatrix(const tmp<fvMatrix<Type> >& tfvm)
         const_cast<fvMatrix<Type>&>(tfvm()).boundaryCoeffs_,
         tfvm.isTmp()
     ),
-    faceFluxCorrectionPtr_(NULL)
+    faceFluxCorrectionPtr_(nullptr)
 {
     if (debug)
     {
@@ -1444,7 +1438,7 @@ CML::fvMatrix<Type>::fvMatrix(const tmp<fvMatrix<Type> >& tfvm)
         if (tfvm.isTmp())
         {
             faceFluxCorrectionPtr_ = tfvm().faceFluxCorrectionPtr_;
-            tfvm().faceFluxCorrectionPtr_ = NULL;
+            tfvm().faceFluxCorrectionPtr_ = nullptr;
         }
         else
         {
@@ -1474,7 +1468,7 @@ CML::fvMatrix<Type>::fvMatrix
     source_(is),
     internalCoeffs_(psi.mesh().boundary().size()),
     boundaryCoeffs_(psi.mesh().boundary().size()),
-    faceFluxCorrectionPtr_(NULL)
+    faceFluxCorrectionPtr_(nullptr)
 {
     if (debug)
     {
@@ -1578,7 +1572,7 @@ void CML::fvMatrix<Type>::relax(const scalar alpha)
 
     if (debug)
     {
-        InfoIn("fvMatrix<Type>::relax(const scalar alpha)")
+        InfoInFunction
             << "Relaxing " << psi_.name() << " by " << alpha
             << endl;
     }
@@ -1655,7 +1649,7 @@ void CML::fvMatrix<Type>::relax(const scalar alpha)
         reduce(sumNon, sumOp<scalar>());
         sumNon /= returnReduce(D.size(), sumOp<label>());
 
-        InfoIn("fvMatrix<Type>::relax(const scalar alpha)")
+        InfoInFunction
             << "Matrix dominance test for " << psi_.name() << nl
             << "    number of non-dominant cells   : " << nNon << nl
             << "    maximum relative non-dominance : " << maxNon << nl
@@ -1786,7 +1780,7 @@ CML::tmp<CML::volScalarField> CML::fvMatrix<Type>::A() const
             ),
             psi_.mesh(),
             dimensions_/psi_.dimensions()/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -1815,7 +1809,7 @@ CML::fvMatrix<Type>::H() const
             ),
             psi_.mesh(),
             dimensions_/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& Hphi = tHphi();
@@ -1881,7 +1875,7 @@ CML::tmp<CML::volScalarField> CML::fvMatrix<Type>::H1() const
             ),
             psi_.mesh(),
             dimensions_/(dimVol*psi_.dimensions()),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     volScalarField& H1_ = tH1();
@@ -1917,7 +1911,7 @@ flux() const
 {
     if (!psi_.mesh().fluxRequired(psi_.name()))
     {
-        FatalErrorIn("fvMatrix<Type>::flux()")
+        FatalErrorInFunction
             << "flux requested but " << psi_.name()
             << " not specified in the fluxRequired sub-dictionary"
                " of fvSchemes."
@@ -2010,7 +2004,7 @@ CML::fvMatrix<Type>::Ac() const
             ),
             psi_.mesh(),
             dimensions_/(psi_.dimensions()*dimVol),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -2040,7 +2034,7 @@ CML::fvMatrix<Type>::spai0() const
             ),
             psi_.mesh(),
             dimensions_/(psi_.dimensions()*dimVol),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -2071,7 +2065,7 @@ CML::fvMatrix<Type>::R() const
             ),
             psi_.mesh(),
             dimensions_/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
 
@@ -2091,14 +2085,14 @@ void CML::fvMatrix<Type>::operator=(const fvMatrix<Type>& fvmv)
 {
     if (this == &fvmv)
     {
-        FatalErrorIn("fvMatrix<Type>::operator=(const fvMatrix<Type>&)")
+        FatalErrorInFunction
             << "attempted assignment to self"
             << abort(FatalError);
     }
 
     if (&psi_ != &(fvmv.psi_))
     {
-        FatalErrorIn("fvMatrix<Type>::operator=(const fvMatrix<Type>&)")
+        FatalErrorInFunction
             << "different fields"
             << abort(FatalError);
     }
@@ -2336,11 +2330,8 @@ void CML::fvMatrix<Type>::operator*=
 
     if (faceFluxCorrectionPtr_)
     {
-        FatalErrorIn
-        (
-            "fvMatrix<Type>::operator*="
-            "(const DimensionedField<scalar, volMesh>&)"
-        )   << "cannot scale a matrix containing a faceFluxCorrection"
+        FatalErrorInFunction
+            << "cannot scale a matrix containing a faceFluxCorrection"
             << abort(FatalError);
     }
 }
@@ -2399,10 +2390,8 @@ void CML::checkMethod
 {
     if (&fvm1.psi() != &fvm2.psi())
     {
-        FatalErrorIn
-        (
-            "checkMethod(const fvMatrix<Type>&, const fvMatrix<Type>&)"
-        )   << "incompatible fields for operation "
+        FatalErrorInFunction
+            << "incompatible fields for operation "
             << endl << "    "
             << "[" << fvm1.psi().name() << "] "
             << op
@@ -2412,10 +2401,8 @@ void CML::checkMethod
 
     if (dimensionSet::debug && fvm1.dimensions() != fvm2.dimensions())
     {
-        FatalErrorIn
-        (
-            "checkMethod(const fvMatrix<Type>&, const fvMatrix<Type>&)"
-        )   << "incompatible dimensions for operation "
+        FatalErrorInFunction
+            << "incompatible dimensions for operation "
             << endl << "    "
             << "[" << fvm1.psi().name() << fvm1.dimensions()/dimVolume << " ] "
             << op
@@ -2435,11 +2422,8 @@ void CML::checkMethod
 {
     if (dimensionSet::debug && fvm.dimensions()/dimVolume != df.dimensions())
     {
-        FatalErrorIn
-        (
-            "checkMethod(const fvMatrix<Type>&, const GeometricField<Type, "
-            "fvPatchField, volMesh>&)"
-        )   <<  "incompatible dimensions for operation "
+        FatalErrorInFunction
+            <<  "incompatible dimensions for operation "
             << endl << "    "
             << "[" << fvm.psi().name() << fvm.dimensions()/dimVolume << " ] "
             << op
@@ -2459,10 +2443,8 @@ void CML::checkMethod
 {
     if (dimensionSet::debug && fvm.dimensions()/dimVolume != dt.dimensions())
     {
-        FatalErrorIn
-        (
-            "checkMethod(const fvMatrix<Type>&, const dimensioned<Type>&)"
-        )   << "incompatible dimensions for operation "
+        FatalErrorInFunction
+            << "incompatible dimensions for operation "
             << endl << "    "
             << "[" << fvm.psi().name() << fvm.dimensions()/dimVolume << " ] "
             << op
@@ -2473,7 +2455,7 @@ void CML::checkMethod
 
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::solve
+CML::solverPerformance CML::solve
 (
     fvMatrix<Type>& fvm,
     const dictionary& solverControls
@@ -2483,13 +2465,13 @@ CML::lduMatrix::solverPerformance CML::solve
 }
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::solve
+CML::solverPerformance CML::solve
 (
     const tmp<fvMatrix<Type> >& tfvm,
     const dictionary& solverControls
 )
 {
-    lduMatrix::solverPerformance solverPerf =
+    solverPerformance solverPerf =
         const_cast<fvMatrix<Type>&>(tfvm()).solve(solverControls);
 
     tfvm.clear();
@@ -2499,15 +2481,15 @@ CML::lduMatrix::solverPerformance CML::solve
 
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::solve(fvMatrix<Type>& fvm)
+CML::solverPerformance CML::solve(fvMatrix<Type>& fvm)
 {
     return fvm.solve();
 }
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::solve(const tmp<fvMatrix<Type> >& tfvm)
+CML::solverPerformance CML::solve(const tmp<fvMatrix<Type> >& tfvm)
 {
-    lduMatrix::solverPerformance solverPerf =
+    solverPerformance solverPerf =
         const_cast<fvMatrix<Type>&>(tfvm()).solve();
 
     tfvm.clear();
@@ -3428,7 +3410,7 @@ CML::operator&
             ),
             psi.mesh(),
             M.dimensions()/dimVol,
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& Mphi = tMphi();
@@ -3572,7 +3554,7 @@ void CML::fvMatrix<Type>::setComponentReference
 
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
+CML::solverPerformance CML::fvMatrix<Type>::solve
 (
     const dictionary& solverControls
 )
@@ -3601,7 +3583,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
         Correction.clear();
     }
 
-    lduMatrix::solverPerformance solverPerfVec
+    solverPerformance solverPerfVec
     (
         "fvMatrix<Type>::solve",
         psi.name()
@@ -3670,7 +3652,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve
             cmpt
         );
 
-        lduMatrix::solverPerformance solverPerf;
+        solverPerformance solverPerf;
 
         // Solver call
         solverPerf = lduMatrix::solver::New
@@ -3719,7 +3701,7 @@ CML::fvMatrix<Type>::solver()
 
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::fvSolver::solve()
+CML::solverPerformance CML::fvMatrix<Type>::fvSolver::solve()
 {
     return solve
     (
@@ -3736,7 +3718,7 @@ CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::fvSolver::solve()
 
 
 template<class Type>
-CML::lduMatrix::solverPerformance CML::fvMatrix<Type>::solve()
+CML::solverPerformance CML::fvMatrix<Type>::solve()
 {
     return solve
     (

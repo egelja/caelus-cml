@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -467,13 +467,11 @@ void mappedFieldFvPatchField<Type>::updateCoeffs()
                 nbrMesh.boundaryMesh().findPatchID(samplePatch());
             if (nbrPatchID < 0)
             {
-                FatalErrorIn
-                (
-                    "void mappedFieldFvPatchField<Type>::updateCoeffs()"
-                )<< "Unable to find sample patch " << samplePatch()
-                 << " in region " << sampleRegion()
-                 << " for patch " << this->patch().name() << nl
-                 << abort(FatalError);
+                FatalErrorInFunction
+                    << "Unable to find sample patch " << samplePatch()
+                    << " in region " << sampleRegion()
+                    << " for patch " << this->patch().name() << nl
+                    << abort(FatalError);
             }
 
             const fieldType& nbrField = sampleField();
@@ -508,7 +506,7 @@ void mappedFieldFvPatchField<Type>::updateCoeffs()
         }
         default:
         {
-            FatalErrorIn("mappedFieldFvPatchField<Type>::updateCoeffs()")
+            FatalErrorInFunction
                 << "Unknown sampling mode: " << mode()
                 << nl << abort(FatalError);
         }

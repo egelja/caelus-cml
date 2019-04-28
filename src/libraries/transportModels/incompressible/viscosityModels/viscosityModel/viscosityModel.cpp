@@ -20,8 +20,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "viscosityModel.hpp"
-#include "volFields.hpp"
 #include "fvcGrad.hpp"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -29,6 +29,20 @@ namespace CML
 {
     defineTypeNameAndDebug(viscosityModel, 0);
     defineRunTimeSelectionTable(viscosityModel, dictionary);
+}
+
+// * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
+
+
+//- Print model coefficients
+void CML::viscosityModel::printCoeffs()
+{
+    if (printCoeffs_)
+    {
+        const word modelType(viscosityProperties_.lookup("transportModel"));
+        Info<< modelType << "Coeffs" << viscosityProperties_.subDict
+            (modelType + "Coeffs") << endl;
+    }
 }
 
 
@@ -44,24 +58,42 @@ CML::viscosityModel::viscosityModel
 :
     name_(name),
     viscosityProperties_(viscosityProperties),
+    printCoeffs_(viscosityProperties_.lookupOrDefault<Switch>("printCoeffs", false)),
+    outputShearStrainRate_(viscosityProperties_.lookupOrDefault<Switch>("outputShearStrainRate", false)),
     U_(U),
-    phi_(phi)
-{}
+    phi_(phi),
+    ssr_
+    (
+        IOobject
+        (
+            "ShearStrainRate",
+            U.mesh().time().timeName(),
+            U.mesh(),
+            IOobject::READ_IF_PRESENT,
+            outputShearStrainRate_ ? IOobject::AUTO_WRITE : IOobject::NO_WRITE 
+        ),
+        U.mesh(), 
+        dimensionedScalar("ssrInit",dimensionSet(0, 0, -1, 0, 0, 0, 0), 0.0)
+    )
+{
+    printCoeffs();
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
-CML::tmp<CML::volScalarField> CML::viscosityModel::strainRate() const
-{
-    return sqrt(2.0)*mag(symm(fvc::grad(U_)));
-}
-
 
 bool CML::viscosityModel::read(const dictionary& viscosityProperties)
 {
     viscosityProperties_ = viscosityProperties;
 
     return true;
+}
+
+
+void CML::viscosityModel::correct()
+{   
+    //- Shear Strain Rate
+    ssr_.internalField() = sqrt(2.0)*mag(symm(fvc::grad(U_)));
 }
 
 

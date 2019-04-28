@@ -11,6 +11,7 @@ reactingSolver.cpp
 """)
 
 caelus_inc = [
+'core/lnInclude',
 'turbulenceModels/',
 'turbulenceModels/compressible/turbulenceModel/lnInclude',
 'transportModels',
@@ -24,6 +25,7 @@ caelus_inc = [
 'fvOptions/lnInclude',
 'sampling/lnInclude',
 'thermophysicalModels/numericFluxes/DBNS/numericFlux/lnInclude',
+'ODE/lnInclude'
 ]
 
 caelus_libs = [
@@ -32,7 +34,7 @@ caelus_libs = [
 'compressibleRASModels',
 'compressibleLESModels',
 'compressibleVLESModels',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'turbulenceDerivedFvPatchFields',
 'fvOptions',
 'sampling',
@@ -40,7 +42,8 @@ caelus_libs = [
 'reactionThermophysicalModels',
 'chemistryModel',
 'specie',
-'combustionModels'
+'combustionModels',
+'ODE'
 ]
 
 ostype = utils.ostype()

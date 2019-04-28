@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
+Copyright (C) 2016-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -24,14 +25,20 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-
 namespace CML
 {
     defineTypeNameAndDebug(cloud, 0);
-
-    const word cloud::prefix("lagrangian");
-    word cloud::defaultName("defaultCloud");
 }
+
+const CML::word CML::cloud::prefix("lagrangian");
+CML::word CML::cloud::defaultName("defaultCloud");
+
+const CML::Enum<CML::cloud::geometryType>
+CML::cloud::geometryTypeNames
+{
+    { geometryType::COORDINATES, "coordinates" },
+    { geometryType::POSITIONS, "positions" }
+};
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -42,7 +49,7 @@ CML::cloud::cloud(const objectRegistry& obr, const word& cloudName)
     (
         IOobject
         (
-            (cloudName.size() ? cloudName : defaultName),
+            cloudName,
             obr.time().timeName(),
             prefix,
             obr,
@@ -53,17 +60,11 @@ CML::cloud::cloud(const objectRegistry& obr, const word& cloudName)
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-CML::cloud::~cloud()
-{}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void CML::cloud::autoMap(const mapPolyMesh&)
 {
-    notImplemented("cloud::autoMap(const mapPolyMesh&)");
+    NotImplemented;
 }
 
 

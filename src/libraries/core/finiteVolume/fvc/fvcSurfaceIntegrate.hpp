@@ -89,7 +89,7 @@ namespace fvc
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "fvMesh.hpp"
-#include "zeroGradientFvPatchFields.hpp"
+#include "extrapolatedCalculatedFvPatchField.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -168,7 +168,7 @@ surfaceIntegrate
                 ssf.dimensions()/dimVol,
                 pTraits<Type>::zero
             ),
-            zeroGradientFvPatchField<Type>::typeName
+            extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& vf = tvf();
@@ -219,7 +219,7 @@ surfaceSum
             ),
             mesh,
             dimensioned<Type>("0", ssf.dimensions(), pTraits<Type>::zero),
-            zeroGradientFvPatchField<Type>::typeName
+            extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& vf = tvf();

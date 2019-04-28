@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -33,7 +33,7 @@ CML::edgeMesh::edgeMesh
 :
     points_(0),
     edges_(0),
-    pointEdgesPtr_(NULL)
+    pointEdgesPtr_(nullptr)
 {
     read(name, ext);
 }
@@ -43,7 +43,7 @@ CML::edgeMesh::edgeMesh(const fileName& name)
 :
     points_(0),
     edges_(0),
-    pointEdgesPtr_(NULL)
+    pointEdgesPtr_(nullptr)
 {
     read(name);
 }
@@ -100,11 +100,8 @@ void CML::edgeMesh::write
 
     if (mfIter == writefileExtensionMemberFunctionTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "MeshedSurface::write"
-            "(const fileName&, const MeshedSurface&)"
-        )   << "Unknown file extension " << ext << nl << nl
+        FatalErrorInFunction
+            << "Unknown file extension " << ext << nl << nl
             << "Valid types are :" << endl
             << writefileExtensionMemberFunctionTablePtr_->sortedToc()
             << exit(FatalError);

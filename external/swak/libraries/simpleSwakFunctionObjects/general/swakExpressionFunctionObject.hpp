@@ -175,20 +175,20 @@ void swakExpressionFunctionObject::writeTheData(
                 }
             }
         } else {
-            FatalErrorIn("swakExpressionFunctionObject::writeTheData")
+            FatalErrorInFunction
                 << "Don't know how to handle logical expressions of type "
-                    << driver.CommonValueExpressionDriver::getResultType()
-                    << " from " << maskExpression_
-                    << endl
-                    << exit(FatalError);
+                << driver.CommonValueExpressionDriver::getResultType()
+                << " from " << maskExpression_
+                << endl
+                << exit(FatalError);
         }
         if(maskValues().size()!=result.size()) {
-            FatalErrorIn("swakExpressionFunctionObject::writeTheData")
+            FatalErrorInFunction
                 << "Size of mask " << maskExpression_ << " not equal to "
-                    << expression_ << " (" << maskValues().size() << " vs "
-                    << result.size() << ")"
-                    << endl
-                    << exit(FatalError);
+                << expression_ << " (" << maskValues().size() << " vs "
+                << result.size() << ")"
+                << endl
+                << exit(FatalError);
         }
 
         pCalculator.set(

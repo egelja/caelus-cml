@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,17 +42,14 @@ void CML::GAMGAgglomeration::agglomerateLduAddressing
 
     if (min(restrictMap) == -1)
     {
-        FatalErrorIn("GAMGAgglomeration::agglomerateLduAddressing")
+        FatalErrorInFunction
             << "min(restrictMap) == -1" << exit(FatalError);
     }
 
     if (restrictMap.size() != fineMeshAddr.size())
     {
-        FatalErrorIn
-        (
-            "GAMGAgglomeration::agglomerateLduAddressing"
-            "(const label fineLevelIndex)"
-        )   << "restrict map does not correspond to fine level. " << endl
+        FatalErrorInFunction
+            << "restrict map does not correspond to fine level. " << endl
             << " Sizes: restrictMap: " << restrictMap.size()
             << " nEqns: " << fineMeshAddr.size()
             << abort(FatalError);

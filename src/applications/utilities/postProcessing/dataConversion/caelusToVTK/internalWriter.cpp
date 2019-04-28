@@ -76,18 +76,18 @@ CML::internalWriter::internalWriter
     // Count total number of vertices referenced.
     label nFaceVerts = 0;
 
-    forAll(vtkVertLabels, cellI)
+    forAll(vtkVertLabels, celli)
     {
-        nFaceVerts += vtkVertLabels[cellI].size() + 1;
+        nFaceVerts += vtkVertLabels[celli].size() + 1;
     }
 
     os_ << "CELLS " << vtkVertLabels.size() << ' ' << nFaceVerts << std::endl;
 
     DynamicList<label> vertLabels(nFaceVerts);
 
-    forAll(vtkVertLabels, cellI)
+    forAll(vtkVertLabels, celli)
     {
-        const labelList& vtkVerts = vtkVertLabels[cellI];
+        const labelList& vtkVerts = vtkVertLabels[celli];
 
         vertLabels.append(vtkVerts.size());
 
@@ -129,28 +129,28 @@ void CML::internalWriter::writeCellIDs()
     {
         const labelList& cMap = vMesh_.subsetter().cellMap();
 
-        forAll(mesh.cells(), cellI)
+        forAll(mesh.cells(), celli)
         {
-            cellId[labelI++] = cMap[cellI];
+            cellId[labelI++] = cMap[celli];
         }
-        forAll(superCells, superCellI)
+        forAll(superCells, superCelli)
         {
-            label origCellI = cMap[superCells[superCellI]];
+            label origCelli = cMap[superCells[superCelli]];
 
-            cellId[labelI++] = origCellI;
+            cellId[labelI++] = origCelli;
         }
     }
     else
     {
-        forAll(mesh.cells(), cellI)
+        forAll(mesh.cells(), celli)
         {
-            cellId[labelI++] = cellI;
+            cellId[labelI++] = celli;
         }
-        forAll(superCells, superCellI)
+        forAll(superCells, superCelli)
         {
-            label origCellI = superCells[superCellI];
+            label origCelli = superCells[superCelli];
 
-            cellId[labelI++] = origCellI;
+            cellId[labelI++] = origCelli;
         }
     }
 

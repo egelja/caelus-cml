@@ -38,7 +38,10 @@ Contributors/Copyright:
 
 #include "runTimeSelectionTables.hpp"
 
-#include "psiChemistryModel.hpp"
+#include "swakThermoTypes.hpp"
+
+#include "BasicChemistryModel_.hpp"
+#include "psiReactionThermo.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,11 +61,17 @@ class swakPsiChemistryModelPluginFunction
     swakPsiChemistryModelPluginFunction(const swakPsiChemistryModelPluginFunction &);
 
 protected:
-    static const psiChemistryModel &chemistryInternal(const fvMesh &reg);
+    typedef BasicChemistryModel<psiReactionThermo> ChemistryModelType;
 
-    const psiChemistryModel &chemistry();
+    static const  swakPsiChemistryModelPluginFunction::ChemistryModelType &chemistryInternal(const fvMesh &reg);
+
+    const  swakPsiChemistryModelPluginFunction::ChemistryModelType &chemistry();
 
     void updateChemistry(const scalar dt);
+
+    tmp<volScalarField> wrapDimField(
+        const DimensionedField<scalar,volMesh> &dimField
+    );
 
 public:
     swakPsiChemistryModelPluginFunction(

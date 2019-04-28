@@ -23,6 +23,8 @@ InNamespace
 Description
     Calculate the face-flux of the given field.
 
+SourceFiles
+    fvcFlux.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -44,6 +46,19 @@ namespace CML
 
 namespace fvc
 {
+    //- Return the face-flux field obtained from the given volVectorField
+    tmp<surfaceScalarField> flux(const volVectorField& vvf);
+
+    //- Return the face-flux field obtained from the given tmp volVectorField
+    tmp<surfaceScalarField> flux(const tmp<volVectorField>& tvvf);
+
+    template<class Type>
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
+    (
+        const surfaceScalarField&,
+        const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+    );
+
     template<class Type>
     tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
     (

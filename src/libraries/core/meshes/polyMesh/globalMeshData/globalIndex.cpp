@@ -41,7 +41,7 @@ CML::globalIndex::globalIndex(const label localSize, const int tag)
 
         if (offset < oldOffset)
         {
-            FatalErrorIn("globalIndex::globalIndex(const label)")
+            FatalErrorInFunction
                 << "Overflow : sum of sizes " << localSizes
                 << " exceeds capability of label (" << labelMax
                 << "). Please recompile with larger datatype for label."

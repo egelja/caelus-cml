@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -62,8 +62,11 @@ extern const dimensionSet dimPower;
 extern const dimensionSet dimVelocity;
 extern const dimensionSet dimAcceleration;
 extern const dimensionSet dimPressure;
+extern const dimensionSet dimCompressibility;
 extern const dimensionSet dimGasConstant;
 extern const dimensionSet dimSpecificHeatCapacity;
+extern const dimensionSet dimViscosity;
+extern const dimensionSet dimDynamicViscosity;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

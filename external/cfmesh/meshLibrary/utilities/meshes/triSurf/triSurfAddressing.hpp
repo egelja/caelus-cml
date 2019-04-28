@@ -180,10 +180,8 @@ inline const VRWGraph& triSurfAddressing::pointFacets() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const VRWGraph& triSurfAddressing::pointFacets() const"
-            ) << "Cannot calculate pointFacets" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate pointFacets" << abort(FatalError);
         # endif
 
         calculatePointFacets();
@@ -198,10 +196,8 @@ inline const edgeLongList& triSurfAddressing::edges() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const edgeLongList& triSurfAddressing::edges() const"
-            ) << "Cannot calculate edges" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate edges" << abort(FatalError);
         # endif
 
         calculateEdges();
@@ -216,10 +212,8 @@ inline const VRWGraph& triSurfAddressing::facetEdges() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const VRWGraph& triSurfAddressing::facetEdges() const"
-            ) << "Cannot calculate facetEdges" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate facetEdges" << abort(FatalError);
         # endif
 
         calculateFacetEdges();
@@ -234,10 +228,8 @@ inline const VRWGraph& triSurfAddressing::edgeFacets() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const VRWGraph& triSurfAddressing::edgeFacets() const"
-            ) << "Cannot calculate edgeFacets" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate edgeFacets" << abort(FatalError);
         # endif
 
         calculateEdgeFacets();
@@ -252,10 +244,8 @@ inline const VRWGraph& triSurfAddressing::pointEdges() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const VRWGraph& triSurfAddressing::pointEdges() const"
-            ) << "Cannot calculate pointEdges" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate pointEdges" << abort(FatalError);
         # endif
 
         calculatePointEdges();
@@ -270,10 +260,8 @@ inline const VRWGraph& triSurfAddressing::facetFacets() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const VRWGraph& triSurfAddressing::facetFacets() const"
-            ) << "Cannot calculate facetFacets" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate facetFacets" << abort(FatalError);
         # endif
 
         calculateFacetFacetsEdges();
@@ -288,11 +276,8 @@ inline const vectorField& triSurfAddressing::pointNormals() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const vectorField&"
-                " triSurfAddressing::pointNormals() const"
-            ) << "Cannot calculate pointNormals" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate pointNormals" << abort(FatalError);
         # endif
 
         calculatePointNormals();
@@ -307,11 +292,8 @@ inline const vectorField& triSurfAddressing::facetNormals() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const vectorField&"
-                " triSurfAddressing::facetNormals() const"
-            ) << "Cannot calculate facetNormals" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate facetNormals" << abort(FatalError);
         # endif
 
         calculateFacetNormals();
@@ -326,11 +308,8 @@ inline const vectorField& triSurfAddressing::facetCentres() const
     {
         # ifdef USE_OMP
         if( omp_in_parallel() )
-            FatalErrorIn
-            (
-                "inline const vectorField&"
-                " triSurfAddressing::facetCentres() const"
-            ) << "Cannot calculate facetCentres" << abort(FatalError);
+            FatalErrorInFunction
+              << "Cannot calculate facetCentres" << abort(FatalError);
         # endif
 
         calculateFacetCentres();

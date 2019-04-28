@@ -92,10 +92,8 @@ autoPtr<frequencyAxis> frequencyAxis::New
 
     if (cstrIter == frequencyAxisConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "frequencyAxis::New(const Time&, dictionary&)"
-        )   << "Unknown discretisation method '" << discretisation << "'"
+        FatalErrorInFunction
+            << "Unknown discretisation method '" << discretisation << "'"
             << endl << endl
             << "Valid discretisation methods are:" << endl
             << frequencyAxisConstructorTablePtr_->toc()

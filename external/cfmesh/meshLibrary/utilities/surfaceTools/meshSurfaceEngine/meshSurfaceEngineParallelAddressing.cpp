@@ -279,11 +279,8 @@ void meshSurfaceEngine::calcGlobalBoundaryPointLabels() const
                 }
                 else if( globalPointLabel[bp[f[pI]]] != globalLabel )
                 {
-                    FatalErrorIn
-                    (
-                        "void meshSurfaceEngine::"
-                        "calcGlobalBoundaryPointLabels() const"
-                    ) << "Point labels in proc boundary "
+                    FatalErrorInFunction
+                        << "Point labels in proc boundary "
                         << procBoundaries[patchI].patchName()
                         << " face " << f << " pI = " << pI
                         << nl << " label " << globalPointLabel[bp[f[pI]]]
@@ -622,11 +619,8 @@ void meshSurfaceEngine::calcGlobalBoundaryEdgeLabels() const
                 }
                 else if( globalEdgeLabel[edgeI] != globalLabel )
                 {
-                    FatalErrorIn
-                    (
-                        "void meshSurfaceEngine::"
-                        "calcGlobalBoundaryEdgeLabels() const"
-                    ) << "Edge labels do not match!" << abort(FatalError);
+                    FatalErrorInFunction
+                        << "Edge labels do not match!" << abort(FatalError);
                 }
             }
         }
@@ -698,10 +692,8 @@ void meshSurfaceEngine::calcAddressingForProcEdges() const
     forAllConstIter(Map<label>, nFacesAtEdge, iter)
     {
         if( iter() != 2 )
-            FatalErrorIn
-            (
-                "void meshSurfaceEngine::calcAddressingForProcEdges() const"
-            ) << "Surface is not manifold at boundary edge "
+            FatalErrorInFunction
+              << "Surface is not manifold at boundary edge "
               << iter.key() << exit(FatalError);
     }
 

@@ -76,7 +76,7 @@ public:
         {}
 
         //- Solve the matrix with this solver
-        lduMatrix::solverPerformance solve
+        solverPerformance solve
         (
             scalarField& x,
             const scalarField& b,

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -26,7 +26,6 @@ License
 
 void CML::SIBS::SIMPR
 (
-    const ODE& ode,
     const scalar xStart,
     const scalarField& y,
     const scalarField& dydx,
@@ -40,63 +39,63 @@ void CML::SIBS::SIMPR
     scalar h = deltaX/nSteps;
 
     scalarSquareMatrix a(n_);
-    for (register label i=0; i<n_; i++)
+    for (label i=0; i<n_; i++)
     {
-        for (register label j=0; j<n_; j++)
+        for (label j=0; j<n_; j++)
         {
-            a[i][j] = -h*dfdy[i][j];
+            a(i, j) = -h*dfdy(i, j);
         }
-        ++a[i][i];
+        ++a(i, i);
     }
 
     labelList pivotIndices(n_);
-    scalarSquareMatrix::LUDecompose(a, pivotIndices);
+    LUDecompose(a, pivotIndices);
 
-    for (register label i=0; i<n_; i++)
+    for (label i=0; i<n_; i++)
     {
         yEnd[i] = h*(dydx[i] + h*dfdx[i]);
     }
 
-    scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
+    LUBacksubstitute(a, pivotIndices, yEnd);
 
     scalarField del(yEnd);
     scalarField ytemp(n_);
 
-    for (register label i=0; i<n_; i++)
+    for (label i=0; i<n_; i++)
     {
         ytemp[i] = y[i] + del[i];
     }
 
     scalar x = xStart + h;
 
-    ode.derivatives(x, ytemp, yEnd);
+    odes_.derivatives(x, ytemp, yEnd);
 
-    for (register label nn=2; nn<=nSteps; nn++)
+    for (label nn=2; nn<=nSteps; nn++)
     {
-        for (register label i=0; i<n_; i++)
+        for (label i=0; i<n_; i++)
         {
             yEnd[i] = h*yEnd[i] - del[i];
         }
 
-        scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
+        LUBacksubstitute(a, pivotIndices, yEnd);
 
-        for (register label i=0; i<n_; i++)
+        for (label i=0; i<n_; i++)
         {
             ytemp[i] += (del[i] += 2.0*yEnd[i]);
         }
 
         x += h;
 
-        ode.derivatives(x, ytemp, yEnd);
+        odes_.derivatives(x, ytemp, yEnd);
     }
-    for (register label i=0; i<n_; i++)
+    for (label i=0; i<n_; i++)
     {
         yEnd[i] = h*yEnd[i] - del[i];
     }
 
-    scalarSquareMatrix::LUBacksubstitute(a, pivotIndices, yEnd);
+    LUBacksubstitute(a, pivotIndices, yEnd);
 
-    for (register label i=0; i<n_; i++)
+    for (label i=0; i<n_; i++)
     {
         yEnd[i] += ytemp[i];
     }

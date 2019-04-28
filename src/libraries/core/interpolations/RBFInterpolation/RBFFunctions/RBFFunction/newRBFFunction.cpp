@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright 2009 TU Delft
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -45,11 +46,8 @@ autoPtr<RBFFunction> RBFFunction::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "RBFFunction::New(const word& type, const dictionary& dict)",
-            dict
-        )   << "Unknown RBFFunction type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown RBFFunction type "
             << type << endl << endl
             << "Valid  RBFFunctions are : " << endl
             << dictionaryConstructorTablePtr_->toc()

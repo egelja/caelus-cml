@@ -85,7 +85,7 @@ void CML::fieldValues::faceSource::setFaceZoneFaces()
 
     if (zoneId < 0)
     {
-        FatalErrorIn("faceSource::faceSource::setFaceZoneFaces()")
+        FatalErrorInFunction
             << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
             << "    Unknown face zone name: " << sourceName_
@@ -170,7 +170,7 @@ void CML::fieldValues::faceSource::setPatchFaces()
 
     if (patchId < 0)
     {
-        FatalErrorIn("faceSource::constructFaceAddressing()")
+        FatalErrorInFunction
             << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
             << "    Unknown patch name: " << sourceName_
@@ -416,7 +416,7 @@ void CML::fieldValues::faceSource::initialise(const dictionary& dict)
         }
         default:
         {
-            FatalErrorIn("faceSource::initialise()")
+            FatalErrorInFunction
                 << type() << " " << name_ << ": "
                 << sourceTypeNames_[source_] << "(" << sourceName_ << "):"
                 << nl << "    Unknown source type. Valid source types are:"
@@ -426,10 +426,7 @@ void CML::fieldValues::faceSource::initialise(const dictionary& dict)
 
     if (nFaces_ == 0)
     {
-        WarningIn
-        (
-            "CML::fieldValues::faceSource::initialise(const dictionary&)"
-        )
+        WarningInFunction
             << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
             << "    Source has no faces - deactivating" << endl;
@@ -457,14 +454,7 @@ void CML::fieldValues::faceSource::initialise(const dictionary& dict)
 
         if (source_ == stSampledSurface)
         {
-            FatalIOErrorIn
-            (
-                "void CML::fieldValues::faceSource::initialise"
-                "("
-                    "const dictionary&"
-                ")",
-                dict
-            )
+            FatalIOErrorInFunction(dict)
                 << "Cannot use weightField for a sampledSurface"
                 << exit(FatalIOError);
         }
@@ -480,14 +470,7 @@ void CML::fieldValues::faceSource::initialise(const dictionary& dict)
         }
         else
         {
-            FatalIOErrorIn
-            (
-                "void CML::fieldValues::faceSource::initialise"
-                "("
-                    "const dictionary&"
-                ")",
-                dict
-            )
+            FatalIOErrorInFunction(dict)
                 << "Either weightField or orientedWeightField can be supplied, "
                 << "but not both"
                 << exit(FatalIOError);
@@ -638,7 +621,7 @@ CML::fieldValues::faceSource::faceSource
 )
 :
     fieldValue(name, obr, dict, typeName, loadFromFiles),
-    surfaceWriterPtr_(NULL),
+    surfaceWriterPtr_(nullptr),
     source_(sourceTypeNames_.read(dict.lookup("source"))),
     operation_(operationTypeNames_.read(dict.lookup("operation"))),
     weightFieldName_("none"),
@@ -732,7 +715,7 @@ void CML::fieldValues::faceSource::write()
 
             if (!ok)
             {
-                WarningIn("void CML::fieldValues::faceSource::write()")
+                WarningInFunction
                     << "Requested field " << fieldName
                     << " not found in database and not processed"
                     << endl;

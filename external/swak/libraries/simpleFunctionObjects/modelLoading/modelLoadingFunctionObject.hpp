@@ -151,7 +151,7 @@ bool modelLoadingFunctionObject<ModelType>::start()
             &&
             failIfModelTypeExists_
         ) {
-            FatalErrorIn("modelLoadingFunctionObject<ModelType>::start()")
+            FatalErrorInFunction
                 << "Model of type " << ModelType::typeName
                     << " in " << this->name()
                     << " already existing. If this is OK overrule this "
@@ -166,7 +166,7 @@ bool modelLoadingFunctionObject<ModelType>::start()
         if(allowReload_) {
             model_.set(initModel().ptr());
         } else {
-            WarningIn("modelLoadingFunctionObject<ModelType>::start()")
+            WarningInFunction
                 << "Not reloading model because it is not allowed"
                     << endl;
         }
@@ -184,7 +184,7 @@ void modelLoadingFunctionObject<ModelType>::write()
 
             model_->correct();
         } else {
-            FatalErrorIn("modelLoadingFunctionObject::start()")
+            FatalErrorInFunction
                 << "Model has never been intialized"
                     << endl
                     << exit(FatalError);

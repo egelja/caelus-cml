@@ -32,7 +32,8 @@ SourceFiles
 #define reactingOneDim_H
 
 #include "pyrolysisModel.hpp"
-
+#include "basicSolidChemistryModel.hpp"
+#include "radiationModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -70,33 +71,26 @@ protected:
 
     // Protected data
 
-        //- Reference to the solid chemistry model
-        autoPtr<solidChemistryModel> solidChemistry_;
-
         //- Reference to solid thermo
-        basicSolidThermo& solidThermo_;
+        autoPtr<solidReactionThermo> solidThermo_;
+
+        //- Reference to the solid chemistry model
+        autoPtr<basicSolidChemistryModel> solidChemistry_;
+
+        //- Pointer to radiation model
+        autoPtr<radiation::radiationModel> radiation_;
 
 
         // Reference to solid thermo properties
 
-            //- Absorption coefficient [1/m]
-            const volScalarField& kappa_;
-
-            //- Thermal conductivity [W/m/K]
-            const volScalarField& K_;
-
             //- Density [kg/m3]
-            volScalarField& rho_;
+            volScalarField rho_;
 
             //- List of solid components
             PtrList<volScalarField>& Ys_;
 
-            // Non-const access to temperature
-            volScalarField& T_;
-
-
-        //- Name of the radiative flux in the primary region
-        word primaryRadFluxName_;
+            // Non-const access to enthalpy
+            volScalarField& h_;
 
 
         // Solution parameters
@@ -119,18 +113,18 @@ protected:
             //- Sensible enthalpy gas flux [J/m2/s]
             volScalarField phiHsGas_;
 
-            //- Heat release [J/s/m3]
-            volScalarField chemistrySh_;
+            //- Heat release rate [J/s/m3]
+            volScalarField chemistryQdot_;
 
 
         // Source term fields
 
             //- Coupled region radiative heat flux [W/m2]
             //  Requires user to input mapping info for coupled patches
-            volScalarField QrCoupled_;
+            // volScalarField qrCoupled_;
 
             //- In depth radiative heat flux [W/m2]
-            volScalarField Qr_;
+            volScalarField qr_;
 
 
         // Checks
@@ -148,6 +142,18 @@ protected:
             dimensionedScalar totalHeatRR_;
 
 
+        // Options
+
+            //- Add gas enthalpy source term
+            bool  gasHSource_;
+
+            //- Add in depth radiation source term
+            bool  qrHSource_;
+
+            //- Use chemistry solvers (ode or sequential)
+            bool useChemistrySolvers_;
+
+
     // Protected member functions
 
         //- Read control parameters from dictionary
@@ -163,7 +169,7 @@ protected:
         void updateMesh(const scalarField& mass0);
 
         //- Update radiative flux in pyrolysis region
-        void updateQr();
+        void updateqr();
 
         //- Update enthalpy flux for pyrolysis gases
         void updatePhiGas();
@@ -193,14 +199,20 @@ public:
     // Constructors
 
         //- Construct from type name and mesh
-        reactingOneDim(const word& modelType, const fvMesh& mesh);
+        reactingOneDim
+        (
+            const word& modelType,
+            const fvMesh& mesh,
+            const word& regionType
+        );
 
         //- Construct from type name, mesh and dictionary
         reactingOneDim
         (
             const word& modelType,
             const fvMesh& mesh,
-            const dictionary& dict
+            const dictionary& dict,
+            const word& regionType
         );
 
 
@@ -216,8 +228,8 @@ public:
 
             //- Fields
 
-                //- Return density [kg/m3]
-                virtual const volScalarField& rho() const;
+                //- Return const density [Kg/m3]
+                const volScalarField& rho() const;
 
                 //- Return const temperature [K]
                 virtual const volScalarField& T() const;
@@ -226,10 +238,10 @@ public:
                 virtual const tmp<volScalarField> Cp() const;
 
                 //- Return the region absorptivity [1/m]
-                virtual const volScalarField& kappa() const;
+                virtual tmp<volScalarField> kappaRad() const;
 
                 //- Return the region thermal conductivity [W/m/k]
-                virtual const volScalarField& K() const;
+                virtual tmp<volScalarField> kappa() const;
 
                 //- Return the total gas mass flux to primary region [kg/m2/s]
                 virtual const surfaceScalarField& phiGas() const;
@@ -249,18 +261,12 @@ public:
             //- External hook to add mass to the primary region
             virtual scalar addMassSources
             (
-                const label patchI,            // patchI on primary region
-                const label faceI              // faceI of patchI
+                const label patchi,            // patchi on primary region
+                const label facei              // facei of patchi
             );
 
             //- Mean diffusion number of the solid region
             virtual scalar solidRegionDiffNo() const;
-
-
-        // Source fields (read/write access)
-
-            //- In depth radiative heat flux
-            inline const volScalarField& Qr() const;
 
 
        // Evolution
@@ -275,7 +281,7 @@ public:
        // I-O
 
             //- Provide some feedback
-            virtual void info() const;
+            virtual void info();
 };
 
 

@@ -463,14 +463,8 @@ void FieldValueExpressionDriver::setValuePatches
         if(typeid(field.boundaryField()[patchI])==typeid(fixedValueFvsPatchField<T>)) {
             fvsPatchField<T> &pf=field.boundaryField()[patchI];
             //            pf==pf.patchInternalField();
-            WarningIn(
-                "FieldValueExpressionDriver::setValuePatches"
-                "("
-                "GeometricField<T,fvsPatchField,surfaceMesh> &field,"
-                "bool keepPatches,"
-                "const wordList &fixedPatches"
-                ")"
-            ) << "There is no patchInternalField() for fvsPatchField. "
+            WarningInFunction
+                << "There is no patchInternalField() for fvsPatchField. "
                 << "Nothing done for patch " << patch.name()
                 << " but setting it to " << pTraits<T>::zero << endl;
             pf==pTraits<T>::zero;
@@ -572,12 +566,12 @@ inline tmp<FType> FieldValueExpressionDriver::makeFieldInternal(
     );
 
     if(val.size()!=f->internalField().size()) {
-        FatalErrorIn("FieldValueExpressionDriver::makeField(const Field<typename FType::value_type> &val)")
+        FatalErrorInFunction
             << "Size " << val.size()
-                << " of the assigned field is not the required "
-                << f->internalField().size()
-                << endl
-                << exit(FatalError);
+            << " of the assigned field is not the required "
+            << f->internalField().size()
+            << endl
+            << exit(FatalError);
     }
 
     f->internalField()=val;
@@ -757,11 +751,11 @@ template<class T>
 const T &FieldValueExpressionDriver::getResult(bool correct) const
 {
     if(!resultField_.valid()) {
-        FatalErrorIn("FieldValueExpressionDriver::getResult()")
+        FatalErrorInFunction
             << "When asking for a " << pTraits<T>::typeName
-                << ": No result present"
-                << endl
-                << exit(FatalError);
+            << ": No result present"
+            << endl
+            << exit(FatalError);
     }
 
     //    return dynamicCast<const T &>(resultField_()); // doesn't work with gcc 4.2
@@ -777,11 +771,11 @@ template<class T>
 bool FieldValueExpressionDriver::resultIsTyp(bool isLogical)
 {
     if(!resultField_.valid()) {
-        FatalErrorIn("FieldValueExpressionDriver::isTyp(bool isLogical)")
+        FatalErrorInFunction
             << "When asking for a " << pTraits<T>::typeName
-                << ": No result present"
-                << endl
-                << exit(FatalError);
+            << ": No result present"
+            << endl
+            << exit(FatalError);
     }
 
     return (

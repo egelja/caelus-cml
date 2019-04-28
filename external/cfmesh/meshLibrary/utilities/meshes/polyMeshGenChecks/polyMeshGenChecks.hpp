@@ -59,7 +59,7 @@ bool checkClosedCells
     const polyMeshGen&,
     const bool report = false,
     const scalar aspectWarn = 1000,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check for negative cell volumes
@@ -67,7 +67,7 @@ bool checkCellVolumes
 (
     const polyMeshGen&,
     const bool report = false,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check for negative face areas
@@ -76,8 +76,8 @@ bool checkFaceAreas
     const polyMeshGen&,
     const bool report = false,
     const scalar minFaceArea = VSMALL,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check for negative part tetrahedra
@@ -88,8 +88,8 @@ bool checkCellPartTetrahedra
     const polyMeshGen&,
     const bool report = false,
     const scalar minPartTet = VSMALL,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check for non-orthogonality
@@ -97,7 +97,7 @@ void checkFaceDotProduct
 (
     const polyMeshGen&,
     scalarField&,
-    const boolList* changedFacePtr = NULL
+    const boolList* changedFacePtr = nullptr
 );
 
 bool checkFaceDotProduct
@@ -105,8 +105,8 @@ bool checkFaceDotProduct
     const polyMeshGen&,
     const bool report = false,
     const scalar nonOrthWarn = 70.0,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check face pyramid volume
@@ -115,8 +115,8 @@ bool checkFacePyramids
     const polyMeshGen&,
     const bool report = false,
     const scalar minPyrVol = -SMALL,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check face skewness
@@ -124,7 +124,7 @@ void checkFaceSkewness
 (
     const polyMeshGen&,
     scalarField&,
-    const boolList* changedFacePtr = NULL
+    const boolList* changedFacePtr = nullptr
 );
 
 bool checkFaceSkewness
@@ -132,8 +132,8 @@ bool checkFaceSkewness
     const polyMeshGen&,
     const bool report = false,
     const scalar warnSkew = 4.0,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check face uniformity
@@ -141,7 +141,7 @@ void checkFaceUniformity
 (
     const polyMeshGen&,
     scalarField&,
-    const boolList* changedFacePtr = NULL
+    const boolList* changedFacePtr = nullptr
 );
 
 bool checkFaceUniformity
@@ -149,8 +149,8 @@ bool checkFaceUniformity
     const polyMeshGen&,
     const bool report = false,
     const scalar warnUniform = 0.1,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- check volume difference of neighbouring cells
@@ -158,7 +158,7 @@ void checkVolumeUniformity
 (
     const polyMeshGen&,
     scalarField&,
-    const boolList* changedFacePtr = NULL
+    const boolList* changedFacePtr = nullptr
 );
 
 bool checkVolumeUniformity
@@ -166,8 +166,8 @@ bool checkVolumeUniformity
     const polyMeshGen&,
     const bool report = false,
     const scalar warnUniform = 0.1,
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check face angles
@@ -176,8 +176,8 @@ bool checkFaceAngles
     const polyMeshGen&,
     const bool report = false,
     const scalar maxDeg = 10,    // In degrees
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 //- Check face warpage: decompose face and check ratio between
@@ -188,8 +188,8 @@ bool checkFaceFlatness
     const polyMeshGen&,
     const bool report,
     const scalar warnFlatness,  // When to include in set.
-    labelHashSet* setPtr = NULL,
-    const boolList* changedFacePtr = NULL
+    labelHashSet* setPtr = nullptr,
+    const boolList* changedFacePtr = nullptr
 );
 
 // Checks using topology only
@@ -199,7 +199,7 @@ bool checkPoints
 (
     const polyMeshGen&,
     const bool report = false,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check face ordering
@@ -207,7 +207,7 @@ bool checkUpperTriangular
 (
     const polyMeshGen&,
     const bool report = false,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check cell zip-up
@@ -215,7 +215,7 @@ bool checkCellsZipUp
 (
     const polyMeshGen&,
     const bool report = false,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check uniqueness of face vertices
@@ -223,7 +223,7 @@ bool checkFaceVertices
 (
     const polyMeshGen&,
     const bool report = false,
-    labelHashSet* setPtr = NULL
+    labelHashSet* setPtr = nullptr
 );
 
 //- Check mesh topology for correctness. Returns false for no error.
@@ -243,7 +243,7 @@ label findBadFacesRelaxed
     const polyMeshGen&,
     labelHashSet& badFaces,
     const bool report = false,
-    const boolList* activeFacePtr = NULL
+    const boolList* activeFacePtr = nullptr
 );
 
 //- check mesh for bad faces which make the mesh invalid
@@ -254,7 +254,7 @@ label findBadFaces
     const polyMeshGen&,
     labelHashSet& badFaces,
     const bool report = false,
-    const boolList* activeFacePtr = NULL
+    const boolList* activeFacePtr = nullptr
 );
 
 //- check mesh for faces that may cause problems to the solver
@@ -264,7 +264,7 @@ label findLowQualityFaces
     const polyMeshGen& mesh,
     labelHashSet& badFaces,
     const bool report = false,
-    const boolList* activeFacePtr = NULL
+    const boolList* activeFacePtr = nullptr
 );
 
 //- checks the mesh and selects the faces with worst quality
@@ -273,7 +273,7 @@ label findWorstQualityFaces
     const polyMeshGen& mesh,
     labelHashSet& badFaces,
     const bool report = false,
-    const boolList* activeFacePtr = NULL,
+    const boolList* activeFacePtr = nullptr,
     const scalar relativeThreshold = 0.1
 );
 

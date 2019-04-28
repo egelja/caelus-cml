@@ -54,16 +54,8 @@ CML::readAndUpdateFields::readAndUpdateFields
     if (!isA<fvMesh>(obr_))
     {
         active_ = false;
-        WarningIn
-        (
-            "readAndUpdateFields::readAndUpdateFields"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating."
+        WarningInFunction
+            << "No fvMesh available, deactivating."
             << endl;
     }
 
@@ -115,7 +107,7 @@ void CML::readAndUpdateFields::read(const dictionary& dict)
         
             if(!found)
             { 
-                FatalErrorIn("CML::readAndUpdateFields::read(const dictionary& dict)")
+                FatalErrorInFunction
                     << "Field " << fieldSet_[fieldI] << " does not exist"
                         << endl
                         << exit(FatalError);

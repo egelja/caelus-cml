@@ -38,7 +38,7 @@ CML::IOmapDistribute::IOmapDistribute(const IOobject& io)
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn("IOmapDistribute::IOmapDistribute(const IOobject&)")
+        WarningInFunction
             << "IOmapDistribute " << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
             " but IOmapDistribute does not support automatic rereading."
@@ -71,7 +71,7 @@ CML::IOmapDistribute::IOmapDistribute
      // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn("IOmapDistribute::IOmapDistribute(const IOobject&)")
+        WarningInFunction
             << "IOmapDistribute " << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
             " but IOmapDistribute does not support automatic rereading."
@@ -108,7 +108,7 @@ CML::IOmapDistribute::IOmapDistribute
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn("IOmapDistribute::IOmapDistribute(const IOobject&)")
+        WarningInFunction
             << "IOmapDistribute " << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
             " but IOmapDistribute does not support automatic rereading."

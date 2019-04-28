@@ -214,7 +214,7 @@ public:
 
             bool writeData(Ostream&) const
             {
-                notImplemented("searchableSphere::writeData(Ostream&) const");
+                NotImplemented;
                 return false;
             }
 

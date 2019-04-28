@@ -112,10 +112,8 @@ autoPtr<waveSpectra> waveSpectra::New
 
     if (cstrIter == waveSpectraConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "waveSpectra::New(const fvMesh&, dictionary&, bool)"
-        )   << "Unknown wave spectrum '" << spectrumName << "'"
+        FatalErrorInFunction
+            << "Unknown wave spectrum '" << spectrumName << "'"
             << endl << endl
             << "Valid wave spectra are:" << endl
             << waveSpectraConstructorTablePtr_->toc()

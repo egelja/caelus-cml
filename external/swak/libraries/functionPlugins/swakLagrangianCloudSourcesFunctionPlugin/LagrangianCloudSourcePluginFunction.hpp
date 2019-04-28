@@ -155,12 +155,12 @@ const OtherCloudType &LagrangianCloudSourcePluginFunction::getCloudAs()
 #define noCloudFound(pVar) \
     if(!pVar.valid()) {                                                 \
         listAvailableClouds(Info);                                      \
-        FatalErrorIn("Plugin function "+this->name())                   \
+        FatalErrorInFunction                                            \
             << "No matching cloud " << this->cloudName() << " found"    \
-                << endl                                                 \
-                << "Supported cloud types (typeid): "                   \
-                << supportedTypes() << endl                             \
-                << exit(FatalError);                                    \
+            << endl                                                     \
+            << "Supported cloud types (typeid): "                       \
+            << supportedTypes() << endl                                 \
+            << exit(FatalError);                                        \
     }
 
 

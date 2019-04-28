@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,12 +34,10 @@ struct sigaction CML::sigQuit::oldAction_;
 void CML::sigQuit::sigHandler(int)
 {
     // Reset old handling
-    if (sigaction(SIGQUIT, &oldAction_, NULL) < 0)
+    if (sigaction(SIGQUIT, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigQuit::sigHandler()"
-        )   << "Cannot reset SIGQUIT trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGQUIT trapping"
             << abort(FatalError);
     }
 
@@ -57,7 +55,7 @@ void CML::sigQuit::sigHandler(int)
 
 CML::sigQuit::sigQuit()
 {
-    oldAction_.sa_handler = NULL;
+    oldAction_.sa_handler = nullptr;
 }
 
 
@@ -66,12 +64,10 @@ CML::sigQuit::sigQuit()
 CML::sigQuit::~sigQuit()
 {
     // Reset old handling
-    if (oldAction_.sa_handler && sigaction(SIGQUIT, &oldAction_, NULL) < 0)
+    if (oldAction_.sa_handler && sigaction(SIGQUIT, &oldAction_, nullptr) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigQuit::~sigQuit()"
-        )   << "Cannot reset SIGQUIT trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGQUIT trapping"
             << abort(FatalError);
     }
 }
@@ -83,10 +79,8 @@ void CML::sigQuit::set(const bool verbose)
 {
     if (oldAction_.sa_handler)
     {
-        FatalErrorIn
-        (
-            "CML::sigQuit::set()"
-        )   << "Cannot call sigQuit::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigQuit::set() more than once"
             << abort(FatalError);
     }
 
@@ -96,10 +90,8 @@ void CML::sigQuit::set(const bool verbose)
     sigemptyset(&newAction.sa_mask);
     if (sigaction(SIGQUIT, &newAction, &oldAction_) < 0)
     {
-        FatalErrorIn
-        (
-            "CML::sigQuit::set()"
-        )   << "Cannot set SIGQUIT trapping"
+        FatalErrorInFunction
+            << "Cannot set SIGQUIT trapping"
             << abort(FatalError);
     }
 }

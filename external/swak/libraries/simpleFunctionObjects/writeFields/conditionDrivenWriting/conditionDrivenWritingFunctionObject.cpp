@@ -132,7 +132,7 @@ conditionDrivenWritingFunctionObject::conditionDrivenWritingFunctionObject
 
 bool conditionDrivenWritingFunctionObject::checkStopWriting()
 {
-    FatalErrorIn("conditionDrivenWritingFunctionObject::checkStopWriting")
+    FatalErrorInFunction
         << name() << " does not implement 'untilSwitch' for 'writeControlMode'"
             << endl
             << exit(FatalError);
@@ -142,7 +142,7 @@ bool conditionDrivenWritingFunctionObject::checkStopWriting()
 
 bool conditionDrivenWritingFunctionObject::checkStopCooldown()
 {
-    FatalErrorIn("conditionDrivenWritingFunctionObject::checkStopCooldown")
+    FatalErrorInFunction
         << name() << " does not implement 'retrigger' for 'cooldownMode'"
             << endl
             << exit(FatalError);
@@ -161,7 +161,7 @@ void conditionDrivenWritingFunctionObject::storePreviousState()
     if(lastTimes_.valid()) {
         lastTimes_->copy(time());
     } else {
-        WarningIn("conditionDrivenWritingFunctionObject::storePreviousState")
+        WarningInFunction
             << "Logic error"
                 << endl;
     }
@@ -172,7 +172,7 @@ void conditionDrivenWritingFunctionObject::writePreviousState()
     if(lastTimes_.valid()) {
         lastTimes_->write();
     } else {
-        WarningIn("conditionDrivenWritingFunctionObject::writePreviousState")
+        WarningInFunction
             << "Logic error"
                 << endl;
     }
@@ -233,7 +233,7 @@ bool conditionDrivenWritingFunctionObject::checkCooldown()
             return checkStopCooldown();
             break;
         default:
-            FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+            FatalErrorInFunction
                 << "Unsupported cooldown mode"
                     << endl
                     << exit(FatalError);
@@ -264,7 +264,7 @@ bool conditionDrivenWritingFunctionObject::checkWrite()
                     << endl;
                 break;
             default:
-                FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+                FatalErrorInFunction
                     << "Unimplemented 'writeControlMode'"
                         << endl
                         << exit(FatalError);
@@ -298,7 +298,7 @@ void conditionDrivenWritingFunctionObject::write()
                     doWrite=!checkStopWriting();
                     break;
                 default:
-                    FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+                    FatalErrorInFunction
                         << "Unimplemented 'writeControlMode'"
                             << endl
                             << exit(FatalError);
@@ -319,15 +319,17 @@ void conditionDrivenWritingFunctionObject::write()
             }
             break;
         case stateStartCooldown:
-            FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+            FatalErrorInFunction
                 << "State 'startCooldown' should not be reached here"
                     << endl
                     << exit(FatalError);
+            break;
         default:
-            FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+            FatalErrorInFunction
                 << "Unsupported state"
                     << endl
                     << exit(FatalError);
+            break;
     }
 
     if(theState_==stateStartCooldown) {
@@ -351,7 +353,7 @@ void conditionDrivenWritingFunctionObject::write()
                     << endl;
                 break;
             default:
-                FatalErrorIn("conditionDrivenWritingFunctionObject::write")
+                FatalErrorInFunction
                     << "Unsupported cooldown mode"
                         << endl
                         << exit(FatalError);

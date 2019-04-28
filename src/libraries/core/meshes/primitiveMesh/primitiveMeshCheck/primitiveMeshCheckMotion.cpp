@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -187,11 +187,8 @@ bool CML::primitiveMesh::checkMeshMotion
             if (dDotS < SMALL && nDotProductErrors == 0)
             {
                 // Non-orthogonality greater than 90 deg
-                WarningIn
-                (
-                    "primitiveMesh::checkMeshMotion"
-                    "(const pointField& newPoints, const bool report) const"
-                )   << "Severe non-orthogonality in mesh motion for face "
+                WarningInFunction
+                    << "Severe non-orthogonality in mesh motion for face "
                     << faceI
                     << " between cells " << own[faceI] << " and " << nei[faceI]
                     << ": Angle = " << radToDeg(::acos(dDotS))
@@ -206,11 +203,8 @@ bool CML::primitiveMesh::checkMeshMotion
     {
         error = true;
 
-        WarningIn
-        (
-            "primitiveMesh::checkMeshMotion"
-            "(const pointField& newPoints, const bool report) const"
-        )   << "Zero or negative face area in mesh motion in " << nNegAreas
+        WarningInFunction
+            << "Zero or negative face area in mesh motion in " << nNegAreas
             << " faces.  Min area: " << minArea << endl;
     }
     else

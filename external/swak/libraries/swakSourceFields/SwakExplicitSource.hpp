@@ -125,10 +125,8 @@ CML::fv::SwakExplicitSource<T>::SwakExplicitSource
     );
 
     if(this->verbose_) {
-        WarningIn(
-            string("SwakExplicitSource<") + pTraits<T>::typeName +
-            ">::SwakExplicitSource"
-        )    << "Adding source term to the fields " << this->fieldNames_
+        WarningInFunction
+            << "Adding source term to the fields " << this->fieldNames_
             << " to the values " << this->expressions_
             << " will be verbose. To switch this off set the "
             << "parameter 'verbose' to false" << endl;
@@ -161,7 +159,7 @@ void CML::fv::SwakExplicitSource<T>::addSup(fvMatrix<T>& eqn, const label fieldI
         !this->driver().
         FieldValueExpressionDriver::template resultIsTyp<typename SwakExplicitSource<T>::resultField>()
     ) {
-        FatalErrorIn("SwakExplicitSource<"+word(pTraits<T>::typeName)+">::addSup()")
+        FatalErrorInFunction
             << "Result of " << this->expressions_[fieldI] << " is not a "
                 << pTraits<T>::typeName
                 << endl

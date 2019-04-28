@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -145,7 +145,7 @@ CML::IOPtrList<T>::IOPtrList(const IOobject& io, const label s)
 {
     if (io.readOpt() != IOobject::NO_READ)
     {
-        FatalErrorIn("IOPtrList<T>::IOPtrList(const IOobject&, const label)")
+        FatalErrorInFunction
             << "NO_READ must be set if specifying size" << nl
             << exit(FatalError);
     }

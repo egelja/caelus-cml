@@ -82,7 +82,7 @@ public:
 
             //- Return the maximum end-of-injection time
             scalar timeEnd() const;
- 
+
             //- Volume of parcels to introduce relative to SOI
             scalar volumeToInject(const scalar time0, const scalar time1);
 
@@ -99,12 +99,21 @@ public:
         // Per-injection event functions
 
             //- Main injection loop
-            template<class TrackData>
-            void inject(TrackData& td);
+            template<class TrackCloudType>
+            void inject
+            (
+                TrackCloudType& cloud,
+                typename CloudType::parcelType::trackingData& td
+            );
 
             //- Main injection loop - steady-state
-            template<class TrackData>
-            void injectSteadyState(TrackData& td, const scalar trackTime);
+            template<class TrackCloudType>
+            void injectSteadyState
+            (
+                TrackCloudType& cloud,
+                typename CloudType::parcelType::trackingData& td,
+                const scalar trackTime
+            );
 
 
         // I-O
@@ -274,27 +283,32 @@ void CML::InjectionModelList<CloudType>::updateMesh()
 
 
 template<class CloudType>
-template<class TrackData>
-void CML::InjectionModelList<CloudType>::inject(TrackData& td)
+template<class TrackCloudType>
+void CML::InjectionModelList<CloudType>::inject
+(
+    TrackCloudType& cloud,
+    typename CloudType::parcelType::trackingData& td
+)
 {
     forAll(*this, i)
     {
-        this->operator[](i).inject(td);
+        this->operator[](i).inject(cloud, td);
     }
 }
 
 
 template<class CloudType>
-template<class TrackData>
+template<class TrackCloudType>
 void CML::InjectionModelList<CloudType>::injectSteadyState
 (
-    TrackData& td,
+    TrackCloudType& cloud,
+    typename CloudType::parcelType::trackingData& td,
     const scalar trackTime
 )
 {
     forAll(*this, i)
     {
-        this->operator[](i).injectSteadyState(td, trackTime);
+        this->operator[](i).injectSteadyState(cloud, td, trackTime);
     }
 }
 

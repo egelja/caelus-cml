@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -94,13 +94,7 @@ public:
         HeatTransferModel(const HeatTransferModel<CloudType>& htm);
 
         //- Construct and return a clone
-        virtual autoPtr<HeatTransferModel<CloudType> > clone() const
-        {
-            return autoPtr<HeatTransferModel<CloudType> >
-            (
-                new HeatTransferModel<CloudType>(*this)
-            );
-        }
+        virtual autoPtr<HeatTransferModel<CloudType> > clone() const = 0;
 
 
     //- Destructor
@@ -130,7 +124,7 @@ public:
             (
                 const scalar Re,
                 const scalar Pr
-            ) const;
+            ) const = 0;
 
             //- Return heat transfer coefficient
             virtual scalar htc
@@ -150,32 +144,29 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeHeatTransferModel(CloudType)                                      \
-                                                                              \
-    typedef CloudType::thermoCloudType thermoCloudType;                       \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        HeatTransferModel<thermoCloudType>,                                   \
-        0                                                                     \
-    );                                                                        \
-    defineTemplateRunTimeSelectionTable                                       \
-    (                                                                         \
-        HeatTransferModel<thermoCloudType>,                                   \
-        dictionary                                                            \
+#define makeHeatTransferModel(CloudType)                                       \
+                                                                               \
+    typedef CloudType::thermoCloudType thermoCloudType;                        \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        HeatTransferModel<thermoCloudType>,                                    \
+        0                                                                      \
+    );                                                                         \
+    defineTemplateRunTimeSelectionTable                                        \
+    (                                                                          \
+        HeatTransferModel<thermoCloudType>,                                    \
+        dictionary                                                             \
     );
 
 
-#define makeHeatTransferModelType(SS, CloudType)                              \
-                                                                              \
-    typedef CloudType::thermoCloudType thermoCloudType;                       \
-    defineNamedTemplateTypeNameAndDebug(SS<thermoCloudType>, 0);              \
-                                                                              \
-    HeatTransferModel<thermoCloudType>::                                      \
-        adddictionaryConstructorToTable<SS<thermoCloudType> >                 \
+#define makeHeatTransferModelType(SS, CloudType)                               \
+                                                                               \
+    typedef CloudType::thermoCloudType thermoCloudType;                        \
+    defineNamedTemplateTypeNameAndDebug(SS<thermoCloudType>, 0);               \
+                                                                               \
+    HeatTransferModel<thermoCloudType>::                                       \
+        adddictionaryConstructorToTable<SS<thermoCloudType> >                  \
             add##SS##CloudType##thermoCloudType##ConstructorToTable_;
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -212,7 +203,6 @@ CML::HeatTransferModel<CloudType>::HeatTransferModel
 {}
 
 
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -226,26 +216,6 @@ template<class CloudType>
 const CML::Switch& CML::HeatTransferModel<CloudType>::BirdCorrection() const
 {
     return BirdCorrection_;
-}
-
-
-template<class CloudType>
-CML::scalar CML::HeatTransferModel<CloudType>::Nu
-(
-    const scalar Re,
-    const scalar Pr
-) const
-{
-    notImplemented
-    (
-        "CML::scalar CML::HeatTransferModel<CloudType>::Nu"
-        "("
-            "const scalar, "
-            "const scalar"
-        ") const"
-    );
-
-    return 0.0;
 }
 
 
@@ -295,14 +265,8 @@ CML::HeatTransferModel<CloudType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "HeatTransferModel<CloudType>::New"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Unknown heat transfer model type "
+        FatalErrorInFunction
+            << "Unknown heat transfer model type "
             << modelType << nl << nl
             << "Valid heat transfer model types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()

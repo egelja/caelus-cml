@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -83,7 +83,10 @@ class primitiveMesh;
 class edgeFaceCirculator
 {
     // Static data members
-
+    
+        //- End iterator primitiveMesh nullptr
+        static const primitiveMesh* const endConstIterMeshPtr;
+    
         //- end iterator
         static const edgeFaceCirculator endConstIter;
 

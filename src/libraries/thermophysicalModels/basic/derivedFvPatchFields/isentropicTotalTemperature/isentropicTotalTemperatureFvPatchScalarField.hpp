@@ -24,7 +24,7 @@ Description
     CML::isentropicTotalTemperatureFvPatchScalarField
 
 SourceFiles
-    isentropicTotalTemperatureFvPatchScalarField.C
+    isentropicTotalTemperatureFvPatchScalarField.cpp
 
 Author
     Aleksandar Jemcov
@@ -32,8 +32,8 @@ Author
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef isentropicTotalTemperatureFvPatchScalarField_H
-#define isentropicTotalTemperatureFvPatchScalarField_H
+#ifndef isentropicTotalTemperatureFvPatchScalarField_HPP
+#define isentropicTotalTemperatureFvPatchScalarField_HPP
 
 #include "fixedValueFvPatchFields.hpp"
 
@@ -43,16 +43,15 @@ namespace CML
 class isentropicTotalTemperatureFvPatchScalarField :
     public fixedValueFvPatchScalarField
 {
-    // Private data
 
-        //- Name of the static pressure field
-        word pName_;
+    //- Name of the static pressure field
+    word pName_;
 
-        //- Total temperature field
-        scalarField T0_;
+    //- Total temperature field
+    scalarField T0_;
 
-        //- Total pressure field
-        scalarField p0_;
+    //- Total pressure field
+    scalarField p0_;
 
 public:
 
@@ -60,120 +59,118 @@ public:
     TypeName("isentropicTotalTemperature");
 
 
-    // Constructors
+    //- Construct from patch and internal field
+    isentropicTotalTemperatureFvPatchScalarField
+    (
+        fvPatch const&,
+        DimensionedField<scalar, volMesh> const&
+    );
 
-        //- Construct from patch and internal field
-        isentropicTotalTemperatureFvPatchScalarField
+    //- Construct from patch, internal field and dictionary
+    isentropicTotalTemperatureFvPatchScalarField
+    (
+        fvPatch const&,
+        DimensionedField<scalar, volMesh> const&,
+        dictionary const&
+    );
+
+    //- Construct by mapping given isentropicTotalTemperatureFvPatchScalarField
+    //  onto a new patch
+    isentropicTotalTemperatureFvPatchScalarField
+    (
+        isentropicTotalTemperatureFvPatchScalarField const&,
+        fvPatch const&,
+        DimensionedField<scalar, volMesh> const&,
+        fvPatchFieldMapper const&
+    );
+
+    //- Construct as copy
+    isentropicTotalTemperatureFvPatchScalarField
+    (
+        isentropicTotalTemperatureFvPatchScalarField const&
+    );
+
+    //- Construct and return a clone
+    virtual tmp<fvPatchScalarField> clone() const
+    {
+        return tmp<fvPatchScalarField>
         (
-            fvPatch const&,
-            DimensionedField<scalar, volMesh> const&
+            new isentropicTotalTemperatureFvPatchScalarField(*this)
         );
+    }
 
-        //- Construct from patch, internal field and dictionary
-        isentropicTotalTemperatureFvPatchScalarField
+    //- Construct as copy setting internal field reference
+    isentropicTotalTemperatureFvPatchScalarField
+    (
+        isentropicTotalTemperatureFvPatchScalarField const&,
+        DimensionedField<scalar, volMesh> const&
+    );
+
+    //- Construct and return a clone setting internal field reference
+    virtual tmp<fvPatchScalarField> clone
+    (
+        DimensionedField<scalar, volMesh> const& iF
+    ) const
+    {
+        return tmp<fvPatchScalarField>
         (
-            fvPatch const&,
-            DimensionedField<scalar, volMesh> const&,
-            dictionary const&
+            new isentropicTotalTemperatureFvPatchScalarField(*this, iF)
         );
-
-        //- Construct by mapping given isentropicTotalTemperatureFvPatchScalarField
-        //  onto a new patch
-        isentropicTotalTemperatureFvPatchScalarField
-        (
-            isentropicTotalTemperatureFvPatchScalarField const&,
-            fvPatch const&,
-            DimensionedField<scalar, volMesh> const&,
-            fvPatchFieldMapper const&
-        );
-
-        //- Construct as copy
-        isentropicTotalTemperatureFvPatchScalarField
-        (
-            isentropicTotalTemperatureFvPatchScalarField const&
-        );
-
-        //- Construct and return a clone
-        virtual tmp<fvPatchScalarField> clone() const
-        {
-            return tmp<fvPatchScalarField>
-            (
-                new isentropicTotalTemperatureFvPatchScalarField(*this)
-            );
-        }
-
-        //- Construct as copy setting internal field reference
-        isentropicTotalTemperatureFvPatchScalarField
-        (
-            isentropicTotalTemperatureFvPatchScalarField const&,
-            DimensionedField<scalar, volMesh> const&
-        );
-
-        //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone
-        (
-            DimensionedField<scalar, volMesh> const& iF
-        ) const
-        {
-            return tmp<fvPatchScalarField>
-            (
-                new isentropicTotalTemperatureFvPatchScalarField(*this, iF)
-            );
-        }
+    }
 
 
     // Member functions
 
-        // Access
+    // Access
 
-            //- Return the total pressure
-            scalarField const& T0() const
-            {
-                return T0_;
-            }
+    //- Return the total pressure
+    scalarField const& T0() const
+    {
+        return T0_;
+    }
 
-            //- Return reference to the total pressure to allow adjustment
-            scalarField& T0()
-            {
-                return T0_;
-            }
-
-
-        // Mapping functions
-
-            //- Map (and resize as needed) from self given a mapping object
-            virtual void autoMap
-            (
-                fvPatchFieldMapper const&
-            );
-
-            //- Reverse map the given fvPatchField onto this fvPatchField
-            virtual void rmap
-            (
-                fvPatchScalarField const&,
-                labelList const&
-            );
+    //- Return reference to the total pressure to allow adjustment
+    scalarField& T0()
+    {
+        return T0_;
+    }
 
 
-        // Evaluation functions
+    // Mapping functions
+
+    //- Map (and resize as needed) from self given a mapping object
+    virtual void autoMap
+    (
+        fvPatchFieldMapper const&
+    );
+
+    //- Reverse map the given fvPatchField onto this fvPatchField
+    virtual void rmap
+    (
+        fvPatchScalarField const&,
+        labelList const&
+    );
+
+
+    // Evaluation functions
     
-            //- Inherit updateCoeffs from fixedValueFvPatchScalarField
-            using fixedValueFvPatchScalarField::updateCoeffs;
+    //- Inherit updateCoeffs from fixedValueFvPatchScalarField
+    using fixedValueFvPatchScalarField::updateCoeffs;
     
-            //- Update the coefficients associated with the patch field
-            //  using the given patch velocity field
-            virtual void updateCoeffs(vectorField const& Up);
+    //- Update the coefficients associated with the patch field
+    //  using the given patch velocity field
+    virtual void updateCoeffs(vectorField const& Up);
 
-            //- Update the coefficients associated with the patch field
-            virtual void updateCoeffs();
+    //- Update the coefficients associated with the patch field
+    virtual void updateCoeffs();
 
+    //- Write
+    virtual void write(Ostream&) const;
 
-        //- Write
-        virtual void write(Ostream&) const;
 };
 
 
 }
 
-#endif
 
+#endif

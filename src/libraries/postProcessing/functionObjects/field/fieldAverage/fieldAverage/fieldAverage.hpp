@@ -459,10 +459,7 @@ void CML::fieldAverage::addPrime2MeanField(const label fieldI)
 
         if (!faItems_[fieldI].mean())
         {
-            FatalErrorIn
-            (
-                "void CML::fieldAverage::addPrime2MeanField(const label) const"
-            )
+            FatalErrorInFunction
                 << "To calculate the prime-squared average, the "
                 << "mean average must also be selected for field "
                 << fieldName << nl << exit(FatalError);

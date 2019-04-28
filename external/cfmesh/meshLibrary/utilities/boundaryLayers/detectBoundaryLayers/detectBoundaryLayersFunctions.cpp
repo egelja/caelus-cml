@@ -601,10 +601,8 @@ void detectBoundaryLayers::generateHairEdges()
                 const edge& he = hairEdges[pI];
 
                 if( he.start() != bf[pI] )
-                    FatalErrorIn
-                    (
-                        "void detectBoundaryLayers::generateHairEdges()"
-                    ) << "Wrong starting point" << abort(FatalError);
+                    FatalErrorInFunction
+                       << "Wrong starting point" << abort(FatalError);
 
                 localEdges.append(he);
             }

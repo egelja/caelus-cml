@@ -68,9 +68,22 @@ public:
         Type interpolate
         (
             const vector& position,
-            const label cellI,
-            const label faceI = -1
+            const label celli,
+            const label facei = -1
         ) const;
+
+        //- Interpolate field to the given coordinates in the tetrahedron
+        //  defined by the given indices. This is an optimisation which skips
+        //  calculating the position, as cell interpolation doesn't need it.
+        inline Type interpolate
+        (
+            const barycentric& coordinates,
+            const tetIndices& tetIs,
+            const label facei = -1
+        ) const
+        {
+            return interpolate(vector::zero, tetIs.cell(), facei);
+        }
 };
 
 
@@ -105,11 +118,11 @@ template<class Type>
 Type interpolationCell<Type>::interpolate
 (
     const vector&,
-    const label cellI,
+    const label celli,
     const label
 ) const
 {
-    return this->psi_[cellI];
+    return this->psi_[celli];
 }
 
 

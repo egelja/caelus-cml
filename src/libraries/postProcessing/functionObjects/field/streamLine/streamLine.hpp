@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -24,9 +24,8 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object generates streamline data by sampling a set of
-    user-specified fields along a particle track, transported by a
-    user-specified velocity field.
+    Generates streamline data by sampling a set of user-specified fields along a
+    particle track, transported by a user-specified velocity field.
 
     Example of function object specification:
     \verbatim
@@ -36,13 +35,15 @@ Description
         functionObjectLibs ("libfieldFunctionObjects.so");
         ...
         setFormat       vtk;
-        UName           U;
+        U               U;
         trackForward    yes;
+
         fields
         (
             U
             p
         );
+
         lifeTime        10000;
         trackLength     1e-3;
         nSubCycle       5;
@@ -62,15 +63,15 @@ Description
     \heading Function object usage
     \table
         Property     | Description             | Required    | Default value
-        type         | type name: streamLine   | yes         |
-        setFormat    | output data type        | yes         |
-        UName        | tracking velocity field name | yes    |
-        fields       | fields to sample        | yes         |
-        lifetime     | maximum number of particle tracking steps | yes |
-        trackLength  | tracking segment length | no          |
-        nSubCycle    | number of tracking steps per cell | no|
-        cloudName    | cloud name to use       | yes         |
-        seedSampleSet| seeding method (see below)| yes       |
+        type         | Type name: streamLine   | yes         |
+        setFormat    | Output data type        | yes         |
+        U            | Tracking velocity field name | yes    |
+        fields       | Fields to sample        | yes         |
+        lifetime     | Maximum number of particle tracking steps | yes |
+        trackLength  | Tracking segment length | no          |
+        nSubCycle    | Number of tracking steps per cell | no|
+        cloudName    | Cloud name to use       | yes         |
+        seedSampleSet| Seeding method (see below)| yes       |
     \endtable
 
     \linebreak
@@ -108,6 +109,7 @@ SourceFiles
 #include "polyMesh.hpp"
 #include "writer.hpp"
 #include "indirectPrimitivePatch.hpp"
+#include "NamedEnum.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -127,6 +129,24 @@ class sampledSet;
 
 class streamLine
 {
+public:
+
+    // Public data types
+
+        //- Track direction enumerations
+        enum trackDirection
+        {
+            FORWARD,
+            BACKWARD,
+            BOTH
+        };
+
+        //- Track direction enumeration names
+        static const NamedEnum<trackDirection, 3> trackDirectionNames_;
+
+
+private:
+
     // Private data
 
         //- Input dictionary
@@ -153,8 +173,8 @@ class streamLine
         //- Interpolation scheme to use
         word interpolationScheme_;
 
-        //- Whether to use +u or -u
-        bool trackForward_;
+        //- The direction in which to track
+        trackDirection trackDirection_;
 
         //- Maximum lifetime (= number of cells) of particle
         label lifeTime_;
@@ -176,7 +196,6 @@ class streamLine
 
         //- Names of vector fields
         wordList vectorNames_;
-
 
 
         // Demand driven

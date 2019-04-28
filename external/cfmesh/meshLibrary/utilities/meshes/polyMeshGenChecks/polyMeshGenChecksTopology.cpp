@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright held by the original author
+Copyright (C) Creative Fields, Ltd.
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of cfMesh.
@@ -16,6 +17,8 @@ License
 
     You should have received a copy of the GNU General Public License
     along with cfMesh.  If not, see <http://www.gnu.org/licenses/>.
+
+Author: Franjo Juretic (franjo.juretic@c-fields.com)
 
 \*---------------------------------------------------------------------------*/
 
@@ -425,11 +428,8 @@ bool checkFaceVertices
 
     if( nErrorFaces > 0 )
     {
-        SeriousErrorIn
-        (
-            "bool checkFaceVertices("
-            "const polyMeshGen&, const bool, labelHashSet*)"
-        )   << "const bool, labelHashSet*) const: "
+        SeriousErrorInFunction
+            << "const bool, labelHashSet*) const: "
             << nErrorFaces << " faces with invalid vertex labels found"
             << endl;
 

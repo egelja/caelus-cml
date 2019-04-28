@@ -95,11 +95,8 @@ namespace MULES
     template<class RhoType>
     inline tmp<surfaceScalarField> interpolate(const RhoType& rho)
     {
-        notImplemented
-        (
-            "tmp<surfaceScalarField> interpolate(const RhoType& rho)"
-        );
-        return tmp<surfaceScalarField>(NULL);
+        NotImplemented;
+        return tmp<surfaceScalarField>(nullptr);
     }
 
     template<>

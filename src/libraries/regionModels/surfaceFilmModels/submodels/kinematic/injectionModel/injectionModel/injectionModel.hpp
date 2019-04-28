@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -27,6 +27,7 @@ Description
 SourceFiles
     injectionModel.C
     injectionModelNew.C
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef injectionModel_H
@@ -53,7 +54,11 @@ class injectionModel
 :
     public filmSubModelBase
 {
-private:
+    // Private data
+
+        //- Injected mass
+        scalar injectedMass_;
+
 
     // Private Member Functions
 
@@ -62,6 +67,17 @@ private:
 
         //- Disallow default bitwise assignment
         void operator=(const injectionModel&);
+
+
+protected:
+
+    // Protected Member Functions
+
+        //- Add to injected mass
+        void addToInjectedMass(const scalar dMass);
+
+        //- Correct
+        void correct();
 
 
 public:
@@ -78,22 +94,23 @@ public:
              injectionModel,
              dictionary,
              (
-                const surfaceFilmModel& owner,
+                surfaceFilmRegionModel& film,
                 const dictionary& dict
              ),
-             (owner, dict)
+             (film, dict)
          );
+
 
     // Constructors
 
         //- Construct null
-        injectionModel(const surfaceFilmModel& owner);
+        injectionModel(surfaceFilmRegionModel& film);
 
         //- Construct from type name, dictionary and surface film model
         injectionModel
         (
-            const word& type,
-            const surfaceFilmModel& owner,
+            const word& modelType,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 
@@ -103,7 +120,7 @@ public:
         //- Return a reference to the selected injection model
         static autoPtr<injectionModel> New
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict,
             const word& mdoelType
         );
@@ -115,15 +132,21 @@ public:
 
     // Member Functions
 
-        // Evolution
+        //- Correct
+        virtual void correct
+        (
+            scalarField& availableMass,
+            scalarField& massToInject,
+            scalarField& diameterToInject
+        ) = 0;
 
-            //- Correct
-            virtual void correct
-            (
-                scalarField& availableMass,
-                scalarField& massToInject,
-                scalarField& diameterToInject
-            ) = 0;
+        //- Return the total mass injected
+        virtual scalar injectedMassTotal() const;
+
+        //- Accumulate the total mass injected for the patches into the
+        //  scalarField provided
+        virtual void patchInjectedMassTotals(scalarField& patchMasses) const
+        {}
 };
 
 

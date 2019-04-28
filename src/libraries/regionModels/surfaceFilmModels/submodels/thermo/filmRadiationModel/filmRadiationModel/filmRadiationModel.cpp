@@ -37,23 +37,20 @@ defineRunTimeSelectionTable(filmRadiationModel, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-filmRadiationModel::filmRadiationModel
-(
-    const surfaceFilmModel& owner
-)
+filmRadiationModel::filmRadiationModel(surfaceFilmRegionModel& film)
 :
-    filmSubModelBase(owner)
+    filmSubModelBase(film)
 {}
 
 
 filmRadiationModel::filmRadiationModel
 (
-    const word& type,
-    const surfaceFilmModel& owner,
+    const word& modelType,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    filmSubModelBase(type, owner, dict)
+    filmSubModelBase(film, dict, typeName, modelType)
 {}
 
 

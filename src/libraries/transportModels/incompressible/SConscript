@@ -11,7 +11,7 @@ viscosityModels/viscosityModel/viscosityModelNew.cpp
 viscosityModels/Newtonian/Newtonian.cpp
 viscosityModels/powerLaw/powerLaw.cpp
 viscosityModels/CrossPowerLaw/CrossPowerLaw.cpp
-viscosityModels/BirdCarreau/BirdCarreau.cpp
+viscosityModels/CarreauYasudaCross/CarreauYasudaCross.cpp
 viscosityModels/HerschelBulkley/HerschelBulkley.cpp
 transportModel/transportModel.cpp
 singlePhaseTransportModel/singlePhaseTransportModel.cpp

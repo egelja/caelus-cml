@@ -92,7 +92,7 @@ namespace CML {
     tmp<Field<Type> > CommonValueExpressionDriver::getResult(bool qPoint)
     {
         if(qPoint!=result_.isPoint()) {
-            FatalErrorIn("CommonValueExpressionDriver::getResult(bool qPoint)")
+            FatalErrorInFunction
                 << "A " << (qPoint ? "point" : "face" ) << "-field was wanted"
                     << " but we got a " << (!qPoint ? "point" : "face" )
                     << endl
@@ -320,10 +320,12 @@ namespace CML {
                 }
                 break;
             case NEW:
-                WarningIn("CommonValueExpressionDriver::updateSet")
+                WarningInFunction
                     << "State NEW shouldn't exist"
                         << endl;
+                [[fallthrough]];
             case MEMORY:
+                [[fallthrough]];
             case CACHE:
                 {
                     word sName=name;
@@ -340,7 +342,7 @@ namespace CML {
                             )
                         );
                     } else {
-                        FatalErrorIn("CommonValueExpressionDriver::updateSet")
+                        FatalErrorInFunction
                             << name << " Not found" << endl
                                 << "In db: " << mesh.thisDb().names() << endl
                                 << exit(FatalError);
@@ -350,15 +352,17 @@ namespace CML {
                 }
                 break;
             case INVALID:
-                FatalErrorIn("CommonValueExpressionDriver::updateSet")
+                FatalErrorInFunction
                     << T::typeName << " " << name << " is invalid"
                         << endl
                         << exit(FatalError);
+                break;
             default:
                 if(debug) {
                     Pout << "Origin " << int(origin) << " not implemented"
                         << endl;
                 }
+                [[fallthrough]];
         }
 
         if(debug) {
@@ -640,7 +644,7 @@ namespace CML {
                     Type minVal=gMin(vals);
                     Type maxVal=gMax(vals);
                     if(mag(minVal-maxVal)>SMALL) {
-                        WarningIn("CommonValueExpressionDriver::getOrReadFieldInternal(const word &name)")
+                        WarningInFunction
                             << "The minimum value " << minVal
                                 << " and the maximum " << maxVal
                                 << " differ. I will use the average " << avg
@@ -712,7 +716,7 @@ namespace CML {
             &&
             failIfNoneFound
         ) {
-            FatalErrorIn("CommonValueExpressionDriver::getOrReadFieldInternal(const word &name)")
+            FatalErrorInFunction
                 << "Could not find the field " << name
                     << " (" << inName << ")"
                     << " in memory or on disc" << endl
@@ -794,13 +798,13 @@ namespace CML {
                 );
             } else {
                 if(!isSingleValue) {
-                    WarningIn("CommonValueExpressionDriver::getVariable(const word &inName,const label expectedSize)")
+                    WarningInFunction
                         << "Variable " << name
-                            << " is not a single value but does not "
-                            << "fit the size " << expectedSize
-                            << ". Using average and "
-                            << "hoping for the best"
-                            << endl;
+                        << " is not a single value but does not "
+                        << "fit the size " << expectedSize
+                        << ". Using average and "
+                        << "hoping for the best"
+                        << endl;
                 }
                 return tmp<Field<Type> >(
                     new Field<Type>(
@@ -809,7 +813,7 @@ namespace CML {
                 );
             }
         } else {
-            FatalErrorIn("CommonValueExpressionDriver::getVariable(const word &inName,const label expectedSize)")
+            FatalErrorInFunction
                 << "Variable " << inName << " (aliased to " << name
                     << ") not found."
                     << endl
@@ -1164,7 +1168,7 @@ namespace CML {
             //            place+=" ";
         }
 
-        FatalErrorIn("parsingValue")
+        FatalErrorInFunction
             //        << CML::args.executable()
             << " Parser Error for driver " << type() << " at "
                 << buff.str() << " :"  << m << CML::endl

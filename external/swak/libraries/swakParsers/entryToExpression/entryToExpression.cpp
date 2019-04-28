@@ -51,14 +51,12 @@ autoPtr<entryToExpression> entryToExpression::New
 
     if (cstrIter == nothingConstructorTablePtr_->end())
     {
-        FatalErrorIn
-            (
-                "autoPtr<entryToExpression> entryToExpression::New"
-            )   << "Unknown  entryToExpression type " << name
-                << endl << endl
-                << "Valid entryToExpression-types are :" << endl
-                << nothingConstructorTablePtr_->sortedToc() // does not work in 1.6
-                << exit(FatalError);
+        FatalErrorInFunction
+            << "Unknown  entryToExpression type " << name
+            << endl << endl
+            << "Valid entryToExpression-types are :" << endl
+            << nothingConstructorTablePtr_->sortedToc() // does not work in 1.6
+            << exit(FatalError);
     }
 
     return autoPtr<entryToExpression>

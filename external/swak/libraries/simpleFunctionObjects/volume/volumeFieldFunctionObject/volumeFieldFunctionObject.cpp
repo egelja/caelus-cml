@@ -86,7 +86,7 @@ bool volumeFieldFunctionObject::start()
         }
         else
         {
-            WarningIn("probes::read()")
+            WarningInFunction
                 << "Unknown field " << fieldNames_[fieldi]
                 << " when reading dictionary " << dict_.name() << endl
                 << "    Can only probe registered volScalar, volVector, "

@@ -112,7 +112,7 @@ public:
 #include "volMesh.hpp"
 #include "surfaceMesh.hpp"
 #include "GeometricField.hpp"
-#include "zeroGradientFvPatchField.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -155,7 +155,7 @@ CML::fv::leastSquaresGrad<Type>::calcGrad
                 vsf.dimensions()/dimLength,
                 pTraits<GradType>::zero
             ),
-            zeroGradientFvPatchField<GradType>::typeName
+            extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
     );
     GeometricField<GradType, fvPatchField, volMesh>& lsGrad = tlsGrad();

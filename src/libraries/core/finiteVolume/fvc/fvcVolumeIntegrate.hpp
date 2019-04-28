@@ -62,6 +62,19 @@ namespace fvc
 
 
     template<class Type>
+    tmp<Field<Type> > volumeIntegrate
+    (
+        const DimensionedField<Type, volMesh>&
+    );
+
+    template<class Type>
+    tmp<Field<Type> > volumeIntegrate
+    (
+        const tmp<DimensionedField<Type, volMesh> >&
+    );
+
+
+    template<class Type>
     dimensioned<Type> domainIntegrate
     (
         const GeometricField<Type, fvPatchField, volMesh>&
@@ -71,6 +84,19 @@ namespace fvc
     dimensioned<Type> domainIntegrate
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+    );
+
+
+    template<class Type>
+    dimensioned<Type> domainIntegrate
+    (
+        const DimensionedField<Type, volMesh>&
+    );
+
+    template<class Type>
+    dimensioned<Type> domainIntegrate
+    (
+        const tmp<DimensionedField<Type, volMesh> >&
     );
 }
 
@@ -106,6 +132,7 @@ volumeIntegrate
     return vf.mesh().V()*vf.internalField();
 }
 
+
 template<class Type>
 tmp<Field<Type> >
 volumeIntegrate
@@ -116,6 +143,23 @@ volumeIntegrate
     tmp<Field<Type> > tvivf = tvf().mesh().V()*tvf().internalField();
     tvf.clear();
     return tvivf;
+}
+
+
+template<class Type>
+tmp<Field<Type> > volumeIntegrate(const DimensionedField<Type, volMesh>& df)
+{
+    return df.mesh().V()*df.field();
+}
+
+
+template<class Type>
+tmp<Field<Type> >
+volumeIntegrate(const tmp<DimensionedField<Type, volMesh>>& tdf)
+{
+    tmp<Field<Type>> tdidf = tdf().mesh().V()*tdf().field();
+    tdf.clear();
+    return tdidf;
 }
 
 
@@ -134,9 +178,9 @@ domainIntegrate
     );
 }
 
+
 template<class Type>
-dimensioned<Type>
-domainIntegrate
+dimensioned<Type> domainIntegrate
 (
     const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf
 )
@@ -147,12 +191,34 @@ domainIntegrate
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Type>
+dimensioned<Type> domainIntegrate
+(
+    const DimensionedField<Type, volMesh>& df
+)
+{
+    return dimensioned<Type>
+    (
+        "domainIntegrate(" + df.name() + ')',
+        dimVol*df.dimensions(),
+        gSum(fvc::volumeIntegrate(df))
+    );
+}
+
+
+template<class Type>
+dimensioned<Type> domainIntegrate
+(
+    const tmp<DimensionedField<Type, volMesh> >& tdf
+)
+{
+    dimensioned<Type> integral = domainIntegrate(tdf());
+    tdf.clear();
+    return integral;
+}
+
 
 } // End namespace fvc
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
 

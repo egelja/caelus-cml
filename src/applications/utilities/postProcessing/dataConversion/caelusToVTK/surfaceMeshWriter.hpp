@@ -49,13 +49,11 @@ namespace CML
 class volPointInterpolation;
 
 /*---------------------------------------------------------------------------*\
-                           Class surfaceMeshWriter Declaration
+                      Class surfaceMeshWriter Declaration
 \*---------------------------------------------------------------------------*/
 
 class surfaceMeshWriter
 {
-    const vtkMesh& vMesh_;
-
     const bool binary_;
 
     const indirectPrimitivePatch& pp_;
@@ -64,9 +62,6 @@ class surfaceMeshWriter
 
     std::ofstream os_;
 
-//    label nPoints_;
-//
-//    label nFaces_;
 
 public:
 
@@ -75,7 +70,6 @@ public:
         //- Construct from components
         surfaceMeshWriter
         (
-            const vtkMesh&,
             const bool binary,
             const indirectPrimitivePatch& pp,
             const word& name,
@@ -89,19 +83,6 @@ public:
         {
             return os_;
         }
-
-//        label nPoints() const
-//        {
-//            return nPoints_;
-//        }
-//
-//        label nFaces() const
-//        {
-//            return nFaces_;
-//        }
-//
-//        //- Write cellIDs
-//        void writePatchIDs();
 
         //- Extract face data
         template<class Type>
@@ -142,18 +123,18 @@ CML::tmp<Field<Type> > CML::surfaceMeshWriter::getFaceField
 
     forAll(pp_.addressing(), i)
     {
-        label faceI = pp_.addressing()[i];
+        label facei = pp_.addressing()[i];
 
-        label patchI = patches.whichPatch(faceI);
+        label patchi = patches.whichPatch(facei);
 
-        if (patchI == -1)
+        if (patchi == -1)
         {
-            fld[i] = sfld[faceI];
+            fld[i] = sfld[facei];
         }
         else
         {
-            label localFaceI = faceI - patches[patchI].start();
-            fld[i] = sfld.boundaryField()[patchI][localFaceI];
+            label localFacei = facei - patches[patchi].start();
+            fld[i] = sfld.boundaryField()[patchi][localFacei];
         }
     }
 
@@ -167,10 +148,10 @@ void CML::surfaceMeshWriter::write
     const PtrList<GeometricField<Type, fvsPatchField, surfaceMesh> >& sflds
 )
 {
-    forAll(sflds, fieldI)
+    forAll(sflds, fieldi)
     {
         const GeometricField<Type, fvsPatchField, surfaceMesh>& fld =
-            sflds[fieldI];
+            sflds[fieldi];
 
         os_ << fld.name() << ' ' << pTraits<Type>::nComponents << ' '
             << pp_.size() << " float" << std::endl;
@@ -180,11 +161,6 @@ void CML::surfaceMeshWriter::write
         writeFuns::write(os_, binary_, fField);
     }
 }
-
-
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 

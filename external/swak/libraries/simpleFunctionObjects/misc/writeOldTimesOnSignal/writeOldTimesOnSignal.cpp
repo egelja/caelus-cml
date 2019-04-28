@@ -39,7 +39,7 @@ namespace CML
         dictionary
     );
 
-    writeOldTimesOnSignalFunctionObject *writeOldTimesOnSignalFunctionObject::singleton_=NULL;
+    writeOldTimesOnSignalFunctionObject *writeOldTimesOnSignalFunctionObject::singleton_=nullptr;
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -62,13 +62,13 @@ writeOldTimesOnSignalFunctionObject::writeOldTimesOnSignalFunctionObject
     sigQUIT_(dict.lookupOrDefault<bool>("sigQUIT",false))
 {
     if(writeCurrent_) {
-        WarningIn("writeOldTimesOnSignalFunctionObject::writeOldTimesOnSignalFunctionObject")
-            << "'writeCurrent' was set. This may lead to uncaught segmentation faults"
+        WarningInFunction
+                << "'writeCurrent' was set. This may lead to uncaught segmentation faults"
                 << endl;
     }
 
-    if(singleton_!=NULL) {
-        FatalErrorIn("writeOldTimesOnSignalFunctionObject::writeOldTimesOnSignalFunctionObject")
+    if(singleton_!=nullptr) {
+        FatalErrorInFunction
             << "Only one instance of 'writeOldTimesOnSignal' may be used in one simulation"
                 << endl
                 << exit(FatalError);
@@ -83,7 +83,7 @@ writeOldTimesOnSignalFunctionObject::writeOldTimesOnSignalFunctionObject
 void writeOldTimesOnSignalFunctionObject::sigHandler(int sig) {
     Pout << "Signal " << sig << " encountered" << endl;
 
-    if(singleton_!=NULL) {
+    if(singleton_!=nullptr) {
         writeOldTimesOnSignalFunctionObject &sh=*singleton_;
         Pout << "Resetting old handlers (just in case)" << endl;
         forAll(sh.handlers_,i){
@@ -94,7 +94,7 @@ void writeOldTimesOnSignalFunctionObject::sigHandler(int sig) {
         sh.times_.write();
         if(sh.writeCurrent_) {
             Pout << "Writing current time" << endl;
-            WarningIn("writeOldTimesOnSignalFunctionObject::sigHandler(int sig)")
+            WarningInFunction
                 << "This action may end in a segmentation fault" << endl
                     << "Set 'writeCurrent false;' to avoid this"
                     << endl;
@@ -190,10 +190,8 @@ writeOldTimesOnSignalFunctionObject::SignalHandlerInfo::SignalHandlerInfo(
     newAction.sa_flags = SA_NODEFER;
     sigemptyset(&newAction.sa_mask);
     if (sigaction(sig_, &newAction, &oldAction_) < 0) {
-        FatalErrorIn
-        (
-            "writeOldTimesOnSignalFunctionObject::SignalHandlerInfo::SignalHandlerInfo"
-        )   << "Cannot set " << name_ << "(" << sig_ << ") trapping"
+        FatalErrorInFunction
+            << "Cannot set " << name_ << "(" << sig_ << ") trapping"
             << abort(FatalError);
     }
     set_=true;
@@ -207,12 +205,10 @@ void writeOldTimesOnSignalFunctionObject::SignalHandlerInfo::resetHandler()
             << endl;
         return;
     }
-    if (sigaction(sig_, &oldAction_, NULL) < 0) {
-        FatalErrorIn
-            (
-                "writeOldTimesOnSignalFunctionObject::SignalHandlerInfo::SignalHandlerInfo"
-            )   << "Cannot unset " << name_ << "(" << sig_ << ") trapping"
-                << abort(FatalError);
+    if (sigaction(sig_, &oldAction_, nullptr) < 0) {
+        FatalErrorInFunction
+            << "Cannot unset " << name_ << "(" << sig_ << ") trapping"
+            << abort(FatalError);
     }
 }
 

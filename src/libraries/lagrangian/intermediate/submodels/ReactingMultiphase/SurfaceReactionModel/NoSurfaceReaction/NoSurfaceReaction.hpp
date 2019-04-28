@@ -80,7 +80,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -165,8 +165,7 @@ CML::scalar CML::NoSurfaceReaction<CloudType>::calculate
     scalarField&
 ) const
 {
-    // do nothing
-    return 0.0;
+    return 0;
 }
 
 

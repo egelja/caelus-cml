@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::thermocapillaryForce
+    CML::regionModels::surfaceFilmModels::thermocapillaryForce
 
 Description
     Thermocapillary force
@@ -72,7 +72,7 @@ public:
         //- Construct from surface film model
         thermocapillaryForce
         (
-            const surfaceFilmModel& owner,
+            surfaceFilmRegionModel& film,
             const dictionary& dict
         );
 

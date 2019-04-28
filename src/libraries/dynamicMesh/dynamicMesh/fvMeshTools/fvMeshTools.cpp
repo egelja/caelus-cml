@@ -280,7 +280,7 @@ void CML::fvMeshTools::trimPatches(fvMesh& mesh, const label nPatches)
 
     if (polyPatches.empty())
     {
-        FatalErrorIn("fvMeshTools::trimPatches(fvMesh&, const label)")
+        FatalErrorInFunction
             << "No patches in mesh"
             << abort(FatalError);
     }
@@ -294,7 +294,7 @@ void CML::fvMeshTools::trimPatches(fvMesh& mesh, const label nPatches)
 
     if (nFaces)
     {
-        FatalErrorIn("fvMeshTools::trimPatches(fvMesh&, const label)")
+        FatalErrorInFunction
             << "There are still " << nFaces
             << " faces in " << polyPatches.size()-nPatches
             << " patches to be deleted" << abort(FatalError);

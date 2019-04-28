@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -119,7 +119,7 @@ const CML::scalarField& CML::graph::y() const
 {
     if (size() != 1)
     {
-        FatalErrorIn("const scalarField& graph::y() const")
+        FatalErrorInFunction
             << "y field requested for graph containing " << size()
             << "ys" << exit(FatalError);
     }
@@ -132,7 +132,7 @@ CML::scalarField& CML::graph::y()
 {
     if (size() != 1)
     {
-        FatalErrorIn("scalarField& graph::y()")
+        FatalErrorInFunction
             << "y field requested for graph containing " << size()
             << "ys" << exit(FatalError);
     }
@@ -148,10 +148,8 @@ CML::autoPtr<CML::graph::writer> CML::graph::writer::New
 {
     if (!wordConstructorTablePtr_)
     {
-        FatalErrorIn
-        (
-            "graph::writer::New(const word&)"
-        )   << "Graph writer table is empty"
+        FatalErrorInFunction
+            << "Graph writer table is empty"
             << exit(FatalError);
     }
 
@@ -160,10 +158,8 @@ CML::autoPtr<CML::graph::writer> CML::graph::writer::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "graph::writer::New(const word&)"
-        )   << "Unknown graph format " << graphFormat
+        FatalErrorInFunction
+            << "Unknown graph format " << graphFormat
             << endl << endl
             << "Valid graph formats are : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -221,7 +217,7 @@ void CML::graph::write(const fileName& pName, const word& format) const
     }
     else
     {
-        WarningIn("graph::write(const word& format, const fileName& dir)")
+        WarningInFunction
             << "Could not open graph file " << graphFile.name()
             << endl;
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -703,8 +703,8 @@ void CML::addPatchCellLayer::calcSidePatch
             if (edgeFaces[edgeI].size() == 1 && sidePatchID[edgeI] == -1)
             {
                 const edge& e = pp.edges()[edgeI];
-                //FatalErrorIn("addPatchCellLayer::calcSidePatch(..)")
-                WarningIn("addPatchCellLayer::calcSidePatch(..)")
+                //FatalErrorInFunction
+                WarningInFunction
                     << "Have no sidePatchID for edge " << edgeI << " points "
                     << pp.points()[pp.meshPoints()[e[0]]]
                     << pp.points()[pp.meshPoints()[e[1]]]
@@ -804,12 +804,8 @@ void CML::addPatchCellLayer::setRefinement
      || pp.size() != nFaceLayers.size()
     )
     {
-        FatalErrorIn
-        (
-            "addPatchCellLayer::setRefinement"
-            "(const scalar, const indirectPrimitivePatch&"
-            ", const labelList&, const vectorField&, polyTopoChange&)"
-        )   << "Size of new points is not same as number of points used by"
+        FatalErrorInFunction
+            << "Size of new points is not same as number of points used by"
             << " the face subset" << endl
             << "  patch.nPoints:" << pp.nPoints()
             << "  displacement:" << firstLayerDisp.size()
@@ -823,12 +819,8 @@ void CML::addPatchCellLayer::setRefinement
     {
         if (nPointLayers[i] < 0)
         {
-            FatalErrorIn
-            (
-                "addPatchCellLayer::setRefinement"
-                "(const scalar, const indirectPrimitivePatch&"
-                ", const labelList&, const vectorField&, polyTopoChange&)"
-            )   << "Illegal number of layers " << nPointLayers[i]
+            FatalErrorInFunction
+                << "Illegal number of layers " << nPointLayers[i]
                 << " at patch point " << i << abort(FatalError);
         }
     }
@@ -836,12 +828,8 @@ void CML::addPatchCellLayer::setRefinement
     {
         if (nFaceLayers[i] < 0)
         {
-            FatalErrorIn
-            (
-                "addPatchCellLayer::setRefinement"
-                "(const scalar, const indirectPrimitivePatch&"
-                ", const labelList&, const vectorField&, polyTopoChange&)"
-            )   << "Illegal number of layers " << nFaceLayers[i]
+            FatalErrorInFunction
+                << "Illegal number of layers " << nFaceLayers[i]
                 << " at patch face " << i << abort(FatalError);
         }
     }
@@ -871,13 +859,8 @@ void CML::addPatchCellLayer::setRefinement
 
                 if (n[meshPointI] != nPointLayers[i])
                 {
-                    FatalErrorIn
-                    (
-                        "addPatchCellLayer::setRefinement"
-                        "(const scalar, const indirectPrimitivePatch&"
-                        ", const labelList&, const vectorField&"
-                        ", polyTopoChange&)"
-                    )   << "At mesh point:" << meshPointI
+                    FatalErrorInFunction
+                        << "At mesh point:" << meshPointI
                         << " coordinate:" << mesh_.points()[meshPointI]
                         << " specified nLayers:" << nPointLayers[i] << endl
                         << "On coupled point a different nLayers:"
@@ -919,13 +902,8 @@ void CML::addPatchCellLayer::setRefinement
                  && nPointLayers[i] != nFromFace[meshPointI]
                 )
                 {
-                    FatalErrorIn
-                    (
-                        "addPatchCellLayer::setRefinement"
-                        "(const scalar, const indirectPrimitivePatch&"
-                        ", const labelList&, const vectorField&"
-                        ", polyTopoChange&)"
-                    )   << "At mesh point:" << meshPointI
+                    FatalErrorInFunction
+                        << "At mesh point:" << meshPointI
                         << " coordinate:" << mesh_.points()[meshPointI]
                         << " specified nLayers:" << nPointLayers[i] << endl
                         << "but the max nLayers of surrounding faces is:"
@@ -952,13 +930,8 @@ void CML::addPatchCellLayer::setRefinement
 
                 if (mag(d[meshPointI] - firstLayerDisp[i]) > SMALL)
                 {
-                    FatalErrorIn
-                    (
-                        "addPatchCellLayer::setRefinement"
-                        "(const scalar, const indirectPrimitivePatch&"
-                        ", const labelList&, const vectorField&"
-                        ", polyTopoChange&)"
-                    )   << "At mesh point:" << meshPointI
+                    FatalErrorInFunction
+                        << "At mesh point:" << meshPointI
                         << " coordinate:" << mesh_.points()[meshPointI]
                         << " specified displacement:" << firstLayerDisp[i]
                         << endl
@@ -988,13 +961,8 @@ void CML::addPatchCellLayer::setRefinement
                 // First check: pp should be single connected.
                 if (eFaces.size() != 1)
                 {
-                    FatalErrorIn
-                    (
-                        "addPatchCellLayer::setRefinement"
-                        "(const scalar, const indirectPrimitivePatch&"
-                        ", const labelList&, const vectorField&"
-                        ", polyTopoChange&)"
-                    )   << "boundary-edge-to-be-extruded:"
+                    FatalErrorInFunction
+                        << "boundary-edge-to-be-extruded:"
                         << pp.points()[meshPoints[e[0]]]
                         << pp.points()[meshPoints[e[1]]]
                         << " has more than two faces using it:" << eFaces
@@ -1027,14 +995,8 @@ void CML::addPatchCellLayer::setRefinement
                             }
                             else
                             {
-                                FatalErrorIn
-                                (
-                                    "addPatchCellLayer::setRefinement"
-                                    "(const scalar"
-                                    ", const indirectPrimitivePatch&"
-                                    ", const labelList&, const vectorField&"
-                                    ", polyTopoChange&)"
-                                )   << "boundary-edge-to-be-extruded:"
+                                FatalErrorInFunction
+                                    << "boundary-edge-to-be-extruded:"
                                     << pp.points()[meshPoints[e[0]]]
                                     << pp.points()[meshPoints[e[1]]]
                                     << " has more than two boundary faces"
@@ -1664,10 +1626,8 @@ void CML::addPatchCellLayer::setRefinement
                             {
                                 if (!verts.insert(newFace[fp]))
                                 {
-                                    FatalErrorIn
-                                    (
-                                        "addPatchCellLayer::setRefinement(..)"
-                                    )   << "Duplicate vertex in face"
+                                    FatalErrorInFunction
+                                        << "Duplicate vertex in face"
                                         << " to be added." << nl
                                         << "newFace:" << newFace << nl
                                         << "points:"

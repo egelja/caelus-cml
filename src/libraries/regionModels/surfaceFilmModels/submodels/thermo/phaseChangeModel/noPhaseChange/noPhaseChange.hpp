@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::noPhaseChange
+    CML::regionModels::surfaceFilmModels::noPhaseChange
 
 Description
     Dummy phase change model for 'none'
@@ -70,7 +70,7 @@ public:
     // Constructors
 
         //- Construct from surface film model
-        noPhaseChange(const surfaceFilmModel& owner, const dictionary& dict);
+        noPhaseChange(surfaceFilmRegionModel& film, const dictionary& dict);
 
 
     //- Destructor
@@ -80,6 +80,9 @@ public:
     // Member Functions
 
         // Evolution
+
+            //- Return the model 'active' status - default active = true
+            virtual bool active() const;
 
             //- Correct
             virtual void correctModel

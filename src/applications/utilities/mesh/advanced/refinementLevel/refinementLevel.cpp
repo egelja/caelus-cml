@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
     if (!readLevel && refHeader.headerOk())
     {
-        WarningIn(args.executable())
+        WarningInFunction
             << "Detected " << refHeader.name() << " file in "
             << polyMesh::defaultRegion <<  " directory. Please remove to"
             << " recreate it or use the -readLevel option to use it"

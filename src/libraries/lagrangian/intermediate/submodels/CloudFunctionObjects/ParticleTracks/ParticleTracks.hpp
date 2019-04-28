@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -129,7 +129,7 @@ public:
             //- Return const access to the reset on write flag
             inline const Switch& resetOnWrite() const;
 
-            //- Rerurn the table of number of times a particle has hit a face
+            //- Return the table of number of times a particle has hit a face
             inline const hitTableType& faceHitCounter() const;
 
             //- Return const access to the cloud
@@ -141,36 +141,8 @@ public:
             //- Pre-evolve hook
             virtual void preEvolve();
 
-            //- Post-evolve hook
-            virtual void postEvolve();
-
-            //- Post-move hook
-            virtual void postMove
-            (
-                typename CloudType::parcelType& p,
-                const label cellI,
-                const scalar dt,
-                const point& position0,
-                bool& keepParticle
-            );
-
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
-
             //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
-                bool& keepParticle
-            );
+            virtual void postFace(const parcelType& p, bool& keepParticle);
 };
 
 
@@ -241,8 +213,7 @@ void CML::ParticleTracks<CloudType>::write()
     {
         if (debug)
         {
-            Info<< "void CML::ParticleTracks<CloudType>::write()" << nl
-                << "cloupPtr invalid" << endl;
+            InfoInFunction << "cloupPtr invalid" << endl;
         }
     }
 }
@@ -263,7 +234,7 @@ CML::ParticleTracks<CloudType>::ParticleTracks
     maxSamples_(readLabel(this->coeffDict().lookup("maxSamples"))),
     resetOnWrite_(this->coeffDict().lookup("resetOnWrite")),
     faceHitCounter_(),
-    cloudPtr_(NULL)
+    cloudPtr_(nullptr)
 {}
 
 
@@ -305,47 +276,7 @@ void CML::ParticleTracks<CloudType>::preEvolve()
 
 
 template<class CloudType>
-void CML::ParticleTracks<CloudType>::postEvolve()
-{
-    CloudFunctionObject<CloudType>::postEvolve();
-}
-
-
-template<class CloudType>
-void CML::ParticleTracks<CloudType>::postMove
-(
-    typename CloudType::parcelType& p,
-    const label cellI,
-    const scalar dt,
-    const point& position0,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParticleTracks<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParticleTracks<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label,
-    bool&
-)
+void CML::ParticleTracks<CloudType>::postFace(const parcelType& p, bool&)
 {
     if
     (
@@ -355,14 +286,8 @@ void CML::ParticleTracks<CloudType>::postFace
     {
         if (!cloudPtr_.valid())
         {
-            FatalErrorIn
-            (
-                "CML::ParticleTracks<CloudType>::postFace"
-                "("
-                    "const parcelType&, "
-                    "const label"
-                ")"
-            )<< "Cloud storage not allocated" << abort(FatalError);
+            FatalErrorInFunction
+             << "Cloud storage not allocated" << abort(FatalError);
         }
 
         hitTableType::iterator iter =

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2012 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -125,7 +126,7 @@ namespace CML
         {
             if (useInotify_)
             {
-                    FatalErrorIn("fileMonitorWatcher(const bool, const label)")
+                    FatalErrorInFunction
                         << "You selected inotify but this file was compiled"
                         << " without FOAM_USE_INOTIFY"
                         << "Please select another fileModification test method"
@@ -150,14 +151,13 @@ namespace CML
                 {
                     return false;
                 }
-
             }
             else
             {
                 if (watchFd < lastMod_.size() && lastMod_[watchFd] != 0)
                 {
                     // Reuse of watchFd : should have lastMod set to 0.
-                    FatalErrorIn("addWatch(const label, const fileName&)")
+                    FatalErrorInFunction
                         << "Problem adding watch " << watchFd
                         << " to file " << fName
                         << abort(FatalError);
@@ -195,10 +195,7 @@ namespace CML
 
 void CML::fileMonitor::checkFiles() const
 {
-    if (useInotify_)
-    {
-    }
-    else
+    if (!useInotify_)
     {
         forAll(watcher_->lastMod_, watchFd)
         {
@@ -244,7 +241,7 @@ CML::fileMonitor::fileMonitor(const bool useInotify)
 {
     if (useInotify_) 
     {
-        FatalErrorIn("inotify is not available.")
+        FatalErrorInFunction
 		     << "Please select another fileModification test method"
 		     << exit(FatalError);
     }
@@ -287,7 +284,7 @@ CML::label CML::fileMonitor::addWatch(const fileName& fName)
 
     if (watchFd < 0)
     {
-        WarningIn("fileMonitor::addWatch(const fileName&)")
+        WarningInFunction
             << "could not add watch for file " << fName << endl;
     }
     else
@@ -407,11 +404,8 @@ void CML::fileMonitor::updateStates
                             << endl;
                     }
 
-                    WarningIn
-                    (
-                        "fileMonitor::updateStates"
-                        "(const bool, const bool) const"
-                    )   << "Delaying reading " << watchFile_[watchFd]
+                    WarningInFunction
+                        << "Delaying reading " << watchFile_[watchFd]
                         << " due to inconsistent "
                            "file time-stamps between processors" << endl;
                 }

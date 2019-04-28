@@ -33,7 +33,7 @@ namespace CML
 CML::kinematicParcelInjectionData::kinematicParcelInjectionData()
 :
     x_(point::zero),
-    U_(vector::zero),
+    U_(Zero),
     d_(0.0),
     rho_(0.0),
     mDot_(0.0)

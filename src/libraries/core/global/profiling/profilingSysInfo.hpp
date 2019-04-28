@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2016 OpenCFD Ltd
+Copyright (C) 2016-2017 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -18,10 +18,10 @@ License
     along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    CML::profiling::SysInfo
+    CML::profilingSysInfo
 
 Description
-    General system information
+    General system information useful for profiling
 
 SourceFiles
     profilingSysInfo.cpp
@@ -31,8 +31,6 @@ SourceFiles
 #ifndef profilingSysInfo_HPP
 #define profilingSysInfo_HPP
 
-#include "profiling.hpp"
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
@@ -40,36 +38,22 @@ namespace CML
 
 // Forward declaration of classes
 class Ostream;
+class profilingSysInfo;
 
 /*---------------------------------------------------------------------------*\
-                     Class profiling::sysInfo Declaration
+                      Class profilingSysInfo Declaration
 \*---------------------------------------------------------------------------*/
 
-class profiling::sysInfo
+class profilingSysInfo
 {
-    // Private Static Data Members
-
-
-    // Private Data Members
-
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
-        sysInfo(const sysInfo&);
+        profilingSysInfo(const profilingSysInfo&) = delete;
 
         //- Disallow default bitwise assignment
-        void operator=(const sysInfo&);
+        void operator=(const profilingSysInfo&) = delete;
 
-
-protected:
-
-    // Friendship
-
-        friend class profiling;
-
-
-    // Member Functions
 
 public:
 
@@ -77,25 +61,19 @@ public:
     // Constructors
 
         //- Construct from components
-        sysInfo();
+        profilingSysInfo();
 
 
     //- Destructor
-    ~sysInfo();
+    ~profilingSysInfo();
 
 
     // Member Functions
 
-    // Access
-
-
-    // Edit
-
         //- Update it with a new timing information
         void update();
 
-        //- Write the profiling times, optionally with additional values
-        //  Use dictionary format.
+        //- Write the profiling system-info, use dictionary format.
         Ostream& write(Ostream& os) const;
 };
 

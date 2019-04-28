@@ -29,8 +29,8 @@ CML::splitCell::splitCell(const label cellI, splitCell* parent)
 :
     cellI_(cellI),
     parent_(parent),
-    master_(NULL),
-    slave_(NULL)
+    master_(nullptr),
+    slave_(nullptr)
 {}
 
 
@@ -45,15 +45,15 @@ CML::splitCell::~splitCell()
         // Make sure parent does not refer to me anymore.
         if (myParent->master() == this)
         {
-            myParent->master() = NULL;
+            myParent->master() = nullptr;
         }
         else if (myParent->slave() == this)
         {
-            myParent->slave() = NULL;
+            myParent->slave() = nullptr;
         }
         else
         {
-            FatalErrorIn("splitCell::~splitCell()") << "this not equal to"
+            FatalErrorInFunction << "this not equal to"
                 << " parent's master or slave pointer" << endl
                 << "Cell:" << cellLabel() << abort(FatalError);
         }
@@ -69,7 +69,7 @@ bool CML::splitCell::isMaster() const
 
     if (!myParent)
     {
-        FatalErrorIn("splitCell::isMaster()") << "parent not set"
+        FatalErrorInFunction << "parent not set"
             << "Cell:" << cellLabel() << abort(FatalError);
 
         return false;
@@ -84,7 +84,7 @@ bool CML::splitCell::isMaster() const
     }
     else
     {
-        FatalErrorIn("splitCell::isMaster()") << "this not equal to"
+        FatalErrorInFunction << "this not equal to"
             << " parent's master or slave pointer" << endl
             << "Cell:" << cellLabel() << abort(FatalError);
 
@@ -105,10 +105,10 @@ CML::splitCell* CML::splitCell::getOther() const
 
     if (!myParent)
     {
-        FatalErrorIn("splitCell::getOther()") << "parent not set"
+        FatalErrorInFunction << "parent not set"
             << "Cell:" << cellLabel() << abort(FatalError);
 
-        return NULL;
+        return nullptr;
     }
     else if (myParent->master() == this)
     {
@@ -120,11 +120,11 @@ CML::splitCell* CML::splitCell::getOther() const
     }
     else
     {
-        FatalErrorIn("splitCell::getOther()") << "this not equal to"
+        FatalErrorInFunction << "this not equal to"
             << " parent's master or slave pointer" << endl
             << "Cell:" << cellLabel() << abort(FatalError);
 
-        return NULL;
+        return nullptr;
     }
 }
 

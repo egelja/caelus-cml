@@ -182,9 +182,9 @@ int main(int argc, char *argv[])
     dataDir=args.path()/fileName(args.args()[1]).name()+"_data";
 
     if (!args.options().found("time") && !args.options().found("latestTime")) {
-        FatalErrorIn("main()")
+        FatalErrorInFunction
             << args.executable()
-                << ": time/latestTime option is required" << endl
+            << ": time/latestTime option is required" << endl
             << exit(FatalError);
     }
 
@@ -232,11 +232,11 @@ int main(int argc, char *argv[])
                     runTime.value()
                 );
             } else {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "No mesh with name " << name << " declared. " << nl
-                        << "Can't follow current time"
-                        << endl
-                        << exit(FatalError);
+                    << "Can't follow current time"
+                    << endl
+                    << exit(FatalError);
 
             }
         }
@@ -298,9 +298,9 @@ int main(int argc, char *argv[])
                 writeData<sphericalTensor>(driver(),accumulations,runTime,
                                   name,writeCsv,writeDistributions);
             } else {
-                WarningIn(args.executable())
+                WarningInFunction
                     << "Don't know how to handle type " << rType
-                        << endl;
+                    << endl;
             }
 
             Info << endl;

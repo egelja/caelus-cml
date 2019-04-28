@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -43,15 +43,8 @@ CML::autoPtr<CML::coordinateRotation> CML::coordinateRotation::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "coordinateRotation::New"
-            "("
-            "   const dictionary&, "
-            "   const objectRegistry& "
-            ")",
-            dict
-        )   << "Unknown coordinateRotation type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown coordinateRotation type "
             << rotType << nl << nl
             << "Valid coordinateRotation types are :" <<  nl
             << "[default: axes ]"
@@ -82,14 +75,8 @@ CML::autoPtr<CML::coordinateRotation> CML::coordinateRotation::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
-        (
-            "coordinateRotation::New"
-            "("
-            "   const dictionary&, "
-            ")",
-            dict
-        )   << "Unknown coordinateRotation type "
+        FatalIOErrorInFunction(dict)
+            << "Unknown coordinateRotation type "
             << rotType << nl << nl
             << "Valid coordinateRotation types are :" <<  nl
             << "[default: axes ]"

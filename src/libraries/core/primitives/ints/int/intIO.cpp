@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -62,7 +62,7 @@ CML::Istream& CML::operator>>(Istream& is, int& i)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, int&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected int, found " << t.info()
             << exit(FatalIOError);
 
@@ -87,7 +87,7 @@ int CML::readInt(Istream& is)
 
 bool CML::readInt(const char* buf, int& s)
 {
-    char *endptr = NULL;
+    char *endptr = nullptr;
     errno = 0;
     long l = strtol(buf, &endptr, 10);
     s = int(l);

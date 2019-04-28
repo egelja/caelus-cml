@@ -24,7 +24,6 @@ Description
     A vertex point representation for STL files.
 
 SourceFiles
-    STLpointI.hpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -32,6 +31,7 @@ SourceFiles
 #define STLpoint_H
 
 #include "point.hpp"
+#include "Istream.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -39,7 +39,7 @@ namespace CML
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class STLpoint Declaration
+                          Class STLpoint Declaration
 \*---------------------------------------------------------------------------*/
 
 class STLpoint
@@ -52,31 +52,41 @@ public:
     // Constructors
 
         //- Construct null
-        inline STLpoint();
+        inline STLpoint()
+        {}
 
         //- Construct from components
-        inline STLpoint(float x, float y, float z);
+        inline STLpoint(float x, float y, float z)
+        :
+            Vector<float>(x, y, z)
+        {}
 
         //- Construct from point
-        inline STLpoint(const point&);
+        inline STLpoint(const point& pt)
+        :
+            Vector<float>(float(pt.x()), float(pt.y()), float(pt.z()))
+        {}
 
         //- Construct from istream
-        inline STLpoint(Istream&);
+        inline STLpoint(Istream& is)
+        :
+            Vector<float>(is)
+        {}
 
 
     // Member Operators
 
-        inline operator point() const;
+        //- Conversion to point
+        inline operator point() const
+        {
+            return point(x(), y(), z());
+        }
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "STLpointI.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

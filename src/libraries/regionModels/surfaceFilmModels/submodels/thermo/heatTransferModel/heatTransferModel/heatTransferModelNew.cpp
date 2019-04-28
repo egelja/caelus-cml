@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,7 @@ namespace surfaceFilmModels
 
 autoPtr<heatTransferModel> heatTransferModel::New
 (
-    const surfaceFilmModel& model,
+    surfaceFilmRegionModel& model,
     const dictionary& dict
 )
 {
@@ -47,10 +47,8 @@ autoPtr<heatTransferModel> heatTransferModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "heatTransferModel::New(const surfaceFilmModel&, const dictionary&)"
-        )   << "Unknown heatTransferModel type " << modelType << nl << nl
+        FatalErrorInFunction
+            << "Unknown heatTransferModel type " << modelType << nl << nl
             << "Valid heatTransferModel types are:" << nl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);

@@ -8,7 +8,7 @@ Import('env')
 target = 'flowType'
 
 sources = Split("""
-flowType.cpp
+flowType_app.cpp
 """)
 
 caelus_inc = [

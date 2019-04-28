@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -36,10 +36,10 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef laminarFlameSpeed_H
-#define laminarFlameSpeed_H
+#ifndef laminarFlameSpeed_HPP
+#define laminarFlameSpeed_HPP
 
-#include "hhuCombustionThermo.hpp"
+#include "psiuReactionThermo.hpp"
 #include "autoPtr.hpp"
 #include "runTimeSelectionTables.hpp"
 
@@ -57,24 +57,20 @@ class laminarFlameSpeed
 
 protected:
 
-    // Protected data
+    const psiuReactionThermo& psiuReactionThermo_;
 
-        const hhuCombustionThermo& hhuCombustionThermo_;
+    //- Fuel
+    word fuel_;
 
-        //- Fuel
-        word fuel_;
-
-        //- Equivalence ratio of a homogeneous mixture
-        scalar equivalenceRatio_;
+    //- Equivalence ratio of a homogeneous mixture
+    scalar equivalenceRatio_;
 
 
 private:
 
-    // Private Member Functions
-
-        //- Construct as copy (not implemented)
-        laminarFlameSpeed(const laminarFlameSpeed&);
-        void operator=(const laminarFlameSpeed&);
+    //- Construct as copy (not implemented)
+    laminarFlameSpeed(const laminarFlameSpeed&);
+    void operator=(const laminarFlameSpeed&);
 
 
 public:
@@ -84,55 +80,48 @@ public:
 
 
     // Declare run-time constructor selection table
-
-        declareRunTimeSelectionTable
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        laminarFlameSpeed,
+        dictionary,
         (
-            autoPtr,
-            laminarFlameSpeed,
-            dictionary,
-            (
-                const dictionary& dict,
-                const hhuCombustionThermo& ct
-            ),
-            (dict, ct)
-        );
+            const dictionary& dict,
+            const psiuReactionThermo& ct
+        ),
+        (dict, ct)
+    );
 
 
-    // Constructors
-
-        //- Construct from dictionary and hhuCombustionThermo
-        laminarFlameSpeed
-        (
-            const dictionary&,
-            const hhuCombustionThermo&
-        );
+    //- Construct from dictionary and psiuReactionThermo
+    laminarFlameSpeed
+    (
+        const dictionary&,
+        const psiuReactionThermo&
+    );
 
 
     // Selector
-
-        static autoPtr<laminarFlameSpeed> New
-        (
-            const hhuCombustionThermo&
-        );
+    static autoPtr<laminarFlameSpeed> New
+    (
+        const psiuReactionThermo&
+    );
 
 
     //- Destructor
-    virtual ~laminarFlameSpeed();
+    virtual ~laminarFlameSpeed()
+    {}
 
 
     // Member functions
 
-        //- Return the laminar flame speed [m/s]
-        virtual tmp<volScalarField> operator()() const = 0;
+    //- Return the laminar flame speed [m/s]
+    virtual tmp<volScalarField> operator()() const = 0;
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2013 OpenFOAM Foundation
+Copyright (C) 2012-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,10 +22,63 @@ Class
 
 Description
     Function object to collect the parcel mass- and mass flow rate over a
-    set of polygons.  The polygons are defined as lists of points.  If a
-    parcel is 'collected', it is subsequently flagged to be removed from the
-    domain.
+    set of polygons.  The polygons can either be specified by sets of user-
+    supplied points, or in a concentric circles arrangement.  If a
+    parcel is 'collected', it can be flagged to be removed from the
+    domain using the removeCollected entry.
 
+    Example usage:
+    \verbatim
+    particleCollector1
+    {
+        type            particleCollector;
+
+        mode            concentricCircle;
+        origin          (0.05 0.025 0.005);
+        radius          (0.01 0.025 0.05);
+        nSector         10;
+        refDir          (1 0 0);
+        normal          (0 0 1);
+
+        negateParcelsOppositeNormal no;
+        removeCollected no;
+        surfaceFormat   vtk;
+        resetOnWrite    no;
+        log             yes;
+    }
+
+    particleCollector2
+    {
+        type            particleCollector;
+
+        mode            polygon;
+        polygons
+        (
+            (
+                (0 0 0)
+                (1 0 0)
+                (1 1 0)
+                (0 1 0)
+            )
+            (
+                (0 0 1)
+                (1 0 1)
+                (1 1 1)
+                (0 1 1)
+            )
+        );
+        normal          (0 0 1);
+
+        negateParcelsOppositeNormal no;
+        removeCollected no;
+        surfaceFormat   vtk;
+        resetOnWrite    no;
+        log             yes;
+    }
+    \endverbatim
+
+SourceFiles
+    ParticleCollector.cpp
 
 \*---------------------------------------------------------------------------*/
 
@@ -137,11 +190,11 @@ private:
         //- Output file pointer
         autoPtr<OFstream> outputFilePtr_;
 
-        //- Output directory
-        fileName outputDir_;
-
         //- Last calculation time
         scalar timeOld_;
+
+        //- Work list to store which faces are hit
+        mutable DynamicList<label> hitFaceIDs_;
 
 
     // Private Member Functions
@@ -161,14 +214,14 @@ private:
         void initConcentricCircles();
 
         //- Collect parcels in polygon collectors
-        label collectParcelPolygon
+        void collectParcelPolygon
         (
             const point& p1,
             const point& p2
         ) const;
 
         //- Collect parcels in concentric circle collectors
-        label collectParcelConcentricCircles
+        void collectParcelConcentricCircles
         (
             const point& p1,
             const point& p2
@@ -226,37 +279,12 @@ public:
 
         // Evaluation
 
-            //- Pre-evolve hook
-            virtual void preEvolve();
-
-            //- Post-evolve hook
-            virtual void postEvolve();
-
             //- Post-move hook
             virtual void postMove
             (
-                typename CloudType::parcelType& p,
-                const label cellI,
+                parcelType& p,
                 const scalar dt,
                 const point& position0,
-                bool& keepParticle
-            );
-
-            //- Post-patch hook
-            virtual void postPatch
-            (
-                const typename CloudType::parcelType& p,
-                const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& testIs,
-                bool& keepParticle
-            );
-
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 };
@@ -305,15 +333,13 @@ void CML::ParticleCollector<CloudType>::makeLogFile
 
         if (Pstream::master())
         {
-            const fileName logDir = outputDir_/this->owner().time().timeName();
-
             // Create directory if does not exist
-            mkDir(logDir);
+            mkDir(this->outputTimeDir());
 
             // Open new file at start up
             outputFilePtr_.reset
             (
-                new OFstream(logDir/(type() + ".dat"))
+                new OFstream(this->outputTimeDir()/(type() + ".dat"))
             );
 
             outputFilePtr_()
@@ -375,11 +401,7 @@ void CML::ParticleCollector<CloudType>::initPolygons
         label np = polygons[polyI].size();
         if (np < 3)
         {
-            FatalIOErrorIn
-            (
-                "CML::ParticleCollector<CloudType>::initPolygons()",
-                this->coeffDict()
-            )
+            FatalIOErrorInFunction(this->coeffDict())
                 << "polygons must consist of at least 3 points"
                 << exit(FatalIOError);
         }
@@ -392,18 +414,18 @@ void CML::ParticleCollector<CloudType>::initPolygons
     faces_.setSize(polygons.size());
     faceTris_.setSize(polygons.size());
     area_.setSize(polygons.size());
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        const Field<point>& polyPoints = polygons[faceI];
+        const Field<point>& polyPoints = polygons[facei];
         face f(identity(polyPoints.size()) + pointOffset);
         UIndirectList<point>(points_, f) = polyPoints;
-        area_[faceI] = f.mag(points_);
+        area_[facei] = f.mag(points_);
 
         DynamicList<face> tris;
         f.triangles(points_, tris);
-        faceTris_[faceI].transfer(tris);
+        faceTris_[facei].transfer(tris);
 
-        faces_[faceI].transfer(f);
+        faces_[facei].transfer(f);
 
         pointOffset += polyPoints.size();
     }
@@ -417,7 +439,7 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
 
     vector origin(this->coeffDict().lookup("origin"));
 
-    radius_ = readScalar(this->coeffDict().lookup("radius"));
+    this->coeffDict().lookup("radius") >> radius_;
     nSector_ = readLabel(this->coeffDict().lookup("nSector"));
 
     label nS = nSector_;
@@ -431,16 +453,16 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
     }
     else
     {
-        // set 4 quadrants for single sector cases
+        // Set 4 quadrants for single sector cases
         nS = 4;
 
-        vector tangent = vector::zero;
+        vector tangent = Zero;
         scalar magTangent = 0.0;
 
         Random rnd(1234);
         while (magTangent < SMALL)
         {
-            vector v = rnd.vector01();
+            vector v = rnd.sample01<vector>();
 
             tangent = v - (v & normal_[0])*normal_[0];
             magTangent = mag(tangent);
@@ -460,7 +482,7 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
     label nPoint = radius_.size()*nPointPerRadius;
     label nFace = radius_.size()*nS;
 
-    // add origin
+    // Add origin
     nPoint++;
 
     points_.setSize(nPoint);
@@ -473,7 +495,7 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
 
     points_[0] = origin;
 
-    // points
+    // Points
     forAll(radius_, radI)
     {
         label pointOffset = radI*nPointPerRadius + 1;
@@ -486,7 +508,7 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
         }
     }
 
-    // faces
+    // Faces
     DynamicList<label> facePts(2*nPointPerSector);
     forAll(radius_, radI)
     {
@@ -496,7 +518,7 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
             {
                 facePts.clear();
 
-                // append origin point
+                // Append origin point
                 facePts.append(0);
 
                 for (label ptI = 0; ptI < nPointPerSector; ptI++)
@@ -506,10 +528,10 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
                     facePts.append(id);
                 }
 
-                label faceI = secI + radI*nS;
+                label facei = secI + radI*nS;
 
-                faces_[faceI] = face(facePts);
-                area_[faceI] = faces_[faceI].mag(points_);
+                faces_[facei] = face(facePts);
+                area_[facei] = faces_[facei].mag(points_);
             }
         }
         else
@@ -533,10 +555,10 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
                     facePts.append(id);
                 }
 
-                label faceI = secI + radI*nS;
+                label facei = secI + radI*nS;
 
-                faces_[faceI] = face(facePts);
-                area_[faceI] = faces_[faceI].mag(points_);
+                faces_[facei] = face(facePts);
+                area_[facei] = faces_[facei].mag(points_);
             }
         }
     }
@@ -544,59 +566,61 @@ void CML::ParticleCollector<CloudType>::initConcentricCircles()
 
 
 template<class CloudType>
-CML::label CML::ParticleCollector<CloudType>::collectParcelPolygon
+void CML::ParticleCollector<CloudType>::collectParcelPolygon
 (
     const point& p1,
     const point& p2
 ) const
 {
-    label dummyNearType = -1;
-    label dummyNearLabel = -1;
-
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        const label facePoint0 = faces_[faceI][0];
+        const label facePoint0 = faces_[facei][0];
 
         const point& pf = points_[facePoint0];
 
-        const scalar d1 = normal_[faceI] & (p1 - pf);
-        const scalar d2 = normal_[faceI] & (p2 - pf);
+        const scalar d1 = normal_[facei] & (p1 - pf);
+        const scalar d2 = normal_[facei] & (p2 - pf);
 
         if (sign(d1) == sign(d2))
         {
-            // did not cross polygon plane
+            // Did not cross polygon plane
             continue;
         }
 
-        // intersection point
+        // Intersection point
         const point pIntersect = p1 + (d1/(d1 - d2))*(p2 - p1);
 
-        const List<face>& tris = faceTris_[faceI];
-
-        // identify if point is within poly bounds
-        forAll(tris, triI)
+        // Identify if point is within the bounds of the face. Create triangles
+        // between the intersection point and each edge of the face. If all the
+        // triangle normals point in the same direction as the face normal, then
+        // the particle is within the face. Note that testing for pointHits on
+        // the face's decomposed triangles does not work due to ambiguity along
+        // the diagonals.
+        const face& f = faces_[facei];
+        const vector a = f.area(points_);
+        bool inside = true;
+        for (label i = 0; i < f.size(); ++ i)
         {
-            const face& tri = tris[triI];
-            triPointRef t
-            (
-                points_[tri[0]],
-                points_[tri[1]],
-                points_[tri[2]]
-            );
-
-            if (t.classify(pIntersect, dummyNearType, dummyNearLabel))
+            const label j = f.fcIndex(i);
+            const triPointRef t(pIntersect, points_[f[i]], points_[f[j]]);
+            if ((a & t.area()) < 0)
             {
-                return faceI;
+                inside = false;
+                break;
             }
         }
-    }
 
-    return -1;
+        // Add to the list of hits
+        if (inside)
+        {
+            hitFaceIDs_.append(facei);
+        }
+    }
 }
 
 
 template<class CloudType>
-CML::label CML::ParticleCollector<CloudType>::collectParcelConcentricCircles
+void CML::ParticleCollector<CloudType>::collectParcelConcentricCircles
 (
     const point& p1,
     const point& p2
@@ -609,11 +633,11 @@ CML::label CML::ParticleCollector<CloudType>::collectParcelConcentricCircles
 
     if (sign(d1) == sign(d2))
     {
-        // did not cross plane
-        return secI;
+        // Did not cross plane
+        return;
     }
 
-    // intersection point in cylindrical co-ordinate system
+    // Intersection point in cylindrical co-ordinate system
     const point pCyl = coordSys_.localPosition(p1 + (d1/(d1 - d2))*(p2 - p1));
 
     scalar r = pCyl[0];
@@ -643,9 +667,14 @@ CML::label CML::ParticleCollector<CloudType>::collectParcelConcentricCircles
         }
     }
 
-    return secI;
+    if (secI != -1)
+    {
+        hitFaceIDs_.append(secI);
+    }
 }
 
+
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 template<class CloudType>
 void CML::ParticleCollector<CloudType>::write()
@@ -660,14 +689,14 @@ void CML::ParticleCollector<CloudType>::write()
     const scalar alpha = (totalTime_ - timeElapsed)/totalTime_;
     const scalar beta = timeElapsed/totalTime_;
 
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        massFlowRate_[faceI] =
-            alpha*massFlowRate_[faceI] + beta*mass_[faceI]/timeElapsed;
-        massTotal_[faceI] += mass_[faceI];
+        massFlowRate_[facei] =
+            alpha*massFlowRate_[facei] + beta*mass_[facei]/timeElapsed;
+        massTotal_[facei] += mass_[facei];
     }
 
-    const label procI = Pstream::myProcNo();
+    const label proci = Pstream::myProcNo();
 
     Info<< type() << " output:" << nl;
 
@@ -680,28 +709,28 @@ void CML::ParticleCollector<CloudType>::write()
 
     scalar sumTotalMass = 0.0;
     scalar sumAverageMFR = 0.0;
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
         scalarList allProcMass(Pstream::nProcs());
-        allProcMass[procI] = massTotal_[faceI];
+        allProcMass[proci] = massTotal_[facei];
         Pstream::gatherList(allProcMass);
-        faceMassTotal[faceI] += sum(allProcMass);
+        faceMassTotal[facei] += sum(allProcMass);
 
         scalarList allProcMassFlowRate(Pstream::nProcs());
-        allProcMassFlowRate[procI] = massFlowRate_[faceI];
+        allProcMassFlowRate[proci] = massFlowRate_[facei];
         Pstream::gatherList(allProcMassFlowRate);
-        faceMassFlowRate[faceI] += sum(allProcMassFlowRate);
+        faceMassFlowRate[facei] += sum(allProcMassFlowRate);
 
-        sumTotalMass += faceMassTotal[faceI];
-        sumAverageMFR += faceMassFlowRate[faceI];
+        sumTotalMass += faceMassTotal[facei];
+        sumAverageMFR += faceMassFlowRate[facei];
 
         if (outputFilePtr_.valid())
         {
             outputFilePtr_()
                 << time.timeName()
-                << tab << faceI
-                << tab << faceMassTotal[faceI]
-                << tab << faceMassFlowRate[faceI]
+                << tab << facei
+                << tab << faceMassTotal[facei]
+                << tab << faceMassFlowRate[facei]
                 << endl;
         }
     }
@@ -719,7 +748,7 @@ void CML::ParticleCollector<CloudType>::write()
 
             writer->write
             (
-                outputDir_/time.timeName(),
+                this->outputTimeDir(),
                 "collector",
                 points_,
                 faces_,
@@ -730,7 +759,7 @@ void CML::ParticleCollector<CloudType>::write()
 
             writer->write
             (
-                outputDir_/time.timeName(),
+                this->outputTimeDir(),
                 "collector",
                 points_,
                 faces_,
@@ -757,11 +786,11 @@ void CML::ParticleCollector<CloudType>::write()
         this->setModelProperty("massFlowRate", faceMassFlowRate);
     }
 
-    forAll(faces_, faceI)
+    forAll(faces_, facei)
     {
-        mass_[faceI] = 0.0;
-        massTotal_[faceI] = 0.0;
-        massFlowRate_[faceI] = 0.0;
+        mass_[facei] = 0.0;
+        massTotal_[facei] = 0.0;
+        massFlowRate_[facei] = 0.0;
     }
 }
 
@@ -799,22 +828,9 @@ CML::ParticleCollector<CloudType>::ParticleCollector
     massFlowRate_(),
     log_(this->coeffDict().lookup("log")),
     outputFilePtr_(),
-    outputDir_(owner.mesh().time().path()),
-    timeOld_(owner.mesh().time().value())
+    timeOld_(owner.mesh().time().value()),
+    hitFaceIDs_()
 {
-    if (Pstream::parRun())
-    {
-        // Put in undecomposed case (Note: gives problems for
-        // distributed data running)
-        outputDir_ =
-            outputDir_/".."/"postProcessing"/cloud::prefix/owner.name();
-    }
-    else
-    {
-        outputDir_ =
-            outputDir_/"postProcessing"/cloud::prefix/owner.name();
-    }
-
     normal_ /= mag(normal_);
 
     word mode(this->coeffDict().lookup("mode"));
@@ -855,16 +871,7 @@ CML::ParticleCollector<CloudType>::ParticleCollector
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "CML::ParticleCollector<CloudType>::ParticleCollector"
-            "("
-                "const dictionary&,"
-                "CloudType&, "
-                "const word&"
-            ")",
-            this->coeffDict()
-        )
+        FatalIOErrorInFunction(this->coeffDict())
             << "Unknown mode " << mode << ".  Available options are "
             << "polygon, polygonWithNormal and concentricCircle"
             << exit(FatalIOError);
@@ -904,8 +911,8 @@ CML::ParticleCollector<CloudType>::ParticleCollector
     massFlowRate_(pc.massFlowRate_),
     log_(pc.log_),
     outputFilePtr_(),
-    outputDir_(pc.outputDir_),
-    timeOld_(0.0)
+    timeOld_(0.0),
+    hitFaceIDs_()
 {}
 
 
@@ -919,23 +926,9 @@ CML::ParticleCollector<CloudType>::~ParticleCollector()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void CML::ParticleCollector<CloudType>::preEvolve()
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParticleCollector<CloudType>::postEvolve()
-{
-    CloudFunctionObject<CloudType>::postEvolve();
-}
-
-template<class CloudType>
 void CML::ParticleCollector<CloudType>::postMove
 (
-    typename CloudType::parcelType& p,
-    const label cellI,
+    parcelType& p,
     const scalar dt,
     const point& position0,
     bool& keepParticle
@@ -946,50 +939,65 @@ void CML::ParticleCollector<CloudType>::postMove
         return;
     }
 
-    label faceI = -1;
-
-    // slightly extend end position to avoid falling within tracking tolerances
-    const point position1 = position0 + 1.0001*(p.position() - position0);
+    hitFaceIDs_.clear();
 
     switch (mode_)
     {
         case mtPolygon:
         {
-            faceI = collectParcelPolygon(position0, position1);
+            collectParcelPolygon(position0, p.position());
             break;
         }
         case mtConcentricCircle:
         {
-            faceI = collectParcelConcentricCircles(position0, position1);
+            collectParcelConcentricCircles(position0, p.position());
             break;
         }
         default:
-        {
-        }
+        {}
     }
 
-    if (faceI != -1)
+    forAll(hitFaceIDs_, i)
     {
+        label facei = hitFaceIDs_[i];
         scalar m = p.nParticle()*p.mass();
 
         if (negateParcelsOppositeNormal_)
         {
+            scalar Unormal = 0;
             vector Uhat = p.U();
-            Uhat /= mag(Uhat) + ROOTVSMALL;
-            if ((Uhat & normal_[faceI]) < 0)
+            switch (mode_)
             {
-                m *= -1.0;
+                case mtPolygon:
+                {
+                    Unormal = Uhat & normal_[facei];
+                    break;
+                }
+                case mtConcentricCircle:
+                {
+                    Unormal = Uhat & normal_[0];
+                    break;
+                }
+                default:
+                {}
+            }
+
+            Uhat /= mag(Uhat) + ROOTVSMALL;
+
+            if (Unormal < 0)
+            {
+                m = -m;
             }
         }
 
-        // add mass contribution
-        mass_[faceI] += m;
+        // Add mass contribution
+        mass_[facei] += m;
 
         if (nSector_ == 1)
         {
-            mass_[faceI + 1] += m;
-            mass_[faceI + 2] += m;
-            mass_[faceI + 3] += m;
+            mass_[facei + 1] += m;
+            mass_[facei + 2] += m;
+            mass_[facei + 3] += m;
         }
 
         if (removeCollected_)
@@ -997,32 +1005,6 @@ void CML::ParticleCollector<CloudType>::postMove
             keepParticle = false;
         }
     }
-}
-
-
-template<class CloudType>
-void CML::ParticleCollector<CloudType>::postPatch
-(
-    const typename CloudType::parcelType& p,
-    const polyPatch& pp,
-    const scalar trackFraction,
-    const tetIndices& testIs,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::ParticleCollector<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
 }
 
 

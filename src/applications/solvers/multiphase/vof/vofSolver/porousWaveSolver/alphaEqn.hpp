@@ -1,7 +1,7 @@
 {
 	if (MULESCorr)
 	{
-		FatalErrorIn("alphaEqn.H")
+		FatalErrorInFunction
 			<< "Implicit solution to the alpha field is chosen for porousWaveSolver.\n"
 			<< "No implementation is currently available that corrects for the\n"
 			<< "porosity in the implicit advection of alpha1.\n"
@@ -35,7 +35,7 @@
     {
         if (nAlphaSubCycles > 1)
         {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Sub-cycling is not supported "
                    "with the CrankNicolson ddt scheme"
                 << exit(FatalError);
@@ -47,7 +47,7 @@
     }
     else
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Only Euler and CrankNicolson ddt schemes are supported"
             << exit(FatalError);
     }

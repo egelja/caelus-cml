@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,7 +47,7 @@ CML::label CML::readHexLabel(ISstream& is)
 
         if (!isxdigit(c))
         {
-            FatalIOErrorIn("readHexLabel(ISstream&)", is)
+            FatalIOErrorInFunction(is)
                 << "Illegal hex digit: '" << c << "'"
                 << exit(FatalIOError);
         }

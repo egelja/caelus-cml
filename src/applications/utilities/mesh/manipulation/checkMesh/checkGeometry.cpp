@@ -411,10 +411,8 @@ bool CML::checkCoupledPoints
 
                     if (f.size() != nbrPoints[bFacei].size())
                     {
-                        FatalErrorIn
-                        (
-                            "bool CML::checkCoupledPoints(...)"
-                        )   << "Local face size : " << f.size()
+                        FatalErrorInFunction
+                            << "Local face size : " << f.size()
                             << " does not equal neighbour face size : "
                             << nbrPoints[bFacei].size()
                             << abort(FatalError);

@@ -28,8 +28,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Chung_H
-#define Chung_H
+#ifndef Chung_HPP
+#define Chung_HPP
 
 #include "barotropicCompressibilityModel.hpp"
 #include "dimensionedScalar.hpp"
@@ -49,13 +49,12 @@ class Chung
 :
     public barotropicCompressibilityModel
 {
-    // Private data
 
-        dimensionedScalar psiv_;
-        dimensionedScalar psil_;
+    dimensionedScalar psiv_;
+    dimensionedScalar psil_;
 
-        dimensionedScalar rhovSat_;
-        dimensionedScalar rholSat_;
+    dimensionedScalar rhovSat_;
+    dimensionedScalar rholSat_;
 
 
 public:
@@ -64,15 +63,13 @@ public:
     TypeName("Chung");
 
 
-    // Constructors
-
-        //- construct from components
-        Chung
-        (
-            const dictionary& compressibilityProperties,
-            const volScalarField& gamma,
-            const word& psiName = "psi"
-        );
+    //- Construct from components
+    Chung
+    (
+        const dictionary& compressibilityProperties,
+        const volScalarField& gamma,
+        const word& psiName = "psi"
+    );
 
 
     //- Destructor
@@ -82,21 +79,17 @@ public:
 
     // Member Functions
 
-        //- Correct the Chung compressibility
-        void correct();
+    //- Correct the Chung compressibility
+    void correct();
 
-        //- Read transportProperties dictionary
-        bool read(const dictionary& compressibilityProperties);
+    //- Read transportProperties dictionary
+    bool read(const dictionary& compressibilityProperties);
+
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace compressibilityModels
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

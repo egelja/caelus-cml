@@ -24,11 +24,14 @@ License
 #include "makeParcelCloudFunctionObjects.hpp"
 
 // Kinematic
-#include "makeThermoParcelForces.hpp" // thermo variant
-#include "makeParcelRASDispersionModels.hpp"
-#include "makeParcelLESDispersionModels.hpp"
+#include "makeParcelForces.hpp"
+#include "makeThermoParcelTurbulenceForces.hpp" // add turbulence variant
+#include "makeParcelDispersionModels.hpp"
+#include "makeParcelRASDispersionModels.hpp"  // add turbulence variant
+#include "makeParcelLESDispersionModels.hpp"  // add turbulence variant
 #include "makeSprayParcelInjectionModels.hpp" // Spray variant
 #include "makeParcelPatchInteractionModels.hpp"
+#include "makeSprayParcelStochasticCollisionModels.hpp" // Spray variant
 
 // Thermodynamic
 #include "makeParcelHeatTransferModels.hpp"
@@ -39,9 +42,9 @@ License
 #include "makeReactingParcelSurfaceFilmModels.hpp"
 
 // Spray
+#include "DistortedSphereDragForce.hpp"
 #include "makeSprayParcelAtomizationModels.hpp"
 #include "makeSprayParcelBreakupModels.hpp"
-#include "makeSprayParcelCollisionModels.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,11 +53,14 @@ namespace CML
     makeParcelCloudFunctionObjects(basicSprayCloud);
 
     // Kinematic sub-models
-    makeThermoParcelForces(basicSprayCloud);
+    makeParcelForces(basicSprayCloud);
+    makeThermoParcelTurbulenceForces(basicSprayCloud);
+    makeParcelDispersionModels(basicSprayCloud);
     makeParcelRASDispersionModels(basicSprayCloud);
     makeParcelLESDispersionModels(basicSprayCloud);
     makeSprayParcelInjectionModels(basicSprayCloud);
     makeParcelPatchInteractionModels(basicSprayCloud);
+    makeSprayParcelStochasticCollisionModels(basicSprayCloud);
 
     // Thermo sub-models
     makeParcelHeatTransferModels(basicSprayCloud);
@@ -65,10 +71,9 @@ namespace CML
     makeReactingParcelSurfaceFilmModels(basicSprayCloud);
 
     // Spray sub-models
+    makeParticleForceModelType(DistortedSphereDragForce, basicSprayCloud);
     makeSprayParcelAtomizationModels(basicSprayCloud);
     makeSprayParcelBreakupModels(basicSprayCloud);
-    makeSprayParcelCollisionModels(basicSprayCloud);
-};
-
+}
 
 // ************************************************************************* //

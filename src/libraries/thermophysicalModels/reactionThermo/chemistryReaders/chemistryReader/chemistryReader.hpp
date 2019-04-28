@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -28,18 +28,22 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef chemistryReader_H
-#define chemistryReader_H
+#ifndef chemistryReader_HPP
+#define chemistryReader_HPP
 
 #include "typeInfo.hpp"
-#include "runTimeSelectionTables.hpp"
+#include "specieElement.hpp"
 #include "Reaction.hpp"
 #include "ReactionList.hpp"
+#include "runTimeSelectionTables.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
 {
+
+typedef HashTable<List<specieElement> > speciesCompositionTable;
+
 
 /*---------------------------------------------------------------------------*\
                       Class chemistryReader Declaration
@@ -48,13 +52,12 @@ namespace CML
 template<class ThermoType>
 class chemistryReader
 {
-    // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        chemistryReader(const chemistryReader&);
+    //- Disallow default bitwise copy construct
+    chemistryReader(const chemistryReader&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const chemistryReader&);
+    //- Disallow default bitwise assignment
+    void operator=(const chemistryReader&);
 
 
 public:
@@ -66,36 +69,31 @@ public:
     typedef ThermoType thermoType;
 
 
-    // Constructors
-
-        //- Construct null
-        chemistryReader()
-        {}
+    //- Construct null
+    chemistryReader()
+    {}
 
 
     // Declare run-time constructor selection table
-
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            chemistryReader,
-            dictionary,
-            (
-                const dictionary& thermoDict,
-                speciesTable& species
-            ),
-            (thermoDict, species)
-        );
-
-
-    // Selectors
-
-        //- Select constructed from dictionary
-        static autoPtr<chemistryReader> New
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        chemistryReader,
+        dictionary,
         (
             const dictionary& thermoDict,
             speciesTable& species
-        );
+        ),
+        (thermoDict, species)
+    );
+
+
+    //- Select constructed from dictionary
+    static autoPtr<chemistryReader> New
+    (
+        const dictionary& thermoDict,
+        speciesTable& species
+    );
 
 
     //- Destructor
@@ -105,22 +103,23 @@ public:
 
     // Member Functions
 
-        //- Return access to the list of species
-        virtual const speciesTable& species() const = 0;
+    //- Return access to the list of species
+    virtual const speciesTable& species() const = 0;
 
-        //- Return access to the thermo packages
-        virtual const HashPtrTable<ThermoType>& speciesThermo() const = 0;
+    //- Table of species composition
+    virtual const speciesCompositionTable& specieComposition() const = 0;
 
-        //- Return access to the list of reactions
-        virtual const ReactionList<ThermoType>& reactions() const = 0;
+    //- Return access to the thermo packages
+    virtual const HashPtrTable<ThermoType>& speciesThermo() const = 0;
+
+    //- Return access to the list of reactions
+    virtual const ReactionList<ThermoType>& reactions() const = 0;
+
 };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace CML
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class ThermoType>
 CML::autoPtr<CML::chemistryReader<ThermoType> >
@@ -144,10 +143,8 @@ CML::chemistryReader<ThermoType>::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "chemistryReader::New(const dictionary&, speciesTable&)"
-        )   << "Unknown chemistryReader type "
+        FatalErrorInFunction
+            << "Unknown chemistryReader type "
             << chemistryReaderTypeName << nl << nl
             << "Valid chemistryReader types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()
@@ -161,37 +158,29 @@ CML::chemistryReader<ThermoType>::New
 }
 
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-
-#define makeChemistryReader(Thermo)                                           \
-    defineTemplateTypeNameAndDebug(chemistryReader<Thermo>, 0);               \
+#define makeChemistryReader(Thermo)                                            \
+    defineTemplateTypeNameAndDebug(chemistryReader<Thermo>, 0);                \
     defineTemplateRunTimeSelectionTable(chemistryReader<Thermo>, dictionary)
 
 
-#define makeChemistryReaderType(Reader, Thermo)                               \
-    defineNamedTemplateTypeNameAndDebug(Reader<Thermo>, 0);                   \
-    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader<Thermo> > \
+#define makeChemistryReaderType(Reader, Thermo)                                \
+    defineNamedTemplateTypeNameAndDebug(Reader<Thermo>, 0);                    \
+    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader<Thermo> >  \
         add##Reader##Thermo##ConstructorToTable_
 
 
-// for non-templated chemistry readers
-#define addChemistryReaderType(Reader, Thermo)                                \
-    defineTypeNameAndDebug(Reader, 0);                                        \
-    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader>          \
+// For non-templated chemistry readers
+#define addChemistryReaderType(Reader, Thermo)                                 \
+    defineTypeNameAndDebug(Reader, 0);                                         \
+    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader>           \
         add##Reader##Thermo##ConstructorToTable_
 
 
-// for templated chemistry readers
-#define addTemplateChemistryReaderType(Reader, Thermo)                        \
-    defineNamedTemplateTypeNameAndDebug(Reader, 0);                           \
-    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader>          \
+// For templated chemistry readers
+#define addTemplateChemistryReaderType(Reader, Thermo)                         \
+    defineNamedTemplateTypeNameAndDebug(Reader, 0);                            \
+    chemistryReader<Thermo>::adddictionaryConstructorToTable<Reader>           \
         add##Reader##Thermo##ConstructorToTable_
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
-
-// ************************************************************************* //

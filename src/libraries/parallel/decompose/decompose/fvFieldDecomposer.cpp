@@ -125,17 +125,17 @@ CML::fvFieldDecomposer::fvFieldDecomposer
     patchFieldDecomposerPtrs_
     (
         procMesh_.boundary().size(),
-        static_cast<patchFieldDecomposer*>(NULL)
+        static_cast<patchFieldDecomposer*>(nullptr)
     ),
     processorVolPatchFieldDecomposerPtrs_
     (
         procMesh_.boundary().size(),
-        static_cast<processorVolPatchFieldDecomposer*>(NULL)
+        static_cast<processorVolPatchFieldDecomposer*>(nullptr)
     ),
     processorSurfacePatchFieldDecomposerPtrs_
     (
         procMesh_.boundary().size(),
-        static_cast<processorSurfacePatchFieldDecomposer*>(NULL)
+        static_cast<processorSurfacePatchFieldDecomposer*>(nullptr)
     )
 {
     forAll(boundaryAddressing_, patchi)

@@ -1,0 +1,25 @@
+# -*- mode: python -*-
+
+from build import build_lib
+Import('env')
+
+target = 'solidSpecie'
+
+sources = Split("""
+reaction/reactions/makeSolidReactions.cpp
+""")
+
+caelus_inc = [
+'thermophysicalModels/specie/lnInclude'
+]
+
+caelus_libs = [
+'core',
+'specie'
+]
+
+build_lib(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

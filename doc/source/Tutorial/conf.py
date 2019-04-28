@@ -47,14 +47,14 @@ master_doc = 'Tutorial_guide'
 
 # General information about the project.
 project = u'Caelus Tutorial Guide'
-copyright = u'2018, Applied CCM Pty Ltd and Applied CCM Canada'
+copyright = u'2014-2019, Applied CCM Pty Ltd and Applied CCM Canada'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '8.04'
+version = '9.04'
 # The full version, including alpha/beta/rc tags.
 release = '1.0'
 

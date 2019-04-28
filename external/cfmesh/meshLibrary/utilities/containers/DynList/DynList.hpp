@@ -241,11 +241,8 @@ CML::DynList<T, staticSize>::DynList(Istream& is)
     UList<T>(),
     nextFree_(0)
 {
-    FatalErrorIn
-    (
-        "template<class T, CML::label staticSize>"
-        "\nCML::DynList<T, staticSize>::DynList(Istream& is)"
-    ) << "Not implemented" << exit(FatalError);
+    FatalErrorInFunction
+        << "Not implemented" << exit(FatalError);
     
     List<T> helper(is);
     
@@ -275,12 +272,8 @@ CML::Istream& CML::operator>>
     CML::DynList<T, staticSize>& DL
 )
 {
-    FatalErrorIn
-    (
-        "template<class T, CML::label staticSize>"
-        "\nCML::Istream& CML::operator>>"
-        "(CML::Istream& is, CML::DynList<T, staticSize>& DL)"
-    ) << "Not implemented" << exit(FatalError);
+    FatalErrorInFunction
+        << "Not implemented" << exit(FatalError);
     
     is >> static_cast<List<T>&>(DL);
     DL.nextFree_ = DL.List<T>::size();

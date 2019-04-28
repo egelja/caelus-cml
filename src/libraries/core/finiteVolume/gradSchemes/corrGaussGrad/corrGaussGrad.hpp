@@ -66,7 +66,7 @@ public:
     {}
 
     CorrGaussGrad(fvMesh const& mesh, Istream& is) : gradScheme<Type>(mesh),
-        tinterpScheme_(NULL),
+        tinterpScheme_(nullptr),
         corrIter_(0)
     {
 
@@ -136,7 +136,7 @@ public:
 }
 }
 
-#include "zeroGradientFvPatchField.hpp"
+#include "extrapolatedCalculatedFvPatchFields.hpp"
 
 template<class Type> CML::tmp
 <
@@ -178,7 +178,7 @@ CML::fv::CorrGaussGrad<Type>::gradf
                 ssf.dimensions()/dimLength,
                 pTraits<GradType>::zero
             ),
-            zeroGradientFvPatchField<GradType>::typeName
+            extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
     );
 

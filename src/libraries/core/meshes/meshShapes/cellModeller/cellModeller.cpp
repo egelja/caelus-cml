@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -30,7 +30,7 @@ CML::cellModeller::cellModeller()
 {
     if (modelPtrs_.size())
     {
-        FatalErrorIn("cellModeller::cellModeller(const fileName&)")
+        FatalErrorInFunction
             << "attempt to re-construct cellModeller when it already exists"
             << exit(FatalError);
     }
@@ -42,7 +42,7 @@ CML::cellModeller::cellModeller()
     }
 
     modelPtrs_.setSize(maxIndex + 1);
-    modelPtrs_ = NULL;
+    modelPtrs_ = nullptr;
 
     // For all the words in the wordlist, set the details of the model
     // to those specified by the word name and the other parameters
@@ -52,7 +52,7 @@ CML::cellModeller::cellModeller()
     {
         if (modelPtrs_[models_[i].index()])
         {
-            FatalErrorIn("cellModeller::cellModeller(const fileName&)")
+            FatalErrorInFunction
                 << "more than one model share the index "
                 << models_[i].index()
                 << exit(FatalError);
@@ -62,7 +62,7 @@ CML::cellModeller::cellModeller()
 
         if (modelDictionary_.found(models_[i].name()))
         {
-            FatalErrorIn("cellModeller::cellModeller(const fileName&)")
+            FatalErrorInFunction
                 << "more than one model share the name "
                 << models_[i].name()
                 << exit(FatalError);
@@ -94,7 +94,7 @@ const CML::cellModel* CML::cellModeller::lookup(const word& name)
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 

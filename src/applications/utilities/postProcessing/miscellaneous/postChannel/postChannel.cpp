@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     instantList timeDirs = timeSelector::select0(runTime, args);
 
 #   include "createMesh.hpp"
-#   include "readTransportProperties.hpp"
+#   include "readTransportProperties_postChannel.hpp"
 
     const word& gFormat = runTime.graphFormat();
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         runTime.setTime(timeDirs[timeI], timeI);
         Info<< "Collapsing fields for time " << runTime.timeName() << endl;
 
-#       include "readFields.hpp"
+#       include "readFields_postChannel.hpp"
 #       include "calculateFields.hpp"
 
         // Average fields over channel down to a line

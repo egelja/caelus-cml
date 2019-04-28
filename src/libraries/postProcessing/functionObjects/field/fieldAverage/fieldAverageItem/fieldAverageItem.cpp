@@ -88,10 +88,8 @@ void CML::fieldAverageItem::operator=(const fieldAverageItem& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn
-        (
-            "CML::fieldAverageItem::operator=(const CML::fieldAverageItem&)"
-        )   << "Attempted assignment to self" << nl
+        FatalErrorInFunction
+            << "Attempted assignment to self" << nl
             << abort(FatalError);
     }
 

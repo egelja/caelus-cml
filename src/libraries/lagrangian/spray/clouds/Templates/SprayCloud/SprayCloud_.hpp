@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,7 +35,6 @@ Description
 #include "sprayCloud.hpp"
 #include "AtomizationModel.hpp"
 #include "BreakupModel.hpp"
-#include "StochasticCollisionModel.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,9 +47,6 @@ class AtomizationModel;
 
 template<class CloudType>
 class BreakupModel;
-
-template<class CloudType>
-class StochasticCollisionModel;
 
 /*---------------------------------------------------------------------------*\
                       Class SprayCloud Declaration
@@ -108,10 +104,6 @@ protected:
 
             //- Break-up model
             autoPtr<BreakupModel<SprayCloud<CloudType> > > breakupModel_;
-
-            //- Collision model
-            autoPtr<StochasticCollisionModel<SprayCloud<CloudType> > >
-                stochasticCollisionModel_;
 
 
     // Protected Member Functions
@@ -189,6 +181,12 @@ public:
             inline scalar averageParcelMass() const;
 
 
+        // Check
+
+            //- Penetration for fraction [0-1] of the current total mass
+            inline scalar penetration(const scalar fraction) const;
+
+
             // Sub-models
 
                 //- Return const-access to the atomization model
@@ -204,14 +202,6 @@ public:
 
                 //- Return reference to the breakup model
                 inline BreakupModel<SprayCloud<CloudType> >& breakup();
-
-                //- Return const-access to the breakup model
-                inline const StochasticCollisionModel<SprayCloud<CloudType> >&
-                    stochasticCollision() const;
-
-                //- Return reference to the breakup model
-                inline StochasticCollisionModel<SprayCloud<CloudType> >&
-                    stochasticCollision();
 
 
         // Cloud evolution functions
@@ -239,10 +229,6 @@ public:
 
             //- Evolve the spray (inject, move)
             void evolve();
-            //- Particle motion
-
-            template<class TrackData>
-            void motion(TrackData& td);
 
 
         // I-O
@@ -250,7 +236,6 @@ public:
             //- Print cloud information
             void info();
 };
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -300,28 +285,146 @@ CML::SprayCloud<CloudType>::breakup()
 
 
 template<class CloudType>
-inline const CML::StochasticCollisionModel<CML::SprayCloud<CloudType> >&
-CML::SprayCloud<CloudType>::stochasticCollision() const
-{
-    return stochasticCollisionModel_;
-}
-
-
-template<class CloudType>
-inline CML::StochasticCollisionModel<CML::SprayCloud<CloudType> >&
-CML::SprayCloud<CloudType>::stochasticCollision()
-{
-    return stochasticCollisionModel_();
-}
-
-
-template<class CloudType>
 inline CML::scalar CML::SprayCloud<CloudType>::averageParcelMass() const
 {
     return averageParcelMass_;
 }
 
 
+template<class CloudType>
+inline CML::scalar CML::SprayCloud<CloudType>::penetration
+(
+    const scalar fraction
+) const
+{
+    if ((fraction < 0) || (fraction > 1))
+    {
+        FatalErrorInFunction
+            << "fraction should be in the range 0 < fraction < 1"
+            << exit(FatalError);
+    }
+
+    scalar distance = 0.0;
+
+    const label nParcel = this->size();
+    globalIndex globalParcels(nParcel);
+    const label nParcelSum = globalParcels.size();
+
+    if (nParcelSum == 0)
+    {
+        return distance;
+    }
+
+    // lists of parcels mass and distance from initial injection point
+    List<List<scalar>> procMass(Pstream::nProcs());
+    List<List<scalar>> procDist(Pstream::nProcs());
+
+    List<scalar>& mass = procMass[Pstream::myProcNo()];
+    List<scalar>& dist = procDist[Pstream::myProcNo()];
+
+    mass.setSize(nParcel);
+    dist.setSize(nParcel);
+
+    label i = 0;
+    scalar mSum = 0.0;
+    forAllConstIter(typename SprayCloud<CloudType>, *this, iter)
+    {
+        const parcelType& p = iter();
+        scalar m = p.nParticle()*p.mass();
+        scalar d = mag(p.position() - p.position0());
+        mSum += m;
+
+        mass[i] = m;
+        dist[i] = d;
+
+        i++;
+    }
+
+    // calculate total mass across all processors
+    reduce(mSum, sumOp<scalar>());
+    Pstream::gatherList(procMass);
+    Pstream::gatherList(procDist);
+
+    if (Pstream::master())
+    {
+        // flatten the mass lists
+        List<scalar> allMass(nParcelSum, 0.0);
+        SortableList<scalar> allDist(nParcelSum, 0.0);
+        for (label proci = 0; proci < Pstream::nProcs(); proci++)
+        {
+            SubList<scalar>
+            (
+                allMass,
+                globalParcels.localSize(proci),
+                globalParcels.offset(proci)
+            ) = procMass[proci];
+
+            // flatten the distance list
+            SubList<scalar>
+            (
+                allDist,
+                globalParcels.localSize(proci),
+                globalParcels.offset(proci)
+            ) = procDist[proci];
+        }
+
+        // sort allDist distances into ascending order
+        // note: allMass masses are left unsorted
+        allDist.sort();
+
+        if (nParcelSum > 1)
+        {
+            const scalar mLimit = fraction*mSum;
+            const labelList& indices = allDist.indices();
+
+            if (mLimit > (mSum - allMass[indices.last()]))
+            {
+                distance = allDist.last();
+            }
+            else
+            {
+                // assuming that 'fraction' is generally closer to 1 than 0,
+                // loop through in reverse distance order
+                const scalar mThreshold = (1.0 - fraction)*mSum;
+                scalar mCurrent = 0.0;
+                label i0 = 0;
+
+                forAllReverse(indices, i)
+                {
+                    label indI = indices[i];
+
+                    mCurrent += allMass[indI];
+
+                    if (mCurrent > mThreshold)
+                    {
+                        i0 = i;
+                        break;
+                    }
+                }
+
+                if (i0 == indices.size() - 1)
+                {
+                    distance = allDist.last();
+                }
+                else
+                {
+                    // linearly interpolate to determine distance
+                    scalar alpha = (mCurrent - mThreshold)/allMass[indices[i0]];
+                    distance =
+                        allDist[i0] + alpha*(allDist[i0+1] - allDist[i0]);
+                }
+            }
+        }
+        else
+        {
+            distance = allDist.first();
+        }
+    }
+
+    Pstream::scatter(distance);
+
+    return distance;
+}
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
 template<class CloudType>
@@ -344,15 +447,6 @@ void CML::SprayCloud<CloudType>::setModels()
             *this
         ).ptr()
     );
-
-    stochasticCollisionModel_.reset
-    (
-        StochasticCollisionModel<SprayCloud<CloudType> >::New
-        (
-            this->subModelProperties(),
-            *this
-        ).ptr()
-    );
 }
 
 
@@ -366,7 +460,6 @@ void CML::SprayCloud<CloudType>::cloudReset
 
     atomizationModel_.reset(c.atomizationModel_.ptr());
     breakupModel_.reset(c.breakupModel_.ptr());
-    stochasticCollisionModel_.reset(c.stochasticCollisionModel_.ptr());
 }
 
 
@@ -385,21 +478,21 @@ CML::SprayCloud<CloudType>::SprayCloud
 :
     CloudType(cloudName, rho, U, g, thermo, false),
     sprayCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     averageParcelMass_(0.0),
-    atomizationModel_(NULL),
-    breakupModel_(NULL),
-    stochasticCollisionModel_(NULL)
+    atomizationModel_(nullptr),
+    breakupModel_(nullptr)
 {
     if (this->solution().active())
     {
         setModels();
 
-        averageParcelMass_ = this->injection().averageParcelMass();
+        averageParcelMass_ = this->injectors().averageParcelMass();
 
         if (readFields)
         {
             parcelType::readFields(*this, this->composition());
+            this->deleteLostParticles();
         }
 
         Info << "Average parcel mass: " << averageParcelMass_ << endl;
@@ -421,11 +514,10 @@ CML::SprayCloud<CloudType>::SprayCloud
 :
     CloudType(c, name),
     sprayCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     averageParcelMass_(c.averageParcelMass_),
     atomizationModel_(c.atomizationModel_->clone()),
-    breakupModel_(c.breakupModel_->clone()),
-    stochasticCollisionModel_(c.stochasticCollisionModel_->clone())
+    breakupModel_(c.breakupModel_->clone())
 {}
 
 
@@ -439,11 +531,10 @@ CML::SprayCloud<CloudType>::SprayCloud
 :
     CloudType(mesh, name, c),
     sprayCloud(),
-    cloudCopyPtr_(NULL),
+    cloudCopyPtr_(nullptr),
     averageParcelMass_(0.0),
-    atomizationModel_(NULL),
-    breakupModel_(NULL),
-    stochasticCollisionModel_(NULL)
+    atomizationModel_(nullptr),
+    breakupModel_(nullptr)
 {}
 
 
@@ -469,10 +560,13 @@ void CML::SprayCloud<CloudType>::setParcelThermoProperties
 
     const scalarField& Y(parcel.Y());
     scalarField X(liqMix.X(Y));
+    const scalar pc = this->p()[parcel.cell()];
 
     // override rho and Cp from constantProperties
-    parcel.Cp() = liqMix.Cp(parcel.pc(), parcel.T(), X);
-    parcel.rho() = liqMix.rho(parcel.pc(), parcel.T(), X);
+    parcel.Cp() = liqMix.Cp(pc, parcel.T(), X);
+    parcel.rho() = liqMix.rho(pc, parcel.T(), X);
+    parcel.sigma() = liqMix.sigma(pc, parcel.T(), X);
+    parcel.mu() = liqMix.mu(pc, parcel.T(), X);
 }
 
 
@@ -523,130 +617,9 @@ void CML::SprayCloud<CloudType>::evolve()
 {
     if (this->solution().canEvolve())
     {
-        typename parcelType::template
-            TrackingData<SprayCloud<CloudType> > td(*this);
+        typename parcelType::trackingData td(*this);
 
-        this->solve(td);
-    }
-}
-
-
-template<class CloudType>
-template<class TrackData>
-void CML::SprayCloud<CloudType>::motion(TrackData& td)
-{
-    const scalar dt = this->solution().trackTime();
-
-    td.part() = TrackData::tpLinearTrack;
-    CloudType::move(td, dt);
-
-    this->updateCellOccupancy();
-
-    if (stochasticCollision().active())
-    {
-        const liquidMixtureProperties& liqMix = this->composition().liquids();
-
-        label i = 0;
-        forAllIter(typename SprayCloud<CloudType>, *this, iter)
-        {
-            label j = 0;
-            forAllIter(typename SprayCloud<CloudType>, *this, jter)
-            {
-                if (j > i)
-                {
-                    parcelType& p = iter();
-                    scalar Vi = this->mesh().V()[p.cell()];
-                    scalarField X1(liqMix.X(p.Y()));
-                    scalar sigma1 = liqMix.sigma(p.pc(), p.T(), X1);
-                    scalar mp = p.mass()*p.nParticle();
-
-                    parcelType& q = jter();
-                    scalar Vj = this->mesh().V()[q.cell()];
-                    scalarField X2(liqMix.X(q.Y()));
-                    scalar sigma2 = liqMix.sigma(q.pc(), q.T(), X2);
-                    scalar mq = q.mass()*q.nParticle();
-
-                    bool updateProperties = stochasticCollision().update
-                    (
-                        dt,
-                        this->rndGen(),
-                        p.position(),
-                        mp,
-                        p.d(),
-                        p.nParticle(),
-                        p.U(),
-                        p.rho(),
-                        p.T(),
-                        p.Y(),
-                        sigma1,
-                        p.cell(),
-                        Vi,
-                        q.position(),
-                        mq,
-                        q.d(),
-                        q.nParticle(),
-                        q.U(),
-                        q.rho(),
-                        q.T(),
-                        q.Y(),
-                        sigma2,
-                        q.cell(),
-                        Vj
-                    );
-
-                    // for coalescence we need to update the density and
-                    // the diameter cause of the temp/conc/mass-change
-                    if (updateProperties)
-                    {
-                        if (mp > VSMALL)
-                        {
-                            scalarField Xp(liqMix.X(p.Y()));
-                            p.rho() = liqMix.rho(p.pc(), p.T(), Xp);
-                            p.Cp() = liqMix.Cp(p.pc(), p.T(), Xp);
-                            p.d() =
-                                cbrt
-                                (
-                                    6.0*mp
-                                   /(
-                                        p.nParticle()
-                                       *p.rho()
-                                       *constant::mathematical::pi
-                                    )
-                                );
-                        }
-
-                        if (mq > VSMALL)
-                        {
-                            scalarField Xq(liqMix.X(q.Y()));
-                            q.rho() = liqMix.rho(q.pc(), q.T(), Xq);
-                            q.Cp() = liqMix.Cp(q.pc(), q.T(), Xq);
-                            q.d() =
-                                cbrt
-                                (
-                                    6.0*mq
-                                   /(
-                                        q.nParticle()
-                                       *q.rho()
-                                       *constant::mathematical::pi
-                                    )
-                                );
-                        }
-                    }
-                }
-                j++;
-            }
-            i++;
-        }
-
-        // remove coalesced particles (diameter set to 0)
-        forAllIter(typename SprayCloud<CloudType>, *this, iter)
-        {
-            parcelType& p = iter();
-            if (p.mass() < VSMALL)
-            {
-                this->deleteParticle(p);
-            }
-        }
+        this->solve(*this, td);
     }
 }
 

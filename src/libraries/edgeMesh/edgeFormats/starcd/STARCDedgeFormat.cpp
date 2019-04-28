@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -136,10 +136,7 @@ bool CML::fileFormats::STARCDedgeFormat::read
     IFstream is(baseName + ".cel");
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STARCDedgeFormat::read(const fileName&)"
-        )
+        FatalErrorInFunction
             << "Cannot read file " << is.name()
             << exit(FatalError);
     }

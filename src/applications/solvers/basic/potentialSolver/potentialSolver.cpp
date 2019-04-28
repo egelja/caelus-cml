@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     #include "setRootCase.hpp"
     #include "createTime.hpp"
     #include "createMesh.hpp"
-    #include "readControls.hpp"
+    #include "readControls_potential.hpp"
     #include "createFields.hpp"
     #include "createMRF.hpp"
     #include "createFvOptions.hpp"
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     U.correctBoundaryConditions();
 
     Info<< "Interpolated U error = "
-        << (sqrt(sum(sqr((fvc::interpolate(U) & mesh.Sf()) - phi)))
+        << (sqrt(sum(sqr(fvc::flux(U) - phi)))
           /sum(mesh.magSf())).value()
         << endl;
 

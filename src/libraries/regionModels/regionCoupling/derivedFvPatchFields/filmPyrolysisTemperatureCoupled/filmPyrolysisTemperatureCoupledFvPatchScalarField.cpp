@@ -23,7 +23,7 @@ License
 #include "addToRunTimeSelectionTable.hpp"
 #include "surfaceFields.hpp"
 #include "pyrolysisModel.hpp"
-#include "surfaceFilmModel.hpp"
+#include "surfaceFilmRegionModel.hpp"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -35,9 +35,10 @@ filmPyrolysisTemperatureCoupledFvPatchScalarField
 )
 :
     fixedValueFvPatchScalarField(p, iF),
+    filmRegionName_("surfaceFilmProperties"),
+    pyrolysisRegionName_("pyrolysisProperties"),
     phiName_("phi"),
-    rhoName_("rho"),
-    deltaWet_(1e-6)
+    rhoName_("rho")
 {}
 
 
@@ -51,9 +52,10 @@ filmPyrolysisTemperatureCoupledFvPatchScalarField
 )
 :
     fixedValueFvPatchScalarField(ptf, p, iF, mapper),
+    filmRegionName_(ptf.filmRegionName_),
+    pyrolysisRegionName_(ptf.pyrolysisRegionName_),
     phiName_(ptf.phiName_),
-    rhoName_(ptf.rhoName_),
-    deltaWet_(ptf.deltaWet_)
+    rhoName_(ptf.rhoName_)
 {}
 
 
@@ -65,13 +67,18 @@ filmPyrolysisTemperatureCoupledFvPatchScalarField
     const dictionary& dict
 )
 :
-    fixedValueFvPatchScalarField(p, iF),
+    fixedValueFvPatchScalarField(p, iF, dict),
+    filmRegionName_
+    (
+        dict.lookupOrDefault<word>("filmRegion", "surfaceFilmProperties")
+    ),
+    pyrolysisRegionName_
+    (
+        dict.lookupOrDefault<word>("pyrolysisRegion", "pyrolysisProperties")
+    ),
     phiName_(dict.lookupOrDefault<word>("phi", "phi")),
-    rhoName_(dict.lookupOrDefault<word>("rho", "rho")),
-    deltaWet_(dict.lookupOrDefault<scalar>("deltaWet", 1e-6))
-{
-    fvPatchScalarField::operator=(scalarField("value", dict, p.size()));
-}
+    rhoName_(dict.lookupOrDefault<word>("rho", "rho"))
+{}
 
 
 CML::filmPyrolysisTemperatureCoupledFvPatchScalarField::
@@ -81,9 +88,10 @@ filmPyrolysisTemperatureCoupledFvPatchScalarField
 )
 :
     fixedValueFvPatchScalarField(fptpsf),
+    filmRegionName_(fptpsf.filmRegionName_),
+    pyrolysisRegionName_(fptpsf.pyrolysisRegionName_),
     phiName_(fptpsf.phiName_),
-    rhoName_(fptpsf.rhoName_),
-    deltaWet_(fptpsf.deltaWet_)
+    rhoName_(fptpsf.rhoName_)
 {}
 
 
@@ -95,9 +103,10 @@ filmPyrolysisTemperatureCoupledFvPatchScalarField
 )
 :
     fixedValueFvPatchScalarField(fptpsf, iF),
+    filmRegionName_(fptpsf.filmRegionName_),
+    pyrolysisRegionName_(fptpsf.pyrolysisRegionName_),
     phiName_(fptpsf.phiName_),
-    rhoName_(fptpsf.rhoName_),
-    deltaWet_(fptpsf.deltaWet_)
+    rhoName_(fptpsf.rhoName_)
 {}
 
 
@@ -110,7 +119,9 @@ void CML::filmPyrolysisTemperatureCoupledFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel filmModelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel
+        filmModelType;
+
     typedef regionModels::pyrolysisModels::pyrolysisModel pyrModelType;
 
     // Since we're inside initEvaluate/evaluate there might be processor
@@ -118,65 +129,45 @@ void CML::filmPyrolysisTemperatureCoupledFvPatchScalarField::updateCoeffs()
     int oldTag = UPstream::msgType();
     UPstream::msgType() = oldTag+1;
 
-    bool filmOk =
-        db().objectRegistry::foundObject<filmModelType>
-        (
-            "surfaceFilmProperties"
-        );
+    bool filmOk = db().time().foundObject<filmModelType>(filmRegionName_);
 
 
-    bool pyrOk =
-        db().objectRegistry::foundObject<pyrModelType>
-        (
-            "pyrolysisProperties"
-        );
+    bool pyrOk = db().time().foundObject<pyrModelType>(pyrolysisRegionName_);
 
     if (!filmOk || !pyrOk)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return;
     }
 
     scalarField& Tp = *this;
 
-    const label patchI = patch().index();
+    const label patchi = patch().index();
 
     // Retrieve film model
     const filmModelType& filmModel =
-        db().lookupObject<filmModelType>("surfaceFilmProperties");
+        db().time().lookupObject<filmModelType>(filmRegionName_);
 
-    const label filmPatchI = filmModel.regionPatchID(patchI);
+    const label filmPatchi = filmModel.regionPatchID(patchi);
 
-    scalarField deltaFilm = filmModel.delta().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, deltaFilm);
+    scalarField alphaFilm = filmModel.alpha().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, alphaFilm);
 
-    scalarField TFilm = filmModel.Ts().boundaryField()[filmPatchI];
-    filmModel.toPrimary(filmPatchI, TFilm);
-
+    scalarField TFilm = filmModel.Ts().boundaryField()[filmPatchi];
+    filmModel.toPrimary(filmPatchi, TFilm);
 
     // Retrieve pyrolysis model
     const pyrModelType& pyrModel =
-        db().lookupObject<pyrModelType>("pyrolysisProperties");
+        db().time().lookupObject<pyrModelType>(pyrolysisRegionName_);
 
-    const label pyrPatchI = pyrModel.regionPatchID(patchI);
+    const label pyrPatchi = pyrModel.regionPatchID(patchi);
 
-    scalarField TPyr = pyrModel.T().boundaryField()[pyrPatchI];
-    pyrModel.toPrimary(pyrPatchI, TPyr);
+    scalarField TPyr = pyrModel.T().boundaryField()[pyrPatchi];
+    pyrModel.toPrimary(pyrPatchi, TPyr);
 
 
-    forAll(deltaFilm, i)
-    {
-        if (deltaFilm[i] > deltaWet_)
-        {
-            // temperature set by film
-            Tp[i] = TFilm[i];
-        }
-        else
-        {
-            // temperature set by pyrolysis model
-            Tp[i] = TPyr[i];
-        }
-    }
+    // Evaluate temperature
+    Tp = alphaFilm*TFilm + (1.0 - alphaFilm)*TPyr;
 
     // Restore tag
     UPstream::msgType() = oldTag;
@@ -191,9 +182,22 @@ void CML::filmPyrolysisTemperatureCoupledFvPatchScalarField::write
 ) const
 {
     fvPatchScalarField::write(os);
+    writeEntryIfDifferent<word>
+    (
+        os,
+        "filmRegion",
+        "surfaceFilmProperties",
+        filmRegionName_
+    );
+    writeEntryIfDifferent<word>
+    (
+        os,
+        "pyrolysisRegion",
+        "pyrolysisProperties",
+        pyrolysisRegionName_
+    );
     writeEntryIfDifferent<word>(os, "phi", "phi", phiName_);
     writeEntryIfDifferent<word>(os, "rho", "rho", rhoName_);
-    os.writeKeyword("deltaWet") << deltaWet_ << token::END_STATEMENT << nl;
     writeEntry("value", os);
 }
 

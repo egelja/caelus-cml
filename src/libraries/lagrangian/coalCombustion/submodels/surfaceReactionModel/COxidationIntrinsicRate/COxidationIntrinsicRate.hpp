@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2014 OpenFOAM Foundation
+Copyright (C) 2014-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    COxidationIntrinsicRate
+    CML::COxidationIntrinsicRate
 
 Description
     Intrinsic char surface reaction mndel
@@ -34,14 +34,16 @@ Description
 
 #include "SurfaceReactionModel.hpp"
 
+
+namespace CML
+{
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // Forward class declarations
 template<class CloudType>
 class COxidationIntrinsicRate;
 
-namespace CML
-{
 /*---------------------------------------------------------------------------*\
                    Class COxidationIntrinsicRate Declaration
 \*---------------------------------------------------------------------------*/
@@ -145,7 +147,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -194,8 +196,8 @@ CML::COxidationIntrinsicRate<CloudType>::COxidationIntrinsicRate
     Ag_(readScalar(this->coeffDict().lookup("Ag"))),
     tau_(this->coeffDict().lookupOrDefault("tau", sqrt(2.0))),
     CsLocalId_(-1),
-    O2GlobalId_(owner.composition().globalCarrierId("O2")),
-    CO2GlobalId_(owner.composition().globalCarrierId("CO2")),
+    O2GlobalId_(owner.composition().carrierId("O2")),
+    CO2GlobalId_(owner.composition().carrierId("CO2")),
     WC_(0.0),
     WO2_(0.0),
     HcCO2_(0.0)
@@ -205,22 +207,16 @@ CML::COxidationIntrinsicRate<CloudType>::COxidationIntrinsicRate
     CsLocalId_ = owner.composition().localId(idSolid, "C");
 
     // Set local copies of thermo properties
-    WO2_ = owner.thermo().carrier().W(O2GlobalId_);
-    const scalar WCO2 = owner.thermo().carrier().W(CO2GlobalId_);
+    WO2_ = owner.thermo().carrier().Wi(O2GlobalId_);
+    const scalar WCO2 = owner.thermo().carrier().Wi(CO2GlobalId_);
     WC_ = WCO2 - WO2_;
 
     HcCO2_ = owner.thermo().carrier().Hc(CO2GlobalId_);
 
     if (Sb_ < 0)
     {
-        FatalErrorIn
-        (
-            "COxidationIntrinsicRate<CloudType>"
-            "("
-                "const dictionary&, "
-                "CloudType&"
-            ")"
-        )   << "Stoichiometry of reaction, Sb, must be greater than zero" << nl
+        FatalErrorInFunction
+            << "Stoichiometry of reaction, Sb, must be greater than zero" << nl
             << exit(FatalError);
     }
 
@@ -268,7 +264,7 @@ template<class CloudType>
 CML::scalar CML::COxidationIntrinsicRate<CloudType>::calculate
 (
     const scalar dt,
-    const label cellI,
+    const label celli,
     const scalar d,
     const scalar T,
     const scalar Tc,
@@ -299,7 +295,7 @@ CML::scalar CML::COxidationIntrinsicRate<CloudType>::calculate
     const SLGThermo& thermo = this->owner().thermo();
 
     // Local mass fraction of O2 in the carrier phase []
-    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[cellI];
+    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[celli];
 
     // Quick exit if oxidant not present
     if (YO2 < ROOTVSMALL)
@@ -323,10 +319,10 @@ CML::scalar CML::COxidationIntrinsicRate<CloudType>::calculate
     const scalar rhoO2 = rhoc*YO2;
 
     // Partial pressure O2 [Pa]
-    const scalar ppO2 = rhoO2/WO2_*specie::RR*Tc;
+    const scalar ppO2 = rhoO2/WO2_*RR*Tc;
 
     // Intrinsic reactivity [1/s]
-    const scalar ki = Ai_*exp(-Ei_/specie::RR/T);
+    const scalar ki = Ai_*exp(-Ei_/RR/T);
 
     // Thiele modulus []
     const scalar phi =
@@ -342,7 +338,7 @@ CML::scalar CML::COxidationIntrinsicRate<CloudType>::calculate
     const scalar Ap = constant::mathematical::pi*sqr(d);
 
     // Change in C mass [kg]
-    scalar dmC = Ap*rhoc*specie::RR*Tc*YO2/WO2_*D0*R/(D0 + R)*dt;
+    scalar dmC = Ap*rhoc*RR*Tc*YO2/WO2_*D0*R/(D0 + R)*dt;
 
     // Limit mass transfer by availability of C
     dmC = min(mass*Ychar, dmC);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012-2014 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -200,16 +200,8 @@ CML::pressureTools::pressureTools
     if (!isA<fvMesh>(obr_))
     {
         active_ = false;
-        WarningIn
-        (
-            "pressureTools::pressureTools"
-            "("
-                "const word&, "
-                "const objectRegistry&, "
-                "const dictionary&, "
-                "const bool"
-            ")"
-        )   << "No fvMesh available, deactivating " << name_ << nl
+        WarningInFunction
+            << "No fvMesh available, deactivating " << name_ << nl
             << endl;
     }
 
@@ -286,7 +278,7 @@ void CML::pressureTools::read(const dictionary& dict)
 
             if (mag(zeroCheck) < ROOTVSMALL)
             {
-                WarningIn("void CML::pressureTools::read(const dictionary&)")
+                WarningInFunction
                     << type() << " " << name_ << ": "
                     << "Coefficient calculation requested, but reference "
                     << "pressure level is zero.  Please check the supplied "

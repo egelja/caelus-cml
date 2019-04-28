@@ -1,0 +1,28 @@
+# -*- mode: python -*-
+
+import utils
+from build import build_app
+Import('env')
+
+target = 'caelusDictionary'
+
+sources = Split("""
+caelusDictionary.cpp
+""")
+
+caelus_inc = [
+]
+
+caelus_libs = [
+'core'
+]
+
+ostype = utils.ostype()
+prepend_args = {}
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs,
+          prepend_args=prepend_args)

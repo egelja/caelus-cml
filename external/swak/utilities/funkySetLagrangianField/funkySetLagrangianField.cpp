@@ -83,12 +83,12 @@ void doAnExpression(
 
     if(create) {
         if(driver.proxy().hasField(field)) {
-            FatalErrorIn("doAnExpression")
+            FatalErrorInFunction
                 << "Cloud " << theCloud.name()
-                    << " already has a field " << field
-                    << " of type " << driver.proxy().fieldType(field)
-                    << endl
-                    << exit(FatalError);
+                << " already has a field " << field
+                << " of type " << driver.proxy().fieldType(field)
+                << endl
+                << exit(FatalError);
         } else {
             Info << "  Creating field " << field << " in cloud "
                 << theCloud.name() << endl;
@@ -99,10 +99,10 @@ void doAnExpression(
                 << driver.proxy().fieldType(field) << " in cloud "
                 << theCloud.name() << endl;
         } else {
-            FatalErrorIn("doAnExpression")
+            FatalErrorInFunction
                 << "No field " << field << " in cloud " << theCloud.name()
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
     }
     Info << " Putting " << expression << " into field " << field
@@ -124,10 +124,10 @@ void doAnExpression(
 
     if(condition!="true") {
         if(create) {
-            FatalErrorIn("doAnExpression")
+            FatalErrorInFunction
                 << "If a field is created no condition can be applied"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
 
         evaluatedCondition=true;
@@ -137,11 +137,11 @@ void doAnExpression(
         }
         driver.parse(condition);
         if(driver.getResultType()!=pTraits<bool>::typeName) {
-            FatalErrorIn("doAnExpression")
+            FatalErrorInFunction
                 << "Expected 'bool' as result of " << condition << nl
-                    << "Got " << driver.getResultType()
-                    << endl
-                    << exit(FatalError);
+                << "Got " << driver.getResultType()
+                << endl
+                << exit(FatalError);
 
         }
         conditionField=driver.getResult<bool>();
@@ -156,12 +156,12 @@ void doAnExpression(
         conditionField=Field<bool>(driver.result().size(),true);
     }
     if(driver.result().size()!=conditionField.size()) {
-        FatalErrorIn("doAnExpression")
+        FatalErrorInFunction
             << "Size " << driver.result().size() << " of expression "
-                << expression << " and condition " << condition << "("
-                << conditionField.size() << ") differ!"
-                << endl
-                << exit(FatalError);
+            << expression << " and condition " << condition << "("
+            << conditionField.size() << ") differ!"
+            << endl
+            << exit(FatalError);
     }
 
     if(
@@ -169,10 +169,10 @@ void doAnExpression(
         &&
         driver.getResultType()!="scalar"
     ) {
-        FatalErrorIn("doAnExpression")
+        FatalErrorInFunction
             << "Only results of type 'scalar' and 'bool' can be written as 'label'"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
     }
 
     if(driver.getResultType()=="scalar") {
@@ -246,11 +246,11 @@ void doAnExpression(
             create
         );
     } else {
-        FatalErrorIn("doAnExpression")
+        FatalErrorInFunction
             << "Results of type " << driver.getResultType()
-                << " not supported"
-                << endl
-                << exit(FatalError);
+            << " not supported"
+            << endl
+            << exit(FatalError);
     }
 }
 
@@ -280,9 +280,9 @@ int main(int argc, char *argv[])
     dimensionSet::debug=false;
 
     if (!args.options().found("time") && !args.options().found("latestTime")) {
-        FatalErrorIn("main()")
+        FatalErrorInFunction
             << args.executable()
-                << ": time/latestTime option is required" << endl
+            << ": time/latestTime option is required" << endl
             << exit(FatalError);
     }
 
@@ -392,10 +392,10 @@ int main(int argc, char *argv[])
                 ||
                 args.options().found("writeValueAsLabel")
             ) {
-                FatalErrorIn("main()")
+                FatalErrorInFunction
                     << args.executable()
-                        << ": No other options than -time valid when using funkySetLagrangianFieldDict"
-                        << exit(FatalError);
+                    << ": No other options than -time valid when using funkySetLagrangianFieldDict"
+                    << exit(FatalError);
             }
 
             word dictName="funkySetLagrangianFieldDict";
@@ -431,20 +431,20 @@ int main(int argc, char *argv[])
                     const dictionary &spec=cloudDict.subDict("creationSpec");
 
                     if(!spec.found("libs")) {
-                        FatalErrorIn(args.executable())
+                        FatalErrorInFunction
                             << "No entry 'libs' in " << spec.name()
-                                << endl
-                                << exit(FatalError);
+                            << endl
+                            << exit(FatalError);
                     }
                     table.open(spec,"libs");
 
                     wordList preloadFieldNames(spec.lookup("preloadFields"));
 
                     if(!spec.found("functions")) {
-                        FatalErrorIn(args.executable())
+                        FatalErrorInFunction
                             << "No entry 'functions' in " << spec.name()
-                                << endl
-                                << exit(FatalError);
+                            << endl
+                            << exit(FatalError);
                     }
 
                     Info << "Preloading fields" << endl;

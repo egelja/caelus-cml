@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -50,13 +50,11 @@ SourceFiles
 
 #include "IOdictionary.hpp"
 #include "autoPtr.hpp"
-#include "cachedRandom.hpp"
+#include "Random.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace CML
-{
-namespace distributionModels
 {
 
 /*---------------------------------------------------------------------------*\
@@ -74,7 +72,7 @@ protected:
         const dictionary distributionModelDict_;
 
         //- Reference to the random number generator
-        cachedRandom& rndGen_;
+        Random& rndGen_;
 
 
     // Protected Member Functions
@@ -97,7 +95,7 @@ public:
         dictionary,
         (
             const dictionary& dict,
-            cachedRandom& rndGen
+            Random& rndGen
         ),
         (dict, rndGen)
     );
@@ -110,24 +108,21 @@ public:
         (
             const word& name,
             const dictionary& dict,
-            cachedRandom& rndGen
+            Random& rndGen
         );
 
         //- Construct copy
         distributionModel(const distributionModel& p);
 
         //- Construct and return a clone
-        virtual autoPtr<distributionModel> clone() const
-        {
-            return autoPtr<distributionModel>(new distributionModel(*this));
-        }
+        virtual autoPtr<distributionModel> clone() const = 0;
 
 
     //- Selector
     static autoPtr<distributionModel> New
     (
         const dictionary& dict,
-        cachedRandom& rndGen
+        Random& rndGen
     );
 
 
@@ -138,22 +133,21 @@ public:
     // Member Functions
 
         //- Sample the distributionModel
-        virtual scalar sample() const;
+        virtual scalar sample() const = 0;
 
         //- Return the minimum value
-        virtual scalar minValue() const;
+        virtual scalar minValue() const = 0;
 
         //- Return the maximum value
-        virtual scalar maxValue() const;
+        virtual scalar maxValue() const = 0;
 
         //- Return the maximum value
-        virtual scalar meanValue() const;
+        virtual scalar meanValue() const = 0;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace distributionModels
 } // End namespace CML
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

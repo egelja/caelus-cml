@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -55,9 +55,9 @@ void CML::intersectedSurface::writeOBJ
     Ostream& os
 )
 {
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        const point& pt = points[pointI];
+        const point& pt = points[pointi];
 
         os << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
     }
@@ -79,9 +79,9 @@ void CML::intersectedSurface::writeOBJ
     Ostream& os
 )
 {
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        const point& pt = points[pointI];
+        const point& pt = points[pointi];
 
         os << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
     }
@@ -115,15 +115,15 @@ void CML::intersectedSurface::writeLocalOBJ
 
         forAll(e, i)
         {
-            label pointI = e[i];
+            label pointi = e[i];
 
-            if (pointMap[pointI] == -1)
+            if (pointMap[pointi] == -1)
             {
-                const point& pt = points[pointI];
+                const point& pt = points[pointi];
 
                 os << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
 
-                pointMap[pointI] = maxVertI++;
+                pointMap[pointi] = maxVertI++;
             }
         }
     }
@@ -146,9 +146,9 @@ void CML::intersectedSurface::writeOBJ
     Ostream& os
 )
 {
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        const point& pt = points[pointI];
+        const point& pt = points[pointi];
 
         os << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
     }
@@ -238,7 +238,7 @@ bool CML::intersectedSurface::sameEdgeOrder
             }
             else
             {
-                FatalErrorIn("intersectedSurface::sameEdgeOrder")
+                FatalErrorInFunction
                     << "Triangle:" << fA << " and triangle:" << fB
                     << " share a point but not an edge"
                     << abort(FatalError);
@@ -246,7 +246,7 @@ bool CML::intersectedSurface::sameEdgeOrder
         }
     }
 
-    FatalErrorIn("intersectedSurface::sameEdgeOrder")
+    FatalErrorInFunction
         << "Triangle:" << fA << " and triangle:" << fB
         << " do not share an edge"
         << abort(FatalError);
@@ -282,13 +282,13 @@ CML::Map<CML::DynamicList<CML::label> >
 CML::intersectedSurface::calcPointEdgeAddressing
 (
     const edgeSurface& eSurf,
-    const label faceI
+    const label facei
 )
 {
     const pointField& points = eSurf.points();
     const edgeList& edges = eSurf.edges();
 
-    const labelList& fEdges = eSurf.faceEdges()[faceI];
+    const labelList& fEdges = eSurf.faceEdges()[facei];
 
     Map<DynamicList<label> > facePointEdges(4*fEdges.size());
 
@@ -337,11 +337,8 @@ CML::intersectedSurface::calcPointEdgeAddressing
         // Check on dangling points.
         if (iter().empty())
         {
-            FatalErrorIn
-            (
-                "intersectedSurface::calcPointEdgeAddressing"
-                "(const edgeSurface&, const label)"
-            )   << "Point:" << iter.key() << " used by too few edges:"
+            FatalErrorInFunction
+                << "Point:" << iter.key() << " used by too few edges:"
                 << iter() << abort(FatalError);
         }
     }
@@ -380,7 +377,7 @@ CML::label CML::intersectedSurface::nextEdge
 (
     const edgeSurface& eSurf,
     const Map<label>& visited,
-    const label faceI,
+    const label facei,
     const vector& n,
     const Map<DynamicList<label> >& facePointEdges,
     const label prevEdgeI,
@@ -389,7 +386,7 @@ CML::label CML::intersectedSurface::nextEdge
 {
     const pointField& points = eSurf.points();
     const edgeList& edges = eSurf.edges();
-    const labelList& fEdges = eSurf.faceEdges()[faceI];
+    const labelList& fEdges = eSurf.faceEdges()[facei];
 
 
     // Edges connected to prevVertI
@@ -399,7 +396,7 @@ CML::label CML::intersectedSurface::nextEdge
     {
         // Problem. Point not connected.
         {
-            Pout<< "Writing face:" << faceI << " to face.obj" << endl;
+            Pout<< "Writing face:" << facei << " to face.obj" << endl;
             OFstream str("face.obj");
             writeOBJ(points, edges, fEdges, str);
 
@@ -407,12 +404,8 @@ CML::label CML::intersectedSurface::nextEdge
             writeLocalOBJ(points, edges, connectedEdges, "faceEdges.obj");
         }
 
-        FatalErrorIn
-        (
-            "intersectedSurface::nextEdge(const pointField&, const edgeList&"
-            ", const vector&, Map<DynamicList<label> >, const label"
-            ", const label)"
-        )   << "Problem: prevVertI:" << prevVertI << " on edge " << prevEdgeI
+        FatalErrorInFunction
+            << "Problem: prevVertI:" << prevVertI << " on edge " << prevEdgeI
             << " has less than 2 connected edges."
             << " connectedEdges:" << connectedEdges << abort(FatalError);
 
@@ -459,7 +452,7 @@ CML::label CML::intersectedSurface::nextEdge
     if (mag(mag(e1) - 1) > SMALL)
     {
         {
-            Pout<< "Writing face:" << faceI << " to face.obj" << endl;
+            Pout<< "Writing face:" << facei << " to face.obj" << endl;
             OFstream str("face.obj");
             writeOBJ(points, edges, fEdges, str);
 
@@ -467,7 +460,7 @@ CML::label CML::intersectedSurface::nextEdge
             writeLocalOBJ(points, edges, connectedEdges, "faceEdges.obj");
         }
 
-        FatalErrorIn("intersectedSurface::nextEdge")
+        FatalErrorInFunction
             << "Unnormalized normal e1:" << e1
             << " formed from cross product of e0:" << e0 << " n:" << n
             << abort(FatalError);
@@ -527,7 +520,7 @@ CML::label CML::intersectedSurface::nextEdge
     {
         // No unvisited edge found
         {
-            Pout<< "Writing face:" << faceI << " to face.obj" << endl;
+            Pout<< "Writing face:" << facei << " to face.obj" << endl;
             OFstream str("face.obj");
             writeOBJ(points, edges, fEdges, str);
 
@@ -535,13 +528,8 @@ CML::label CML::intersectedSurface::nextEdge
             writeLocalOBJ(points, edges, connectedEdges, "faceEdges.obj");
         }
 
-        FatalErrorIn
-        (
-            "intersectedSurface::nextEdge(const pointField&, const edgeList&"
-            ", const Map<label>&, const vector&"
-            ", const Map<DynamicList<label> >&"
-            ", const label, const label"
-        )   << "Trying to step from edge " << edges[prevEdgeI]
+        FatalErrorInFunction
+            << "Trying to step from edge " << edges[prevEdgeI]
             << ", vertex " << prevVertI
             << " but cannot find 'unvisited' edges among candidates:"
             << connectedEdges
@@ -567,7 +555,7 @@ CML::label CML::intersectedSurface::nextEdge
 CML::face CML::intersectedSurface::walkFace
 (
     const edgeSurface& eSurf,
-    const label faceI,
+    const label facei,
     const vector& n,
     const Map<DynamicList<label> >& facePointEdges,
 
@@ -581,7 +569,7 @@ CML::face CML::intersectedSurface::walkFace
     const edgeList& edges = eSurf.edges();
 
     // Overestimate size of face
-    face f(eSurf.faceEdges()[faceI].size());
+    face f(eSurf.faceEdges()[facei].size());
 
     label fp = 0;
 
@@ -627,7 +615,7 @@ CML::face CML::intersectedSurface::walkFace
         (
             eSurf,
             visited,
-            faceI,
+            facei,
             n,
             facePointEdges,
             edgeI,
@@ -644,11 +632,11 @@ CML::face CML::intersectedSurface::walkFace
 void CML::intersectedSurface::findNearestVisited
 (
     const edgeSurface& eSurf,
-    const label faceI,
+    const label facei,
     const Map<DynamicList<label> >& facePointEdges,
     const Map<label>& pointVisited,
     const point& pt,
-    const label excludePointI,
+    const label excludePointi,
 
     label& minVertI,
     scalar& minDist
@@ -659,21 +647,21 @@ void CML::intersectedSurface::findNearestVisited
 
     forAllConstIter(Map<label>, pointVisited, iter)
     {
-        label pointI = iter.key();
+        label pointi = iter.key();
 
-        if (pointI != excludePointI)
+        if (pointi != excludePointi)
         {
             label nVisits = iter();
 
-            if (nVisits == 2*facePointEdges[pointI].size())
+            if (nVisits == 2*facePointEdges[pointi].size())
             {
                 // Fully visited (i.e. both sides of all edges)
-                scalar dist = mag(eSurf.points()[pointI] - pt);
+                scalar dist = mag(eSurf.points()[pointi] - pt);
 
                 if (dist < minDist)
                 {
                     minDist = dist;
-                    minVertI = pointI;
+                    minVertI = pointi;
                 }
             }
         }
@@ -681,14 +669,14 @@ void CML::intersectedSurface::findNearestVisited
 
     if (minVertI == -1)
     {
-        const labelList& fEdges = eSurf.faceEdges()[faceI];
+        const labelList& fEdges = eSurf.faceEdges()[facei];
 
-        SeriousErrorIn("intersectedSurface::findNearestVisited")
+        SeriousErrorInFunction
             << "Dumping face edges to faceEdges.obj" << endl;
 
         writeLocalOBJ(eSurf.points(), eSurf.edges(), fEdges, "faceEdges.obj");
 
-        FatalErrorIn("intersectedSurface::findNearestVisited")
+        FatalErrorInFunction
             << "No fully visited edge found for pt " << pt
             << abort(FatalError);
     }
@@ -706,7 +694,7 @@ void CML::intersectedSurface::findNearestVisited
 CML::faceList CML::intersectedSurface::resplitFace
 (
     const triSurface& surf,
-    const label faceI,
+    const label facei,
     const Map<DynamicList<label> >& facePointEdges,
     const Map<label>& visited,
     edgeSurface& eSurf
@@ -714,9 +702,9 @@ CML::faceList CML::intersectedSurface::resplitFace
 {
     {
         // Dump face for debugging.
-        Pout<< "Writing face:" << faceI << " to face.obj" << endl;
+        Pout<< "Writing face:" << facei << " to face.obj" << endl;
         OFstream str("face.obj");
-        writeOBJ(eSurf.points(), eSurf.edges(), eSurf.faceEdges()[faceI], str);
+        writeOBJ(eSurf.points(), eSurf.edges(), eSurf.faceEdges()[facei], str);
     }
 
 
@@ -729,9 +717,9 @@ CML::faceList CML::intersectedSurface::resplitFace
         OFstream str0("visitedNone.obj");
         OFstream str1("visitedOnce.obj");
         OFstream str2("visitedTwice.obj");
-        forAll(eSurf.points(), pointI)
+        forAll(eSurf.points(), pointi)
         {
-            const point& pt = eSurf.points()[pointI];
+            const point& pt = eSurf.points()[pointi];
 
             str0 << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
             str1 << "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
@@ -775,12 +763,12 @@ CML::faceList CML::intersectedSurface::resplitFace
     {
         forAllConstIter(Map<label>, pointVisited, iter)
         {
-            label pointI = iter.key();
+            label pointi = iter.key();
 
             label nVisits = iter();
 
-            Pout<< "point:" << pointI << "  nVisited:" << nVisits
-                << "  pointEdges:" << facePointEdges[pointI].size() << endl;
+            Pout<< "point:" << pointi << "  nVisited:" << nVisits
+                << "  pointEdges:" << facePointEdges[pointi].size() << endl;
         }
     }
 
@@ -796,9 +784,9 @@ CML::faceList CML::intersectedSurface::resplitFace
 
         forAllConstIter(Map<DynamicList<label> >, facePointEdges, iter)
         {
-            label pointI = iter.key();
+            label pointi = iter.key();
 
-            label nVisits = pointVisited[pointI];
+            label nVisits = pointVisited[pointi];
 
             const DynamicList<label>& pEdges = iter();
 
@@ -812,10 +800,10 @@ CML::faceList CML::intersectedSurface::resplitFace
                 findNearestVisited
                 (
                     eSurf,
-                    faceI,
+                    facei,
                     facePointEdges,
                     pointVisited,
-                    eSurf.points()[pointI],
+                    eSurf.points()[pointi],
                     -1,                         // Do not exclude vertex
                     nearVertI,
                     nearDist
@@ -826,7 +814,7 @@ CML::faceList CML::intersectedSurface::resplitFace
                 {
                     minDist = nearDist;
                     visitedVert0 = nearVertI;
-                    unvisitedVert0 = pointI;
+                    unvisitedVert0 = pointi;
                 }
             }
         }
@@ -841,11 +829,11 @@ CML::faceList CML::intersectedSurface::resplitFace
 
         forAllConstIter(Map<DynamicList<label> >, facePointEdges, iter)
         {
-            label pointI = iter.key();
+            label pointi = iter.key();
 
-            if (pointI != unvisitedVert0)
+            if (pointi != unvisitedVert0)
             {
-                label nVisits = pointVisited[pointI];
+                label nVisits = pointVisited[pointi];
 
                 const DynamicList<label>& pEdges = iter();
 
@@ -859,10 +847,10 @@ CML::faceList CML::intersectedSurface::resplitFace
                     findNearestVisited
                     (
                         eSurf,
-                        faceI,
+                        facei,
                         facePointEdges,
                         pointVisited,
-                        eSurf.points()[pointI],
+                        eSurf.points()[pointi],
                         visitedVert0,           // vertex to exclude
                         nearVertI,
                         nearDist
@@ -873,7 +861,7 @@ CML::faceList CML::intersectedSurface::resplitFace
                     {
                         minDist = nearDist;
                         visitedVert1 = nearVertI;
-                        unvisitedVert1 = pointI;
+                        unvisitedVert1 = pointi;
                     }
                 }
             }
@@ -896,34 +884,34 @@ CML::faceList CML::intersectedSurface::resplitFace
     edgeList additionalEdges(1);
     additionalEdges[0] = edge(visitedVert0, unvisitedVert0);
 
-    eSurf.addIntersectionEdges(faceI, additionalEdges);
+    eSurf.addIntersectionEdges(facei, additionalEdges);
 
-    fileName newFName("face_" + CML::name(faceI) + "_newEdges.obj");
-    Pout<< "Dumping face:" << faceI << " to " << newFName << endl;
+    fileName newFName("face_" + CML::name(facei) + "_newEdges.obj");
+    Pout<< "Dumping face:" << facei << " to " << newFName << endl;
     writeLocalOBJ
     (
         eSurf.points(),
         eSurf.edges(),
-        eSurf.faceEdges()[faceI],
+        eSurf.faceEdges()[facei],
         newFName
     );
 
     // Retry splitFace. Use recursion since is rare situation.
-    return splitFace(surf, faceI, eSurf);
+    return splitFace(surf, facei, eSurf);
 }
 
 
 CML::faceList CML::intersectedSurface::splitFace
 (
     const triSurface& surf,
-    const label faceI,
+    const label facei,
     edgeSurface& eSurf
 )
 {
     // Alias
     const pointField& points = eSurf.points();
     const edgeList& edges = eSurf.edges();
-    const labelList& fEdges = eSurf.faceEdges()[faceI];
+    const labelList& fEdges = eSurf.faceEdges()[facei];
 
     // Create local (for the face only) point-edge connectivity.
     Map<DynamicList<label> > facePointEdges
@@ -931,7 +919,7 @@ CML::faceList CML::intersectedSurface::splitFace
         calcPointEdgeAddressing
         (
             eSurf,
-            faceI
+            facei
         )
     );
 
@@ -952,11 +940,11 @@ CML::faceList CML::intersectedSurface::splitFace
 
             if
             (
-                owner == faceI
+                owner == facei
              || sameEdgeOrder
                 (
                     surf.localFaces()[owner],
-                    surf.localFaces()[faceI]
+                    surf.localFaces()[facei]
                 )
             )
             {
@@ -1033,7 +1021,7 @@ CML::faceList CML::intersectedSurface::splitFace
         //printVisit(eSurf.edges(), fEdges, visited);
 
         //{
-        //    Pout<< "Writing face:" << faceI << " to face.obj" << endl;
+        //    Pout<< "Writing face:" << facei << " to face.obj" << endl;
         //    OFstream str("face.obj");
         //    writeOBJ(eSurf.points(), eSurf.edges(), fEdges, str);
         //}
@@ -1043,8 +1031,8 @@ CML::faceList CML::intersectedSurface::splitFace
             walkFace
             (
                 eSurf,
-                faceI,
-                surf.faceNormals()[faceI],
+                facei,
+                surf.faceNormals()[facei],
                 facePointEdges,
 
                 startEdgeI,
@@ -1065,14 +1053,14 @@ CML::faceList CML::intersectedSurface::splitFace
 
         if (eSurf.isSurfaceEdge(edgeI) && stat != BOTH)
         {
-            SeriousErrorIn("CML::intersectedSurface::splitFace")
+            SeriousErrorInFunction
                 << "Dumping face edges to faceEdges.obj" << endl;
 
             writeLocalOBJ(points, edges, fEdges, "faceEdges.obj");
 
-            FatalErrorIn("intersectedSurface::splitFace")
+            FatalErrorInFunction
                << "Problem: edge " << edgeI << " vertices "
-                << edges[edgeI] << " on face " << faceI
+                << edges[edgeI] << " on face " << facei
                 << " has visited status " << stat << " from a "
                  << "righthanded walk along all"
                 << " of the triangle edges. Are the original surfaces"
@@ -1100,7 +1088,7 @@ CML::faceList CML::intersectedSurface::splitFace
             return resplitFace
             (
                 surf,
-                faceI,
+                facei,
                 facePointEdges,
                 visited,
                 eSurf
@@ -1112,9 +1100,9 @@ CML::faceList CML::intersectedSurface::splitFace
     // See if normal needs flipping.
     faces.shrink();
 
-    vector n = faces[0].normal(eSurf.points());
+    vector a = faces[0].area(eSurf.points());
 
-    if ((n & surf.faceNormals()[faceI]) < 0)
+    if ((a & surf.faceNormals()[facei]) < 0)
     {
         forAll(faces, i)
         {
@@ -1169,9 +1157,9 @@ CML::intersectedSurface::intersectedSurface
         // Identity for face map
         faceMap_.setSize(size());
 
-        forAll(faceMap_, faceI)
+        forAll(faceMap_, facei)
         {
-            faceMap_[faceI] = faceI;
+            faceMap_[facei] = facei;
         }
         return;
     }
@@ -1193,11 +1181,11 @@ CML::intersectedSurface::intersectedSurface
     // Start in newTris for decomposed face.
     labelList startTriI(surf.size(), 0);
 
-    forAll(surf, faceI)
+    forAll(surf, facei)
     {
-        startTriI[faceI] = newTris.size();
+        startTriI[facei] = newTris.size();
 
-        if (eSurf.faceEdges()[faceI].size() != surf.faceEdges()[faceI].size())
+        if (eSurf.faceEdges()[facei].size() != surf.faceEdges()[facei].size())
         {
             // Face has been cut by intersection.
             // Cut face into multiple subfaces. Use faceEdge information
@@ -1208,26 +1196,26 @@ CML::intersectedSurface::intersectedSurface
                 splitFace
                 (
                     surf,
-                    faceI,              // current triangle
+                    facei,              // current triangle
                     eSurf               // face-edge description of surface
                                         // + intersection
                 )
             );
-            forAll(newFaces, newFaceI)
+            forAll(newFaces, newFacei)
             {
-                const face& newF = newFaces[newFaceI];
+                const face& newF = newFaces[newFacei];
 
 //                {
 //                    fileName fName
 //                    (
 //                        "face_"
-//                      + CML::name(faceI)
+//                      + CML::name(facei)
 //                      + "_subFace_"
-//                      + CML::name(newFaceI)
+//                      + CML::name(newFacei)
 //                      + ".obj"
 //                    );
-//                    Pout<< "Writing original face:" << faceI << " subFace:"
-//                        << newFaceI << " to " << fName << endl;
+//                    Pout<< "Writing original face:" << facei << " subFace:"
+//                        << newFacei << " to " << fName << endl;
 //
 //                    OFstream str(fName);
 //
@@ -1244,8 +1232,8 @@ CML::intersectedSurface::intersectedSurface
 //                }
 
 
-                const vector& n = surf.faceNormals()[faceI];
-                const label region = surf[faceI].region();
+                const vector& n = surf.faceNormals()[facei];
+                const label region = surf[facei].region();
 
                 faceTriangulation tris(eSurf.points(), newF, n);
 
@@ -1257,10 +1245,8 @@ CML::intersectedSurface::intersectedSurface
                     {
                         if (t[i] < 0 || t[i] >= eSurf.points().size())
                         {
-                            FatalErrorIn
-                            (
-                                "intersectedSurface::intersectedSurface"
-                            )   << "Face triangulation of face " << faceI
+                            FatalErrorInFunction
+                                << "Face triangulation of face " << facei
                                 << " uses points outside range 0.."
                                 << eSurf.points().size()-1 << endl
                                 << "Triangulation:"
@@ -1276,7 +1262,7 @@ CML::intersectedSurface::intersectedSurface
         {
             // Face has not been cut at all. No need to renumber vertices since
             // eSurf keeps surface vertices first.
-            newTris.append(surf.localFaces()[faceI]);
+            newTris.append(surf.localFaces()[facei]);
         }
     }
 
@@ -1298,11 +1284,11 @@ CML::intersectedSurface::intersectedSurface
     // Construct mapping back into original surface
     faceMap_.setSize(size());
 
-    for (label faceI = 0; faceI < surf.size()-1; faceI++)
+    for (label facei = 0; facei < surf.size()-1; facei++)
     {
-        for (label triI = startTriI[faceI]; triI < startTriI[faceI+1]; triI++)
+        for (label triI = startTriI[facei]; triI < startTriI[facei+1]; triI++)
         {
-            faceMap_[triI] = faceI;
+            faceMap_[triI] = facei;
         }
     }
     for (label triI = startTriI[surf.size()-1]; triI < size(); triI++)
@@ -1355,7 +1341,7 @@ CML::intersectedSurface::intersectedSurface
         }
         else
         {
-            FatalErrorIn("intersectedSurface::intersectedSurface")
+            FatalErrorInFunction
                 << "Cannot find edge among candidates " << pEdges
                 << " which uses points " << surfStartI
                 << " and " << surfEndI

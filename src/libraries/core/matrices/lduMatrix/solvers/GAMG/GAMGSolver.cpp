@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -98,18 +98,8 @@ CML::GAMGSolver::GAMGSolver
     }
     else
     {
-        FatalErrorIn
-        (
-            "GAMGSolver::GAMGSolver"
-            "("
-            "const word& fieldName,"
-            "const lduMatrix& matrix,"
-            "const FieldField<Field, scalar>& interfaceBouCoeffs,"
-            "const FieldField<Field, scalar>& interfaceIntCoeffs,"
-            "const lduInterfaceFieldPtrsList& interfaces,"
-            "const dictionary& solverControls"
-            ")"
-        )   << "No coarse levels created, either matrix too small for GAMG"
+        FatalErrorInFunction
+            << "No coarse levels created, either matrix too small for GAMG"
                " or nCellsInCoarsestLevel too large.\n"
                "    Either choose another solver of reduce "
                "nCellsInCoarsestLevel."

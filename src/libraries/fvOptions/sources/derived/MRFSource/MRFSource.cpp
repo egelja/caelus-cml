@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2012 OpenFOAM Foundation
+Copyright (C) 2012-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -43,7 +43,7 @@ void CML::fv::MRFSource::initialise()
 {
     if (selectionMode_ != smCellZone)
     {
-        FatalErrorIn("void CML::MRFSource::initialise()")
+        FatalErrorInFunction
             << "The MRF region must be specified as a cellZone.  Current "
             << "selection mode is " << selectionModeTypeNames_[selectionMode_]
             << exit(FatalError);
@@ -78,7 +78,7 @@ CML::fv::MRFSource::MRFSource
 )
 :
     option(name, modelType, dict, mesh),
-    mrfPtr_(NULL),
+    mrfPtr_(nullptr),
     UName_(coeffs_.lookupOrDefault<word>("UName", "U"))
 {
     initialise();

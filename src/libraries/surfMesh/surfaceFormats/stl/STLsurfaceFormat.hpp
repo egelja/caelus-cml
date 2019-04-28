@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -173,13 +173,12 @@ inline void CML::fileFormats::STLsurfaceFormat<Face>::writeShell
 )
 {
     // calculate the normal ourselves, for flexibility and speed
-    vector norm = triPointRef
+    const vector norm = triPointRef
     (
         pointLst[f[0]],
         pointLst[f[1]],
         pointLst[f[2]]
     ).normal();
-    norm /= mag(norm) + VSMALL;
 
     // simple triangulation about f[0].
     // better triangulation should have been done before
@@ -214,13 +213,12 @@ inline void CML::fileFormats::STLsurfaceFormat<Face>::writeShell
 )
 {
     // calculate the normal ourselves, for flexibility and speed
-    vector norm = triPointRef
+    const vector norm = triPointRef
     (
         pointLst[f[0]],
         pointLst[f[1]],
         pointLst[f[2]]
     ).normal();
-    norm /= mag(norm) + VSMALL;
 
     // simple triangulation about f[0].
     // better triangulation should have been done before
@@ -282,10 +280,10 @@ bool CML::fileFormats::STLsurfaceFormat<Face>::read
     if (reader.sorted())
     {
         // already sorted - generate directly
-        forAll(faceLst, faceI)
+        forAll(faceLst, facei)
         {
-            const label startPt = 3*faceI;
-            faceLst[faceI] = triFace(startPt, startPt+1, startPt+2);
+            const label startPt = 3*facei;
+            faceLst[facei] = triFace(startPt, startPt+1, startPt+2);
         }
     }
     else
@@ -296,10 +294,10 @@ bool CML::fileFormats::STLsurfaceFormat<Face>::read
         sortedOrder(zoneIds, faceMap);
 
         // generate sorted faces
-        forAll(faceMap, faceI)
+        forAll(faceMap, facei)
         {
-            const label startPt = 3*faceMap[faceI];
-            faceLst[faceI] = triFace(startPt, startPt+1, startPt+2);
+            const label startPt = 3*faceMap[facei];
+            faceLst[facei] = triFace(startPt, startPt+1, startPt+2);
         }
     }
     zoneIds.clear();
@@ -332,11 +330,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeAscii
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormat::writeAscii"
-            "(const fileName&, const MeshedSurfaceProxy<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }
@@ -364,15 +358,15 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeAscii
 
         if (useFaceMap)
         {
-            forAll(zone, localFaceI)
+            forAll(zone, localFacei)
             {
-                const label faceI = faceMap[faceIndex++];
-                writeShell(os, pointLst, faceLst[faceI]);
+                const label facei = faceMap[faceIndex++];
+                writeShell(os, pointLst, faceLst[facei]);
             }
         }
         else
         {
-            forAll(zone, localFaceI)
+            forAll(zone, localFacei)
             {
                 writeShell(os, pointLst, faceLst[faceIndex++]);
             }
@@ -392,11 +386,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
     std::ofstream os(filename.c_str(), std::ios::binary);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormat::writeBinary"
-            "(const fileName&, const MeshedSurfaceProxy<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }
@@ -424,9 +414,9 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
     else
     {
         // count triangles for on-the-fly triangulation
-        forAll(faceLst, faceI)
+        forAll(faceLst, facei)
         {
-            nTris += faceLst[faceI].size() - 2;
+            nTris += faceLst[facei].size() - 2;
         }
     }
 
@@ -440,7 +430,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
 
         if (useFaceMap)
         {
-            forAll(zone, localFaceI)
+            forAll(zone, localFacei)
             {
                 writeShell
                 (
@@ -453,7 +443,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
         }
         else
         {
-            forAll(zone, localFaceI)
+            forAll(zone, localFacei)
             {
                 writeShell
                 (
@@ -478,11 +468,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeAscii
     OFstream os(filename);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormat::writeAscii"
-            "(const fileName&, const UnsortedMeshedSurface<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }
@@ -494,9 +480,9 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeAscii
         const List<Face>& faceLst  = surf.faces();
 
         os << "solid " << surf.zoneToc()[0].name() << endl;
-        forAll(faceLst, faceI)
+        forAll(faceLst, facei)
         {
-            writeShell(os, pointLst, faceLst[faceI]);
+            writeShell(os, pointLst, faceLst[facei]);
         }
         os << "endsolid " << surf.zoneToc()[0].name() << endl;
     }
@@ -530,11 +516,7 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
     std::ofstream os(filename.c_str(), std::ios::binary);
     if (!os.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormat::writeBinary"
-            "(const fileName&, const UnsortedMeshedSurface<Face>&)"
-        )
+        FatalErrorInFunction
             << "Cannot open file for writing " << filename
             << exit(FatalError);
     }
@@ -551,9 +533,9 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
     else
     {
         // count triangles for on-the-fly triangulation
-        forAll(faceLst, faceI)
+        forAll(faceLst, facei)
         {
-            nTris += faceLst[faceI].size() - 2;
+            nTris += faceLst[facei].size() - 2;
         }
     }
 
@@ -561,14 +543,14 @@ void CML::fileFormats::STLsurfaceFormat<Face>::writeBinary
     STLsurfaceFormatCore::writeHeaderBINARY(os, nTris);
 
     // always write unsorted
-    forAll(faceLst, faceI)
+    forAll(faceLst, facei)
     {
         writeShell
         (
             os,
             pointLst,
-            faceLst[faceI],
-            zoneIds[faceI]
+            faceLst[facei],
+            zoneIds[facei]
         );
     }
 }

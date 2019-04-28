@@ -142,8 +142,8 @@ autoPtr<ConcretePluginFunction<DriverType> > ConcretePluginFunction<DriverType>:
             << nameConstructorTablePtr_->sortedToc()
             << endl;
     }
-    if(nameConstructorTablePtr_==NULL) {
-        FatalErrorIn("ConcretePluginFunction<DriverType>::New")
+    if(nameConstructorTablePtr_==nullptr) {
+        FatalErrorInFunction
             << "Constructor table of plugin functions for "
                 << DriverType::typeName << " is not initialized"
                 << endl
@@ -152,10 +152,8 @@ autoPtr<ConcretePluginFunction<DriverType> > ConcretePluginFunction<DriverType>:
     typename nameConstructorTable::iterator cstrIter =
         nameConstructorTablePtr_->find(name);
     if(cstrIter==nameConstructorTablePtr_->end()) {
-        FatalErrorIn(
-            "autoPtr<ConcretePluginFunction> ConcretePluginFunction<"+
-            DriverType::typeName+">::New"
-        ) << "Unknow plugin function " << name << endl
+        FatalErrorInFunction
+            << "Unknow plugin function " << name << endl
             << " Available functions are "
             << nameConstructorTablePtr_->sortedToc()
             << endl
@@ -177,11 +175,11 @@ bool ConcretePluginFunction<DriverType>::exists (
     if(firstCall) {
         firstCall=false;
 
-        if(nameConstructorTablePtr_==NULL) {
-            WarningIn("ConcretePluginFunction<DriverType>::exists")
+        if(nameConstructorTablePtr_==nullptr) {
+            WarningInFunction
                 << "Constructor table of plugin functions for "
-                    << DriverType::typeName << " is not initialized"
-                    << endl;
+                << DriverType::typeName << " is not initialized"
+                << endl;
             return false;
         }
         if(nameConstructorTablePtr_->size()>0) {

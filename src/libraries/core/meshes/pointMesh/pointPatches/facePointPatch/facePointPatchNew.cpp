@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -42,11 +42,8 @@ CML::autoPtr<CML::facePointPatch> CML::facePointPatch::New
 
     if (cstrIter == polyPatchConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "facePointPatch::New(const polyPatch&, "
-            "const pointBoundaryMesh&) : "
-        )   << "Unknown facePointPatch type "
+        FatalErrorInFunction
+            << "Unknown facePointPatch type "
             << patch.type()
             << nl << nl
             << "Valid facePointPatch types are :" << endl

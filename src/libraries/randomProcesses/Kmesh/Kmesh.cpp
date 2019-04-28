@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -69,7 +69,7 @@ CML::Kmesh::Kmesh(const fvMesh& mesh)
 
     if (nTot != mesh.nCells())
     {
-        FatalErrorIn("Kmesh::Kmesh(const fvMesh& mesh)")
+        FatalErrorInFunction
             << "calculated number of cells is incorrect"
             << abort(FatalError);
     }

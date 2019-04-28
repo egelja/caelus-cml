@@ -54,7 +54,7 @@ void CML::layerAdditionRemoval::checkDefinition()
 {
     if (!faceZoneID_.active())
     {
-        FatalErrorIn("void CML::layerAdditionRemoval::checkDefinition()")
+        FatalErrorInFunction
             << "Master face zone named " << faceZoneID_.name()
             << " cannot be found."
             << abort(FatalError);
@@ -66,10 +66,8 @@ void CML::layerAdditionRemoval::checkDefinition()
      || maxLayerThickness_ < minLayerThickness_
     )
     {
-        FatalErrorIn
-        (
-            "void CML::layerAdditionRemoval::checkDefinition()"
-        )   << "Incorrect layer thickness definition."
+        FatalErrorInFunction
+            << "Incorrect layer thickness definition."
             << abort(FatalError);
     }
 
@@ -79,7 +77,7 @@ void CML::layerAdditionRemoval::checkDefinition()
 
     if (nFaces == 0)
     {
-        FatalErrorIn("void CML::layerAdditionRemoval::checkDefinition()")
+        FatalErrorInFunction
             << "Face extrusion zone contains no faces. "
             << "Please check your mesh definition."
             << abort(FatalError);
@@ -128,8 +126,8 @@ CML::layerAdditionRemoval::layerAdditionRemoval
     maxLayerThickness_(maxThickness),
     thicknessFromVolume_(thicknessFromVolume),
     oldLayerThickness_(-1.0),
-    pointsPairingPtr_(NULL),
-    facesPairingPtr_(NULL),
+    pointsPairingPtr_(nullptr),
+    facesPairingPtr_(nullptr),
     triggerRemoval_(-1),
     triggerAddition_(-1)
 {
@@ -154,8 +152,8 @@ CML::layerAdditionRemoval::layerAdditionRemoval
         dict.lookupOrDefault<Switch>("thicknessFromVolume", true)
     ),
     oldLayerThickness_(readOldThickness(dict)),
-    pointsPairingPtr_(NULL),
-    facesPairingPtr_(NULL),
+    pointsPairingPtr_(nullptr),
+    facesPairingPtr_(nullptr),
     triggerRemoval_(-1),
     triggerAddition_(-1)
 {
@@ -199,7 +197,7 @@ bool CML::layerAdditionRemoval::changeTopology() const
 
     if (min(V) < -VSMALL)
     {
-        FatalErrorIn("bool layerAdditionRemoval::changeTopology() const")
+        FatalErrorInFunction
             << "negative cell volume. Error in mesh motion before "
             << "topological change.\n V: " << V
             << abort(FatalError);
@@ -439,13 +437,8 @@ void CML::layerAdditionRemoval::setMinLayerThickness(const scalar t) const
 {
     if (t < VSMALL || maxLayerThickness_ < t)
     {
-        FatalErrorIn
-        (
-            "void layerAdditionRemoval::setMinLayerThickness"
-            "("
-                "const scalar"
-            ") const"
-        )   << "Incorrect layer thickness definition."
+        FatalErrorInFunction
+            << "Incorrect layer thickness definition."
             << abort(FatalError);
     }
 
@@ -457,13 +450,8 @@ void CML::layerAdditionRemoval::setMaxLayerThickness(const scalar t) const
 {
     if (t < minLayerThickness_)
     {
-        FatalErrorIn
-        (
-            "void layerAdditionRemoval::setMaxLayerThickness"
-            "("
-                "const scalar"
-            ") const"
-        )   << "Incorrect layer thickness definition."
+        FatalErrorInFunction
+            << "Incorrect layer thickness definition."
             << abort(FatalError);
     }
 

@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
 
     if(args.optionFound("expression")) {
         if(args.optionFound("dictExt")) {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Can't specify 'dictExt' and 'expression' at the same time"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
 
         }
         relative=args.optionFound("relative");
@@ -89,21 +89,21 @@ int main(int argc, char *argv[])
         // no clearVariables needed here
         driver.parse(expression);
         if(!driver.resultIsTyp<pointVectorField>()) {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Expression " << expression
-                    << " does not evaluate to a pointVectorField but a "
-                    << driver.typ()
-                    << endl
-                    << exit(FatalError);
+                << " does not evaluate to a pointVectorField but a "
+                << driver.typ()
+                << endl
+                << exit(FatalError);
         }
         newPoints=driver.getResult<pointVectorField>().internalField();
     } else {
         Info << "Dictionary mode" << nl << endl;
         if(args.optionFound("relative")) {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Option 'relative' not allowed in dictionary-mode"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
         word dictName("funkyWarpMeshDict");
         if(args.optionFound("dictExt")) {
@@ -137,21 +137,21 @@ int main(int argc, char *argv[])
 
             driver.parse(expression);
             if(!driver.resultIsTyp<pointVectorField>()) {
-                FatalErrorIn(args.executable())
+                FatalErrorInFunction
                     << "Expression " << expression
-                        << " does not evaluate to a pointVectorField but a "
-                        << driver.typ()
-                        << endl
-                        << exit(FatalError);
+                    << " does not evaluate to a pointVectorField but a "
+                    << driver.typ()
+                    << endl
+                    << exit(FatalError);
             }
             newPoints=driver.getResult<pointVectorField>().internalField();
         } else if (mode=="move") {
-            notImplemented(args.executable()+" mode: move");
+            NotImplemented;
         } else {
-            FatalErrorIn(args.executable())
+            FatalErrorInFunction
                 << "Possible values for 'mode' are 'set' or 'move'"
-                    << endl
-                    << exit(FatalError);
+                << endl
+                << exit(FatalError);
         }
     }
 
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
         )
     )
     {
-        FatalErrorIn(args.executable())
+        FatalErrorInFunction
             << "Failed writing polyMesh."
             << exit(FatalError);
     }

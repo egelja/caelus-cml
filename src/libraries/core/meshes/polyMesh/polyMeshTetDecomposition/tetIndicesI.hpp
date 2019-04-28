@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,169 +19,121 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-CML::label CML::tetIndices::cell() const
+inline CML::label CML::tetIndices::cell() const
 {
-    return cellI_;
+    return celli_;
 }
 
 
-CML::label CML::tetIndices::face() const
+inline CML::label& CML::tetIndices::cell()
 {
-    return faceI_;
+    return celli_;
 }
 
 
-CML::label CML::tetIndices::faceBasePt() const
+inline CML::label CML::tetIndices::face() const
 {
-    return faceBasePtI_;
+    return facei_;
 }
 
 
-CML::label CML::tetIndices::facePtA() const
+inline CML::label& CML::tetIndices::face()
 {
-    return facePtAI_;
+    return facei_;
 }
 
 
-CML::label CML::tetIndices::facePtB() const
+inline CML::label CML::tetIndices::tetPt() const
 {
-    return facePtBI_;
+    return tetPti_;
 }
 
 
-CML::label CML::tetIndices::tetPt() const
+inline CML::label& CML::tetIndices::tetPt()
 {
-    return tetPtI_;
+    return tetPti_;
 }
 
 
-CML::tetPointRef CML::tetIndices::tet(const polyMesh& mesh) const
+inline CML::triFace CML::tetIndices::faceTriIs(const polyMesh& mesh) const
 {
-    const pointField& pPts = mesh.points();
-    const faceList& pFaces = mesh.faces();
-    const vectorField& pC = mesh.cellCentres();
+    const CML::face& f = mesh.faces()[face()];
 
-    const CML::face& f = pFaces[faceI_];
+    label faceBasePtI = mesh.tetBasePtIs()[face()];
+
+    if (faceBasePtI < 0)
+    {
+        static label badFacei = -1;
+
+        if (badFacei != face())
+        {
+            WarningInFunction
+                << "No base point for face " << face() << ", " << f
+                << ", produces a valid tet decomposition." << endl;
+
+            badFacei = face();
+        }
+
+        faceBasePtI = 0;
+    }
+
+    label facePtI = (tetPt() + faceBasePtI) % f.size();
+    label faceOtherPtI = f.fcIndex(facePtI);
+
+    if (mesh.faceOwner()[face()] != cell())
+    {
+        Swap(facePtI, faceOtherPtI);
+    }
+
+    return triFace(f[faceBasePtI], f[facePtI], f[faceOtherPtI]);
+}
+
+
+inline CML::tetPointRef CML::tetIndices::tet(const polyMesh& mesh) const
+{
+    const pointField& meshPoints = mesh.points();
+    const triFace tri = faceTriIs(mesh);
 
     return tetPointRef
     (
-        pC[cellI_],
-        pPts[f[faceBasePtI_]],
-        pPts[f[facePtAI_]],
-        pPts[f[facePtBI_]]
+        mesh.cellCentres()[cell()],
+        meshPoints[tri[0]],
+        meshPoints[tri[1]],
+        meshPoints[tri[2]]
     );
 }
 
 
-CML::tetPointRef CML::tetIndices::oldTet(const polyMesh& mesh) const
+inline CML::triPointRef CML::tetIndices::faceTri(const polyMesh& mesh) const
 {
-    const pointField& oldPPts = mesh.oldPoints();
-    const faceList& pFaces = mesh.faces();
-
-    // We need to reconstruct the old Cc from oldPoints (it isn't
-    // stored)
-    point oldC = mesh.cells()[cellI_].centre
-    (
-        oldPPts,
-        pFaces
-    );
-
-    const CML::face& f = pFaces[faceI_];
-
-    return tetPointRef
-    (
-        oldC,
-        oldPPts[f[faceBasePtI_]],
-        oldPPts[f[facePtAI_]],
-        oldPPts[f[facePtBI_]]
-    );
-}
-
-
-CML::triPointRef CML::tetIndices::faceTri(const polyMesh& mesh) const
-{
-    const pointField& pPts = mesh.points();
-    const faceList& pFaces = mesh.faces();
-
-    const CML::face& f = pFaces[faceI_];
+    const pointField& meshPoints = mesh.points();
+    const triFace tri = faceTriIs(mesh);
 
     return triPointRef
     (
-        pPts[f[faceBasePtI_]],
-        pPts[f[facePtAI_]],
-        pPts[f[facePtBI_]]
+        meshPoints[tri[0]],
+        meshPoints[tri[1]],
+        meshPoints[tri[2]]
     );
 }
 
 
-CML::triFace CML::tetIndices::faceTriIs(const polyMesh& mesh) const
+inline CML::triPointRef CML::tetIndices::oldFaceTri
+(
+    const polyMesh& mesh
+) const
 {
-    const faceList& pFaces = mesh.faces();
-
-    const CML::face& f = pFaces[faceI_];
-
-    return triFace
-    (
-        f[faceBasePtI_],
-        f[facePtAI_],
-        f[facePtBI_]
-    );
-}
-
-
-CML::triPointRef CML::tetIndices::oldFaceTri(const polyMesh& mesh) const
-{
-    const pointField& oldPPts = mesh.oldPoints();
-    const faceList& pFaces = mesh.faces();
-
-    const CML::face& f = pFaces[faceI_];
+    const pointField& meshOldPoints = mesh.oldPoints();
+    const triFace tri = faceTriIs(mesh);
 
     return triPointRef
     (
-        oldPPts[f[faceBasePtI_]],
-        oldPPts[f[facePtAI_]],
-        oldPPts[f[facePtBI_]]
+        meshOldPoints[tri[0]],
+        meshOldPoints[tri[1]],
+        meshOldPoints[tri[2]]
     );
-}
-
-
-CML::label& CML::tetIndices::cell()
-{
-    return cellI_;
-}
-
-
-CML::label& CML::tetIndices::face()
-{
-    return faceI_;
-}
-
-
-CML::label& CML::tetIndices::faceBasePt()
-{
-    return faceBasePtI_;
-}
-
-
-CML::label& CML::tetIndices::facePtA()
-{
-    return facePtAI_;
-}
-
-
-CML::label& CML::tetIndices::facePtB()
-{
-    return facePtBI_;
-}
-
-
-CML::label& CML::tetIndices::tetPt()
-{
-    return tetPtI_;
 }
 
 
@@ -190,14 +142,9 @@ CML::label& CML::tetIndices::tetPt()
 inline bool CML::tetIndices::operator==(const CML::tetIndices& rhs) const
 {
     return
-    (
         cell() == rhs.cell()
      && face() == rhs.face()
-     && faceBasePt() == rhs.faceBasePt()
-     && facePtA() == rhs.facePtA()
-     && facePtB() == rhs.facePtB()
-     && tetPt() == rhs.tetPt()
-    );
+     && tetPt() == rhs.tetPt();
 }
 
 
@@ -205,9 +152,6 @@ inline bool CML::tetIndices::operator!=(const CML::tetIndices& rhs) const
 {
     return !(*this == rhs);
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

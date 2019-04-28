@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2015 Applied CCM
+Copyright (C) 2015-2018 Applied CCM
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -61,6 +61,7 @@ protected:
         virtual scalar Cl
         (
             const typename CloudType::parcelType& p,
+            const typename CloudType::parcelType::trackingData& td,
             const vector& curlUc,
             const scalar Re,
             const scalar muc
@@ -118,6 +119,7 @@ template<class CloudType>
 CML::scalar CML::ConstantLiftCoefficient<CloudType>::ConstantLiftCoefficient::Cl
 (
     const typename CloudType::parcelType& p,
+    const typename CloudType::parcelType::trackingData& td,
     const vector& curlUc,
     const scalar Re,
     const scalar muc

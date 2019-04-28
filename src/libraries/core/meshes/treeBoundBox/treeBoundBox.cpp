@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -21,6 +21,7 @@ License
 
 #include "treeBoundBox.hpp"
 #include "ListOps.hpp"
+#include "OFstream.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -126,10 +127,8 @@ CML::treeBoundBox::treeBoundBox(const UList<point>& points)
 {
     if (points.empty())
     {
-        WarningIn
-        (
-            "treeBoundBox::treeBoundBox(const UList<point>&)"
-        )   << "cannot find bounding box for zero-sized pointField, "
+        WarningInFunction
+            << "cannot find bounding box for zero-sized pointField, "
             << "returning zero" << endl;
 
         return;
@@ -147,11 +146,8 @@ CML::treeBoundBox::treeBoundBox
 {
     if (points.empty() || indices.empty())
     {
-        WarningIn
-        (
-            "treeBoundBox::treeBoundBox"
-            "(const UList<point>&, const labelUList&)"
-        )   << "cannot find bounding box for zero-sized pointField, "
+        WarningInFunction
+            << "cannot find bounding box for zero-sized pointField, "
             << "returning zero" << endl;
 
         return;
@@ -164,7 +160,6 @@ CML::treeBoundBox::treeBoundBox
 CML::tmp<CML::pointField> CML::treeBoundBox::points() const
 {
     tmp<pointField> tPts = tmp<pointField>(new pointField(8));
-
     pointField& points = tPts();
 
     forAll(points, octant)
@@ -191,10 +186,8 @@ CML::treeBoundBox CML::treeBoundBox::subBbox
 {
     if (octant > 7)
     {
-        FatalErrorIn
-        (
-            "treeBoundBox::subBbox(const point&, const direction)"
-        )   << "octant should be [0..7]"
+        FatalErrorInFunction
+            << "octant should be [0..7]"
             << abort(FatalError);
     }
 
@@ -301,10 +294,27 @@ bool CML::treeBoundBox::intersects
     direction& ptOnFaces
 ) const
 {
+    // Sutherlands algorithm:
+    //   loop
+    //     - start = intersection of line with one of the planes bounding
+    //       the bounding box
+    //     - stop if start inside bb (return true)
+    //     - stop if start and end in same 'half' (e.g. both above bb)
+    //       (return false)
+    //
+    // Uses posBits to efficiently determine 'half' in which start and end
+    // point are.
+    //
+    // Note:
+    //   - sets coordinate to exact position: e.g. pt.x() = min().x()
+    //     since plane intersect routine might have truncation error.
+    //     This makes sure that posBits tests 'inside'
+
     const direction endBits = posBits(end);
     pt = start;
 
-    while (true)
+    // Allow maximum of 3 clips.
+    for (label i = 0; i < 4; ++i)
     {
         direction ptBits = posBits(pt);
 
@@ -415,6 +425,9 @@ bool CML::treeBoundBox::intersects
             }
         }
     }
+
+    // Can end up here if the end point is on the edge of the boundBox
+    return true;
 }
 
 
@@ -432,9 +445,8 @@ bool CML::treeBoundBox::intersects
 
 bool CML::treeBoundBox::contains(const vector& dir, const point& pt) const
 {
-    //
     // Compare all components against min and max of bb
-    //
+
     for (direction cmpt=0; cmpt<3; cmpt++)
     {
         if (pt[cmpt] < min()[cmpt])
@@ -659,6 +671,31 @@ CML::label CML::treeBoundBox::distanceCmp
     {
         // Mixed bag
         return 0;
+    }
+}
+
+
+void CML::treeBoundBox::writeOBJ(const fileName& fName) const
+{
+    OFstream str(fName);
+
+    Info<< "Dumping bounding box " << *this << " as lines to obj file "
+        << str.name() << endl;
+
+    pointField bbPoints(points());
+
+    forAll(bbPoints, i)
+    {
+        const point& pt = bbPoints[i];
+
+        str<< "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << endl;
+    }
+
+    forAll(treeBoundBox::edges, i)
+    {
+        const edge& e = treeBoundBox::edges[i];
+
+        str<< "l " << e[0]+1 <<  ' ' << e[1]+1 << nl;
     }
 }
 

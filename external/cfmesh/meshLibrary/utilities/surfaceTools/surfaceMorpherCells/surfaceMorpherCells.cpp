@@ -159,10 +159,8 @@ void surfaceMorpherCells::morphMesh()
                 Info << "Cell " << cellI << " consists of faces " << c << endl;
                 forAll(c, fI)
                     Info << "Face " << c[fI] << " is " << faces[c[fI]] << endl;
-                FatalErrorIn
-                (
-                    "void surfaceMorpherCells::morphMesh()"
-                ) << "Cell " << cellI << " is not topologically closed"
+                FatalErrorInFunction
+                    << "Cell " << cellI << " is not topologically closed"
                     << abort(FatalError);
             }
         }

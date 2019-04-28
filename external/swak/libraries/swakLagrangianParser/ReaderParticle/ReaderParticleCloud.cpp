@@ -83,21 +83,21 @@ tmp<Field<T> > filterValues(
     {
 	if(mask[i]) {
             if(cnt>=size) {
-                FatalErrorIn("filterValues")
+                FatalErrorInFunction
                     << "Mask seems to have more elements than " << size
-                        << endl
-                        << exit(FatalError);
+                    << endl
+                    << exit(FatalError);
             }
             result[cnt]=orig[i];
             cnt++;
         }
     }
     if(cnt!=size) {
-        FatalErrorIn("filterValues")
+        FatalErrorInFunction
             << "Inconsistent amount of elements in mask " << cnt << nl
-                << "Need: " << size
-                << endl
-                << exit(FatalError);
+            << "Need: " << size
+            << endl
+            << exit(FatalError);
 
     }
     return pResult;
@@ -140,10 +140,10 @@ autoPtr<ReaderParticleCloud> ReaderParticleCloud::makeCloudFromVariables(
     Info << "Variables to be added: " << varNames << endl;
 
     if(!foundPos) {
-        FatalErrorIn("ReaderParticleCloud::makeCloudFromVariables")
+        FatalErrorInFunction
             << "No position variable " << positionVar << " found"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
     label globalMin=minSize;
@@ -155,10 +155,10 @@ autoPtr<ReaderParticleCloud> ReaderParticleCloud::makeCloudFromVariables(
     if(!ok) {
         Pout << "Minimum variable size: " << minSize << " maximum: "
             << maxSize << endl;
-        FatalErrorIn("ReaderParticleCloud::makeCloudFromVariables")
+        FatalErrorInFunction
             << "Variable size should be the same on all processors"
-                << endl
-                << exit(FatalError);
+            << endl
+            << exit(FatalError);
 
     }
 
@@ -265,10 +265,10 @@ autoPtr<ReaderParticleCloud> ReaderParticleCloud::makeCloudFromVariables(
                        )()
                    );
                } else {
-                   FatalErrorIn("ReaderParticleCloud::makeCloudFromVariables")
+                   FatalErrorInFunction
                        << "Unhandled type " << type
-                           << endl
-                           << exit(FatalError);
+                       << endl
+                       << exit(FatalError);
                }
             }
         }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -135,10 +135,8 @@ const CML::fvPatch& CML::fvBoundaryMesh::operator[]
 
     if (patchI < 0)
     {
-        FatalErrorIn
-        (
-            "fvBoundaryMesh::operator[](const word&) const"
-        )   << "Patch named " << patchName << " not found." << nl
+        FatalErrorInFunction
+            << "Patch named " << patchName << " not found." << nl
             << abort(FatalError);
     }
 
@@ -155,10 +153,8 @@ CML::fvPatch& CML::fvBoundaryMesh::operator[]
 
     if (patchI < 0)
     {
-        FatalErrorIn
-        (
-            "fvBoundaryMesh::operator[](const word&)"
-        )   << "Patch named " << patchName << " not found." << nl
+        FatalErrorInFunction
+            << "Patch named " << patchName << " not found." << nl
             << abort(FatalError);
     }
 

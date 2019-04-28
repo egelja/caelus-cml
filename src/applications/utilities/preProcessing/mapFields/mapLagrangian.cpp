@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -35,17 +35,17 @@ static const scalar perturbFactor = 1e-6;
 // compatible with tracking.
 static label findCell(const Cloud<passiveParticle>& cloud, const point& pt)
 {
-    label cellI = -1;
-    label tetFaceI = -1;
+    label celli = -1;
+    label tetFacei = -1;
     label tetPtI = -1;
 
     const polyMesh& mesh = cloud.pMesh();
 
-    mesh.findCellFacePt(pt, cellI, tetFaceI, tetPtI);
+    mesh.findCellFacePt(pt, celli, tetFacei, tetPtI);
 
-    if (cellI >= 0)
+    if (celli >= 0)
     {
-        return cellI;
+        return celli;
     }
     else
     {
@@ -58,17 +58,17 @@ static label findCell(const Cloud<passiveParticle>& cloud, const point& pt)
             polyMesh::FACEPLANES    // no decomposition needed
         );
 
-        label faceI = meshSearcher.findNearestBoundaryFace(pt);
+        label facei = meshSearcher.findNearestBoundaryFace(pt);
 
-        if (faceI >= 0)
+        if (facei >= 0)
         {
-            const point& cc = mesh.cellCentres()[mesh.faceOwner()[faceI]];
+            const point& cc = mesh.cellCentres()[mesh.faceOwner()[facei]];
 
             const point perturbPt = (1-perturbFactor)*pt+perturbFactor*cc;
 
-            mesh.findCellFacePt(perturbPt, cellI, tetFaceI, tetPtI);
+            mesh.findCellFacePt(perturbPt, celli, tetFacei, tetPtI);
 
-            return cellI;
+            return celli;
         }
     }
 
@@ -106,9 +106,10 @@ void mapLagrangian(const meshToMesh& interp)
             cloud::prefix/cloudDirs[cloudI]
         );
 
-        IOobject* positionsPtr = objects.lookup(word("positions"));
+        IOobject* positionsPtr = objects.lookup("positions");
+        IOobject* coordinatesPtr = objects.lookup("coordinates");
 
-        if (positionsPtr)
+        if (positionsPtr || coordinatesPtr)
         {
             Info<< nl << "    processing cloud " << cloudDirs[cloudI] << endl;
 
@@ -130,7 +131,7 @@ void mapLagrangian(const meshToMesh& interp)
                 IDLList<passiveParticle>()
             );
 
-            particle::TrackingData<passiveParticleCloud> td(targetParcels);
+            passiveParticle::trackingData td(targetParcels);
 
             label sourceParticleI = 0;
 
@@ -160,7 +161,7 @@ void mapLagrangian(const meshToMesh& interp)
                     // all by tracking from their cell centre to the parcel
                     // position.
 
-                    forAll(targetCells, i)
+                    forAll(targetCells, targetCell)
                     {
                         // Track from its cellcentre to position to make sure.
                         autoPtr<passiveParticle> newPtr
@@ -168,15 +169,17 @@ void mapLagrangian(const meshToMesh& interp)
                             new passiveParticle
                             (
                                 meshTarget,
-                                targetCc[targetCells[i]],
-                                targetCells[i]
+                                barycentric(1, 0, 0, 0),
+                                targetCell,
+                                meshTarget.cells()[targetCell][0],
+                                1
                             )
                         );
                         passiveParticle& newP = newPtr();
 
-                        label faceI = newP.track(iter().position(), td);
+                        newP.track(iter().position() - newP.position(), 0);
 
-                        if (faceI < 0 && newP.cell() >= 0)
+                        if (!newP.onFace())
                         {
                             // Hit position.
                             foundCell = true;
@@ -212,18 +215,23 @@ void mapLagrangian(const meshToMesh& interp)
                 {
                     if (unmappedSource.found(sourceParticleI))
                     {
-                        label targetCell =
+                        const label targetCell =
                             findCell(targetParcels, iter().position());
 
                         if (targetCell >= 0)
                         {
                             unmappedSource.erase(sourceParticleI);
                             addParticles.append(sourceParticleI);
-                            iter().cell() = targetCell;
                             targetParcels.addParticle
                             (
-                                sourceParcels.remove(&iter())
+                                new passiveParticle
+                                (
+                                    meshTarget,
+                                    iter().position(),
+                                    targetCell
+                                )
                             );
+                            sourceParcels.remove(&iter());
                         }
                     }
                     sourceParticleI++;

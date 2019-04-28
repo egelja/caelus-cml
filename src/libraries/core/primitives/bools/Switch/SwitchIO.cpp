@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -58,7 +58,7 @@ CML::Istream& CML::operator>>(Istream& is, Switch& s)
         else
         {
             is.setBad();
-            FatalIOErrorIn("operator>>(Istream&, bool/Switch&)", is)
+            FatalIOErrorInFunction(is)
                 << "expected 'true/false', 'on/off' ... found " << t.wordToken()
                 << exit(FatalIOError);
 
@@ -68,7 +68,7 @@ CML::Istream& CML::operator>>(Istream& is, Switch& s)
     else
     {
         is.setBad();
-        FatalIOErrorIn("operator>>(Istream&, bool/Switch&)", is)
+        FatalIOErrorInFunction(is)
             << "wrong token type - expected bool, found " << t
             << exit(FatalIOError);
 

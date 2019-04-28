@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -29,13 +29,15 @@ namespace CML
 {
 namespace regionModels
 {
-namespace thermoBaffleModels
+namespace thermalBaffleModels
 {
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 defineTypeNameAndDebug(noThermo, 0);
-addToRunTimeSelectionTable(thermoBaffleModel, noThermo, mesh);
+
+addToRunTimeSelectionTable(thermalBaffleModel, noThermo, mesh);
+addToRunTimeSelectionTable(thermalBaffleModel, noThermo, dictionary);
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
@@ -49,8 +51,20 @@ bool noThermo::read()
 
 noThermo::noThermo(const word& modelType, const fvMesh& mesh)
 :
-    thermoBaffleModel(mesh)
+    thermalBaffleModel(mesh)
 {}
+
+
+noThermo::noThermo
+(
+    const word& modelType,
+    const fvMesh& mesh,
+    const dictionary& dict
+)
+:
+    thermalBaffleModel(modelType, mesh, dict)
+{}
+
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -69,8 +83,9 @@ void noThermo::evolveRegion()
 
 const tmp<volScalarField> noThermo::Cp() const
 {
-    FatalErrorIn("const tmp<volScalarField>& noThermo::Cp() const")
-        << "Cp field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "Cp field not available for " << type()
+        << abort(FatalError);
 
     return tmp<volScalarField>
     (
@@ -91,49 +106,54 @@ const tmp<volScalarField> noThermo::Cp() const
     );
 }
 
-const volScalarField& noThermo::kappa() const
+const volScalarField& noThermo::kappaRad() const
 {
-    FatalErrorIn("const volScalarField& noThermo::kappa() const")
-        << "kappa field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "kappa field not available for " << type()
+        << abort(FatalError);
     return volScalarField::null();
 }
 
 
 const volScalarField& noThermo::rho() const
 {
-    FatalErrorIn("const volScalarField& noThermo::rho() const")
-        << "rho field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "rho field not available for " << type()
+        << abort(FatalError);
     return volScalarField::null();
 }
 
 
-const volScalarField& noThermo::K() const
+const volScalarField& noThermo::kappa() const
 {
-   FatalErrorIn("const volScalarField& noThermo::K() const")
-        << "K field not available for " << type() << abort(FatalError);
+   FatalErrorInFunction
+        << "K field not available for " << type()
+        << abort(FatalError);
     return volScalarField::null();
 }
 
 
 const volScalarField& noThermo::T() const
 {
-    FatalErrorIn("const volScalarField& noThermo::T() const")
-        << "T field not available for " << type() << abort(FatalError);
+    FatalErrorInFunction
+        << "T field not available for " << type()
+        << abort(FatalError);
     return volScalarField::null();
 }
 
 
-const basicSolidThermo& noThermo::thermo() const
+const solidThermo& noThermo::thermo() const
 {
-    FatalErrorIn("const volScalarField& noThermo::T() const")
-        << "T field not available for " << type() << abort(FatalError);
-    return static_cast<const basicSolidThermo&>(null);
+    FatalErrorInFunction
+        << "T field not available for " << type()
+        << abort(FatalError);
+    return NullSingletonRef<solidThermo>();
 }
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace thermoBaffleModels
+} // End namespace thermalBaffleModels
 } // End namespace regionModels
 } // End namespace CML
 

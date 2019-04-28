@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -163,10 +163,8 @@ CML::patchZones::patchZones
 
     if (borderEdge.size() != pp_.nEdges())
     {
-        FatalErrorIn
-        (
-            "patchZones::patchZones(const primitivePatch&, const boolList&)"
-        )   << "borderEdge boolList not same size as number of edges" << endl
+        FatalErrorInFunction
+            << "borderEdge boolList not same size as number of edges" << endl
             << "borderEdge:" << borderEdge.size() << endl
             << "nEdges    :" << pp_.nEdges()
             << abort(FatalError);

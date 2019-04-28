@@ -199,10 +199,8 @@ void polyMeshGenModifier::renumberMesh()
             }
             else
             {
-                FatalErrorIn
-                (
-                    "void polyMeshGenModifier::renumberedMesh() const"
-                )   << "Error in internal face insertion"
+                FatalErrorInFunction
+                    << "Error in internal face insertion"
                     << abort(FatalError);
             }
         }

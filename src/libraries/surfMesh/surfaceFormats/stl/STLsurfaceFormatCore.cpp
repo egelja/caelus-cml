@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -97,10 +97,7 @@ bool CML::fileFormats::STLsurfaceFormatCore::readBINARY
     // Check that stream is OK, if not this may be an ASCII file
     if (!is.good())
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormatCore::readBINARY(IFstream&)"
-        )
+        FatalErrorInFunction
             << "problem reading header, perhaps file is not binary "
             << exit(FatalError);
     }
@@ -123,10 +120,7 @@ bool CML::fileFormats::STLsurfaceFormatCore::readBINARY
      || nTris > int(dataFileSize - headerSize)/25
     )
     {
-        FatalErrorIn
-        (
-            "fileFormats::STLsurfaceFormatCore::readBINARY(istream&)"
-        )
+        FatalErrorInFunction
             << "problem reading number of triangles, perhaps file is not binary"
             << exit(FatalError);
     }

@@ -39,14 +39,8 @@ CML::autoPtr<CML::solidBodyMotionFunction> CML::solidBodyMotionFunction::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "solidBodyMotionFunction::New"
-            "("
-            "    const dictionary& SBMFCoeffs,"
-            "    const Time& runTime"
-            ")"
-        )   << "Unknown solidBodyMotionFunction type "
+        FatalErrorInFunction
+            << "Unknown solidBodyMotionFunction type "
             << motionType << nl << nl
             << "Valid solidBodyMotionFunctions are : " << endl
             << dictionaryConstructorTablePtr_->sortedToc()

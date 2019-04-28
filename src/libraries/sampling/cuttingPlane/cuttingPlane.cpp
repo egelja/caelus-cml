@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -53,19 +53,20 @@ void CML::cuttingPlane::calcCutCells
     }
 
     cutCells_.setSize(listSize);
-    label cutcellI(0);
+    label cutcelli(0);
 
     // Find the cut cells by detecting any cell that uses points with
     // opposing dotProducts.
     for (label listI = 0; listI < listSize; ++listI)
     {
-        label cellI = listI;
+        label celli = listI;
+
         if (notNull(cellIdLabels))
         {
-            cellI = cellIdLabels[listI];
+            celli = cellIdLabels[listI];
         }
 
-        const labelList& cEdges = cellEdges[cellI];
+        const labelList& cEdges = cellEdges[celli];
 
         label nCutEdges = 0;
 
@@ -83,7 +84,7 @@ void CML::cuttingPlane::calcCutCells
 
                 if (nCutEdges > 2)
                 {
-                    cutCells_[cutcellI++] = cellI;
+                    cutCells_[cutcelli++] = celli;
 
                     break;
                 }
@@ -92,7 +93,7 @@ void CML::cuttingPlane::calcCutCells
     }
 
     // Set correct list size
-    cutCells_.setSize(cutcellI);
+    cutCells_.setSize(cutcelli);
 }
 
 
@@ -162,12 +163,12 @@ bool CML::cuttingPlane::walkCell
 (
     const primitiveMesh& mesh,
     const labelUList& edgePoint,
-    const label cellI,
+    const label celli,
     const label startEdgeI,
     DynamicList<label>& faceVerts
 )
 {
-    label faceI = -1;
+    label facei = -1;
     label edgeI = startEdgeI;
 
     label nIter = 0;
@@ -178,10 +179,10 @@ bool CML::cuttingPlane::walkCell
         faceVerts.append(edgePoint[edgeI]);
 
         // Cross edge to other face
-        faceI = meshTools::otherFace(mesh, cellI, faceI, edgeI);
+        facei = meshTools::otherFace(mesh, celli, facei, edgeI);
 
         // Find next cut edge on face.
-        const labelList& fEdges = mesh.faceEdges()[faceI];
+        const labelList& fEdges = mesh.faceEdges()[facei];
 
         label nextEdgeI = -1;
 
@@ -203,9 +204,9 @@ bool CML::cuttingPlane::walkCell
 
         if (nextEdgeI == -1)
         {
-            // Did not find another cut edge on faceI. Do what?
-            WarningIn("CML::cuttingPlane::walkCell")
-                << "Did not find closed walk along surface of cell " << cellI
+            // Did not find another cut edge on facei. Do what?
+            WarningInFunction
+                << "Did not find closed walk along surface of cell " << celli
                 << " starting from edge " << startEdgeI
                 << " in " << nIter << " iterations." << nl
                 << "Collected cutPoints so far:" << faceVerts
@@ -220,8 +221,8 @@ bool CML::cuttingPlane::walkCell
 
         if (nIter > 1000)
         {
-            WarningIn("CML::cuttingPlane::walkCell")
-                << "Did not find closed walk along surface of cell " << cellI
+            WarningInFunction
+                << "Did not find closed walk along surface of cell " << celli
                 << " starting from edge " << startEdgeI
                 << " in " << nIter << " iterations." << nl
                 << "Collected cutPoints so far:" << faceVerts
@@ -238,8 +239,8 @@ bool CML::cuttingPlane::walkCell
     }
     else
     {
-        WarningIn("CML::cuttingPlane::walkCell")
-            << "Did not find closed walk along surface of cell " << cellI
+        WarningInFunction
+            << "Did not find closed walk along surface of cell " << celli
             << " starting from edge " << startEdgeI << nl
             << "Collected cutPoints so far:" << faceVerts
             << endl;
@@ -259,19 +260,19 @@ void CML::cuttingPlane::walkCellCuts
 {
     const pointField& cutPoints = this->points();
 
-    // Use dynamic lists to handle triangulation and/or missed cuts
+    // use dynamic lists to handle triangulation and/or missed cuts
     DynamicList<face>  dynCutFaces(cutCells_.size());
     DynamicList<label> dynCutCells(cutCells_.size());
 
-    // Scratch space for calculating the face vertices
+    // scratch space for calculating the face vertices
     DynamicList<label> faceVerts(10);
 
     forAll(cutCells_, i)
     {
-        label cellI = cutCells_[i];
+        label celli = cutCells_[i];
 
         // Find the starting edge to walk from.
-        const labelList& cEdges = mesh.cellEdges()[cellI];
+        const labelList& cEdges = mesh.cellEdges()[celli];
 
         label startEdgeI = -1;
 
@@ -289,8 +290,8 @@ void CML::cuttingPlane::walkCellCuts
         // Check for the unexpected ...
         if (startEdgeI == -1)
         {
-            FatalErrorIn("CML::cuttingPlane::walkCellCuts(..)")
-                << "Cannot find cut edge for cut cell " << cellI
+            FatalErrorInFunction
+                << "Cannot find cut edge for cut cell " << celli
                 << abort(FatalError);
         }
 
@@ -299,7 +300,7 @@ void CML::cuttingPlane::walkCellCuts
         (
             mesh,
             edgePoint,
-            cellI,
+            celli,
             startEdgeI,
             faceVerts
         );
@@ -309,7 +310,7 @@ void CML::cuttingPlane::walkCellCuts
             face f(faceVerts);
 
             // Orient face to point in the same direction as the plane normal
-            if ((f.normal(cutPoints) & normal()) < 0)
+            if ((f.area(cutPoints) & normal()) < 0)
             {
                 f.flip();
             }
@@ -320,13 +321,13 @@ void CML::cuttingPlane::walkCellCuts
                 label nTri = f.triangles(cutPoints, dynCutFaces);
                 while (nTri--)
                 {
-                    dynCutCells.append(cellI);
+                    dynCutCells.append(celli);
                 }
             }
             else
             {
                 dynCutFaces.append(f);
-                dynCutCells.append(cellI);
+                dynCutCells.append(celli);
             }
         }
     }
@@ -416,7 +417,7 @@ void CML::cuttingPlane::operator=(const cuttingPlane& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn ("CML::cuttingPlane::operator=(const cuttingPlane&)")
+        FatalErrorInFunction
             << "Attempted assignment to self"
             << abort(FatalError);
     }

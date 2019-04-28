@@ -488,11 +488,8 @@ inline scalar angleBetweenFaces
 
     if( counter == 0 )
     {
-        FatalErrorIn
-        (
-            "scalar angleBetweenFaces"
-            "(const pointField&, const face&, const face&)"
-        ) << "Faces " << f1 << " and " << f2
+        FatalErrorInFunction
+          << "Faces " << f1 << " and " << f2
           << " do no share an edge" << abort(FatalError);
     }
 
@@ -889,11 +886,8 @@ inline bool findMinimizerPoint
 )
 {
     if( origins.size() != normals.size() )
-        FatalErrorIn
-        (
-            "inline bool findMinimizerPoint"
-            "(const DynList<point>&, const DynList<vector>&, point&)"
-        ) << "Size of normals and origins do not match" << abort(FatalError);
+        FatalErrorInFunction
+          << "Size of normals and origins do not match" << abort(FatalError);
 
     tensor mat(tensor::zero);
     vector source(vector::zero);

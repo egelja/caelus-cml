@@ -160,12 +160,7 @@ void CML::primitiveEntry::readEntry(const dictionary& dict, Istream& is)
             << " on line " << keywordLineNumber
             << " and ending at line " << is.lineNumber();
 
-        SafeFatalIOErrorIn
-        (
-            "primitiveEntry::readEntry(const dictionary&, Istream&)",
-            is,
-            os.str()
-        );
+        SafeFatalIOErrorInFunction(is, os.str());
     }
 }
 

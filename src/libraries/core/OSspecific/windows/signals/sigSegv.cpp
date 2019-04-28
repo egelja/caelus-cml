@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2011 Symscape
+Copyright (C) 2018 Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -40,10 +41,8 @@ void CML::sigSegv::sigSegvHandler(int)
 
     if (SIG_ERR == success)
     {
-         FatalErrorIn
-        (
-            "CML::sigSegv::sigSegvHandler()"
-        )   << "Cannot reset SIGSEGV trapping"
+         FatalErrorInFunction
+            << "Cannot reset SIGSEGV trapping"
             << abort(FatalError);    
     }
 
@@ -75,10 +74,8 @@ CML::sigSegv::~sigSegv()
 
     if (SIG_ERR == success)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::~sigSegv()"
-        )   << "Cannot reset SIGSEGV trapping"
+        FatalErrorInFunction
+            << "Cannot reset SIGSEGV trapping"
             << abort(FatalError);    
     }
 }
@@ -90,10 +87,8 @@ void CML::sigSegv::set(const bool verbose)
 {
     if (SIG_DFL != oldAction_)
     {
-        FatalErrorIn
-        (
-            "CML::sigSegv::set()"
-        )   << "Cannot call sigSegv::set() more than once"
+        FatalErrorInFunction
+            << "Cannot call sigSegv::set() more than once"
             << abort(FatalError);
     }
 
@@ -103,10 +98,8 @@ void CML::sigSegv::set(const bool verbose)
     {
         oldAction_ = SIG_DFL;
 
-        FatalErrorIn
-        (
-            "CML::sigSegv::set()"
-        )   << "Cannot set SIGSEGV trapping"
+        FatalErrorInFunction
+            << "Cannot set SIGSEGV trapping"
             << abort(FatalError);    
     }
 }

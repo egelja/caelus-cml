@@ -245,14 +245,14 @@ bool TimeClone::write(const bool force)
 
     if(exists(time.timePath())) {
         if(!force) {
-            WarningIn("TimeClone::write(const bool force)")
+            WarningInFunction
                 << time.timePath() << " already existing. Skipping because no 'force' set"
                     << endl;
             Dbug << "Clearing and exiting" << endl;
             storedTime_.clear();
             return false;
         } else {
-            WarningIn("TimeClone::write(const bool force)")
+            WarningInFunction
                 << time.timePath() << " already existing. Writing because 'force' is set"
                     << endl;
         }

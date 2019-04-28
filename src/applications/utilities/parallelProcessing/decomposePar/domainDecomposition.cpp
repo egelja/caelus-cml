@@ -92,7 +92,7 @@ CML::domainDecomposition::domainDecomposition
                 false
             )
         )
-      : NULL
+      : nullptr
     ),
     decompositionDict_
     (

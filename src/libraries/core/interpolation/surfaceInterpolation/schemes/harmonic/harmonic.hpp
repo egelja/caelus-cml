@@ -104,13 +104,9 @@ public:
             const GeometricField<scalar, fvPatchField, volMesh>&
         ) const
         {
-            notImplemented
-            (
-                "harmonic::weights"
-                "(const GeometricField<scalar, fvPatchField, volMesh>&)"
-            );
+            NotImplemented;
 
-            return tmp<surfaceScalarField>(NULL);
+            return tmp<surfaceScalarField>(nullptr);
         }
 
         //- Return the face-interpolate of the given cell field

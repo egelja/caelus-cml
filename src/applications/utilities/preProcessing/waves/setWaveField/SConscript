@@ -6,7 +6,7 @@ Import('env')
 target = 'setWaveField'
 
 sources = Split("""
- setWaveField.cpp
+ setWaveField_app.cpp
 """)
 
 caelus_inc = [

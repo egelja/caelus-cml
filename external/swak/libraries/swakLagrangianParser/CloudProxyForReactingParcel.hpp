@@ -124,13 +124,6 @@ CloudProxyForReactingParcel<CloudType>::CloudProxyForReactingParcel
         );
     }
 
-    this->addScalarFunction(
-        "pc",
-        "Owner cell pressure",
-        new typename baseType::template ParticleMethodWrapperValue<scalar>(
-            &CloudType::particleType::pc
-        )
-    );
 
     //- constant Properties
     const typename CloudType::particleType::constantProperties &constProps=
@@ -141,13 +134,6 @@ CloudProxyForReactingParcel<CloudType>::CloudProxyForReactingParcel
         "Minimum pressure (constant)",
         new typename baseType::template ParticleMethodWrapperConstant<scalar>(
             constProps.pMin()
-        )
-    );
-    this->addScalarFunction(
-        "Tvap",
-        "Vaporisation temperature (constant)",
-        new typename baseType::template ParticleMethodWrapperConstant<scalar>(
-            constProps.Tvap()
         )
     );
 }

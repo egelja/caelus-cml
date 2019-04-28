@@ -224,10 +224,8 @@ void gammaReTheta::ReTheta(volScalarField& ReThetaField) const
 
             if (iter++ > maxIter_)
             {
-                FatalErrorIn
-                (
-                    "gammaReTheta::ReTheta(volScalarField& ReThetaField) const"
-                )   << "Maximum number of iterations exceeded"
+                FatalErrorInFunction
+                    << "Maximum number of iterations exceeded"
                 << abort(FatalError);
             }
         } while(mag(ReThetaNew-ReThetaOld) > ReThetaTol);

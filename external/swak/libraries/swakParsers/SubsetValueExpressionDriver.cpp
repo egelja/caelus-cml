@@ -105,26 +105,26 @@ tmp<scalarField> SubsetValueExpressionDriver::makeIdField()
 
 tmp<vectorField> SubsetValueExpressionDriver::makePositionField() const
 {
-    notImplemented("SubsetValueExpressionDriver::makePositionField");
+    NotImplemented;
 
     return tmp<vectorField>(new vectorField(0));
 }
 
 // tmp<vectorField> SubsetValueExpressionDriver::makePointField() const
 // {
-//     notImplemented("SubsetValueExpressionDriver::makePointField");
+//     NotImplemented;
 // }
 
 tmp<vectorField> SubsetValueExpressionDriver::makeFaceNormalField() const
 {
-    notImplemented("SubsetValueExpressionDriver::makeFaceNormalField");
+    NotImplemented;
 
     return tmp<vectorField>(new vectorField(0));
 }
 
 tmp<vectorField> SubsetValueExpressionDriver::makeFaceAreaField() const
 {
-    notImplemented("SubsetValueExpressionDriver::makeFaceAreaField");
+    NotImplemented;
 
     return tmp<vectorField>(new vectorField(0));
 }

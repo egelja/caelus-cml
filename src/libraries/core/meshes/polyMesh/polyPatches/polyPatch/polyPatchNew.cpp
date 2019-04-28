@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -47,11 +47,8 @@ CML::autoPtr<CML::polyPatch> CML::polyPatch::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "polyPatch::New(const word&, const word&, const label, "
-            "const label, const label, const polyBoundaryMesh&) "
-        )   << "Unknown polyPatch type "
+        FatalErrorInFunction
+            << "Unknown polyPatch type "
             << patchType << " for patch " << name << nl << nl
             << "Valid polyPatch types are :" << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -123,12 +120,8 @@ CML::autoPtr<CML::polyPatch> CML::polyPatch::New
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
-            FatalIOErrorIn
-            (
-                "polyPatch::New(const word&, const dictionary&, "
-                "const label, const polyBoundaryMesh&)",
-                dict
-            )   << "Unknown polyPatch type "
+            FatalIOErrorInFunction(dict)
+                << "Unknown polyPatch type "
                 << patchType << " for patch " << name << nl << nl
                 << "Valid polyPatch types are :" << endl
                 << dictionaryConstructorTablePtr_->sortedToc()

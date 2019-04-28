@@ -6,12 +6,12 @@ Import('env')
 target = 'compressibleVLESModels'
 
 sources = Split("""
-VLESModel/VLESModel.cpp
-laminar/laminar.cpp
-realizableKE/realizableKE.cpp
-kOmegaSST/kOmegaSST.cpp
-kOmegaSSTCSModel/kOmegaSSTCSModel.cpp
-SpalartAllmaras/SpalartAllmaras.cpp
+VLESModel/compressibleVLESModel.cpp
+laminar/compressibleVLESLaminar.cpp
+realizableKE/compressibleVLESRealizableKE.cpp
+kOmegaSST/compressibleVLESkOmegaSST.cpp
+kOmegaSSTCSModel/compressibleVLESkOmegaSSTCSModel.cpp
+SpalartAllmaras/compressibleVLESSpalartAllmaras.cpp
 """)
 
 caelus_inc = [
@@ -23,7 +23,7 @@ caelus_inc = [
 caelus_libs = [
 'core',
 'specie',
-'basicThermophysicalModels',
+'fluidThermophysicalModels',
 'compressibleTurbulenceModel'
 ]
 

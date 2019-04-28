@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -48,6 +48,14 @@ namespace CML
 // Forward declaration of classes
 class polyPatch;
 class polyMesh;
+
+// Forward declaration of friend functions and operators
+
+class pointEdgePoint;
+
+Istream& operator>>(Istream&, pointEdgePoint&);
+Ostream& operator<<(Ostream&, const pointEdgePoint&);
+
 
 /*---------------------------------------------------------------------------*\
                            Class pointEdgePoint Declaration

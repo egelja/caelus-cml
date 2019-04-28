@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -19,61 +19,75 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef makeChemistrySolverTypes_H
-#define makeChemistrySolverTypes_H
+#ifndef makeChemistrySolverTypes_HPP
+#define makeChemistrySolverTypes_HPP
 
 #include "chemistrySolver.hpp"
 
-#include "ODEChemistryModel.hpp"
+#include "StandardChemistryModel.hpp"
+#include "TDACChemistryModel.hpp"
 
 #include "noChemistrySolver.hpp"
 #include "EulerImplicit.hpp"
 #include "ode_.hpp"
-#include "sequential.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeChemistrySolverTypes(CompChemModel,Thermo)                        \
-                                                                              \
-    typedef ODEChemistryModel<CompChemModel, Thermo> CompChemModel##Thermo;   \
-                                                                              \
-    makeChemistrySolver(CompChemModel##Thermo);                               \
-                                                                              \
-    makeChemistrySolverType                                                   \
-    (                                                                         \
-        noChemistrySolver,                                                    \
-        ODEChemistryModel,                                                    \
-        CompChemModel,                                                        \
-        Thermo                                                                \
-    );                                                                        \
-                                                                              \
-    makeChemistrySolverType                                                   \
-    (                                                                         \
-        EulerImplicit,                                                        \
-        ODEChemistryModel,                                                    \
-        CompChemModel,                                                        \
-        Thermo                                                                \
-    );                                                                        \
-                                                                              \
-    makeChemistrySolverType                                                   \
-    (                                                                         \
-        ode,                                                                  \
-        ODEChemistryModel,                                                    \
-        CompChemModel,                                                        \
-        Thermo                                                                \
-    );                                                                        \
-                                                                              \
-    makeChemistrySolverType                                                   \
-    (                                                                         \
-        sequential,                                                           \
-        ODEChemistryModel,                                                    \
-        CompChemModel,                                                        \
-        Thermo                                                                \
-    );
+#define makeChemistrySolverType(SS, Comp, Thermo)                              \
+                                                                               \
+    typedef SS<StandardChemistryModel<Comp, Thermo>> SS##Comp##Thermo;         \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        SS##Comp##Thermo,                                                      \
+        (#SS"<" + word(StandardChemistryModel<Comp, Thermo>::typeName_()) + "<"\
+        + word(Comp::typeName_()) + "," + Thermo::typeName() + ">>").c_str(),  \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    BasicChemistryModel<Comp>::                                                \
+        add##thermo##ConstructorToTable<SS##Comp##Thermo>                      \
+        add##SS##Comp##Thermo##thermo##ConstructorTo##BasicChemistryModel##Comp\
+##Table_; \
+                                                                               \
+    typedef SS<TDACChemistryModel<Comp, Thermo>> TDAC##SS##Comp##Thermo;       \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        TDAC##SS##Comp##Thermo,                                                \
+        (#SS"<" + word(TDACChemistryModel<Comp, Thermo>::typeName_()) + "<"    \
+        + word(Comp::typeName_()) + "," + Thermo::typeName() + ">>").c_str(),  \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    BasicChemistryModel<Comp>::                                                \
+        add##thermo##ConstructorToTable<TDAC##SS##Comp##Thermo>                \
+        add##TDAC##SS##Comp##Thermo##thermo##ConstructorTo##BasicChemistryModel\
+##Comp##Table_;
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#define makeChemistrySolverTypes(Comp, Thermo)                                 \
+                                                                               \
+    makeChemistrySolverType                                                    \
+    (                                                                          \
+        noChemistrySolver,                                                     \
+        Comp,                                                                  \
+        Thermo                                                                 \
+    );                                                                         \
+                                                                               \
+    makeChemistrySolverType                                                    \
+    (                                                                          \
+        EulerImplicit,                                                         \
+        Comp,                                                                  \
+        Thermo                                                                 \
+    );                                                                         \
+                                                                               \
+    makeChemistrySolverType                                                    \
+    (                                                                          \
+        ode,                                                                   \
+        Comp,                                                                  \
+        Thermo                                                                 \
+    );                                                                         \
+
 
 #endif
-
-// ************************************************************************* //

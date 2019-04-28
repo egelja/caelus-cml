@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2004-6 H. Jasak
+Copyright (C) Applied CCM Pty Ltd
 -------------------------------------------------------------------------------
 License
     This file is part of Caelus.
@@ -289,11 +290,8 @@ inline void DecoupledCoeffField<Type>::checkSize
 {
     if (f.size() != this->size())
     {
-        FatalErrorIn
-        (
-            "void DecoupledCoeffField<Type>::checkSize("
-            "const Field<Type2>& f) const"
-        )   << "Incorrect field size: " << f.size()
+        FatalErrorInFunction
+            << "Incorrect field size: " << f.size()
             << " local size: " << size()
             << abort(FatalError);
     }
@@ -309,11 +307,8 @@ DecoupledCoeffField<Type>::toScalar()
         // Debug check: demotion
         if (linearCoeffPtr_)
         {
-            FatalErrorIn
-            (
-                "DecoupledCoeffField<Type>::scalarTypeField& "
-                "DecoupledCoeffField<Type>::toScalar()"
-            )   << "Detected demotion to scalar.  Probably an error"
+            FatalErrorInFunction
+                << "Detected demotion to scalar.  Probably an error"
                 << abort(FatalError);
         }
 
@@ -350,8 +345,8 @@ DecoupledCoeffField<Type>::toLinear()
 template<class Type>
 DecoupledCoeffField<Type>::DecoupledCoeffField(const label size)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
     size_(size)
 {}
 
@@ -363,8 +358,8 @@ DecoupledCoeffField<Type>::DecoupledCoeffField
 )
 :
     refCount(),
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
     size_(f.size())
 {
     if (f.scalarCoeffPtr_)
@@ -381,8 +376,8 @@ DecoupledCoeffField<Type>::DecoupledCoeffField
 template<class Type>
 DecoupledCoeffField<Type>::DecoupledCoeffField(Istream& is)
 :
-    scalarCoeffPtr_(NULL),
-    linearCoeffPtr_(NULL),
+    scalarCoeffPtr_(nullptr),
+    linearCoeffPtr_(nullptr),
     size_(0)
 {
     // Read keyword and pick up allocated field
@@ -416,11 +411,8 @@ DecoupledCoeffField<Type>::DecoupledCoeffField(Istream& is)
     }
     else
     {
-        FatalIOErrorIn
-        (
-            "DecoupledCoeffField<Type>::DecoupledCoeffField(Istream& is)",
-            is
-        )   << "invalid keyword while reading: " << key
+        FatalIOErrorInFunction(is)
+            << "invalid keyword while reading: " << key
             << exit(FatalIOError);
     }
 }
@@ -531,10 +523,8 @@ void DecoupledCoeffField<Type>::checkActive() const
 
     if (nActive > 1)
     {
-        FatalErrorIn
-        (
-            "void CML::DecoupledCoeffField<Type>::checkActive() const"
-        )   << "Activation/deactivation error.  nActive = " << nActive
+        FatalErrorInFunction
+            << "Activation/deactivation error.  nActive = " << nActive
             << abort(FatalError);
     }
 }
@@ -546,11 +536,8 @@ DecoupledCoeffField<Type>::asScalar() const
 {
     if (not scalarCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::scalarTypeField& "
-            "DecoupledCoeffField<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -566,11 +553,8 @@ DecoupledCoeffField<Type>::asLinear() const
 {
     if (not linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::linearTypeField& "
-            "DecoupledCoeffField<Type>::asLinear()"
-        )   << "Requested linear but active type is: "
+        FatalErrorInFunction
+            << "Requested linear but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -586,11 +570,8 @@ DecoupledCoeffField<Type>::asScalar()
 {
     if (linearCoeffPtr_)
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::scalarTypeField& "
-            "DecoupledCoeffField<Type>::asScalar()"
-        )   << "Requested scalar but active type is: "
+        FatalErrorInFunction
+            << "Requested scalar but active type is: "
             << blockCoeffBase::activeLevelNames_[this->activeType()]
             << ".  This is not allowed."
             << abort(FatalError);
@@ -632,11 +613,8 @@ DecoupledCoeffField<Type>::component(const direction dir) const
     }
     else
     {
-        FatalErrorIn
-        (
-            "tmp<DecoupledCoeffField<Type>::scalarTypeField>"
-            "DecoupledCoeffField<Type>::component(const direction dir) const"
-        )   << "Field not allocated."
+        FatalErrorInFunction
+            << "Field not allocated."
             << abort(FatalError);
     }
 
@@ -695,16 +673,8 @@ void DecoupledCoeffField<Type>::getSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::getSubset\n"
-            "(\n"
-            "    DecoupledCoeffField<Type>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -743,15 +713,8 @@ void DecoupledCoeffField<Type>::getSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::getSubset\n"
-            "(\n"
-            "    DecoupledCoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ") const"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -791,16 +754,8 @@ void DecoupledCoeffField<Type>::setSubset
     // Check sizes
     if (f.size() != size)
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::setSubset\n"
-            "(\n"
-            "     const DecoupledCoeffField<Type>& f,\n"
-            "    const label start,\n"
-            "    const label size\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << size
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << size
             << abort(FatalError);
     }
 
@@ -839,15 +794,8 @@ void DecoupledCoeffField<Type>::setSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::setSubset\n"
-            "(\n"
-            "    const DecoupledCoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -941,15 +889,8 @@ void DecoupledCoeffField<Type>::addSubset
     // Check sizes
     if (f.size() != addr.size())
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::addSubset\n"
-            "(\n"
-            "    const DecoupledCoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible sizes: " << f.size() << " and " << addr.size()
+        FatalErrorInFunction
+            << "Incompatible sizes: " << f.size() << " and " << addr.size()
             << abort(FatalError);
     }
 
@@ -985,15 +926,8 @@ void DecoupledCoeffField<Type>::addSubset
     }
     else
     {
-        FatalErrorIn
-        (
-            "template<class Type>\n"
-            "void CML::DecoupledCoeffField<Type>::addSubset\n"
-            "(\n"
-            "    const DecoupledCoeffField<Type>& f,\n"
-            "    const labelList addr\n"
-            ")"
-        )   << "Incompatible combination of types"
+        FatalErrorInFunction
+            << "Incompatible combination of types"
             << abort(FatalError);
     }
 }
@@ -1008,22 +942,16 @@ void DecoupledCoeffField<Type>::operator=
 {
     if (this == &f)
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::operator=("
-            "const DecoupledCoeffField<Type>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
     // Check field sizes
     if (f.size() != this->size())
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::operator=("
-            "const DecoupledCoeffField<Type>&)"
-        )   << "Incorrect field size: " << f.size()
+        FatalErrorInFunction
+            << "Incorrect field size: " << f.size()
             << " local size: " << size()
             << abort(FatalError);
     }
@@ -1051,11 +979,8 @@ void DecoupledCoeffField<Type>::operator=
 {
     if (this == &(tf()))
     {
-        FatalErrorIn
-        (
-            "DecoupledCoeffField<Type>::operator=("
-            "const tmp<DecoupledCoeffField>&)"
-        )   << "attempted assignment to self"
+        FatalErrorInFunction
+            << "attempted assignment to self"
             << abort(FatalError);
     }
 
@@ -1077,11 +1002,8 @@ void CML::DecoupledCoeffField<Type>::operator op                             \
 {                                                                             \
     if (f.size() != this->size())                                             \
     {                                                                         \
-        FatalErrorIn                                                          \
-        (                                                                     \
-            "void DecoupledCoeffField<tensor>::operator "                     \
-            "op(const DecoupledCoeffField<tensor>& f)"                        \
-        )   << "Incorrect field size: " << f.size()                           \
+        FatalErrorInFunction                                                  \
+            << "Incorrect field size: " << f.size()                           \
             << " local size: " << size()                                      \
             << abort(FatalError);                                             \
     }                                                                         \

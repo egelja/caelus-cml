@@ -57,13 +57,13 @@ void CML::writeFaceSet
 
     faceList setFaces(set.size());
     labelList setFaceLabels(set.size());
-    label setFaceI = 0;
+    label setFacei = 0;
 
     forAllConstIter(faceSet, set, iter)
     {
-        setFaceLabels[setFaceI] = iter.key();
-        setFaces[setFaceI] = faces[iter.key()];
-        setFaceI++;
+        setFaceLabels[setFacei] = iter.key();
+        setFaces[setFacei] = faces[iter.key()];
+        setFacei++;
     }
     primitiveFacePatch fp(setFaces, vMesh.mesh().points());
 
@@ -81,18 +81,18 @@ void CML::writeFaceSet
 
     label nFaceVerts = 0;
 
-    forAll(fp.localFaces(), faceI)
+    forAll(fp.localFaces(), facei)
     {
-        nFaceVerts += fp.localFaces()[faceI].size() + 1;
+        nFaceVerts += fp.localFaces()[facei].size() + 1;
     }
     ostr<< "POLYGONS " << fp.size() << ' ' << nFaceVerts << std::endl;
 
 
     DynamicList<label> vertLabels(nFaceVerts);
 
-    forAll(fp.localFaces(), faceI)
+    forAll(fp.localFaces(), facei)
     {
-        const face& f = fp.localFaces()[faceI];
+        const face& f = fp.localFaces()[facei];
 
         vertLabels.append(f.size());
 

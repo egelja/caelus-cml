@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -49,7 +49,7 @@ void CML::sampledSurface::makeSf() const
     // It is an error to recalculate if the pointer is already set
     if (SfPtr_)
     {
-        FatalErrorIn("CML::sampledSurface::makeSf()")
+        FatalErrorInFunction
             << "face area vectors already exist"
             << abort(FatalError);
     }
@@ -58,9 +58,9 @@ void CML::sampledSurface::makeSf() const
     SfPtr_ = new vectorField(theFaces.size());
 
     vectorField& values = *SfPtr_;
-    forAll(theFaces, faceI)
+    forAll(theFaces, facei)
     {
-        values[faceI] = theFaces[faceI].normal(points());
+        values[facei] = theFaces[facei].area(points());
     }
 }
 
@@ -70,7 +70,7 @@ void CML::sampledSurface::makeMagSf() const
     // It is an error to recalculate if the pointer is already set
     if (magSfPtr_)
     {
-        FatalErrorIn("CML::sampledSurface::makeMagSf()")
+        FatalErrorInFunction
             << "mag face areas already exist"
             << abort(FatalError);
     }
@@ -79,9 +79,9 @@ void CML::sampledSurface::makeMagSf() const
     magSfPtr_ = new scalarField(theFaces.size());
 
     scalarField& values = *magSfPtr_;
-    forAll(theFaces, faceI)
+    forAll(theFaces, facei)
     {
-        values[faceI] = theFaces[faceI].mag(points());
+        values[facei] = theFaces[facei].mag(points());
     }
 }
 
@@ -91,7 +91,7 @@ void CML::sampledSurface::makeCf() const
     // It is an error to recalculate if the pointer is already set
     if (CfPtr_)
     {
-        FatalErrorIn("CML::sampledSurface::makeCf()")
+        FatalErrorInFunction
             << "face centres already exist"
             << abort(FatalError);
     }
@@ -100,9 +100,9 @@ void CML::sampledSurface::makeCf() const
     CfPtr_ = new vectorField(theFaces.size());
 
     vectorField& values = *CfPtr_;
-    forAll(theFaces, faceI)
+    forAll(theFaces, facei)
     {
-        values[faceI] = theFaces[faceI].centre(points());
+        values[facei] = theFaces[facei].centre(points());
     }
 }
 
@@ -128,11 +128,8 @@ CML::autoPtr<CML::sampledSurface> CML::sampledSurface::New
 
     if (cstrIter == wordConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "sampledSurface::New"
-            "(const word&, const polyMesh&, const dictionary&)"
-        )   << "Unknown sample type "
+        FatalErrorInFunction
+            << "Unknown sample type "
             << sampleType << nl << nl
             << "Valid sample types : " << endl
             << wordConstructorTablePtr_->sortedToc()
@@ -155,9 +152,9 @@ CML::sampledSurface::sampledSurface
     name_(name),
     mesh_(mesh),
     interpolate_(interpolate),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CfPtr_(NULL),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CfPtr_(nullptr),
     area_(-1)
 {}
 
@@ -172,9 +169,9 @@ CML::sampledSurface::sampledSurface
     name_(name),
     mesh_(mesh),
     interpolate_(dict.lookupOrDefault("interpolate", false)),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CfPtr_(NULL),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CfPtr_(nullptr),
     area_(-1)
 {
     dict.readIfPresent("name", name_);
@@ -241,8 +238,8 @@ CML::tmp<CML::scalarField> CML::sampledSurface::sample
     const surfaceScalarField& sField
 ) const
 {
-    notImplemented("tmp<CML::scalarField> sampledSurface::sample");
-    return tmp<scalarField>(NULL);
+    NotImplemented;
+    return tmp<scalarField>(nullptr);
 }
 
 
@@ -251,8 +248,8 @@ CML::tmp<CML::vectorField> CML::sampledSurface::sample
     const surfaceVectorField& sField
 ) const
 {
-    notImplemented("tmp<CML::vectorField> sampledSurface::sample");
-    return tmp<vectorField>(NULL);
+    NotImplemented;
+    return tmp<vectorField>(nullptr);
 }
 
 
@@ -261,8 +258,8 @@ CML::tmp<CML::sphericalTensorField> CML::sampledSurface::sample
     const surfaceSphericalTensorField& sField
 ) const
 {
-    notImplemented("tmp<CML::sphericalTensorField> sampledSurface::sample");
-    return tmp<sphericalTensorField>(NULL);
+    NotImplemented;
+    return tmp<sphericalTensorField>(nullptr);
 }
 
 
@@ -271,8 +268,8 @@ CML::tmp<CML::symmTensorField> CML::sampledSurface::sample
     const surfaceSymmTensorField& sField
 ) const
 {
-    notImplemented("tmp<CML::symmTensorField> sampledSurface::sample");
-    return tmp<symmTensorField>(NULL);
+    NotImplemented;
+    return tmp<symmTensorField>(nullptr);
 }
 
 
@@ -281,8 +278,8 @@ CML::tmp<CML::tensorField> CML::sampledSurface::sample
     const surfaceTensorField& sField
 ) const
 {
-    notImplemented("tmp<CML::tensorField> sampledSurface::sample");
-    return tmp<tensorField>(NULL);
+    NotImplemented;
+    return tmp<tensorField>(nullptr);
 }
 
 
@@ -292,9 +289,9 @@ CML::sampledSurface::project(const Field<scalar>& field) const
     tmp<Field<scalar> > tRes(new Field<scalar>(faces().size()));
     Field<scalar>& res = tRes();
 
-    forAll(faces(), faceI)
+    forAll(faces(), facei)
     {
-        res[faceI] = field[faceI];
+        res[facei] = field[facei];
     }
 
     return tRes;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011-2013 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -131,7 +131,7 @@ CML::triSurfaceRegionSearch::treeByRegion() const
 
     //            if (nPoints != surface().points().size())
     //            {
-    //                WarningIn("triSurfaceRegionSearch::treeByRegion() const")
+    //                WarningInFunction
     //                    << "Surface does not have compact point numbering. "
     //                    << "Of " << surface().points().size()
     //                    << " only " << nPoints
@@ -140,16 +140,10 @@ CML::triSurfaceRegionSearch::treeByRegion() const
     //                    << endl;
     //            }
 
-                // Random number generator. Bit dodgy since not exactly
-                // random ;-)
-                Random rndGen(65431);
-
                 // Slightly extended bb. Slightly off-centred just so
                 // on symmetric geometry there are fewer face/edge
                 // aligned items.
-                bb = bb.extend(rndGen, 1e-4);
-                bb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-                bb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+                bb = bb.extend(1e-4);
             }
 
             treeByRegion_.set

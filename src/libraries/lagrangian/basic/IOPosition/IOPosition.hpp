@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -31,6 +31,7 @@ SourceFiles
 #ifndef IOPosition_H
 #define IOPosition_H
 
+#include "cloud_.hpp"
 #include "regIOobject.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -62,7 +63,6 @@ public:
         virtual const word& type() const
         {
             return Cloud<typename CloudType::particleType>::typeName;
-            //cloud_.type();
         }
 
 
@@ -73,10 +73,10 @@ public:
 
 
     // Member functions
-    
+
         //- Inherit readData from regIOobject
         using regIOobject::readData;
-    
+
         virtual void readData(CloudType& c, bool checkClass);
 
         virtual bool write() const;
@@ -88,6 +88,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace CML
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -132,11 +133,7 @@ bool CML::IOPosition<CloudType>::writeData(Ostream& os) const
 
     forAllConstIter(typename CloudType, cloud_, iter)
     {
-        const typename CloudType::particleType& p = iter();
-
-        // Prevent writing additional fields
-        p.write(os, false);
-
+        iter().writePosition(os);
         os  << nl;
     }
 
@@ -160,24 +157,23 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
         label s = firstToken.labelToken();
 
         // Read beginning of contents
-        is.readBeginList("IOPosition<CloudType>::readData(CloudType, bool)");
+        is.readBeginList(FUNCTION_NAME);
 
         for (label i=0; i<s; i++)
         {
-            // Do not read any fields, position only
+            // Read position only
             c.append(new typename CloudType::particleType(mesh, is, false));
         }
 
         // Read end of contents
-        is.readEndList("IOPosition<CloudType>::readData(CloudType, bool)");
+        is.readEndList(FUNCTION_NAME);
     }
     else if (firstToken.isPunctuation())
     {
         if (firstToken.pToken() != token::BEGIN_LIST)
         {
-            FatalIOErrorIn
+            FatalIOErrorInFunction
             (
-                "void IOPosition<CloudType>::readData(CloudType&, bool)",
                 is
             )   << "incorrect first token, '(', found "
                 << firstToken.info() << exit(FatalIOError);
@@ -193,26 +189,23 @@ void CML::IOPosition<CloudType>::readData(CloudType& c, bool checkClass)
         )
         {
             is.putBack(lastToken);
-            // Do not read any fields, position only
+
+            // Read position only
             c.append(new typename CloudType::particleType(mesh, is, false));
             is  >> lastToken;
         }
     }
     else
     {
-        FatalIOErrorIn
+        FatalIOErrorInFunction
         (
-            "void IOPosition<ParticleType>::readData(CloudType&, bool)",
             is
         )   << "incorrect first token, expected <int> or '(', found "
             << firstToken.info() << exit(FatalIOError);
     }
 
     // Check state of IOstream
-    is.check
-    (
-        "void IOPosition<CloudType>::readData(CloudType&, bool)"
-    );
+    is.check(FUNCTION_NAME);
 }
 
 

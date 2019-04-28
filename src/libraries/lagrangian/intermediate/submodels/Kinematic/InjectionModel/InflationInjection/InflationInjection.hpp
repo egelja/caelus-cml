@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -107,7 +107,7 @@ class InflationInjection
         scalar dSeed_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
 
 public:
@@ -168,8 +168,8 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
-                label& tetPtI
+                label& tetFacei,
+                label& tetPti
             );
 
             //- Set the parcel properties
@@ -239,7 +239,7 @@ CML::InflationInjection<CloudType>::InflationInjection
     dSeed_(SMALL),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -322,9 +322,7 @@ CML::InflationInjection<CloudType>::~InflationInjection()
 
 template<class CloudType>
 void CML::InflationInjection<CloudType>::updateMesh()
-{
-    // do nothing
-}
+{}
 
 
 template<class CloudType>
@@ -356,7 +354,7 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
     {
         label cI = inflationCells_[iCI];
 
-        typename CloudType::parcelType* pPtr = NULL;
+        typename CloudType::parcelType* pPtr = nullptr;
 
         forAll(cellOccupancy[cI], cPI)
         {
@@ -372,7 +370,7 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
 
     newParticles_.clear();
 
-    cachedRandom& rnd = this->owner().rndGen();
+    Random& rnd = this->owner().rndGen();
 
     // Diameter factor, when splitting particles into 4, this is the
     // factor that modifies the diameter.
@@ -403,29 +401,15 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
     {
         if (iterationNo > maxIterations)
         {
-            WarningIn
-            (
-                "CML::label "
-                "CML::InflationInjection<CloudType>::parcelsToInject"
-                "("
-                    "const scalar, "
-                    "const scalar"
-                ")"
-            )
+            WarningInFunction
                 << "Maximum particle split iterations ("
                 << maxIterations << ") exceeded" << endl;
 
             break;
         }
 
-        label cI = generationCells_
-        [
-            rnd.position
-            (
-                label(0),
-                generationCells_.size() - 1
-            )
-        ];
+        label cI =
+            generationCells_[rnd.sampleAB<label>(0, generationCells_.size())];
 
         // Pick a particle at random from the cell - if there are
         // none, insert one at the cell centre.  Otherwise, split an
@@ -441,7 +425,7 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
                 (
                     vectorPairScalarPair
                     (
-                        Pair<vector>(mesh.cellCentres()[cI], vector::zero),
+                        Pair<vector>(mesh.cellCentres()[cI], Zero),
                         Pair<scalar>(dSeed_, dNew)
                     )
                 );
@@ -453,13 +437,13 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
         }
         else
         {
-            label cPI = rnd.position(label(0), cellOccupancy[cI].size() - 1);
+            label cPI = rnd.sampleAB<label>(0, cellOccupancy[cI].size());
 
             // This has to be a reference to the pointer so that it
-            // can be set to NULL when the particle is deleted.
+            // can be set to nullptr when the particle is deleted.
             typename CloudType::parcelType*& pPtr = cellOccupancy[cI][cPI];
 
-            if (pPtr != NULL)
+            if (pPtr != nullptr)
             {
                 scalar pD = pPtr->d();
 
@@ -553,7 +537,7 @@ CML::label CML::InflationInjection<CloudType>::parcelsToInject
 
                 this->owner().deleteParticle(*pPtr);
 
-                pPtr = NULL;
+                pPtr = nullptr;
             }
         }
 
@@ -620,8 +604,8 @@ void CML::InflationInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
-    label& tetPtI
+    label& tetFacei,
+    label& tetPti
 )
 {
     position = newParticles_[parcelI].first().first();
@@ -629,8 +613,8 @@ void CML::InflationInjection<CloudType>::setPositionAndCell
     this->findCellAtPosition
     (
         cellOwner,
-        tetFaceI,
-        tetPtI,
+        tetFacei,
+        tetPti,
         position,
         false
     );

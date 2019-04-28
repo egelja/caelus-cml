@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -74,7 +74,7 @@ class sampledSets
             fieldGroup()
             :
                 DynamicList<word>(0),
-                formatter(NULL)
+                formatter(nullptr)
             {}
 
             //- Construct for a particular format
@@ -447,17 +447,8 @@ void CML::sampledSets::writeSampleFile
     }
     else
     {
-        WarningIn
-        (
-            "void CML::sampledSets::writeSampleFile"
-            "("
-                "const coordSet&, "
-                "const PtrList<volFieldSampler<Type> >&, "
-                "const label, "
-                "const fileName&, "
-                "const writer<Type>&"
-            ")"
-        )   << "File " << ofs.name() << " could not be opened. "
+        WarningInFunction
+            << "File " << ofs.name() << " could not be opened. "
             << "No data will be written" << endl;
     }
 }

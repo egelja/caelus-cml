@@ -69,6 +69,9 @@ private:
         //- Time object
         const Time& time_;
 
+        //- Prefix
+        const word prefix_;
+
         //- String representation of outputControls enums
         static const NamedEnum<outputControls, 7> outputControlNames_;
 
@@ -98,7 +101,7 @@ public:
     // Constructors
 
         //- Construct from Time object and dictionary
-        outputFilterOutputControl(const Time&, const dictionary&);
+        outputFilterOutputControl(const Time&, const dictionary&, const word prefix = "write");
 
 
     //- Destructor

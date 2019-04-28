@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -59,14 +59,8 @@ void MapInternalField<Type, MeshMapper, volMesh>::operator()
 {
     if (field.size() != mapper.volMap().sizeBeforeMapping())
     {
-        FatalErrorIn
-        (
-            "void MapInternalField<Type, MeshMapper, volMesh>::operator()\n"
-            "(\n"
-            "    Field<Type>& field,\n"
-            "    const MeshMapper& mapper\n"
-            ") const"
-        )  << "Incompatible size before mapping.  Field size: " << field.size()
+        FatalErrorInFunction
+           << "Incompatible size before mapping.  Field size: " << field.size()
            << " map size: " << mapper.volMap().sizeBeforeMapping()
            << abort(FatalError);
     }

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -139,32 +139,23 @@ void CML::edgeCollapser::filterFace(const label faceI, face& f) const
 
         if (index == fp1)
         {
-            WarningIn
-            (
-                "CML::edgeCollapser::filterFace(const label faceI, "
-                "face& f) const"
-            )   << "Removing consecutive duplicate vertex in face "
+            WarningInFunction
+                << "Removing consecutive duplicate vertex in face "
                 << f << endl;
             // Don't store current pointI
         }
         else if (index == fp2)
         {
-            WarningIn
-            (
-                "CML::edgeCollapser::filterFace(const label faceI, "
-                "face& f) const"
-            )   << "Removing non-consecutive duplicate vertex in face "
+            WarningInFunction
+                << "Removing non-consecutive duplicate vertex in face "
                 << f << endl;
             // Don't store current pointI and remove previous
             newFp--;
         }
         else if (index != -1)
         {
-            WarningIn
-            (
-                "CML::edgeCollapser::filterFace(const label faceI, "
-                "face& f) const"
-            )   << "Pinched face " << f << endl;
+            WarningInFunction
+                << "Pinched face " << f << endl;
             f[newFp++] = pointI;
         }
         else
@@ -304,8 +295,7 @@ bool CML::edgeCollapser::collapseEdge(const label edgeI, const label master)
 
                 if (pointRegionMaster_[freeRegion] != -1)
                 {
-                    FatalErrorIn
-                    ("edgeCollapser::collapseEdge(const label, const label)")
+                    FatalErrorInFunction
                         << "Problem : freeed region :" << freeRegion
                         << " has already master "
                         << pointRegionMaster_[freeRegion]

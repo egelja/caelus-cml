@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -79,6 +79,15 @@ CML::argList::initValidTables::initValidTables()
     Pstream::addValidParOptions(validParOptions);
 }
 
+
+void CML::argList::initValidTables::clear()
+{
+    argList::removeOption("case");
+    argList::removeOption("parallel");
+    argList::removeOption("roots");
+    argList::removeOption("decomposeParDict");
+    argList::removeOption("noFunctionObjects");
+}
 
 CML::argList::initValidTables dummyInitValidTables;
 

@@ -407,7 +407,7 @@ meshSurfaceCheckInvertedVertices::meshSurfaceCheckInvertedVertices
 )
 :
     surfacePartitioner_(mpart),
-    activePointsPtr_(NULL),
+    activePointsPtr_(nullptr),
     invertedVertices_()
 {
     checkVertices();

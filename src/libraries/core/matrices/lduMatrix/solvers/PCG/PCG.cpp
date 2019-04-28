@@ -51,7 +51,7 @@ CML::PCG::PCG
     )
 {}
 
-CML::lduMatrix::solverPerformance CML::PCG::solve
+CML::solverPerformance CML::PCG::solve
 (
     scalarField& x,
     scalarField const& b,
@@ -59,7 +59,7 @@ CML::lduMatrix::solverPerformance CML::PCG::solve
 ) const
 {
     // Setup class containing solver performance data
-    lduMatrix::solverPerformance solverPerf
+    solverPerformance solverPerf
     (
         lduMatrix::preconditioner::getName(controlDict_) + typeName,
         fieldName_

@@ -704,7 +704,7 @@
 <li><a href="#sec-9-13-6-14">9.13.6.14. Python-integration does not return single scalars as uniform</a></li>
 <li><a href="#sec-9-13-6-15">9.13.6.15. <code>basicSource</code> working again for OF 2.1</a></li>
 <li><a href="#sec-9-13-6-16">9.13.6.16. <code>faceZone</code> and <code>faceSet</code> do not correctly work on parallel runs</a></li>
-<li><a href="#sec-9-13-6-17">9.13.6.17. Allow user to override <code>notImplemented</code> in <code>movePoints</code> and <code>moveMesh</code> of function objects</a></li>
+<li><a href="#sec-9-13-6-17">9.13.6.17. Allow user to override <code>NotImplemented</code> in <code>movePoints</code> and <code>moveMesh</code> of function objects</a></li>
 </ul>
 </li>
 <li><a href="#sec-9-13-7">9.13.7. New features</a>
@@ -4139,7 +4139,7 @@ fixed. If the face is on a regular boundary patch the value is
 used. If on a processor patch the value is only used if it is on
 the owner processor.
 
-#### Allow user to override `notImplemented` in `movePoints` and `moveMesh` of function objects<a id="sec-9-13-6-17" name="sec-9-13-6-17"></a>
+#### Allow user to override `NotImplemented` in `movePoints` and `moveMesh` of function objects<a id="sec-9-13-6-17" name="sec-9-13-6-17"></a>
 
 This addresses
 <http://sourceforge.net/apps/mantisbt/openfoam-extend/view.php?id=190>
@@ -4147,10 +4147,10 @@ This addresses
 Subclasses of `simpleFunction`-objects are not guaranteed to be
 parallel-aware (for instance `swakExpression` can have problems
 with stored variables if the number of cells/faces changes) so
-the `notImplemented` can't be removed for good.
+the `NotImplemented` can't be removed for good.
 
 The workaround is a rather verbose error message and the
-possibility to override `notImplemented` with a dictionary-switch
+possibility to override `NotImplemented` with a dictionary-switch
 
 ### New features<a id="sec-9-13-7" name="sec-9-13-7"></a>
 

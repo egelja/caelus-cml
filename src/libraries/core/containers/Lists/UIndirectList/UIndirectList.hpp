@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
+Copyright (C) 2017-2018 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -134,6 +135,14 @@ public:
         typedef label size_type;
 
 
+    // Writing
+
+        //- Write the list, with line-breaks in ASCII if its length
+        //- exceeds shortListLen.
+        //  Using '0' suppresses line-breaks entirely.
+        Ostream& writeList(Ostream& os, const label shortListLen=0) const;
+
+
     // Ostream operator
 
         //- Write UIndirectList to Ostream
@@ -257,7 +266,7 @@ inline void CML::UIndirectList<T>::operator=(const UList<T>& ae)
 {
     if (addressing_.size() != ae.size())
     {
-        FatalErrorIn("UIndirectList<T>::operator=(const UList<T>&)")
+        FatalErrorInFunction
             << "Addressing and list of addressed elements "
                "have different sizes: "
             << addressing_.size() << " " << ae.size()
@@ -276,7 +285,7 @@ inline void CML::UIndirectList<T>::operator=(const UIndirectList<T>& ae)
 {
     if (addressing_.size() != ae.size())
     {
-        FatalErrorIn("UIndirectList<T>::operator=(const UIndirectList<T>&)")
+        FatalErrorInFunction
             << "Addressing and list of addressed elements "
                "have different sizes: "
             << addressing_.size() << " " << ae.size()
@@ -305,6 +314,83 @@ inline void CML::UIndirectList<T>::operator=(const T& t)
 #include "contiguous.hpp"
 
 // * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
+
+template<class T>
+CML::Ostream& CML::UIndirectList<T>::writeList
+(
+    Ostream& os,
+    const label shortListLen
+) const
+{
+    const UIndirectList<T>& list = *this;
+
+    const label len = list.size();
+
+    // Write list contents depending on data format
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
+    {
+        if (contiguous<T>() && list.uniform())
+        {
+            // Two or more entries, and all entries have identical values.
+            os << len << token::BEGIN_BLOCK << list[0] << token::END_BLOCK;
+        }
+        else if
+        (
+            len <= 1 || !shortListLen
+         || (len <= shortListLen && contiguous<T>())
+        )
+        {
+            // Size and start delimiter
+            os << len << token::BEGIN_LIST;
+
+            // Contents
+            for (label i=0; i < len; ++i)
+            {
+                if (i) os << token::SPACE;
+                os << list[i];
+            }
+
+            // End delimiter
+            os << token::END_LIST;
+        }
+        else
+        {
+            // Size and start delimiter
+            os << nl << len << nl << token::BEGIN_LIST << nl;
+
+            // Contents
+            for (label i=0; i < len; ++i)
+            {
+                os << list[i] << nl;
+            }
+
+            // End delimiter
+            os << token::END_LIST << nl;
+        }
+    }
+    else
+    {
+        // Contents are binary and contiguous
+        os << nl << len << nl;
+
+        if (len)
+        {
+            // This is annoying, and wasteful, but currently no alternative
+            List<T> lst = list();
+
+            // write(...) includes surrounding start/end delimiters
+            os.write
+            (
+                reinterpret_cast<const char*>(lst.cdata()),
+                lst.byteSize()
+            );
+        }
+    }
+
+    os.check(FUNCTION_NAME);
+    return os;
+}
+
 
 template<class T>
 CML::Ostream& CML::operator<<

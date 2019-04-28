@@ -131,7 +131,7 @@ public:
         (
             const triSurf&,
             const boundBox&,
-            meshOctreeSlot* slotPtr = NULL
+            meshOctreeSlot* slotPtr = nullptr
         );
 
         //- subdivide the octree cube
@@ -139,7 +139,7 @@ public:
         (
             const triSurf&,
             const boundBox&,
-            meshOctreeSlot* slotPtr = NULL
+            meshOctreeSlot* slotPtr = nullptr
         );
 
         //- create missing child cubes and refine them until the required
@@ -149,7 +149,7 @@ public:
             const triSurf&,
             const boundBox&,
             const label scI,
-            meshOctreeSlot* slotPtr = NULL
+            meshOctreeSlot* slotPtr = nullptr
         );
 
         //- create missing child cubes and refine them until the required
@@ -160,7 +160,7 @@ public:
             const label scI,
             const label elementsRowI = -1,
             const label edgesRowI = -1,
-            meshOctreeSlot* slotPtr = NULL
+            meshOctreeSlot* slotPtr = nullptr
         );
 
         //- return the pointer to the slot containing the cube

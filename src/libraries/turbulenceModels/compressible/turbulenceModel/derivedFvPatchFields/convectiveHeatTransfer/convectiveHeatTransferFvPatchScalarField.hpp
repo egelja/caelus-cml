@@ -21,15 +21,53 @@ Class
     CML::compressible::RASModels::convectiveHeatTransferFvPatchScalarField
 
 Description
-    Convective heat transfer boundary condition
+    This boundary condition provides a convective heat transfer coefficient
+    condition
+
+    if Re > 500000
+    \f[
+        htc_p = \frac{0.664 Re^{0.5} Pr^{0.333} \kappa_p}{L}
+    \f]
+    else
+    \f[
+        htc_p = \frac{0.037 Re^{0.8} Pr^{0.333} \kappa_p}{L}
+    \f]
+
+    where
+
+    \vartable
+        htc_p   | patch convective heat transfer coefficient
+        Re      | Reynolds number
+        Pr      | Prandtl number
+        \kappa_p | thermal conductivity
+        L       | length scale
+    \endvartable
+
+Usage
+    \table
+        Property     | Description             | Required    | Default value
+        L            | Length scale [m]        | yes |
+    \endtable
+
+    Example of the boundary condition specification:
+    \verbatim
+    <patchName>
+    {
+        type            convectiveHeatTransfer;
+        L               0.1;
+    }
+    \endverbatim
+
+See also
+    Foam::fixedValueFvPatchField
 
 SourceFiles
     convectiveHeatTransferFvPatchScalarField.cpp
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef compressibleMutRoughWallFunctionFvPatchScalarField_H
-#define compressibleMutRoughWallFunctionFvPatchScalarField_H
+#ifndef convectiveHeatTransferFvPatchScalarField_HPP
+#define convectiveHeatTransferFvPatchScalarField_HPP
 
 #include "fixedValueFvPatchFields.hpp"
 
@@ -41,7 +79,7 @@ namespace compressible
 {
 
 /*---------------------------------------------------------------------------*\
-                 Class convectiveHeatTransferFvPatchScalarField Declaration
+           Class convectiveHeatTransferFvPatchScalarField Declaration
 \*---------------------------------------------------------------------------*/
 
 class convectiveHeatTransferFvPatchScalarField

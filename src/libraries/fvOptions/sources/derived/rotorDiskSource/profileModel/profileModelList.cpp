@@ -101,7 +101,7 @@ void CML::profileModelList::connectBlades
                 profileNames[i] = pm.name();
             }
 
-            FatalErrorIn("void CML::connectBlades(List<word>& names) const")
+            FatalErrorInFunction
                 << "Profile " << profileName << " could not be found "
                 << "in profile list.  Available profiles are"
                 << profileNames << exit(FatalError);

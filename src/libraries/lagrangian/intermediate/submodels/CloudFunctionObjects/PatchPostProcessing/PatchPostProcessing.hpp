@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*\
 Copyright (C) 2014 Applied CCM
-Copyright (C) 2011-2012 OpenFOAM Foundation
+Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -71,8 +71,8 @@ class PatchPostProcessing
 
     // Private Member Functions
 
-        //- Returns local patchI if patch is in patchIds_ list
-        label applyToPatch(const label globalPatchI) const;
+        //- Returns local patchi if patch is in patchIds_ list
+        label applyToPatch(const label globalPatchi) const;
 
 
 protected:
@@ -129,37 +129,11 @@ public:
 
         // Evaluation
 
-            //- Pre-evolve hook
-            virtual void preEvolve();
-
-            //- Post-evolve hook
-            virtual void postEvolve();
-
-            //- Post-move hook
-            virtual void postMove
-            (
-                typename CloudType::parcelType& p,
-                const label cellI,
-                const scalar dt,
-                const point& position0,
-                bool& keepParticle
-            );
-
             //- Post-patch hook
             virtual void postPatch
             (
-                const typename CloudType::parcelType& p,
+                const parcelType& p,
                 const polyPatch& pp,
-                const scalar trackFraction,
-                const tetIndices& tetIs,
-                bool& keepParticle
-            );
-
-            //- Post-face hook
-            virtual void postFace
-            (
-                const typename CloudType::parcelType& p,
-                const label faceI,
                 bool& keepParticle
             );
 };
@@ -190,12 +164,12 @@ const CML::labelList& CML::PatchPostProcessing<CloudType>::patchIDs() const
 template<class CloudType>
 CML::label CML::PatchPostProcessing<CloudType>::applyToPatch
 (
-    const label globalPatchI
+    const label globalPatchi
 ) const
 {
     forAll(patchIDs_, i)
     {
-        if (patchIDs_[i] == globalPatchI)
+        if (patchIDs_[i] == globalPatchi)
         {
             return i;
         }
@@ -300,14 +274,8 @@ CML::PatchPostProcessing<CloudType>::PatchPostProcessing
 
         if (patchIDs.empty())
         {
-            WarningIn
-            (
-                "CML::PatchPostProcessing<CloudType>::PatchPostProcessing"
-                "("
-                    "const dictionary&, "
-                    "CloudType& "
-                ")"
-            )   << "Cannot find any patch names matching " << patchName[i]
+            WarningInFunction
+                << "Cannot find any patch names matching " << patchName[i]
                 << endl;
         }
 
@@ -320,8 +288,8 @@ CML::PatchPostProcessing<CloudType>::PatchPostProcessing
     {
         forAll(patchIDs_, i)
         {
-            const label patchI = patchIDs_[i];
-            const word& patchName = owner.mesh().boundaryMesh()[patchI].name();
+            const label patchi = patchIDs_[i];
+            const word& patchName = owner.mesh().boundaryMesh()[patchi].name();
             Info<< "Post-process patch " << patchName << endl;
         }
     }
@@ -355,67 +323,25 @@ CML::PatchPostProcessing<CloudType>::~PatchPostProcessing()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void CML::PatchPostProcessing<CloudType>::preEvolve()
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
-void CML::PatchPostProcessing<CloudType>::postEvolve()
-{
-    CloudFunctionObject<CloudType>::postEvolve();
-}
-
-
-template<class CloudType>
-void CML::PatchPostProcessing<CloudType>::postMove
-(
-    typename CloudType::parcelType& p,
-    const label cellI,
-    const scalar dt,
-    const point& position0,
-    bool& keepParticle
-)
-{
-    // Do nothing
-}
-
-
-template<class CloudType>
 void CML::PatchPostProcessing<CloudType>::postPatch
 (
-    const typename CloudType::parcelType& p,
+    const parcelType& p,
     const polyPatch& pp,
-    const scalar,
-    const tetIndices& tetIs,
     bool&
 )
 {
-    const label patchI = pp.index();
-    const label localPatchI = applyToPatch(patchI);
+    const label patchi = pp.index();
+    const label localPatchi = applyToPatch(patchi);
 
-    if (localPatchI != -1 && patchData_[localPatchI].size() < maxStoredParcels_)
+    if (localPatchi != -1 && patchData_[localPatchi].size() < maxStoredParcels_)
     {
-        times_[localPatchI].append(this->owner().time().value());
+        times_[localPatchi].append(this->owner().time().value());
 
         OStringStream data;
         data<< Pstream::myProcNo() << ' ' << p;
 
-        patchData_[localPatchI].append(data.str());
+        patchData_[localPatchi].append(data.str());
     }
-}
-
-
-template<class CloudType>
-void CML::PatchPostProcessing<CloudType>::postFace
-(
-    const typename CloudType::parcelType& p,
-    const label faceI,
-    bool& keepParticle
-)
-{
-    // Do nothing
 }
 
 

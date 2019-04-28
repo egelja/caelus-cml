@@ -25,25 +25,13 @@ License
 
 void CML::fv::pressureGradientExplicitSource::writeData(Ostream& os) const
 {
-    notImplemented
-    (
-        "void CML::fv::pressureGradientExplicitSource::writeData"
-        "("
-            "Ostream&"
-        ") const"
-    );
+    NotImplemented;
 }
 
 
 bool CML::fv::pressureGradientExplicitSource::read(const dictionary& dict)
 {
-    notImplemented
-    (
-        "bool CML::fv::pressureGradientExplicitSource::read"
-        "("
-            "const dictionary&"
-        ") const"
-    );
+    NotImplemented;
 
     return false;
 }

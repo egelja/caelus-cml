@@ -18,7 +18,7 @@ License
     along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    COxidationHurtMitchell
+    CML::COxidationHurtMitchell
 
 Description
     Char oxidation model given by Hurt and Mitchell:
@@ -37,7 +37,7 @@ Description
     Model validity:
         Gas temperature: Tc > 1500 K
         Particle sizes:  75 um -> 200 um
-        Pox > 0.3 atm        
+        Pox > 0.3 atm
 
 \*---------------------------------------------------------------------------*/
 
@@ -143,7 +143,7 @@ public:
         virtual scalar calculate
         (
             const scalar dt,
-            const label cellI,
+            const label celli,
             const scalar d,
             const scalar T,
             const scalar Tc,
@@ -184,8 +184,8 @@ CML::COxidationHurtMitchell<CloudType>::COxidationHurtMitchell
     Sb_(readScalar(this->coeffDict().lookup("Sb"))),
     CsLocalId_(-1),
     ashLocalId_(-1),
-    O2GlobalId_(owner.composition().globalCarrierId("O2")),
-    CO2GlobalId_(owner.composition().globalCarrierId("CO2")),
+    O2GlobalId_(owner.composition().carrierId("O2")),
+    CO2GlobalId_(owner.composition().carrierId("CO2")),
     WC_(0.0),
     WO2_(0.0),
     HcCO2_(0.0),
@@ -194,11 +194,11 @@ CML::COxidationHurtMitchell<CloudType>::COxidationHurtMitchell
     // Determine Cs and ash ids
     label idSolid = owner.composition().idSolid();
     CsLocalId_ = owner.composition().localId(idSolid, "C");
-    ashLocalId_ = owner.composition().localId(idSolid, "ash");
+    ashLocalId_ = owner.composition().localId(idSolid, "ash", true);
 
     // Set local copies of thermo properties
-    WO2_ = owner.thermo().carrier().W(O2GlobalId_);
-    const scalar WCO2 = owner.thermo().carrier().W(CO2GlobalId_);
+    WO2_ = owner.thermo().carrier().Wi(O2GlobalId_);
+    const scalar WCO2 = owner.thermo().carrier().Wi(CO2GlobalId_);
     WC_ = WCO2 - WO2_;
 
     HcCO2_ = owner.thermo().carrier().Hc(CO2GlobalId_);
@@ -247,7 +247,7 @@ template<class CloudType>
 CML::scalar CML::COxidationHurtMitchell<CloudType>::calculate
 (
     const scalar dt,
-    const label cellI,
+    const label celli,
     const scalar d,
     const scalar T,
     const scalar Tc,
@@ -278,7 +278,7 @@ CML::scalar CML::COxidationHurtMitchell<CloudType>::calculate
     const SLGThermo& thermo = this->owner().thermo();
 
     // Local mass fraction of O2 in the carrier phase
-    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[cellI];
+    const scalar YO2 = thermo.carrier().Y(O2GlobalId_)[celli];
 
     // No combustion if no oxygen present
     if (YO2 < SMALL)
@@ -307,7 +307,7 @@ CML::scalar CML::COxidationHurtMitchell<CloudType>::calculate
 
     // Far field partial pressure O2 [Pa]
     // Note: Should really use the surface partial pressure
-    const scalar ppO2 = max(0.0, rhoc*YO2/WO2_*specie::RR*Tc);
+    const scalar ppO2 = max(0.0, rhoc*YO2/WO2_*RR*Tc);
 
     // Activation energy [kcal/mol]
     const scalar E = -5.94 + 0.355*charPrc;

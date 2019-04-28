@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -34,7 +34,11 @@ namespace pyrolysisModels
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
-autoPtr<pyrolysisModel> pyrolysisModel::New(const fvMesh& mesh)
+autoPtr<pyrolysisModel> pyrolysisModel::New
+(
+    const fvMesh& mesh,
+    const word& regionType
+)
 {
     // get model name, but do not register the dictionary
     const word modelType
@@ -43,7 +47,7 @@ autoPtr<pyrolysisModel> pyrolysisModel::New(const fvMesh& mesh)
         (
             IOobject
             (
-                "pyrolysisProperties",
+                regionType + "Properties",
                 mesh.time().constant(),
                 mesh,
                 IOobject::MUST_READ,
@@ -60,21 +64,22 @@ autoPtr<pyrolysisModel> pyrolysisModel::New(const fvMesh& mesh)
 
     if (cstrIter == meshConstructorTablePtr_->end())
     {
-        FatalErrorIn("pyrolysisModel::New(const fvMesh&)")
+        FatalErrorInFunction
             << "Unknown pyrolysisModel type " << modelType
             << nl << nl << "Valid pyrolisisModel types are:" << nl
             << meshConstructorTablePtr_->sortedToc()
             << exit(FatalError);
     }
 
-    return autoPtr<pyrolysisModel>(cstrIter()(modelType, mesh));
+    return autoPtr<pyrolysisModel>(cstrIter()(modelType, mesh, regionType));
 }
 
 
 autoPtr<pyrolysisModel> pyrolysisModel::New
 (
     const fvMesh& mesh,
-    const dictionary& dict
+    const dictionary& dict,
+    const word& regionType
 )
 {
 
@@ -87,14 +92,23 @@ autoPtr<pyrolysisModel> pyrolysisModel::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn("pyrolysisModel::New(const fvMesh&, const dictionary&)")
+        FatalErrorInFunction
             << "Unknown pyrolysisModel type " << modelType
             << nl << nl << "Valid pyrolisisModel types are:" << nl
             << dictionaryConstructorTablePtr_->sortedToc()
             << exit(FatalError);
     }
 
-    return autoPtr<pyrolysisModel>(cstrIter()(modelType, mesh, dict));
+    return autoPtr<pyrolysisModel>
+    (
+        cstrIter()
+        (
+            modelType,
+            mesh,
+            dict,
+            regionType
+        )
+    );
 }
 
 

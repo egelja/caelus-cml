@@ -1,20 +1,21 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2018 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
+    This file is part of Caelus.
 
-    CAELUS is free software: you can redistribute it and/or modify it
+    Caelus is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CAELUS is distributed in the hope that it will be useful, but WITHOUT
+    Caelus is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with CAELUS.  If not, see <http://www.gnu.org/licenses/>.
+    along with Caelus.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
     CML::combustionModels::singleStepCombustion
@@ -25,10 +26,11 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef singleStepCombustion_H
-#define singleStepCombustion_H
+#ifndef singleStepCombustion_HPP
+#define singleStepCombustion_HPP
 
 #include "singleStepReactingMixture.hpp"
+#include "ThermoCombustion.hpp"
 #include "fvmSup.hpp"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -39,181 +41,172 @@ namespace combustionModels
 {
 
 /*---------------------------------------------------------------------------*\
-                  Class singleStepCombustion Declaration
+                    Class singleStepCombustion Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class CombThermoType, class ThermoType>
+template<class ReactionThermo, class ThermoType>
 class singleStepCombustion
 :
-    public CombThermoType
+    public ThermoCombustion<ReactionThermo>
 {
+    // Private Member Functions
+
+    //- Disallow copy construct
+    singleStepCombustion(const singleStepCombustion&);
+
+    //- Disallow default bitwise assignment
+    void operator=(const singleStepCombustion&);
+
 
 protected:
 
     // Protected data
 
-        //- Reference to singleStepReactingMixture mixture
-        singleStepReactingMixture<ThermoType>& singleMixture_;
+    //- Pointer to singleStepReactingMixture mixture
+    singleStepReactingMixture<ThermoType>* singleMixturePtr_;
 
-        //- Fuel consumption rate
-        volScalarField wFuel_;
+    //- Fuel consumption rate
+    volScalarField wFuel_;
 
-
-private:
-
-    // Private Member Functions
-
-        //- Disallow copy construct
-        singleStepCombustion(const singleStepCombustion&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const singleStepCombustion&);
+    //- Semi-implicit (true) or explicit (false) treatment
+    bool semiImplicit_;
 
 
 public:
 
-
-    // Constructors
-
-        //- Construct from components
-        singleStepCombustion
-        (
-            const word& modelType, const fvMesh& mesh
-        );
+    //- Construct from components
+    singleStepCombustion
+    (
+        const word& modelType,
+        ReactionThermo& thermo,
+        const compressible::turbulenceModel& turb,
+        const word& combustionProperties
+    );
 
 
     //- Destructor
-    virtual ~singleStepCombustion();
+    virtual ~singleStepCombustion()
+    {}
 
 
     // Member Functions
 
-        // Evolution
+    //- Fuel consumption rate matrix
+    virtual tmp<fvScalarMatrix> R(volScalarField& Y) const;
 
+    //- Heat release rate [kg/m/s3]
+    virtual tmp<volScalarField> Qdot() const;
 
-            //- Fuel consumption rate matrix
-            virtual tmp<fvScalarMatrix> R(const volScalarField& Y) const;
+    //- Update properties from given dictionary
+    virtual bool read();
 
-            //- Heat release rate calculated from fuel consumption rate matrix
-            virtual tmp<volScalarField> dQ() const;
-
-            //- Sensible enthalpy source term
-            virtual tmp<volScalarField> Sh() const;
-
-
-    // I-O
-
-            //- Update properties from given dictionary
-            virtual bool read();
 };
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-template<class CombThermoType, class ThermoType>
-singleStepCombustion<CombThermoType, ThermoType>
+template<class ReactionThermo, class ThermoType>
+singleStepCombustion<ReactionThermo, ThermoType>
 ::singleStepCombustion
 (
-    const word& modelType, const fvMesh& mesh
+    const word& modelType,
+    ReactionThermo& thermo,
+    const compressible::turbulenceModel& turb,
+    const word& combustionProperties
 )
 :
-    CombThermoType(modelType, mesh),
-    singleMixture_
-    (
-        dynamic_cast<singleStepReactingMixture<ThermoType>&>(this->thermo())
-    ),
+    ThermoCombustion<ReactionThermo>(modelType, thermo, turb),
+    singleMixturePtr_(nullptr),
     wFuel_
     (
         IOobject
         (
-            "wFuel",
+            this->thermo().phasePropertyName("wFuel"),
             this->mesh().time().timeName(),
             this->mesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         this->mesh(),
-        dimensionedScalar("zero", dimMass/pow3(dimLength)/dimTime, 0.0)
-    )
-{}
+        dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
+    ),
+    semiImplicit_(readBool(this->coeffs_.lookup("semiImplicit")))
+{
+    if (isA<singleStepReactingMixture<ThermoType>>(this->thermo()))
+    {
+        singleMixturePtr_ =
+            &dynamic_cast<singleStepReactingMixture<ThermoType>&>
+            (
+                this->thermo()
+            );
+    }
+    else
+    {
+        FatalErrorInFunction
+            << "Inconsistent thermo package for " << this->type() << " model:\n"
+            << "    " << this->thermo().type() << nl << nl
+            << "Please select a thermo package based on "
+            << "singleStepReactingMixture" << exit(FatalError);
+    }
 
-
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-template<class CombThermoType, class ThermoType>
-singleStepCombustion<CombThermoType, ThermoType>
-::~singleStepCombustion()
-{}
+    if (semiImplicit_)
+    {
+        Info<< "Combustion mode: semi-implicit" << endl;
+    }
+    else
+    {
+        Info<< "Combustion mode: explicit" << endl;
+    }
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-
-template<class CombThermoType, class ThermoType>
-CML::tmp<CML::fvScalarMatrix>
-singleStepCombustion<CombThermoType, ThermoType>::R
+template<class ReactionThermo, class ThermoType>
+CML::tmp<CML::fvScalarMatrix> singleStepCombustion<ReactionThermo, ThermoType>::R
 (
-    const volScalarField& Y
+    volScalarField& Y
 ) const
 {
-    const label specieI = this->thermo_->composition().species()[Y.name()];
+    const label specieI =
+        this->thermo().composition().species()[Y.member()];
 
-    const volScalarField wSpecie
+    volScalarField wSpecie
     (
-        wFuel_*singleMixture_.specieStoichCoeffs()[specieI]
+        wFuel_*singleMixturePtr_->specieStoichCoeffs()[specieI]
     );
 
-    return wSpecie + fvm::Sp(0.0*wSpecie, Y);
-}
-
-
-template<class CombThermoType, class ThermoType>
-CML::tmp<CML::volScalarField>
-singleStepCombustion< CombThermoType, ThermoType>::Sh() const
-{
-    const label fuelI = singleMixture_.fuelIndex();
-    const volScalarField& YFuel = this->thermo_->composition().Y(fuelI);
-
-    return -singleMixture_.qFuel()*(R(YFuel) & YFuel);
-}
-
-
-template<class CombThermoType, class ThermoType>
-CML::tmp<CML::volScalarField>
-singleStepCombustion< CombThermoType, ThermoType>::dQ() const
-{
-    tmp<volScalarField> tdQ
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "dQ",
-                this->mesh_.time().timeName(),
-                this->mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            this->mesh_,
-            dimensionedScalar("dQ", dimEnergy/dimTime, 0.0),
-            zeroGradientFvPatchScalarField::typeName
-        )
-    );
-
-    if (this->active())
+    if (semiImplicit_)
     {
-        volScalarField& dQ = tdQ();
-        dQ.dimensionedInternalField() = this->mesh().V()*Sh()();
+        const label fNorm = singleMixturePtr_->specieProd()[specieI];
+        const volScalarField fres(singleMixturePtr_->fres(specieI));
+        wSpecie /= max(fNorm*(Y - fres), scalar(1e-2));
+
+        return -fNorm*wSpecie*fres + fNorm*fvm::Sp(wSpecie, Y);
     }
-    return tdQ;
+    else
+    {
+        return wSpecie + fvm::Sp(0.0*wSpecie, Y);
+    }
 }
 
 
-template<class CombThermoType, class ThermoType>
-bool singleStepCombustion< CombThermoType, ThermoType>::read()
+template<class ReactionThermo, class ThermoType>
+CML::tmp<CML::volScalarField>
+singleStepCombustion<ReactionThermo, ThermoType>::Qdot() const
 {
-    if (CombThermoType::read())
+    const label fuelI = singleMixturePtr_->fuelIndex();
+    volScalarField& YFuel =
+        const_cast<volScalarField&>(this->thermo().composition().Y(fuelI));
+
+    return -singleMixturePtr_->qFuel()*(R(YFuel) & YFuel);
+}
+
+
+template<class ReactionThermo, class ThermoType>
+bool singleStepCombustion<ReactionThermo, ThermoType>::read()
+{
+    if (ThermoCombustion<ReactionThermo>::read())
     {
         return true;
     }
@@ -224,12 +217,8 @@ bool singleStepCombustion< CombThermoType, ThermoType>::read()
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 } // End namespace combustionModels
 } // End namespace CML
 
 
 #endif
-
-// ************************************************************************* //

@@ -75,10 +75,8 @@ void CML::slidingInterface::checkDefinition()
      || !slavePatchID_.active()
     )
     {
-        FatalErrorIn
-        (
-            "void slidingInterface::checkDefinition()"
-        )   << "Not all zones and patches needed in the definition "
+        FatalErrorInFunction
+            << "Not all zones and patches needed in the definition "
             << "have been found.  Please check your mesh definition."
             << abort(FatalError);
     }
@@ -90,7 +88,7 @@ void CML::slidingInterface::checkDefinition()
      || mesh.faceZones()[slaveFaceZoneID_.index()].empty()
     )
     {
-        FatalErrorIn("void slidingInterface::checkDefinition()")
+        FatalErrorInFunction
             << "Master or slave face zone contain no faces.  "
             << "Please check your mesh definition."
             << abort(FatalError);
@@ -177,41 +175,26 @@ CML::slidingInterface::slidingInterface
     edgeMasterCatchFraction_(edgeMasterCatchFractionDefault_),
     edgeCoPlanarTol_(edgeCoPlanarTolDefault_),
     edgeEndCutoffTol_(edgeEndCutoffTolDefault_),
-    cutFaceMasterPtr_(NULL),
-    cutFaceSlavePtr_(NULL),
-    masterFaceCellsPtr_(NULL),
-    slaveFaceCellsPtr_(NULL),
-    masterStickOutFacesPtr_(NULL),
-    slaveStickOutFacesPtr_(NULL),
-    retiredPointMapPtr_(NULL),
-    cutPointEdgePairMapPtr_(NULL),
-    slavePointPointHitsPtr_(NULL),
-    slavePointEdgeHitsPtr_(NULL),
-    slavePointFaceHitsPtr_(NULL),
-    masterPointEdgeHitsPtr_(NULL),
-    projectedSlavePointsPtr_(NULL)
+    cutFaceMasterPtr_(nullptr),
+    cutFaceSlavePtr_(nullptr),
+    masterFaceCellsPtr_(nullptr),
+    slaveFaceCellsPtr_(nullptr),
+    masterStickOutFacesPtr_(nullptr),
+    slaveStickOutFacesPtr_(nullptr),
+    retiredPointMapPtr_(nullptr),
+    cutPointEdgePairMapPtr_(nullptr),
+    slavePointPointHitsPtr_(nullptr),
+    slavePointEdgeHitsPtr_(nullptr),
+    slavePointFaceHitsPtr_(nullptr),
+    masterPointEdgeHitsPtr_(nullptr),
+    projectedSlavePointsPtr_(nullptr)
 {
     checkDefinition();
 
     if (attached_)
     {
-        FatalErrorIn
-        (
-            "CML::slidingInterface::slidingInterface\n"
-            "(\n"
-            "    const word& name,\n"
-            "    const label index,\n"
-            "    const polyTopoChanger& mme,\n"
-            "    const word& masterFaceZoneName,\n"
-            "    const word& slaveFaceZoneName,\n"
-            "    const word& cutFaceZoneName,\n"
-            "    const word& cutPointZoneName,\n"
-            "    const word& masterPatchName,\n"
-            "    const word& slavePatchName,\n"
-            "    const typeOfMatch tom,\n"
-            "    const bool coupleDecouple\n"
-            ")"
-        )   << "Creation of a sliding interface from components "
+        FatalErrorInFunction
+            << "Creation of a sliding interface from components "
             << "in attached state not supported."
             << abort(FatalError);
     }
@@ -270,19 +253,19 @@ CML::slidingInterface::slidingInterface
         intersection::algorithmNames_.read(dict.lookup("projection"))
     ),
     trigger_(false),
-    cutFaceMasterPtr_(NULL),
-    cutFaceSlavePtr_(NULL),
-    masterFaceCellsPtr_(NULL),
-    slaveFaceCellsPtr_(NULL),
-    masterStickOutFacesPtr_(NULL),
-    slaveStickOutFacesPtr_(NULL),
-    retiredPointMapPtr_(NULL),
-    cutPointEdgePairMapPtr_(NULL),
-    slavePointPointHitsPtr_(NULL),
-    slavePointEdgeHitsPtr_(NULL),
-    slavePointFaceHitsPtr_(NULL),
-    masterPointEdgeHitsPtr_(NULL),
-    projectedSlavePointsPtr_(NULL)
+    cutFaceMasterPtr_(nullptr),
+    cutFaceSlavePtr_(nullptr),
+    masterFaceCellsPtr_(nullptr),
+    slaveFaceCellsPtr_(nullptr),
+    masterStickOutFacesPtr_(nullptr),
+    slaveStickOutFacesPtr_(nullptr),
+    retiredPointMapPtr_(nullptr),
+    cutPointEdgePairMapPtr_(nullptr),
+    slavePointPointHitsPtr_(nullptr),
+    slavePointEdgeHitsPtr_(nullptr),
+    slavePointFaceHitsPtr_(nullptr),
+    masterPointEdgeHitsPtr_(nullptr),
+    projectedSlavePointsPtr_(nullptr)
 {
     // Optionally default tolerances from dictionary
     setTolerances(dict);
@@ -640,11 +623,8 @@ void CML::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
                 }
                 else
                 {
-                    FatalErrorIn
-                    (
-                        "void slidingInterface::modifyMotionPoints"
-                        "(pointField&) const"
-                    )   << "Cut point " << cutPoints[pointI]
+                    FatalErrorInFunction
+                        << "Cut point " << cutPoints[pointI]
                         << " not recognised as either the projected "
                         << "or as intersection point.  Error in point "
                         << "projection or data mapping"

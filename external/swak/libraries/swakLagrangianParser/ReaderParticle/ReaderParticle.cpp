@@ -139,17 +139,16 @@ void ReaderParticle::readFields (ReaderParticleCloud &c) {
             // } else if(className=="boolField") {
             //     c.addBoolField(name);
             } else {
-                WarningIn("ReaderParticle::readFields")
+                WarningInFunction
                     << "File " << header.objectPath() << " has unknown type "
-                        << className << ". Skipping"
-                        << endl;
+                    << className << ". Skipping"
+                    << endl;
             }
         } else {
-            WarningIn("ReaderParticle::readFields")
+            WarningInFunction
                 << "File " << header.objectPath()
-                    << " not existing or inproper header"
-                    << endl;
-
+                << " not existing or inproper header"
+                << endl;
         }
     }
 

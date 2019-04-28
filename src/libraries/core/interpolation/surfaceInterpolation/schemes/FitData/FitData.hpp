@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2015 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -169,17 +169,17 @@ CML::FitData<Form, ExtendedStencil, Polynomial>::FitData
     linearCorrection_(linearCorrection),
     linearLimitFactor_(linearLimitFactor),
     centralWeight_(centralWeight),
-#   ifdef SPHERICAL_GEOMETRY
+    #ifdef SPHERICAL_GEOMETRY
     dim_(2),
-#   else
+    #else
     dim_(mesh.nGeometricD()),
-#   endif
+    #endif
     minSize_(Polynomial::nTerms(dim_))
 {
     // Check input
     if (linearLimitFactor <= SMALL || linearLimitFactor > 3)
     {
-        FatalErrorIn("FitData<Polynomial>::FitData(..)")
+        FatalErrorInFunction
             << "linearLimitFactor requested = " << linearLimitFactor
             << " should be between zero and 3"
             << exit(FatalError);
@@ -203,7 +203,7 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::findFaceDirs
     idir = mesh.faceAreas()[facei];
     idir /= mag(idir);
 
-#   ifndef SPHERICAL_GEOMETRY
+    #ifndef SPHERICAL_GEOMETRY
     if (mesh.nGeometricD() <= 2) // find the normal direction
     {
         if (mesh.geometricD()[0] == -1)
@@ -224,10 +224,10 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::findFaceDirs
         const face& f = mesh.faces()[facei];
         kdir = mesh.points()[f[0]] - mesh.faceCentres()[facei];
     }
-#   else
+    #else
     // Spherical geometry so kdir is the radial direction
     kdir = mesh.faceCentres()[facei];
-#   endif
+    #endif
 
     if (mesh.nGeometricD() == 3)
     {
@@ -238,7 +238,7 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::findFaceDirs
 
         if (magk < SMALL)
         {
-            FatalErrorIn("findFaceDirs(..)") << " calculated kdir = zero"
+            FatalErrorInFunction << " calculated kdir = zero"
                 << exit(FatalError);
         }
         else
@@ -294,11 +294,11 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
 
         d.x() = (p - p0)&idir;
         d.y() = (p - p0)&jdir;
-#       ifndef SPHERICAL_GEOMETRY
+        #ifndef SPHERICAL_GEOMETRY
         d.z() = (p - p0)&kdir;
-#       else
+        #else
         d.z() = mag(p) - mag(p0);
-#       endif
+        #endif
 
         if (ip == 0)
         {
@@ -318,10 +318,10 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
     }
 
     // Additional weighting for constant and linear terms
-    for (label i = 0; i < B.n(); i++)
+    for (label i = 0; i < B.m(); i++)
     {
-        B[i][0] *= wts[0];
-        B[i][1] *= wts[0];
+        B(i, 0) *= wts[0];
+        B(i, 1) *= wts[0];
     }
 
     // Set the fit
@@ -332,13 +332,14 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
     for (int iIt = 0; iIt < 8 && !goodFit; iIt++)
     {
         SVD svd(B, SMALL);
+        scalarRectangularMatrix invB(svd.VSinvUt());
 
         scalar maxCoeff = 0;
         label maxCoeffi = 0;
 
         for (label i=0; i<stencilSize; i++)
         {
-            coeffsi[i] = wts[0]*wts[i]*svd.VSinvUt()[0][i];
+            coeffsi[i] = wts[0]*wts[i]*invB(0, i);
             if (mag(coeffsi[i]) > maxCoeff)
             {
                 maxCoeff = mag(coeffsi[i]);
@@ -377,11 +378,8 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
         {
             // if (iIt == 7)
             // {
-            //     WarningIn
-            //     (
-            //         "FitData<Polynomial>::calcFit"
-            //         "(const List<point>& C, const label facei"
-            //     )   << "Cannot fit face " << facei << " iteration " << iIt
+            //     WarningInFunction
+            //         << "Cannot fit face " << facei << " iteration " << iIt
             //         << " with sum of weights " << sum(coeffsi) << nl
             //         << "    Weights " << coeffsi << nl
             //         << "    Linear weights " << wLin << " " << 1 - wLin << nl
@@ -394,16 +392,16 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
                 wts[1] *= 10;
             }
 
-            for (label j = 0; j < B.m(); j++)
+            for (label j = 0; j < B.n(); j++)
             {
-                B[0][j] *= 10;
-                B[1][j] *= 10;
+                B(0, j) *= 10;
+                B(1, j) *= 10;
             }
 
-            for (label i = 0; i < B.n(); i++)
+            for (label i = 0; i < B.m(); i++)
             {
-                B[i][0] *= 10;
-                B[i][1] *= 10;
+                B(i, 0) *= 10;
+                B(i, 1) *= 10;
             }
         }
     }
@@ -426,10 +424,8 @@ void CML::FitData<FitDataType, ExtendedStencil, Polynomial>::calcFit
     {
         // if (debug)
         // {
-            WarningIn
-            (
-                "FitData<Polynomial>::calcFit(..)"
-            )   << "Could not fit face " << facei
+            WarningInFunction
+                << "Could not fit face " << facei
                 << "    Weights = " << coeffsi
                 << ", reverting to linear." << nl
                 << "    Linear weights " << wLin << " " << 1 - wLin << endl;

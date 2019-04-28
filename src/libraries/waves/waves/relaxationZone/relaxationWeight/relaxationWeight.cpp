@@ -100,10 +100,8 @@ autoPtr<relaxationWeight> relaxationWeight::New
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalErrorIn
-        (
-            "relaxationWeight::New(const word&, const fvMesh&)"
-        )   << "Unknown relaxation weight type 'relaxationWeight"
+        FatalErrorInFunction
+            << "Unknown relaxation weight type 'relaxationWeight"
             << relaxationWeightTypeName << "'"<< endl << endl
             << "Valid relaxation weight types are :" << endl
             << dictionaryConstructorTablePtr_->toc()

@@ -75,7 +75,7 @@ void CML::fv::option::writeData(Ostream& os) const
         }
         default:
         {
-            FatalErrorIn("option::writeData(Ostream&) const")
+            FatalErrorInFunction
                 << "Unknown selectionMode "
                 << selectionMode_
                 << abort(FatalError);

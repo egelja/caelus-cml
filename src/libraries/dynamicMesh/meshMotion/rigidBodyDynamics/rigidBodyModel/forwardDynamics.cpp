@@ -57,12 +57,7 @@ void CML::RBD::rigidBodyModel::forwardDynamics
     const scalarField& qDot = state.qDot();
     scalarField& qDdot = state.qDdot();
 
-    DebugIn
-    (
-        "RBD::rigidBodyModel::forwardDynamics"
-        "(rigidBodyModelState&, const scalarField&,"
-        " const Field<spatialVector>&) const"
-    )
+    DebugInFunction
         << "q = " << q << nl
         << "qDot = " << qDot << nl
         << "tau = " << tau << endl;
@@ -209,7 +204,7 @@ void CML::RBD::rigidBodyModel::forwardDynamicsCorrection
     const rigidBodyModelState& state
 ) const
 {
-    DebugIn("RBD::rigidBodyModel::forwardDynamicsCorrection(const rigidBodyModelState&) const") << endl;
+    DebugInFunction << endl;
 
     const scalarField& q = state.q();
     const scalarField& qDot = state.qDot();

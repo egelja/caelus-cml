@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 8.04</fullName>
-    <version>8.04</version>
+    <fullName>Caelus 9.04</fullName>
+    <version>9.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <wrapLicenseFileText>0</wrapLicenseFileText>
@@ -93,7 +93,7 @@
                             <origin>../external/metis-5.1.0</origin>
                         </distributionDirectory>
                         <distributionDirectory>
-                            <origin>../external/scons-local-2.3.4</origin>
+                            <origin>../external/scons-local-3.0.3</origin>
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/scotch-6.0.4</origin>
@@ -210,10 +210,10 @@
 
 caelus:
   caelus_cml:
-    default: "8.04"
+    default: "9.04"
 
     versions:
-      - version: "8.04"
+      - version: "9.04"
         path: ${installdir}/${product_shortName}-${product_version}
 </text>
                 </writeFile>
@@ -226,7 +226,7 @@ caelus:
                     <title>Installing Caelus Python Library</title>
                     <actionList>
                         <runProgram>
-                            <program>${installdir}/${product_shortName}-${product_version}/platforms/linux64/caelus-conda-v0.1.0-Linux-x86_64.sh</program>
+                            <program>${installdir}/${product_shortName}-${product_version}/platforms/linux64/caelus-conda-v1.0.1-Linux-x86_64.sh</program>
                             <programArguments>-b -f -p ${installdir}/conda</programArguments>
                             <progressText>Extracting to ${installdir}/conda ...</progressText>
                         </runProgram>

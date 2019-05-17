@@ -13,7 +13,7 @@ see CONTRIBUTORS.md
 
 ## COPYRIGHT Applied CCM 2014-2018
 
-Current version: Caelus 8.04
+Current version: Caelus 9.04
 
 ## Solvers
 ### basic:
@@ -134,7 +134,7 @@ from a command prompt to configure the run environment. For users of the C shell
 - The installer can be run in text mode by issuing the following the installation command with “–mode text” (without quotes).
     
 ## Caelus Python Library
-A powerful new Python library, called the Caelus Python Library or CPL, has been developed that replaces the original Python environment. CPL provides a mechanism that does not require sourcing or calling an environment file to run applications. The CPL  documentation can be found at <http://caelus.readthedocs.io>. CPL is included in the Caelus installers or can be obtained from the public repository.
+The Caelus Python Library (CPL) provides a mechanism that does not require sourcing or calling an environment file to run applications. The CPL documentation can be found at <http://caelus.readthedocs.io>. CPL is included in the Caelus installers or can be obtained from the public repository.
 
 ### Usage
 Running an application:
@@ -150,72 +150,7 @@ _new_:
 Type `caelus -h` for the complete list of subcommands, `caelus <subcommand> -h` for the subcommand's options, or refer to documentation.
 
 ### Workflows
-Previously complex Python scripts were required to run Caelus workflows. With CPL, workflows are more straightforward with YAML-based task files. For example, constrast workflow set up for the pitzDailyExptInlet tutorial.
-
-**previous**:
-
-Python `Allrun.py` script:
-```Python
-#!/usr/bin/python
-
-# Importing the required modules for Python
-import subprocess
-import sys
-import os
-import glob
-import shutil
-import Caelus
-
-# Code name and version
-code = 'Caelus'
-version = Caelus.PROJECT_VER
-
-# Starting up the meshing and solving
-print "**********************************"
-print "Starting %s %s simulation" % (code, version)
-print "**********************************"
-
-if sys.platform == 'win32':
-   pltfrm = True
-else:
-   pltfrm = False
-
-# Cleaning up the case
-os.system('caelus-cleanCase.py')
-os.system('caelus-clearPolyMesh.py')
-
-# Executing BlockMesh utility
-print "Executing blockMesh"
-run = subprocess.Popen(['caelus.py', '-l', 'blockMesh'], shell=pltfrm)
-run.wait()
-run = None
-
-#Executing decomposePar -force
-print "Executing decomposePar -force"
-run = subprocess.Popen(['caelus.py', '-l', 'decomposePar', '-force'], shell=pltfrm)
-run.wait()
-run = None
-
-# Executing simpleSolver in parallel
-print "Executing simpleSolver in parallel"
-
-run = subprocess.Popen(['caelus.py', '-l', 'simpleSolver', '-parallel'], shell=pltfrm)
-run.wait()
-run = None
-
-# Executing reconstructPar -latestTime
-print "Executing reconstructPar -latestTime"
-run = subprocess.Popen(['caelus.py', '-l', 'reconstructPar', '-latestTime'], shell=pltfrm)
-run.wait()
-run = None
-
-# Create stub file for paraview
-open('pitzDailyExpInlet.foam', 'a').close()
-```
-
-**new**:
-
-YAML-based `run_tutorial.yaml` task file:
+With CPL, workflows are straightforward to setup with YAML-based task files. For example, the the `pitzDailyExptInlet` tutorial the YAML-based `run_tutorial.yaml` task file:
 
 ```Yaml
 tasks:
@@ -244,21 +179,33 @@ tasks:
 Task files are run by:
 
 ```Bash
- $> caelus tasks -f run_case.py
+ $> caelus tasks -f run_tutorial.py
 ```
-## Contributors Repository Set Up
-There is a public git repository for the Caelus source code that tracks with the current release.
 
-<https://bitbucket.org/appliedccm/caelus-contributors>
+### Build
+CPL now provides an interface to compile Caelus and external Caelus-based code.
+
+```Bash
+ $> caelus build
+```
+Parallel compilation can be invoked with the -j [nProcs] option.
+
+By default a log of the build process is sent to `~/.caelus/cml_build_logs/cml_build.log` but can be changed with the `-l [log file name]` option.
+
+### Parametric Runs
+CPL provides a parametric run capability, accessible from the command-line via the `caelus_sim` application. To use the parametric run capability, a simulation configuration file (in YAML format) and a template case directory are required. Refer to the [parametric run](https://caelus.readthedocs.io/en/latest/user/tutorials/caelus_sim.html) tutorial for a full explanation.
+
+## Contributors Repository Set Up
+There is a public git repository for the Caelus source code that tracks with the current release
+
+https://bitbucket.org/appliedccm/caelus-cml.
 
 To make a local copy, clone the repository with git:
 
 ```Bash
- $> git clone git@bitbucket.org:appliedccm/caelus-contributors.git
+ $> git clone git@bitbucket.org:appliedccm/caelus-cml.git
 ```
-Environment variables are not required to compile Caelus. However, adding the SCons directory to the system PATH, ${CAELUS_PROJECT_DIR}/external/scons-local-2.3.4, enables easier building.
-
-Create and modify a build_config.py in the top-level directory where the Caelus repository was cloned. A basic build_config.py on Linux, which uses a system MPI, would take the following form:
+Create and modify a `build_config.py` in the top-level directory where the Caelus repository was cloned. A basic build_config.py on Linux, which uses a system MPI, would take the following form:
 
 ```Python
 """
@@ -266,7 +213,7 @@ Caelus configuration file
 """
 
 PROJECT_NAME = "Caelus"
-PROJECT_VERSION = "8.04"
+PROJECT_VERSION = "9.04"
 
 CC = "gcc"
 CXX = "g++"
@@ -279,39 +226,30 @@ MPI_LIB_NAME = 'mpi'
 MPI_LIB_PATH = '/usr/lib/openmpi/lib'
 MPI_INC_PATH = '/usr/lib/openmpi/include
 ```
-To compile scons, in the Caelus repository directory, type:
+To compile Caelus, in the Caelus repository directory, type:
+
+**new**:
+```Bash
+ $> caelus build
+```
+Parallel compilation can be invoked with the `-j [nProcs]` option.
+
+Upon successful compilation, run Caelus using CPL. To compile applications and libraries outside the Caelus repository directory use `caelus build`.
+
+**previous**:
+First, ensure the SCons directory is in the system PATH, `${CAELUS_PROJECT_DIR}/external/scons-local-3.0.3`.
 
 ```Bash
  $> scons.py install
 ```
-
 Parallel compilation can be invoked with the `-j [nProcs]` option.
 
 Upon successful compilation, run Caelus per the above platform-specific instructions. To compile applications and libraries outside the Caelus repository directory, provide scons with the location of the site_scons directory. For example,
 
 ```Bash
- $> scons.py --site-dir="/home/username/Caelus/Caelus-8.04/site_scons" install
+ $> scons.py --site-dir="/home/username/Caelus/Caelus-9.04/site_scons" install
 ```
 Run `scons.py -h` to see the full list of build options or refer to the scons_notes.md for further details about the build system.
 
 ## CPL Repository Setup
-For convenience, a submodule within the Caelus repository is provided to clone the CPL repository into the ./tools/cpl directory. To clone the submodule, from the Caelus repository directory, type:
-
-```Bash
- $> git submodule init
-```
-and
-```Bash
- $> git submodule update
-```
-If using the submodule is not desirable, for example when working with multiple versions of Caelus, refer to the public git repository for CPL.
-
-<https://bitbucket.org/appliedccm/cpl>
-
-To make a local copy, clone the repository with git:
-
-```Bash
- $> git clone git@bitbucket.org:appliedccm/cpl.git
-```
-
-A Python environment and configuration file is required to work with the CPL source code. Refer to the CPL <a href="http://caelus.readthedocs.io/en/latest/user/installation.html">installation</a> and <a href="http://caelus.readthedocs.io/en/latest/user/configuration.html">configuration</a> documentation.
+Refer to the CPL [installation](http://caelus.readthedocs.io/en/latest/user/installation.html) and [configuration](http://caelus.readthedocs.io/en/latest/user/configuration.html) documentation.

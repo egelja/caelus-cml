@@ -1,7 +1,7 @@
 <project>
     <shortName>Caelus</shortName>
-    <fullName>Caelus 8.04</fullName>
-    <version>8.04</version>
+    <fullName>Caelus 9.04</fullName>
+    <version>9.04</version>
     <installerFilename>${project.shortName}-${project.version}-${platform_name}-${buildtype}-installer.${platform_exec_suffix}</installerFilename>
     <readmeFile>../README.md</readmeFile>
     <wrapLicenseFileText>0</wrapLicenseFileText>
@@ -93,7 +93,7 @@
                             <origin>../external/metis-5.1.0</origin>
                         </distributionDirectory>
                         <distributionDirectory>
-                            <origin>../external/scons-local-2.3.4</origin>
+                            <origin>../external/scons-local-3.0.3</origin>
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../external/scotch-6.0.4</origin>
@@ -235,10 +235,10 @@
 
 caelus:
   caelus_cml:
-    default: "8.04"
+    default: "9.04"
 
     versions:
-      - version: "8.04"
+      - version: "9.04"
         path: ${installdir}\${product_shortName}-${product_version}
         mpi_root: ${mpibinpath}\..
         mpi_bin_path: ${mpibinpath}
@@ -247,7 +247,7 @@ caelus:
                 </writeFile>
                 <writeFile>
                     <path>${installdir}\${product_shortName}-${product_version}\platforms\install_cpl.bat</path>
-                    <text>call windows64\caelus-conda-v0.1.0-Windows-x86_64.exe /InstallationType=JustMe /RegisterPython=0 /S /D=${installdir}\conda</text>
+                    <text>call windows64\caelus-conda-v1.0.1-Windows-x86_64.exe /InstallationType=JustMe /RegisterPython=0 /S /D=${installdir}\conda</text>
                 </writeFile>
                 <showProgressDialog>
                     <title>Installing Caelus Python Library</title>
@@ -261,12 +261,19 @@ caelus:
                 </showProgressDialog>
                 <addDirectoryToPath>
                     <insertAt>beginning</insertAt>
-                    <path>${installdir}\conda\bin</path>
+                    <path>${installdir}\conda\Scripts</path>
+                </addDirectoryToPath>
+                <addDirectoryToPath>
+                    <insertAt>beginning</insertAt>
+                    <path>${installdir}\conda\Library\bin</path>
                 </addDirectoryToPath>
             </postInstallationActionList>
             <postUninstallationActionList>
                 <removeDirectoryFromPath>
-                    <path>${installdir}\conda\bin</path>
+                    <path>${installdir}\conda\Scripts</path>
+                </removeDirectoryFromPath>
+                <removeDirectoryFromPath>
+                    <path>${installdir}\conda\Library\bin</path>
                 </removeDirectoryFromPath>
             </postUninstallationActionList>
         </component>
@@ -339,7 +346,6 @@ caelus:
                 <writeFile>
                     <path>${installdir}\\${product_shortName}-${product_version}\external\windows\terminal\cmd-scripts\shell-colour.cmd</path>
                     <text>@echo off
-call "${installdir}\\${product_shortName}-${product_version}\etc\caelus-environment.cmd"
 prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
 "${installdir}\\${product_shortName}-${product_version}\external\windows\terminal\ansicon\x64\ansicon.exe"
 </text>
@@ -503,8 +509,8 @@ prompt $E[1;34;40m$P$E[1;30;40m$$$S$E[0m
             </postInstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Caelus 8.04 Terminal</comment>
-                    <name>Caelus 8.04 Terminal</name>
+                    <comment>Caelus 9.04 Terminal</comment>
+                    <name>Caelus 9.04 Terminal</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>${installdir}\\${product_shortName}-${product_version}\\external\\windows\\terminal\\ConsoleZ.x64\\Console.exe</windowsExec>

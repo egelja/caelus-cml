@@ -68,6 +68,4 @@ src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/posix/
 *.tgz
 *.gtgz
  
-doc/Guides/Validation
-doc/Guides/Tutorial
-doc/Guides/Theory
+docs/Guides

@@ -26,10 +26,10 @@ Benchmark experiments on this configuration has been reported in Jyotsna and Ven
 
 **Problem Definition**
 
-A schematic of the triangular cavity is presented in :num:`Fig. #t-cavity-schematic` where depth of the cavity D = 4 m and the width W = 2 m. The Reynolds number based on the cavity depth is 800 and the wall velocity is U = 2 m/s. Using the Reynolds number, U, and D, kinematic viscosity was calculated to be 0.01 :math:`m^2/s`. 
+A schematic of the triangular cavity is presented in :numref:`t-cavity-schematic` where depth of the cavity D = 4 m and the width W = 2 m. The Reynolds number based on the cavity depth is 800 and the wall velocity is U = 2 m/s. Using the Reynolds number, U, and D, kinematic viscosity was calculated to be 0.01 :math:`m^2/s`. 
 
 .. _t-cavity-schematic:
-.. figure:: /sections_v/validation-figures/t-cavity-schematic.*
+.. figure:: sections_v/validation-figures/t-cavity-schematic.*
    :width: 300px
    :align: center
    
@@ -47,10 +47,10 @@ The flow in this case is assumed to be incompressible and hence the density rema
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain is the triangular cavity shown in :num:`Fig. #t-cavity-domain`. Highlighted in blue, the side walls of the cavity have a no-slip boundary condition while the top wall, highlighted in green, has a uniform velocity in the :math:`x` direction.
+The computational domain is the triangular cavity shown in :numref:`t-cavity-domain`. Highlighted in blue, the side walls of the cavity have a no-slip boundary condition while the top wall, highlighted in green, has a uniform velocity in the :math:`x` direction.
 
 .. _t-cavity-domain:
-.. figure:: /sections_v/validation-figures/t-cavity-domain.*
+.. figure:: sections_v/validation-figures/t-cavity-domain.*
    :width: 300px
    :align: center
    
@@ -72,10 +72,10 @@ The computational domain is the triangular cavity shown in :num:`Fig. #t-cavity-
 	
 **Computational Grid**
 
-The 2D grid in :math:`x-y` plane is shown in :num:`Fig. #t-cavity-grid`. A hybrid grid is employed for this case with a total of 5538 cells. Up to a depth of D = 1.35 m a structured grid is used while below that value an unstructured triangular grid is used. An unstructured grid is used in the bottom portion because it resulted in lower skewness in this vicinity. For the structured region, 40 cells are distributed across the width of the cavity and 40 along the depth. The cavity walls in the unstructured region have 100 cells along each. The interface of the two regions is *node matched* and has 40 cells across the width. The grid close to the cavity lid was refined to better capture the shear layer.
+The 2D grid in :math:`x-y` plane is shown in :numref:`t-cavity-grid`. A hybrid grid is employed for this case with a total of 5538 cells. Up to a depth of D = 1.35 m a structured grid is used while below that value an unstructured triangular grid is used. An unstructured grid is used in the bottom portion because it resulted in lower skewness in this vicinity. For the structured region, 40 cells are distributed across the width of the cavity and 40 along the depth. The cavity walls in the unstructured region have 100 cells along each. The interface of the two regions is *node matched* and has 40 cells across the width. The grid close to the cavity lid was refined to better capture the shear layer.
 
 .. _t-cavity-grid:
-.. figure:: /sections_v/validation-figures/t-cavity-grid.*
+.. figure:: sections_v/validation-figures/t-cavity-grid.*
    :width: 600px
    :align: center
    
@@ -87,16 +87,16 @@ The flow characteristics in the cavity can be assumed to be two dimensional and 
 
 A steady solution to the cavity was obtained using Caelus |version| with the SLIM solver. While a time-dependent approach was used, the solution was simulated sufficiently long so that steady flow was achieved. To determine when this occured the velocity distribution along the cavity centre-line was monitored with respect to time. The simulations was stopped when no appreciable changes were observed.
 
-In :num:`Fig. #t-cavity-velocity`, the :math:`x` velocity distribution along the cavity centre-line is compared with that of the benchmark experimental data. The :math:`y` distance is normalised with the cavity depth (:math:`D`) which gives :math:`y/d = 0` at the cavity lid and :math:`y/d = -1` at the bottom vertex. Similarly, the :math:`u` velocity is normalised with the velocity of the cavity lid (:math:`u_L`).
+In :numref:`t-cavity-velocity`, the :math:`x` velocity distribution along the cavity centre-line is compared with that of the benchmark experimental data. The :math:`y` distance is normalised with the cavity depth (:math:`D`) which gives :math:`y/d = 0` at the cavity lid and :math:`y/d = -1` at the bottom vertex. Similarly, the :math:`u` velocity is normalised with the velocity of the cavity lid (:math:`u_L`).
 
 .. _t-cavity-velocity:
-.. figure:: /sections_v/validation-figures/t-cavity-velocity.*
+.. figure:: sections_v/validation-figures/t-cavity-velocity.*
    :width: 600px
    :align: center
    
    Comparison of experimental and computational :math:`x` velocity distribution along the cavity's centre-line
 
-As seen in :num:`Fig. #t-cavity-velocity` above, the comparison the experiment is excellent.
+As seen in :numref:`t-cavity-velocity` above, the comparison the experiment is excellent.
 
 **Conclusions**
 

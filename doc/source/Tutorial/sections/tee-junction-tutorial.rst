@@ -35,10 +35,10 @@ Background
 ````````````
 The flow in a tee-junction presents with a simple introduction in carrying out separated flow simulation in Caelus. Because of the presence of a side branch, the flow separates forming a recirculating region. This in turn affects the mass flow through main and side branches altering the flow splits. For more details, the user can refer to the validation example show in :ref:`tee-junction-validation-label`.
 
-A schematic of the tee-junction geometry is shown in :num:`Fig. #tj-schematic-tutorials`. Here, :math:`L = 3.0~m` and :math:`W = 1.0~m` with a Reynolds number of :math:`Re_w = 300` based on the side branch width. The velocity (:math:`V`) is assumed to be :math:`1~m/s` in the :math:`y` direction for simplicity. With these flow parameters, the kinematic viscosity can be evaluated to :math:`\nu = 0.00333~m^2/s`.
+A schematic of the tee-junction geometry is shown in :numref:`tj-schematic-tutorials`. Here, :math:`L = 3.0~m` and :math:`W = 1.0~m` with a Reynolds number of :math:`Re_w = 300` based on the side branch width. The velocity (:math:`V`) is assumed to be :math:`1~m/s` in the :math:`y` direction for simplicity. With these flow parameters, the kinematic viscosity can be evaluated to :math:`\nu = 0.00333~m^2/s`.
 
 .. _tj-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/tj-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/tj-schematic-tutorials.*
    :width: 300px
    :align: center
 
@@ -60,22 +60,22 @@ Grid Generation
 
 A hexahedral grid is generated for the tee-junction grid using `Pointwise <http://www.pointwise.com/>`_. Specific grid generation details are not discussed here, however information regarding the computational domain and boundary conditions are provided. With this, the user will be able to generate an equivalent grid using their choice of tool.
 
-The computational domain should follow the tee-junction geometry and the details are shown in :num:`Fig. #tj-domain-tutorials`. Due to viscous nature of the flow, the velocity at the walls is zero, which should be represented through a no-slip boundary condition (:math:`u, v, w = 0`) highlighted in blue. A fully developed laminar flow with a parabolic velocity profile will also be applied as a profile boundary at the inlet. This would ensure that the velocity is fully developed before it approaches the side branch, otherwise requiring to have sufficient length in main branch for the flow to develop. As shown in the geometry, the domain will have two outlets, one at the end of the main channel and the other at the end of side branch. Also of further importance is that the exit pressures at the two outlets are set equal. 
+The computational domain should follow the tee-junction geometry and the details are shown in :numref:`tj-domain-tutorials`. Due to viscous nature of the flow, the velocity at the walls is zero, which should be represented through a no-slip boundary condition (:math:`u, v, w = 0`) highlighted in blue. A fully developed laminar flow with a parabolic velocity profile will also be applied as a profile boundary at the inlet. This would ensure that the velocity is fully developed before it approaches the side branch, otherwise requiring to have sufficient length in main branch for the flow to develop. As shown in the geometry, the domain will have two outlets, one at the end of the main channel and the other at the end of side branch. Also of further importance is that the exit pressures at the two outlets are set equal. 
 
 .. _tj-domain-tutorials:
-.. figure:: /sections/tutorial-figures/tj-domain-tutorials.*
+.. figure:: sections/tutorial-figures/tj-domain-tutorials.*
    :width: 300px
    :align: center
 		
    Tee junction Computational Domain
 
-The 2D structured grid is shown in :num:`Fig. #tj-grid-tutorials` for a :math:`x-y` plane. Caelus is a 3D solver and hence requires a 3D grid although the flow here is assumed to be two-dimensional. The 3D grid was obtained by extruding the 2D grid in the third (:math:`z` - direction) dimension by *one-cell* thick. The two :math:`x-y` planes obtained as a result of mesh extrusion needs boundary conditions to be specified. As the flow is assumed to be 2D, we do not need to solve the flow in :math:`z` direction and this was achieved by specifying *empty* boundary condition for each of those two planes.
+The 2D structured grid is shown in :numref:`tj-grid-tutorials` for a :math:`x-y` plane. Caelus is a 3D solver and hence requires a 3D grid although the flow here is assumed to be two-dimensional. The 3D grid was obtained by extruding the 2D grid in the third (:math:`z` - direction) dimension by *one-cell* thick. The two :math:`x-y` planes obtained as a result of mesh extrusion needs boundary conditions to be specified. As the flow is assumed to be 2D, we do not need to solve the flow in :math:`z` direction and this was achieved by specifying *empty* boundary condition for each of those two planes.
 
 .. Note::
    A velocity value of :math:`w=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`z` direction.
 
 .. _tj-grid-tutorials:
-.. figure:: /sections/tutorial-figures/tj-grid-tutorials.*
+.. figure:: sections/tutorial-figures/tj-grid-tutorials.*
    :width: 500px
    :align: center
 		
@@ -109,7 +109,7 @@ It should be noted that Caelus is case sensitive and therefore the user should s
 
 *Boundary Conditions*
 
-Referring to :num:`Fig. #tj-domain-tutorials`, the following boundary conditions will be applied:
+Referring to :numref:`tj-domain-tutorials`, the following boundary conditions will be applied:
 
 * Inlet
     - Velocity: Parabolic velocity profile; average velocity of :math:`v = 1.0~m/s` in :math:`y` direction
@@ -251,7 +251,7 @@ The execution of the solver involves few different steps. The first of which is 
 		
 During the process of renumbering, grid-cell bandwidth information before and after ``renumberMesh`` is shown and the user can take a note of this. The mesh statistics are as shown below after invoking ``checkMesh``
 
-.. literalinclude:: /sections/tutorial-figures/tj_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/tj_checkmesh.txt
 	
 From the above information, the mesh non-orthogonality is very small and therefore no non-orthogonal corrections are required for the solver to be carried out and we set ``nNonOrthogonalCorrectors`` to ``0`` in the ``fvSolution`` file. In the next step, we will execute the solver and monitor the progress of the simulation. The solver should be executed from the top level directory 
 
@@ -266,10 +266,10 @@ The progress of the simulation is written to the log file ``my-tee-junction.log`
 	
    caelus logs -w my-tee-junction.log 
 		
-The plot indicates the convergence history for pressure and other variables with respect to number of iterations. The same for pressure is shown in :num:`Fig. #tj-convergence-tutorials`. 
+The plot indicates the convergence history for pressure and other variables with respect to number of iterations. The same for pressure is shown in :numref:`tj-convergence-tutorials`. 
 
 .. _tj-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/tj-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/tj-convergence-tutorials.*
    :width: 500px
    :align: center
 		
@@ -278,10 +278,10 @@ The plot indicates the convergence history for pressure and other variables with
 Results
 ````````
 
-The solution obtained for the tee-junction at steady state is shown here using qualitative contour plots. In :num:`Fig. #tj-velocitypressure-tutorials`, velocity magnitude and pressure contour plots are shown. In addition, streamlines superimposed on the velocity magnitude is given. The change in the flow pattern due to the presence of side branch is quite evident from the velocity magnitude contour. The streamlines particularly facilitate to visualise the flow separation phenomenon which is occurring in this case, just before the flow entering the side branch. Also to note is the velocity profile at the inlet, which is fully developed as expected.
+The solution obtained for the tee-junction at steady state is shown here using qualitative contour plots. In :numref:`tj-velocitypressure-tutorials`, velocity magnitude and pressure contour plots are shown. In addition, streamlines superimposed on the velocity magnitude is given. The change in the flow pattern due to the presence of side branch is quite evident from the velocity magnitude contour. The streamlines particularly facilitate to visualise the flow separation phenomenon which is occurring in this case, just before the flow entering the side branch. Also to note is the velocity profile at the inlet, which is fully developed as expected.
 
 .. _tj-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/tj-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/tj-velocitypressure-tutorials.*
    :width: 700px
    :align: center
 		

@@ -35,10 +35,10 @@ Background
 ````````````
 Turbulent flow over a flat-plate configuration presents an ideal case to introduce the user with the turbulent simulation using Caelus. Here, the steady-state solution to the incompressible flow over the plate will be obtained, which results in a turbulent boundary layer. The shear stress distribution along the length of the wall and the velocity profile across the wall would be used to infer the development of the turbulent boundary layer. The user can look at the validation section for more details at :ref:`turbulent-flat-plate-verification-label`.
 
-The flat-plate length considered for this tutorial is L = 2.0 m and with a unit Reynolds number of :math:`5 \times 10^6`. Air is used as a fluid and a temperature of T = 300 K is assumed. Based on the Reynolds number and temperature, kinematic viscosity evaluates to :math:`\nu = 1.38872\times10^{-5}~(m^2/s)`. A freestream velocity of :math:`U = 69.436113~m/s` is used. In :num:`Fig. #tfpschematictutorials`, a schematic of the flat-plate is shown. Note that the 2D plane of interest is in :math:`x-z` directions.
+The flat-plate length considered for this tutorial is L = 2.0 m and with a unit Reynolds number of :math:`5 \times 10^6`. Air is used as a fluid and a temperature of T = 300 K is assumed. Based on the Reynolds number and temperature, kinematic viscosity evaluates to :math:`\nu = 1.38872\times10^{-5}~(m^2/s)`. A freestream velocity of :math:`U = 69.436113~m/s` is used. In :numref:`tfpschematictutorials`, a schematic of the flat-plate is shown. Note that the 2D plane of interest is in :math:`x-z` directions.
 
 .. _tfpschematictutorials:
-.. figure:: /sections/tutorial-figures/t-fp-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/t-fp-schematic-tutorials.*
    :width: 500px
    :align: center
 
@@ -60,10 +60,10 @@ Grid Generation
 
 The hexahedral grid used in this tutorial is obtained from `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/flatplate_grids.html>`__ that has 137 X 97 cells in :math:`x-z` directions respectively. The original 3D grid is in Plot3D and is then converted to Caelus compatible ``polyMesh`` format.
 
-The computational domain is a rectangular block that encompasses the flat-plate. In :num:`Fig. #t-fp-domain-tutorials` below, the details of the boundaries in 2D (:math:`x-z` plane) that will be used is shown. The region of interest, which is highlighted in blue extends between :math:`0 \leq x \leq 2.0~m`, where the leading-edge is at :math:`x=0`. Due to the viscous nature of the flow, the velocity at the wall is zero which is represented through a no-slip boundary wherein :math:`u,v,w = 0`. Upstream of the leading edge, a symmetry boundary at the wall will be used. The inlet boundary is placed at the start of the symmetry boundary and the outlet is placed at the exit of the flat-plate the no-slip wall. The entire top boundary will be again modelled as a symmetry plane.
+The computational domain is a rectangular block that encompasses the flat-plate. In :numref:`t-fp-domain-tutorials` below, the details of the boundaries in 2D (:math:`x-z` plane) that will be used is shown. The region of interest, which is highlighted in blue extends between :math:`0 \leq x \leq 2.0~m`, where the leading-edge is at :math:`x=0`. Due to the viscous nature of the flow, the velocity at the wall is zero which is represented through a no-slip boundary wherein :math:`u,v,w = 0`. Upstream of the leading edge, a symmetry boundary at the wall will be used. The inlet boundary is placed at the start of the symmetry boundary and the outlet is placed at the exit of the flat-plate the no-slip wall. The entire top boundary will be again modelled as a symmetry plane.
 
 .. _t-fp-domain-tutorials:
-.. figure:: /sections/tutorial-figures/t-fp-domain-tutorials.*
+.. figure:: sections/tutorial-figures/t-fp-domain-tutorials.*
    :width: 500px
    :align: center
 		
@@ -75,13 +75,13 @@ The ``polyMesh`` grid as noted earlier is in 3D. However, since the flow over a 
    A velocity value of :math:`v=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`y` direction.
 
 .. _t-fp-grid-tutorials:
-.. figure:: /sections/tutorial-figures/t-fp-grid-tutorials.*
+.. figure:: sections/tutorial-figures/t-fp-grid-tutorials.*
    :width: 800px
    :align: center
    
    Flat-plate computational grid in :math:`x-z` plane
 
-In :num:`Fig. #t-fp-grid-tutorials`, the 2D grid is shown which has 137 X 97 cells in :math:`x-z` directions respectively. To capture the turbulent boundary layer accurately, the grids are refined close to the wall and :math:`y^+` is estimated to be less than 1. Due to this, no wall-functions would be used to estimate the velocity gradients near the wall and integration is carried up to the wall.
+In :numref:`t-fp-grid-tutorials`, the 2D grid is shown which has 137 X 97 cells in :math:`x-z` directions respectively. To capture the turbulent boundary layer accurately, the grids are refined close to the wall and :math:`y^+` is estimated to be less than 1. Due to this, no wall-functions would be used to estimate the velocity gradients near the wall and integration is carried up to the wall.
 
 Problem definition
 ````````````````````
@@ -127,7 +127,7 @@ The user should take into account that Caelus is case sensitive and therefore wh
 
 *Boundary Conditions*
 
-Initially, let us set-up the boundary conditions. Referring back to :num:`Fig. #t-fp-domain-tutorials`, the following are the boundary conditions that will be specified:
+Initially, let us set-up the boundary conditions. Referring back to Fig. %s:num:`t-fp-domain-tutorials`, the following are the boundary conditions that will be specified:
 
 * Inlet
    - Velocity: Fixed uniform velocity :math:`u = 69.436113~m/s` in :math:`x` direction
@@ -303,7 +303,7 @@ Prior to execution of solver, renumbering of the grid/mesh needs to be performed
 At this stage, it is suggested that the user should take note of the matrix bandwidth before and after the mesh renumbering. When the ``checkMesh`` is performed, the mesh statistics are shown as below
 
 
-.. literalinclude:: /sections/tutorial-figures/t_fp_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/t_fp_checkmesh.txt
 
 In the above terminal output, we get ``Failed 1 mesh checks.`` and this is because of the high aspect ratio meshes present immediate to the wall due to very low (:math:`<< 1~y^+`). However, Caelus can solve on this mesh. The next step is to execute the solver and monitoring the progress of the solution. The solver is always executed from the top directory. 
 
@@ -317,10 +317,10 @@ With the execution of the above command, the simulation begins and the progress 
 
    caelus logs -w my-turbulent-flat-plate.log
 
-This allows you to look at the convergence of different variables with respect to the number of iterations carried out. In :num:`Fig. #tfpconvergencetutorials` pressure convergence is shown.
+This allows you to look at the convergence of different variables with respect to the number of iterations carried out. In Fig. %s:num:`tfpconvergencetutorials` pressure convergence is shown.
 
 .. _tfpconvergencetutorials:
-.. figure:: /sections/tutorial-figures/t-fp-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/t-fp-convergence-tutorials.*
    :width: 400px
    :align: center
 
@@ -329,11 +329,11 @@ This allows you to look at the convergence of different variables with respect t
 Results
 ````````
 
-The turbulent flow over the flat plate is shown here through velocity magnitude contours for SA model. In :num:`Fig. #tfpvelocitytutorials` the boundary layer over the entire flat-plate and in the region up to :math:`x=0.10~m` is emphasised. The growth of the boundary layer can be seen very clearly. Since the Reynolds number of the flow is reasonably high, the turbulent boundary layer seems thin in comparison to the length of the plate.
+The turbulent flow over the flat plate is shown here through velocity magnitude contours for SA model. In Fig. %s:num:`tfpvelocitytutorials` the boundary layer over the entire flat-plate and in the region up to :math:`x=0.10~m` is emphasised. The growth of the boundary layer can be seen very clearly. Since the Reynolds number of the flow is reasonably high, the turbulent boundary layer seems thin in comparison to the length of the plate.
 
 
 .. _tfpvelocitytutorials:
-.. figure:: /sections/tutorial-figures/t-fp-velocity-tutorials.*
+.. figure:: sections/tutorial-figures/t-fp-velocity-tutorials.*
    :width: 700px
    :align: center
 

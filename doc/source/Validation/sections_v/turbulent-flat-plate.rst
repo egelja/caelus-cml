@@ -38,10 +38,10 @@ In this case, steady turbulent incompressible flow over a two-dimensional sharp-
 
 **Problem definition**
 
-This exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/flatplate.html>`__ case for a flat-plate and follows the same conditions used in the incompressible limit. However, note that `CFL3D <http://cfl3d.larc.nasa.gov>`__ uses a freestream Mach number (:math:`M_\infty`) of 0.2 as it is a compressible solver. The schematic of the geometric configuration is shown in :num:`Fig. #turbulentflatplateschematic`.
+This exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/flatplate.html>`__ case for a flat-plate and follows the same conditions used in the incompressible limit. However, note that `CFL3D <http://cfl3d.larc.nasa.gov>`__ uses a freestream Mach number (:math:`M_\infty`) of 0.2 as it is a compressible solver. The schematic of the geometric configuration is shown in :numref:`turbulentflatplateschematic`.
 
 .. _turbulentflatplateschematic:
-.. figure:: /sections_v/validation-figures/turbulent-flat-plate-schematic.*
+.. figure:: sections_v/validation-figures/turbulent-flat-plate-schematic.*
    :width: 500px
    :align: center
 
@@ -101,10 +101,10 @@ Note that the :index:`dynamic viscosity` for the above equation is obtained from
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain is a rectangular block encompassing the flat-plate. :num:`Fig. #turbulent-flat-plate-domain` below shows the details of the boundaries used in two-dimensions (:math:`x-y` plane). As can be seen, the region of interest (highlighted in blue) extends between :math:`0\leq x \leq 2.0~m` and has a no-slip boundary condition. Upstream of the leading edge, a symmetry boundary is used to simulate a freestream flow approaching the flat-plate. The inlet boundary as shown in :num:`Fig. #turbulent-flat-plate-domain` is placed at start of the symmetry at :math:`x = -0.3333~m` and the outlet at the exit plane of the no-slip wall (blue region) at :math:`x = 2.0~m`.  A symmetry plane condition is used for the entire top boundary.
+The computational domain is a rectangular block encompassing the flat-plate. :numref:`turbulent-flat-plate-domain` below shows the details of the boundaries used in two-dimensions (:math:`x-y` plane). As can be seen, the region of interest (highlighted in blue) extends between :math:`0\leq x \leq 2.0~m` and has a no-slip boundary condition. Upstream of the leading edge, a symmetry boundary is used to simulate a freestream flow approaching the flat-plate. The inlet boundary as shown in :numref:`turbulent-flat-plate-domain` is placed at start of the symmetry at :math:`x = -0.3333~m` and the outlet at the exit plane of the no-slip wall (blue region) at :math:`x = 2.0~m`.  A symmetry plane condition is used for the entire top boundary.
 
 .. _turbulent-flat-plate-domain:
-.. figure:: /sections_v/validation-figures/turbulent-flat-plate-domain.*
+.. figure:: sections_v/validation-figures/turbulent-flat-plate-domain.*
    :width: 500px
    :align: center
 
@@ -165,10 +165,10 @@ Grid-4                  272                                  192                
 Grid-5                  544                                  384                              208,896         0.05
 ======================  ==================================   ===============================  =============== ============
 
-In :num:`Fig. #turbulent-flat-plate-grid`, the 2D grid in the :math:`x-z` plane is shown for Grid-4. As can be seen, the grid is refined close to the wall in order to capture the turbulent boundary layer accurately. All grids have :math:`y^+ < 1` and no wall function is used for the wall boundary in the current verification cases.
+In :numref:`turbulent-flat-plate-grid`, the 2D grid in the :math:`x-z` plane is shown for Grid-4. As can be seen, the grid is refined close to the wall in order to capture the turbulent boundary layer accurately. All grids have :math:`y^+ < 1` and no wall function is used for the wall boundary in the current verification cases.
 
 .. _turbulent-flat-plate-grid:
-.. figure:: /sections_v/validation-figures/turbulent-flat-plate-grid.*
+.. figure:: sections_v/validation-figures/turbulent-flat-plate-grid.*
    :width: 600px
    :align: center
 
@@ -181,19 +181,19 @@ The steady-state solution of the turbulent flow over a flat plate was obtained u
 
 *Spalart–Allmaras*
 
-In :num:`Fig. #cf-turb-flat-plate-caelus-sacc`, the :index:`skin-friction` distribution along the flat-plate obtained from Caelus for different grids is shown. As can be seen, all grids produce the same skin-friction values suggesting a grid-independent solution is achieved.
+In :numref:`cf-turb-flat-plate-caelus-sacc`, the :index:`skin-friction` distribution along the flat-plate obtained from Caelus for different grids is shown. As can be seen, all grids produce the same skin-friction values suggesting a grid-independent solution is achieved.
 
 .. _cf-turb-flat-plate-caelus-sacc:
-.. figure:: /sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-SACC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-SACC.*
    :width: 600px
    :align: center
 
    Skin-friction distribution for various grids obtained from Caelus simulation using Spalart–Allmaras turbulence model
 
-In :num:`Fig. #cf-turb-flat-plate-caelus-cfl3d-sacc`, the skin-friction distribution obtained from Caelus on Grid-5 is compared with CFL3D of the same grid. An excellent agreement is obtained all along the plate.
+In :numref:`cf-turb-flat-plate-caelus-cfl3d-sacc`, the skin-friction distribution obtained from Caelus on Grid-5 is compared with CFL3D of the same grid. An excellent agreement is obtained all along the plate.
 
 .. _cf-turb-flat-plate-caelus-cfl3d-sacc:
-.. figure:: /sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-CFL3D-SACC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-CFL3D-SACC.*
    :width: 600px
    :align: center
 
@@ -201,19 +201,19 @@ In :num:`Fig. #cf-turb-flat-plate-caelus-cfl3d-sacc`, the skin-friction distribu
 
 *k-Omega SST*
 
-The skin-friction distribution for various grids obtained from :math:`k-\omega~\rm{SST}` model is shown in :num:`Fig. #cf-turb-flat-plate-caelus-sst`.
+The skin-friction distribution for various grids obtained from :math:`k-\omega~\rm{SST}` model is shown in :numref:`cf-turb-flat-plate-caelus-sst`.
 
 .. _cf-turb-flat-plate-caelus-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-SST.*
    :width: 600px
    :align: center
 
    Skin-friction distribution for various grids obtained from Caelus simulation using :math:`k-\omega~\rm{SST}` turbulence model
 
-The skin-friction comparison between Caelus and CFL3D for Grid-5 is shown in :num:`Fig. #cf-turb-flat-plate-caelus-cfl3d-sst`.
+The skin-friction comparison between Caelus and CFL3D for Grid-5 is shown in :numref:`cf-turb-flat-plate-caelus-cfl3d-sst`.
 
 .. _cf-turb-flat-plate-caelus-cfl3d-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-CFL3D-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-flat-plate-Caelus-CFL3D-SST.*
    :width: 600px
    :align: center
 

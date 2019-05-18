@@ -37,10 +37,10 @@ Background
 
 The flow inside a spherically heated cavity is an interesting case of buoyant flow simulation. Here, the flow is enclosed in a spherical cavity and the wall is heated with a specified temperature gradient. Due to the natural convection process, the fluid initiates a motion as a result of buoyancy effects. The characteristic feature that is of interest is the steady isotherms. Details regarding the validation of this case is given in :ref:`spherical-cavity-validation`.
 
-The schematic representation of the sphere is shown in :num:`Fig. #sphereschematictutorials` and only half of the sphere is considered here having the plane of symmetry in #:math:`x-y` plane at :math:`z=0`. The radius of the sphere is chosen to be :math:`r=0.5~m`, such that :math:`x=0` at :math:`r=0` and :math:`x=0.5` at :math:`r=0.5`.
+The schematic representation of the sphere is shown in :numref:`sphereschematictutorials` and only half of the sphere is considered here having the plane of symmetry in #:math:`x-y` plane at :math:`z=0`. The radius of the sphere is chosen to be :math:`r=0.5~m`, such that :math:`x=0` at :math:`r=0` and :math:`x=0.5` at :math:`r=0.5`.
 
 .. _sphereschematictutorials:
-.. figure:: /sections/tutorial-figures/sphere-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/sphere-schematic-tutorials.*
    :width: 300px
    :align: center
   
@@ -79,21 +79,21 @@ Grid Generation
 
 A hexahedral grid within the sphere was developed via the O-grid topology using `Pointwise <http://www.pointwise.com/>`_. Grid generation details are not discussed here, however details regarding the computational domain and boundary conditions are provided.
 
-As noted earlier, the computational domain considered is a half sphere with the plane of symmetry in the :math:`x-y` axes at :math:`z=0~m`. The temperature will be set as given in the above equations and also the initialisation follows the surface temperature (:math:`T=x`). In :num:`Fig. #sphere-domain-tutorials` the computational domain, in particular the applied temperature boundary condition when applied is shown.
+As noted earlier, the computational domain considered is a half sphere with the plane of symmetry in the :math:`x-y` axes at :math:`z=0~m`. The temperature will be set as given in the above equations and also the initialisation follows the surface temperature (:math:`T=x`). In :numref:`sphere-domain-tutorials` the computational domain, in particular the applied temperature boundary condition when applied is shown.
 
 
 .. _sphere-domain-tutorials:
-.. figure:: /sections/tutorial-figures/sphere-domain-tutorials.*
+.. figure:: sections/tutorial-figures/sphere-domain-tutorials.*
    :width: 400px
    :align: center
 		
    Computational domain and temperature boundary condition for a spherical cavity
 
-The structured O-grid over the spherical wall and on the plane of symmetry is shown in :num:`Fig. #sphere-grid-tutorials`. A total of 18564 cells are present within the domain. Over the plane of symmetry, 32 cells are distributed and, over the spherical surface 35 cells are distributed in the radial direction.
+The structured O-grid over the spherical wall and on the plane of symmetry is shown in :numref:`sphere-grid-tutorials`. A total of 18564 cells are present within the domain. Over the plane of symmetry, 32 cells are distributed and, over the spherical surface 35 cells are distributed in the radial direction.
 
 
 .. _sphere-grid-tutorials:
-.. figure:: /sections/tutorial-figures/sphere-grid-tutorials.*
+.. figure:: sections/tutorial-figures/sphere-grid-tutorials.*
    :width: 600px
    :align: center
 
@@ -206,12 +206,12 @@ Here, ``Newtonian;`` keyword is used since the flow is under Newtonian assumptio
 
 The type of simulation is specified in ``turbulenceProperties`` to ``laminar`` using the keyword ``simulationType`` as shown below
 
-.. literalinclude:: /../../../tutorials/heatTransfer/buoyantBoussinesqSimpleSolver/laminar/ACCM_sphericalCavity/constant/turbulenceProperties
+.. literalinclude:: ../../../tutorials/heatTransfer/buoyantBoussinesqSimpleSolver/laminar/ACCM_sphericalCavity/constant/turbulenceProperties
  
 
 In addition to this, ``RASProperties`` file is required since we specify turbulent thermal conductivity property.    
 
-.. literalinclude:: /../../../tutorials/heatTransfer/buoyantBoussinesqSimpleSolver/laminar/ACCM_sphericalCavity/constant/RASProperties
+.. literalinclude:: ../../../tutorials/heatTransfer/buoyantBoussinesqSimpleSolver/laminar/ACCM_sphericalCavity/constant/RASProperties
 
 *Controls and Solver Attributes*
 
@@ -300,7 +300,7 @@ The above expression re-writes the ``T`` file with the appropriate values of tem
 
 During the process of renumbering, grid-cell bandwidth information before and after ``renumberMesh`` is shown and the user can take a note of this. The mesh statistics are as shown below after invoking ``checkMesh``
 
-.. literalinclude:: /sections/tutorial-figures/sc_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/sc_checkmesh.txt
 
 The above information gives a maximum mesh non-orthogonality angle of 64.2 and therefore non-orthogonal corrections are needed for the solver. In the next step, we will execute the solver and monitor the progress of the simulation. The solver should be executed from the top level directory using,
 
@@ -315,10 +315,10 @@ The progress of the simulation is written to the log file ``my-spherical-cavity.
    caelus logs -w my-spherical-cavity.log
 
 		
-The plot indicates the convergence history for pressure with respect to time and a similar plot is shown in :num:`Fig. #sphere-convergence-tutorials`. The convergence of other properties can also be found by using the above command.
+The plot indicates the convergence history for pressure with respect to time and a similar plot is shown in :numref:`sphere-convergence-tutorials`. The convergence of other properties can also be found by using the above command.
 
 .. _sphere-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/sphere-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/sphere-convergence-tutorials.*
    :width: 500px
    :align: center
 		
@@ -328,11 +328,11 @@ The plot indicates the convergence history for pressure with respect to time and
 Results
 ````````
 
-Here, the solution obtained at steady state is shown and is compared with the analytical solution. In :num:`Fig. #sphere-isotherms-tutorials`, the comparison of temperature isotherms is presented. The analytical solution is a first order approximation. A close agreement between the two can be observed.
+Here, the solution obtained at steady state is shown and is compared with the analytical solution. In :numref:`sphere-isotherms-tutorials`, the comparison of temperature isotherms is presented. The analytical solution is a first order approximation. A close agreement between the two can be observed.
 
 
 .. _sphere-isotherms-tutorials:
-.. figure:: /sections/tutorial-figures/sphere-isotherms-tutorials.*
+.. figure:: sections/tutorial-figures/sphere-isotherms-tutorials.*
    :width: 600px 
    :align: center
 		

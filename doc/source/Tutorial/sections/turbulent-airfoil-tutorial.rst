@@ -38,10 +38,10 @@ Background
 
 Turbulent flow over airfoils is an interesting example to highlight some of the capabilities of Caelus. Here, the flow undergoes rapid expansion due to strong surface curvatures thereby inducing pressure and velocity gradients along the surface. Depending on shape of the curvature, adverse or favourable pressure gradients can exist on either side. These can be examined through surface quantities like pressure and skin-friction distributions. The user can refer to the verification and validation of this case at :ref:`turbulent-airfoil-verification-label`.
 
-The schematic of NACA 0012 airfoil at two angles of attack are shown in :num:`Fig. #t-airfoil-schematic-tutorials` for a two-dimensional profile. A chord length (C) of 1.0 m is considered for both and has a Reynolds number of :math:`6 \times 10^6`. The flow is assumed to be Air with a freestream temperature of 300 K. Considering these values, the freestream velocity can be evaluated to U = 52.077 m/s. Note that the geometric plane considered for two-dimensionality is in :math:`x-z` directions. 
+The schematic of NACA 0012 airfoil at two angles of attack are shown in :numref:`t-airfoil-schematic-tutorials` for a two-dimensional profile. A chord length (C) of 1.0 m is considered for both and has a Reynolds number of :math:`6 \times 10^6`. The flow is assumed to be Air with a freestream temperature of 300 K. Considering these values, the freestream velocity can be evaluated to U = 52.077 m/s. Note that the geometric plane considered for two-dimensionality is in :math:`x-z` directions. 
 
 .. _t-airfoil-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/t-airfoil-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/t-airfoil-schematic-tutorials.*
    :width: 500px
    :align: center
 
@@ -75,10 +75,10 @@ Grid Generation
 
 The structured grid used for this tutorial can cells obtained from `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/naca0012_grids.html>`__ in Plot3D format that contains 512 around the airfoil and 256 cells in the flow normal direction. This should be then converted to ``polyMesh`` format.
 
-The computational domain for the NACA 0012 airfoil is shown in :num:`Fig. #t-airfoil-domain-tutorials` along with the boundary conditions. A large domain exists around the airfoil (highlighted in blue) extending 500 chord lengths in the radial direction and the inlet condition is given  for the entire boundary highlighted in green, whereas the outlet is placed at the exit plane which is about :math:`x \approx 500~m`. The velocity on the airfoil surface is zero, wherein :math:`u, v, w = 0` represented through a no-slip boundary.
+The computational domain for the NACA 0012 airfoil is shown in :numref:`t-airfoil-domain-tutorials` along with the boundary conditions. A large domain exists around the airfoil (highlighted in blue) extending 500 chord lengths in the radial direction and the inlet condition is given  for the entire boundary highlighted in green, whereas the outlet is placed at the exit plane which is about :math:`x \approx 500~m`. The velocity on the airfoil surface is zero, wherein :math:`u, v, w = 0` represented through a no-slip boundary.
 
 .. _t-airfoil-domain-tutorials:
-.. figure:: /sections/tutorial-figures/t-airfoil-domain-tutorials.*
+.. figure:: sections/tutorial-figures/t-airfoil-domain-tutorials.*
    :width: 600px
    :align: center
       
@@ -90,13 +90,13 @@ The ``polyMesh`` grid is in three-dimensions, however the flow over airfoils can
    A velocity value of :math:`v=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`y` direction.
 
 .. _t-airfoil-grid-tutorials:
-.. figure:: /sections/tutorial-figures/t-airfoil-grid-tutorials.*
+.. figure:: sections/tutorial-figures/t-airfoil-grid-tutorials.*
    :width: 800px
    :align: center
    
    Computational grid of a 2D airfoil in :math:`x-z` plane
 
-The 2D airfoil grid in :math:`x-z` plane is shown in :num:`Fig. #t-airfoil-grid-tutorials` which has a distribution of 512 X 256 cells. The grid in the vicinity of airfoil is shown as an inset and a very fine distribution can be noted very close to the wall. It was estimated that :math:`y^+` is less than 1 to capture the turbulent boundary layer accurately and no wall-function is used.
+The 2D airfoil grid in :math:`x-z` plane is shown in :numref:`t-airfoil-grid-tutorials` which has a distribution of 512 X 256 cells. The grid in the vicinity of airfoil is shown as an inset and a very fine distribution can be noted very close to the wall. It was estimated that :math:`y^+` is less than 1 to capture the turbulent boundary layer accurately and no wall-function is used.
 
 Problem definition
 ````````````````````
@@ -144,7 +144,7 @@ The user should note that Caelus is case sensitive and therefore the directory a
 
 *Boundary Conditions*
 
-Referring back to :num:`Fig. #t-airfoil-domain-tutorials`, the following are the boundary conditions that will be specified:
+Referring back to :numref:`t-airfoil-domain-tutorials`, the following are the boundary conditions that will be specified:
 
 * Inlet
    - Velocity:
@@ -330,7 +330,7 @@ Before executing the solver, it is important to renumber and to carry out a qual
 
 When the ``renumberMesh`` is performed, the user should take note of the bandwidth before and after the mesh renumbering. In a similar manner, when the ``checkMesh`` is performed, the mesh statistics are shown as below 
 
-.. literalinclude:: /sections/tutorial-figures/t_airfoil_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/t_airfoil_checkmesh.txt
 
 As can be noted above, the output of the ``checkMesh`` indicates that the mesh check has failed reporting in the final message as ``Failed 1 mesh checks``. This is because of the high aspect ratio meshes present immediate to the wall with very low (:math:`<< y^+`) values. Nevertheless, this is just a warning and Caelus will solve on this mesh.
 
@@ -365,10 +365,10 @@ The log file can be further processed to look at the convergence history and thi
 
    caelus logs -w my-turbulent-airfoil.log
 
-The above command  allows you to look at the convergence of different variables with respect to the number of iterations carried out. The convergence of pressure is shown in :num:`Fig. #t-airfoil-convergence-tutorials`.
+The above command  allows you to look at the convergence of different variables with respect to the number of iterations carried out. The convergence of pressure is shown in :numref:`t-airfoil-convergence-tutorials`.
 
 .. _t-airfoil-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/t-airfoil-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/t-airfoil-convergence-tutorials.*
    :width: 400px
    :align: center
 		
@@ -377,17 +377,17 @@ The above command  allows you to look at the convergence of different variables 
 Results
 ````````
 
-The flow over the airfoil at both :math:`0^\circ` and :math:`10^\circ` degree angle of attack are presented here. In :num:`Fig. #t-airfoil-velocitypressure-tutorials-0`, velocity magnitude and pressure contours can be seen for :math:`\alpha = 0^\circ` angle of attack. These result are for the SA model. The suction and the pressure surfaces essentially produce the same flow due to :math:`0^\circ` angle of incidence and thus contributes to zero lift. In contrast, at :math:`0^\circ` angle of incidence in :num:`Fig. #t-airfoil-velocitypressure-tutorials-10`, a low pressure region exists on the upper surface and consequently the velocity increases thus generating some lift.
+The flow over the airfoil at both :math:`0^\circ` and :math:`10^\circ` degree angle of attack are presented here. In :numref:`t-airfoil-velocitypressure-tutorials-0`, velocity magnitude and pressure contours can be seen for :math:`\alpha = 0^\circ` angle of attack. These result are for the SA model. The suction and the pressure surfaces essentially produce the same flow due to :math:`0^\circ` angle of incidence and thus contributes to zero lift. In contrast, at :math:`0^\circ` angle of incidence in :numref:`t-airfoil-velocitypressure-tutorials-10`, a low pressure region exists on the upper surface and consequently the velocity increases thus generating some lift.
 
 .. _t-airfoil-velocitypressure-tutorials-0:
-.. figure:: /sections/tutorial-figures/t-airfoil-velocitypressure-tutorials-0.*
+.. figure:: sections/tutorial-figures/t-airfoil-velocitypressure-tutorials-0.*
    :width: 800px
    :align: center
 		
    Velocity magnitude and pressure contours for :math:`\alpha = 0^\circ` angle of attack
 
 .. _t-airfoil-velocitypressure-tutorials-10:
-.. figure:: /sections/tutorial-figures/t-airfoil-velocitypressure-tutorials-10.*
+.. figure:: sections/tutorial-figures/t-airfoil-velocitypressure-tutorials-10.*
    :width: 800px
    :align: center
 		

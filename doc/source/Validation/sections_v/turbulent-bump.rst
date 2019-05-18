@@ -36,10 +36,10 @@ This case covers the verification of turbulent incompressible flow over a two-di
 
 **Problem definition**
 
-This verification exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/bump.html>`__ case for a 2D bump in a channel and follows the same conditions used in the limit of incompressibility. In this case, `CFL3D <http://cfl3d.larc.nasa.gov>`__ uses a freestream Mach number (:math:`M_\infty`) of 0.2. The schematic of the geometric configuration is shown in :num:`Fig. #turbulent-bump-schematic`.
+This verification exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/bump.html>`__ case for a 2D bump in a channel and follows the same conditions used in the limit of incompressibility. In this case, `CFL3D <http://cfl3d.larc.nasa.gov>`__ uses a freestream Mach number (:math:`M_\infty`) of 0.2. The schematic of the geometric configuration is shown in :numref:`turbulent-bump-schematic`.
 
 .. _turbulent-bump-schematic:
-.. figure:: /sections_v/validation-figures/turbulent-bump-schematic.*
+.. figure:: sections_v/validation-figures/turbulent-bump-schematic.*
    :width: 500px
    :align: center
 
@@ -97,10 +97,10 @@ Note that the dynamic viscosity for the above equation is obtained from Sutherla
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain consists of a rectangular channel encompassing the bump. In :num:`Fig. #turbulent-bump-domain` , the details of the boundaries used in two-dimensions (:math:`x-y` plane) are shown. The region of interest, which is the bump extends between :math:`0\leq x \leq 1.5~m` and has a no-slip boundary condition. Upstream and downstream of the bump, the symmetry boundary extends about 17 bump lengths. The inlet boundary is placed at the start of the symmetry at :math:`x = -25.0~m` and the outlet is placed at :math:`x = 26.5~m`. For the entire top boundary, symmetry plane condition is used.
+The computational domain consists of a rectangular channel encompassing the bump. In :numref:`turbulent-bump-domain` , the details of the boundaries used in two-dimensions (:math:`x-y` plane) are shown. The region of interest, which is the bump extends between :math:`0\leq x \leq 1.5~m` and has a no-slip boundary condition. Upstream and downstream of the bump, the symmetry boundary extends about 17 bump lengths. The inlet boundary is placed at the start of the symmetry at :math:`x = -25.0~m` and the outlet is placed at :math:`x = 26.5~m`. For the entire top boundary, symmetry plane condition is used.
 
 .. _turbulent-bump-domain:
-.. figure:: /sections_v/validation-figures/turbulent-bump-domain.*
+.. figure:: sections_v/validation-figures/turbulent-bump-domain.*
    :width: 500px
    :align: center
 
@@ -160,10 +160,10 @@ Grid-4                  704                                  320                
 Grid-5                  1408                                 640                              901,120         0.03
 ======================  ==================================   ===============================  =============== ============
 
-The 2D grid in :math:`x-z` plane is shown in :num:`Fig. #turbulent-bump-grid` for Grid-3. As can be noted, the grid is sufficiently refined close to the wall in the normal direction. In addition, the grids are refined in the vicinity of the bump, including both upstream and downstream which can be seen in the inset. All grids have a :math:`y^+ < 1` and no wall function is used for the wall boundary in the current verification cases.
+The 2D grid in :math:`x-z` plane is shown in :numref:`turbulent-bump-grid` for Grid-3. As can be noted, the grid is sufficiently refined close to the wall in the normal direction. In addition, the grids are refined in the vicinity of the bump, including both upstream and downstream which can be seen in the inset. All grids have a :math:`y^+ < 1` and no wall function is used for the wall boundary in the current verification cases.
 
 .. _turbulent-bump-grid:
-.. figure:: /sections_v/validation-figures/turbulent-bump-grid.*
+.. figure:: sections_v/validation-figures/turbulent-bump-grid.*
    :width: 800px
    :align: center
 
@@ -175,19 +175,19 @@ The steady-state solution of the turbulent flow over a two-dimensional bump was 
 
 *Spalart–Allmaras*
 
-The skin-friction distributions over the 2D bump obtained from Caelus for different grids are shown in :num:`Fig. #cf-turbulent-bump-caelus-sacc`. There is very little difference in the skin-friction beyond Grid-2 suggesting that a grid-independence solution is achieved.
+The skin-friction distributions over the 2D bump obtained from Caelus for different grids are shown in :numref:`cf-turbulent-bump-caelus-sacc`. There is very little difference in the skin-friction beyond Grid-2 suggesting that a grid-independence solution is achieved.
 
 .. _cf-turbulent-bump-caelus-sacc:
-.. figure:: /sections_v/validation-figures/cf-turbulent-bump-Caelus-SACC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-bump-Caelus-SACC.*
    :width: 600px
    :align: center
 
    Skin-friction distribution for various grids obtained from Caelus simulation using Spalart–Allmaras turbulence model
 
-In :num:`Fig. #cf-turbulent-bump-caelus-cfl3d-sacc` , the comparison between Caelus and CFL3D is made for Grid-5 and as can be seen, a very good agreement is obtained over the entire region of the bump.
+In :numref:`cf-turbulent-bump-caelus-cfl3d-sacc` , the comparison between Caelus and CFL3D is made for Grid-5 and as can be seen, a very good agreement is obtained over the entire region of the bump.
 
 .. _cf-turbulent-bump-caelus-cfl3d-sacc:
-.. figure:: /sections_v/validation-figures/cf-turbulent-bump-Caelus-CFL3D-SACC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-bump-Caelus-CFL3D-SACC.*
    :width: 600px
    :align: center
 
@@ -195,19 +195,19 @@ In :num:`Fig. #cf-turbulent-bump-caelus-cfl3d-sacc` , the comparison between Cae
 
 *k-Omega SST*
 
-The skin-friction distribution variation for different grids obtained from :math:`k-\omega~\rm{SST}` model is shown in :num:`Fig. #cf-turbulent-bump-caelus-sst`.
+The skin-friction distribution variation for different grids obtained from :math:`k-\omega~\rm{SST}` model is shown in :numref:`cf-turbulent-bump-caelus-sst`.
 
 .. _cf-turbulent-bump-caelus-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-bump-Caelus-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-bump-Caelus-SST.*
    :width: 600px
    :align: center
 
    Skin-friction distribution for various grids obtained from Caelus simulation using :math:`k-\omega~\rm{SST}` turbulence model
 
-In :num:`Fig. #cf-turbulent-bump-caelus-cfl3d-sst` , the skin-friction comparison between Caelus and CFL3D is made for Grid-5 and is shown.
+In :numref:`cf-turbulent-bump-caelus-cfl3d-sst` , the skin-friction comparison between Caelus and CFL3D is made for Grid-5 and is shown.
 
 .. _cf-turbulent-bump-caelus-cfl3d-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-bump-Caelus-CFL3D-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-bump-Caelus-CFL3D-SST.*
    :width: 600px
    :align: center
 

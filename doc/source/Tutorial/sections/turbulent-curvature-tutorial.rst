@@ -37,10 +37,10 @@ Background
 ````````````
 Turbulent flow in a constant-area duct with a curvature is an interesting case. Here as a result of a curvature, pressure gradients occur in the vicinity of the curvature having localised effect. The flow will be assumed as steady-state and incompressible. Non-dimensional shear-stress (skin-friction coefficient) will be used to show the influence of curvature on the flow. Validation and verification of this exercise is detailed in section :ref:`turbulent-curvature-verification-label` and the user is suggested to refer for more information.
 
-The inlet of the duct as can be seen from the schematic below in :num:`Fig. #t-curvature-schematic-tutorials` has an inclination of :math:`\alpha = 30^\circ`. This is followed by a rapid bend at the same angle, :math:`\alpha` after a distance of about 1.4 m. The downstream extends to 1.6 meters. The inflow has a Reynolds number of :math:`2.1 \times 10^6`, with Air as the fluid. The temperature of the inflow is at 293 K and U is the inlet velocity. Based on the Reynolds number, temperature and velocity, the kinematic viscosity is evaluated to :math:`\nu = 1.519470 \times 10^{-5}~m^2/s`. The geometric-plane for this case in 2-D is :math:`x-z` plane.
+The inlet of the duct as can be seen from the schematic below in :numref:`t-curvature-schematic-tutorials` has an inclination of :math:`\alpha = 30^\circ`. This is followed by a rapid bend at the same angle, :math:`\alpha` after a distance of about 1.4 m. The downstream extends to 1.6 meters. The inflow has a Reynolds number of :math:`2.1 \times 10^6`, with Air as the fluid. The temperature of the inflow is at 293 K and U is the inlet velocity. Based on the Reynolds number, temperature and velocity, the kinematic viscosity is evaluated to :math:`\nu = 1.519470 \times 10^{-5}~m^2/s`. The geometric-plane for this case in 2-D is :math:`x-z` plane.
 
 .. _t-curvature-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/t-curvature-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/t-curvature-schematic-tutorials.*
    :width: 500px
    :align: center
 
@@ -74,10 +74,10 @@ Grid Generation
 
 The structured grid for this case has been obtained from from `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/smitscurve_grids.html>`__ in a Plot3 format which contains 512 cells in streamwise direction and 192 in the flow normal direction. The Plot3D file has to be converted to ``polyMesh`` format.
 
-In :num:`Fig. #t-curvature-domain-tutorials`, the computational domain can be seen which as expected follows the geometry. The velocity at the internal walls (highlighted in blue) are zero, wherein :math:`u, v, w =0` representing a no-slip boundary. The inlet and the outlet are applied to the start and end of the domain respectively.
+In :numref:`t-curvature-domain-tutorials`, the computational domain can be seen which as expected follows the geometry. The velocity at the internal walls (highlighted in blue) are zero, wherein :math:`u, v, w =0` representing a no-slip boundary. The inlet and the outlet are applied to the start and end of the domain respectively.
 
 .. _t-curvature-domain-tutorials:
-.. figure:: /sections/tutorial-figures/t-curvature-domain-tutorials.*
+.. figure:: sections/tutorial-figures/t-curvature-domain-tutorials.*
    :width: 500px
    :align: center
 
@@ -89,13 +89,13 @@ The grid that is used, ``polyMesh`` format is in three-dimensions. However it is
    A velocity value of :math:`v=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`y` direction.
 
 .. _t-curvature-grid-tutorials:
-.. figure:: /sections/tutorial-figures/t-curvature-grid-tutorials.*
+.. figure:: sections/tutorial-figures/t-curvature-grid-tutorials.*
    :width: 800px
    :align: center
    
    Convex curvature grid in two-dimensions in :math:`x-z` plane
 
-The 2D grid in :math:`x-z` plane is shown in :num:`Fig. #t-curvature-grid-tutorials` having a distribution of 512 X 192 cells. The inset in the figure highlights the region vicinity of the curvature and very fine distribution of cells can be seen close to the wall. It is estimated that :math:`y^+` is less than 1 in order to capture turbulent boundary layer accurately and thus no wall-function is used.
+The 2D grid in :math:`x-z` plane is shown in :numref:`t-curvature-grid-tutorials` having a distribution of 512 X 192 cells. The inset in the figure highlights the region vicinity of the curvature and very fine distribution of cells can be seen close to the wall. It is estimated that :math:`y^+` is less than 1 in order to capture turbulent boundary layer accurately and thus no wall-function is used.
 
 Problem definition
 ````````````````````
@@ -318,7 +318,7 @@ Renumbering and checking the grid/mesh quality is important before the solver is
 
 With the execution of ``renumberMesh -overwrite``, the user should note the reduction in bandwidth after renumbering occurs. Similarly, when the ``checkMesh`` is performed, the mesh statistics are shown as below
 
-.. literalinclude:: /sections/tutorial-figures/t_curvature_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/t_curvature_checkmesh.txt
 
 Apparent from the above output, the ``checkMesh`` indicates that the mesh check has failed reporting in the final message as ``Failed 1 mesh checks``. This is because of the high aspect ratio meshes present immediate to the wall with very low (:math:`<< y^+`) values. Nevertheless, this is just a warning and Caelus will solve on this mesh.
 
@@ -353,10 +353,10 @@ The log file can be further processed to look at the convergence history and thi
 
    caelus logs -w my-turbulent-curvature.log
 
-The above statement allows you to look at the convergence of variables with respect to the number of iterations carried out as shown in :num:`Fig. #t-curvature-convergence-tutorials` for pressure.
+The above statement allows you to look at the convergence of variables with respect to the number of iterations carried out as shown in :numref:`t-curvature-convergence-tutorials` for pressure.
 
 .. _t-curvature-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/t-curvature-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/t-curvature-convergence-tutorials.*
    :width: 400px
    :align: center
 		
@@ -365,11 +365,11 @@ The above statement allows you to look at the convergence of variables with resp
 Results
 ````````
 
-The flow visualisation of velocity and pressure within the convex duct is presented here. In :num:`Fig. #t-curvature-velocitypressure-tutorials` velocity magnitude and pressure are shown for SA model. Due to the convex bend, the thinning of the turbulent boundary layer occurs on the lower surface and the pressure decreases. Whereas the trends are opposite on the upper surface.
+The flow visualisation of velocity and pressure within the convex duct is presented here. In :numref:`t-curvature-velocitypressure-tutorials` velocity magnitude and pressure are shown for SA model. Due to the convex bend, the thinning of the turbulent boundary layer occurs on the lower surface and the pressure decreases. Whereas the trends are opposite on the upper surface.
 
 
 .. _t-curvature-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/t-curvature-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/t-curvature-velocitypressure-tutorials.*
    :width: 800px
    :align: center
 		

@@ -31,7 +31,7 @@ A comprehensive study of flow through planar branches has been carried out by Ha
 The following figure shows the schematic of the tee-junction. Here, L = 3.0 m, W = 1.0 m respectively, the Reynolds number based on the width is 300, and V is the velocity in the y-direction. For simplicity, we have assumed the velocity, V = 1 m/s. Using these values the resulting kinematic viscosity was 0.00333 :math:`m^2/s`.
 
 .. _tee-junction-schematic:
-.. figure:: /sections_v/validation-figures/tee-junction-schematic.*
+.. figure:: sections_v/validation-figures/tee-junction-schematic.*
    :width: 300px
    :align: center
 
@@ -49,10 +49,10 @@ As we have assumed the flow incompressible, the density (:math:`\rho`) remains c
 
 **Computational Domain and Boundary Conditions**
 
-Since this is an internal flow problem, the computational domain is contained within tee-junction geometry. The details are shown in :num:`Fig. #tee-junction-domain`. As indicated, all tee-junction walls have a no-slip boundary condition which has been highlighted in blue. At the inlet, a fully developed laminar flow parabolic profile is applied, otherwise a much longer main branch would be required for the flow to develop. The domain has two outlets, one at the end of the main channel and the other at the end of side branch. Note the exit pressures at the two outlets are equal. 
+Since this is an internal flow problem, the computational domain is contained within tee-junction geometry. The details are shown in :numref:`tee-junction-domain`. As indicated, all tee-junction walls have a no-slip boundary condition which has been highlighted in blue. At the inlet, a fully developed laminar flow parabolic profile is applied, otherwise a much longer main branch would be required for the flow to develop. The domain has two outlets, one at the end of the main channel and the other at the end of side branch. Note the exit pressures at the two outlets are equal. 
 
 .. _tee-junction-domain:
-.. figure:: /sections_v/validation-figures/tee-junction-domain.*
+.. figure:: sections_v/validation-figures/tee-junction-domain.*
    :width: 300px
    :align: center
    
@@ -85,10 +85,10 @@ The following are the boundary condition details used for the computational doma
     
 **Computational Grid**
 
-The 2D structured grid is shown in :num:`Fig. #tee-junction-grid`. Since Caelus is a 3D computational framework, it necessitates the grid to also be 3D. Therefore, a 3D grid was obtained by extruding the 2D grid in the positive :math:`z` direction by *one cell*. The final 3D grid was then exported to the Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This is achieved in Caelus by specifying *empty* boundary condition for each plane. Although, no flow is computed in the :math:`z` direction, a velocity of :math:`w = 0` has to be specified for the velocity boundary condition as indicated above.
+The 2D structured grid is shown in :numref:`tee-junction-grid`. Since Caelus is a 3D computational framework, it necessitates the grid to also be 3D. Therefore, a 3D grid was obtained by extruding the 2D grid in the positive :math:`z` direction by *one cell*. The final 3D grid was then exported to the Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This is achieved in Caelus by specifying *empty* boundary condition for each plane. Although, no flow is computed in the :math:`z` direction, a velocity of :math:`w = 0` has to be specified for the velocity boundary condition as indicated above.
 
 .. _tee-junction-grid:
-.. figure:: /sections_v/validation-figures/tee-junction-grid.*
+.. figure:: sections_v/validation-figures/tee-junction-grid.*
    :width: 500px
    :align: center
 

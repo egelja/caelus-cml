@@ -44,10 +44,10 @@ This study investigates steady turbulent, incompressible flow over a two-dimensi
 
 **Problem definition**
 
-The backward facing step configuration is obtained from the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/backstep_val.html>`__ and is a widely considered case for the purpose of verification and validation. This particular study is based on the experiments carried out by Driver and Seegmiller :cite:`Driver1985`. The schematic of the step configuration in :num:`Fig. #turbulentstepschematic` below as considered in the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/backstep_val.html>`__.
+The backward facing step configuration is obtained from the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/backstep_val.html>`__ and is a widely considered case for the purpose of verification and validation. This particular study is based on the experiments carried out by Driver and Seegmiller :cite:`Driver1985`. The schematic of the step configuration in :numref:`turbulentstepschematic` below as considered in the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/backstep_val.html>`__.
 
 .. _turbulentstepschematic:
-.. figure:: /sections_v/validation-figures/turbulent-step-schematic.*
+.. figure:: sections_v/validation-figures/turbulent-step-schematic.*
    :width: 500px
    :align: center
 
@@ -134,10 +134,10 @@ where, :math:`\lambda` is the turbulent length scale and is evaluated at 0.22 of
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain simply follows the step geometry for the entire bottom region. In :num:`Fig. #turbulent-step-domain` below, the boundary details in two-dimensions (:math:`x-z` plane) are shown. The walls of the upstream plate, step and the downstream plate that extend between :math:`-110 \leq x \leq 50~m` are modelled as no-slip wall boundary condition. Similarly, the top plate is also modelled as a no-slip wall. Upstream of the leading edge, that is, :math:`x \leq 110` symmetry boundary extends for a length of 20 step heights and the inlet boundary is placed at the start of the symmetry. The outlet is placed at the end of the downstream plate, which is at :math:`x = 50~m`.
+The computational domain simply follows the step geometry for the entire bottom region. In :numref:`turbulent-step-domain` below, the boundary details in two-dimensions (:math:`x-z` plane) are shown. The walls of the upstream plate, step and the downstream plate that extend between :math:`-110 \leq x \leq 50~m` are modelled as no-slip wall boundary condition. Similarly, the top plate is also modelled as a no-slip wall. Upstream of the leading edge, that is, :math:`x \leq 110` symmetry boundary extends for a length of 20 step heights and the inlet boundary is placed at the start of the symmetry. The outlet is placed at the end of the downstream plate, which is at :math:`x = 50~m`.
 
 .. _turbulent-step-domain:
-.. figure:: /sections_v/validation-figures/turbulent-step-domain.*
+.. figure:: sections_v/validation-figures/turbulent-step-domain.*
    :width: 600px
    :align: center
 
@@ -227,10 +227,10 @@ where, :math:`c_f` was obtained for the flat-plate as given in Schlichting :cite
 
 where, :math:`Re_x` is the Reynolds number based on the length of the boundary layer. In this case, it is the length developed over the upstream plate.
 
-The 2D grid of a backward facing step in :math:`x-z` is shown in :num:`Fig. #turbulent-step-grid` for a :math:`y^+ \approx 30`. In the upstream region of the step, there are 60 cells in the streamwise and 64 in the wall normal directions respectively. Downstream of the step, there are 129 cells in the streamwise and a total of 84 cells in the normal direction. Out of 84 cells, 20 cells represent the height of the step.
+The 2D grid of a backward facing step in :math:`x-z` is shown in :numref:`turbulent-step-grid` for a :math:`y^+ \approx 30`. In the upstream region of the step, there are 60 cells in the streamwise and 64 in the wall normal directions respectively. Downstream of the step, there are 129 cells in the streamwise and a total of 84 cells in the normal direction. Out of 84 cells, 20 cells represent the height of the step.
 
 .. _turbulent-step-grid:
-.. figure:: /sections_v/validation-figures/turbulent-step-grid.*
+.. figure:: sections_v/validation-figures/turbulent-step-grid.*
    :width: 800px
    :align: center
 
@@ -243,28 +243,28 @@ The steady-state solution of turbulent flow over a two-dimensional backward faci
 
 *Experimental validation of skin-friction coefficient*
 
-In this section, the validation carried out for Caelus based on skin-friction and pressure obtained experimentally by Driver and Seegmiller :cite:`Driver1985` is presented. The results obtained from CFL3D :cite:`CFL3D` are additionally shown and should be considered only as a reference and not as a benchmark for verification. This is because all the CFL3D results have been obtained without the use of wall functions and on a grid having :math:`y^+ \approx 1`. In :num:`Fig. #turbulent-stp-caelus-sa`, skin-friction distribution obtained from Caelus using SA turbulence model is compared with the experiments. Upstream of the step, the agreement is good, however, downstream post-reattachment the skin-friction under predicts the experimental data. In both these regions of the flow, Caelus results are nearly identical to that of CFL3D suggesting that the wall-function is capturing the flow characteristics accurately. Within the separated region, there is a large discrepancy and this is due to the inherent low :math:`y^+` mesh in that region, where typically a wall function becomes invalid.
+In this section, the validation carried out for Caelus based on skin-friction and pressure obtained experimentally by Driver and Seegmiller :cite:`Driver1985` is presented. The results obtained from CFL3D :cite:`CFL3D` are additionally shown and should be considered only as a reference and not as a benchmark for verification. This is because all the CFL3D results have been obtained without the use of wall functions and on a grid having :math:`y^+ \approx 1`. In :numref:`turbulent-stp-caelus-sa`, skin-friction distribution obtained from Caelus using SA turbulence model is compared with the experiments. Upstream of the step, the agreement is good, however, downstream post-reattachment the skin-friction under predicts the experimental data. In both these regions of the flow, Caelus results are nearly identical to that of CFL3D suggesting that the wall-function is capturing the flow characteristics accurately. Within the separated region, there is a large discrepancy and this is due to the inherent low :math:`y^+` mesh in that region, where typically a wall function becomes invalid.
 
 .. _turbulent-stp-caelus-sa:
-.. figure:: /sections_v/validation-figures/cf-turbulent-step-Caelus-SA.*
+.. figure:: sections_v/validation-figures/cf-turbulent-step-Caelus-SA.*
    :width: 600px
    :align: center
 
    Skin-friction distribution obtained from Caelus simulation using SA turbulence model
 
-Figure :num:`Fig. #turbulent-stp-caelus-sst` gives the comparison of skin-friction obtained from :math:`k-\omega~\rm{SST}` turbulence model. The result is very similar to the one obtained from SA model. In this case, the skin-friction upstream of the step is slightly under predicted, whereas, post reattachment, it seems to be closer to experiments. In contrast with the SA result, the skin-friction is now closer to the experimental data within the separated region, particularly in the region closer to the reattachment location.
+Figure :numref:`turbulent-stp-caelus-sst` gives the comparison of skin-friction obtained from :math:`k-\omega~\rm{SST}` turbulence model. The result is very similar to the one obtained from SA model. In this case, the skin-friction upstream of the step is slightly under predicted, whereas, post reattachment, it seems to be closer to experiments. In contrast with the SA result, the skin-friction is now closer to the experimental data within the separated region, particularly in the region closer to the reattachment location.
 
 .. _turbulent-stp-caelus-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-step-Caelus-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-step-Caelus-SST.*
    :width: 600px
    :align: center
 
    Skin-friction distribution obtained from Caelus simulation using :math:`k-\omega~\rm{SST}` turbulence model
 
-In :num:`Fig. #turbulent-stp-caelus-rke`, the comparison is shown for Realizable :math:`k-\epsilon` turbulence model. Note that CFL3D data was not available for this turbulence model to use as a reference. Again, similar skin-friction behaviour can be noted both upstream and downstream of the step with reasonable agreement with the experimental data. Within the separated region, there is a large difference and this could be due to the presence of low :math:`y^+` mesh as discussed earlier.
+In :numref:`turbulent-stp-caelus-rke`, the comparison is shown for Realizable :math:`k-\epsilon` turbulence model. Note that CFL3D data was not available for this turbulence model to use as a reference. Again, similar skin-friction behaviour can be noted both upstream and downstream of the step with reasonable agreement with the experimental data. Within the separated region, there is a large difference and this could be due to the presence of low :math:`y^+` mesh as discussed earlier.
 
 .. _turbulent-stp-caelus-rke:
-.. figure:: /sections_v/validation-figures/cf-turbulent-step-Caelus-RKE.*
+.. figure:: sections_v/validation-figures/cf-turbulent-step-Caelus-RKE.*
    :width: 600px
    :align: center
 
@@ -290,10 +290,10 @@ One of the key feature of modelling the backward facing step is the accurate pre
 
 *Experimental validation of pressure coefficient*
 
-:num:`Fig. #turbulent-step-caelus-cfl3d-expt-p` gives the pressure-coefficient (:math:`c_p`) comparison among three Caelus simulations and the experimental data. The inclusion of CFL3D data is again only for reference and not as a benchmark comparison. All the simulations essentially produce the same trend and is consistent with the skin-friction coefficient distribution. The pressure prediction in both :math:`k-\omega~\rm{SST}` and Realizable :math:`k-\epsilon` are very close to each other over the entire region shown in the figure and is also in fair agreement with the experimental data. However, SA seems to show some significant deviation particularly in the region of pressure minima.
+:numref:`turbulent-step-caelus-cfl3d-expt-p` gives the pressure-coefficient (:math:`c_p`) comparison among three Caelus simulations and the experimental data. The inclusion of CFL3D data is again only for reference and not as a benchmark comparison. All the simulations essentially produce the same trend and is consistent with the skin-friction coefficient distribution. The pressure prediction in both :math:`k-\omega~\rm{SST}` and Realizable :math:`k-\epsilon` are very close to each other over the entire region shown in the figure and is also in fair agreement with the experimental data. However, SA seems to show some significant deviation particularly in the region of pressure minima.
 
 .. _turbulent-step-caelus-cfl3d-expt-p:
-.. figure:: /sections_v/validation-figures/p-turbulent-step-Caelus-CFL3D-Expt.*
+.. figure:: sections_v/validation-figures/p-turbulent-step-Caelus-CFL3D-Expt.*
    :width: 600px
    :align: center
 

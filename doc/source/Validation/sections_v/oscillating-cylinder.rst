@@ -33,10 +33,10 @@ where, :math:`f` is the frequency of oscillations of vortex shedding, :math:`D` 
 
 **Problem Definition**
 
-:num:`Fig. #cylinder-schematic` shows the schematic of the two-dimensional circular cylinder. Here, the diameter D = 2 m and is the characteristic length for the Reynolds number, which is 100. For simplicity, the freestream velocity was taken to be U = 1 m/s in the x direction. Using these values the kinematic viscosity was calculated to be 0.02 :math:`m^2/s`.
+:numref:`cylinder-schematic` shows the schematic of the two-dimensional circular cylinder. Here, the diameter D = 2 m and is the characteristic length for the Reynolds number, which is 100. For simplicity, the freestream velocity was taken to be U = 1 m/s in the x direction. Using these values the kinematic viscosity was calculated to be 0.02 :math:`m^2/s`.
 
 .. _cylinder-schematic:
-.. figure:: /sections_v/validation-figures/cylinder-schematic.*
+.. figure:: sections_v/validation-figures/cylinder-schematic.*
    :width: 600px
    :align: center
 
@@ -54,10 +54,10 @@ Here, the flow is assumed to be incompressible and therefore the density is cons
 
 **Computational Domain and Boundary Conditions**
 
-A rectangular computational domain in the :math:`x-y` plane was constructed surrounding the circular cylinder as shown in :num:`Fig. #cylinder-domain`. A full cylinder must be used due to the oscillatory nature of the shed vortices. Rhe domain extends by 5 diameters of cylinder and 20 diameters downstream. Since the flow here is viscous dominated, sufficient downstream length is required to capture the vortex separation from the surface of the cylinder and the subsequently shedding in the wake. In the :math:`y` direction, the domain extends 5 diameters on either side. From the figure, multiple inlet boundaries to this domain can be seen, one at the upstream boundary and the other two for the top and bottom boundaries. This type of configuration is needed to appropriately model the inflow, similar to an undisturbed flow in an experimental set-up. It is noted that for top and bottom boundaries, the flow is in the :math:`x` direction. The outlet is located at the downstream boundary. The cylindrical wall is a no-slip boundary condition.
+A rectangular computational domain in the :math:`x-y` plane was constructed surrounding the circular cylinder as shown in :numref:`cylinder-domain`. A full cylinder must be used due to the oscillatory nature of the shed vortices. Rhe domain extends by 5 diameters of cylinder and 20 diameters downstream. Since the flow here is viscous dominated, sufficient downstream length is required to capture the vortex separation from the surface of the cylinder and the subsequently shedding in the wake. In the :math:`y` direction, the domain extends 5 diameters on either side. From the figure, multiple inlet boundaries to this domain can be seen, one at the upstream boundary and the other two for the top and bottom boundaries. This type of configuration is needed to appropriately model the inflow, similar to an undisturbed flow in an experimental set-up. It is noted that for top and bottom boundaries, the flow is in the :math:`x` direction. The outlet is located at the downstream boundary. The cylindrical wall is a no-slip boundary condition.
 
 .. _cylinder-domain:
-.. figure:: /sections_v/validation-figures/cylinder-domain.*
+.. figure:: sections_v/validation-figures/cylinder-domain.*
    :width: 600px
    :align: center
 
@@ -92,7 +92,7 @@ Following are the details of the boundary conditions used:
 The computational grid in 2D was generated using `Pointwise <http://www.pointwise.com/>`_ in the :math:`x-y` plane. Since Caelus is a 3D computational framework, it necessitates the grid to also be 3D. Therefore, a 3D grid was obtained using `Pointwise <http://www.pointwise.com/>`_ by extruding the 2D grid in the positive :math:`z` direction by *one cell*. The final 3D grid was then exported to the Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This is achieved in Caelus by specifying *empty* boundary condition for each plane. Although, no flow is computed in the :math:`z` direction, a velocity of :math:`w = 0` has to be specified for the velocity boundary condition as indicated above. 
 
 .. _cylinder-grid:
-.. figure:: /sections_v/validation-figures/cylinder-grid.*
+.. figure:: sections_v/validation-figures/cylinder-grid.*
    :width: 800px
    :align: center
 

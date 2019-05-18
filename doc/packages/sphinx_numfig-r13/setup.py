@@ -5,17 +5,17 @@ import sys, os, stat
 try:
   import sphinx
 except:
-  print "Sphinx not found.  Quitting."
+  print ("Sphinx not found.  Quitting.")
   sys.exit(1)
 
-print "Action is '" + sys.argv[1] + "'."
+print ("Action is '" + sys.argv[1] + "'.")
 if sys.argv[1] == "build":
-  print "Nothing to build.  Quitting."
+  print ("Nothing to build.  Quitting.")
   sys.exit(0)
 elif sys.argv[1] == "install":
   pass
 else:
-  print sys.argv[1], "action not known.  Quitting."
+  print (sys.argv[1], "action not known.  Quitting.")
   sys.exit(1)
 
 # Remove the old installation
@@ -33,17 +33,17 @@ for f in [dst, olddst, dstc, olddstc]:
 
 # Assume we are in my directory
 import shutil
-print "Copying numfig.py to", dst
+print ("Copying numfig.py to", dst)
 shutil.copyfile("numfig.py", dst)
 
 # Compile to bytecode
 import py_compile
-print "Compiling", dst, "to bytecode."
+print ("Compiling", dst, "to bytecode.")
 py_compile.compile(dst)
 
 # Fix perms
 mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH
-print "Setting mode of", dst, "to 664."
+print ("Setting mode of", dst, "to 664.")
 os.chmod(dst, mode)
 os.chmod(dstc, mode)
 

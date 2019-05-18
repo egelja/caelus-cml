@@ -37,10 +37,10 @@ Background
 
 Flow inside lid-driven cavities is a classical case to study cases with flow recirculation. In the present case, the top wall of the cavity moves at constant velocity initiating a recirculation motion with the cavity and as a consequence, a boundary layer develops in the direction of the moving lid. The feature that is of interest is the velocity distribution along the center-line of cavity. Details regarding the validation of this case is given in :ref:`t-cavity-validation`.
 
-The triangular cavity schematic is shown in :num:`Fig. #tcschematictutorials`. Here D represents the cavity depth which is 4 m and the top width, W = 2 m. For this configuration, the Reynolds number based on the cavity depth is 800 and the wall velocity is assumed and set to 2 m/s. This give us with a kinematic viscosity of 0.01. Note that the two-dimensional plane considered here is in :math:`x-z`.
+The triangular cavity schematic is shown in :numref:`tcschematictutorials`. Here D represents the cavity depth which is 4 m and the top width, W = 2 m. For this configuration, the Reynolds number based on the cavity depth is 800 and the wall velocity is assumed and set to 2 m/s. This give us with a kinematic viscosity of 0.01. Note that the two-dimensional plane considered here is in :math:`x-z`.
 
 .. _tcschematictutorials:
-.. figure:: /sections/tutorial-figures/tc-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/tc-schematic-tutorials.*
    :width: 300px
    :align: center
   
@@ -61,22 +61,22 @@ Grid Generation
 
 A hybrid-grid consisting of quadrilateral and triangular cells has been generated for this cavity geometry using `Pointwise <http://www.pointwise.com/>`_. Details regarding the generation of grid is not covered in this tutorial, however details regarding computational domain and boundary conditions are provided.
 
-The computational domain for the triangular cavity follows the cavity geometry due to internal flow configuration. This is in contrast to other flow configurations here where the flow was over the region of interest. A schematic of the domain is shown in :num:`Fig. #tc-domain-tutorials`. The velocity at the cavity walls (high lighted in blue) is zero, represented through a no-slip boundary, wherein :math:`u, v, w = 0`. Whereas the top wall has a uniform velocity in the x-direction.
+The computational domain for the triangular cavity follows the cavity geometry due to internal flow configuration. This is in contrast to other flow configurations here where the flow was over the region of interest. A schematic of the domain is shown in :numref:`tc-domain-tutorials`. The velocity at the cavity walls (high lighted in blue) is zero, represented through a no-slip boundary, wherein :math:`u, v, w = 0`. Whereas the top wall has a uniform velocity in the x-direction.
 
 .. _tc-domain-tutorials:
-.. figure:: /sections/tutorial-figures/tc-domain-tutorials.*
+.. figure:: sections/tutorial-figures/tc-domain-tutorials.*
    :width: 300px
    :align: center
 		
    Computational domain for a triangular cavity
 
-The hybrid grid is shown in :num:`Fig. #tc-grid-tutorials`. As can be seen, up to a depth of D = 1.35 m, structured grids are used and after which it is filled with triangular unstructured elements. In the structured domain, 40 X 40 cells are used respectively. In the 2D domain, a total of 5538 cells are present, however the ``polyMesh`` format of Caelus should be in 3D. This was achieved by extruding the grid in the :math:`x-y` plane by *one cell* thick and subsequently specifying empty boundary conditions to the extruded planes. This should force Caelus to solve the flow the flow in 2D in the extruded direction, which is :math:`z`.
+The hybrid grid is shown in :numref:`tc-grid-tutorials`. As can be seen, up to a depth of D = 1.35 m, structured grids are used and after which it is filled with triangular unstructured elements. In the structured domain, 40 X 40 cells are used respectively. In the 2D domain, a total of 5538 cells are present, however the ``polyMesh`` format of Caelus should be in 3D. This was achieved by extruding the grid in the :math:`x-y` plane by *one cell* thick and subsequently specifying empty boundary conditions to the extruded planes. This should force Caelus to solve the flow the flow in 2D in the extruded direction, which is :math:`z`.
 
 .. Note::
    A velocity value of :math:`w=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`z` direction.
 
 .. _tc-grid-tutorials:
-.. figure:: /sections/tutorial-figures/tc-grid-tutorials.*
+.. figure:: sections/tutorial-figures/tc-grid-tutorials.*
    :width: 400px
    :align: center
    
@@ -107,7 +107,7 @@ If applicable, the user should take precautions in setting the directories and f
 
 *Boundary Conditions*
 
-Next we start with setting-up of the boundary conditions. Referring back to :num:`Fig. #tc-domain-tutorials`, the following are the boundary conditions that need to be specified:
+Next we start with setting-up of the boundary conditions. Referring back to :numref:`tc-domain-tutorials`, the following are the boundary conditions that need to be specified:
 
 * Moving wall
     - Velocity: Fixed uniform velocity :math:`u = 2.0~m/s` in :math:`x` direction
@@ -223,7 +223,7 @@ Renumbering and checking the mesh quality is needed before the solver is execute
 
 The user should take note of the bandwidth before and after the mesh renumbering. When the ``checkMesh`` is performed, the mesh statistics are shown as below
 
-.. literalinclude:: /sections/tutorial-figures/tc_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/tc_checkmesh.txt
 
 Solver can now be executed and the progress of the solution can be monitored. The solver is always executed from the top directory which is ``my-triangular-cavity`` in this case.
 
@@ -241,7 +241,7 @@ The output of the solver progress is saved in the log file, ``my-triangular-cavi
 The convergence of the pressure can now be seen with respect to time.
 
 .. _tc-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/tc-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/tc-convergence-tutorials.*
    :width: 500px
    :align: center
 
@@ -250,11 +250,11 @@ The convergence of the pressure can now be seen with respect to time.
 Results
 ````````
 
-The flow within the cavity is shown here at steady state condition. :num:`Fig. #tc-velocitypressure-tutorials` presents the velocity and pressure contour plots. In addition, the streamlines indicate the multiple vortices formed within the cavity.
+The flow within the cavity is shown here at steady state condition. :numref:`tc-velocitypressure-tutorials` presents the velocity and pressure contour plots. In addition, the streamlines indicate the multiple vortices formed within the cavity.
 
 
 .. _tc-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/tc-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/tc-velocitypressure-tutorials.*
    :width: 700px
    :align: center
 		

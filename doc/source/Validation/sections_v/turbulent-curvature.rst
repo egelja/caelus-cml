@@ -45,7 +45,7 @@ In this case, the turbulent incompressible flow in a constant-area duct having a
 This verification and validation exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/smitscurve_val.html>`__ case and follows the same conditions used in the incompressible limit. As CFL3D is a compressible CFD code, the original simulation used a inlet Mach number (:math:`M_i`) of 0.093. A schematic of the geometric configuration is shown below and is depicted in :math:`x-z` plane as the computational grid also follows the same 2D plane of flow.
 
 .. _turbulent-curvature-schematic:
-.. figure:: /sections_v/validation-figures/turbulent-curvature-schematic.*
+.. figure:: sections_v/validation-figures/turbulent-curvature-schematic.*
    :width: 500px
    :align: center
 
@@ -111,10 +111,10 @@ Note that the dynamic viscosity in the above equation is obtained from Sutherlan
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain for the duct is quite simple and follows the geometry as is shown in :num:`Fig. #turbulent-curvature-domain`. The walls are modelled as no-slip boundary and is highlighted in blue and the outlet is placed at the end of the duct.
+The computational domain for the duct is quite simple and follows the geometry as is shown in :numref:`turbulent-curvature-domain`. The walls are modelled as no-slip boundary and is highlighted in blue and the outlet is placed at the end of the duct.
 
 .. _turbulent-curvature-domain:
-.. figure:: /sections_v/validation-figures/turbulent-curvature-domain.*
+.. figure:: sections_v/validation-figures/turbulent-curvature-domain.*
    :width: 800px
    :align: center
 
@@ -167,10 +167,10 @@ Grid-4                  512                                  192                
 Grid-5                  1024                                 384                              393,216
 ======================  ==================================   ===============================  =================
 
-The 2D convex curvature grid is shown in :num:`Fig. #turbulent-curvature-grid` below, for Grid-3 in :math:`x-z` plane and the inset shows the grids in the vicinity of the strong curvature. Grids are refined close to the wall in order to capture the turbulent boundary layer and all grids have a :math:`y^+ < 1` and no wall function is used through the validation and verification of this configuration.
+The 2D convex curvature grid is shown in :numref:`turbulent-curvature-grid` below, for Grid-3 in :math:`x-z` plane and the inset shows the grids in the vicinity of the strong curvature. Grids are refined close to the wall in order to capture the turbulent boundary layer and all grids have a :math:`y^+ < 1` and no wall function is used through the validation and verification of this configuration.
 
 .. _turbulent-curvature-grid:
-.. figure:: /sections_v/validation-figures/turbulent-curvature-grid.*
+.. figure:: sections_v/validation-figures/turbulent-curvature-grid.*
    :width: 800px
    :align: center
 
@@ -184,19 +184,19 @@ The verification results of the turbulence model are discussed first, which is t
 
 *Verification results Spalart–Allmaras (SA)*
 
-In :num:`Fig. #turbulent-curvature-caelus-sa`, the skin-friction distribution obtained over the lower wall of the duct is shown from Caelus for different grids. As can be seen, there is very little difference in skin-friction variation among the different grids. The oscillatory behaviour noted at Grid-5 very close to the corner is also apparent in CFL3D data as will be see in :num:`Fig. #turbulent-curvature-caelus-sa`.
+In :numref:`turbulent-curvature-caelus-sa`, the skin-friction distribution obtained over the lower wall of the duct is shown from Caelus for different grids. As can be seen, there is very little difference in skin-friction variation among the different grids. The oscillatory behaviour noted at Grid-5 very close to the corner is also apparent in CFL3D data as will be see in :numref:`turbulent-curvature-caelus-sa`.
 
 .. _turbulent-curvature-caelus-sa:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-SA.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-SA.*
    :width: 600px
    :align: center
    
    Skin-friction distribution obtained from Caelus simulations using SA turbulence model on the lower surface of the duct
 
-The skin-friction coefficient comparison with CFL3D is shown in :num:`Fig. #turbulent-curvature-caelus-cfl3d-sa`. It should be noted that the available solution from CFL3D was for Grid-4 and hence to be consistent, Grid-4 solution from Caelus is used for comparison. In the vicinity of strong curvature region, Caelus compares very well with CFL3D, however both upstream and downstream, there seems to be some difference in the solution.
+The skin-friction coefficient comparison with CFL3D is shown in :numref:`turbulent-curvature-caelus-cfl3d-sa`. It should be noted that the available solution from CFL3D was for Grid-4 and hence to be consistent, Grid-4 solution from Caelus is used for comparison. In the vicinity of strong curvature region, Caelus compares very well with CFL3D, however both upstream and downstream, there seems to be some difference in the solution.
 
 .. _turbulent-curvature-caelus-cfl3d-sa:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SA.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SA.*
    :width: 600px
    :align: center
    
@@ -204,17 +204,17 @@ The skin-friction coefficient comparison with CFL3D is shown in :num:`Fig. #turb
 
 *Verification results Spalart–Allmaras Rotational/Curvature (SA-RC)*
 
-The following :num:`Fig. #turbulent-curvature-caelus-sarc` shows the grid sensitivity and verification with CFL3D data respectively. The solution that have been used for verification is obtained from Grid-4 and the trends are similar to what is noted for the SA model.
+The following :numref:`turbulent-curvature-caelus-sarc` shows the grid sensitivity and verification with CFL3D data respectively. The solution that have been used for verification is obtained from Grid-4 and the trends are similar to what is noted for the SA model.
 
 .. _turbulent-curvature-caelus-sarc:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-SARC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-SARC.*
    :width: 600px
    :align: center
    
    Skin-friction distribution obtained from Caelus simulations using SA-RC turbulence model on the lower surface of the duct
 
 .. _turbulent-curvature-Caelus-CFL3D-SARC:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SARC.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SARC.*
    :width: 600px
    :align: center
    
@@ -222,19 +222,19 @@ The following :num:`Fig. #turbulent-curvature-caelus-sarc` shows the grid sensit
 
 *Verification results k-Omega SST*
 
-In :num:`Fig. #turbulent-curvature-caelus-sst`, the skin-friction sensitivity is shown over the lower wall obtained using Caelus with the :math:`k-\omega~\rm{SST}` model. After Grid-3, not much difference in values can be noted. With Grid-5, however some oscillations can be see upstream and in the vicinity of the curvature.
+In :numref:`turbulent-curvature-caelus-sst`, the skin-friction sensitivity is shown over the lower wall obtained using Caelus with the :math:`k-\omega~\rm{SST}` model. After Grid-3, not much difference in values can be noted. With Grid-5, however some oscillations can be see upstream and in the vicinity of the curvature.
 
 .. _turbulent-curvature-caelus-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-SST.*
    :width: 600px
    :align: center
    
    Skin-friction distribution obtained from Caelus simulations using :math:`k-\omega~\rm{SST}` turbulence model on the lower surface of the duct
 
-The skin-friction comparison between Caelus and CFL3D is shown in :num:`Fig. #turbulent-curvature-caelus-cfl3d-sst`. A very good agreement between the two is obtained.
+The skin-friction comparison between Caelus and CFL3D is shown in :numref:`turbulent-curvature-caelus-cfl3d-sst`. A very good agreement between the two is obtained.
 
 .. _turbulent-curvature-caelus-cfl3d-sst:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SST.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-SST.*
    :width: 600px
    :align: center
    
@@ -242,28 +242,28 @@ The skin-friction comparison between Caelus and CFL3D is shown in :num:`Fig. #tu
 
 *Experimental validation* 
 
-This section details the experimental validation carried out for Caelus and both skin-friction and pressure coefficients obtained experimentally by Smits, A. J et al. :cite:`Smits1979` are compared. Further, CFL3D is also included. In :num:`Fig. #turbulent-curvature-caelus-cfl3d-expt`, skin-friction distribution obtained from Caelus using different turbulence models is compared with the experiments. Both SA-RC and :math:`k-\omega~\rm{SST}` has a fair agreement with experiments down stream of the curvature, more so with the SA-RC model. However upstream they all seem to predict nearly the same values.
+This section details the experimental validation carried out for Caelus and both skin-friction and pressure coefficients obtained experimentally by Smits, A. J et al. :cite:`Smits1979` are compared. Further, CFL3D is also included. In :numref:`turbulent-curvature-caelus-cfl3d-expt`, skin-friction distribution obtained from Caelus using different turbulence models is compared with the experiments. Both SA-RC and :math:`k-\omega~\rm{SST}` has a fair agreement with experiments down stream of the curvature, more so with the SA-RC model. However upstream they all seem to predict nearly the same values.
 
 .. _turbulent-curvature-caelus-cfl3d-expt:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-Expt.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-Expt.*
    :width: 600px
    :align: center
 
    Skin-friction comparison between Caelus, experiments and CFL3D on the lower surface of the duct.
 
-:num:`Fig. #turbulent-curvature-caelus-cfl3d-expt-p` shows the comparison of pressure-coefficient (:math:`c_p`) distribution with experiments and CFL3D data on the lower surface. Firstly, the solutions obtained from Caelus with the three turbulence models essentially produces the same values and matches exactly with the CFL3D data. In comparison with experiments, the agreement is very good in the upstream, vicinity of the curvature and downstream and, identical to CFL3D's behaviour. Note that for obtaining the pressure-coefficient (:math:`c_p`) values, a reference pressure (:math:`p_{ref}`) is needed. However, this is not specified in `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/smitscurve_val.html>`__ for this case and hence a value of 145 Pa has been used.
+:numref:`turbulent-curvature-caelus-cfl3d-expt-p` shows the comparison of pressure-coefficient (:math:`c_p`) distribution with experiments and CFL3D data on the lower surface. Firstly, the solutions obtained from Caelus with the three turbulence models essentially produces the same values and matches exactly with the CFL3D data. In comparison with experiments, the agreement is very good in the upstream, vicinity of the curvature and downstream and, identical to CFL3D's behaviour. Note that for obtaining the pressure-coefficient (:math:`c_p`) values, a reference pressure (:math:`p_{ref}`) is needed. However, this is not specified in `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/smitscurve_val.html>`__ for this case and hence a value of 145 Pa has been used.
 
 .. _turbulent-curvature-caelus-cfl3d-expt-p:
-.. figure:: /sections_v/validation-figures/p-turbulent-curvature-Caelus-CFL3D-Expt.*
+.. figure:: sections_v/validation-figures/p-turbulent-curvature-Caelus-CFL3D-Expt.*
    :width: 600px
    :align: center
 
    Pressure coefficient comparison between Caelus, experiments and CFL3D on the lower surface of the duct.
 
-Experimental skin-friction data :cite:`Smits1979` is also available over the upper surface of the duct and is used to compare the Caelus results. :num:`Fig. #turbulent-curvature-caelus-cfl3d-expt-upper` shows the comparison. Similar to the behaviour noted for the lower surface, the SA-RC model tends to be closer to the experimental data. In general, all the three turbulence model have similar trends and agrees very closely with the CFL3D data.
+Experimental skin-friction data :cite:`Smits1979` is also available over the upper surface of the duct and is used to compare the Caelus results. :numref:`turbulent-curvature-caelus-cfl3d-expt-upper` shows the comparison. Similar to the behaviour noted for the lower surface, the SA-RC model tends to be closer to the experimental data. In general, all the three turbulence model have similar trends and agrees very closely with the CFL3D data.
 
 .. _turbulent-curvature-caelus-cfl3d-expt-upper:
-.. figure:: /sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-Expt-upper.*
+.. figure:: sections_v/validation-figures/cf-turbulent-curvature-Caelus-CFL3D-Expt-upper.*
    :width: 600px
    :align: center
 

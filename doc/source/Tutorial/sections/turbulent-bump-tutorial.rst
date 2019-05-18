@@ -36,10 +36,10 @@ Background
 ````````````
 Turbulent flow over a bump in a channel is quite similar to a flat-plate flow, except that due to the curvature effect, a pressure gradient is developed. The flow would be assumed to be steady-state and incompressible. To demonstrate the effect of curvature, the skin friction distribution along the bump will be plotted. For further information on this case, the user can refer to :ref:`turbulent-bump-verification-label`.
 
-The bump, as shown in the schematic below in :num:`Fig. #t-bump-schematic-tutorials` has a upstream and a downstream flat-plate region that begins at x = 0 m and x = 1.5 m respectively, which gives a total length of L = 1.5 m. The flow has a unit Reynolds number of :math:`3 \times 10^6` and Air is used as a fluid with a temperature of 300 K. Based on these values, kinematic viscosity can be evaluated to :math:`\nu = 2.314537 \times 10^{-5} m^2/s`. To match the required Reynolds number, a freestream velocity of U = 69.436 m/s would be used. Note that the two-dimensional plane considered here is in :math:`x-z` directions.
+The bump, as shown in the schematic below in :numref:`t-bump-schematic-tutorials` has a upstream and a downstream flat-plate region that begins at x = 0 m and x = 1.5 m respectively, which gives a total length of L = 1.5 m. The flow has a unit Reynolds number of :math:`3 \times 10^6` and Air is used as a fluid with a temperature of 300 K. Based on these values, kinematic viscosity can be evaluated to :math:`\nu = 2.314537 \times 10^{-5} m^2/s`. To match the required Reynolds number, a freestream velocity of U = 69.436 m/s would be used. Note that the two-dimensional plane considered here is in :math:`x-z` directions.
 
 .. _t-bump-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/t-bump-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/t-bump-schematic-tutorials.*
    :width: 500px
    :align: center
 
@@ -61,10 +61,10 @@ Grid Generation
 ````````````````
 The hexahedral grid used in this tutorial is obtained from `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/bump_grids.html>`__ that contains 704 X 320 cells in :math:`x-z` directions respectively. The grid originally is in Plot3D format and is converted to Caelus compatible ``polyMesh`` format.
 
-The computational domain is a rectangular channel encompassing the bump. :num:`Fig. #t-bump-domain-tutorials` shown below identifies the boundary conditions in a two-dimensional plane (:math:`x-z`). The bump region, highlighted in blue extends between :math:`0 \leq x \leq 1.5~m`, where the velocity at the wall is zero, wherein :math:`u,v,w=0` represented through a no-slip boundary. Upstream and downstream of the bump, a symmetry boundary at the wall is used. The inlet and outlet are placed at the end of the symmetry as depicted in the figure and the top boundary has a symmetry condition.
+The computational domain is a rectangular channel encompassing the bump. :numref:`t-bump-domain-tutorials` shown below identifies the boundary conditions in a two-dimensional plane (:math:`x-z`). The bump region, highlighted in blue extends between :math:`0 \leq x \leq 1.5~m`, where the velocity at the wall is zero, wherein :math:`u,v,w=0` represented through a no-slip boundary. Upstream and downstream of the bump, a symmetry boundary at the wall is used. The inlet and outlet are placed at the end of the symmetry as depicted in the figure and the top boundary has a symmetry condition.
 
 .. _t-bump-domain-tutorials:
-.. figure:: /sections/tutorial-figures/t-bump-domain-tutorials.*
+.. figure:: sections/tutorial-figures/t-bump-domain-tutorials.*
    :width: 500px
    :align: center
 		
@@ -76,13 +76,13 @@ The ``polyMesh`` grid obtained from the conversion of Plot3D is in 3D. However, 
    A velocity value of :math:`v=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`y` direction.
 
 .. _t-bump-grid-tutorials:
-.. figure:: /sections/tutorial-figures/t-bump-grid-tutorials.*
+.. figure:: sections/tutorial-figures/t-bump-grid-tutorials.*
    :width: 800px
    :align: center
    
    Computational grid of a two-dimensional bump in :math:`x-z` plane
 
-In :num:`Fig. #t-bump-grid-tutorials` above, the 2D grid is shown with a distribution of 704 X 320 in :math:`x-z` directions respectively. The inset focuses the distribution in the region between :math:`0 \leq x \leq 1.5~m`. As can be seen, the distribution of the grids in the flow normal direction is finer near the wall to capture the turbulent boundary layer more accurately and it is estimated that :math:`y^+` is less than 1 for the chosen grid and therefore, no wall-function has been used and the integration is carried out up to the wall.
+In :numref:`t-bump-grid-tutorials` above, the 2D grid is shown with a distribution of 704 X 320 in :math:`x-z` directions respectively. The inset focuses the distribution in the region between :math:`0 \leq x \leq 1.5~m`. As can be seen, the distribution of the grids in the flow normal direction is finer near the wall to capture the turbulent boundary layer more accurately and it is estimated that :math:`y^+` is less than 1 for the chosen grid and therefore, no wall-function has been used and the integration is carried out up to the wall.
 
 Problem definition
 ````````````````````
@@ -130,7 +130,7 @@ The user should take into account that Caelus is case sensitive and therefore th
 
 *Boundary Conditions*
 
-Referring back to :num:`Fig. #t-bump-domain-tutorials`, the following are the boundary conditions that will be specified:
+Referring back to :numref:`t-bump-domain-tutorials`, the following are the boundary conditions that will be specified:
 
 * Inlet
    - Velocity: Fixed uniform velocity :math:`u = 69.436113~m/s` in :math:`x` direction
@@ -302,7 +302,7 @@ It is always important to renumber and to do a quality check on the grid/mesh be
 At this stage, it is suggested that the user should take note of the bandwidth before and after the mesh renumbering. When the ``checkMesh`` is performed, the mesh statistics are shown as below 
 
 
-.. literalinclude:: /sections/tutorial-figures/cc_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/cc_checkmesh.txt
 
 The output of the ``checkMesh`` indicates that the mesh check has failed through the final message``Failed 1 mesh checks.`` and this is because of the high aspect ratio meshes present immediate to the wall due to very low (:math:`<< 1~y^+`). However, Caelus will solve on this mesh.
 
@@ -338,10 +338,10 @@ The log file can be further processed to look at the convergence history and thi
    caelus logs -w my-turbulent-bump.log
 
 
-This allows you to look at the convergence of the variables with respect to the number of iterations carried out and the :num:`Fig. #t-bump-convergence-tutorials` indicates the same for pressure.
+This allows you to look at the convergence of the variables with respect to the number of iterations carried out and the :numref:`t-bump-convergence-tutorials` indicates the same for pressure.
 
 .. _t-bump-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/t-bump-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/t-bump-convergence-tutorials.*
    :width: 400px
    :align: center
 		
@@ -350,10 +350,10 @@ This allows you to look at the convergence of the variables with respect to the 
 Results
 ````````
 
-The flow visualisation over the bump is shown here through the contours of velocity and pressure for SA model. In :num:`Fig. #t-bump-velocitypressure-tutorials` the variation of velocity and pressure can be seen as the bump is approached. As expected due to the curvature, flow accelerates while pressure reduces over the bump.
+The flow visualisation over the bump is shown here through the contours of velocity and pressure for SA model. In :numref:`t-bump-velocitypressure-tutorials` the variation of velocity and pressure can be seen as the bump is approached. As expected due to the curvature, flow accelerates while pressure reduces over the bump.
 
 .. _t-bump-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/t-bump-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/t-bump-velocitypressure-tutorials.*
    :width: 750px
    :align: center
 		

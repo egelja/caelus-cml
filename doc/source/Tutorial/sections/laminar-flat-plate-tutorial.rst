@@ -33,13 +33,13 @@ It is assumed that the user is familiar with the Linux command line environment 
 
 Background
 ````````````
-The flow over a flat-plate presents an ideal case where initial steps of a Caelus simulation can be introduced to the user in easy steps. Here, laminar, incompressible flow over a sharp-leading edge plate is solved in a time-accurate approach. This results in the formation of laminar boundary layer which is then compared with the famous Blasius :cite:`Blasius1908` analytical solution in the form of a non-dimensional shear stress distribution (skin-friction coefficient). For more details, the user is suggested to refer the validation of flat-plate in section :ref:`Flat plate validation <validation:flat-plate-validation-label>`.
+The flow over a flat-plate presents an ideal case where initial steps of a Caelus simulation can be introduced to the user in easy steps. Here, laminar, incompressible flow over a sharp-leading edge plate is solved in a time-accurate approach. This results in the formation of laminar boundary layer which is then compared with the famous Blasius :cite:`Blasius1908` analytical solution in the form of a non-dimensional shear stress distribution (skin-friction coefficient). For more details, the user is suggested to refer the validation of flat-plate in section :ref:`Flat plate validation <flat-plate-validation-label>`.
 
-The length of the flat-plate considered here is :math:`L = 0.3048~m` with a Reynolds number based on the total length of :math:`Re = 200,000`. A schematic of the geometry is shown in :num:`Fig. #fpschematictutorials`, wherein :math:`U` is the flow velocity in :math:`x` direction. An inflow temperature of :math:`T = 300~K` can assumed for the fluid *air* which corresponds to a kinematic viscosity (:math:`\nu`) of :math:`\nu = 1.5896306 \times 10^{-5}~m^2/s`. Using the values of :math:`Re`, :math:`L` and :math:`\nu`, we can evaluate the freestream velocity to :math:`U = 10.4306~m/s`.
+The length of the flat-plate considered here is :math:`L = 0.3048~m` with a Reynolds number based on the total length of :math:`Re = 200,000`. A schematic of the geometry is shown in :numref:`fpschematictutorials`, wherein :math:`U` is the flow velocity in :math:`x` direction. An inflow temperature of :math:`T = 300~K` can assumed for the fluid *air* which corresponds to a kinematic viscosity (:math:`\nu`) of :math:`\nu = 1.5896306 \times 10^{-5}~m^2/s`. Using the values of :math:`Re`, :math:`L` and :math:`\nu`, we can evaluate the freestream velocity to :math:`U = 10.4306~m/s`.
 
 .. _fpschematictutorials:
 
-.. figure:: /sections/tutorial-figures/fp-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/fp-schematic-tutorials.*
    :width: 600px
    :align: center
    
@@ -60,22 +60,22 @@ Grid Generation
 `````````````````
 As noted earlier, `Pointwise <http://www.pointwise.com/>`_ has been used here to generate a hexahedral grid. Specific details pertaining to its usage are not discussed here, rather a more generic discussion is given about the computational domain and boundary conditions. This would facilitate the user to obtain a Caelus compatible grid using their choice of grid generating tool.
 
-The computational domain is a rectangular block encompassing the flat-plate. The below (:num:`Fig. #fpdomaintutorials`) shows the details of the boundaries that will be used in two-dimensions (:math:`x-y` plane). First, the flat-plate, which is our region of interest (highlighted in blue) is extended between :math:`0\leq x \leq 0.3048~m`. Because of viscous nature of the flow, the velocity at the wall is zero which can be represented through a no-slip boundary (:math:`u, v, w = 0`). Upstream of the leading edge, a slip boundary will be used to simulate a freestream flow approaching the flat-plate. However, downstream of the plate, it would be ideal to further extend up to three plate lengths (highlighted in green) with no-slip wall. This would then ensure that the boundary layer in the vicinity of the trailing edge is not influenced by outlet boundary. Since the flow is incompressible (subsonic), the disturbance caused by the pressure can propagate both upstream as well as downstream. Therefore, the placement of the inlet and outlet boundaries are to be chosen to have minimal or no effect on the solution. The inlet boundary as shown will be placed at start of the slip-wall at :math:`x = -0.06~m` and the outlet at the exit plane of the no-slip wall (green region) at :math:`x = 1.2192~m`. Both inlet and outlet boundary are between :math:`0\leq y \leq 0.15~m`. A slip-wall condition is used for the entire top boundary.
+The computational domain is a rectangular block encompassing the flat-plate. The below (:numref:`fpdomaintutorials`) shows the details of the boundaries that will be used in two-dimensions (:math:`x-y` plane). First, the flat-plate, which is our region of interest (highlighted in blue) is extended between :math:`0\leq x \leq 0.3048~m`. Because of viscous nature of the flow, the velocity at the wall is zero which can be represented through a no-slip boundary (:math:`u, v, w = 0`). Upstream of the leading edge, a slip boundary will be used to simulate a freestream flow approaching the flat-plate. However, downstream of the plate, it would be ideal to further extend up to three plate lengths (highlighted in green) with no-slip wall. This would then ensure that the boundary layer in the vicinity of the trailing edge is not influenced by outlet boundary. Since the flow is incompressible (subsonic), the disturbance caused by the pressure can propagate both upstream as well as downstream. Therefore, the placement of the inlet and outlet boundaries are to be chosen to have minimal or no effect on the solution. The inlet boundary as shown will be placed at start of the slip-wall at :math:`x = -0.06~m` and the outlet at the exit plane of the no-slip wall (green region) at :math:`x = 1.2192~m`. Both inlet and outlet boundary are between :math:`0\leq y \leq 0.15~m`. A slip-wall condition is used for the entire top boundary.
 
 .. _fpdomaintutorials:
-.. figure:: /sections/tutorial-figures/fp-domain-tutorials.*
+.. figure:: sections/tutorial-figures/fp-domain-tutorials.*
    :width: 600px
    :align: center
 		
    Flat-plate computational domain
 
-The 2D structured grid is shown in :num:`Fig. #fp-grid-tutorials`. Since Caelus is a 3D solver, it necessitates the grid to be in 3D. Therefore, the 3D grid should be obtained through extruding the 2D gird in the :math:`z` direction by a minimum of *one-cell* thick. The final 3D grid should be then exported to Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This can easily be achieved in Caelus by specifying ``empty`` boundary condition for each of those two planes.
+The 2D structured grid is shown in :numref:`fp-grid-tutorials`. Since Caelus is a 3D solver, it necessitates the grid to be in 3D. Therefore, the 3D grid should be obtained through extruding the 2D gird in the :math:`z` direction by a minimum of *one-cell* thick. The final 3D grid should be then exported to Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This can easily be achieved in Caelus by specifying ``empty`` boundary condition for each of those two planes.
 
 .. Note::
    A velocity value of :math:`w=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`z` direction.
 
 .. _fp-grid-tutorials:
-.. figure:: /sections/tutorial-figures/fp-grid-tutorials.*
+.. figure:: sections/tutorial-figures/fp-grid-tutorials.*
    :width: 700px
    :align: center
 		
@@ -110,7 +110,7 @@ It should be noted that Caelus is case sensitive and therefore the user should s
 
 *Boundary Conditions*
 
-First let us look at setting up the boundary conditions. Referring back to :num:`Fig. #fpdomaintutorials`, following are the boundary conditions that need to be specified:
+First let us look at setting up the boundary conditions. Referring back to :numref:`fpdomaintutorials`, following are the boundary conditions that need to be specified:
 
 * Inlet
     - Velocity: Fixed uniform velocity :math:`u = 10.4306~m/s` in :math:`x` direction
@@ -238,7 +238,7 @@ Before execution of the solver, renumbering of the grid or mesh needs to be perf
 
 It is suggested for the user to take note of the bandwidth before and after the mesh renumbering. When the ``checkMesh`` is performed, the following information is given as an output 
 
-.. literalinclude:: /sections/tutorial-figures/fp_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/fp_checkmesh.txt
 
 The mesh non-orthogonality as reported above is 0 and therefore no no-orthogonal corrections are needed in this case. In the case of mesh non-orthogonality being high, certain number of corrections are to be accounted for which can be set in the ``fvSolution`` file with the keyword ``nNonOrthogonalCorrectors``. The next step is to execute the solver and monitoring the progress of the solution. The solver is always executed from the top directory which is ``ACCM_flatPlate2D`` in our case as below 
 
@@ -255,7 +255,7 @@ Now the simulation begins and the output of the solution process is written to t
 Now the convergence of pressure can be seen with respect to number of iterations along with other convergence properties.
 
 .. _fp-lam-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/fp-lam-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/fp-lam-convergence-tutorials.*
    :width: 500px
    :align: center
 		
@@ -263,23 +263,12 @@ Now the convergence of pressure can be seen with respect to number of iterations
 	
 Results
 ````````
-A brief qualitative data of the simulated flat-plate results are given here. Since the aim here is to obtained the steady solution, the results therefore represent the final steady state condition. In :num:`Fig. #fpvelocitytutorials`, the contours of velocity magnitude are shown which highlights the development of the boundary layer. Since the Reynolds number of the flow is high, thickness of the boundary layer is quite thin in comparison to the length of the plate.
+A brief qualitative data of the simulated flat-plate results are given here. Since the aim here is to obtained the steady solution, the results therefore represent the final steady state condition. In :numref:`fpvelocitytutorials`, the contours of velocity magnitude are shown which highlights the development of the boundary layer. Since the Reynolds number of the flow is high, thickness of the boundary layer is quite thin in comparison to the length of the plate.
 
 
 .. _fpvelocitytutorials:
-.. figure:: /sections/tutorial-figures/fp-velocity-tutorials.*
+.. figure:: sections/tutorial-figures/fp-velocity-tutorials.*
    :width: 700px
    :align: center
 		
    Contour of velocity magnitude over the flat-plate
-
-
-
-	
-
-
-
-	
-
-
- 

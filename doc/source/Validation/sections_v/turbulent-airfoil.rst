@@ -42,10 +42,10 @@ This case deals with the steady turbulent incompressible flow over a two-dimensi
 
 **Problem definition**
 
-This verification and validation exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/naca0012_val.html>`__ case for a NACA 0012 airfoil and follows the same flow conditions used in the incompressible limit. However, the numerical code CFL3D uses a freestream Mach number (:math:`M_\infty`) of 0.15. In :num:`Fig. #turbulent-airfoil-schematic` the schematic of the airfoil is shown. Note that the 2D plane in :num:`Fig. #turbulent-airfoil-schematic`  is depicted in :math:`x-z` directions as the computational grid also follows the same 2D plane.
+This verification and validation exercise is based on the `Turbulence Modeling Resource <http://turbmodels.larc.nasa.gov/naca0012_val.html>`__ case for a NACA 0012 airfoil and follows the same flow conditions used in the incompressible limit. However, the numerical code CFL3D uses a freestream Mach number (:math:`M_\infty`) of 0.15. In :numref:`turbulent-airfoil-schematic` the schematic of the airfoil is shown. Note that the 2D plane in :numref:`turbulent-airfoil-schematic`  is depicted in :math:`x-z` directions as the computational grid also follows the same 2D plane.
 
 .. _turbulent-airfoil-schematic:
-.. figure:: /sections_v/validation-figures/turbulent-airfoil-schematic.*
+.. figure:: sections_v/validation-figures/turbulent-airfoil-schematic.*
    :width: 600px
    :align: center
 
@@ -112,10 +112,10 @@ Note that the dynamic viscosity in the above equation is obtained from Sutherlan
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain used for the airfoil simulations and the details of the boundaries are shown in :num:`Fig. #turbulent-airfoil-domain` for a :math:`x-z` plane. The leading edge and the trailing edge extends between :math:`0 \leq x \leq 1.0~m` and the entire airfoil has a no-slip boundary condition. The far-field domain extends by about 500 chord lengths in the radial direction and the inlet is placed for the entire boundary highlighted in green. The outlet boundary is placed at the exit plane, which is at :math:`x \approx 500~m`. 
+The computational domain used for the airfoil simulations and the details of the boundaries are shown in :numref:`turbulent-airfoil-domain` for a :math:`x-z` plane. The leading edge and the trailing edge extends between :math:`0 \leq x \leq 1.0~m` and the entire airfoil has a no-slip boundary condition. The far-field domain extends by about 500 chord lengths in the radial direction and the inlet is placed for the entire boundary highlighted in green. The outlet boundary is placed at the exit plane, which is at :math:`x \approx 500~m`. 
 
 .. _turbulent-airfoil-domain:
-.. figure:: /sections_v/validation-figures/turbulent-airfoil-domain.*
+.. figure:: sections_v/validation-figures/turbulent-airfoil-domain.*
    :width: 800px
    :align: center
 
@@ -174,10 +174,10 @@ Grid-4                  512                                  256                
 Grid-5                  1024                                 512                              917,504         0.047
 ======================  ==================================   ===============================  =============== ============
 
-The below :num:`Fig. #turbulent-airfoil-grid` shows the 2D grid in :math:`x-z` plane for Grid-3 and the refinement around the airfoil is shown in the inset. Sufficient refinement can be seen in the wall normal direction and all the grid have a :math:`y^+ < 1` and no wall function is used for the airfoil surface throughout the current verification and validation cases.
+The below :numref:`turbulent-airfoil-grid` shows the 2D grid in :math:`x-z` plane for Grid-3 and the refinement around the airfoil is shown in the inset. Sufficient refinement can be seen in the wall normal direction and all the grid have a :math:`y^+ < 1` and no wall function is used for the airfoil surface throughout the current verification and validation cases.
 
 .. _turbulent-airfoil-grid:
-.. figure:: /sections_v/validation-figures/turbulent-airfoil-grid.*
+.. figure:: sections_v/validation-figures/turbulent-airfoil-grid.*
    :width: 800px
    :align: center
 
@@ -191,33 +191,33 @@ The verification results are shown firstly for both angles of attack and is foll
 
 *Verification results: Spalart–Allmaras*
 
-The following :num:`Fig. #turbulent-airfoil-caelus-sacc-0` and :num:`Fig. #turbulent-airfoil-caelus-sacc-10` shows the skin-friction distribution over the upper surface for :math:`\alpha=0^\circ` and :math:`\alpha=10^\circ` from Caelus for different grids. In both cases, Grid-4 and Grid-5 essentially produces the same solution suggesting a grid-independence solution is obtained.
+The following :numref:`turbulent-airfoil-caelus-sacc-0` and :numref:`turbulent-airfoil-caelus-sacc-10` shows the skin-friction distribution over the upper surface for :math:`\alpha=0^\circ` and :math:`\alpha=10^\circ` from Caelus for different grids. In both cases, Grid-4 and Grid-5 essentially produces the same solution suggesting a grid-independence solution is obtained.
 
 .. _turbulent-airfoil-caelus-sacc-0:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SACC-0.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SACC-0.*
    :width: 600px
    :align: center
    
    Skin-friction distribution obtained from Caelus simulations using SA turbulence model for :math:`\alpha=0^\circ`
    
 .. _turbulent-airfoil-caelus-sacc-10:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SACC-10.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SACC-10.*
    :width: 600px
    :align: center
 
    Skin-friction distribution obtained from Caelus simulations using SA turbulence model for :math:`\alpha=10^\circ`
 
-In :num:`Fig. #turbulent-airfoil-caelus-cfl3d-sacc-0` and `Fig. #turbulent-airfoil-caelus-cfl3d-sacc-10` , the skin-friction is compared with CFL3D on Grid-4. As can be seen, a very good agreement between the two codes can be seen.
+In :numref:`turbulent-airfoil-caelus-cfl3d-sacc-0` and `Fig. #turbulent-airfoil-caelus-cfl3d-sacc-10` , the skin-friction is compared with CFL3D on Grid-4. As can be seen, a very good agreement between the two codes can be seen.
 
 .. _turbulent-airfoil-caelus-cfl3d-sacc-0:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SACC-0.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SACC-0.*
    :width: 600px
    :align: center
    
    Skin-friction comparison between Caelus and CFL3D using SA turbulence model for :math:`\alpha=0^\circ`
    
 .. _turbulent-airfoil-caelus-cfl3d-sacc-10:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SACC-10.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SACC-10.*
    :width: 600px
    :align: center
 
@@ -228,30 +228,30 @@ In :num:`Fig. #turbulent-airfoil-caelus-cfl3d-sacc-0` and `Fig. #turbulent-airfo
 The skin-friction distribution obtained from using :math:`k-\omega~\rm{SST}` turbulence model for :math:`\alpha=0^\circ` and :math:`\alpha=10^\circ` is shown below for different grids. The grid-sensitivity behaviour is very similar to the Spalart–Allmaras turbulence case and no change is seen between Grid-4 and Grid-5.
 
 .. _turbulent-airfoil-Caelus-SST-0:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SST-0.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SST-0.*
    :width: 600px
    :align: center
    
    Skin-friction distribution obtained from Caelus simulations using :math:`k-\omega~\rm{SST}` turbulence model for :math:`\alpha=0^\circ`
    
 .. _turbulent-airfoil-Caelus-SST-10:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SST-10.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-SST-10.*
    :width: 600px
    :align: center
 
    Skin-friction distribution obtained from Caelus simulations using :math:`k-\omega~\rm{SST}` turbulence model for :math:`\alpha=10^\circ`
 
-The comparison of the skin-friction with CFL3D using :math:`k-\omega~\rm{SST}` is shown in :num:`Fig. #turbulent-airfoil-caelus-cfl3d-sst-0` and :num:`Fig. #turbulent-airfoil-caelus-cfl3d-sst-10` for both angle of attacks and similar to the previous case, a very good agreement between the two can be seen.
+The comparison of the skin-friction with CFL3D using :math:`k-\omega~\rm{SST}` is shown in :numref:`turbulent-airfoil-caelus-cfl3d-sst-0` and :numref:`turbulent-airfoil-caelus-cfl3d-sst-10` for both angle of attacks and similar to the previous case, a very good agreement between the two can be seen.
 
 .. _turbulent-airfoil-caelus-cfl3d-sst-0:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SST-0.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SST-0.*
    :width: 600px
    :align: center
    
    Skin-friction comparison between Caelus and CFL3D using :math:`k-\omega~\rm{SST}` turbulence model for :math:`\alpha=0^\circ`
    
 .. _turbulent-airfoil-caelus-cfl3d-sst-10:
-.. figure:: /sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SST-10.*
+.. figure:: sections_v/validation-figures/cf-turbulent-airfoil-Caelus-CFL3D-SST-10.*
    :width: 600px
    :align: center
 
@@ -262,13 +262,13 @@ The comparison of the skin-friction with CFL3D using :math:`k-\omega~\rm{SST}` i
 Here, the Caelus data is compared with the pressure-coefficient (:math:`c_p`) obtained experimentally by Gregory, N. and O'Reilly, C. L :cite:`Gregory1970` for both angles of attack over the upper surface. In addition, the data obtained from CFL3D is also included for verification. There is a very good agreement with the current Caelus and experiments which indicates that the correct turbulence equations are being solved in both Spalart–Allmaras and :math:`k-\omega~\rm{SST}` models.
 
 .. _turbulent-airfoil-Caelus-CFL3D-SA-SST-0-10:
-.. figure:: /sections_v/validation-figures/p-turbulent-airfoil-Caelus-CFL3D-SA-SST-0.*
+.. figure:: sections_v/validation-figures/p-turbulent-airfoil-Caelus-CFL3D-SA-SST-0.*
    :width: 600px
    :align: center
    
    Pressure comparison between Caelus, experiments and CFL3D for :math:`\alpha=0^\circ`
    
-.. figure:: /sections_v/validation-figures/p-turbulent-airfoil-Caelus-CFL3D-SA-SST-10.*
+.. figure:: sections_v/validation-figures/p-turbulent-airfoil-Caelus-CFL3D-SA-SST-10.*
    :width: 600px
    :align: center
 

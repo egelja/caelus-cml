@@ -38,10 +38,10 @@ Background
 
 Turbulent flow over a backward facing step is a classical configuration to examine steady separated flows. Here due to the presence of the step, the flow undergoes separation and the subsequent shear layer reattaches downstream forming a recirculation region. The thickness of the boundary layer at the lip of the step and the flow Reynolds number are important parameters that determines the length of separated region. A decrease in pressure or favourable pressure gradient in the immediate vicinity of the step is a classical behaviour that contributes to the increase in drag. The user is suggested to refer to the verification and validation of this case at :ref:`turbulent-step-verification-label` for more detailed analysis.
 
-The schematic of the backward facing step is shown in :num:`Fig. #t-step-schematic-tutorials` in two-dimensions. A step height (H) of 1.0 m is used with a flow Reynolds number of 36000, which is based on the step height. Air is considered as a fluid with a freestream temperature of 298 K and the freestream velocity corresponds to U = 44.315 m/s. The user should note that the two-dimensional geometric plane considered is in :math:`x-z` directions.
+The schematic of the backward facing step is shown in :numref:`t-step-schematic-tutorials` in two-dimensions. A step height (H) of 1.0 m is used with a flow Reynolds number of 36000, which is based on the step height. Air is considered as a fluid with a freestream temperature of 298 K and the freestream velocity corresponds to U = 44.315 m/s. The user should note that the two-dimensional geometric plane considered is in :math:`x-z` directions.
 
 .. _t-step-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/t-step-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/t-step-schematic-tutorials.*
    :width: 500px
    :align: center
 
@@ -67,11 +67,11 @@ A fully structured gird is developed for this geometry and is converted to ``pol
 
    /tutorials/incompressible/simpleSolver/ras/ACCM_backwardFacingStep2D/constant/polyMesh
 
-The computational domain for the step is shown in :num:`Fig. #t-step-domain-tutorials` which also highlights the boundary conditions used. The upstream flat plate extends for up to 110 step heights so that a fully turbulent boundary layer is ensured prior to the step at which the flow separates. Downstream of the step, the plate extends to 50 step heights giving sufficient length for the flow to reattach. The inlet and the outlet is placed as indicated in the :num:`Fig. #t-step-domain-tutorials` and closely flows the experimental set-up. The velocity on the step surfaces is zero, wherein :math:`u,v,w = 0` represented through a no-slip boundary.
+The computational domain for the step is shown in :numref:`t-step-domain-tutorials` which also highlights the boundary conditions used. The upstream flat plate extends for up to 110 step heights so that a fully turbulent boundary layer is ensured prior to the step at which the flow separates. Downstream of the step, the plate extends to 50 step heights giving sufficient length for the flow to reattach. The inlet and the outlet is placed as indicated in the :numref:`t-step-domain-tutorials` and closely flows the experimental set-up. The velocity on the step surfaces is zero, wherein :math:`u,v,w = 0` represented through a no-slip boundary.
 
 
 .. _t-step-domain-tutorials:
-.. figure:: /sections/tutorial-figures/t-step-domain-tutorials.*
+.. figure:: sections/tutorial-figures/t-step-domain-tutorials.*
    :width: 500px
    :align: center
       
@@ -83,13 +83,13 @@ The grid in ``polyMesh`` is in three-dimensions, although the flow over the step
    A velocity value of :math:`v=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`y` direction.
 
 .. _t-step-grid-tutorials:
-.. figure:: /sections/tutorial-figures/t-step-grid-tutorials.*
+.. figure:: sections/tutorial-figures/t-step-grid-tutorials.*
    :width: 800px
    :align: center
    
    Computational grid of a 2D backward facing step in :math:`x-z` plane
 
-The 2D step grid in :math:`x-z` plane is shown in :num:`Fig. #t-step-grid-tutorials` which has a total of 189 cells in the streamwise direction and 64 cells in the normal direction, with 20 cells representing the step height. As noted earlier, the grid is developed to use with wall functions and hence the :math:`y^+ \approx 30` in this case.
+The 2D step grid in :math:`x-z` plane is shown in figure %s:numref:`t-step-grid-tutorials` which has a total of 189 cells in the streamwise direction and 64 cells in the normal direction, with 20 cells representing the step height. As noted earlier, the grid is developed to use with wall functions and hence the :math:`y^+ \approx 30` in this case.
 
 Problem definition
 ````````````````````
@@ -137,7 +137,7 @@ The user should note that Caelus is case sensitive and therefore the directory a
 
 *Boundary Conditions*
 
-Referring back to :num:`Fig. #t-step-domain-tutorials`, the following are the boundary conditions that will be specified:
+Referring back to :numref:`t-step-domain-tutorials`, the following are the boundary conditions that will be specified:
 
 * Inlet
    - Velocity: Fixed uniform velocity :math:`u = 44.31525~m/s` in :math:`x` direction
@@ -336,7 +336,7 @@ Prior to the execution of the solver, it is important to renumber and to carry o
 
 When the ``renumberMesh`` is performed, the user should take note of the bandwidth before and after the mesh renumbering. In a similar manner, when the ``checkMesh`` is performed, the mesh statistics are shown as below
 
-.. literalinclude:: /sections/tutorial-figures/t_step_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/t_step_checkmesh.txt
 
 At this stage, the solver can be executed from the top directory using the following command
 
@@ -351,11 +351,11 @@ The log file can be further processed to look at the convergence history and thi
 
    caelus logs -w my-turbulent-step.log
 
-The ``caelus-plotResiduals -l`` allows you to look at the convergence of various variables with respect to the number of iterations carried out and is shown in :num:`Fig. #t-step-convergence-tutorials`. 
+The ``caelus-plotResiduals -l`` allows you to look at the convergence of various variables with respect to the number of iterations carried out and is shown in :numref:`t-step-convergence-tutorials`. 
 
 
 .. _t-step-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/t-step-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/t-step-convergence-tutorials.*
    :width: 400px
    :align: center
 		
@@ -364,17 +364,16 @@ The ``caelus-plotResiduals -l`` allows you to look at the convergence of various
 Results
 ````````
 
-The flow within the separated region is visualised here through the velocity and pressure contours. In :num:`Fig. #t-step-velocitypressure-tutorials` velocity magnitude and pressure contours are shown for SA model. Immediate downstream of the step a decrease in pressure is seen followed by an increases as the shear layer reattaches to the step. This is consistent with the formation of a low velocity recirculating region behind the step.
+The flow within the separated region is visualised here through the velocity and pressure contours. In :numref:`t-step-velocitypressure-tutorials` velocity magnitude and pressure contours are shown for SA model. Immediate downstream of the step a decrease in pressure is seen followed by an increases as the shear layer reattaches to the step. This is consistent with the formation of a low velocity recirculating region behind the step.
 
 
 .. _t-step-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/t-step-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/t-step-velocitypressure-tutorials.*
    :width: 800px
    :align: center
     
    Velocity magnitude and pressure contours over the backward facing step
 
-	
 
 
 

@@ -35,10 +35,10 @@ Analytical solutions to the heated spherical cavity were investigated by McBain 
 
 **Problem Definition**
 
-The schematic of the spherical cavity is depicted :num:`Fig. #sphere-schematic` and as can be seen, only half of the sphere is considered here with an :math:`x-y` symmetry plane. The sphere is located at :math:`x = 0, y = 0, z = 0` with a radius :math:`r = 0.5~m`. 
+The schematic of the spherical cavity is depicted :numref:`sphere-schematic` and as can be seen, only half of the sphere is considered here with an :math:`x-y` symmetry plane. The sphere is located at :math:`x = 0, y = 0, z = 0` with a radius :math:`r = 0.5~m`. 
 
 .. _sphere-schematic:
-.. figure:: /sections_v/validation-figures/sphere-schematic.*
+.. figure:: sections_v/validation-figures/sphere-schematic.*
    :width: 500px
    :align: center
    
@@ -100,10 +100,10 @@ Although the temperature is calculated in this simulation, a constant viscosity 
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain was a half sphere with an :math:`x-y` plane of symmetry at :math:`z = 0~m`. The surface temperature was prescribed as discussed above. The initialisation of the fluid temperature within the sphere follows that of the surface temperature (:math:`T = x`) and is depicted in :num:`Fig. #sphere-domain` at the symmetry plane. Note that this figure also aids in providing a clarity of understanding for the temperature variation over the spherical surface.
+The computational domain was a half sphere with an :math:`x-y` plane of symmetry at :math:`z = 0~m`. The surface temperature was prescribed as discussed above. The initialisation of the fluid temperature within the sphere follows that of the surface temperature (:math:`T = x`) and is depicted in :numref:`sphere-domain` at the symmetry plane. Note that this figure also aids in providing a clarity of understanding for the temperature variation over the spherical surface.
 
 .. _sphere-domain:
-.. figure:: /sections_v/validation-figures/sphere-domain.*
+.. figure:: sections_v/validation-figures/sphere-domain.*
    :width: 400px
    :align: center
    
@@ -128,10 +128,10 @@ The computational domain was a half sphere with an :math:`x-y` plane of symmetry
 	
 **Computational Grid**
 
-The computational grid for the half sphere was generated using `Pointwise <http://www.pointwise.com/>`_. A fully structured grid was constructured with a total of 18564 cells. As seen in :num:`Fig. #sphere-grid`, an O-H topology used where an H-block is centred within 5 O-blocks.
+The computational grid for the half sphere was generated using `Pointwise <http://www.pointwise.com/>`_. A fully structured grid was constructured with a total of 18564 cells. As seen in :numref:`sphere-grid`, an O-H topology used where an H-block is centred within 5 O-blocks.
 
 .. _sphere-grid:
-.. figure:: /sections_v/validation-figures/sphere-grid.*
+.. figure:: sections_v/validation-figures/sphere-grid.*
    :width: 700px
    :align: center
    
@@ -139,10 +139,10 @@ The computational grid for the half sphere was generated using `Pointwise <http:
    
 **Results and Discussion**
 
-The steady solution to the natural convection in a buoyant sphere was obtained using Caelus |version| with the SLIM solver that includes the a buoyancy source term based on the Boussinesq assumption. Since SLIM is inherently time-accurate, the simulation was run sufficiently long such that a steady state was achieved. In :num:`Fig. #sphere-isotherms`, compares the isotherms obtained with SLIM and the analytical isotherms obtained with a first order approximation. Close agreement was observed.
+The steady solution to the natural convection in a buoyant sphere was obtained using Caelus |version| with the SLIM solver that includes the a buoyancy source term based on the Boussinesq assumption. Since SLIM is inherently time-accurate, the simulation was run sufficiently long such that a steady state was achieved. In :numref:`sphere-isotherms`, compares the isotherms obtained with SLIM and the analytical isotherms obtained with a first order approximation. Close agreement was observed.
 
  .. _sphere-isotherms:
- .. figure:: /sections_v/validation-figures/sphere-isotherms.*
+ .. figure:: sections_v/validation-figures/sphere-isotherms.*
     :width: 700px
     :align: center
 	
@@ -154,4 +154,4 @@ The steady solution to the natural convection in a buoyant sphere was obtained u
 A validation study of a buoyant flow inside a spherically heated cavity was conducted using Caelus |version|. The isotherms obtained from the CFD results were compared with the first order analytical solution and excellent agreement was observed.
 
 
- 
+

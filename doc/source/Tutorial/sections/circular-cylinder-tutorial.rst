@@ -42,10 +42,10 @@ The flow over a circular cylinder is a classical configuration to study separati
 
 For a Reynolds number based on the cylinder diameter of :math:`Re_D = 100`, the Strouhal number is about :math:`St\approx 0.16-0.17` as determined through experiments and is nearly independent of the diameter of the cylinder. More details are discussed in section :ref:`circular-cylinder-validation`
 
-The diameter chosen for the cylinder here is :math:`D = 2~m` and is the characteristic length for the Reynolds number, which is (:math:`Re_D = 100`). The velocity is assumed to be :math:`U = 1~m/s` in the :math:`x` direction. Based on these, the kinematic velocity can be estimated as :math:`\nu = 0.02~m^2/s`. The below :num:`Fig. #cc-schematic-tutorials` shows the schematic of the cylinder in the :math:`x-y` plane.
+The diameter chosen for the cylinder here is :math:`D = 2~m` and is the characteristic length for the Reynolds number, which is (:math:`Re_D = 100`). The velocity is assumed to be :math:`U = 1~m/s` in the :math:`x` direction. Based on these, the kinematic velocity can be estimated as :math:`\nu = 0.02~m^2/s`. The below :numref:`cc-schematic-tutorials` shows the schematic of the cylinder in the :math:`x-y` plane.
 
 .. _cc-schematic-tutorials:
-.. figure:: /sections/tutorial-figures/cc-schematic-tutorials.*
+.. figure:: sections/tutorial-figures/cc-schematic-tutorials.*
    :width: 500px
    :align: center
    
@@ -66,22 +66,22 @@ Grid Generation
 ````````````````
 A hexahedral grid around the circular cylinder was development with a O-grid topology using  `Pointwise <http://www.pointwise.com/>`_. Specific grid generation details are omitted while proving sufficient details regarding computational domain and boundary conditions. With these details the user should be able to recreate the required grid for the two-dimensional cylinder
 
-A rectangular computational domain in the :math:`x-y` plane has been constructed surrounding the circular cylinder as shown in :num:`Fig. #cc-domain-tutorials`. A full cylinder was considered as the vortices developed behind the cylinder are of the periodic nature. Upstream of the cylinder, the domain is extended by 5 cylindrical diameters, whereas, downstream it was extended up to 20. Since the flow here is viscous dominated, sufficient downstream length is required to capture the initial vortex separation from the surface of the cylinder and the subsequent shedding process. In the :math:`y` direction, the domain is extended up to 5 cylindrical diameters on either side. From the figure, multiple inlet boundaries to this domain can be seen, one at the far end of the upstream and the other two for the top and bottom boundaries. This type of configuration is particularly needed to appropriately model the inflow, very similar to an undisturbed flow in an experimental set-up. It should be noted here that for top and bottom boundaries, the flow is in the :math:`x` direction. Outlet boundary to the domain is placed at the downstream end which is at 20 cylindrical diameters. Since the fluid behaviour is viscous, the velocity at the wall is zero (:math:`u, v, w = 0~m/s`) represented here through a no-slip boundary condition as highlighted in blue.
+A rectangular computational domain in the :math:`x-y` plane has been constructed surrounding the circular cylinder as shown in :numref:`cc-domain-tutorials`. A full cylinder was considered as the vortices developed behind the cylinder are of the periodic nature. Upstream of the cylinder, the domain is extended by 5 cylindrical diameters, whereas, downstream it was extended up to 20. Since the flow here is viscous dominated, sufficient downstream length is required to capture the initial vortex separation from the surface of the cylinder and the subsequent shedding process. In the :math:`y` direction, the domain is extended up to 5 cylindrical diameters on either side. From the figure, multiple inlet boundaries to this domain can be seen, one at the far end of the upstream and the other two for the top and bottom boundaries. This type of configuration is particularly needed to appropriately model the inflow, very similar to an undisturbed flow in an experimental set-up. It should be noted here that for top and bottom boundaries, the flow is in the :math:`x` direction. Outlet boundary to the domain is placed at the downstream end which is at 20 cylindrical diameters. Since the fluid behaviour is viscous, the velocity at the wall is zero (:math:`u, v, w = 0~m/s`) represented here through a no-slip boundary condition as highlighted in blue.
 		
 .. _cc-domain-tutorials:
-.. figure:: /sections/tutorial-figures/cc-domain-tutorials.*
+.. figure:: sections/tutorial-figures/cc-domain-tutorials.*
    :width: 600px
    :align: center
 		
    Circular cylinder computational domain
 		
-The hexahedral grid around the cylinder is shown in :num:`Fig. #cc-grid-tutorials` for a :math:`x-y` plane. Caelus is a 3D solver and requires the grid to be in 3D. This was obtained by extruding the grid in the :math:`x-y` plane by *one cell* thick and subsequently specifying *empty* boundary conditions to the extruded planes. This enforces that Caelus to solve the flow in two dimensions assuming symmetry in the :math:`z` direction as is required in this case due to the two-dimensionality of the flow. 
+The hexahedral grid around the cylinder is shown in :numref:`cc-grid-tutorials` for a :math:`x-y` plane. Caelus is a 3D solver and requires the grid to be in 3D. This was obtained by extruding the grid in the :math:`x-y` plane by *one cell* thick and subsequently specifying *empty* boundary conditions to the extruded planes. This enforces that Caelus to solve the flow in two dimensions assuming symmetry in the :math:`z` direction as is required in this case due to the two-dimensionality of the flow. 
 
 .. Note::
    A velocity value of :math:`w=0` needs to be specified at appropriate boundaries although no flow is solved in the :math:`z` direction.
 
 .. _cc-grid-tutorials:
-.. figure:: /sections/tutorial-figures/cc-grid-tutorials.*
+.. figure:: sections/tutorial-figures/cc-grid-tutorials.*
    :width: 600px
    :align: center
 
@@ -112,7 +112,7 @@ It is to be noted that Caelus is case sensitive and therefore the user should se
 
 *Boundary Conditions*
 
-We now begin with setting up the boundary conditions. Referring back to :num:`Fig. #cc-domain-tutorials`, the following are the boundary conditions that need to be specified:
+We now begin with setting up the boundary conditions. Referring back to :numref:`cc-domain-tutorials`, the following are the boundary conditions that need to be specified:
 
 * Inlet
     - Velocity: Fixed uniform velocity :math:`u = 1.0~m/s` in :math:`x` direction
@@ -233,7 +233,7 @@ Prior to solver execution, renumbering of the grid or mesh needs to be performed
 
 The user should take note of the bandwidth before and after the mesh renumbering. When the ``checkMesh`` is performed, the mesh statistics are shown as below
 
-.. literalinclude:: /sections/tutorial-figures/cc_checkmesh.txt
+.. literalinclude:: sections/tutorial-figures/cc_checkmesh.txt
 
 In the next step, execution of the solver can be performed while monitoring the progress of the solution. The solver is always executed from the top directory which is ``ACCM_circularCylinder`` in this case.
 
@@ -247,11 +247,11 @@ The output of the solution process is saved in the log file, ``my-circular-cylin
 	
    caelus logs -w my-circular-cylinder.log
 
-With the above, the convergence of pressure along with other variables can be seen with respect to time. The same is shown in the :num:`Fig. #cc-convergence-tutorials` and due to the periodic nature of vortex shedding, oscillatory convergence of pressure is seen. 
+With the above, the convergence of pressure along with other variables can be seen with respect to time. The same is shown in the :numref:`cc-convergence-tutorials` and due to the periodic nature of vortex shedding, oscillatory convergence of pressure is seen. 
 
 
 .. _cc-convergence-tutorials:
-.. figure:: /sections/tutorial-figures/cc-convergence-tutorials.*
+.. figure:: sections/tutorial-figures/cc-convergence-tutorials.*
   :width: 500px
   :align: center
 		
@@ -260,16 +260,11 @@ With the above, the convergence of pressure along with other variables can be se
 Results
 ````````
 
-In this section, some qualitative results obtained as a result of steady vortex shedding in the wake of the cylinder is shown. :num:`Fig. #cc-velocitypressure-tutorials` shows the velocity magnitude and pressure contour for the flow over the cylinder. The formation of vortex shedding is clearly visible from the velocity contour and the pressure variation due to oscillating vortex in the wake. The vortex break-up that occurs in the near wake of the cylinder, travels several diameters downstream eventually diffusing into the flow.
+In this section, some qualitative results obtained as a result of steady vortex shedding in the wake of the cylinder is shown. :numref:`cc-velocitypressure-tutorials` shows the velocity magnitude and pressure contour for the flow over the cylinder. The formation of vortex shedding is clearly visible from the velocity contour and the pressure variation due to oscillating vortex in the wake. The vortex break-up that occurs in the near wake of the cylinder, travels several diameters downstream eventually diffusing into the flow.
 
 .. _cc-velocitypressure-tutorials:
-.. figure:: /sections/tutorial-figures/cc-velocitypressure-tutorials.*
+.. figure:: sections/tutorial-figures/cc-velocitypressure-tutorials.*
    :width: 700px
    :align: center
 		
    Velocity magnitude and pressure contour plots for the flow over the 2D cylinder
-
-
-
-
-

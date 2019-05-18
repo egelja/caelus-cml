@@ -44,10 +44,10 @@ where :math:`Re_{x}` is the local Reynolds number defined as
 
 **Problem definition**
 
-This exercise is based on the validation work carried out by the NASA `NPARC alliance <http://www.grc.nasa.gov/WWW/wind/valid/archive.html>`_ for a flow over a `flat-plate <http://www.grc.nasa.gov/WWW/wind/valid/fplam/fplam.html>`_ using the same conditions in the incompressible limit. A schematic of the geometric configuration is shown in :num:`Fig. #flat-plate-schematic`.
+This exercise is based on the validation work carried out by the NASA `NPARC alliance <http://www.grc.nasa.gov/WWW/wind/valid/archive.html>`_ for a flow over a `flat-plate <http://www.grc.nasa.gov/WWW/wind/valid/fplam/fplam.html>`_ using the same conditions in the incompressible limit. A schematic of the geometric configuration is shown in :numref:`flat-plate-schematic`.
 
 .. _flat-plate-schematic:
-.. figure:: /sections_v/validation-figures/flat-plate-schematic.*
+.. figure:: sections_v/validation-figures/flat-plate-schematic.*
    :width: 500px
    :align: center
 
@@ -65,10 +65,10 @@ As we have assumed the flow incompressible, the density (:math:`\rho`)  remains 
 
 **Computational Domain and Boundary Conditions**
 
-The computational domain is a rectangular block encompassing the flat-plate. :num:`Fig. #flat-plate-domain` shows the details of the boundaries used in two-dimensions (:math:`x-y` plane). As indicated in blue, the region of interest extends between :math:`0\leq x \leq 0.3048~m` and has a no-slip boundary condition. Upstream of the leading edge, a slip boundary is used to simulate freestream uniform flow approaching the flat-plate. However, downstream of the plate, there is additional no-slip wall a further three plate lengths (highlighted in green). This ensures that the boundary layer in the vicinity of the trailing edge is not influenced by the outlet boundary. Since the flow is subsonic, disturbances cause the pressure to propagate both upstream and downstream. Therefore, placement of the inlet and outlet boundaries were chosen to have minimal effect on the solution. The inlet boundary as shown in the figure below is placed at start of the slip-wall (:math:`x = -0.06~m`) and the outlet at the end of the second no-slip wall (:math:`x = 1.2192~m`). Both inlet and outlet boundaries are between :math:`0\leq y \leq 0.15~m`. A slip-wall condition is used for the entire top boundary.
+The computational domain is a rectangular block encompassing the flat-plate. :numref:`flat-plate-domain` shows the details of the boundaries used in two-dimensions (:math:`x-y` plane). As indicated in blue, the region of interest extends between :math:`0\leq x \leq 0.3048~m` and has a no-slip boundary condition. Upstream of the leading edge, a slip boundary is used to simulate freestream uniform flow approaching the flat-plate. However, downstream of the plate, there is additional no-slip wall a further three plate lengths (highlighted in green). This ensures that the boundary layer in the vicinity of the trailing edge is not influenced by the outlet boundary. Since the flow is subsonic, disturbances cause the pressure to propagate both upstream and downstream. Therefore, placement of the inlet and outlet boundaries were chosen to have minimal effect on the solution. The inlet boundary as shown in the figure below is placed at start of the slip-wall (:math:`x = -0.06~m`) and the outlet at the end of the second no-slip wall (:math:`x = 1.2192~m`). Both inlet and outlet boundaries are between :math:`0\leq y \leq 0.15~m`. A slip-wall condition is used for the entire top boundary.
 
 .. _flat-plate-domain:
-.. figure:: /sections_v/validation-figures/flat-plate-domain.*
+.. figure:: sections_v/validation-figures/flat-plate-domain.*
    :width: 500px
    :align: center
 
@@ -103,31 +103,31 @@ The following are the boundary condition details used for the computational doma
 A 2D structured grid was generated using `Pointwise <http://www.pointwise.com/>`__ in the :math:`x-y` plane. Since Caelus is a 3D computational framework, it necessitates the grid to also be 3D. Therefore, a 3D grid was obtained using `Pointwise <http://www.pointwise.com/>`_ by extruding the 2D grid in the positive :math:`z` direction by *one cell*. The final 3D grid was then exported to the Caelus format (polyMesh). The two :math:`x-y` planes obtained as a result of grid extrusion need boundary conditions to be specified. As the flow over a flat-plate is generally 2D, we do not need to solve the flow in the third dimension. This is achieved in Caelus by specifying *empty* boundary condition for each plane. Although, no flow is computed in the :math:`z` direction, a velocity of :math:`w = 0` has to be specified for the velocity boundary condition as indicated above.
 
 .. _flat-plate-grid:
-.. figure:: /sections_v/validation-figures/flat-plate-grid.*
+.. figure:: sections_v/validation-figures/flat-plate-grid.*
    :width: 800px
    :align: center
 
    Structured grid for a flat plate domain
 
-:num:`Fig. #flat-plate-grid` shows the 2D grid in the :math:`x-y` plane. As can be seen, the grid is refined perpendicular to the wall in order to capture resolve the viscous effects. To ensure that the gradients in boundary layer are well resolved, about 50 grid nodes are placed between the wall and the boundary layer edge. Grid refinement is also added at the leading edge so that the growth of the boundary layer is also well resolved. In this particular case, 400 cells were used in the stream-wise (:math:`x`) direction (:math:`x \leq 0 \leq 0.3048~m`) and 600 in the wall normal (:math:`y`) direction. For no-slip wall beyond :math:`x > 0.3048`, a similar distribution is used.
+:numref:`flat-plate-grid` shows the 2D grid in the :math:`x-y` plane. As can be seen, the grid is refined perpendicular to the wall in order to capture resolve the viscous effects. To ensure that the gradients in boundary layer are well resolved, about 50 grid nodes are placed between the wall and the boundary layer edge. Grid refinement is also added at the leading edge so that the growth of the boundary layer is also well resolved. In this particular case, 400 cells were used in the stream-wise (:math:`x`) direction (:math:`x \leq 0 \leq 0.3048~m`) and 600 in the wall normal (:math:`y`) direction. For no-slip wall beyond :math:`x > 0.3048`, a similar distribution is used.
 
 **Results and Discussion**
 
 A time-dependent solution to the two-dimensional flat-plate was obtained using Caelus |version|. The SLIM transient solver was used here and the flow was simulated sufficiently long (several plate length flow times) such that steady flow was established. For the discretization of time-dependent terms, the first-order Euler scheme was used. A Gauss linear discretization was used for the pressure and velocity gradients. A linear upwind discretization was for the divergence of velocity and mass flux. A linear corrected scheme was used for Laplacian discretization while cell-to-face centre interpolation used linear interpolation. 
 
-In :num:`Fig. #cf-flat-plate-laminar`, the skin-friction distribution along the flat-plate obtained from the CFD simulation is compared with that of the Blasius analytical solution. Here, the distance :math:`x` is normalised with the length of the plate (:math:`L`). Excellent agreement is observed along the entire length of the flat-plate.
+In :numref:`cf-flat-plate-laminar`, the skin-friction distribution along the flat-plate obtained from the CFD simulation is compared with that of the Blasius analytical solution. Here, the distance :math:`x` is normalised with the length of the plate (:math:`L`). Excellent agreement is observed along the entire length of the flat-plate.
 
 .. _cf-flat-plate-laminar:
-.. figure:: /sections_v/validation-figures/cf-flat-plate-laminar.*
+.. figure:: sections_v/validation-figures/cf-flat-plate-laminar.*
    :width: 600px
    :align: center
 
    Skin-friction comparison between SLIM and Blasius solutions
     
-At the exit plane of the flat-plate at :math:`x = 0.3048~m`, velocity data was extracted across the boundary layer and compared with the Blasius analytical solution. This is shown in :num:`Fig. #velocity-profile-laminar` where the velocity profile is plotted using similarity variables from the Blasius solution. Here, :math:`\eta` is the non-dimensional distance from the wall to the boundary layer edge and :math:`U_e` is the velocity at the boundary layer edge. Similar to skin-friction, the velocity profile also exhibits excellent agreement with the Blasius solution.
+At the exit plane of the flat-plate at :math:`x = 0.3048~m`, velocity data was extracted across the boundary layer and compared with the Blasius analytical solution. This is shown in :numref:`velocity-profile-laminar` where the velocity profile is plotted using similarity variables from the Blasius solution. Here, :math:`\eta` is the non-dimensional distance from the wall to the boundary layer edge and :math:`U_e` is the velocity at the boundary layer edge. Similar to skin-friction, the velocity profile also exhibits excellent agreement with the Blasius solution.
 
 .. _velocity-profile-laminar:
-.. figure:: /sections_v/validation-figures/velocity-profile-laminar.*
+.. figure:: sections_v/validation-figures/velocity-profile-laminar.*
    :width: 600px
    :align: center
 

@@ -240,7 +240,7 @@ It is suggested for the user to take note of the bandwidth before and after the 
 
 .. literalinclude:: sections/tutorial-figures/fp_checkmesh.txt
 
-The mesh non-orthogonality as reported above is 0 and therefore no no-orthogonal corrections are needed in this case. In the case of mesh non-orthogonality being high, certain number of corrections are to be accounted for which can be set in the ``fvSolution`` file with the keyword ``nNonOrthogonalCorrectors``. The next step is to execute the solver and monitoring the progress of the solution. The solver is always executed from the top directory which is ``ACCM_flatPlate2D`` in our case as below 
+The mesh non-orthogonality as reported above is 0 and therefore no non-orthogonal corrections are needed in this case. In the case of mesh non-orthogonality being high, certain number of corrections are to be accounted for which can be set in the ``fvSolution`` file with the keyword ``nNonOrthogonalCorrectors``. The next step is to execute the solver and monitoring the progress of the solution. The solver is always executed from the top directory which is ``ACCM_flatPlate2D`` in our case as below 
 
 .. code-block:: bash
 

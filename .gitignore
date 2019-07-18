@@ -69,3 +69,4 @@ src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/posix/
 *.gtgz
  
 docs/Guides
+external/linux/openmpi-1\.6\.5/bin/

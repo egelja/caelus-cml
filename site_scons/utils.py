@@ -132,7 +132,7 @@ def get_git_version(branch='HEAD'):
         # Encountered some error, so return empty string
         return ''
     else:
-        return stdout.strip()
+        return stdout.decode('utf-8').strip()
 
 def get_git_branch():
     """Return the current branch
@@ -150,7 +150,7 @@ def get_git_branch():
         # Encountered some error, so return empty string
         return ''
     else:
-        return stdout.strip()
+        return stdout.decode('utf-8').strip()
 
 def get_git_tag():
     """Return the closest annotated tag
@@ -168,7 +168,7 @@ def get_git_tag():
         # Encountered some error, so return empty string
         return ''
     else:
-        return stdout.strip()
+        return stdout.decode('utf-8').strip()
 
 def tag_build_version(target, source, env):
     """Tag the build version for dependency tracking"""

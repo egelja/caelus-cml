@@ -1366,7 +1366,7 @@ void CML::autoSnapDriver::doSnap
             localPointRegion regionSide(mesh, candidatePoints);
             autoPtr<mapPolyMesh> mapPtr =
                 meshRefiner_.dupNonManifoldPoints(regionSide);
-            meshRefinement::updateList(mapPtr().faceMap(), -1, filterFace);
+            meshRefinement::updateList(mapPtr().faceMap(), label(-1), filterFace);
 
             const labelList& reverseFaceMap = mapPtr().reverseFaceMap();
             origBaffles.setSize(mesh.nFaces());

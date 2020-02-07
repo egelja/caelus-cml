@@ -421,18 +421,21 @@ void CML::sampledSurfaceElevation::sampleIntegrateAndWrite
                     result[seti] = value + minScalarCoord;
                 }
             }
+
+            if (surfaceElevationFilePtr_.valid())
+            {
+                // Write time
+                surfaceElevationFilePtr_() << mesh_.time().value();
+
+                // Write the surface elevation
+                forAll (result, seti)
+                {
+                    surfaceElevationFilePtr_() << tab << result[seti];
+                }
+
+                surfaceElevationFilePtr_() << endl;
+            }
         }
-
-        // Write time
-        surfaceElevationFilePtr_() << mesh_.time().value();
-
-        // Write the surface elevation
-        forAll (result, seti)
-        {
-            surfaceElevationFilePtr_() << tab << result[seti];
-        }
-
-        surfaceElevationFilePtr_() << endl;
     }
 }
 

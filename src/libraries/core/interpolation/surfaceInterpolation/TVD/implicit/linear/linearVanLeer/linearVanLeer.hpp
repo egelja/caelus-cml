@@ -94,7 +94,7 @@ public:
             faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return order_*max(0,4*r/((r*r+1+VSMALL)*(r*r+1+VSMALL)));
+        return order_*max(0,4*r/((r+1+VSMALL)*(r+1+VSMALL)));
     }
 };
 

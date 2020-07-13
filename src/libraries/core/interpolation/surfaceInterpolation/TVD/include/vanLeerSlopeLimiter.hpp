@@ -45,7 +45,7 @@ CML::classType##VanLeer<Type>::slopeLimiter(CML::scalar const r) const         \
 {                                                                              \
     return CML::scalar                                                         \
     (                                                                          \
-        max(0,4*r/((r*r+1+VSMALL)*(r*r+1+VSMALL)))                             \
+        max(0,4*r/((r+1+VSMALL)*(r+1+VSMALL)))                                 \
     );                                                                         \
 }                                                                              
 #endif

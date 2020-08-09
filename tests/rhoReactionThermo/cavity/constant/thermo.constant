@@ -1,0 +1,55 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermo.constant;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+H2O
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       18.0153;
+    }
+    equationOfState
+    {
+        rho             1.0;
+    }
+    thermodynamics
+    {
+        Hf              0;
+        Cp              4138.0;
+    }
+    transport
+    {
+        mu              0.003;
+        Pr              7.0;
+    }
+}
+
+air
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       28.85;
+    }
+    equationOfState
+    {
+        rho             0.0012;
+    }
+    thermodynamics
+    {
+        Hf              0;
+        Cp              718.0;
+    }
+    transport
+    {
+        mu              1.8e-05;
+        Pr              0.7;
+    }
+}

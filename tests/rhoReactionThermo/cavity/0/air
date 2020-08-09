@@ -1,0 +1,34 @@
+/*-------------------------------------------------------------------------------*
+Caelus 9.04
+Web:   www.caelus-cml.com
+\*------------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      air;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 0 0 0 0];
+
+internalField   uniform 0.99;
+
+boundaryField
+{
+    frontAndBack
+    {
+        type            empty;
+    }
+    movingWall
+    {
+        type            zeroGradient;
+    }
+    fixedWalls
+    {
+        type            zeroGradient;
+    }
+}
+
+// ************************************************************************* //

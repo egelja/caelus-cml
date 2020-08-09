@@ -101,6 +101,9 @@ void CML::heRhoThermo<BasicPsiThermo, MixtureType>::calculate()
         const typename MixtureType::thermoType& mixture_ =
             this->cellMixture(celli);
 
+        const typename MixtureType::thermoType& volMixture_ =
+            this->cellVolMixture(pCells[celli], TCells[celli], celli);
+
         TCells[celli] = mixture_.THE
         (
             hCells[celli],
@@ -109,7 +112,7 @@ void CML::heRhoThermo<BasicPsiThermo, MixtureType>::calculate()
         );
 
         psiCells[celli] = mixture_.psi(pCells[celli], TCells[celli]);
-        rhoCells[celli] = mixture_.rho(pCells[celli], TCells[celli]);
+        rhoCells[celli] = volMixture_.rho(pCells[celli], TCells[celli]);
 
         muCells[celli] = mixture_.mu(pCells[celli], TCells[celli]);
         alphaCells[celli] = mixture_.alphah(pCells[celli], TCells[celli]);
@@ -153,10 +156,19 @@ void CML::heRhoThermo<BasicPsiThermo, MixtureType>::calculate()
                 const typename MixtureType::thermoType& mixture_ =
                     this->patchFaceMixture(patchi, facei);
 
+                const typename MixtureType::thermoType& volMixture_ =
+                    this->patchFaceVolMixture
+                    (
+                        pp[facei],
+                        pT[facei],
+                        patchi,
+                        facei
+                    );
+
                 phe[facei] = mixture_.HE(pp[facei], pT[facei]);
 
                 ppsi[facei] = mixture_.psi(pp[facei], pT[facei]);
-                prho[facei] = mixture_.rho(pp[facei], pT[facei]);
+                prho[facei] = volMixture_.rho(pp[facei], pT[facei]);
                 pmu[facei] = mixture_.mu(pp[facei], pT[facei]);
                 palpha[facei] = mixture_.alphah(pp[facei], pT[facei]);
             }
@@ -168,10 +180,19 @@ void CML::heRhoThermo<BasicPsiThermo, MixtureType>::calculate()
                 const typename MixtureType::thermoType& mixture_ =
                     this->patchFaceMixture(patchi, facei);
 
+                const typename MixtureType::thermoType& volMixture_ =
+                    this->patchFaceVolMixture
+                    (
+                        pp[facei],
+                        pT[facei],
+                        patchi,
+                        facei
+                    );
+
                 pT[facei] = mixture_.THE(phe[facei], pp[facei], pT[facei]);
 
                 ppsi[facei] = mixture_.psi(pp[facei], pT[facei]);
-                prho[facei] = mixture_.rho(pp[facei], pT[facei]);
+                prho[facei] = volMixture_.rho(pp[facei], pT[facei]);
                 pmu[facei] = mixture_.mu(pp[facei], pT[facei]);
                 palpha[facei] = mixture_.alphah(pp[facei], pT[facei]);
             }

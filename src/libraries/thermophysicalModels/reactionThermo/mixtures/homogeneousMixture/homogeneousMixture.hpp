@@ -93,8 +93,24 @@ public:
         return mixture(b_[celli]);
     }
 
+    const ThermoType& cellVolMixture(const scalar p, const scalar T, const label celli) const
+    {
+        return mixture(b_[celli]);
+    }
+
     const ThermoType& patchFaceMixture
     (
+        const label patchi,
+        const label facei
+    ) const
+    {
+        return mixture(b_.boundaryField()[patchi][facei]);
+    }
+
+    const ThermoType& patchFaceVolMixture
+    (
+        const scalar p,
+        const scalar T,
         const label patchi,
         const label facei
     ) const

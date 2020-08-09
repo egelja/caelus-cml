@@ -1,0 +1,30 @@
+# -*- mode: python -*-
+
+import utils
+from build import build_app
+Import('env')
+
+target = "Test-rhoReactionThermo"
+
+sources = Split("""
+Test-rhoReactionThermo.cpp
+""")
+
+caelus_inc = [
+'thermophysicalModels/basic/lnInclude',
+'thermophysicalModels/reactionThermo/lnInclude',
+'thermophysicalModels/specie/lnInclude',
+]
+
+caelus_libs = [
+'core',
+'fluidThermophysicalModels',
+'reactionThermophysicalModels',
+'specie'
+]
+
+build_app(env,
+          target=target,
+          sources=sources,
+          caelus_inc=caelus_inc,
+          caelus_libs=caelus_libs)

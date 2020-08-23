@@ -55,9 +55,15 @@ int main(int argc, char *argv[])
         thermo.rho()
     );
 
+    Info<< "Mixture density = "
+        << rho.weightedAverage(mesh.Vsc()).value()
+        << "  Min(" << rho.name() << ") = " << min(rho).value()
+        << "  Max(" << rho.name() << ") = " << max(rho).value()
+        << endl;
+
     runTime++;
     Info<< "Time = " << runTime.timeName() << nl << endl;
-    Info<< "Write\n" << endl;
+    
     
     runTime.write();
     Info<< "End\n" << endl;

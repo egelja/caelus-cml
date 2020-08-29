@@ -291,9 +291,20 @@ CML::cyclicAMIFvPatchField<Type>::cyclicAMIFvPatchField
             << exit(FatalIOError);
     }
 
-    if (!dict.found("value") && this->coupled())
+//    if (!dict.found("value") && this->coupled())
+//    {
+//        this->evaluate(Pstream::blocking);
+//    }
+    if (!dict.found("value"))
     {
-        this->evaluate(Pstream::blocking);
+        if (this->coupled())
+        {
+            this->evaluate(Pstream::blocking);
+        }
+        else
+        {
+            fvPatchField<Type>::operator=(this->patchInternalField());
+        }
     }
 }
 

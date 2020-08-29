@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*\
-Copyright (C) 2011 OpenFOAM Foundation
+Copyright (C) 2011-2019 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of CAELUS.
@@ -22,6 +22,7 @@ License
 #include "cyclicAMIFvPatch.hpp"
 #include "addToRunTimeSelectionTable.hpp"
 #include "fvMesh.hpp"
+#include "Time.hpp"
 #include "transform.hpp"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -37,7 +38,9 @@ namespace CML
 
 bool CML::cyclicAMIFvPatch::coupled() const
 {
-    return Pstream::parRun() || (this->size() && neighbFvPatch().size());
+    return
+        Pstream::parRun()
+     || !this->boundaryMesh().mesh().time().processorCase();
 }
 
 

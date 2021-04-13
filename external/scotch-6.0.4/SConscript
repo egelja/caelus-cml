@@ -184,7 +184,6 @@ src/libscotch/library_order.c
 src/libscotch/library_parser.c
 src/libscotch/library_parser_f.c
 src/libscotch/library_random.c
-src/libscotch/library_random_f.c
 src/libscotch/library_strat.c
 src/libscotch/library_version.c
 src/libscotch/library_version_f.c

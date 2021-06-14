@@ -37,6 +37,7 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
             For the MSys2 terminals, add this under `profiles.list` in `settings.json`:
 
             <details><summary>Sample Config</summary>
+            
             ```json
             {
                 "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw64",

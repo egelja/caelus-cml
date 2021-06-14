@@ -67,6 +67,9 @@ src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/posix/
 *.tar
 *.tgz
 *.gtgz
- 
+
 docs/Guides
 external/linux/openmpi-1\.6\.5/bin/
+
+# ingore everything not already tracked in the tutorials folder
+tutorials/

@@ -31,34 +31,34 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
 
             This is all detailed on the front page of the MSys2 site.
 
-            <details>
-                <summary>Windows Terminal</summary>
-                MSys2 adds 3 new shells, which, combined with the 2 shells Windows comes with, means that you have 5 shells on your computer. To help manage those, you may want to download [Windows Terminal](https://aka.ms/terminal).
+            <details><summary>Windows Terminal</summary>
+            MSys2 adds 3 new shells, which, combined with the 2 shells Windows comes with, means that you have 5 shells on your computer. To help manage those, you may want to download [Windows Terminal](https://aka.ms/terminal).
 
-                For the MSys2 terminals, add this under `profiles.list` in `settings.json`:
+            For the MSys2 terminals, add this under `profiles.list` in `settings.json`:
 
-                <details>
-                <summary>Sample Config</summary>
-                    {
-                        "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw64",
-                        "guid": "{17da3cac-b318-431e-8a3e-7fcdefe6d114}",
-                        "hidden": false,
-                        "icon": "C:/msys64/mingw64.ico",
-                        "name": "MINGW64 / MSYS2",
-                    },
-                    {
-                        "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw32",
-                        "guid": "{2d51fdc4-a03b-4efe-81bc-722b7f6f3820}",
-                        "icon": "C:/msys64/mingw32.ico",
-                        "name": "MINGW32 / MSYS2",
-                    },
-                    {
-                        "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -msys",
-                        "guid": "{71160544-14d8-4194-af25-d05feeac7233}",
-                        "icon": "C:/msys64/msys2.ico",
-                        "name": "MSYS / MSYS2",
-                    }
-                </details>
+            <details><summary>Sample Config</summary>
+            ```json
+            {
+                "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw64",
+                "guid": "{17da3cac-b318-431e-8a3e-7fcdefe6d114}",
+                "hidden": false,
+                "icon": "C:/msys64/mingw64.ico",
+                "name": "MINGW64 / MSYS2",
+            },
+            {
+                "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw32",
+                "guid": "{2d51fdc4-a03b-4efe-81bc-722b7f6f3820}",
+                "icon": "C:/msys64/mingw32.ico",
+                "name": "MINGW32 / MSYS2",
+            },
+            {
+                "commandline": "C:/msys64/msys2_shell.cmd -defterm -here -no-start -msys",
+                "guid": "{71160544-14d8-4194-af25-d05feeac7233}",
+                "icon": "C:/msys64/msys2.ico",
+                "name": "MSYS / MSYS2",
+            }
+            ```
+            </details>
             </details>
 
         2.  Download and install the needed packages for building:

@@ -34,6 +34,7 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
             <details><summary>Windows Terminal</summary>
             MSys2 adds 3 new shells, which, combined with the 2 shells Windows comes with, means that you have 5 shells on your computer. To help manage those, you may want to download [Windows Terminal](https://aka.ms/terminal).
 
+
             <details><summary>Sample Config</summary>
             For the MSys2 terminals, add this under `profiles.list` in `settings.json`:
 

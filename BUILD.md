@@ -13,7 +13,12 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
     Run the following command:
 
     ```sh
-    $> sudo apt install git build-essential flex bison zlib1g-dev python3 python3-pip
+    $> sudo apt install \
+         git build-essential \
+         flex bison \
+         zlib1g-dev libopenmpi-dev libcgal-dev \
+         libptscotch-dev libscotch-dev \
+         python3 python3-pip
     ```
 
     </details>
@@ -21,6 +26,22 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
     <details><summary>MaxOS</summary>
 
     Clang comes with the developer tools package, just open a terminal and type `clang`, then click install on the popup. Alternatively, you could download XCode.
+
+    You also have to download and install OpenMPI:
+
+    ```sh
+    $> wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.bz2
+    $> tar xf openmpi-4.1.1.tar.bz2
+    $> cd openmpi-4.1.1
+    $> ./configure --prefix=/opt/openmpi 2>&1 | tee config.out
+    $> make -j 8 2>&1 | tee make.out
+    $> sudo make install 2>&1 | tee install.out
+    $> echo "export PATH=/opt/openmpi/bin:$PATH" >> ~/.bashrc
+
+    # Now open a new shell
+    $> opmi_info
+    # should give output
+    ```
     </details>
 
     <details><summary>Windows</summary>
@@ -132,22 +153,97 @@ CPL is a Python library packaged with Caelus that is used for building and runni
    $> pip install .  # -e if you plan on making changes to CPL, pip3 if not on Windows
    ```
 6. Test CPL installation:
-    ```sh
-    # In current terminal
-    $> caelus -h
 
-    # In a new terminal
-    $> workon cpl
-    $> caelus -h
-    ```
+   ```sh
+   # In current terminal
+   $> caelus -h
+
+   # In a new terminal
+   $> workon cpl
+   $> caelus -h
+   ```
 
 ## Building
 
+Caelus-CML is built with [SCons](https://scons.org/), which is wrapped in CPL. If you wish to use SCons to build CPL (**not recommended**), see the [SCons notes](./scons_notes.md).
+
+1.  Get the code:
+    ```sh
+    $> git clone https://github.com/MrAwesomeRocks/caelus-cml.git  # Note: will take a while
+    ```
+    _Note: Windows does not work well with paths over 260 characters, make sure to place the repository in a high-level directory, such as your Desktop, <u>if you are using Windows</u>._
+2.  Add a CPL config:
+    <details><summary>Windows</summary>
+
+    Create the file `%APPDATA%/caelus/caelus.yaml` and add this text to it:
+
+    ```yaml
+    # -*- mode: yaml -*-
+    #
+    # CPL configuration file
+    #
+
+    # Root CPL configuration node
+    caelus:
+      # Control logging of CPL library
+      logging:
+        log_to_file: true
+        log_file: "%USERPROFILE%\\Caelus\\cpl.log"
+
+      # Configuration for Caelus CML
+      caelus_cml:
+        # "latest" chooses the latest version available.
+        default: "latest"
+
+        versions:
+          - version: "9.04"
+            path: "C:\\path\\to\\caelus-cml\\"
+    ```
+
+    </details>
+
+    <details><summary>MacOS and Linux</summary>
+
+    Create the file `~/.caelus/caelus.yaml` and add this text to it:
+
+    ```yaml
+    # -*- mode: yaml -*-
+    #
+    # CPL configuration file
+    #
+
+    # Root CPL configuration node
+    caelus:
+      # Control logging of CPL library
+      logging:
+        log_to_file: true
+        log_file: "~/Caelus/cpl.log"
+
+      # Configuration for Caelus CML
+      caelus_cml:
+        # "latest" chooses the latest version available.
+        default: "latest"
+
+        versions:
+          - version: "9.04"
+            path: "/path/to/caelus-cml"
+    ```
+
+    </details>
+
+3. Add a build config:
+    <details><summary>Windows</summary></details>
+    <details><summary>MacOS</summary></details>
+    <details><summary>Linux</summary></details>
+    
 ### If errors occur
+
 If an error occurs while building, run
+
 ```sh
 $> workon cpl
 $> cd PATH/TO/caelus-cml  # if needed
 $> caelus build -l build.log BUILD_SWAK=False BUILD_CFMESH=True -- -k
 ```
+
 Repeat the final command until the `build.log` file contains only error messages, then [create an issue](https://www.github.com/MrAwesomeRocks/caelus-cml/issues) and attach your `build.log` file to it.

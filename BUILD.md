@@ -114,3 +114,20 @@ CPL is a Python library packaged with Caelus that is used for building and runni
    ```
 
     </details>
+
+2. Set the `WORKON_HOME` environment variable to `$HOME/.envs` or `%USERPROFILE%\.envs` to give the virtualenvs a consistent location. This is optional, but highly recommended.
+
+3. Clone the CPL source:
+   ```sh
+   $> git clone https://github.com/MrAwesomeRocks/caelus-CPL.git
+   $> cd caelus-CPL
+   ```
+4. Create a CPL virtual environment:
+   ```sh
+   $> mkvirtualenv -a $(pwd) -r requirements.txt cpl
+   ```
+5. Activate the virtual environment and install CPL:
+   ```sh
+   $> workon cpl
+   $> pip install .  # -e if you plan on making changes to CPL
+   ```

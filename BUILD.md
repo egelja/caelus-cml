@@ -355,7 +355,7 @@ To build the documentation, first make sure that you followed the steps in [Cael
 2. Get to the docs folder: `cd /path/to/caelus-cml/docs`
 3. Setup `sphinx-numfig`:
    ```sh
-   $> cd packages/sphinx-numfig*
+   $> cd packages/sphinx-numfig-r13
    $> python setup.py install
    $> cd ../../
    ```

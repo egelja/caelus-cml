@@ -9,9 +9,11 @@
         "IRUSR",
         "IWGRP",
         "IWUSR",
+        "Paraview",
         "cpython",
         "destc",
         "numfig",
-        "pltfrm"
+        "pltfrm",
+        "virtualenv"
     ]
 }

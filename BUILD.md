@@ -231,11 +231,79 @@ Caelus-CML is built with [SCons](https://scons.org/), which is wrapped in CPL. I
 
     </details>
 
-3. Add a build config:
-    <details><summary>Windows</summary></details>
-    <details><summary>MacOS</summary></details>
-    <details><summary>Linux</summary></details>
-    
+3. Create a file in the `caelus-cml` directory called `build_config.py`, and add the following lines to it:
+    <details><summary>Windows</summary>
+
+    ```py
+    """
+    Caelus configuration file
+    """
+
+    PROJECT_NAME = "Caelus"
+    PROJECT_VERSION = "9.04"
+
+    CC = "gcc"
+    CXX = "g++"
+    OMP = True
+    BUILD_TYPE = "Opt"
+    BUILD_ARCH = "64"
+    PRECISION = "DP"
+
+    MPI_LIB_NAME = 'msmpi'
+    MPI_LIB_PATH = 'C:\\msys64\\mingw64\\lib'
+    MPI_INC_PATH = 'C:\\msys64\\mingw64\\include'
+    ```
+
+    </details>
+
+    <details><summary>MacOS</summary>
+
+    ```py
+    """
+    Caelus configuration file
+    """
+
+    PROJECT_NAME = "Caelus"
+    PROJECT_VERSION = "9.04"
+
+    CC = "clang"
+    CXX = "clang++"
+    OMP = True
+    BUILD_TYPE = "Opt"
+    BUILD_ARCH = "64"
+    PRECISION = "DP"
+
+    MPI_LIB_NAME = 'mpi'
+    MPI_LIB_PATH = '/opt/openmpi/lib'
+    MPI_INC_PATH = '/opt/openmpi/include'
+    ```
+
+    </details>
+
+    <details><summary>Linux</summary>
+
+    ```py
+    """
+    Caelus configuration file
+    """
+
+    PROJECT_NAME = "Caelus"
+    PROJECT_VERSION = "9.04"
+
+    CC = "gcc"
+    CXX = "g++"
+    OMP = True
+    BUILD_TYPE = "Opt"
+    BUILD_ARCH = "64"
+    PRECISION = "DP"
+
+    MPI_LIB_NAME = 'mpi'
+    MPI_LIB_PATH = '/usr/lib/openmpi/lib'
+    MPI_INC_PATH = '/usr/lib/openmpi/include
+    ```
+
+    </details>
+
 ### If errors occur
 
 If an error occurs while building, run

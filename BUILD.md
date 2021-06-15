@@ -109,7 +109,7 @@ CPL is a Python library packaged with Caelus that is used for building and runni
    <details><summary>MacOS and Linux</summary>
 
    ```sh
-   $> pip install virtualenv virtualenvwrapper \
+   $> pip3 install virtualenv virtualenvwrapper \
         && echo "source /usr/local/bin/virtualenvwrapper.sh" >> .bashrc
    ```
 
@@ -129,5 +129,14 @@ CPL is a Python library packaged with Caelus that is used for building and runni
 5. Activate the virtual environment and install CPL:
    ```sh
    $> workon cpl
-   $> pip install .  # -e if you plan on making changes to CPL
+   $> pip install .  # -e if you plan on making changes to CPL, pip3 if not on Windows
    ```
+6. Test CPL installation:
+    ```sh
+    # In current terminal
+    $> caelus -h
+
+    # In a new terminal
+    $> workon cpl
+    $> caelus -h
+    ```

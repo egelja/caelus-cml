@@ -1,5 +1,16 @@
 # Building Caelus-CML
 
+## Table of contents
+
+- [Setup](#setup)
+  - [Needed tools](#needed-tools)
+  - [Caelus Python Library (CPL) setup](#caelus-python-library--cpl--setup)
+- [Building](#building)
+  - [If errors occur](#if-errors-occur)
+  - [Documentation](#documentation)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 ## Setup
 
 ### Needed tools
@@ -42,6 +53,7 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
     $> opmi_info
     # should give output
     ```
+
     </details>
 
     <details><summary>Windows</summary>
@@ -231,7 +243,7 @@ Caelus-CML is built with [SCons](https://scons.org/), which is wrapped in CPL. I
 
     </details>
 
-3. Create a file in the `caelus-cml` directory called `build_config.py`, and add the following lines to it:
+3.  Create a file in the `caelus-cml` directory called `build_config.py`, and add the following lines to it:
     <details><summary>Windows</summary>
 
     ```py
@@ -304,14 +316,57 @@ Caelus-CML is built with [SCons](https://scons.org/), which is wrapped in CPL. I
 
     </details>
 
+4.  Build Caelus-CML
+
+    _Note: this will take a while._
+
+    1. If you have VSCode, you can just open the `caelus-cml` directory and press `Ctrl+F7` (or `Crtl+Shift+P` and then type in `default build task`). This will activate the CPL environment and build Caelus-CML.
+    2. Otherwise, run these commands:
+       ```sh
+       $> workon cpl
+       $> cd /path/to/caelus-cml
+       $> caelus build -l build.log BUILD_SWAK=False BUILD_CFMESH=True  # swak causes a build error
+       ```
+
+5.  Test Caelus-CML using one of the tutorials:
+    ```sh
+    $> cd path/to/caelus-cml/tutorials/combustion/reactingSolver/volvoTestCase
+    $> caelus run -f run_tutorial.yaml
+    ```
+    You should see output log files and new folders being created.
+
 ### If errors occur
 
 If an error occurs while building, run
 
 ```sh
 $> workon cpl
-$> cd PATH/TO/caelus-cml  # if needed
+$> cd path/to/caelus-cml  # if needed
 $> caelus build -l build.log BUILD_SWAK=False BUILD_CFMESH=True -- -k
 ```
 
 Repeat the final command until the `build.log` file contains only error messages, then [create an issue](https://www.github.com/MrAwesomeRocks/caelus-cml/issues) and attach your `build.log` file to it.
+
+### Documentation
+
+To build the documentation, first make sure that you followed the steps in [Caelus Python Library (CPL) setup](#caelus-python-library--cpl--setup).
+
+1. Activate the CPL environment: `workon cpl`.
+2. Get to the docs folder: `cd /path/to/caelus-cml/docs`
+3. Setup `sphinx-numfig`:
+   ```sh
+   $> cd packages/sphinx-numfig*
+   $> python setup.py install
+   $> cd ../../
+   ```
+4. Run the makefile:
+
+   ```sh
+   # Windows Powershell and CMD
+   make.bat html
+
+   # MacOS, Linux, and MSys2
+   make html
+   ```
+
+5. The generated docs will be in the `Guides/` folder. Open `index.html` with a web browser by clicking on it.

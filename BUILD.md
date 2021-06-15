@@ -6,7 +6,7 @@
 
 To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/). [Paraview](https://www.paraview.org/) is also recommended for viewing the solved cases.
 
-1.  Download and install either [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/), whichever you prefer. If you already have a text editor, skip this step. VSCode is recommended since there are already build tasks for it in this project.
+1.  Download and install either [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/), whichever you prefer. VSCode is recommended since there are build tasks for it. If you already have a text editor, skip this step.
 2.  Download the build tools and dependencies based on your platform:
 
     <details><summary>Linux</summary>
@@ -25,7 +25,7 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
 
     <details><summary>Windows</summary>
 
-    1.  Download and install [MSys2](https://www.msys2.org/). Select the default options in the installer. After the installer has finished, open MSys2 and run:
+    1.  Download and install [MSys2](https://www.msys2.org/). Select the default options in the installer. After the installer has finished, open MSys and run:
 
         ```sh
         $> pacman -Syu
@@ -81,8 +81,8 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
            3. Close all MSys2 windows after the `git-extra` step, but **DO NOT** open any new ones.
            4. Open the `C:\msys64\etc\profile.d` folder, and delete the `git-prompt.sh` and `git-sdk.sh` files. These will change your prompt and make it into a Git-for-Windows development environment, and are therefore unneeded.
            5. Add `C:\msys64\cmd` to your PATH.
-    4.  Download and install the version of MS-MPI from [here](https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi-release-notes) matching the version of the [MSys2 package](https://packages.msys2.org/package/mingw-w64-x86_64-msmpi?repo=mingw64).
-    5.  Download and install [Python](https://python.org/). Make sure to check the box to add it to your PATH.
+    4.  Download and install the version of MS-MPI from [here](https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi-release-notes) matching the version of the [MSys2 package](https://packages.msys2.org/package/mingw-w64-x86_64-msmpi?repo=mingw64) installed earlier.
+    5.  Download and install [Python](https://python.org/). Make sure to check the box to add it to your PATH and disable the `MAX_PATH` limit.
     6.  Add the `C:\msys64\mingw64\bin` directory to your PATH.
     </details>
 

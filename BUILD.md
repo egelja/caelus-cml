@@ -140,3 +140,14 @@ CPL is a Python library packaged with Caelus that is used for building and runni
     $> workon cpl
     $> caelus -h
     ```
+
+## Building
+
+### If errors occur
+If an error occurs while building, run
+```sh
+$> workon cpl
+$> cd PATH/TO/caelus-cml  # if needed
+$> caelus build -l build.log BUILD_SWAK=False BUILD_CFMESH=True -- -k
+```
+Repeat the final command until the `build.log` file contains only error messages, then [create an issue](https://www.github.com/MrAwesomeRocks/caelus-cml/issues) and attach your `build.log` file to it.

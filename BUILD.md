@@ -15,7 +15,7 @@
 
 ### Needed tools
 
-To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/). [Paraview](https://www.paraview.org/) is also recommended for viewing the solved cases.
+To build Caelus-CML, you will need GCC, Git, Python, and a text editor such as [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/). [Paraview](https://www.paraview.org/) is also recommended for viewing the solved cases.
 
 1.  Download and install either [Notepad++](https://notepad-plus-plus.org) or [VSCode](https://code.visualstudio.com/), whichever you prefer. VSCode is recommended since there are build tasks for it. If you already have a text editor, skip this step.
 2.  Download the build tools and dependencies based on your platform:
@@ -119,7 +119,7 @@ To build Caelus-CML, you will GCC, Git, Python, and a text editor such as [Notep
     6.  Add the `C:\msys64\mingw64\bin` directory to your PATH.
     </details>
 
-3.  Download and install [Paraview](https://www.paraview.org/) to view the cases. You will need to create an empty `case.foam` file in every case directory, then open it with Paraview to view the case.
+3.  Download and install [Paraview](https://www.paraview.org/) to view the cases. You will need to create an empty `case.foam` file in every case directory, then open it with Paraview to view the case. This is optional, but highly recommended.
 
 ### Caelus Python Library (CPL) setup
 
@@ -363,10 +363,10 @@ To build the documentation, first make sure that you followed the steps in [Cael
 
    ```sh
    # Windows Powershell and CMD
-   make.bat html
+   $> make.bat html
 
    # MacOS, Linux, and MSys2
-   make html
+   $> make html
    ```
 
 5. The generated docs will be in the `Guides/` folder. Open `index.html` with a web browser by clicking on it.

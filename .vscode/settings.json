@@ -1,3 +1,17 @@
 {
-    "python.pythonPath": "C:\\Users\\ninom_khl1ot5\\AppData\\Local\\Programs\\Python\\Python39\\python.exe"
+    "python.pythonPath": "C:\\Users\\ninom_khl1ot5\\.envs\\cpl\\Scripts\\python.exe",
+    "python.linting.flake8Enabled": false,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "cSpell.words": [
+        "IRGRP",
+        "IROTH",
+        "IRUSR",
+        "IWGRP",
+        "IWUSR",
+        "cpython",
+        "destc",
+        "numfig",
+        "pltfrm"
+    ]
 }

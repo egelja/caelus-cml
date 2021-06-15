@@ -16,7 +16,20 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "workon cpl; caelus build -c"
+            "command": "workon cpl; caelus build -c",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build docs (Windows)",
+            "type": "shell",
+            "command": "workon cpl; cd docs; .\\make html",
+            "group": "build"
+        },
+        {
+            "label": "Build docs (MacOS and Linux)",
+            "type": "shell",
+            "command": "workon cpl && cd docs && make html",
+            "group": "build"
         }
     ]
 }

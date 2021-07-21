@@ -102,13 +102,22 @@ void cartesianMeshGenerator::mapMeshToSurface()
 
     //- pre-map mesh surface
     meshSurfaceMapper mapper(mse, *octreePtr_);
-    mapper.preMapVertices();
+    if( controller_.runCurrentStep("preMapVertices") )
+    {
+        mapper.preMapVertices();
+    }
 
     //- map mesh surface on the geometry surface
-    mapper.mapVerticesOntoSurface();
+    if( controller_.runCurrentStep("mapVerticesOntoSurface") )
+    {
+        mapper.mapVerticesOntoSurface();
+    }
 
     //- untangle surface faces
-    meshSurfaceOptimizer(mse, *octreePtr_).untangleSurface();
+    if( controller_.runCurrentStep("untangleSurface") )
+    {
+        meshSurfaceOptimizer(mse, *octreePtr_).untangleSurface();
+    }
 }
 
 void cartesianMeshGenerator::extractPatches()

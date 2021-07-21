@@ -227,11 +227,14 @@ std::map<word, label> workflowControls::populateWorkflowSteps()
     workflowSteps.insert(std::make_pair(word("templateGeneration"), 1));
     workflowSteps.insert(std::make_pair(word("surfaceTopology"), 2));
     workflowSteps.insert(std::make_pair(word("surfaceProjection"), 4));
-    workflowSteps.insert(std::make_pair(word("patchAssignment"), 8));
-    workflowSteps.insert(std::make_pair(word("edgeExtraction"), 16));
-    workflowSteps.insert(std::make_pair(word("meshOptimisation"), 32));
-    workflowSteps.insert(std::make_pair(word("boundaryLayerGeneration"), 64));
-    workflowSteps.insert(std::make_pair(word("boundaryLayerRefinement"), 128));
+    workflowSteps.insert(std::make_pair(word("preMapVertices"), 8));
+    workflowSteps.insert(std::make_pair(word("mapVerticesOntoSurface"), 16));
+    workflowSteps.insert(std::make_pair(word("untangleSurface"), 32));
+    workflowSteps.insert(std::make_pair(word("patchAssignment"), 64));
+    workflowSteps.insert(std::make_pair(word("edgeExtraction"), 128));
+    workflowSteps.insert(std::make_pair(word("meshOptimisation"), 256));
+    workflowSteps.insert(std::make_pair(word("boundaryLayerGeneration"), 512));
+    workflowSteps.insert(std::make_pair(word("boundaryLayerRefinement"), 1024));
 
     return workflowSteps;
 }

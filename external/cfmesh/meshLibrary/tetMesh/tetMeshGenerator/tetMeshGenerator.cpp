@@ -80,12 +80,20 @@ void tetMeshGenerator::mapMeshToSurface()
     //- calculate mesh surface
     meshSurfaceEngine* msePtr = new meshSurfaceEngine(mesh_);
 
+    if( controller_.runCurrentStep("preMapVertices") ) { /* No premapping done here */ }
+
     //- map mesh surface on the geometry surface
-    meshSurfaceMapper(*msePtr, *octreePtr_).mapVerticesOntoSurface();
+    if( controller_.runCurrentStep("mapVerticesOntoSurface") )
+    {
+        meshSurfaceMapper(*msePtr, *octreePtr_).mapVerticesOntoSurface();
+    }
 
     //- untangle surface faces
-    meshSurfaceOptimizer(*msePtr, *octreePtr_).untangleSurface();
-
+    if( controller_.runCurrentStep("untangleSurface") )
+    {
+        meshSurfaceOptimizer(*msePtr, *octreePtr_).untangleSurface();
+    }
+    
     deleteDemandDrivenData(msePtr);
 }
 

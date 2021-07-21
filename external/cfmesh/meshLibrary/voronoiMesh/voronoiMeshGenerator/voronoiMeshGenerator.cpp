@@ -87,8 +87,14 @@ void voronoiMeshGenerator::mapMeshToSurface()
 
     //- map mesh surface on the geometry surface
     meshSurfaceMapper mapper(*msePtr, *octreePtr_);
-    mapper.preMapVertices();
-    mapper.mapVerticesOntoSurface();
+    if( controller_.runCurrentStep("preMapVertices") )
+    {
+        mapper.preMapVertices();
+    }
+    if( controller_.runCurrentStep("mapVerticesOntoSurface") )
+    {
+        mapper.mapVerticesOntoSurface();
+    }
 
     # ifdef DEBUG
     mesh_.write();
@@ -96,8 +102,11 @@ void voronoiMeshGenerator::mapMeshToSurface()
     # endif
 
     //- untangle surface faces
-    meshSurfaceOptimizer(*msePtr, *octreePtr_).untangleSurface();
-
+    if( controller_.runCurrentStep("untangleSurface") )
+    {
+        meshSurfaceOptimizer(*msePtr, *octreePtr_).untangleSurface();
+    }
+    
     # ifdef DEBUG
     mesh_.write();
     ::exit(EXIT_FAILURE);

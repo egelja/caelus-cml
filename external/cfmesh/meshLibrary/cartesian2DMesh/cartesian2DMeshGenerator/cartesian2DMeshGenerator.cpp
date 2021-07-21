@@ -106,10 +106,18 @@ void cartesian2DMeshGenerator::mapMeshToSurface()
 
     mapper.adjustZCoordinates();
 
-    mapper.preMapVertices();
+    if( controller_.runCurrentStep("preMapVertices") )
+    {
+        mapper.preMapVertices();
+    }
 
     //- map mesh surface on the geometry surface
-    mapper.mapVerticesOntoSurface();
+    if( controller_.runCurrentStep("mapVerticesOntoSurface") )
+    {
+        mapper.mapVerticesOntoSurface();
+    }
+
+    if( controller_.runCurrentStep("untangleSurface") ) { /* No untangling here */ }
 
     deleteDemandDrivenData(msePtr);
 }
